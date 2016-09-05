@@ -40,10 +40,10 @@ class ConcreteWorker(base.AbstractWorker):
 class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_workername(self):
-        self.failUnless(hasattr(self.sl, 'workername'))
+        self.assertTrue(hasattr(self.sl, 'workername'))
 
     def test_attr_properties(self):
-        self.failUnless(hasattr(self.sl, 'properties'))
+        self.assertTrue(hasattr(self.sl, 'properties'))
 
     @defer.inlineCallbacks
     def test_attr_worker_basedir(self):
@@ -53,12 +53,12 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_attr_path_module(self):
         yield self.callAttached()
-        self.failUnless(hasattr(self.sl, 'path_module'))
+        self.assertTrue(hasattr(self.sl, 'path_module'))
 
     @defer.inlineCallbacks
     def test_attr_worker_system(self):
         yield self.callAttached()
-        self.failUnless(hasattr(self.sl, 'worker_system'))
+        self.assertTrue(hasattr(self.sl, 'worker_system'))
 
     def test_signature_acquireLocks(self):
         @self.assertArgSpecMatches(self.sl.acquireLocks)

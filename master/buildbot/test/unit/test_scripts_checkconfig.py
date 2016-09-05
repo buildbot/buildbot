@@ -63,10 +63,10 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
             sys.stdout, sys.stderr = old_stdout, old_stderr
         if stdout_re:
             stdout = stdout.getvalue()
-            self.failUnless(stdout_re.search(stdout), stdout)
+            self.assertTrue(stdout_re.search(stdout), stdout)
         if stderr_re:
             stderr = stderr.getvalue()
-            self.failUnless(stderr_re.search(stderr), stderr)
+            self.assertTrue(stderr_re.search(stderr), stderr)
 
     def test_success(self):
         len_sys_path = len(sys.path)

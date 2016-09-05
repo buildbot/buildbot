@@ -251,28 +251,28 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_unsubscribe(self):
         # method has been removed
-        self.failIf(hasattr(self.log, 'unsubscribe'))
+        self.assertFalse(hasattr(self.log, 'unsubscribe'))
 
     def test_signature_getStep_removed(self):
-        self.failIf(hasattr(self.log, 'getStep'))
+        self.assertFalse(hasattr(self.log, 'getStep'))
 
     def test_signature_subscribeConsumer_removed(self):
-        self.failIf(hasattr(self.log, 'subscribeConsumer'))
+        self.assertFalse(hasattr(self.log, 'subscribeConsumer'))
 
     def test_signature_hasContents_removed(self):
-        self.failIf(hasattr(self.log, 'hasContents'))
+        self.assertFalse(hasattr(self.log, 'hasContents'))
 
     def test_signature_getText_removed(self):
-        self.failIf(hasattr(self.log, 'getText'))
+        self.assertFalse(hasattr(self.log, 'getText'))
 
     def test_signature_readlines_removed(self):
-        self.failIf(hasattr(self.log, 'readlines'))
+        self.assertFalse(hasattr(self.log, 'readlines'))
 
     def test_signature_getTextWithHeaders_removed(self):
-        self.failIf(hasattr(self.log, 'getTextWithHeaders'))
+        self.assertFalse(hasattr(self.log, 'getTextWithHeaders'))
 
     def test_signature_getChunks_removed(self):
-        self.failIf(hasattr(self.log, 'getChunks'))
+        self.assertFalse(hasattr(self.log, 'getChunks'))
 
 
 class TestProcessItfc(unittest.TestCase, InterfaceTests):

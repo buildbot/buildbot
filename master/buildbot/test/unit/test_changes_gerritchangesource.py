@@ -150,7 +150,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
             for k, v in iteritems(c):
                 self.assertEqual(self.expected_change[k], v)
@@ -175,9 +175,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
-            self.failUnlessEqual(c["category"], "change-merged")
+            self.assertEqual(c["category"], "change-merged")
             self.assertEqual(c["branch"], "br")
         return d
 
@@ -188,7 +188,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 0)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 0)
         return d
 
     def test_custom_handler(self):
@@ -205,9 +205,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
-            self.failUnlessEqual(c['project'], "world")
+            self.assertEqual(c['project'], "world")
         return d
 
 

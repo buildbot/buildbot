@@ -133,10 +133,10 @@ class TestBuildbotCvsMail(unittest.TestCase):
         if isinstance(output, bytes):
             output = output.decode("utf-8")
         try:
-            self.failUnlessEqual(code, 0, "subprocess exited uncleanly")
+            self.assertEqual(code, 0, "subprocess exited uncleanly")
             lines = output.splitlines()
-            self.failUnlessEqual(len(lines), len(regexList),
-                                 "got wrong number of lines of output")
+            self.assertEqual(len(lines), len(regexList),
+                             "got wrong number of lines of output")
 
             misses = []
             for line, regex in zip(lines, regexList):

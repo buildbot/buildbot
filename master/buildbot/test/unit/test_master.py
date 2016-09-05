@@ -247,7 +247,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.assertTrue(self.master.data.updates.thisMasterActive)
         d = self.master.stopService()
         self.assertTrue(d.called)
-        self.failIf(self.reactor.stop.called)
+        self.assertFalse(self.reactor.stop.called)
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
@@ -266,7 +266,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.master.botmaster.shutdownDeferred.callback(None)
         self.assertTrue(d.called)
 
-        self.failIf(self.reactor.stop.called)
+        self.assertFalse(self.reactor.stop.called)
         self.assertLogged("BuildMaster is running")
 
         # check started/stopped messages
@@ -301,7 +301,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         self.master.stopService()
 
         self.assertLogged("reconfig aborted without")
-        self.failIf(self.master.reconfigService.called)
+        self.assertFalse(self.master.reconfigService.called)
 
     @defer.inlineCallbacks
     def test_reconfigService_db_url_changed(self):

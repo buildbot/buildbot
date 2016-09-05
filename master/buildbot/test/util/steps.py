@@ -379,7 +379,7 @@ class BuildStepMixin(object):
         if exp.shouldAssertCommandEqualExpectation():
             # handle any incomparable args
             for arg in exp.incomparable_args:
-                self.failUnless(arg in got[1],
+                self.assertTrue(arg in got[1],
                                 "incomparable arg '%s' not received" % (arg,))
                 del got[1][arg]
 

@@ -1931,7 +1931,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(
+        self.assertEqual(
             ["svn_external_path/unversioned_file"], unversioned_files)
 
     def test_getUnversionedFiles_does_not_list_missing(self):
@@ -1945,7 +1945,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals([], unversioned_files)
+        self.assertEqual([], unversioned_files)
 
     def test_getUnversionedFiles_corrupted_xml(self):
         svn_st_xml_corrupt = """<?xml version="1.0"?>
@@ -1980,7 +1980,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals([], unversioned_files)
+        self.assertEqual([], unversioned_files)
 
     def test_getUnversionedFiles_no_item(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -1998,7 +1998,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(
+        self.assertEqual(
             ["svn_external_path/unversioned_file"], unversioned_files)
 
 

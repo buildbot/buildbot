@@ -314,7 +314,7 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         self.manual_component.startService()
 
         persp = self.got_factory(mock.Mock(), 'user')
-        self.failUnless(
+        self.assertTrue(
             isinstance(persp, manual.CommandlineUserManagerPerspective))
 
         return self.manual_component.stopService()

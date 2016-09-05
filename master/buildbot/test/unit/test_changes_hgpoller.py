@@ -193,7 +193,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d.addCallback(self.check_current_rev(5))
 
         def check_changes(_):
-            self.assertEquals(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             change = self.master.data.updates.changesAdded[0]
             self.assertEqual(change['revision'], u'784bd')
             self.assertEqual(change['comments'], u'Comment for rev 5')

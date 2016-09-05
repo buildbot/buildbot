@@ -114,8 +114,8 @@ class ConfigErrors(unittest.TestCase):
     def test_nonempty(self):
         empty = config.ConfigErrors()
         full = config.ConfigErrors(['a'])
-        self.failUnless(not empty)
-        self.failIf(not full)
+        self.assertTrue(not empty)
+        self.assertFalse(not full)
 
     def test_error_raises(self):
         e = self.assertRaises(config.ConfigErrors, config.error, "message")
@@ -343,25 +343,25 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertIsInstance(rv, config.MasterConfig)
 
         # make sure all of the loaders and checkers are called
-        self.failUnless(rv.load_global.called)
-        self.failUnless(rv.load_validation.called)
-        self.failUnless(rv.load_db.called)
-        self.failUnless(rv.load_metrics.called)
-        self.failUnless(rv.load_caches.called)
-        self.failUnless(rv.load_schedulers.called)
-        self.failUnless(rv.load_builders.called)
-        self.failUnless(rv.load_workers.called)
-        self.failUnless(rv.load_change_sources.called)
-        self.failUnless(rv.load_status.called)
-        self.failUnless(rv.load_user_managers.called)
+        self.assertTrue(rv.load_global.called)
+        self.assertTrue(rv.load_validation.called)
+        self.assertTrue(rv.load_db.called)
+        self.assertTrue(rv.load_metrics.called)
+        self.assertTrue(rv.load_caches.called)
+        self.assertTrue(rv.load_schedulers.called)
+        self.assertTrue(rv.load_builders.called)
+        self.assertTrue(rv.load_workers.called)
+        self.assertTrue(rv.load_change_sources.called)
+        self.assertTrue(rv.load_status.called)
+        self.assertTrue(rv.load_user_managers.called)
 
-        self.failUnless(rv.check_single_master.called)
-        self.failUnless(rv.check_schedulers.called)
-        self.failUnless(rv.check_locks.called)
-        self.failUnless(rv.check_builders.called)
-        self.failUnless(rv.check_status.called)
-        self.failUnless(rv.check_horizons.called)
-        self.failUnless(rv.check_ports.called)
+        self.assertTrue(rv.check_single_master.called)
+        self.assertTrue(rv.check_schedulers.called)
+        self.assertTrue(rv.check_locks.called)
+        self.assertTrue(rv.check_builders.called)
+        self.assertTrue(rv.check_status.called)
+        self.assertTrue(rv.check_horizons.called)
+        self.assertTrue(rv.check_ports.called)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
@@ -393,7 +393,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     # utils
 
     def assertResults(self, **expected):
-        self.failIf(self.errors, self.errors.errors)
+        self.assertFalse(self.errors, self.errors.errors)
         got = dict([
             (attr, getattr(self.cfg, attr))
             for attr, exp in iteritems(expected)])

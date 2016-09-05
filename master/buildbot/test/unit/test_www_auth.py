@@ -191,7 +191,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
 
         res = yield self.render_resource(self.rsrc, '/auth/login')
         self.assertEqual(res, "")
-        self.failIf(self.auth.maybeAutoLogin.called)
+        self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
         self.assertEqual(self.master.session.user_info,
                          {'email': 'him@org', 'username': 'him'})

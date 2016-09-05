@@ -170,8 +170,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             srctimestamp = map(int, timestamp)
             desttimestamp = map(int, desttimestamp)
 
-            self.assertEquals(srctimestamp[0], desttimestamp[0])
-            self.assertEquals(srctimestamp[1], desttimestamp[1])
+            self.assertEqual(srctimestamp[0], desttimestamp[0])
+            self.assertEqual(srctimestamp[1], desttimestamp[1])
         return d
 
     def testURL(self):
@@ -675,14 +675,14 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(step.uploadDone.call_count, 2)
-            self.assertEquals(step.uploadDone.call_args_list[0],
-                              ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
-            self.assertEquals(step.uploadDone.call_args_list[1],
-                              ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
-            self.assertEquals(step.allUploadsDone.call_count, 1)
-            self.assertEquals(step.allUploadsDone.call_args_list[0],
-                              ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
+            self.assertEqual(step.uploadDone.call_count, 2)
+            self.assertEqual(step.uploadDone.call_args_list[0],
+                             ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
+            self.assertEqual(step.uploadDone.call_args_list[1],
+                             ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
+            self.assertEqual(step.allUploadsDone.call_count, 1)
+            self.assertEqual(step.allUploadsDone.call_args_list[0],
+                             ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
             return res
 
         return d
@@ -810,7 +810,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
                 contents = f.read()
             # Only first 1000 bytes trasferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEquals(''.join(read), contents)
+            self.assertEqual(''.join(read), contents)
 
         return d
 
@@ -844,7 +844,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
                 contents = f.read()
             # Only first 1000 bytes trasferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEquals(''.join(read), contents)
+            self.assertEqual(''.join(read), contents)
 
         return d
 
@@ -890,7 +890,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), "Hello World")
+            self.assertEqual(''.join(read), "Hello World")
         return d
 
     def testBasicWorker2_16(self):
@@ -918,7 +918,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), "Hello World")
+            self.assertEqual(''.join(read), "Hello World")
         return d
 
     def testFailure(self):
@@ -1007,7 +1007,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), '{"message": "Hello World"}')
+            self.assertEqual(''.join(read), '{"message": "Hello World"}')
         return d
 
     def testFailure(self):
@@ -1087,10 +1087,10 @@ class TestJSONPropertiesDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['workerdest'], 'props.json')
+                self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(
+                self.assertEqual(
                     data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
                 break
         else:
@@ -1117,10 +1117,10 @@ class TestJSONPropertiesDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'props.json')
+                self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(
+                self.assertEqual(
                     data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
                 break
         else:

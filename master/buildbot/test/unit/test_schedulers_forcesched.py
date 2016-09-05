@@ -59,7 +59,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             createBuilderDB=True)
         sched.master.config = config.MasterConfig()
 
-        self.assertEquals(sched.name, name)
+        self.assertEqual(sched.name, name)
 
         return sched
 

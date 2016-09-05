@@ -225,7 +225,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, SUCCESS)
+            self.assertEqual(result, SUCCESS)
             return False
 
         self._setupWaterfallTest(shouldHide, False)
@@ -240,7 +240,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, SUCCESS)
+            self.assertEqual(result, SUCCESS)
             return True
 
         self._setupWaterfallTest(shouldHide, True)
@@ -265,7 +265,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, EXCEPTION)
+            self.assertEqual(result, EXCEPTION)
             return True
 
         def createException(*args, **kwargs):
@@ -418,8 +418,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
-        self.failUnless(all(isinstance(k, text_type) for k in got))
-        self.failUnless(all(isinstance(k, text_type) for k in itervalues(got)))
+        self.assertTrue(all(isinstance(k, text_type) for k in got))
+        self.assertTrue(all(isinstance(k, text_type) for k in itervalues(got)))
         exp = {u'step': step}
         if build:
             exp[u'build'] = build
@@ -546,9 +546,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         res = yield step.startStep(mock.Mock())
         self.assertFalse(step._running)
         errors = self.flushLoggedErrors()
-        self.assertEquals(len(errors), 1)
-        self.assertEquals(errors[0].getErrorMessage(), 'got exception')
-        self.assertEquals(res, EXCEPTION)
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0].getErrorMessage(), 'got exception')
+        self.assertEqual(res, EXCEPTION)
 
 
 class TestLoggingBuildStep(unittest.TestCase):
@@ -604,7 +604,7 @@ class InterfaceTests(interfaces.InterfaceTests):
             'progress',
             'stopped',
         ]:
-            self.failUnless(hasattr(self.step, attr))
+            self.assertTrue(hasattr(self.step, attr))
 
     def test_signature_setBuild(self):
         @self.assertArgSpecMatches(self.step.setBuild)

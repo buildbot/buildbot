@@ -798,7 +798,7 @@ class Try_Userpass(scheduler.SchedulerMixin, unittest.TestCase):
         # make a fake connection by invoking the factory, and check that we
         # get the correct perspective
         persp = self.got_factory(mock.Mock(), 'fred')
-        self.failUnless(isinstance(persp, trysched.Try_Userpass_Perspective))
+        self.assertTrue(isinstance(persp, trysched.Try_Userpass_Perspective))
         return sched.stopService()
 
     @defer.inlineCallbacks

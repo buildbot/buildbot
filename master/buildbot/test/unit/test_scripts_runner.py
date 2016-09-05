@@ -476,7 +476,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def test_properties_with_colon(self):
         opts = self.parse('--property', 'x:http://foo', *self.master_and_who)
-        self.assertEquals(opts['properties'], dict(x='http://foo'))
+        self.assertEqual(opts['properties'], dict(x='http://foo'))
 
     def test_config_file(self):
         self.options_file['master'] = 'MMM:123'

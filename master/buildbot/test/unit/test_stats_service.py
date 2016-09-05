@@ -157,7 +157,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             'tags': {'x': 'y'}
         }
         points = [data]
-        self.assertEquals(svc.client.points, points)
+        self.assertEqual(svc.client.points, points)
 
     def test_influx_service_not_inited(self):
         self.setUpLogging()
