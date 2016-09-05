@@ -20,6 +20,9 @@ from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, SUCCESS, RESUM
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
 
+# ManagerUrl never changes across Buildmaster, so it's a static variable.
+managerUrl = None
+
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
 
@@ -189,6 +192,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['fqdn'] = self.fqdn
+        result['managerUrl'] = managerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()
