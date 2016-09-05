@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 import random
+from datetime import datetime
+from dateutil.tz import tzutc
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -404,13 +406,20 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
-        def nonecmp(a, b):
+        def nonekey(a):
             if a[0] is None:
-                return 1
-            if b[0] is None:
-                return -1
-            return cmp(a, b)
-        xformed.sort(cmp=nonecmp)
+                b = list(a)
+                # Choose a really big date, so that any
+                # date set to 'None' will appear at the
+                # end of the list during comparisons.
+                b[0] = datetime.max
+                # Need to set the timezone on the date, in order
+                # to perform comparisons with other dates which
+                # have the time zone set.
+                b[0] = b[0].replace(tzinfo=tzutc())
+                return tuple(b)
+            return a
+        xformed.sort(key=nonekey)
 
         # and reverse the transform
         rv = [xf[1] for xf in xformed]
