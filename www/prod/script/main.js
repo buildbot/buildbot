@@ -24670,11 +24670,19 @@ helpers = this.merge(helpers, Handlebars.helpers); partials = this.merge(partial
 function program1(depth0,data) {
   
   var buffer = "", stack1, helper;
-  buffer += "\n        <li><strong>Yumi URL:</strong> <a href=\" http://yumi.hq.unity3d.com/agent/";
+  buffer += "\n        <li><strong>Yumi URL: </strong> <a href=\"";
+  if (helper = helpers.managerUrl) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.managerUrl); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "/";
   if (helper = helpers.eid) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.eid); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
-    + "\"> http://yumi.hq.unity3d.com/agent/";
+    + "\">";
+  if (helper = helpers.managerUrl) { stack1 = helper.call(depth0, {hash:{},data:data}); }
+  else { helper = (depth0 && depth0.managerUrl); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
+  buffer += escapeExpression(stack1)
+    + "/";
   if (helper = helpers.eid) { stack1 = helper.call(depth0, {hash:{},data:data}); }
   else { helper = (depth0 && depth0.eid); stack1 = typeof helper === functionType ? helper.call(depth0, {hash:{},data:data}) : helper; }
   buffer += escapeExpression(stack1)
