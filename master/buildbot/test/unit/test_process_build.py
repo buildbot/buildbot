@@ -70,6 +70,7 @@ class FakeBuildStep:
         self.flunkOnFailure = True
         self.warnOnWarnings = True
         self.warnOnFailure = False
+        self.pauseSlaveOnFailure = False
         self.alwaysRun = False
         self.name = 'fake'
 
@@ -571,6 +572,58 @@ class TestBuild(unittest.TestCase):
         terminate = b.stepDone(WARNINGS, step)
         self.assertEqual(terminate, False)
         self.assertEqual(b.result, FAILURE)
+
+    def testStepDonePauseSlaveOnFailure(self):
+        b = self.build
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        b.slavebuilder = Mock()
+        step = FakeBuildStep()
+        step.pauseSlaveOnFailure = True
+        terminate = b.stepDone(FAILURE, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, FAILURE)
+        b.slavebuilder.slave.slave_status.setPaused.assert_called_once_with(True)
+
+    def testStepDonePauseSlaveOnException(self):
+        b = self.build
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        b.slavebuilder = Mock()
+        step = FakeBuildStep()
+        step.pauseSlaveOnFailure = True
+        terminate = b.stepDone(EXCEPTION, step)
+        self.assertEqual(terminate, True)
+        self.assertEqual(b.result, EXCEPTION)
+        b.slavebuilder.slave.slave_status.setPaused.assert_called_once_with(True)
+
+    def testStepDoneDoesntPauseSlaveOnSuccess(self):
+        b = self.build
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        b.slavebuilder = Mock()
+        step = FakeBuildStep()
+        step.pauseSlaveOnFailure = True
+        terminate = b.stepDone(SUCCESS, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, SUCCESS)
+        b.slavebuilder.slave.slave_status.setPaused.assert_not_called()
+
+    def testStepDoneDoesntPauseSlaveOnWarnings(self):
+        b = self.build
+        b.results = [SUCCESS]
+        b.result = SUCCESS
+        b.remote = Mock()
+        b.slavebuilder = Mock()
+        step = FakeBuildStep()
+        step.pauseSlaveOnFailure = True
+        terminate = b.stepDone(WARNINGS, step)
+        self.assertEqual(terminate, False)
+        self.assertEqual(b.result, WARNINGS)
+        b.slavebuilder.slave.slave_status.setPaused.assert_not_called()
 
     def testStepDoneWarningsDontOverrideFailure(self):
         b = self.build

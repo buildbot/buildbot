@@ -507,6 +507,7 @@ class Build(properties.PropertiesMixin):
             terminate = True
 
         possible_overall_result = result
+
         if result == FAILURE:
             if not step.flunkOnFailure:
                 possible_overall_result = SUCCESS
@@ -516,6 +517,7 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = FAILURE
             if step.haltOnFailure:
                 terminate = True
+
         elif result == WARNINGS:
             if not step.warnOnWarnings:
                 possible_overall_result = SUCCESS
@@ -525,6 +527,9 @@ class Build(properties.PropertiesMixin):
                 possible_overall_result = FAILURE
         elif result in (EXCEPTION, RETRY, DEPENDENCY_FAILURE):
             terminate = True
+
+        if result in (FAILURE, EXCEPTION) and step.pauseSlaveOnFailure:
+                self.slavebuilder.slave.slave_status.setPaused(True)
 
         # if we skipped this step, then don't adjust the build status
         if result != SKIPPED:

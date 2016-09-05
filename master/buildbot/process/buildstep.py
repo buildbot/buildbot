@@ -442,6 +442,7 @@ class BuildStep(object, properties.PropertiesMixin):
     flunkOnFailure = False
     warnOnWarnings = False
     warnOnFailure = False
+    pauseSlaveOnFailure = False
     alwaysRun = False
     doStepIf = True
     hideStepIf = False
@@ -462,6 +463,7 @@ class BuildStep(object, properties.PropertiesMixin):
              'flunkOnFailure',
              'warnOnWarnings',
              'warnOnFailure',
+             'pauseSlaveOnFailure',
              'alwaysRun',
              'progressMetrics',
              'useProgress',

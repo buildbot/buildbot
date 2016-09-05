@@ -9,7 +9,7 @@ This section describes the base classes.  The "leaf" classes are described in :d
 BuildStep
 ---------
 
-.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: BuildStep(name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, pauseSlaveOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     All constructor arguments must be given as keyword arguments.
     Each constructor parameter is copied to the corresponding attribute.
@@ -63,6 +63,10 @@ BuildStep
     .. py:attribute:: warnOnFailure
 
         If true, the build will be marked as warnings, or worse, if this step fails.
+
+    .. py:attribute:: pauseSlaveOnFailure
+
+        If true, the slave running the build will be paused if this step fails.
 
     .. py:attribute:: alwaysRun
 
@@ -330,7 +334,7 @@ BuildStep
 LoggingBuildStep
 ----------------
 
-.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
+.. py:class:: LoggingBuildStep(logfiles, lazylogfiles, log_eval_func, name, locks, haltOnFailure, flunkOnWarnings, flunkOnFailure, warnOnWarnings, warnOnFailure, pauseAgentsOnFailure, alwaysRun, progressMetrics, useProgress, doStepIf, hideStepIf)
 
     :param logfiles: see :bb:step:`ShellCommand`
     :param lazylogfiles: see :bb:step:`ShellCommand`
