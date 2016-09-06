@@ -216,6 +216,8 @@ class TestBuilderSlavesJsonResources(unittest.TestCase):
                              'runningBuilds': [], 'friendly_name': None, 'admin': None, 'host': None,
                              'version': None, 'connected': False, 'eid': -1, 'lastMessage': 0,
                              'health': 0,
+                             'fqdn': None,
+                             'managerUrl': 'No Slave Manager URL configured',
                              'paused': False,
                              'graceful_shutdown': False,
                              'builders': [

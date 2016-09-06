@@ -15,7 +15,7 @@
 
 import time
 from zope.interface import implements
-from buildbot import interfaces, config
+from buildbot import interfaces
 from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, SUCCESS, RESUME, CANCELED, NOT_REBUILT
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
@@ -189,7 +189,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['fqdn'] = self.fqdn
-        result['managerUrl'] = config.MasterConfig.slaveManagerUrl
+        result['managerUrl'] = self.master.config.slaveManagerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()

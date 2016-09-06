@@ -92,6 +92,7 @@ class MasterConfig(object):
         self.lastBuildCacheDays = 30
         self.slave_debug_url = None
         # This URL will only be used if no slaveManagerUrl is present in master.cfg
+        self.slaveManagerUrl = "No Slave Manager URL configured"
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
