@@ -820,6 +820,92 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
    ``name=None``
      (Optional) The name of this storage backend.
 
+.. bb:cfg:: buildbotNetStatistics
+
+BuildbotNetStatistics
+~~~~~~~~~~~~~~~~~~~~~
+
+Since buildbot 0.9.0, buildbot has a simple feature which sends usage analysis info to buildbot.net.
+This is very important for buildbot developers to understand how the community is using the tools.
+This allows to better prioritize issues, and understand what plugins are actually being used.
+This will also be a tool to decide whether to keep support for very old tools.
+For example buildbot contains support for the venerable CVS, but we have no information whether it actually works beyond the unit tests.
+We rely on the community to test and report issues with the old features.
+
+With BuildbotNetStatistics, we can know exactly what combination of plugins are working together, how much people are customizing plugins, what versions of the main dependencies people run.
+
+We take your privacy very seriously.
+BuildbotNetStatistics will never send information specific to your Code or Intellectual Property.
+No repository url, no shell command values, no host names, no custom class names.
+If it does, then this is a bug, please report.
+
+BuildbotNetStatistics can be configured with 4 values:
+
+* ``c['buildbotNetStatistics'] = None`` disables the feature
+
+* ``c['buildbotNetStatistics'] = 'basic'`` sends the basic information to buildbot including:
+
+    * versions of buildbot, python and twisted
+    * platform information (CPU, OS, distribution, python flavor (i.e CPython vs PyPy))
+    * mq and database type (mysql or sqlite?)
+    * www plugins usage
+    * Plugins usages:
+      This counts the number of time each class of buildbot is used in your configuration.
+      This counts workers, builders, steps, schedulers, change sources.
+      If the plugin is subclassed, then it will be prefixed with a `>`
+
+    example of basic report (for the metabuildbot):
+
+    .. code-block:: javascript
+
+        {
+        'versions': {
+            'Python': '2.7.6',
+            'Twisted': '15.5.0',
+            'Buildbot': '0.9.0rc2-176-g5fa9dbf'
+        },
+        'platform': {
+            'machine': 'x86_64',
+            'python_implementation': 'CPython',
+            'version': '#140-Ubuntu SMP Mon Jul',
+            'processor':
+            'x86_64',
+            'distro:': ('Ubuntu', '14.04', 'trusty')
+            },
+        'db': 'sqlite',
+        'mq': 'simple',
+        'plugins': {
+            'buildbot.schedulers.forcesched.ForceScheduler': 2,
+            'buildbot.schedulers.triggerable.Triggerable': 1,
+            'buildbot.config.BuilderConfig': 4,
+            'buildbot.schedulers.basic.AnyBranchScheduler': 2,
+            'buildbot.steps.source.git.Git': 4,
+            '>>buildbot.steps.trigger.Trigger': 2,
+            '>>>buildbot.worker.base.Worker': 4,
+            'buildbot.reporters.irc.IRC': 1,
+            '>>>buildbot.process.buildstep.LoggingBuildStep': 2},
+        'www_plugins': ['buildbot_travis', 'waterfall_view']
+        }
+
+* ``c['buildbotNetStatistics'] = 'full'`` sends the basic information plus additional information:
+
+    * configuration of each builders: how the steps are arranged together. for ex:
+
+    .. code-block:: javascript
+
+        {
+            'builders': [
+                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger'],
+                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger']]
+        }
+
+* ``c['buildbotNetStatistics'] = myCustomFunction``. You can also specify exactly what to send using a callback.
+
+    The custom function will take the generated data from full report in the form of a dictionary, and return a customized report as a jsonable dictionary. You can use this to filter any information you dont want to disclose. You can use a custom http_proxy environment variable in order to not send any data while developing your callback.
+
+
 .. bb:cfg:: user_managers
 
 .. _Users-Options:
