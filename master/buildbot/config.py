@@ -91,6 +91,7 @@ class MasterConfig(object):
         self.autobahn_push = "false"
         self.lastBuildCacheDays = 30
         self.slave_debug_url = None
+        self.slaveManagerUrl = None
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -127,7 +128,7 @@ class MasterConfig(object):
         "properties", "revlink", "schedulers", "slavePortnum", "slaves",
         "status", "title", "titleURL", "user_managers", "validation", "realTimeServer",
         "analytics_code", "gzip", "autobahn_push", "lastBuildCacheDays",
-        "requireLogin", "globalFactory", "slave_debug_url",
+        "requireLogin", "globalFactory", "slave_debug_url", "slaveManagerUrl",
         "cleanUpPeriod", "buildRequestsDays"
     ])
 
@@ -338,6 +339,9 @@ class MasterConfig(object):
 
         if 'slave_debug_url' in config_dict:
             self.slave_debug_url = config_dict["slave_debug_url"]
+
+        if 'slaveManagerUrl' in config_dict:
+            self.slaveManagerUrl = config_dict["slaveManagerUrl"]
 
         copy_str_param('debugPassword')
 

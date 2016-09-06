@@ -15,13 +15,10 @@
 
 import time
 from zope.interface import implements
-from buildbot import interfaces
+from buildbot import interfaces, config
 from buildbot.status.results import WARNINGS, EXCEPTION, FAILURE, SUCCESS, RESUME, CANCELED, NOT_REBUILT
 from buildbot.util.eventual import eventually
 from twisted.internet import defer
-
-# ManagerUrl never changes across Buildmaster, so it's a static variable.
-managerUrl = None
 
 class SlaveStatus:
     implements(interfaces.ISlaveStatus)
@@ -192,7 +189,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['fqdn'] = self.fqdn
-        result['managerUrl'] = managerUrl
+        result['managerUrl'] = config.MasterConfig.slaveManagerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()
