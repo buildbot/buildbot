@@ -351,14 +351,15 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     def load_global(self, filename, config_dict):
         def copy_param(name, alt_key=None,
-                       check_type=None, check_type_name=None):
+                       check_type=None, check_type_name=None, can_be_callable=False):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
                 v = config_dict[alt_key]
             else:
                 return
-            if v is not None and check_type and not isinstance(v, check_type):
+            if v is not None and check_type and not (
+                    isinstance(v, check_type) or (can_be_callable and callable(v))):
                 error("c['%s'] must be %s" %
                       (name, check_type_name))
             else:
@@ -378,7 +379,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         def copy_str_or_callable_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=string_types + (callable,), check_type_name='a string or collable')
+                       check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
 
         if "buildbotNetStatistics" not in config_dict:
             warnDeprecated(

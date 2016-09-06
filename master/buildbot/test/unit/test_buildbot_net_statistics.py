@@ -23,6 +23,7 @@ from buildbot.buildbot_net_statistics import _sendBuildbotNetStatistics
 from buildbot.buildbot_net_statistics import computeStatistics
 from buildbot.config import BuilderConfig
 from buildbot.master import BuildMaster
+from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.util.integration import DictLoader
@@ -39,14 +40,15 @@ class Tests(unittest.TestCase):
         basedir.createDirectory()
         master = BuildMaster(
             basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
+        master.config = master.config_loader.loadConfig()
         return master
 
-    def test_basic(self):
-        master = self.getMaster({
+    def getBaseConfig(self):
+        return {
             'builders': [
                 BuilderConfig(name="testy",
                               workernames=["local1", "local2"],
-                              factory=BuildFactory()),
+                              factory=BuildFactory([steps.ShellCommand(command='echo hello')])),
             ],
             'workers': [Worker('local' + str(i), 'pass') for i in xrange(3)],
             'schedulers': [
@@ -56,15 +58,36 @@ class Tests(unittest.TestCase):
             ],
             'protocols': {'null': {}},
             'multiMaster': True,
-        })
-        master.config = master.config_loader.loadConfig()
+        }
+
+    def test_basic(self):
+        master = self.getMaster(self.getBaseConfig())
         data = computeStatistics(master)
         self.assertEquals(sorted(data.keys()),
                           sorted(['versions', 'db', 'platform', 'mq', 'plugins', 'www_plugins']))
-        self.assertEquals(data['plugins']['buildbot.worker.base.Worker'], 3)
+        self.assertEquals(data['plugins']['buildbot/worker/base/Worker'], 3)
         self.assertEquals(sorted(data['plugins'].keys()), sorted(
-            ['buildbot.schedulers.forcesched.ForceScheduler', 'buildbot.worker.base.Worker',
-             'buildbot.config.BuilderConfig']))
+            ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
+             'buildbot/steps/shell/ShellCommand', 'buildbot/config/BuilderConfig']))
+
+    def test_full(self):
+        c = self.getBaseConfig()
+        c['buildbotNetStatistics'] = 'full'
+        master = self.getMaster(c)
+        data = computeStatistics(master)
+        self.assertEquals(sorted(data.keys()),
+                          sorted(['versions', 'db', 'platform', 'mq', 'plugins', 'builders', 'www_plugins']))
+
+    def test_custom(self):
+        c = self.getBaseConfig()
+
+        def myCompute(data):
+            return dict(db=data['db'])
+        c['buildbotNetStatistics'] = myCompute
+        master = self.getMaster(c)
+        data = computeStatistics(master)
+        self.assertEquals(sorted(data.keys()),
+                          sorted(['db']))
 
     def test_urllib2(self):
 
