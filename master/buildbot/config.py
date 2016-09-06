@@ -92,7 +92,7 @@ class MasterConfig(object):
         self.lastBuildCacheDays = 30
         self.slave_debug_url = None
         # This URL will only be used if no slaveManagerUrl is present in master.cfg
-        self.slaveManagerUrl = "No Slave Manager URL configured"
+        self.slaveManagerUrl = None
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -338,11 +338,11 @@ class MasterConfig(object):
         if 'autobahn_push' in config_dict:
             self.autobahn_push = "true" if config_dict["autobahn_push"] else "false"
 
-        if 'slave_debug_url' in config_dict:
-            self.slave_debug_url = config_dict["slave_debug_url"]
+        copy_str_param("slave_debug_url")
 
-        if 'slaveManagerUrl' in config_dict:
-            self.slaveManagerUrl = config_dict["slaveManagerUrl"]
+        copy_str_param("slaveManagerUrl")
+        if not self.slaveManagerUrl:
+            self.slaveManagerUrl = "No Slave Manager URL Configured"
 
         copy_str_param('debugPassword')
 
