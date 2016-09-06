@@ -44,6 +44,9 @@ def getName(obj):
     """This method finds the first parent class which is within the buildbot namespace
     it prepends the name with as many ">" as the class is subclassed
     """
+    # elastic search does not like '.' in dict keys, so we replace by /
+    def sanitize(name):
+        return name.replace(".", "/")
     if isinstance(obj, _BuildStepFactory):
         klass = obj.factory
     else:
@@ -52,10 +55,10 @@ def getName(obj):
     klasses = (klass, ) + inspect.getmro(klass)
     for klass in klasses:
         if hasattr(klass, "__module__") and klass.__module__.startswith("buildbot."):
-            return name + klass.__module__ + "." + klass.__name__
+            return sanitize(name + klass.__module__ + "." + klass.__name__)
         else:
             name += ">"
-    return type(obj).__name__
+    return sanitize(type(obj).__name__)
 
 
 def countPlugins(plugins_uses, l):
@@ -86,7 +89,7 @@ def basicData(master):
             'python_implementation': platform.python_implementation(),
             # xBSD including osx will disclose too much information after [4] like where it was built
             'version': " ".join(platform.version().split(' ')[:4]),
-            'distro:': get_distro()
+            'distro': get_distro()
         },
         'plugins': plugins_uses,
         'db': master.config.db['db_url'].split("://")[0],
