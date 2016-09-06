@@ -51,7 +51,7 @@ def getName(obj):
     name = ""
     klasses = (klass, ) + inspect.getmro(klass)
     for klass in klasses:
-        if hasattr(klass, "__module__") and klass.__module__.startswith("buildbot"):
+        if hasattr(klass, "__module__") and klass.__module__.startswith("buildbot."):
             return name + klass.__module__ + "." + klass.__name__
         else:
             name += ">"
