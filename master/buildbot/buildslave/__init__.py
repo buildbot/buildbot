@@ -69,13 +69,15 @@ class AbstractBuildSlave(config.ReconfigurableServiceMixin, pb.Avatar,
         @param locks: A list of locks that must be acquired before this slave
                       can be used
         @type locks: dictionary
+        @param fqdn: The fully qualified domain name (eg: slave1.unity.com) of the agent
+        @type fqdn: string
         """
         service.MultiService.__init__(self)
         self.slavename = name
         self.password = password
         self.friendly_name = friendlyName
         self.eid = eid  # External ID
-        self.fqdn = fqdn
+        self.fqdn = fqdn  # Slave's full domain name
 
         if self.friendly_name is None:
             self.friendly_name = name
