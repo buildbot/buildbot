@@ -835,9 +835,17 @@ We rely on the community to test and report issues with the old features.
 With BuildbotNetStatistics, we can know exactly what combination of plugins are working together, how much people are customizing plugins, what versions of the main dependencies people run.
 
 We take your privacy very seriously.
+
 BuildbotNetStatistics will never send information specific to your Code or Intellectual Property.
-No repository url, no shell command values, no host names, no custom class names.
+No repository url, shell command values, host names, ip address or custom class names.
 If it does, then this is a bug, please report.
+
+We still need to track unique number for installation.
+This is done via doing a sha1 hash of master's hostname, installation path and fqdn.
+Using a secure hash means there is no way of knowing hostname, path and fqdn given the hash, but still there is a different hash for each master.
+
+You can see exactly what is sent in the master's twisted.log.
+Usage data is sent everytime the master is started.
 
 BuildbotNetStatistics can be configured with 4 values:
 

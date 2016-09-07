@@ -64,7 +64,7 @@ class Tests(unittest.TestCase):
         master = self.getMaster(self.getBaseConfig())
         data = computeStatistics(master)
         self.assertEquals(sorted(data.keys()),
-                          sorted(['versions', 'db', 'platform', 'mq', 'plugins', 'www_plugins']))
+                          sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']))
         self.assertEquals(data['plugins']['buildbot/worker/base/Worker'], 3)
         self.assertEquals(sorted(data['plugins'].keys()), sorted(
             ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
@@ -76,11 +76,10 @@ class Tests(unittest.TestCase):
         master = self.getMaster(c)
         data = computeStatistics(master)
         self.assertEquals(sorted(data.keys()),
-                          sorted(['versions', 'db', 'platform', 'mq', 'plugins', 'builders', 'www_plugins']))
+                          sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins', 'builders', 'www_plugins']))
 
     def test_custom(self):
         c = self.getBaseConfig()
-
         def myCompute(data):
             return dict(db=data['db'])
         c['buildbotNetStatistics'] = myCompute

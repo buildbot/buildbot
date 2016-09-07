@@ -18,9 +18,11 @@ This files implement buildbotNetStatistics options
 It uses urllib2 instead of requests in order to avoid requiring another dependency for statistics feature.
 urllib2 supports http_proxy already urllib2 is blocking and thus everything is done from a thread.
 """
+import hashlib
 import inspect
 import json
 import platform
+import socket
 import urllib2
 
 from twisted.internet import threads
@@ -81,7 +83,17 @@ def basicData(master):
     for b in master.config.builders:
         countPlugins(plugins_uses, b.factory.steps)
 
+    # we hash the master's name + various other master dependent variables
+    # to get as much as possible an unique id
+    # we hash it to not leak private information about the installation such as hostnames and domain names
+    installid = hashlib.sha1(
+        master.name  # master name contains hostname + master basepath
+        +
+        socket.getfqdn()  # we add the fqdn to account for people
+                          # call their buildbot host 'buildbot' and install it in /var/lib/buildbot
+    ).hexdigest()
     return {
+        'installid': installid,
         'versions': dict(IndexResource.getEnvironmentVersions()),
         'platform': {
             'machine': platform.machine(),
