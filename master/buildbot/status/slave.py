@@ -40,6 +40,7 @@ class SlaveStatus:
         self.connect_times = []
         self.master = None
         self.health = 0
+        self.fqdn = None
         self.eid = -1
 
     def getName(self):
@@ -187,6 +188,8 @@ class SlaveStatus:
         result['runningBuilds'] = builds
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
+        result['fqdn'] = self.fqdn
+        result['slaveManagerUrl'] = self.master.config.slaveManagerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()
