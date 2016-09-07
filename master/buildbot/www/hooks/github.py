@@ -173,11 +173,6 @@ class GitHubEventHandler(object):
             return changes
 
         for commit in payload['commits']:
-            if not commit.get('distinct', True):
-                log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
-                        (commit['id'],))
-                continue
-
             files = []
             for kind in ('added', 'modified', 'removed'):
                 files.extend(commit.get(kind, []))
@@ -196,7 +191,8 @@ class GitHubEventHandler(object):
                 'branch': branch,
                 'revlink': commit['url'],
                 'repository': repo_url,
-                'project': project
+                'project': project,
+                'properties': {'github_distinct': commit.get('distinct', True)}
             }
 
             if callable(self._codebase):
