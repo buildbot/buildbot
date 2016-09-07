@@ -189,7 +189,7 @@ class SlaveStatus:
         result['lastMessage'] = self.lastMessageReceived()
         result['health'] = self.health
         result['fqdn'] = self.fqdn
-        result['managerUrl'] = self.master.config.slaveManagerUrl
+        result['slaveManagerUrl'] = self.master.config.slaveManagerUrl
         result['eid'] = self.eid
         result['graceful_shutdown'] = self.graceful_shutdown
         result['paused'] = self.isPaused()
