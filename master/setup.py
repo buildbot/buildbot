@@ -152,6 +152,7 @@ setup_args = {
 
     'packages': [
         "buildbot",
+        "buildbot.buildslave",
         "buildbot.worker",
         "buildbot.worker.protocols",
         "buildbot.changes",

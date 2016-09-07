@@ -198,7 +198,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             toCbChange = toChanges.get(cb) or {}
             if change and change['changeid'] != toCbChange.get('changeid'):
                 changes.append(change)
-                while ((toChanges.get(cb, {}).get('changeid') not in change['parent_changeids']) and
+                while ((toCbChange.get('changeid') not in change['parent_changeids']) and
                        change['parent_changeids']):
                     # For the moment, a Change only have 1 parent.
                     change = yield self.master.db.changes.getChange(change['parent_changeids'][0])
