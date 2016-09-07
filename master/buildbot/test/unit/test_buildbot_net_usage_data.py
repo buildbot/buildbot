@@ -19,8 +19,8 @@ from twisted.internet import reactor
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
-from buildbot.buildbot_net_statistics import _sendBuildbotNetStatistics
-from buildbot.buildbot_net_statistics import computeStatistics
+from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
+from buildbot.buildbot_net_usage_data import computeUsageData
 from buildbot.config import BuilderConfig
 from buildbot.master import BuildMaster
 from buildbot.plugins import steps
@@ -62,7 +62,7 @@ class Tests(unittest.TestCase):
 
     def test_basic(self):
         master = self.getMaster(self.getBaseConfig())
-        data = computeStatistics(master)
+        data = computeUsageData(master)
         self.assertEquals(sorted(data.keys()),
                           sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']))
         self.assertEquals(data['plugins']['buildbot/worker/base/Worker'], 3)
@@ -72,9 +72,9 @@ class Tests(unittest.TestCase):
 
     def test_full(self):
         c = self.getBaseConfig()
-        c['buildbotNetStatistics'] = 'full'
+        c['buildbotNetUsageData'] = 'full'
         master = self.getMaster(c)
-        data = computeStatistics(master)
+        data = computeUsageData(master)
         self.assertEquals(sorted(data.keys()),
                           sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins', 'builders', 'www_plugins']))
 
@@ -82,9 +82,9 @@ class Tests(unittest.TestCase):
         c = self.getBaseConfig()
         def myCompute(data):
             return dict(db=data['db'])
-        c['buildbotNetStatistics'] = myCompute
+        c['buildbotNetUsageData'] = myCompute
         master = self.getMaster(c)
-        data = computeStatistics(master)
+        data = computeUsageData(master)
         self.assertEquals(sorted(data.keys()),
                           sorted(['db']))
 
@@ -110,7 +110,7 @@ class Tests(unittest.TestCase):
 
         self.patch(urllib2, "Request", FakeRequest)
         self.patch(urllib2, "urlopen", urlopen)
-        _sendBuildbotNetStatistics({'foo': 'bar'})
+        _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
                         ('https://events.buildbot.net/events/phone_home',

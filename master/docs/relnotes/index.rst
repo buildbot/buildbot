@@ -28,7 +28,7 @@ Master
 
 .. _Hyper: https://hyper.sh
 
-* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetStatistics`
+* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
 
 Features
 ~~~~~~~~

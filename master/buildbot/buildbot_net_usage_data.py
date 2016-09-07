@@ -14,16 +14,16 @@
 # Copyright Buildbot Team Members
 
 """
-This files implement buildbotNetStatistics options
+This files implement buildbotNetUsageData options
 It uses urllib2 instead of requests in order to avoid requiring another dependency for statistics feature.
 urllib2 supports http_proxy already urllib2 is blocking and thus everything is done from a thread.
 """
-import hashlib
 import inspect
 import json
 import platform
-import socket
 import urllib2
+import hashlib
+import socket
 
 from twisted.internet import threads
 from twisted.python import log
@@ -125,35 +125,35 @@ def fullData(master):
     return {'builders': builders}
 
 
-def computeStatistics(master):
-    if master.config.buildbotNetStatistics is None:
+def computeUsageData(master):
+    if master.config.buildbotNetUsageData is None:
         return
     data = basicData(master)
 
-    if master.config.buildbotNetStatistics != "basic":
+    if master.config.buildbotNetUsageData != "basic":
         data.update(fullData(master))
 
-    if callable(master.config.buildbotNetStatistics):
-        data = master.config.buildbotNetStatistics(data)
+    if callable(master.config.buildbotNetUsageData):
+        data = master.config.buildbotNetUsageData(data)
 
     return data
 
 
-def _sendBuildbotNetStatistics(data):
-    log.msg("buildbotNetStatistics: sending {}".format(data))
+def _sendBuildbotNetUsageData(data):
+    log.msg("buildbotNetUsageData: sending {}".format(data))
     data = json.dumps(data)
     clen = len(data)
     req = urllib2.Request(PHONE_HOME_URL, data, {'Content-Type': 'application/json', 'Content-Length': clen})
     f = urllib2.urlopen(req)
     res = f.read()
     f.close()
-    log.msg("buildbotNetStatistics: buildbot.net said:", res)
+    log.msg("buildbotNetUsageData: buildbot.net said:", res)
 
 
-def sendBuildbotNetStatistics(master):
-    if master.config.buildbotNetStatistics is None:
+def sendBuildbotNetUsageData(master):
+    if master.config.buildbotNetUsageData is None:
         return
-    data = computeStatistics(master)
+    data = computeUsageData(master)
     if data is None:
         return
-    threads.deferToThread(_sendBuildbotNetStatistics, data)
+    threads.deferToThread(_sendBuildbotNetUsageData, data)

@@ -70,7 +70,7 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
-    buildbotNetStatistics='basic',
+    buildbotNetUsageData='basic',
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
@@ -474,7 +474,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         with assertProducesWarning(
                 config.ConfigWarning,
                 message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
-            self.do_test_load_global(dict(eventHorizon=10, buildbotNetStatistics=None))
+            self.do_test_load_global(dict(eventHorizon=10, buildbotNetUsageData=None))
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)

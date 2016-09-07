@@ -820,9 +820,9 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
    ``name=None``
      (Optional) The name of this storage backend.
 
-.. bb:cfg:: buildbotNetStatistics
+.. bb:cfg:: buildbotNetUsageData
 
-BuildbotNetStatistics
+BuildbotNetUsageData
 ~~~~~~~~~~~~~~~~~~~~~
 
 Since buildbot 0.9.0, buildbot has a simple feature which sends usage analysis info to buildbot.net.
@@ -832,11 +832,11 @@ This will also be a tool to decide whether to keep support for very old tools.
 For example buildbot contains support for the venerable CVS, but we have no information whether it actually works beyond the unit tests.
 We rely on the community to test and report issues with the old features.
 
-With BuildbotNetStatistics, we can know exactly what combination of plugins are working together, how much people are customizing plugins, what versions of the main dependencies people run.
+With BuildbotNetUsageData, we can know exactly what combination of plugins are working together, how much people are customizing plugins, what versions of the main dependencies people run.
 
 We take your privacy very seriously.
 
-BuildbotNetStatistics will never send information specific to your Code or Intellectual Property.
+BuildbotNetUsageData will never send information specific to your Code or Intellectual Property.
 No repository url, shell command values, host names, ip address or custom class names.
 If it does, then this is a bug, please report.
 
@@ -847,11 +847,11 @@ Using a secure hash means there is no way of knowing hostname, path and fqdn giv
 You can see exactly what is sent in the master's twisted.log.
 Usage data is sent everytime the master is started.
 
-BuildbotNetStatistics can be configured with 4 values:
+BuildbotNetUsageData can be configured with 4 values:
 
-* ``c['buildbotNetStatistics'] = None`` disables the feature
+* ``c['buildbotNetUsageData'] = None`` disables the feature
 
-* ``c['buildbotNetStatistics'] = 'basic'`` sends the basic information to buildbot including:
+* ``c['buildbotNetUsageData'] = 'basic'`` sends the basic information to buildbot including:
 
     * versions of buildbot, python and twisted
     * platform information (CPU, OS, distribution, python flavor (i.e CPython vs PyPy))
@@ -895,7 +895,7 @@ BuildbotNetStatistics can be configured with 4 values:
         'www_plugins': ['buildbot_travis', 'waterfall_view']
         }
 
-* ``c['buildbotNetStatistics'] = 'full'`` sends the basic information plus additional information:
+* ``c['buildbotNetUsageData'] = 'full'`` sends the basic information plus additional information:
 
     * configuration of each builders: how the steps are arranged together. for ex:
 
@@ -909,7 +909,7 @@ BuildbotNetStatistics can be configured with 4 values:
                 ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger']]
         }
 
-* ``c['buildbotNetStatistics'] = myCustomFunction``. You can also specify exactly what to send using a callback.
+* ``c['buildbotNetUsageData'] = myCustomFunction``. You can also specify exactly what to send using a callback.
 
     The custom function will take the generated data from full report in the form of a dictionary, and return a customized report as a jsonable dictionary. You can use this to filter any information you dont want to disclose. You can use a custom http_proxy environment variable in order to not send any data while developing your callback.
 

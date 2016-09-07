@@ -32,7 +32,7 @@ import buildbot.pbmanager
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
-from buildbot.buildbot_net_statistics import sendBuildbotNetStatistics
+from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
@@ -305,7 +305,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield self.masterHeartbeatService.setServiceParent(self)
 
             # send the statistics to buildbot.net, without waiting
-            self.sendBuildbotNetStatistics()
+            self.sendBuildbotNetUsageData()
             startup_succeed = True
         except Exception:
             f = failure.Failure()
@@ -320,10 +320,10 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
             self._master_initialized = True
 
-    def sendBuildbotNetStatistics(self):
-        if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetStatistics is not None:
-            raise RuntimeError("Shoud not enable buildbotNetStatistics in trial tests!")
-        sendBuildbotNetStatistics(self)
+    def sendBuildbotNetUsageData(self):
+        if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetUsageData is not None:
+            raise RuntimeError("Shoud not enable buildbotNetUsageData in trial tests!")
+        sendBuildbotNetUsageData(self)
 
     @defer.inlineCallbacks
     def stopService(self):

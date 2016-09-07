@@ -197,7 +197,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.multiMaster = False
         self.manhole = None
         self.protocols = {}
-        self.buildbotNetStatistics = "basic"
+        self.buildbotNetUsageData = "basic"
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -235,7 +235,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.services = {}
 
     _known_config_keys = set([
-        "buildbotNetStatistics",
+        "buildbotNetUsageData",
         "buildbotURL",
         "buildCacheSize",
         "builders",
@@ -381,17 +381,17 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             copy_param(name, alt_key=alt_key,
                        check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
 
-        if "buildbotNetStatistics" not in config_dict:
+        if "buildbotNetUsageData" not in config_dict:
             warnDeprecated(
                 '0.9.0',
-                '`buildbotNetStatistics` is not configured and defaults to basic\n'
+                '`buildbotNetUsageData` is not configured and defaults to basic\n'
                 'This parameter helps the buildbot development team to understand the installation base\n'
                 'No personal information is collected.\n'
                 'Only installation software version info and plugin usage is sent\n'
                 'You can `opt-out` by setting this variable to None\n'
                 'Or `opt-in` for more information by setting it to "full"\n'
             )
-        copy_str_or_callable_param('buildbotNetStatistics')
+        copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')
         copy_int_param('logHorizon')
