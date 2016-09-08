@@ -845,7 +845,7 @@ This is done via doing a sha1 hash of master's hostname, installation path and f
 Using a secure hash means there is no way of knowing hostname, path and fqdn given the hash, but still there is a different hash for each master.
 
 You can see exactly what is sent in the master's twisted.log.
-Usage data is sent everytime the master is started.
+Usage data is sent every time the master is started.
 
 BuildbotNetUsageData can be configured with 4 values:
 

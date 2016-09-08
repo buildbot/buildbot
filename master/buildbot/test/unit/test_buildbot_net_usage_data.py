@@ -76,10 +76,12 @@ class Tests(unittest.TestCase):
         master = self.getMaster(c)
         data = computeUsageData(master)
         self.assertEquals(sorted(data.keys()),
-                          sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins', 'builders', 'www_plugins']))
+                          sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins',
+                                  'builders', 'www_plugins']))
 
     def test_custom(self):
         c = self.getBaseConfig()
+
         def myCompute(data):
             return dict(db=data['db'])
         c['buildbotNetUsageData'] = myCompute
