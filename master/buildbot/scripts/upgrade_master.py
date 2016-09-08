@@ -26,6 +26,7 @@ from buildbot.db import connector
 from buildbot.master import BuildMaster
 from buildbot.scripts import base
 from buildbot.util import in_reactor
+from buildbot.util import stripUrlPassword
 
 
 def installFile(config, target, source, overwrite=False):
@@ -72,7 +73,8 @@ def upgradeFiles(config):
 @defer.inlineCallbacks
 def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
-        print("upgrading database (%s)" % (master_cfg.db['db_url']))
+        print("upgrading database (%s)"
+              % (stripUrlPassword(master_cfg.db['db_url'])))
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
