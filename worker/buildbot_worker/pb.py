@@ -19,12 +19,13 @@ from __future__ import print_function
 import os.path
 import signal
 
-from twisted.application import internet
 from twisted.application import service
+from twisted.application.internet import ClientService
 from twisted.cred import credentials
-from twisted.internet import error
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 from twisted.spread import pb
 
@@ -32,8 +33,7 @@ from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.compat import unicode2bytes
-from buildbot_worker.pbutil import ReconnectingPBClientFactory
-from buildbot_worker.util import HangCheckFactory
+from buildbot_worker.pbutil import AutoLoginPBFactory
 
 
 class UnknownCommand(pb.Error):
@@ -48,20 +48,38 @@ class BotPb(BotBase, pb.Referenceable):
     WorkerForBuilder = WorkerForBuilderPb
 
 
-class BotFactory(ReconnectingPBClientFactory):
-    # 'keepaliveInterval' serves two purposes. The first is to keep the
-    # connection alive: it guarantees that there will be at least some
-    # traffic once every 'keepaliveInterval' seconds, which may help keep an
-    # interposed NAT gateway from dropping the address mapping because it
-    # thinks the connection has been abandoned.  This also gives the operating
-    # system a chance to notice that the master has gone away, and inform us
-    # of such (although this could take several minutes).
+class BotFactory(AutoLoginPBFactory):
+    """The protocol factory for the worker.
+
+    buildmaster host, port and maxDelay are accepted for backwards
+    compatibility only.
+
+    With endpoints, everything related to reconnection is managed by the
+    service.
+
+    buildmaster_host and port were used for logging only, mostly within
+    reconnection methods
+
+    maxDelay is a feature of protocol.ReconnectingClientFactory, that we
+    don't use anymore. With endpoints, this is managed by the service
+    (TODO reimplement that)
+
+    This class implements the optional applicative keepalives, on top of
+    AutoLoginPBFactory.
+
+    'keepaliveInterval' serves two purposes. The first is to keep the
+    connection alive: it guarantees that there will be at least some
+    traffic once every 'keepaliveInterval' seconds, which may help keep an
+    interposed NAT gateway from dropping the address mapping because it
+    thinks the connection has been abandoned.  This also gives the operating
+    system a chance to notice that the master has gone away, and inform us
+    of such (although this could take several minutes).
+
+    @ivar currentKeepAliveWaiter: either ``None`` or a deferred for the reply
+                                  to the keepalive (mostly useful for tests)
+    """
     keepaliveInterval = None  # None = do not use keepalives
-
-    # 'maxDelay' determines the maximum amount of time the worker will wait
-    # between connection retries
-    maxDelay = 300
-
+    currentKeepaliveWaiter = None
     keepaliveTimer = None
     unsafeTracebacks = 1
     perspective = None
@@ -69,35 +87,13 @@ class BotFactory(ReconnectingPBClientFactory):
     # for tests
     _reactor = reactor
 
-    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay,
-                 maxRetries=None, maxRetriesCallback=None):
-        ReconnectingPBClientFactory.__init__(self)
-        self.maxDelay = maxDelay
+    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
+        AutoLoginPBFactory.__init__(self)
         self.keepaliveInterval = keepaliveInterval
-        # NOTE: this class does not actually make the TCP connections - this information is
-        # only here to print useful error messages
-        self.buildmaster_host = buildmaster_host
-        self.port = port
-        self.maxRetries = maxRetries
-        self.maxRetriesCallback = maxRetriesCallback
-
-    def retry(self, connector=None):
-        ReconnectingPBClientFactory.retry(self, connector=connector)
-        log.msg("Retry attempt {}/{}".format(
-            self.retries, self.maxRetries if self.maxRetries is not None else "inf"))
-        if self.maxRetries is not None and self.retries > self.maxRetries and self.maxRetriesCallback:
-            log.msg("Giving up retrying!")
-            self.maxRetriesCallback()
-
-    def startedConnecting(self, connector):
-        log.msg("Connecting to {0}:{1}".format(self.buildmaster_host, self.port))
-        ReconnectingPBClientFactory.startedConnecting(self, connector)
-        self.connector = connector
 
     def gotPerspective(self, perspective):
-        log.msg("Connected to {0}:{1}; worker is ready".format(
-                self.buildmaster_host, self.port))
-        ReconnectingPBClientFactory.gotPerspective(self, perspective)
+        log.msg("Connected to buildmaster; worker is ready")
+        AutoLoginPBFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
             perspective.broker.transport.setTcpKeepAlive(1)
@@ -111,25 +107,6 @@ class BotFactory(ReconnectingPBClientFactory):
                     self.keepaliveInterval))
             self.startTimers()
 
-    def clientConnectionFailed(self, connector, reason):
-        self.connector = None
-        why = reason
-        if reason.check(error.ConnectionRefusedError):
-            why = "Connection Refused"
-        log.msg("Connection to {0}:{1} failed: {2}".format(
-                self.buildmaster_host, self.port, why))
-        ReconnectingPBClientFactory.clientConnectionFailed(self,
-                                                           connector, reason)
-
-    def clientConnectionLost(self, connector, reason):
-        log.msg("Lost connection to {0}:{1}".format(
-                self.buildmaster_host, self.port))
-        self.connector = None
-        self.stopTimers()
-        self.perspective = None
-        ReconnectingPBClientFactory.clientConnectionLost(self,
-                                                         connector, reason)
-
     def startTimers(self):
         assert self.keepaliveInterval
         assert not self.keepaliveTimer
@@ -142,6 +119,15 @@ class BotFactory(ReconnectingPBClientFactory):
             # was already dropped, so just log and ignore.
             log.msg("sending app-level keepalive")
             d = self.perspective.callRemote("keepalive")
+            self.currentKeepaliveWaiter = defer.Deferred()
+
+            def keepaliveReplied(details):
+                log.msg("Master replied to keepalive, everything's fine")
+                self.currentKeepaliveWaiter.callback(details)
+                self.currentKeepaliveWaiter = None
+                return details
+
+            d.addCallback(keepaliveReplied)
             d.addErrback(log.err, "error sending keepalive")
         self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval,
                                                       doKeepalive)
@@ -156,22 +142,32 @@ class BotFactory(ReconnectingPBClientFactory):
         active communication between the master and worker."""
 
     def stopFactory(self):
-        ReconnectingPBClientFactory.stopFactory(self)
         self.stopTimers()
+        AutoLoginPBFactory.stopFactory(self)
 
 
 class Worker(WorkerBase, service.MultiService):
+    """The service class to be instantiated from buildbot.tac
+
+    to just pass a connection description string, set buildmaster_host and
+    port to None, and use conndescr.
+
+    note: keepaliveTimeout is ignored, but preserved here for
+    backward-compatibility
+    """
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
-                 keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
+                 keepalive, conndescr=None,
+                 usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=300, numcpus=None, unicode_encoding=None,
                  allow_shutdown=None, maxRetries=None):
 
-        # note: keepaliveTimeout is ignored, but preserved here for
-        # backward-compatibility
-
         assert usePTY is None, "worker-side usePTY is not supported anymore"
+        assert (conndescr is None or
+                (buildmaster_host, port) == (None, None)), (
+                    "If you want to supply a connection description string, "
+                    "then set host and port to None")
 
         service.MultiService.__init__(self)
         WorkerBase.__init__(
@@ -184,7 +180,6 @@ class Worker(WorkerBase, service.MultiService):
 
         self.numcpus = numcpus
         self.shutdown_loop = None
-        self.maxRetries = maxRetries
 
         if allow_shutdown == 'signal':
             if not hasattr(signal, 'SIGHUP'):
@@ -194,19 +189,15 @@ class Worker(WorkerBase, service.MultiService):
             self.shutdown_mtime = 0
 
         self.allow_shutdown = allow_shutdown
-        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay,
-            maxRetries=self.maxRetries, maxRetriesCallback=self.gracefulShutdown)
+        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
-        self.connection = c = internet.TCPClient(
-            buildmaster_host, port,
-            HangCheckFactory(bf, hung_callback=self._hung_connection))
-        c.setServiceParent(self)
-
-    def _hung_connection(self):
-        log.msg("connection attempt timed out (is the port number correct?)")
-        if self.maxRetries is not None:
-            self.gracefulShutdown()
+        if conndescr is None:
+            conndescr = 'tcp:host={}:port={}'.format(
+                buildmaster_host, port)  # TODO escaping for buildmaster_host
+        endpoint = clientFromString(reactor, conndescr)
+        pb_service = ClientService(endpoint, bf)
+        self.addService(pb_service)
 
     def startService(self):
         WorkerBase.startService(self)
@@ -223,8 +214,6 @@ class Worker(WorkerBase, service.MultiService):
             loop.start(interval=10)
 
     def stopService(self):
-        self.bf.continueTrying = 0
-        self.bf.stopTrying()
         if self.shutdown_loop:
             self.shutdown_loop.stop()
             self.shutdown_loop = None
