@@ -18,23 +18,30 @@
 """
 
 from twisted.cred import error
-from twisted.internet import protocol
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
 
-class ReconnectingPBClientFactory(PBClientFactory,
-                                  protocol.ReconnectingClientFactory):
+class AutoLoginPBFactory(PBClientFactory):
+    """Factory for PB brokers that are managed through a ClientService.
 
-    """Reconnecting client factory for PB brokers.
+    The methods inherited from ClientFactory through PBClientFactory aren't
+    called by ClientService, so there's no point inheriting them. Some of
+    them are worth calling from here, though, to limit code duplication.
 
     Like PBClientFactory, but if the connection fails or is lost, the factory
     will attempt to reconnect.
 
+    GR these two paragraphs below are instructions for users, not description
+    of what happens.
+
     Instead of using f.getRootObject (which gives a Deferred that can only
-    be fired once), override the gotRootObject method.
+    be fired once), override the gotRootObject method. GR -> yes in case a user
+    would use that to be notified of root object appearances, it wouldn't
+    work. But getRootObject() can itself be used as much as one wants.
+
 
     Instead of using the newcred f.login (which is also one-shot), call
     f.startLogin() with the credentials and client, and override the
@@ -47,8 +54,23 @@ class ReconnectingPBClientFactory(PBClientFactory,
     If an authorization error occurs, failedToGetPerspective() will be
     invoked.
 
-    To use me, subclass, then hand an instance to a connector (like
-    TCPClient).
+    To use me, subclass, use in a ClientService, with ``onConnection`` added as
+    ``whenConnected()`` callback
+
+    More GR notes:
+    - whenConnected() is fired upon connection *before* banana protocol neg
+      so that basically, login() ends with:
+         " The client selected a protocol the server didn't "
+         "suggest and doesn't know: disconnecting."
+    - whenConnected() is useless for behaviour upon reconnection, re-registering
+      again on an active connection results in a immediate call
+    - also pb is reentrant wrt the factory, and really expects it to be a
+      ClientFactory, in that upon dialect selection, banana calls
+      self.connectionReady(), which in turn in case of the pb protocol will
+      call the factory's clientConnectionMade(). Using pb with a plain factory
+      is therefore not that meaningful.
+
+      All this together suggests to keep the changes minimal.
     """
 
     # hung connections wait for a relatively long time, since a busy master may
@@ -56,23 +78,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
     hungConnectionTimer = None
     HUNG_CONNECTION_TIMEOUT = 120
 
-    def clientConnectionFailed(self, connector, reason):
-        PBClientFactory.clientConnectionFailed(self, connector, reason)
-        if self.continueTrying:
-            self.connector = connector
-            self.retry()
-
-    def clientConnectionLost(self, connector, reason):
-        PBClientFactory.clientConnectionLost(self, connector, reason,
-                                             reconnecting=True)
-        RCF = protocol.ReconnectingClientFactory
-        RCF.clientConnectionLost(self, connector, reason)
-
-    def startedConnecting(self, connector):
-        self.startHungConnectionTimer(connector)
-
     def clientConnectionMade(self, broker):
-        self.resetDelay()
         PBClientFactory.clientConnectionMade(self, broker)
         self.doLogin(self._root, broker)
         self.gotRootObject(self._root)
@@ -92,17 +98,18 @@ class ReconnectingPBClientFactory(PBClientFactory,
                                  self._credentials.password, self._client)
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
                        errbackArgs=(broker,))
+        return d
 
     # timer for hung connections
 
-    def startHungConnectionTimer(self, connector):
+    def startHungConnectionTimer(self):
         self.stopHungConnectionTimer()
 
         def hungConnection():
             log.msg(
                 "connection attempt timed out (is the port number correct?)")
             self.hungConnectionTimer = None
-            connector.disconnect()
+            self.disconnect()
             # (this will trigger the retry)
         self.hungConnectionTimer = reactor.callLater(
             self.HUNG_CONNECTION_TIMEOUT, hungConnection)
@@ -141,7 +148,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
             # fall through
         else:
             log.err(why, 'While trying to connect:')
-            self.stopTrying()
             reactor.stop()
             return
 
