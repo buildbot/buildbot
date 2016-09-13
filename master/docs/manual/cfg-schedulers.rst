@@ -160,6 +160,16 @@ or apply a regular expression, using the attribute name with a "``_re``" suffix:
     import re
     my_filter = util.ChangeFilter(category_re=re.compile('.*deve.*', re.I))
 
+:class:`buildbot.status.web.hooks.github.GitHubEventHandler` has a special
+``github_distinct`` property that can be used to filter whether or not
+non-distinct changes should be considered. For example, if a commit is pushed to
+a branch that is not being watched and then later pushed to a watched branch, by
+default, this will be recorded as two separate Changes. In order to record a
+change only the first time the commit appears, you can install a custom
+:class:`ChangeFilter` like this::
+
+    ChangeFilter(filter_fn = lambda c: c.properties.getProperty('github_distinct')
+
 For anything more complicated, define a Python function to recognize the strings you want::
 
     def my_branch_fn(branch):

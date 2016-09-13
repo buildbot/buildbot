@@ -388,17 +388,45 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def test_git_with_change_json(self):
         self._check_git_with_change(gitJsonPayload)
 
+    # Test that, even with commits not marked as distinct, the changes get
+    # recorded each time we receive the payload. This is important because
+    # without it, commits can get pushed to a non-scheduled branch, get
+    # recorded and associated with that branch, and then later get pushed to a
+    # scheduled branch and not trigger a build.
+    #
+    # For example, if a commit is pushed to a dev branch, it then gets recorded
+    # as a change associated with that dev branch. If that change is later
+    # pushed to master, we still need to trigger a build even though we've seen
+    # the commit before.
     @defer.inlineCallbacks
     def testGitWithDistinctFalse(self):
         self.request = _prepare_request('push', [gitJsonPayload.replace('"distinct": true,',
                                                                         '"distinct": false,')])
 
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
 
-        self.assertEqual(change['files'],
-                         ['modfile', 'removedFile'])
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change['files'], ['filepath.rb'])
+        self.assertEqual(change["repository"],
+                         "http://github.com/defunkt/github")
+        self.assertEqual(timegm(change["when_timestamp"].utctimetuple()),
+                         1203116237)
+        self.assertEqual(change["author"],
+                         "Fred Flinstone <fred@flinstone.org>")
+        self.assertEqual(change["revision"],
+                         '41a212ee83ca127e3c8cf465891ab7216a705f59')
+        self.assertEqual(change["comments"],
+                         "okay i give in")
+        self.assertEqual(change["branch"], "master")
+        self.assertEqual(change["revlink"],
+                         "http://github.com/defunkt/github/commit/"
+                         "41a212ee83ca127e3c8cf465891ab7216a705f59")
+        self.assertEqual(change["properties"]["github_distinct"],
+                         False)
+
+        change = self.changeHook.master.addedChanges[1]
+        self.assertEqual(change['files'], ['modfile', 'removedFile'])
         self.assertEqual(change["repository"],
                          "http://github.com/defunkt/github")
         self.assertEqual(timegm(change["when_timestamp"].utctimetuple()),

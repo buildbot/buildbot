@@ -56,7 +56,18 @@ Fixes
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* By default, non-distinct commits received via
+  :class:`buildbot.status.web.hooks.github.GitHubEventHandler` now get recorded
+  as a :class:`Change`. In this way, a commit pushed to a branch that is not
+  being watched (e.g. a dev branch) will still get acted on when it is later
+  pushed to a branch that is being watched (e.g. master). In the past, such a
+  commit would get ignored and not built because it was non-distinct. To disable
+  this behavior and revert to the old behavior, install a :class:`ChangeFilter`
+  that checks the ``github_distinct`` property:
 
+.. code-block:: python
+
+  ChangeFilter(filter_fn=lambda c: c.properties.getProperty('github_distinct'))
 
 Buildslave
 ----------
