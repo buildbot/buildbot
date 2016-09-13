@@ -200,6 +200,7 @@ cp
 cpdir
 cppcheck
 Cppcheck
+CPython
 Cred
 credentails
 creds
@@ -626,6 +627,7 @@ pyflakes
 Pyflakes
 pyjade
 pypi
+PyPy
 pysqlite
 pythonic
 Pythonic

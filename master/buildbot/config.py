@@ -197,6 +197,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.multiMaster = False
         self.manhole = None
         self.protocols = {}
+        self.buildbotNetUsageData = "basic"
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -234,15 +235,45 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.services = {}
 
     _known_config_keys = set([
-        "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
-        "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url",
-        "logCompressionLimit", "logCompressionMethod", "logEncoding",
-        "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
-        "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
-        "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "services", "status", "title", "titleURL",
-        "user_managers", "validation", "www", "workers",
+        "buildbotNetUsageData",
+        "buildbotURL",
+        "buildCacheSize",
+        "builders",
+        "buildHorizon",
+        "caches",
+        "change_source",
+        "codebaseGenerator",
+        "changeCacheSize",
+        "changeHorizon",
+        'db',
+        "db_poll_interval",
+        "db_url",
+        "logCompressionLimit",
+        "logCompressionMethod",
+        "logEncoding",
+        "logHorizon",
+        "logMaxSize",
+        "logMaxTailSize",
+        "manhole",
+        "collapseRequests",
+        "metrics",
+        "mq",
+        "multiMaster",
+        "prioritizeBuilders",
+        "projectName",
+        "projectURL",
+        "properties",
+        "protocols",
+        "revlink",
+        "schedulers",
+        "services",
+        "status",
+        "title",
+        "titleURL",
+        "user_managers",
+        "validation",
+        "www",
+        "workers",
 
         # deprecated, c['protocols']['pb']['port'] should be used
         "slavePortnum",
@@ -320,14 +351,15 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     def load_global(self, filename, config_dict):
         def copy_param(name, alt_key=None,
-                       check_type=None, check_type_name=None):
+                       check_type=None, check_type_name=None, can_be_callable=False):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
                 v = config_dict[alt_key]
             else:
                 return
-            if v is not None and check_type and not isinstance(v, check_type):
+            if v is not None and check_type and not (
+                    isinstance(v, check_type) or (can_be_callable and callable(v))):
                 error("c['%s'] must be %s" %
                       (name, check_type_name))
             else:
@@ -344,6 +376,22 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
         copy_str_param('buildbotURL')
+
+        def copy_str_or_callable_param(name, alt_key=None):
+            copy_param(name, alt_key=alt_key,
+                       check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
+
+        if "buildbotNetUsageData" not in config_dict:
+            warnDeprecated(
+                '0.9.0',
+                '`buildbotNetUsageData` is not configured and defaults to basic\n'
+                'This parameter helps the buildbot development team to understand the installation base\n'
+                'No personal information is collected.\n'
+                'Only installation software version info and plugin usage is sent\n'
+                'You can `opt-out` by setting this variable to None\n'
+                'Or `opt-in` for more information by setting it to "full"\n'
+            )
+        copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')
         copy_int_param('logHorizon')
