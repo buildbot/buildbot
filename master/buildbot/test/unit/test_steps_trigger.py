@@ -21,7 +21,7 @@ from twisted.internet import defer, reactor
 from buildbot import config, interfaces
 from buildbot.process import properties
 from buildbot.status import master
-from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION, DEPENDENCY_FAILURE
+from buildbot.status.results import SUCCESS, FAILURE, DEPENDENCY_FAILURE, INTERRUPTED
 from buildbot.steps import trigger
 from buildbot.test.util import steps, compat
 from buildbot.test.fake import fakemaster, fakedb, fakebuild
@@ -504,7 +504,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     def test_interrupt(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
             waitForFinish=True))
-        self.expectOutcome(result=EXCEPTION, status_text=['Trigger', '(build was interrupted)'])
+        self.expectOutcome(result=INTERRUPTED, status_text=['Trigger', '(build was interrupted)'])
         self.expectTriggeredWith(a=({}, {'stepname': ('Trigger', 'Trigger')}, 1))
         d = self.runStep(expect_waitForFinish=True)
 

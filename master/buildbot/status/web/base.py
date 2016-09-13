@@ -23,7 +23,7 @@ from twisted.web import resource, static, server
 from twisted.python import log
 from buildbot.status import builder, buildstep, build
 from buildbot.status.results import SUCCESS, WARNINGS, FAILURE, SKIPPED, CANCELED, NOT_REBUILT, DEPENDENCY_FAILURE
-from buildbot.status.results import EXCEPTION, RETRY, RESUME, MERGED
+from buildbot.status.results import EXCEPTION, RETRY, RESUME, MERGED, INTERRUPTED
 from buildbot import version, util
 from buildbot.process.properties import Properties
 
@@ -62,6 +62,7 @@ css_classes = {SUCCESS: "success",
                NOT_REBUILT: "not-rebuilt",
                RESUME: "success",
                MERGED: "success",
+               INTERRUPTED: "exception",
                None: "",
                }
 

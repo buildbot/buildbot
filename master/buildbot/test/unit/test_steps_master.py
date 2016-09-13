@@ -19,7 +19,7 @@ from twisted.python import failure, runtime
 from twisted.internet import error, reactor
 from twisted.trial import unittest
 from buildbot.test.util import steps
-from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, FAILURE, INTERRUPTED
 from buildbot.steps import master
 from buildbot.process.properties import WithProperties
 from buildbot.process.properties import Interpolate
@@ -77,10 +77,10 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectLogfile('stdio', "")
         if runtime.platformType == 'win32':
             # windows doesn't have signals, so we don't get 'killed'
-            self.expectOutcome(result=EXCEPTION,
+            self.expectOutcome(result=INTERRUPTED,
                     status_text=["failed (1)", "(build was interrupted)"])
         else:
-            self.expectOutcome(result=EXCEPTION,
+            self.expectOutcome(result=INTERRUPTED,
                     status_text=["killed (9)", "(build was interrupted)"])
         d = self.runStep()
         self.step.interrupt("KILL")

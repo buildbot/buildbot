@@ -346,6 +346,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
     def setText(self, text):
         assert isinstance(text, (list, tuple))
         self.text = text
+
     def setResults(self, results):
         self.results = results
 
