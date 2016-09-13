@@ -25,7 +25,7 @@
 # # Install docker (http://docker.io)
 #
 # # Download buildbot Dockerfile
-# wget https://raw.github.com/buildbot/buildbot/master/master/contrib/Dockerfile
+# wget https://raw.githubusercontent.com/buildbot/buildbot/eight/master/contrib/Dockerfile
 #
 # # Build buildbot image
 # docker build -t buildbot - < Dockerfile
