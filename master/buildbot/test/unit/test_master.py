@@ -31,6 +31,7 @@ from buildbot.interfaces import IConfigLoader
 from buildbot.test.fake import fakedata
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemq
+from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.test.util import dirs
 from buildbot.test.util import logging
 
@@ -176,6 +177,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             self.reactor = self.make_reactor()
             self.master = master.BuildMaster(
                 self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+            self.master.sendBuildbotNetUsageData = mock.Mock()
+            self.master.botmaster = FakeBotMaster()
             self.db = self.master.db = fakedb.FakeDBConnector(self)
             self.db.setServiceParent(self.master)
             self.mq = self.master.mq = fakemq.FakeMQConnector(self)

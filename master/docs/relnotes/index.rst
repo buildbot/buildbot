@@ -22,6 +22,8 @@ See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 Master
 ------
 
+* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
+
 Features
 ~~~~~~~~
 
