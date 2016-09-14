@@ -22,21 +22,11 @@ See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 Master
 ------
 
-* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
-
 Features
 ~~~~~~~~
 
 Fixes
 ~~~~~
-
-* Publish python module buildbot.buildslave in the dist files
-
-* Upgrade to guanlecoja 0.7 (for compatibility with node6)
-
-* Fix invocation of trial on windows, with twisted 16+
-
-* Fix rare issue which makes buildbot throw a exception when there is a sourcestamp with no change for a particular codebase.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -70,7 +60,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0rc2..master
+   git log v0.9.0rc3..master
 
 Older Versions
 --------------
@@ -82,6 +72,7 @@ Newer versions are also available here:
     :maxdepth: 1
 
     0.9.0
+    0.9.0rc3
     0.9.0rc2
     0.9.0rc1
     0.9.0b9
