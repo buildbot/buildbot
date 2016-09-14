@@ -30,6 +30,14 @@ Features
 Fixes
 ~~~~~
 
+* Publish python module buildbot.buildslave in the dist files
+
+* Upgrade to guanlecoja 0.7 (for compatibility with node6)
+
+* Fix invocation of trial on windows, with twisted 16+
+
+* Fix rare issue which makes buildbot throw a exception when there is a sourcestamp with no change for a particular codebase.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
