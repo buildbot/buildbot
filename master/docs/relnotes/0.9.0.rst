@@ -196,6 +196,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
 
+* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
+
 Reporters
 ~~~~~~~~~
 
