@@ -753,15 +753,14 @@ td.visible-print,th.visible-print{display:table-cell!important}}
 .color-blind-mode .log-list-retry>a:before{background-color:#c20ac2}
 .state-text.retry:before{content:"Retry"}
 .table-katana .retry{border-top:1px solid #fff}
-.log-list-retry>a:before{background-color:#DDD7DD}
-.interrupted{background-color:#f4d6f9}
-.color-blind-mode .interrupted{background-color:#a80ac2!important;color:#fff}
+.interrupted,.log-list-retry>a:before{background-color:#DDD7DD}
+.color-blind-mode .interrupted{background-color:#c20ac2!important;color:#fff}
 .color-blind-mode .interrupted a{color:#fff!important}
 .color-blind-mode .dependency-list .interrupted:before{content:"Interrupted"}
-.color-blind-mode .log-list-interrupted>a:before{background-color:#a80ac2}
+.color-blind-mode .log-list-interrupted>a:before{background-color:#c20ac2}
 .state-text.interrupted:before{content:"Interrupted"}
 .table-katana .interrupted{border-top:1px solid #fff}
-.log-list-interrupted>a:before{background-color:#f4d6f9}
+.log-list-interrupted>a:before{background-color:#DDD7DD}
 .table-katana tr .success:first-child{border-top:none}
 .current-step,.waiting,td.building{background-color:#FCFACB}
 .offline,td.offline{background-color:#E7E7E7;text-shadow:0 1px 0 #fff}
