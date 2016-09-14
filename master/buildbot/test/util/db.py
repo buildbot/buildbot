@@ -180,13 +180,14 @@ class RealDatabaseMixin(object):
         """
         self.__want_pool = want_pool
 
-        default = 'sqlite://'
-        if not sqlite_memory:
-            default = "sqlite:///tmp.sqlite"
-            if not os.path.exists(basedir):
-                os.makedirs(basedir)
+        default_sqlite = 'sqlite://'
+        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default_sqlite)
+        if not sqlite_memory and self.db_url == default_sqlite:
+            self.db_url = "sqlite:///tmp.sqlite"
 
-        self.db_url = os.environ.get('BUILDBOT_TEST_DB_URL', default)
+        if not os.path.exists(basedir):
+            os.makedirs(basedir)
+
         self.basedir = basedir
         self.db_engine = enginestrategy.create_engine(self.db_url,
                                                       basedir=basedir)
