@@ -44,6 +44,8 @@ Fixes
 
 * fix the UI to allow to cancel a buildrequest (:bug:`3582`)
 
+* GitHub change hook now correctly use the refs/pull/xx/merge for testing PRs.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

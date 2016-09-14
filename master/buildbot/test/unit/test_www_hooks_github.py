@@ -496,7 +496,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
                          '05c588ba8cd510ecbe112d020f215facb17817a7')
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #50 (1 commit)")
-        self.assertEqual(change["branch"], "refs/pull/50/head")
+        self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
 

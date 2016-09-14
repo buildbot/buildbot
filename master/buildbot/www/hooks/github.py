@@ -114,7 +114,7 @@ class GitHubEventHandler(object):
     def handle_pull_request(self, payload):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/%d/head' % (number,)
+        refname = 'refs/pull/%d/merge' % (number,)
         commits = payload['pull_request']['commits']
 
         log.msg('Processing GitHub PR #%d' % number, logLevel=logging.DEBUG)

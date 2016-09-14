@@ -159,6 +159,9 @@ class Git(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
+        # ignore the revision if the branch ends with /merge
+        if self.branch.endswith("/merge"):
+            self.revision = None
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
