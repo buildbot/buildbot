@@ -66,10 +66,19 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 application = service.Application('buildmaster')
             """))
         self.setUpStdoutAssertions()
+        self.ensureNoSqliteMemory()
 
     def tearDown(self):
         os.chdir(self.origcwd)
         self.tearDownDirs()
+
+    def ensureNoSqliteMemory(self):
+        # test may use mysql or pg if configured in env
+        envkey = "BUILDBOT_TEST_DB_URL"
+        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
+
+            patch_environ(self, envkey, "sqlite:///" + os.path.join(
+                self.origcwd, "basedir", "state.sqlite"))
 
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
@@ -97,11 +106,6 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def test_cleanup_bad_config2(self):
-        # test may use mysql or pg if configured in env
-        if "BUILDBOT_TEST_DB_URL" not in os.environ:
-
-            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                                    "basedir", "state.sqlite"))
 
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
@@ -115,11 +119,6 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
     @defer.inlineCallbacks
     def test_cleanup(self):
 
-        # test may use mysql or pg if configured in env
-        if "BUILDBOT_TEST_DB_URL" not in os.environ:
-
-            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                                    "basedir", "state.sqlite"))
         # we reuse RealDatabaseMixin to setup the db
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
