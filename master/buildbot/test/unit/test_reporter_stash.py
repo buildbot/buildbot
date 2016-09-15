@@ -64,11 +64,14 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.assertEqual(
             self.sp.session.post.mock_calls,
             [call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
-                  {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'INPROGRESS', 'key': u'Builder0'}, auth=('username', 'passwd')),
+                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'INPROGRESS', 'key': u'Builder0'},
+                  auth=('username', 'passwd')),
              call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
-                  {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'SUCCESSFUL', 'key': u'Builder0'}, auth=('username', 'passwd')),
+                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'SUCCESSFUL', 'key': u'Builder0'},
+                  auth=('username', 'passwd')),
              call(u'serv/rest/build-status/1.0/commits/d34db33fd43db33f',
-                  {'url': 'http://localhost:8080/#builders/79/builds/0',
-                   'state': 'FAILED', 'key': u'Builder0'}, auth=('username', 'passwd'))])
+                  json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                        'state': 'FAILED', 'key': u'Builder0'},
+                  auth=('username', 'passwd'))])
