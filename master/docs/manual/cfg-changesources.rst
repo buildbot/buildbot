@@ -67,8 +67,8 @@ Git
 * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/git_buildbot.py` run in the post-receive hook)
 * :bb:chsrc:`PBChangeSource` (listening for connections from :file:`contrib/github_buildbot.py`, which listens for notifications from GitHub)
 * :bb:chsrc:`Change Hooks` in WebStatus
-* GitHub change hook (specifically designed for GitHub notifications, but requiring a publicly-accessible WebStatus)
-* BitBucket change hook (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
+* :bb:chsrc:`GitHub` change hook (specifically designed for GitHub notifications, but requiring a publicly-accessible WebStatus)
+* :bb:chsrc:`BitBucket` change hook (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`GitPoller` (polling a remote Git repository)
 * :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)
 * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)

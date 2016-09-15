@@ -875,6 +875,25 @@ Gerrit integration can be also triggered using forced build with property named 
 This property will be translated into a branch name.
 This feature allows integrators to build with several pending interdependent changes, which at the moment cannot be described properly in Gerrit, and can only be described by humans.
 
+.. bb:step:: GitHub
+
+.. _Step-GitHub:
+
+GitHub
+++++++
+
+.. py:class:: buildbot.steps.source.github.GitHub
+
+:bb:step:`GitHub` step is exactly like the :bb:step:`Git` step, except that it will ignore the revision sent by :bb:chsrc:`GitHub` change hook, and rather take the branch if the branch ends with /merge.
+
+This allows to test github pull requests merged directly into the mainline.
+
+GitHub indeed provides ``refs/origin/pull/NNN/merge`` on top of ``refs/origin/pull/NNN/head`` which is a magic ref that always create a merge commit to the latest version of the mainline (i.e. the target branch for the pull request).
+
+The revision in the GitHub event points to ``/head`` is important for the GitHub reporter as this is the revision that will be tagged with a CI status when the build is finished.
+
+If you want to use  :bb:step:`Trigger` to create sub tests and want to have the GitHub reporter still update the original revision, make sure you set ``updateSourceStamp=False`` in the :bb:step:`Trigger` configuration.
+
 .. bb:step:: Darcs
 
 .. _Step-Darcs:
@@ -2446,7 +2465,7 @@ Hyperlinks are added to the build detail web pages for each triggered build.
 ``unimportantSchedulerNames``
     When ``waitForFinish`` is ``True``, all schedulers in this list will not cause the trigger step to fail. unimportantSchedulerNames must be a subset of schedulerNames
     If ``waitForFinish`` is ``False``, unimportantSchedulerNames will simply be ignored.
-        
+
 ``waitForFinish``
     If ``True``, the step will not finish until all of the builds from the triggered schedulers have finished.
 

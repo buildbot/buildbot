@@ -29,6 +29,7 @@ from buildbot.test.util import sourcesteps
 
 
 class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
+    stepClass = git.Git
 
     def setUp(self):
         return self.setUpSourceStep()
@@ -38,8 +39,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -77,8 +78,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_win32path(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
         self.build.path_module = namedModule('ntpath')
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -117,9 +118,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_timeout(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    timeout=1,
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           timeout=1,
+                           mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         timeout=1,
@@ -162,8 +163,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_patch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'),
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'),
             patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -228,8 +229,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_patch_worker_2_16(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'),
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'),
             patch=(1, 'patch'),
             worker_version={'*': '2.16'})
         self.expectCommands(
@@ -295,8 +296,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_patch_fail(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'),
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'),
             patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -348,8 +349,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean', branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -390,8 +391,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_non_empty_builddir(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean', branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -426,8 +427,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_parsefail(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -462,8 +463,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_no_existing_repo(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -492,8 +493,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_no_existing_repo_with_reference(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean', reference='path/to/reference/repo'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', reference='path/to/reference/repo'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -522,8 +523,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_no_existing_repo_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean', branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', branch='test-branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -553,8 +554,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clean_no_existing_repo_with_origin(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean', origin='foo'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', origin='foo'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -583,8 +584,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -617,8 +618,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clone_fails(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -645,8 +646,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True, branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True, branch='test-branch'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -680,8 +681,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_no_branch_support(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True, branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True, branch='test-branch'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -714,8 +715,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_oldworker(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -751,8 +752,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -788,8 +789,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_version_format(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -825,8 +826,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_retry(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', retry=(0, 1)))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', retry=(0, 1)))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -867,8 +868,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', branch='test-branch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -907,8 +908,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_fresh(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -946,8 +947,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_fresh_clean_fails(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -986,8 +987,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_given_revision(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'), dict(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'), dict(
                 revision='abcdef01',
             ))
         self.expectCommands(
@@ -1022,8 +1023,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_given_revision_not_exists(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'), dict(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'), dict(
                 revision='abcdef01',
             ))
         self.expectCommands(
@@ -1063,8 +1064,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_fresh_submodule(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh', submodules=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh', submodules=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1114,8 +1115,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         """This tests the same as test_mode_full_fresh_submodule, but the
         "submodule update" command should be different for Git v1.7.8+."""
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh', submodules=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh', submodules=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1144,7 +1145,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'submodule', 'sync'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'submodule', 'update', '--init', '--recursive', '--force', '--checkout'])
+                        command=['git', 'submodule', 'update', '--init', '--recursive',
+                                 '--force', '--checkout'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'submodule', 'foreach', '--recursive', 'git', 'clean',
@@ -1163,8 +1165,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_shallow(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', shallow=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', shallow=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1197,8 +1199,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_shallow_depth(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', shallow="100"))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', shallow="100"))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1231,8 +1233,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_no_shallow(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1265,8 +1267,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_retryFetch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', retryFetch=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', retryFetch=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1310,8 +1312,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_retryFetch_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', retryFetch=True, branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', retryFetch=True, branch='test-branch'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1358,8 +1360,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_clobberOnFailure(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', clobberOnFailure=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', clobberOnFailure=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1404,8 +1406,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_clobberOnFailure_branch(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental', clobberOnFailure=True, branch='test-branch'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', clobberOnFailure=True, branch='test-branch'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1451,8 +1453,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_copy(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='copy'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy'))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1494,13 +1496,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_copy_shallow(self):
         self.assertRaisesConfigError("shallow only possible with mode 'full' and method 'clobber'", lambda:
-                                     git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                                             mode='full', method='copy', shallow=True))
+                                     self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                                                    mode='full', method='copy', shallow=True))
 
     def test_mode_incremental_no_existing_repo(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1532,8 +1534,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_incremental_no_existing_repo_oldworker(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental'))
         self.step.build.getWorkerCommandVersion = lambda cmd, oldversion: "2.15"
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1565,8 +1567,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_given_revision(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True), dict(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
             ))
         self.expectCommands(
@@ -1603,8 +1605,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_revparse_failure(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True), dict(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True), dict(
                 revision='abcdef01',
             ))
         self.expectCommands(
@@ -1640,8 +1642,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_clobber_submodule(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', submodules=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', submodules=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1677,12 +1679,12 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_repourl(self):
         self.assertRaisesConfigError("must provide repourl", lambda:
-                                     git.Git(mode="full"))
+                                     self.stepClass(mode="full"))
 
     def test_mode_full_fresh_revision(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh', progress=True), dict(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh', progress=True), dict(
                 revision='abcdef01',
             ))
         self.expectCommands(
@@ -1719,8 +1721,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_fresh_retry(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh', retry=(0, 2)))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh', retry=(0, 2)))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1769,8 +1771,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_fresh_clobberOnFailure(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='fresh', clobberOnFailure=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='fresh', clobberOnFailure=True))
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1811,8 +1813,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_no_method(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1850,8 +1852,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_with_env(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', env={'abc': '123'}))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', env={'abc': '123'}))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'],
@@ -1894,8 +1896,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_mode_full_logEnviron(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', logEnviron=False))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', logEnviron=False))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'],
@@ -1938,8 +1940,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_wkdir_doesnt_exist(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -1973,9 +1975,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         # only difference is to set the getDescription property
 
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental',
-                    getDescription=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental',
+                           getDescription=True))
         self.expectCommands(
             # copied from test_mode_incremental:
             ExpectShell(workdir='wkdir',
@@ -2025,9 +2027,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         # tags in the repository
 
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='incremental',
-                    getDescription=True))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental',
+                           getDescription=True))
         self.expectCommands(
             # copied from test_mode_incremental:
             ExpectShell(workdir='wkdir',
@@ -2079,10 +2081,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             kwargs.update(codebase=codebase)
 
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clobber', progress=True,
-                    getDescription=setup_args,
-                    **kwargs))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clobber', progress=True,
+                           getDescription=setup_args,
+                           **kwargs))
 
         self.expectCommands(
             # copied from test_mode_full_clobber:
@@ -2356,9 +2358,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         name = 'url.http://github.com.insteadOf'
         value = 'blahblah'
         self.setupStep(
-            git.Git(repourl='%s/buildbot/buildbot.git' % (value,),
-                    mode='full', method='clean',
-                    config={name: value}))
+            self.stepClass(repourl='%s/buildbot/buildbot.git' % (value,),
+                           mode='full', method='clean',
+                           config={name: value}))
         prefix = ['git', '-c', '%s=%s' % (name, value)]
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -2397,8 +2399,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
 
     def test_worker_connection_lost(self):
         self.setupStep(
-            git.Git(repourl='http://github.com/buildbot/buildbot.git',
-                    mode='full', method='clean'))
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
