@@ -51,4 +51,4 @@ class StashStatusPush(http.HttpStatusPushBase):
             response = yield self.session.post(stash_uri, body, auth=self.auth)
             if response.status_code != 200:
                 log.msg("%s: unable to upload stash status: %s" %
-                        (response.status, response.content))
+                        (response.status_code, response.content))
