@@ -496,6 +496,10 @@ class KatanaBuildChooser(BasicBuildChooser):
                 log.msg("BuildRequest %d uses unknown builder %s" % (br['brid'], buildername))
                 continue
 
+            if not bldr.config:
+                log.msg("BuildRequest %d uses builder %s with no configuration" % (br['brid'], buildername))
+                continue
+
             if buildername in unavailableBuilderNames and not bldr.building and br['startbrid'] is None:
                 continue
 

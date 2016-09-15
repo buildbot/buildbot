@@ -168,10 +168,6 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         yield config.ReconfigurableServiceMixin.reconfigService(self,
                                                     new_config)
 
-        # try to start a build for every builder; this is necessary at master
-        # startup, and a good idea in any other case
-        self.maybeStartBuildsForAllBuilders()
-
         timer.stop()
 
 

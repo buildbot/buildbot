@@ -86,6 +86,12 @@ Arguments common to all :class:`BuildStep` subclasses:
     when ``True``, a ``FAILURE`` of this build step will mark the overall build as
     having ``WARNINGS``. The remaining steps will still be executed.
 
+.. index:: Buildstep Parameter; pauseSlaveOnFailure
+
+``pauseSlaveOnFailure``
+    when ``True``, a ``FAILURE`` of this build step will pause the slave currently running this step.
+    The remaining steps will still be executed.
+
 .. index:: Buildstep Parameter; alwaysRun
 
 ``alwaysRun``

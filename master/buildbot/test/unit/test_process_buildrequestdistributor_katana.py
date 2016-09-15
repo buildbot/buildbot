@@ -96,6 +96,32 @@ class TestKatanaBuildRequestDistributorGetNextPriorityBuilder(unittest.TestCase,
         self.assertEquals(self.log[:2], self.expectedLog)
 
     @defer.inlineCallbacks
+    def test_getNextPriorityBuilderUnknownConfiguration(self):
+        testdata = [fakedb.BuildRequest(id=1, buildsetid=1, buildername="bldr1", priority=20, submitted_at=1449578391),
+                    fakedb.BuildRequest(id=2, buildsetid=2, buildername="bldr2", priority=50, submitted_at=1450171039)]
+
+        testdata += self.getBuildSetTestData(xrange=xrange(1, 3))
+
+        yield self.insertTestData(testdata)
+
+        self.setupBuilderInMaster(name='bldr1', slavenames={'slave-01': True}, startSlavenames={'slave-02': True})
+        self.setupBuilderInMaster(name='bldr2', slavenames={'slave-01': True}, startSlavenames={'slave-02': True})
+        self.botmaster.builders['bldr2'].config = None
+
+        self.log = []
+        self.expectedLog =["getNextPriorityBuilder found 2 buildrequests in the 'unclaimed' Queue",
+                           "BuildRequest 2 uses builder bldr2 with no configuration"]
+        def addLog(value=None, metric=None):
+            self.log.append(value)
+
+        self.patch(log, 'msg', addLog)
+
+        breq = yield self.brd.katanaBuildChooser.getNextPriorityBuilder(queue=Queue.unclaimed)
+        # in this case brd should pick next high priority builder and a message should be added to log
+        self.assertEquals((breq.buildername, breq.id), ('bldr1', 1))
+        self.assertEquals(self.log[:2], self.expectedLog)
+
+    @defer.inlineCallbacks
     def test_getNextPriorityBuilderEmptyQueue(self):
         breq = yield self.brd.katanaBuildChooser.getNextPriorityBuilder(queue=Queue.unclaimed)
         self.assertEquals(breq, None)

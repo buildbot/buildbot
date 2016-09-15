@@ -288,7 +288,7 @@ class Trial(ShellCommand):
         @param kwargs: parameters. The following parameters are inherited from
                        L{ShellCommand} and may be useful to set: workdir,
                        haltOnFailure, flunkOnWarnings, flunkOnFailure,
-                       warnOnWarnings, warnOnFailure, want_stdout, want_stderr,
+                       warnOnWarnings, warnOnFailure, pauseSlaveOnFailure, want_stdout, want_stderr,
                        timeout.
         """
         ShellCommand.__init__(self, **kwargs)

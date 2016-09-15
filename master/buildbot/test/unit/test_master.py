@@ -27,6 +27,7 @@ from buildbot.test.fake import fakedb
 from buildbot.util import epoch2datetime
 from buildbot.changes import changes
 from buildbot.process.users import users
+from twisted.application import service
 
 class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 
@@ -214,6 +215,7 @@ class Subscriptions(dirs.DirsMixin, unittest.TestCase):
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
     def setUp(self):
+        self.calledMethods = []
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
         d = self.setUpDirs(self.basedir)
@@ -231,6 +233,9 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
                     classmethod(lambda cls, b, f : cls()))
 
             self.master = master.BuildMaster(self.basedir)
+            self.master.botmaster = mock.Mock()
+            self.master.db_loop = mock.Mock()
+            self.master.db_loop.stop = lambda: self.methodCalled("db_loop_stop")
             self.db = self.master.db = fakedb.FakeDBConnector(self)
 
         return d
@@ -249,6 +254,8 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
             config.error('oh noes')
         self.patch(config.MasterConfig, 'loadConfig', loadConfig)
 
+    def methodCalled(self, name):
+        self.calledMethods.append(name)
 
     # tests
 
@@ -321,6 +328,19 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         return d
 
     @defer.inlineCallbacks
+    def test_reconfig_order(self):
+        new_config = self.master.config = config.MasterConfig()
+
+        self.patch(config.ReconfigurableServiceMixin,
+                   "reconfigService",
+                   lambda _, new_config: self.methodCalled("reconfigService"))
+        self.master.botmaster.maybeStartBuildsForAllBuilders = lambda: \
+            self.methodCalled("maybeStartBuildsForAllBuilders")
+
+        yield self.master.reconfigService(new_config)
+        self.assertEquals(self.calledMethods, ['db_loop_stop', 'reconfigService', 'maybeStartBuildsForAllBuilders'])
+
+    @defer.inlineCallbacks
     def test_reconfig_bad_config(self):
         reactor = self.make_reactor()
         self.master.reconfigService = mock.Mock(
@@ -348,9 +368,7 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
-
-        self.assertRaises(config.ConfigErrors, lambda :
-                self.master.reconfigService(new))
+        self.failureResultOf(self.master.reconfigService(new), config.ConfigErrors)
 
     def test_reconfigService_start_polling(self):
         loopingcall = mock.Mock()
@@ -380,6 +398,12 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
 
         db_loop.stop.assert_called_with()
         self.assertEqual(self.master.db_loop, None)
+
+    @defer.inlineCallbacks
+    def test_stopService_order(self):
+        self.master.db_loop.stop = lambda: self.methodCalled("db_loop_stop")
+        yield self.master.stopService()
+        self.assertEquals(self.calledMethods, ['db_loop_stop'])
 
 
 class Polling(dirs.DirsMixin, misc.PatcherMixin, unittest.TestCase):
