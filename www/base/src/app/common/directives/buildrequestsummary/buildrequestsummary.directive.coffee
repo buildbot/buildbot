@@ -9,9 +9,8 @@ class Buildrequestsummary extends Directive('common')
             controller: '_buildrequestsummaryController'
         }
 
-
 class _buildrequestsummary extends Controller('common')
-    constructor: ($scope, dataService, findBuilds, resultsService) ->
+    constructor: ($scope, dataService, buildersService, findBuilds, resultsService) ->
         _.mixin($scope, resultsService)
         $scope.$watch "buildrequest.claimed", (n, o) ->
             if n  # if it is unclaimed, then claimed, we need to try again
@@ -23,5 +22,5 @@ class _buildrequestsummary extends Controller('common')
             $scope.buildrequest = buildrequest
             data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
                 $scope.buildset = buildset
-            data.getBuilders(buildrequest.builderid).onNew = (builder) ->
-                $scope.builder = builder
+
+            $scope.builder = buildersService.getBuilder(buildrequest.builderid)
