@@ -91,7 +91,8 @@ class TestingWorker(buildbot_worker.bot.Worker):
     """
 
     def __init__(self, *args, **kwargs):
-        super(TestingWorker, self).__init__(*args, **kwargs)
+        # In Twisted 14, this is an old-style class (no super())
+        buildbot_worker.bot.Worker.__init__(self, *args, **kwargs)
 
         self.tests_disconnected = defer.Deferred()
         self.tests_connected = defer.Deferred()

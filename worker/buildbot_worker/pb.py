@@ -19,7 +19,6 @@ import signal
 from twisted.internet.endpoints import clientFromString
 from twisted.internet import defer
 from twisted.application import service
-from twisted.application.internet import ClientService
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.internet import task
@@ -31,6 +30,7 @@ from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
 from buildbot_worker.pbutil import AutoLoginPBFactory
 
+from .backports import ClientService
 
 class UnknownCommand(pb.Error):
     pass
