@@ -321,7 +321,6 @@ class TestWorkerComm(unittest.TestCase):
         # wait for the resulting detach
         yield worker.waitForDetach()
 
-
     @flaky(bugNumber=2761)
     @defer.inlineCallbacks
     def test_duplicate_worker(self):
