@@ -215,11 +215,10 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             if len(words) < 1:
                 return ["???"]
-            if len(words) == 1:
-                return ["'%s'" % words[0]]
-            if len(words) == 2:
-                return ["'%s" % words[0], "%s'" % words[1]]
-            return ["'%s" % words[0], "%s" % words[1], "...'"]
+            desc = words[:]
+            desc[0] = "'" + desc[0]
+            desc[-1] = desc[-1] + "'"
+            return desc
 
         except:
             log.err(failure.Failure(), "Error describing step")
