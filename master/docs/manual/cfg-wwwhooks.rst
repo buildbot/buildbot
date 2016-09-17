@@ -245,6 +245,7 @@ You can restrict which pollers the webhook has access to using the ``allowed`` o
     c['www'] = dict(...,
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     )
+
 .. bb:chsrc:: GitLab
 
 GitLab hook
