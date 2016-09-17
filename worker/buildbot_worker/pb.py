@@ -158,10 +158,9 @@ class Worker(WorkerBase, service.MultiService):
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
-                 keepalive, conndescr=None,
-                 usePTY=None, keepaliveTimeout=None, umask=None,
+                 keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=300, numcpus=None, unicode_encoding=None,
-                 allow_shutdown=None, maxRetries=None):
+                 allow_shutdown=None, maxRetries=None, conndescr=None):
 
         assert usePTY is None, "worker-side usePTY is not supported anymore"
         assert (conndescr is None or
