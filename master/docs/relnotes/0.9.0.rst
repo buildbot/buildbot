@@ -198,6 +198,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
 
+* new :bb:step:`GitHub` which correctly checkout the magic branch like ``refs/pull/xx/merge``.
+
 Reporters
 ~~~~~~~~~
 
