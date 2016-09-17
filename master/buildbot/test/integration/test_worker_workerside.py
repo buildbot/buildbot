@@ -164,7 +164,7 @@ class TestWorkerConnection(unittest.TestCase):
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
-        self.client_conndescr_tpl = "tcp:host=\:\:1:port={port}"
+        self.client_conndescr_tpl = r"tcp:host=\:\:1:port={port}"
 
         self.tmpdirs = set()
 
@@ -186,7 +186,7 @@ class TestWorkerConnection(unittest.TestCase):
 
     @defer.inlineCallbacks
     def addMasterSideWorker(self,
-                            conndescr="tcp:{port}:interface=\:\:1".format(
+                            conndescr=r"tcp:{port}:interface=\:\:1".format(
                                 port=DEFAULT_PORT),
                             name="testworker", password="pw",
                             update_port=True,
@@ -221,7 +221,7 @@ class TestWorkerConnection(unittest.TestCase):
         """
         worker.bf.disconnect()
 
-    def addWorker(self, conndescr_tpl="tcp:host=\:\:1:port={port}",
+    def addWorker(self, conndescr_tpl=r"tcp:host=\:\:1:port={port}",
                   password="pw", name="testworker", keepalive=None):
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
@@ -253,7 +253,7 @@ class TestWorkerConnection(unittest.TestCase):
         def could_not_connect():
             self.fail("Worker did not reconnect in time to master")
 
-        worker = self.addWorker("tcp:host=\:\:1:port={port}")
+        worker = self.addWorker(r"tcp:host=\:\:1:port={port}")
         yield worker.startService()
         yield worker.tests_connected
 
@@ -290,7 +290,7 @@ class TestWorkerConnection(unittest.TestCase):
         yield self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
-            conndescr="tcp:{port}:interface=\:\:1".format(port=self.port))
+            conndescr=r"tcp:{port}:interface=\:\:1".format(port=self.port))
         timeout = reactor.callLater(10, could_not_connect)
         yield worker.tests_connected
 

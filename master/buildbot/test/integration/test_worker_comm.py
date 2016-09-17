@@ -193,8 +193,8 @@ class TestWorkerComm(unittest.TestCase):
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
-        self.server_conndescr = "tcp:0:interface=\:\:1"
-        self.client_conndescr_tpl = "tcp:host=\:\:1:port={port}"
+        self.server_conndescr = r"tcp:0:interface=\:\:1"
+        self.client_conndescr_tpl = r"tcp:host=\:\:1:port={port}"
 
     def tearDown(self):
         deferreds = self._detach_deferreds + [
