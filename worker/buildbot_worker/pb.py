@@ -32,6 +32,7 @@ from buildbot_worker.pbutil import AutoLoginPBFactory
 
 from .backports import ClientService
 
+
 class UnknownCommand(pb.Error):
     pass
 
@@ -154,7 +155,7 @@ class Worker(WorkerBase, service.MultiService):
     """
     Bot = BotPb
 
-    def __init__(self,  buildmaster_host, port, name, passwd, basedir,
+    def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=300, numcpus=None, unicode_encoding=None,
                  allow_shutdown=None, conndescr=None):

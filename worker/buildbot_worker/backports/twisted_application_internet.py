@@ -1,4 +1,5 @@
 # coding=utf-8
+# flake8: noqa
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -66,12 +67,15 @@ try:
     from twisted.logger import Logger
 except:
     import logging
+
     class Logger:
 
         def __init__(self):
             self._log = logging.getLogger(__file__)
+
         def info(self, *a, **kw):
             self._log.info(*a, **kw)
+
         def warn(self, *a, **kw):
             self._log.warn(*a, **kw)
 

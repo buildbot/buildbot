@@ -522,7 +522,7 @@ def _WaitForShutdown(h):
 
 
 def DetermineRunner(bbdir):
-    '''Checks if the given directory is a buildbot worker or a master and 
+    '''Checks if the given directory is a buildbot worker or a master and
     returns the appropriate run function.'''
     try:
         import buildbot_worker.scripts.runner
