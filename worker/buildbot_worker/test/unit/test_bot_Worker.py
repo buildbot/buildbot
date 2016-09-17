@@ -107,18 +107,32 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
 
     def test_constructor_minimal(self):
         # only required arguments
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10)
+        wk = bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10)
+        self.assertEqual(wk.conndescr, 'tcp:host=mstr:port=9010')
 
     def test_constructor_083_tac(self):
         """invocation as made from default 0.8.3 tac files"""
-        bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
-                   umask=0o123, maxdelay=10)
+        wk = bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
+                        umask=0o123, maxdelay=10)
+        self.assertEqual(wk.conndescr, 'tcp:host=mstr:port=9010')
 
     def test_constructor_091_tac(self):
         # invocation as made from default 0.9.1 tac files
-        bot.Worker(None, None, 'me', 'pwd', '/s', 10,
-                   conndescr="tcp:host=localhost:port=9010",
-                   umask=0o123, maxdelay=10)
+        wk = bot.Worker(None, None, 'me', 'pwd', '/s', 10,
+                        conndescr="tcp:host=localhost:port=9010",
+                        umask=0o123, maxdelay=10)
+        self.assertEqual(wk.conndescr, 'tcp:host=localhost:port=9010')
+
+    def test_tcpConnectionDescr(self):
+        """Translation from buildmaster_host, port to simple TCP.
+
+        This is a pure function, one test method is enough
+        """
+        fun = bot.Worker.tcpConnectionDescr
+        self.assertEqual(fun('some.host.test', 1234),
+                         'tcp:host=some.host.test:port=1234')
+        self.assertEqual(fun('::1', 1235), r'tcp:host=\:\:1:port=1235')
+        self.assertEqual(fun('a=b', 1232), r'tcp:host=a\=b:port=1232')
 
     def test_constructor_invalid_both_styles(self):
         """Can't instantiate with both host/port and connection descr."""

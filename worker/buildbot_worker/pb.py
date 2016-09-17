@@ -186,11 +186,26 @@ class Worker(WorkerBase, service.MultiService):
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
         if conndescr is None:
-            conndescr = 'tcp:host={}:port={}'.format(
-                buildmaster_host, port)  # TODO escaping for buildmaster_host
+            conndescr = self.tcpConnectionDescr(buildmaster_host, port)
+        self.conndescr = conndescr  # for log messages and unit tests
         endpoint = clientFromString(reactor, conndescr)
         pb_service = ClientService(endpoint, bf)
         self.addService(pb_service)
+
+    @staticmethod
+    def tcpConnectionDescr(host, port):
+        """Build a simple TCP connection description from host and port.
+
+        Takes care of escaping the two separators in connection description
+        syntax: colon and equal sign.
+
+        Colons appear notably in IPv6 addresses; while the equal sign is not
+        allowed in DNS, nor any current IP addresses, it can be valid in
+        ``/etc/hosts`` entries.
+        """
+        return 'tcp:host={}:port={}'.format(
+            host.replace(':', r'\:').replace('=', r'\='),
+            port)
 
     def startService(self):
         WorkerBase.startService(self)
