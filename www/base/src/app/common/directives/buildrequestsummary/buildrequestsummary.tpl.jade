@@ -6,7 +6,7 @@ div
       .panel-heading.no-select
           .flex-row
               .flex-grow-1
-                a(ui-sref="builder({builder:builder.builderid})")
+                a(ui-sref="builder({builder:buildrequest.builderid})")
                     | {{builder.name}}
                 | #{' '}/ buildrequests /#{' '}
                 a(ui-sref="buildrequest({buildrequest:buildrequest.buildrequestid})")
