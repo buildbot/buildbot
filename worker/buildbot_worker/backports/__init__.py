@@ -19,4 +19,10 @@ try:
 except ImportError:
     from .twisted_application_internet import ClientService
 
-__all__ = [ClientService]
+try:
+    from twisted.logger import Logger
+except ImportError:
+    from .twisted_logger import Logger
+
+
+__all__ = ['ClientService', 'Logger']

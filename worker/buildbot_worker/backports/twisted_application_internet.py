@@ -65,20 +65,8 @@ from twisted.python import log
 # Buildbot: twisted.logger does not exist in Twisted < 16
 try:
     from twisted.logger import Logger
-except:
-    import logging
-
-    class Logger:
-
-        def __init__(self):
-            self._log = logging.getLogger(__file__)
-
-        def info(self, *a, **kw):
-            self._log.info(*a, **kw)
-
-        def warn(self, *a, **kw):
-            self._log.warn(*a, **kw)
-
+except ImportError:
+    from .twisted_logger import Logger
 from twisted.application import service
 from twisted.internet import task
 from twisted.python.failure import Failure
@@ -231,7 +219,7 @@ class _AbstractClient(_VolatileDataService):
 
 
 
-_doc={
+_doc = {
 'Client':
 """Connect to %(tran)s
 
