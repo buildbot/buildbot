@@ -198,6 +198,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
 
+* new :bb:step:`GitHub` which correctly checkout the magic branch like ``refs/pull/xx/merge``.
+
 Reporters
 ~~~~~~~~~
 
@@ -306,6 +308,9 @@ Fixes
 * The list of changes in the build page now displays all the changes since the last sucessful build.
 
 * GitHub change hook now correctly responds to ping events.
+
+* GitHub change hook now correctly use the refs/pull/xx/merge branch for testing PRs.
+
 * ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable
 
 * When no arguments are used ``buildbot checkconfig`` now uses :file:`buildbot.tac` to locate the master config file.

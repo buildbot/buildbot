@@ -39,10 +39,14 @@ Features
 
 * Buildbot log viewer now support 256 colors ANSI codes
 
+* new :bb:step:`GitHub` which correctly checkout the magic branch like ``refs/pull/xx/merge``.
+
 Fixes
 ~~~~~
 
 * fix the UI to allow to cancel a buildrequest (:bug:`3582`)
+
+* :bb:chsrc:`GitHub` change hook now correctly use the refs/pull/xx/merge branch for testing PRs.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~

@@ -159,6 +159,7 @@ class Git(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
+
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 

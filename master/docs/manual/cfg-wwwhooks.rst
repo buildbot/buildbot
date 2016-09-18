@@ -25,6 +25,8 @@ The :file:`post_build_request.py` script in :file:`master/contrib` allows for th
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
 
+.. bb:chsrc:: Mercurial
+
 Mercurial hook
 ++++++++++++++
 
@@ -45,6 +47,8 @@ Once this is configured on your buildmaster add the following hook on your serve
     changegroup.buildbot = python:/path/to/hgbuildbot.py:hook
 
 You'll find ``hgbuildbot.py``, and its inline documentation, in the ``contrib`` directory of Buildbot's repository.
+
+.. bb:chsrc:: GitHub
 
 GitHub hook
 +++++++++++
@@ -149,6 +153,7 @@ Patches are welcome to implement: https://developer.github.com/webhooks/securing
 
    When using a :ref:`ChangeFilter<Change-Filters>` with a GitHub webhook ensure that your filter matches all desired requests as fields such as ``repository`` and ``project`` may differ in different events.
 
+.. bb:chsrc:: BitBucket
 
 BitBucket hook
 ++++++++++++++
@@ -204,6 +209,8 @@ Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource`
 
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
 
+.. bb:chsrc:: Poller
+
 Poller hook
 +++++++++++
 
@@ -238,6 +245,8 @@ You can restrict which pollers the webhook has access to using the ``allowed`` o
     c['www'] = dict(...,
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     )
+
+.. bb:chsrc:: GitLab
 
 GitLab hook
 +++++++++++
@@ -275,6 +284,8 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
+
+.. bb:chsrc:: Gitorious
 
 Gitorious Hook
 ++++++++++++++
