@@ -12,17 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import mock
-import time
 import os
-import tempfile
 import shutil
-from twisted.python import util
+import tempfile
+import time
+
+import mock
+from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import util
 from twisted.trial import unittest
-from twisted.cred.error import UnauthorizedLogin
 
+import buildbot_worker.bot
 from buildbot import config
 from buildbot import pbmanager
 from buildbot import worker
@@ -32,9 +34,6 @@ from buildbot.process import factory
 from buildbot.status import master
 from buildbot.test.fake import fakemaster
 from buildbot.worker import manager as workermanager
-
-import buildbot_worker.bot
-
 
 PKI_DIR = util.sibpath(__file__, 'pki')
 

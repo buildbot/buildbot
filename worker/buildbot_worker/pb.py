@@ -16,12 +16,12 @@
 import os.path
 import signal
 
-from twisted.internet.endpoints import clientFromString
-from twisted.internet import defer
 from twisted.application import service
 from twisted.cred import credentials
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
+from twisted.internet.endpoints import clientFromString
 from twisted.python import log
 from twisted.spread import pb
 

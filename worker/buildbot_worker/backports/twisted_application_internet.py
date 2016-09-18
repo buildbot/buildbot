@@ -57,22 +57,27 @@ C{TCPServer(8080, server.Site(r))}.  See the documentation for the
 reactor.listen/connect* methods for more information.
 """
 
-from __future__ import absolute_import, division
+# Buildbot: ordering of imports changed by and for isort
+from __future__ import absolute_import
+from __future__ import division
 
 from random import random as _goodEnoughRandom
 
+from twisted.application import service
+from twisted.internet import task
+from twisted.internet.defer import CancelledError
+from twisted.internet.defer import Deferred
+from twisted.internet.defer import fail
+from twisted.internet.defer import gatherResults
+from twisted.internet.defer import succeed
 from twisted.python import log
+from twisted.python.failure import Failure
+
 # Buildbot: twisted.logger does not exist in Twisted < 16
 try:
     from twisted.logger import Logger
 except ImportError:
     from .twisted_logger import Logger
-from twisted.application import service
-from twisted.internet import task
-from twisted.python.failure import Failure
-from twisted.internet.defer import (
-    CancelledError, gatherResults, Deferred, succeed, fail
-)
 
 
 
