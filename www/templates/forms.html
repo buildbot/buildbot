@@ -106,18 +106,24 @@
        <input type='text' size='{{f.size}}'  name='{{f.fullName}}' value='{{default_props[sch.name+"."+f.fullName]}}' />
      
     {% elif 'Force Rebuild' in f.label%}
-       <span class="label">{{f.label}}</span>
-        <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. Dependencies will not be rebuilt if a suitable build is available.  Should be selected in most cases." class="tooltip question-icon">
-      </span>
-       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+       <label class="display-flex">
+          <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+          <span class="label">{{f.label}}</span>
+          <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. Dependencies will not be rebuilt if a suitable build is available.  Should be selected in most cases." class="tooltip question-icon">
+          </span>
+       </label>
     {% elif 'Force Chain Rebuild' in f.label%}
-       <span class="label">{{f.label}}</span>
-        <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
-      </span>
-       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+       <label class="display-flex">
+         <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+         <span class="label">{{f.label}}</span>
+         <span title="Checking this box will force the build to be rebuilt, regardless of whether or not there is a previous successful build at the same revision. If the build triggers dependencies, those will also be rebuilt." class="tooltip question-icon">
+         </span>
+      </label>
     {% elif 'bool' in f.type %}
-      <span class="label">{{f.label}}</span>
-      <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+      <label class="display-flex">
+        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
+        <span class="label">{{f.label}}</span>
+      </label>
     {% elif 'textarea' in f.type %}
        <span class="label">{{f.label}}</span>
        <textarea name='{{f.fullName}}' rows={{f.rows}} cols={{f.cols}}>{{default_props[sch.name+"."+f.fullName]}}</textarea>
@@ -194,10 +200,12 @@
 
     <div class="force-text" id="force-{{ sch.name }}-slave">
     {% if slaves %}
-        <span class="label">Specify Slave</span>
-           <span title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases." class="tooltip question-icon">
-      </span>
-        <select id="selected_slave" name="selected_slave" class="select"> 
+        <div class="display-flex">
+         <span class="label">Specify Slave</span>
+            <span title="You can specify a build to run on a particular slave, or to run on all slaves. Leave set to 'Any Compatible' for most cases." class="tooltip question-icon">
+        </span>
+        </div>
+        <select id="selected_slave" name="selected_slave" class="width-100 margin-0">
             <option value="default">Any Compatible</option>
             <option value="allCompatible">All Compatible</option>
             {% for slave in slaves %}
@@ -211,10 +219,12 @@
         </div>
     {% endif %}
         <div class="force-text">
-        <span class="label">Priority</span>
-        <span title="You can specify a the priority at which your build(s) should be ran."
-             class="tooltip question-icon"></span>
-        <select id="priority" name="priority" class="select">
+        <div class="display-flex">
+            <span class="label">Priority</span>
+            <span title="You can specify a the priority at which your build(s) should be ran."
+             class="tooltip question-icon position-relative float-right"></span>
+        </div>
+        <select id="priority" name="priority" class="select width-100 margin-0">
             {% if is_admin != 0 %}
             <option value="100">Emergency</option>
             <option value="80">Very high</option>

@@ -452,6 +452,10 @@ define(function (require) {
                                         };
 
                                     $form.ajaxForm(formOptions);
+                                    $('#selected_slave').select2();
+                                    $('#priority').select2({
+                                        minimumResultsForSearch: -1
+                                    });
 
                                     if (instantBuild) {
                                         $form.ajaxSubmit(formOptions);
