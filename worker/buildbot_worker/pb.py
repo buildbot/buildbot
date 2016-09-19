@@ -204,7 +204,7 @@ class Worker(WorkerBase, service.MultiService):
         allowed in DNS, nor any current IP addresses, it can be valid in
         ``/etc/hosts`` entries.
         """
-        return 'tcp:host={}:port={}'.format(
+        return 'tcp:host={0}:port={1}'.format(
             host.replace(':', r'\:').replace('=', r'\='),
             port)
 
