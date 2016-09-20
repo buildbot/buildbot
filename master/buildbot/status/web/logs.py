@@ -69,8 +69,10 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path == "text":
+        if path.startswith("text"):
             self.asText = True
+            if path.endswith("with_headers"):
+                self.withHeaders = True
             return self
         if path == "text_with_headers":
             self.asText = True
@@ -126,6 +128,7 @@ class TextLog(Resource, ContextMixin):
         if self.asText:
             return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
+
         # Else render the logs template
         
         self.template = req.site.buildbot_service.templates.get_template("logs.html")
@@ -165,7 +168,6 @@ class TextLog(Resource, ContextMixin):
 
         return ""
 
-            
 
     def _setContentType(self, req):
         if self.asText:
