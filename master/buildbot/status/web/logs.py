@@ -59,6 +59,7 @@ class TextLog(Resource, ContextMixin):
     implements(IHTMLLog)
 
     asText = False
+    withHeaders = False
     subscribed = False
     iFrame = False
 
@@ -68,8 +69,10 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path == "text":
+        if path.startswith("text"):
             self.asText = True
+            if path.endswith("with_headers"):
+                self.withHeaders = True
             return self
         if path == "iframe":
             self.iFrame = True
@@ -138,6 +141,8 @@ class TextLog(Resource, ContextMixin):
             project = builder_status.getProject()
             cxt["pageTitle"] = "Log File Contents"
             cxt["iframe_url"] = req.path + "/iframe"
+            cxt["plaintext_url"] = req.path + "/text"
+            cxt["plaintext_with_headers_url"] = req.path + "/text_with_headers"
             cxt["builder_name"] = builder.getFriendlyName()
             cxt['path_to_builder'] = path_to_builder(req, builder_status)
             cxt['path_to_builders'] = path_to_builders(req, project)
@@ -152,7 +157,9 @@ class TextLog(Resource, ContextMixin):
             req.write(data)
 
             return ""
-
+        else:
+            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
+            
 
     def _setContentType(self, req):
         if self.asText:
