@@ -117,6 +117,7 @@
        <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'bool' in f.type %}
       <span class="label">{{f.label}}</span>
+      {% if f.tooltip %}<span title='{{f.tooltip}}' class="tooltip question-icon"></span>{% endif %}
       <input type='checkbox' name='checkbox' value='{{f.fullName}}' {{default_props[sch.name+"."+f.fullName]}} />
     {% elif 'textarea' in f.type %}
        <span class="label">{{f.label}}</span>
