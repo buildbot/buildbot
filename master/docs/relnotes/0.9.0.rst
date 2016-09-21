@@ -176,7 +176,7 @@ Individual features and improvements to the Data API are not described on this p
 
 * EC2LatentWorker supports VPCs, instance profiles, and advanced volume mounts.
 
-* new steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
+* New steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
 
 * The :bb:step:`P4` step now obfuscates the password in status logs.
 
