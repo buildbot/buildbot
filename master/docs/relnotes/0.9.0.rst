@@ -200,6 +200,8 @@ Individual features and improvements to the Data API are not described on this p
 
 * new :bb:step:`GitHub` which correctly checkout the magic branch like ``refs/pull/xx/merge``.
 
+* Enable parallel builds with Visual Studio and MSBuild.
+
 Reporters
 ~~~~~~~~~
 
