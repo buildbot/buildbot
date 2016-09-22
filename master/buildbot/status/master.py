@@ -241,7 +241,7 @@ class Status(config.ReconfigurableServiceMixin, service.MultiService):
         # respect addition order
         for name in self.botmaster.builderNames:
             bldr = self.getBuilder(name)
-            if bldr.matchesAnyTag(tags):
+            if bldr.builder_status.matchesAnyTag(tags):
                 l.append(name)
         return util.naturalSort(l)
 
