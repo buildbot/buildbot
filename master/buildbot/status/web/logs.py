@@ -69,10 +69,12 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path.startswith("text"):
+        if path == "text":
             self.asText = True
-            if path.endswith("with_headers"):
-                self.withHeaders = True
+            return self
+        if path == "text_with_headers":
+            self.asText = True
+            self.withHeaders = True
             return self
         if path == "iframe":
             self.iFrame = True
@@ -120,45 +122,49 @@ class TextLog(Resource, ContextMixin):
         else:
             req.setHeader("Cache-Control", "no-cache")
 
-        if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")
-            self.chunk_template = req.site.buildbot_service.templates.get_template("log_chunk.html")
-            builder = self.original.step.build.builder
-            build_id = self.original.step.build.number
-            url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
+        # If plaintext is requested just return the content of the logfile
+        if self.asText:
+            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
-            if self.iFrame:
-                data = self.chunk_template.module.page_header(version)
-                data = data.encode('utf-8')
-                req.write(data)
-                self.original.subscribeConsumer(ChunkConsumer(req, self))
-                return server.NOT_DONE_YET
+        # Else render the logs template
+        
+        self.template = req.site.buildbot_service.templates.get_template("logs.html")
+        self.chunk_template = req.site.buildbot_service.templates.get_template("log_chunk.html")
+        builder = self.original.step.build.builder
+        build_id = self.original.step.build.number
+        url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
 
-
-            cxt = self.getContext(req)
-            build = self.original.step.build
-            builder_status = build.builder
-            project = builder_status.getProject()
-            cxt["pageTitle"] = "Log File Contents"
-            cxt["iframe_url"] = req.path + "/iframe"
-            cxt["plaintext_url"] = req.path + "/text"
-            cxt["plaintext_with_headers_url"] = req.path + "/text_with_headers"
-            cxt["builder_name"] = builder.getFriendlyName()
-            cxt['path_to_builder'] = path_to_builder(req, builder_status)
-            cxt['path_to_builders'] = path_to_builders(req, project)
-            cxt["builder_url"] = url_dict['path'] + getCodebasesArg(request=req)
-            cxt['path_to_codebases'] = path_to_codebases(req, project)
-            cxt['path_to_build'] = path_to_build(req, build)
-            cxt['build_number'] = build.getNumber()
-            cxt['selectedproject'] = project
-
-            data = self.template.render(**cxt)
+        if self.iFrame:
+            data = self.chunk_template.module.page_header(version)
             data = data.encode('utf-8')
             req.write(data)
+            self.original.subscribeConsumer(ChunkConsumer(req, self))
+            return server.NOT_DONE_YET
 
-            return ""
-        else:
-            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
+
+        cxt = self.getContext(req)
+        build = self.original.step.build
+        builder_status = build.builder
+        project = builder_status.getProject()
+        cxt["pageTitle"] = "Log File Contents"
+        cxt["iframe_url"] = req.path + "/iframe"
+        cxt["plaintext_url"] = req.path + "/text"
+        cxt["plaintext_with_headers_url"] = req.path + "/text_with_headers"
+        cxt["builder_name"] = builder.getFriendlyName()
+        cxt['path_to_builder'] = path_to_builder(req, builder_status)
+        cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt["builder_url"] = url_dict['path'] + getCodebasesArg(request=req)
+        cxt['path_to_codebases'] = path_to_codebases(req, project)
+        cxt['path_to_build'] = path_to_build(req, build)
+        cxt['build_number'] = build.getNumber()
+        cxt['selectedproject'] = project
+
+        data = self.template.render(**cxt)
+        data = data.encode('utf-8')
+        req.write(data)
+
+        return ""
+
             
 
     def _setContentType(self, req):
