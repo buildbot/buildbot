@@ -77,3 +77,16 @@
         max-width:750px;
     }
 }
+
+// A little bit of functional styles approach to prevent duplications over the css classes
+.width-100 {
+  width: 100%;
+}
+
+.display-flex {
+  display: flex;
+}
+
+.margin-0 {
+  margin: 0;
+}

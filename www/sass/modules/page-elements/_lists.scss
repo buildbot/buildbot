@@ -182,9 +182,10 @@ a.no-artifacts {
 	.label {
 		display:block;
 		float:left;
+		font-size: 90%;
 		font-weight:bold;		
 		color: #333;
-		margin:6px 10px 8px 0;	
+		margin:6px 10px 6px 0;
 	}
 	.select {
 		display:block;
@@ -192,6 +193,7 @@ a.no-artifacts {
 	}
 	input[type="checkbox"] {
 		display: block;
+		margin-top: 7px;
 		clear: both;
 	}
 }
