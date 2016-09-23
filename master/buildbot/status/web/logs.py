@@ -76,10 +76,6 @@ class TextLog(Resource, ContextMixin):
             self.asText = True
             self.withHeaders = True
             return self
-        if path == "text_with_headers":
-            self.asText = True
-            self.withHeaders = True
-            return self
         if path == "iframe":
             self.iFrame = True
             return self
