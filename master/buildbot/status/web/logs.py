@@ -69,10 +69,12 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path.startswith("text"):
+        if path == "text":
             self.asText = True
-            if path.endswith("with_headers"):
-                self.withHeaders = True
+            return self
+        if path == "text_with_headers":
+            self.asText = True
+            self.withHeaders = True
             return self
         if path == "text_with_headers":
             self.asText = True
