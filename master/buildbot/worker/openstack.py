@@ -21,7 +21,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker import AbstractLatentWorker
 
 try:
     import novaclient.exceptions as nce

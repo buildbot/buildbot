@@ -25,8 +25,8 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.util.eventual import eventually
-from buildbot.worker.base import AbstractLatentWorker
-from buildbot.worker.base import AbstractWorker
+from buildbot.worker import AbstractLatentWorker
+from buildbot.worker import AbstractWorker
 
 try:
     import libvirt
