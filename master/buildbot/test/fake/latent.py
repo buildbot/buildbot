@@ -18,7 +18,7 @@ from twisted.internet.defer import succeed
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
-from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker import AbstractLatentWorker
 
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker

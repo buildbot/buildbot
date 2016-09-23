@@ -28,6 +28,7 @@ from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -494,9 +495,9 @@ class TestAbstractLatentWorker(unittest.SynchronousTestCase):
         self.successResultOf(old.reconfigServiceWithSibling(new))
 
     def test_reconfigService(self):
-        old = base.AbstractLatentWorker(
+        old = AbstractLatentWorker(
             "name", "password", build_wait_timeout=10)
-        new = base.AbstractLatentWorker(
+        new = AbstractLatentWorker(
             "name", "password", build_wait_timeout=30)
 
         self.do_test_reconfigService(old, new)
@@ -527,7 +528,7 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="AbstractLatentBuildSlave was deprecated"):
             deprecated = bs.AbstractLatentBuildSlave
 
-        self.assertIdentical(deprecated, base.AbstractLatentWorker)
+        self.assertIdentical(deprecated, AbstractLatentWorker)
 
     def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker
