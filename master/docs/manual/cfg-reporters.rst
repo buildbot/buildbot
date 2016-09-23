@@ -665,7 +665,7 @@ GerritStatusPush
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
 
-.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, identity_file, ...)
+.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, identity_file, builders, notify...)
 
    :param string server: Gerrit SSH server's address to use for push event notifications.
    :param string username: Gerrit SSH server's username.
@@ -738,6 +738,9 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param builders: (optional) list of builders to send results for.
                     This method allows to filter results for a specific set of builder.
                     By default, or if builders is None, then no filtering is performed.
+   :param notify: (optional) control who gets notified by Gerrit once the status is posted.
+                  The possible values for `notify` can be found in your version of the
+                  Gerrit documentation for the `gerrit review` command.
 
 .. note::
 

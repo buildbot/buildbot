@@ -51,6 +51,8 @@ Features
 
 * Optimization of the data api filtering, sorting and paging, speeding up a lot the UI when the master has lots of builds.
 
+* :bb:reporter:`GerritStatusPush` now accepts a ``notify`` parameter to control who gets emailed by Gerrit.
+
 Fixes
 ~~~~~
 

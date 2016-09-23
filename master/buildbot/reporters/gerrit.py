@@ -145,11 +145,12 @@ class GerritStatusPush(service.BuildbotService):
     startArg = None
     summaryCB = None
     summaryArg = None
+    _gerrit_notify = None
 
     def reconfigService(self, server, username, reviewCB=DEFAULT_REVIEW,
                         startCB=None, port=29418, reviewArg=None,
                         startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                        identity_file=None, builders=None):
+                        identity_file=None, builders=None, notify=None):
 
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
@@ -176,6 +177,7 @@ class GerritStatusPush(service.BuildbotService):
         self.summaryCB = summaryCB
         self.summaryArg = summaryArg
         self.builders = builders
+        self._gerrit_notify = notify
 
     def _gerritCmd(self, *args):
         '''Construct a command as a list of strings suitable for
@@ -398,6 +400,10 @@ class GerritStatusPush(service.BuildbotService):
             return
 
         command = self._gerritCmd("review", "--project %s" % (project,))
+
+        if self._gerrit_notify is not None:
+            command.append('--notify %s' % str(self._gerrit_notify))
+
         message = result.get('message', None)
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))
