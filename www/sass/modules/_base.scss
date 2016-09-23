@@ -30,7 +30,8 @@ running #FCFACB false "Running",
 overtime #FCCBCB false "Overtime",
 offline #E7E7E7 false "Offline" #d1d1d1,
 waiting #E7E7E7 false "Waiting for buildslave",
-retry #DDD7DD $color-white "Retry";
+retry #DDD7DD $color-white "Retry",
+interrupted #DDD7DD $color-white "Interrupted";
 
 // Create colorblind version of colors
 @each $colorvar in $state-colors {

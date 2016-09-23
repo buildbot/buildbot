@@ -25,6 +25,7 @@ define(function (require) {
             DEPENDENCY_FAILURE: [8, "dependency-failure"],
             RUNNING: [9, "running"],
             NOT_STARTED: [10, "not-started"],
+            INTERRUPTED: [11, "interrupted"],
             None: ""
         },
         settings = {},
