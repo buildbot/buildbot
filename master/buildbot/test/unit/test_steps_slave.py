@@ -204,7 +204,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["Deleted"])
+                status_text=["rmdir", "d"])
         return self.runStep()
 
     def test_failure(self):
@@ -214,7 +214,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 1
         )
         self.expectOutcome(result=FAILURE,
-                status_text=["Delete failed."])
+                status_text=["rmdir", "d", "failed"])
         return self.runStep()
 
     def test_render(self):
@@ -225,7 +225,7 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
             + 0
         )
         self.expectOutcome(result=SUCCESS,
-                status_text=["Deleted"])
+                status_text=["rmdir", "XXX"])
         return self.runStep()
 
     def test_description(self):
