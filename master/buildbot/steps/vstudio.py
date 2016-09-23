@@ -448,7 +448,7 @@ class MsBuild4(VisualStudio):
             config.error(
                 'platform is mandatory. Please specify a string such as "Win32"')
 
-        command = ('"%%VCENV_BAT%%" x86 && msbuild "%s" /p:Configuration="%s" /p:Platform="%s"'
+        command = ('"%%VCENV_BAT%%" x86 && msbuild "%s" /p:Configuration="%s" /p:Platform="%s" /maxcpucount'
                    % (self.projectfile, self.config, self.platform))
 
         if self.project is not None:
