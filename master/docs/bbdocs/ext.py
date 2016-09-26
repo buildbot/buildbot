@@ -270,6 +270,17 @@ class BBDomain(Domain):
                                                           names=('pathkey',), typenames=('type',),
                                                           can_collapse=True),
                                            ]),
+        'raction': make_ref_target_directive('raction',
+                                           indextemplates=[
+                                               'single: Resource Action; %s',
+                                           ],
+                                           name_annotation='POST with method:',
+                                           has_content=True,
+                                           doc_field_types=[
+                                               TypedField('body', label='Body keys',
+                                                          names=('body',), typenames=('type',),
+                                                          can_collapse=True),
+                                           ]),
     }
 
     roles = {
@@ -301,8 +312,9 @@ class BBDomain(Domain):
         make_index("cmdline", "Command Line Index"),
         make_index("msg", "MQ Routing Key Index"),
         make_index("event", "Data API Event Index"),
-        make_index("rtype", "Data API Resource Type Index"),
-        make_index("rpath", "Data API Path Index"),
+        make_index("rtype", "REST/Data API Resource Type Index"),
+        make_index("rpath", "REST/Data API Path Index"),
+        make_index("raction", "REST/Data API Actions Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

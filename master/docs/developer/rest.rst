@@ -211,7 +211,7 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
 
     {{type.description}}
     {% endif %}
-    {% if name in raml.endpoints_by_type -%}
+    {% if name in raml.endpoints_by_type -%}{# if type has endpoints #}
     Endpoints
     ---------
     {% for ep, config in raml.endpoints_by_type[name].items()|sort -%}
@@ -230,7 +230,18 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
             :bb:rtype:`collection` of :bb:rtype:`{{method_ep['eptype']}}`
         {% endif %}
 
-    {% endif %}
-    {% endfor %}
-    {% endif %}
-    {% endfor %}
+    {% endif %}{# if ep has get #}
+
+    {% for method, action in raml.iter_actions(config) -%}
+    .. bb:raction:: {{ep}}:{{method}}
+
+        :body string method:  must be ``{{ method }}``
+
+        {% for key, value in action['body'].items() -%}
+        :body {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+        {% endfor %}
+
+    {% endfor %}{# endpoints #}
+    {% endfor %}{# endpoints #}
+    {% endif %}{# if type has endpoints #}
+    {% endfor %}{# for each types #}

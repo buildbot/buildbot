@@ -78,3 +78,13 @@ class RamlSpec(object):
     def parse_types(self):
         types = self.api['types']
         return types
+
+    def iter_actions(self, endpoint):
+        ACTIONS_MAGIC = '/actions/'
+        for k, v in endpoint.iteritems():
+            if k.startswith(ACTIONS_MAGIC):
+                k = k[len(ACTIONS_MAGIC):]
+                v = v['post']
+                # simplify the raml tree for easier processing
+                v['body'] = v['body']['application/json'].get('properties', {})
+                yield (k, v)
