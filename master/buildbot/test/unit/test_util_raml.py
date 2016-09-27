@@ -81,3 +81,8 @@ class TestRaml(unittest.TestCase):
         build = self.api.endpoints_by_type['build']
         actions = dict(self.api.iter_actions(build['/builds/{buildid}']))
         self.assertEqual(sorted(actions.keys()), sorted(['rebuild', 'stop']))
+
+    def test_rawendpoints(self):
+        self.assertIn(
+            "/steps/{stepid}/logs/{log_slug}/raw",
+            self.api.rawendpoints.keys())

@@ -17,8 +17,8 @@ import json
 import os
 
 import ramlfications
-
 from future.utils import iteritems
+
 try:
     from collections import OrderedDict
 except ImportError:  # pragma: no cover
@@ -43,6 +43,7 @@ class RamlSpec(object):
             os.path.dirname(__file__), os.pardir, 'spec', 'api.raml'))
         endpoints = {}
         self.endpoints_by_type = {}
+        self.rawendpoints = {}
         self.endpoints = self.parse_endpoints(endpoints, "", self.api)
         self.types = self.parse_types()
 
@@ -66,6 +67,9 @@ class RamlSpec(object):
                             v['eptype'] = _is['bbget']['bbtype']
                             self.endpoints_by_type.setdefault(v['eptype'], {})
                             self.endpoints_by_type[v['eptype']][base] = api
+                        if 'bbgetraw' in _is:
+                            self.rawendpoints.setdefault(base, {})
+                            self.rawendpoints[base] = api
         return endpoints
 
     def reindent(self, s, indent):
