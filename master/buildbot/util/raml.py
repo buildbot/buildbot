@@ -38,8 +38,11 @@ class RamlSpec(object):
         # waiting for raml1.0 support in ramlfications
         # we cannot use its raml parser
         # so we just use its loader
-        self.api = ramlfications.load(os.path.join(
-            os.path.dirname(__file__), os.pardir, 'spec', 'api.raml'))
+        fn = os.path.join(os.path.dirname(__file__), os.pardir, 'spec', 'api.raml')
+        self.api = ramlfications.load(fn)
+        with open(fn) as f:
+            self.rawraml = f.read()
+
         endpoints = {}
         self.endpoints_by_type = {}
         self.endpoints = self.parse_endpoints(endpoints, "", self.api)

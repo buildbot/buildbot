@@ -244,3 +244,30 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
     {% endfor %}{# endpoints #}
     {% endif %}{# if type has endpoints #}
     {% endfor %}{# for each types #}
+
+    Raw endpoints
+    .............
+
+    Raw endpoints allow to download content in their raw format (i.e. not within a json glue).
+    The ``content-disposition`` http header is set, so that the browser knows which file to store the content to.
+
+    {% for ep, config in raml.rawendpoints.items()|sort %}
+
+    .. bb:rpath:: {{ep}}
+
+        {% for key, value in config.uriParameters.items() -%}
+            :pathkey {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+        {% endfor %}
+
+    {{config['get'].description}}
+
+    {% endfor %}
+
+    Raml spec verbatim
+    ..................
+
+    Sometimes raml is just clearer than formatted text.
+
+    .. code-block:: yaml
+
+        {{raml.reindent(raml.rawraml, 4*1)}}
