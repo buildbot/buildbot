@@ -266,7 +266,7 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
     Raml spec verbatim
     ..................
 
-    Sometimes raml is just clearer than formatted text.
+    Sometimes Raml is just clearer than formatted text.
 
     .. code-block:: yaml
 
