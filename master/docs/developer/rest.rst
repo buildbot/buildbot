@@ -14,6 +14,8 @@ It is also designed, in keeping with REST principles, to be discoverable.
 As such, the details of the paths and resources are not documented here.
 Begin at the root URL, and see the :ref:`Data_API` documentation for more information.
 
+.. contents:: :local:
+
 Versions
 ~~~~~~~~
 
@@ -167,9 +169,6 @@ Raml Specs
 
 The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md>`_.
 RAML describes and documents all our data, rest, and javascript APIs in a format that can be easily manipulated by human and machines.
-
-.. toctree::
-    :maxdepth: 2
 
 .. jinja:: data_api
 
