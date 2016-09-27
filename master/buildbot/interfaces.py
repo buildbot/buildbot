@@ -56,6 +56,10 @@ deprecatedWorkerModuleAttribute(
     compat_name="LatentBuildSlaveFailedToSubstantiate")
 
 
+class LatentWorkerSubstantiatiationCancelled(Exception):
+    pass
+
+
 class IPlugin(Interface):
 
     """

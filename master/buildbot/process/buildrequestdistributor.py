@@ -352,7 +352,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         def remove(x):
             self._pendingMSBOCalls.remove(d)
             return x
-        d.addErrback(log.err, "while strting builds on %s" % (new_builders,))
+        d.addErrback(log.err, "while starting builds on %s" % (new_builders,))
 
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)

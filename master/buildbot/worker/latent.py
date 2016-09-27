@@ -23,6 +23,7 @@ from zope.interface import implementer
 
 from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
 from buildbot.worker.base import AbstractWorker
 
@@ -101,14 +102,20 @@ class AbstractLatentWorker(AbstractWorker):
 
     def _substantiate(self, build):
         # register event trigger
-        d = self.start_instance(build)
+        try:
+            d = self.start_instance(build)
+        except Exception:
+            # if start_instance crashes without defer, we still handle the cleanup
+            d = defer.fail(failure.Failure())
 
         def start_instance_result(result):
             # If we don't report success, then preparation failed.
+            # we let the errback handle the issue
             if not result:
+                # this behaviour is kept as compatibility, but it is better
+                # to just errback with a workable reason
                 msg = "Worker does not want to substantiate at this time"
-                self._substantiation_notifier.notify(LatentWorkerFailedToSubstantiate(self.name, msg))
-                return None
+                return failure.Failure(LatentWorkerFailedToSubstantiate(self.name, msg))
             return result
 
         def clean_up(failure):
@@ -117,7 +124,8 @@ class AbstractLatentWorker(AbstractWorker):
             self._substantiation_failed(failure)
             # swallow the failure as it is given to notified
             return None
-        d.addCallbacks(start_instance_result, clean_up)
+        d.addCallback(start_instance_result)
+        d.addErrback(clean_up)
         return d
 
     @defer.inlineCallbacks
@@ -223,11 +231,17 @@ class AbstractLatentWorker(AbstractWorker):
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
         self.substantiated = False
-        yield d
+        try:
+            yield d
+        except Exception as e:
+            # The case of failure for insubstanciation is bad as we have a left-over costing ressource
+            # There is not much thing to do here generically, so we must put the problem of stop_instance
+            # reliability to the backend driver
+            log.err(e, "while insubstantiating")
+
         self.insubstantiating = False
         if self._substantiation_notifier:
-            # notify waiters that substantiation was cancelled
-            self._substantiation_notifier.notify(failure.Failure(Exception("cancelled")))
+            self._substantiation_notifier.notify(failure.Failure(LatentWorkerSubstantiatiationCancelled()))
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks

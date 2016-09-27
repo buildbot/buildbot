@@ -129,7 +129,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         d = defer.Deferred()
         self.ping_watchers.append(d)
         if newping:
-            Ping().ping(self.worker.conn).addCallback(self._pong)
+            Ping().ping(self.worker.conn).addBoth(self._pong)
 
         return d
 
@@ -147,6 +147,10 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         self.remoteCommands = None
 
 
+class PingException(Exception):
+    pass
+
+
 class Ping:
     running = False
 
@@ -154,7 +158,7 @@ class Ping:
         assert not self.running
         if not conn:
             # clearly the ping must fail
-            return defer.succeed(False)
+            return defer.fail(PingException("Worker not connected?"))
         self.running = True
         log.msg("sending ping")
         self.d = defer.Deferred()
@@ -175,7 +179,7 @@ class Ping:
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
         conn.loseConnection()
-        self.d.callback(False)
+        self.d.errback(res)
 
 
 class WorkerForBuilder(AbstractWorkerForBuilder):
@@ -236,5 +240,5 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
 
     def ping(self, status=None):
         if not self.worker.substantiated:
-            return defer.succeed(True)
+            return defer.fail(PingException("worker is not substantiated"))
         return AbstractWorkerForBuilder.ping(self, status)

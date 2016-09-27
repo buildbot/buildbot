@@ -37,22 +37,24 @@ class LatentController(object):
 
     def __init__(self, name, **kwargs):
         self.worker = ControllableLatentWorker(name, self, **kwargs)
-        self.started = False
-        self.stopped = False
+        self.starting = False
+        self.stopping = False
         self.auto_stop_flag = False
 
     def start_instance(self, result):
-        assert self.started
-        self.started = False
+        assert self.starting
+        self.starting = False
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
 
     def auto_stop(self, result):
         self.auto_stop_flag = result
+        if self.auto_stop_flag and self.stopping:
+            self.stop_instance(True)
 
     def stop_instance(self, result):
-        assert self.stopped
-        self.stoped = False
+        assert self.stopping
+        self.stopping = False
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
@@ -88,13 +90,16 @@ class ControllableLatentWorker(AbstractLatentWorker):
         AbstractLatentWorker.reconfigService(self, name, None, **kwargs)
 
     def start_instance(self, build):
-        self._controller.started = True
+        assert not self._controller.stopping
+
+        self._controller.starting = True
         self._controller._start_deferred = Deferred()
         return self._controller._start_deferred
 
     def stop_instance(self, build):
-        self._controller.stopped = True
+        self._controller.stopping = True
         if self._controller.auto_stop_flag:
+            self._controller.stopping = False
             return succeed(True)
         self._controller._stop_deferred = Deferred()
         return self._controller._stop_deferred
