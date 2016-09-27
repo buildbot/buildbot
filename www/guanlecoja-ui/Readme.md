@@ -142,6 +142,7 @@ The stored list of notifications.
 
 ## ChangeLog
 
+* 1.6.2: Fix width issues of content which push some content off-screen for certain monitor size
 * 1.6.1: rebuilt with guanlecoja 1.7.2, which populates the BOWERDEPS metadata
 * 1.6.0: Massive upgrade of dependencies:
     - jquery 2.1 -> 2.2.
