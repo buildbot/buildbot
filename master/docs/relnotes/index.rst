@@ -28,6 +28,8 @@ Features
 Fixes
 ~~~~~
 
+* Fix the UI to better adapt to different screen width (:bug:`3614`)
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
