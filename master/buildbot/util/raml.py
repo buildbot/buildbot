@@ -45,6 +45,7 @@ class RamlSpec(object):
 
         endpoints = {}
         self.endpoints_by_type = {}
+        self.rawendpoints = {}
         self.endpoints = self.parse_endpoints(endpoints, "", self.api)
         self.types = self.parse_types()
 
@@ -68,6 +69,9 @@ class RamlSpec(object):
                             v['eptype'] = _is['bbget']['bbtype']
                             self.endpoints_by_type.setdefault(v['eptype'], {})
                             self.endpoints_by_type[v['eptype']][base] = api
+                        if 'bbgetraw' in _is:
+                            self.rawendpoints.setdefault(base, {})
+                            self.rawendpoints[base] = api
         return endpoints
 
     def reindent(self, s, indent):
