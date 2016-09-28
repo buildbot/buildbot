@@ -114,6 +114,7 @@ Newer versions are also available here:
     :maxdepth: 1
 
     0.9.0
+    0.9.0rc4
     0.9.0rc3
     0.9.0rc2
     0.9.0rc1
