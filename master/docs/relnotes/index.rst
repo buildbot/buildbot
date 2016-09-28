@@ -48,6 +48,8 @@ Fixes
 
 * :bb:chsrc:`GitHub` change hook now correctly use the refs/pull/xx/merge branch for testing PRs.
 
+* Fix the UI to better adapt to different screen width (:bug:`3614`)
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
