@@ -9,23 +9,23 @@
 #   is working as expected.
 #
 # * Install the buildbot service.  Execute the command:
-#   % python buildbot_service.py
+#   % buildbot_worker_windows_service
 #   To see installation options.  You probably want to specify:
 #   + --username and --password options to specify the user to run the
 #   + --startup auto to have the service start at boot time.
 #
 #   For example:
-#   % python buildbot_service.py --user mark --password secret \
+#   % buildbot_worker_windows_service --user mark --password secret \
 #     --startup auto install
 #   Alternatively, you could execute:
-#   % python buildbot_service.py install
+#   % buildbot_worker_windows_service install
 #   to install the service with default options, then use Control Panel
 #   to configure it.
 #
 # * Start the service specifying the name of all buildbot directories as
 #   service args.  This can be done one of 2 ways:
 #   - Execute the command:
-#     % python buildbot_service.py start "dir_name1" "dir_name2"
+#     % buildbot_worker_windows_service start "dir_name1" "dir_name2"
 #   or:
 #   - Start Control Panel->Administrative Tools->Services
 #   - Locate the previously installed buildbot service.
@@ -46,14 +46,14 @@
 # * If you change the buildbot configuration, you must restart the service.
 #   There is currently no way to ask a running buildbot to reload the
 #   config.  You can restart by executing:
-#   % python buildbot_service.py restart
+#   % buildbot_worker_windows_service restart
 #
 # Troubleshooting:
 # * Check the Windows event log for any errors.
 # * Check the "twistd.log" file in your buildbot directories - once each
 #   bot has been started it just writes to this log as normal.
 # * Try executing:
-#   % python buildbot_service.py debug
+#   % buildbot_windows_service debug
 #   This will execute the buildbot service in "debug" mode, and allow you to
 #   see all messages etc generated. If the service works in debug mode but
 #   not as a real service, the error probably relates to the environment or
@@ -522,7 +522,7 @@ def _WaitForShutdown(h):
 
 
 def DetermineRunner(bbdir):
-    '''Checks if the given directory is a buildbot worker or a master and 
+    '''Checks if the given directory is a buildbot worker or a master and
     returns the appropriate run function.'''
     try:
         import buildbot_worker.scripts.runner

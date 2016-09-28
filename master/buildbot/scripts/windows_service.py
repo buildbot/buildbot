@@ -9,23 +9,23 @@
 #   is working as expected.
 #
 # * Install the buildbot service.  Execute the command:
-#   % python buildbot_service.py
+#   % buildbot_windows_service
 #   To see installation options.  You probably want to specify:
 #   + --username and --password options to specify the user to run the
 #   + --startup auto to have the service start at boot time.
 #
 #   For example:
-#   % python buildbot_service.py --user mark --password secret \
+#   % buildbot_windows_service --user mark --password secret \
 #     --startup auto install
 #   Alternatively, you could execute:
-#   % python buildbot_service.py install
+#   % buildbot_windows_service install
 #   to install the service with default options, then use Control Panel
 #   to configure it.
 #
 # * Start the service specifying the name of all buildbot directories as
 #   service args.  This can be done one of 2 ways:
 #   - Execute the command:
-#     % python buildbot_service.py start "dir_name1" "dir_name2"
+#     % buildbot_windows_service start "dir_name1" "dir_name2"
 #   or:
 #   - Start Control Panel->Administrative Tools->Services
 #   - Locate the previously installed buildbot service.
@@ -46,7 +46,7 @@
 # * If you change the buildbot configuration, you must restart the service.
 #   There is currently no way to ask a running buildbot to reload the
 #   config.  You can restart by executing:
-#   % python buildbot_service.py restart
+#   % buildbot_windows_service restart
 #
 # Troubleshooting:
 # * Check the Windows event log for any errors.
