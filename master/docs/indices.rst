@@ -12,5 +12,6 @@ Indices and Tables
 * :bb:index:`event`
 * :bb:index:`rtype`
 * :bb:index:`rpath`
+* :bb:index:`raction`
 * :ref:`modindex`
 * :ref:`search`

@@ -14,6 +14,8 @@ It is also designed, in keeping with REST principles, to be discoverable.
 As such, the details of the paths and resources are not documented here.
 Begin at the root URL, and see the :ref:`Data_API` documentation for more information.
 
+.. contents:: :local:
+
 Versions
 ~~~~~~~~
 
@@ -168,9 +170,6 @@ Raml Specs
 The Data API is documented in `RAML 1.0 format <https://github.com/raml-org/raml-spec/blob/master/versions/raml-10/raml-10.md>`_.
 RAML describes and documents all our data, rest, and javascript APIs in a format that can be easily manipulated by human and machines.
 
-.. toctree::
-    :maxdepth: 2
-
 .. jinja:: data_api
 
     {% for name, type in raml.types.items()|sort %}
@@ -211,7 +210,7 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
 
     {{type.description}}
     {% endif %}
-    {% if name in raml.endpoints_by_type -%}
+    {% if name in raml.endpoints_by_type -%}{# if type has endpoints #}
     Endpoints
     ---------
     {% for ep, config in raml.endpoints_by_type[name].items()|sort -%}
@@ -230,7 +229,45 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
             :bb:rtype:`collection` of :bb:rtype:`{{method_ep['eptype']}}`
         {% endif %}
 
-    {% endif %}
+    {% endif %}{# if ep has get #}
+
+    {% for method, action in raml.iter_actions(config) -%}
+    .. bb:raction:: {{ep}}:{{method}}
+
+        :body string method:  must be ``{{ method }}``
+
+        {% for key, value in action['body'].items() -%}
+        :body {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+        {% endfor %}
+
+    {% endfor %}{# endpoints #}
+    {% endfor %}{# endpoints #}
+    {% endif %}{# if type has endpoints #}
+    {% endfor %}{# for each types #}
+
+    Raw endpoints
+    .............
+
+    Raw endpoints allow to download content in their raw format (i.e. not within a json glue).
+    The ``content-disposition`` http header is set, so that the browser knows which file to store the content to.
+
+    {% for ep, config in raml.rawendpoints.items()|sort %}
+
+    .. bb:rpath:: {{ep}}
+
+        {% for key, value in config.uriParameters.items() -%}
+            :pathkey {{value.type}} {{key}}: {{raml.reindent(value.description, 4*2)}}
+        {% endfor %}
+
+    {{config['get'].description}}
+
     {% endfor %}
-    {% endif %}
-    {% endfor %}
+
+    Raml spec verbatim
+    ..................
+
+    Sometimes Raml is just clearer than formatted text.
+
+    .. code-block:: yaml
+
+        {{raml.reindent(raml.rawraml, 4*1)}}

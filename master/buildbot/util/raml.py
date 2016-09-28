@@ -17,8 +17,8 @@ import json
 import os
 
 import ramlfications
-
 from future.utils import iteritems
+
 try:
     from collections import OrderedDict
 except ImportError:  # pragma: no cover
@@ -39,10 +39,14 @@ class RamlSpec(object):
         # waiting for raml1.0 support in ramlfications
         # we cannot use its raml parser
         # so we just use its loader
-        self.api = ramlfications.load(os.path.join(
-            os.path.dirname(__file__), os.pardir, 'spec', 'api.raml'))
+        fn = os.path.join(os.path.dirname(__file__), os.pardir, 'spec', 'api.raml')
+        self.api = ramlfications.load(fn)
+        with open(fn) as f:
+            self.rawraml = f.read()
+
         endpoints = {}
         self.endpoints_by_type = {}
+        self.rawendpoints = {}
         self.endpoints = self.parse_endpoints(endpoints, "", self.api)
         self.types = self.parse_types()
 
@@ -66,6 +70,9 @@ class RamlSpec(object):
                             v['eptype'] = _is['bbget']['bbtype']
                             self.endpoints_by_type.setdefault(v['eptype'], {})
                             self.endpoints_by_type[v['eptype']][base] = api
+                        if 'bbgetraw' in _is:
+                            self.rawendpoints.setdefault(base, {})
+                            self.rawendpoints[base] = api
         return endpoints
 
     def reindent(self, s, indent):
@@ -78,3 +85,13 @@ class RamlSpec(object):
     def parse_types(self):
         types = self.api['types']
         return types
+
+    def iter_actions(self, endpoint):
+        ACTIONS_MAGIC = '/actions/'
+        for k, v in endpoint.iteritems():
+            if k.startswith(ACTIONS_MAGIC):
+                k = k[len(ACTIONS_MAGIC):]
+                v = v['post']
+                # simplify the raml tree for easier processing
+                v['body'] = v['body']['application/json'].get('properties', {})
+                yield (k, v)
