@@ -28,8 +28,6 @@ Features
 Fixes
 ~~~~~
 
-* Fix the UI to better adapt to different screen width (:bug:`3614`)
-
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
@@ -62,7 +60,7 @@ For a more detailed description of the changes made in this version, see the git
 
 .. code-block:: bash
 
-   git log v0.9.0rc3..master
+   git log v0.9.0rc4..master
 
 Older Versions
 --------------
@@ -74,6 +72,7 @@ Newer versions are also available here:
     :maxdepth: 1
 
     0.9.0
+    0.9.0rc4
     0.9.0rc3
     0.9.0rc2
     0.9.0rc1
