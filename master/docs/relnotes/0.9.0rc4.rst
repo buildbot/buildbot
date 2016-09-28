@@ -1,4 +1,4 @@
-Release Notes for Buildbot ``0.9.0rc3``
+Release Notes for Buildbot ``0.9.0rc4``
 ========================================
 
 
