@@ -53,7 +53,7 @@
 # * Check the "twistd.log" file in your buildbot directories - once each
 #   bot has been started it just writes to this log as normal.
 # * Try executing:
-#   % buildbot_windows_service debug
+#   % buildbot_worker_windows_service debug
 #   This will execute the buildbot service in "debug" mode, and allow you to
 #   see all messages etc generated. If the service works in debug mode but
 #   not as a real service, the error probably relates to the environment or
