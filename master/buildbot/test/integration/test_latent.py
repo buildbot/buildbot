@@ -474,3 +474,59 @@ class Tests(SynchronousTestCase):
             # make sure stacktrace is present in html
             self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
         controller.auto_stop(True)
+
+    def test_worker_restarted_before_taking_new_build(self):
+        """
+        If build_wait_timeout is 0, the worker must always restart from clean environment
+        """
+        controller = LatentController('local', build_wait_timeout=0)
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        claimed_build_requests = []
+        self.successResultOf(master.mq.startConsuming(
+            lambda key, request: claimed_build_requests.append(request),
+            ('buildrequests', None, 'claimed')))
+
+        # Request two builds.
+        for i in range(2):
+            self.createBuildrequest(master, [builder_id])
+
+        self.assertTrue(controller.starting)
+        controller.start_instance(True)
+        controller.connect_worker(self)
+
+        # Only one buildrequest was claimed until we allow the worker to stop
+        self.assertEqual(
+            len(claimed_build_requests), 1)
+
+        self.assertFalse(controller.starting)
+        self.assertTrue(controller.stopping)
+
+        # finish instance stopping
+        controller.disconnect_worker("")
+        controller.stop_instance(True)
+        self.assertEqual(
+            len(claimed_build_requests), 2)
+
+        self.assertTrue(controller.starting)
+        controller.start_instance(True)
+        controller.connect_worker(self)
+
+        self.assertFalse(controller.starting)
+        self.assertTrue(controller.stopping)
+
+        controller.auto_stop(True)

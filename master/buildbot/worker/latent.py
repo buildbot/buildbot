@@ -196,21 +196,20 @@ class AbstractLatentWorker(AbstractWorker):
         return AbstractWorker.canStartBuild(self)
 
     def buildStarted(self, sb):
+        assert sb.isBusy()
         self._clearBuildWaitTimer()
 
     def buildFinished(self, sb):
-        AbstractWorker.buildFinished(self, sb)
-
+        assert not sb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
-                d = self.insubstantiate()
-                # try starting builds for this worker after insubstantiating;
-                # this will cause the worker to re-substantiate immediately if
-                # there are pending build requests.
-                d.addCallback(lambda _:
-                              self.botmaster.maybeStartBuildsForWorker(self.workername))
+                self.insubstantiate()
+                # insubstantiate will automatically retry to create build for this worker
             else:
                 self._setBuildWaitTimer()
+
+        # AbstractWorker.buildFinished() will try to start the next build for that worker
+        AbstractWorker.buildFinished(self, sb)
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:
@@ -234,7 +233,7 @@ class AbstractLatentWorker(AbstractWorker):
         try:
             yield d
         except Exception as e:
-            # The case of failure for insubstanciation is bad as we have a left-over costing ressource
+            # The case of failure for insubstantiation is bad as we have a left-over costing ressource
             # There is not much thing to do here generically, so we must put the problem of stop_instance
             # reliability to the backend driver
             log.err(e, "while insubstantiating")

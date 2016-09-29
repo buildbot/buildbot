@@ -66,6 +66,9 @@ class Connection(base.Connection):
     proxies = {base.FileWriterImpl: FileWriterProxy,
                base.FileReaderImpl: FileReaderProxy}
 
+    def loseConnection(self):
+        pass
+
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)
 

@@ -34,3 +34,8 @@ class LocalWorker(WorkerBase):
         res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield self.parent.detached()
+        yield WorkerBase.stopService(self)
