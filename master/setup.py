@@ -103,6 +103,13 @@ def define_plugin_entry(name, module_name):
     return '%s = %s:%s' % (entry, module_name, name)
 
 
+def concat_dicts(*dicts):
+    result = dict()
+    for d in dicts:
+        result.update(d)
+    return result
+
+
 def define_plugin_entries(groups):
     """
     helper to all groups for plugins
@@ -121,13 +128,6 @@ def define_plugin_entries(groups):
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
     long_description = long_d_f.read()
-
-scripts = ["bin/buildbot"]
-# sdist is usually run on a non-Windows platform, but the buildslave.bat file
-# still needs to get packaged.
-if 'sdist' in sys.argv or sys.platform == 'win32':
-    scripts.append("contrib/windows/buildbot.bat")
-    scripts.append("contrib/windows/buildbot_service.py")
 
 setup_args = {
     'name': "buildbot",
@@ -207,10 +207,9 @@ setup_args = {
         include("buildbot/spec", "*.raml"),
         include("buildbot/spec/types", "*.raml"),
     ] + include_statics("buildbot/www/static"),
-    'scripts': scripts,
     'cmdclass': {'install_data': install_data_twisted,
                  'sdist': our_sdist},
-    'entry_points': define_plugin_entries([
+    'entry_points': concat_dicts(define_plugin_entries([
         ('buildbot.changes', [
             ('buildbot.changes.mail', [
                 'MaildirSource', 'CVSMaildirSource',
@@ -373,7 +372,13 @@ setup_args = {
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
                 'RebuildBuildEndpointMatcher']),
         ])
-    ])
+    ]), {
+        'console_scripts': [
+            'buildbot=buildbot.scripts.runner:run',
+            # this will also be shipped on non windows :-(
+            'buildbot_windows_service=buildbot.scripts.windows_service:HandleCommandLine',
+        ]}
+    )
 }
 
 # set zip_safe to false to force Windows installs to always unpack eggs

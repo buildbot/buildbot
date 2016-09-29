@@ -3,29 +3,29 @@
 # * Install and configure buildbot as per normal (ie, running
 #  'setup.py install' from the source directory).
 #
-# * Configure any number of build-bot directories (workers or masters), as
+# * Configure any number of build-bot directories (slaves or masters), as
 #   per the buildbot instructions.  Test these directories normally by
 #   using the (possibly modified) "buildbot.bat" file and ensure everything
 #   is working as expected.
 #
 # * Install the buildbot service.  Execute the command:
-#   % python buildbot_service.py
+#   % buildbot_windows_service
 #   To see installation options.  You probably want to specify:
 #   + --username and --password options to specify the user to run the
 #   + --startup auto to have the service start at boot time.
 #
 #   For example:
-#   % python buildbot_service.py --user mark --password secret \
+#   % buildbot_windows_service --user mark --password secret \
 #     --startup auto install
 #   Alternatively, you could execute:
-#   % python buildbot_service.py install
+#   % buildbot_windows_service install
 #   to install the service with default options, then use Control Panel
 #   to configure it.
 #
 # * Start the service specifying the name of all buildbot directories as
 #   service args.  This can be done one of 2 ways:
 #   - Execute the command:
-#     % python buildbot_service.py start "dir_name1" "dir_name2"
+#     % buildbot_windows_service start "dir_name1" "dir_name2"
 #   or:
 #   - Start Control Panel->Administrative Tools->Services
 #   - Locate the previously installed buildbot service.
@@ -46,7 +46,7 @@
 # * If you change the buildbot configuration, you must restart the service.
 #   There is currently no way to ask a running buildbot to reload the
 #   config.  You can restart by executing:
-#   % python buildbot_service.py restart
+#   % buildbot_windows_service restart
 #
 # Troubleshooting:
 # * Check the Windows event log for any errors.
@@ -108,8 +108,8 @@ CHILDCAPTURE_MAX_BLOCKS = 200
 class BBService(win32serviceutil.ServiceFramework):
     _svc_name_ = 'BuildBot'
     _svc_display_name_ = _svc_name_
-    _svc_description_ = 'Manages local buildbot workers and masters - ' \
-                        'see http://buildbot.sourceforge.net'
+    _svc_description_ = 'Manages local buildbot slaves and masters - ' \
+                        'see http://buildbot.net'
 
     def __init__(self, args):
         win32serviceutil.ServiceFramework.__init__(self, args)
@@ -215,7 +215,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # Set the stop event - the main loop takes care of termination.
         win32event.SetEvent(self.hWaitStop)
 
-    # SvcStop only gets triggered when the user explicitly stops (or restarts)
+    # SvcStop only gets triggered when the user explictly stops (or restarts)
     # the service.  To shut the service down cleanly when Windows is shutting
     # down, we also need to hook SvcShutdown.
     SvcShutdown = SvcStop
@@ -508,7 +508,7 @@ def _RunChild(runfn):
         # py2exe sets this env vars that may screw our child process - reset
         del os.environ["PYTHONPATH"]
 
-    # Start the buildbot/buildbot-worker app
+    # Start the buildbot/buildslave app
     runfn()
     print("Service child process terminating normally.")
 
@@ -522,17 +522,17 @@ def _WaitForShutdown(h):
 
 
 def DetermineRunner(bbdir):
-    '''Checks if the given directory is a buildbot worker or a master and 
-    returns the appropriate run function.'''
+    '''Checks if the given directory is a buildslave or a master and returns the
+    appropriate run function.'''
     try:
-        import buildbot_worker.scripts.runner
+        import buildslave.scripts.runner
         tacfile = os.path.join(bbdir, 'buildbot.tac')
 
         if os.path.exists(tacfile):
             with open(tacfile, 'r') as f:
                 contents = f.read()
-                if 'import Worker' in contents:
-                    return buildbot_worker.scripts.runner.run
+                if 'import BuildSlave' in contents:
+                    return buildslave.scripts.runner.run
 
     except ImportError:
         # Use the default
@@ -549,7 +549,7 @@ def HandleCommandLine():
         # Special command-line created by the service to execute the
         # child-process.
         # First arg is the handle to wait on
-        # Fourth arg is the config directory to use for the buildbot worker
+        # Fourth arg is the config directory to use for the buildbot/slave
         _RunChild(DetermineRunner(sys.argv[5]))
     else:
         win32serviceutil.HandleCommandLine(BBService,

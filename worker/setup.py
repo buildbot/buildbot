@@ -27,13 +27,6 @@ from distutils.core import setup
 
 from buildbot_worker import version
 
-scripts = ["bin/buildbot-worker"]
-# sdist is usually run on a non-Windows platform, but the buildbot-worker.bat
-# file still needs to get packaged.
-if 'sdist' in sys.argv or sys.platform == 'win32':
-    scripts.append("contrib/windows/buildbot-worker.bat")
-    scripts.append("contrib/windows/buildbot_service.py")
-
 
 class our_install_data(install_data):
 
@@ -97,14 +90,19 @@ setup_args = {
         "buildbot_worker.test.util",
         "buildbot_worker.test.unit",
     ],
-    'scripts': scripts,
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot_worker", [])],
     'cmdclass': {
         'install_data': our_install_data,
         'sdist': our_sdist
-    }
+    },
+    'entry_points': {
+        'console_scripts': [
+            'buildbot_worker=buildbot_worker.scripts.runner:run',
+            # this will also be shipped on non windows :-(
+            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
+        ]}
 }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
