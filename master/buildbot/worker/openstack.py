@@ -56,6 +56,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  # to novaclient.
                  nova_args=None,
                  client_version='2',
+                 region=None,
                  **kwargs):
 
         if not client or not nce:
@@ -72,7 +73,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.client_version = client_version
         self.novaclient = client.Client(client_version, os_username,
                                         os_password, os_tenant_name,
-                                        os_auth_url)
+                                        os_auth_url, region_name=region)
 
         if block_devices is not None:
             self.block_devices = [
