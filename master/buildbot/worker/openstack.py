@@ -55,7 +55,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  # Have a nova_args parameter to allow passing things directly
                  # to novaclient.
                  nova_args=None,
-                 client_version='1.1',
+                 client_version='2',
                  **kwargs):
 
         if not client or not nce:
