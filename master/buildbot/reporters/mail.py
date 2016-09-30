@@ -111,8 +111,7 @@ class MailNotifier(service.BuildbotService):
                     messageFormatter=None, extraHeaders=None,
                     addPatch=True, useTls=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None
-                    ):
+                    name=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
@@ -171,8 +170,7 @@ class MailNotifier(service.BuildbotService):
                         messageFormatter=None, extraHeaders=None,
                         addPatch=True, useTls=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None
-                        ):
+                        name=None):
 
         if extraRecipients is None:
             extraRecipients = []
@@ -315,8 +313,7 @@ class MailNotifier(service.BuildbotService):
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
                                       'title': title,
-                                      'builder': builderName,
-                                      }
+                                      'builder': builderName}
 
         assert '\n' not in subject, \
             "Subject cannot contain newlines"
