@@ -107,10 +107,13 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # Check that there really aren't any running builds
             n = 0
             for builder in self.builders.values():
-                n += len(builder.building)
+                if builder.building:
+                    num_builds = len(builder.building)
+                    log.msg("Builder %s has %i builds running" % (builder, num_builds))
+                    n += num_builds
             if n > 0:
                 log.msg(
-                    "Not shutting down, builder %s has %i builds running" % (builder, n))
+                    "Not shutting down, there are %i builds running" % n)
                 log.msg("Trying shutdown sequence again")
                 yield util.asyncSleep(1)
             else:
