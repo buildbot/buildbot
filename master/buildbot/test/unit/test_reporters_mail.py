@@ -79,6 +79,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
                     buildid=_id, name="workername", value="sl"),
                 fakedb.BuildProperty(
                     buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="scheduler", value="checkin"),
             ])
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
                                                 wantPreviousBuild=wantPreviousBuild)
@@ -256,6 +258,26 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn = yield self.setupMailNotifier('from@example.org',
                                           tags=["fast"])
         self.assertTrue(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
+    def test_isMailNeeded_schedulers_positive(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          schedulers=['checkin'])
+        self.assertTrue(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
+    def test_isMailNeeded_schedulers_negative(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          schedulers=['some-random-scheduler'])
+        self.assertFalse(mn.isMailNeeded(build))
 
     @defer.inlineCallbacks
     def run_simple_test_sends_email_for_mode(self, mode, result, shouldSend=True):

@@ -41,6 +41,10 @@ Features
 
 * new :bb:step:`GitHub` which correctly checkout the magic branch like ``refs/pull/xx/merge``.
 
+* :class:`MailNotifier` now supports a `schedulers` constructor argument that
+  allows you to send mail only for builds triggered by the specified list of
+  schedulers.
+
 Fixes
 ~~~~~
 
