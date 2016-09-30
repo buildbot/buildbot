@@ -195,12 +195,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         if not self.building:
             if self.build_wait_timeout == 0:
-                d = self.insubstantiate()
-                # try starting builds for this worker after insubstantiating;
-                # this will cause the worker to re-substantiate immediately if
-                # there are pending build requests.
-                d.addCallback(lambda _:
-                              self.botmaster.maybeStartBuildsForWorker(self.workername))
+                self._soft_disconnect()
             else:
                 self._setBuildWaitTimer()
 
