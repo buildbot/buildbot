@@ -36,7 +36,7 @@ class HttpStatusPushBase(service.BuildbotService):
     def checkConfig(self, *args, **kwargs):
         service.BuildbotService.checkConfig(self)
         if txrequests is None:
-            config.error("Please install txrequests and requests to use %s (pip install txrequest)" %
+            config.error("Please install txrequests and requests to use %s (pip install txrequests)" %
                          (self.__class__,))
         if not isinstance(kwargs.get('builders'), (type(None), list)):
             config.error("builders must be a list or None")
