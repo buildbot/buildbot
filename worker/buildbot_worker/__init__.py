@@ -57,7 +57,14 @@ def getVersion(init_file):
         if (not p.returncode) and out:
             v = VERSION_MATCH.search(out)
             if v:
-                return v.group(1)
+                version = v.group(1)
+                # Always return version of type str on Python 2 and 3.
+                if isinstance(version, str):
+                    # Python 2
+                    return version
+                else:
+                    # Python 3
+                    return version.decode("utf-8")
     except OSError:
         pass
 
