@@ -76,8 +76,10 @@ matrix:
     - python: "2.6"
       env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
-#    - python: "3.4"
-#      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
+    - python: "3.5"
+      env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
+  allow_failures:
+    - python: "3.5"
 
 # Dependencies installation commands
 install:
@@ -106,11 +108,7 @@ install:
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
 
 
-  # for python 3 we dont install everything yet..
-  - |
-      [ $TESTS != py3 ] || \
-      pip install -e worker \
-                  future
+  - "pip install -e worker future"
 
   # Run additional tests only in latest configuration
   # Astroid 1.3.0 dropped Python-2.6 spuport
@@ -148,8 +146,7 @@ script:
   # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
-  # run tests that are know to work on py3
-  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildbot_worker.test"
+  - "trial  --reporter=text --rterrors buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
