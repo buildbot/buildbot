@@ -29,6 +29,7 @@
 
 # NOTE: This file is NOT under GPL.  See above.
 
+from __future__ import division
 from __future__ import print_function
 
 import code

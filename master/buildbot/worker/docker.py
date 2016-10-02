@@ -15,6 +15,8 @@
 
 # Needed so that this module name don't clash with docker-py on older python.
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import socket
 from io import BytesIO
