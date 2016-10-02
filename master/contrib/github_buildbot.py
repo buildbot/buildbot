@@ -134,7 +134,7 @@ class GitHubBuildBot(resource.Resource):
         except Exception as e:
             logging.exception(e)
             request.setResponseCode(INTERNAL_SERVER_ERROR)
-            return json.dumps({"error": e.message})
+            return json.dumps({"error": str(e)})
 
     def process_change(self, change, branch, repo, repo_url):
         files = change['added'] + change['removed'] + change['modified']

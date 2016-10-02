@@ -210,8 +210,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             self.ec2.KeyPair(self.keypair_name).load()
             # key_pair.delete() # would be used to recreate
         except ClientError as e:
-            if 'InvalidKeyPair.NotFound' not in e.message:
-                if 'AuthFailure' in e.message:
+            if 'InvalidKeyPair.NotFound' not in str(e):
+                if 'AuthFailure' in str(e):
                     log.msg('POSSIBLE CAUSES OF ERROR:\n'
                             '  Did you supply your AWS credentials?\n'
                             '  Did you sign up for EC2?\n'
@@ -229,7 +229,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             try:
                 self.ec2.SecurityGroup(security_name).load()
             except ClientError as e:
-                if 'InvalidGroup.NotFound' in e.message:
+                if 'InvalidGroup.NotFound' in str(e):
                     self.security_group = self.ec2.create_security_group(
                         GroupName=security_name,
                         Description='Authorization to access the buildbot instance.')
