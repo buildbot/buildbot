@@ -96,7 +96,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                              {'logid': logid, 'firstline': i, 'content': expLines[i] + '\n'})
 
         # half and half
-        mid = len(expLines) / 2
+        mid = int(len(expLines) / 2)
         for f, l in (0, mid), (mid, len(expLines) - 1):
             logchunk = yield self.callGet(path,
                                           resultSpec=resultspec.ResultSpec(offset=f, limit=l - f + 1))

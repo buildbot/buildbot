@@ -608,7 +608,7 @@ class TestRealDB(unittest.TestCase,
             for n in range(1000)
         ] + [
             fakedb.ConfiguredWorker(
-                id=n + 3000, workerid=50 + n, buildermasterid=1000 + n / 2)
+                id=n + 3000, workerid=50 + n, buildermasterid=int(1000 + n / 2))
             for n in range(2000)
         ]
         yield self.insertTestData(self.baseRows + manyWorkers)
