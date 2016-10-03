@@ -171,7 +171,7 @@ def hook(ui, repo, hooktype, node=None, source=None, **kwargs):
             ui.write('* Virtualenv "%s" does not exist.\n' % venv)
         else:
             activate_this = os.path.join(venv, "bin/activate_this.py")
-            execfile(activate_this, dict(__file__=activate_this))
+            exec(open(activate_this).read(), dict(__file__=activate_this))
 
     # - auth
     username = ui.config('hgbuildbot', 'user')

@@ -118,7 +118,7 @@ def getConfigFromTac(basedir):
         # don't mess with the global namespace, but set __file__ for
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
-        execfile(tacFile, tacGlobals)
+        exec(open(tacFile).read(), tacGlobals)
         return tacGlobals
     return None
 
