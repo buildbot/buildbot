@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import text_type
+
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
 from twisted.protocols import basic
@@ -62,6 +64,8 @@ class NetstringParser(basic.NetstringReceiver):
         self.strings = []
 
     def feed(self, data):
+        if isinstance(data, text_type):
+            data = data.encode("utf-8")
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!
         if self.brokenPeer:
