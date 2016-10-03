@@ -15,8 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-
-import urllib2
+from future.moves.urllib import request
 
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath
@@ -93,9 +92,10 @@ class Tests(unittest.TestCase):
         self.assertEqual(sorted(data.keys()),
                          sorted(['db']))
 
-    def test_urllib2(self):
+    def test_urllib(self):
 
         class FakeRequest(object):
+
             def __init__(self, *args, **kwargs):
                 self.args = args
                 self.kwargs = kwargs
@@ -103,6 +103,7 @@ class Tests(unittest.TestCase):
         open_url = []
 
         class urlopen(object):
+
             def __init__(self, r):
                 self.request = r
                 open_url.append(self)
@@ -113,10 +114,10 @@ class Tests(unittest.TestCase):
             def close(self):
                 pass
 
-        self.patch(urllib2, "Request", FakeRequest)
-        self.patch(urllib2, "urlopen", urlopen)
+        self.patch(request, "Request", FakeRequest)
+        self.patch(request, "urlopen", urlopen)
         _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
-                        ('https://events.buildbot.net/events/phone_home',
-                         '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
+                         ('https://events.buildbot.net/events/phone_home',
+                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))

@@ -15,19 +15,19 @@
 
 """
 This files implement buildbotNetUsageData options
-It uses urllib2 instead of requests in order to avoid requiring another dependency for statistics feature.
-urllib2 supports http_proxy already urllib2 is blocking and thus everything is done from a thread.
+It uses urllib instead of requests in order to avoid requiring another dependency for statistics feature.
+urllib supports http_proxy already urllib is blocking and thus everything is done from a thread.
 """
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.moves.urllib import request
 
 import hashlib
 import inspect
 import json
 import platform
 import socket
-import urllib2
 
 from twisted.internet import threads
 from twisted.python import log
@@ -89,12 +89,14 @@ def basicData(master):
 
     # we hash the master's name + various other master dependent variables
     # to get as much as possible an unique id
-    # we hash it to not leak private information about the installation such as hostnames and domain names
+    # we hash it to not leak private information about the installation such
+    # as hostnames and domain names
     installid = hashlib.sha1(
         master.name  # master name contains hostname + master basepath
         +
         socket.getfqdn()  # we add the fqdn to account for people
-                          # call their buildbot host 'buildbot' and install it in /var/lib/buildbot
+                          # call their buildbot host 'buildbot' and install it
+                          # in /var/lib/buildbot
     ).hexdigest()
     return {
         'installid': installid,
@@ -103,7 +105,8 @@ def basicData(master):
             'machine': platform.machine(),
             'processor': platform.processor(),
             'python_implementation': platform.python_implementation(),
-            # xBSD including osx will disclose too much information after [4] like where it was built
+            # xBSD including osx will disclose too much information after [4]
+            # like where it was built
             'version': " ".join(platform.version().split(' ')[:4]),
             'distro': get_distro()
         },
@@ -147,8 +150,9 @@ def _sendBuildbotNetUsageData(data):
     log.msg("buildbotNetUsageData: sending {}".format(data))
     data = json.dumps(data)
     clen = len(data)
-    req = urllib2.Request(PHONE_HOME_URL, data, {'Content-Type': 'application/json', 'Content-Length': clen})
-    f = urllib2.urlopen(req)
+    req = request.Request(PHONE_HOME_URL, data, {
+        'Content-Type': 'application/json', 'Content-Length': clen})
+    f = request.urlopen(req)
     res = f.read()
     f.close()
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
