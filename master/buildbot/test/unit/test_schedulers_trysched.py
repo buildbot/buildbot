@@ -35,6 +35,7 @@ if PY3:
 else:
     from io import BytesIO as StringIO
 
+
 class TryBase(unittest.TestCase):
 
     def test_filterBuilderList_ok(self):

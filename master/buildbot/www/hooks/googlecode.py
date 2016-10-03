@@ -16,6 +16,8 @@
 # Quite inspired from the github hook.
 import hmac
 
+from future.utils import text_type
+
 from twisted.python import log
 
 from buildbot.util import json
@@ -39,8 +41,13 @@ class Payload(object):
         self.revision_count = payload['revision_count']
 
     def authenticate(self, secret_key):
+        if isinstance(secret_key, text_type):
+            secret_key = secret_key.encode("utf-8")
         m = hmac.new(secret_key)
-        m.update(self._body)
+        body = self._body
+        if isinstance(body, text_type):
+            body = body.encode("utf-8")
+        m.update(body)
         digest = m.hexdigest()
         return digest == self._auth_code
 

@@ -42,6 +42,7 @@ if PY3:
 else:
     from io import BytesIO as StringIO
 
+
 class FakeSession(object):
     pass
 

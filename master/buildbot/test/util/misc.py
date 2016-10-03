@@ -15,11 +15,15 @@
 from __future__ import print_function
 from future.utils import text_type
 
-import cStringIO
 import os
 import sys
 
 import buildbot
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class PatcherMixin(object):

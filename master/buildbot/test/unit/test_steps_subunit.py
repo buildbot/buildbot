@@ -12,7 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+
+from future.utils import PY3
 
 import mock
 
@@ -25,6 +26,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.steps import subunit
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 @implementer(interfaces.ILogObserver)
@@ -40,7 +46,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.errors = []
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
-        self.logobserver.warningio = StringIO.StringIO()
+        self.logobserver.warningio = StringIO()
         self.patch(subunit, 'SubunitLogObserver',
                    lambda: self.logobserver)
         return self.setUpBuildStep()

@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
+
+from future.utils import PY3
 from future.utils import itervalues
 
-import StringIO
-import sys
-
 import mock
+
+import sys
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -38,6 +39,11 @@ try:
     from buildbot_worker.bot import Worker
 except ImportError:
     Worker = None
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 @implementer(IConfigLoader)
@@ -137,7 +143,7 @@ class RunMasterBase(unittest.TestCase):
         @defer.inlineCallbacks
         def dump():
             if not self._passed:
-                dump = StringIO.StringIO()
+                dump = StringIO()
                 print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:

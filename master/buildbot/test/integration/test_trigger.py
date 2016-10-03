@@ -12,13 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+from future.utils import PY3
 
 from twisted.internet import defer
 
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
@@ -58,7 +62,7 @@ class TriggeringMaster(RunMasterBase):
             build['steps'][1]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
-        dump = StringIO.StringIO()
+        dump = StringIO()
         for b in builds:
             yield self.printBuild(b, dump)
         # depending on the environment the number of lines is different between

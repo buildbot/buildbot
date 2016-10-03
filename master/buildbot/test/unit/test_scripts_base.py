@@ -12,10 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
 import os
 import string
 import textwrap
+
+from future.utils import PY3
 
 from twisted.python import runtime
 from twisted.python import usage
@@ -27,12 +28,17 @@ from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
-        self.stdout = cStringIO.StringIO()
+        self.stdout = StringIO()
         self.setUpStdoutAssertions()
 
     def test_isBuildmasterDir_no_dir(self):

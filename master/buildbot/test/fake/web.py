@@ -12,12 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from StringIO import StringIO
+from future.utils import PY3
 
 from mock import Mock
 
 from twisted.internet import defer
 from twisted.web import server
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 def fakeMasterForHooks():

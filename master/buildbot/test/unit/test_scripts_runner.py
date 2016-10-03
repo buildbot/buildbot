@@ -12,10 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
 import getpass
 import os
 import sys
+
+from future.utils import PY3
 
 import mock
 
@@ -27,6 +28,11 @@ from twisted.trial import unittest
 from buildbot.scripts import base
 from buildbot.scripts import runner
 from buildbot.test.util import misc
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class OptionsMixin(object):
@@ -837,7 +843,7 @@ class TestRun(unittest.TestCase):
 
     def test_run_bad(self):
         self.patch(sys, 'argv', ['buildbot', 'my', '-l'])
-        stdout = cStringIO.StringIO()
+        stdout = StringIO()
         self.patch(sys, 'stdout', stdout)
         try:
             runner.run()

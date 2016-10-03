@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import string_types
@@ -57,7 +58,11 @@ from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 
-from io import BytesIO
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
+
 
 class BuildStepFailed(Exception):
     pass
@@ -213,7 +218,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = BytesIO(alltext)
+        io = StringIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):

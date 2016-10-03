@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from future.utils import iteritems
-
-import cStringIO
 import os
 import re
 import sys
 import textwrap
+
+from future.utils import PY3
+from future.utils import iteritems
 
 import mock
 
@@ -27,6 +27,11 @@ from twisted.trial import unittest
 from buildbot.scripts import base
 from buildbot.scripts import checkconfig
 from buildbot.test.util import dirs
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
@@ -56,8 +61,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 f.write(contents)
 
         old_stdout, old_stderr = sys.stdout, sys.stderr
-        stdout = sys.stdout = cStringIO.StringIO()
-        stderr = sys.stderr = cStringIO.StringIO()
+        stdout = sys.stdout = StringIO()
+        stderr = sys.stderr = StringIO()
         try:
             checkconfig._loadConfig(
                 basedir='configdir', configFile="master.cfg", quiet=False)
