@@ -315,7 +315,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             ping_success_or_failure = Failure()
 
         if ping_success_or_failure is not True:
-            print("ping", ping_success_or_failure)
             yield self.buildPreparationFailure(ping_success_or_failure, "worker_ping")
             self.buildFinished(["worker", "not", "pinged"], RETRY)
             return
@@ -328,7 +327,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         try:
             yield self.conn.remoteStartBuild(self.builder.name)
         except Exception:
-            log.err(Failure(), 'while calling remote startBuild:')
+            yield self.buildPreparationFailure(Failure(), "start_build")
             self.buildFinished(["worker", "not", "building"], RETRY)
             return
 
@@ -339,11 +338,16 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'building')
 
+        # This worker looks sane!
+        worker.resetQuarantine()
+
         # start the sequence of steps
         self.startNextStep()
 
     @defer.inlineCallbacks
     def buildPreparationFailure(self, why, state_string):
+        log.err(why, "while " + state_string)
+        self.workerforbuilder.worker.putInQuarantine()
         step = buildstep.BuildStep(name=state_string)
         step.setBuild(self)
         yield step.addStep()

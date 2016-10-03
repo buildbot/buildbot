@@ -2,6 +2,8 @@
 find . -name VERSION -exec rm {} \;
 rm -rf dist
 mkdir dist
+pip install mock wheel
+set -e
 for pkg in pkg master worker www/base www/console_view www/waterfall_view
 do
   pip install -e ${pkg}

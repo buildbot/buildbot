@@ -56,3 +56,9 @@ class FakeWorker(object):
 
     def canStartBuild(self):
         pass
+
+    def putInQuarantine(self):
+        pass
+
+    def resetQuarantine(self):
+        pass

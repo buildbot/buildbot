@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import print_function
+
 import cStringIO
 import os
 import sys
+
 from future.utils import text_type
+
+import buildbot
 
 
 class PatcherMixin(object):
@@ -71,3 +76,28 @@ def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
         argsBytes.append(arg)
 
     return (executable, argsBytes)
+
+
+def enable_trace(case, trace_exclusions=None, f=sys.stdout):
+    """This function can be called to enable tracing of the execution
+    """
+    if trace_exclusions is None:
+        trace_exclusions = ["twisted", "worker_transition.py", "util/tu",
+                            "log.py", "/mq/", "/db/", "buildbot/data/", "fake/reactor.py"]
+
+    bbbase = os.path.dirname(buildbot.__file__)
+    state = {'indent': 0}
+
+    def tracefunc(frame, event, arg):
+        if frame.f_code.co_filename.startswith(bbbase):
+            if not any(te in frame.f_code.co_filename for te in trace_exclusions):
+                if event == "call":
+                    state['indent'] += 2
+                    print("-" * state['indent'], frame.f_code.co_filename.replace(bbbase, ""),
+                          frame.f_code.co_name, frame.f_code.co_varnames, file=f)
+                if event == "return":
+                    state['indent'] -= 2
+        return tracefunc
+
+    sys.settrace(tracefunc)
+    case.addCleanup(sys.settrace, lambda _a, _b, _c: None)

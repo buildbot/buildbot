@@ -51,6 +51,10 @@ class AbstractWorker(service.BuildbotService, object):
     # reconfig workers after builders
     reconfig_priority = 64
 
+    quarantine_timer = None
+    quarantine_timeout = quarantine_initial_timeout = 10
+    quarantine_max_timeout = 60 * 60
+
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
                     missing_timeout=10 * 60,   # Ten minutes
@@ -275,6 +279,7 @@ class AbstractWorker(service.BuildbotService, object):
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
+        self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
@@ -501,6 +506,9 @@ class AbstractWorker(service.BuildbotService, object):
         if self.worker_status.isPaused():
             return False
 
+        if self.quarantine_timer:
+            return False
+
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
         if self.worker_status.getGraceful():
@@ -582,6 +590,29 @@ class AbstractWorker(service.BuildbotService, object):
 
     def isPaused(self):
         return self.worker_status.isPaused()
+
+    def resetQuarantine(self):
+        self.quarantine_timeout = self.quarantine_initial_timeout
+
+    def putInQuarantine(self):
+        if self.quarantine_timer:  # already in quarantine
+            return
+        self.quarantine_timer = self.master.reactor.callLater(self.quarantine_timeout, self.exitQuarantine)
+        log.msg("{} has been put in quarantine for {}s".format(self.name, self.quarantine_timeout))
+        # next we will wait twice as long
+        self.quarantine_timeout *= 2
+        if self.quarantine_timeout > self.quarantine_max_timeout:
+            # unless we hit the max timeout
+            self.quarantine_timeout = self.quarantine_max_timeout
+
+    def exitQuarantine(self):
+        self.quarantine_timer = None
+        self.botmaster.maybeStartBuildsForWorker(self.name)
+
+    def stopQuarantineTimer(self):
+        if self.quarantine_timer is not None:
+            self.quarantine_timer.cancel()
+            self.quarantine_timer = None
 
 
 class Worker(AbstractWorker):
