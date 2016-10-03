@@ -57,12 +57,7 @@ from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 
-try:
-    import cStringIO as StringIO
-    assert StringIO
-except ImportError:
-    import StringIO
-
+from io import BytesIO
 
 class BuildStepFailed(Exception):
     pass
@@ -218,7 +213,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = StringIO.StringIO(alltext)
+        io = BytesIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):

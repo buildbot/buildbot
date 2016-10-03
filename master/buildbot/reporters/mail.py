@@ -23,7 +23,7 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from StringIO import StringIO
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.internet import reactor

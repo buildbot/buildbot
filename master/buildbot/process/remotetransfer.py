@@ -19,11 +19,7 @@ import tempfile
 
 from buildbot.worker.protocols import base
 
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
+from io import BytesIO
 
 
 """
@@ -197,4 +193,4 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        FileReader.__init__(self, StringIO(s))
+        FileReader.__init__(self, BytesIO(s))
