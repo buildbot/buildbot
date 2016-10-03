@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 import os
 import sys
-from cStringIO import StringIO
+from io import BytesIO
+from io import StringIO
 
+from future.utils import PY3
 from twisted.trial import unittest
 
 from buildbot.scripts import tryserver
@@ -31,7 +33,10 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
 
     def test_trycmd(self):
         config = dict(jobdir='jobdir')
-        inputfile = StringIO('this is my try job')
+        if PY3:
+            inputfile = StringIO(u'this is my try job')
+        else:
+            inputfile = BytesIO(b'this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
         rc = tryserver.tryserver(config)

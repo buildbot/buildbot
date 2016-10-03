@@ -17,6 +17,8 @@ import sys
 import time
 from hashlib import md5
 
+from future.utils import text_type
+
 
 def tryserver(config):
     jobdir = os.path.expanduser(config["jobdir"])
@@ -26,12 +28,16 @@ def tryserver(config):
     # going to MD5 the contents and prepend a timestamp.
     timestring = "%d" % time.time()
     m = md5()
+
+    if isinstance(job, text_type):
+        job = job.encode("utf-8")
+
     m.update(job)
     jobhash = m.hexdigest()
     fn = "%s-%s" % (timestring, jobhash)
     tmpfile = os.path.join(jobdir, "tmp", fn)
     newfile = os.path.join(jobdir, "new", fn)
-    with open(tmpfile, "w") as f:
+    with open(tmpfile, "wb") as f:
         f.write(job)
     os.rename(tmpfile, newfile)
 
