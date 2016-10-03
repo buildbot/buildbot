@@ -23,7 +23,7 @@ from buildbot.test.util.integration import RunMasterBase
 # we make sure that we can reconfigure the master while build is running
 
 
-class SetProperyFromCommand(RunMasterBase):
+class SetPropertyFromCommand(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_setProp(self):
