@@ -73,15 +73,17 @@ For example::
             master.data.get(('buildsets', req1['buildsetid'])),
             master.data.get(('buildsets', req2['buildsetid']))
             ])
+        selfSourcestamps = selfBuildset['sourcestamps']
+        otherSourcestamps = otherBuildset['sourcestamps']
 
-        if len(selfBuildset['sourcestamps']) != len(otherBuildset['sourcestamps']):
+        if len(selfSourcestamps) != len(otherSourcestamps):
             defer.returnValue(False)
 
-        for selfSourcestamp, i in enumerate(selfBuildset['sourcestamps']):
-            if selfSourcestamp['branch'] != otherBuildset['sourcestamps'][i]['branch']:
-                return False
+        for selfSourcestamp, otherSourcestamp in zip(selfSourcestamps, otherSourcestamps):
+            if selfSourcestamp['branch'] != otherSourcestamp['branch']:
+                defer.returnValue(False)
 
-        return True
+        defer.returnValue(True)
 
     c['collapseRequests'] = collapseRequests
 
