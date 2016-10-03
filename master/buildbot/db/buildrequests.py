@@ -77,7 +77,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None):
+                         bsid=None, branch=None, repository=None, resultSpec=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -109,6 +109,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(sstamps_tbl.c.branch == branch)
             if repository is not None:
                 q = q.where(sstamps_tbl.c.repository == repository)
+
+            if resultSpec is not None:
+                return resultSpec.thd_execute(
+                    conn, q,
+                    lambda r: self._brdictFromRow(r, self.db.master.masterid))
 
             res = conn.execute(q)
 

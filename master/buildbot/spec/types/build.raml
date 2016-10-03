@@ -75,7 +75,10 @@ properties:
         description: time at which this build started
         type: date
     complete:
-        description: true if this build is complete
+        description: |
+            true if this build is complete
+            Note that this is a calculated field (from complete_at != None).
+            Ordering by this field is not optimized by the database layer.
         type: boolean
     complete_at?:
         description: time at which this build was complete, or None if it's still running

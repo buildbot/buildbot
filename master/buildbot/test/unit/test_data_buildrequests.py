@@ -149,7 +149,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             builderid=None,
             bsid=None,
             complete=None,
-            claimed=None)
+            claimed=None,
+            resultSpec=resultspec.ResultSpec())
 
     @defer.inlineCallbacks
     def testGetFilters(self):
@@ -168,7 +169,8 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             builderid=None,
             bsid=55,
             complete=False,
-            claimed=True)
+            claimed=True,
+            resultSpec=resultspec.ResultSpec(filters=[f4, f5]))
 
     @defer.inlineCallbacks
     def testGetClaimedByMasterIdFilters(self):
@@ -185,7 +187,22 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             builderid=None,
             bsid=None,
             complete=None,
-            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID)
+            claimed=fakedb.FakeBuildRequestsComponent.MASTER_ID,
+            resultSpec=resultspec.ResultSpec(filters=[f1]))
+
+    @defer.inlineCallbacks
+    def testGetSortedLimit(self):
+        yield self.master.db.buildrequests.completeBuildRequests([44], 1)
+        res = yield self.callGet(
+            ('buildrequests',),
+            resultSpec=resultspec.ResultSpec(order=['results'], limit=2))
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0]['results'], -1)
+        res = yield self.callGet(
+            ('buildrequests',),
+            resultSpec=resultspec.ResultSpec(order=['-results'], limit=2))
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0]['results'], 1)
 
 
 class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):

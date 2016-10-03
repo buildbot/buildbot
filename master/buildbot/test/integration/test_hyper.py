@@ -39,6 +39,8 @@ NUM_CONCURRENT = int(os.environ.get("HYPER_TEST_NUM_CONCURRENT_BUILD", 1))
 class HyperMaster(RunMasterBase):
 
     def setUp(self):
+        if "TEST_HYPER" not in os.environ:
+            raise SkipTest("hyper integration tests only run when environment variable TEST_HYPER is set")
         if workerhyper.Hyper is None:
             raise SkipTest("hyper is not installed")
         try:

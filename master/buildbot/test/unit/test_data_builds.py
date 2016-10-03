@@ -190,6 +190,14 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
     @defer.inlineCallbacks
+    def test_get_complete_at(self):
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('complete_at', 'eq', [None])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = MockedResultSpec(
             filters=[resultspec.Filter('property', 'eq', [False])])

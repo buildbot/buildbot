@@ -57,6 +57,18 @@ class Db2DataMixin(object):
             'properties': {}
         }
         return defer.succeed(data)
+    fieldMapping = {
+        'buildid': 'builds.id',
+        'number': 'builds.number',
+        'builderid': 'builds.builderid',
+        'buildrequestid': 'builds.buildrequestid',
+        'workerid': 'builds.workerid',
+        'masterid': 'builds.masterid',
+        'started_at': 'builds.started_at',
+        'complete_at': 'builds.complete_at',
+        'state_string': 'builds.state_string',
+        'results': 'builds.results',
+    }
 
 
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
@@ -139,11 +151,13 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         # true or false, if there is a complete filter
         complete = resultSpec.popBooleanFilter("complete")
         buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
+        resultSpec.fieldMapping = self.fieldMapping
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
             buildrequestid=kwargs.get('buildrequestid', buildrequestid),
             workerid=kwargs.get('workerid'),
-            complete=complete)
+            complete=complete,
+            resultSpec=resultSpec)
         # returns properties' list
         filters = resultSpec.popProperties()
         buildscol = []

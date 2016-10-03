@@ -92,7 +92,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         defer.returnValue(rv)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.select()
@@ -107,8 +107,13 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete_at != NULL)
                 else:
                     q = q.where(tbl.c.complete_at == NULL)
+
+            if resultSpec is not None:
+                return resultSpec.thd_execute(conn, q, self._builddictFromRow)
+
             res = conn.execute(q)
             return [self._builddictFromRow(row) for row in res.fetchall()]
+
         return self.db.pool.do(thd)
 
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
