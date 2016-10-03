@@ -19,6 +19,8 @@ import tempfile
 
 from buildbot.worker.protocols import base
 
+from future.utils import text_type
+
 from io import BytesIO
 
 
@@ -150,7 +152,7 @@ class FileReader(base.FileReaderImpl):
         @rtype: C{string} of bytes read from file
         """
         if self.fp is None:
-            return ''
+            return b''
 
         data = self.fp.read(maxlength)
         return data
@@ -174,7 +176,7 @@ class StringFileWriter(base.FileWriterImpl):
     """
 
     def __init__(self):
-        self.buffer = ""
+        self.buffer = b""
 
     def remote_write(self, data):
         self.buffer += data
@@ -193,4 +195,6 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
+        if isinstance(s, text_type):
+            s = s.encode("utf-8")
         FileReader.__init__(self, BytesIO(s))
