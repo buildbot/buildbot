@@ -19,7 +19,6 @@ from __future__ import print_function
 from functools import reduce
 
 from future.utils import string_types
-
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import components

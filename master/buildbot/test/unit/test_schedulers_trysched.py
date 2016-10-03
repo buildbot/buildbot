@@ -16,9 +16,9 @@ import os
 import shutil
 import sys
 
-import mock
-
 from future.utils import PY3
+
+import mock
 
 import twisted
 from twisted.internet import defer

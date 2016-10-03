@@ -18,9 +18,7 @@ import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
-
 from future.utils import text_type
-
 from twisted.python import log
 
 try:

@@ -18,7 +18,6 @@ from hashlib import sha1
 
 from future.utils import PY3
 from future.utils import text_type
-
 from twisted.internet import defer
 from twisted.trial import unittest
 

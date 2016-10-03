@@ -15,7 +15,6 @@
 #
 # Written from the github change hook unit test
 from future.utils import PY3
-
 from twisted.trial import unittest
 
 import buildbot.www.change_hook as change_hook

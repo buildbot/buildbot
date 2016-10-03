@@ -16,12 +16,11 @@
 import os
 import tarfile
 import tempfile
-
-from buildbot.worker.protocols import base
+from io import BytesIO
 
 from future.utils import text_type
 
-from io import BytesIO
+from buildbot.worker.protocols import base
 
 
 """

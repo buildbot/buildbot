@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import text_type
-
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
 from twisted.protocols import basic

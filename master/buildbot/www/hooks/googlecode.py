@@ -17,7 +17,6 @@
 import hmac
 
 from future.utils import text_type
-
 from twisted.python import log
 
 from buildbot.util import json
