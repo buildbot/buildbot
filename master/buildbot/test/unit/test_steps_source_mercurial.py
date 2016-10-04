@@ -525,7 +525,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
@@ -565,7 +565,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
@@ -598,7 +598,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
@@ -683,7 +683,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'default'])
@@ -768,7 +768,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['hg', '--traceback', 'pull', 'http://hg.mozilla.org', '--rev', 'defaultz'])
@@ -1325,7 +1325,7 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
                                       logEnviron=True))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all'])
+                        command=['hg', '--traceback', '--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err'])
             + ExpectShell.log('stdio', stdout='\n')
             + ExpectShell.log('stdio',
                               stdout='File "mercurial\revlog.pyc", line 1115, in checkhash\n'
