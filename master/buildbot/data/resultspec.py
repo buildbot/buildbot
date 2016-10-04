@@ -243,7 +243,7 @@ class ResultSpec(object):
             self.order = unmatched_order
             return query, None
 
-        count_query = query.count()
+        count_query = query.alias('q').count()
         self.order = None
         self.filters = []
         # finally, slice out the limit/offset
