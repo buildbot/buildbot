@@ -39,7 +39,7 @@ for testlist in files:
         print("running test", test)
 
         try:
-            execfile(test, globals().copy())
+            exec(open(test).read(), globals().copy())
 
         except Exception:
             ei = sys.exc_info()
