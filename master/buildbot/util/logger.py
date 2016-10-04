@@ -33,3 +33,4 @@ except ImportError:
 
         def failure(self, format, failure, *args, **kwargs):
             log.error(failure, format.format(args, **kwargs))
+__all__ = ["Logger"]
