@@ -6,7 +6,7 @@
                 th Status
                 th Builders
                 th Infos
-            tr(ng-repeat='worker in workers',
+            tr(ng-repeat='worker in workers | orderBy: ["name"]',
                ng-show="settings.show_old_workers.value || worker.configured_on.length > 0")
                 td {{worker.name}}
                 td {{worker.connected_to.length}} connection
