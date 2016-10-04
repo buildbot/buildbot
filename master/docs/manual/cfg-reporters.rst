@@ -934,7 +934,7 @@ The build status is published to a specific commit SHA in GitLab.
 
 It requires `txrequests`_ package to allow interaction with GitLab Commit Status API.
 
-It uses private token auth, and the token owner is required to have at least reporter access to each repository. As a result, we recommend you use https in your base_url rather than http.
+It uses private token auth, and the token owner is required to have at least developer access to each repository. As a result, we recommend you use https in your base_url rather than http.
 
 
 .. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
