@@ -27,10 +27,12 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
+from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import enable_trace
 
@@ -475,16 +477,18 @@ class Tests(SynchronousTestCase):
             self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
         controller.auto_stop(True)
 
-    def test_worker_restarted_before_taking_new_build(self):
+    def test_worker_close_connection_while_building(self):
         """
-        If build_wait_timeout is 0, the worker must always restart from clean environment
+        If the worker close connection in the middle of the build, the next build can start correctly
         """
         controller = LatentController('local', build_wait_timeout=0)
+        # a step that we can finish when we want
+        stepcontroller = BuildStepController()
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
                               workernames=["local"],
-                              factory=BuildFactory(),
+                              factory=BuildFactory([stepcontroller.step]),
                               ),
             ],
             'workers': [controller.worker],
@@ -496,37 +500,31 @@ class Tests(SynchronousTestCase):
         builder_id = self.successResultOf(
             master.data.updates.findBuilderId('testy'))
 
-        claimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
-            lambda key, request: claimed_build_requests.append(request),
-            ('buildrequests', None, 'claimed')))
-
         # Request two builds.
         for i in range(2):
             self.createBuildrequest(master, [builder_id])
-
-        self.assertTrue(controller.starting)
-        controller.start_instance(True)
-        controller.connect_worker(self)
-
-        # Only one buildrequest was claimed until we allow the worker to stop
-        self.assertEqual(
-            len(claimed_build_requests), 1)
-
-        self.assertFalse(controller.starting)
-        self.assertTrue(controller.stopping)
-
-        # finish instance stopping
-        controller.disconnect_worker("")
-        controller.stop_instance(True)
-        self.assertEqual(
-            len(claimed_build_requests), 2)
-
-        self.assertTrue(controller.starting)
-        controller.start_instance(True)
-        controller.connect_worker(self)
-
-        self.assertFalse(controller.starting)
-        self.assertTrue(controller.stopping)
-
         controller.auto_stop(True)
+
+        self.assertTrue(controller.starting)
+        controller.start_instance(True)
+        controller.connect_worker(self)
+
+        builds = self.successResultOf(
+            master.data.get(("builds",)))
+        self.assertEqual(builds[0]['results'], None)
+        controller.disconnect_worker(self)
+        builds = self.successResultOf(
+            master.data.get(("builds",)))
+        self.assertEqual(builds[0]['results'], CANCELLED)
+
+        # Request one build.
+        self.createBuildrequest(master, [builder_id])
+        controller.start_instance(True)
+        controller.connect_worker(self)
+        builds = self.successResultOf(
+            master.data.get(("builds",)))
+        self.assertEqual(builds[1]['results'], None)
+        stepcontroller.finish_step(SUCCESS)
+        builds = self.successResultOf(
+            master.data.get(("builds",)))
+        self.assertEqual(builds[1]['results'], SUCCESS)

@@ -205,7 +205,8 @@ class AbstractLatentWorker(AbstractWorker):
         assert not sb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
-                self.insubstantiate()
+                # we insubstantiate asynchronously to trigger more bugs with the fake reactor
+                self.master.reactor.callLater(0, self.insubstantiate)
                 # insubstantiate will automatically retry to create build for this worker
             else:
                 self._setBuildWaitTimer()

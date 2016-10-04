@@ -67,8 +67,9 @@ class LatentController(object):
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self, workdir):
-        # LocalWorker does actually disconnect, so we must fo
-        self.worker.conn = None
+        self.worker.conn, conn = None, self.worker.conn
+        # LocalWorker does actually disconnect, so we must force diconnection via detached
+        conn.notifyDisconnected()
         return self.remote_worker.disownServiceParent()
 
     def patchBot(self, case, remoteMethod, patch):
