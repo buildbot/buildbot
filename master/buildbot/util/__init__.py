@@ -169,6 +169,13 @@ def safeTranslate(s):
     return s.translate(badchars_map)
 
 
+def encodeString(s, encoding='utf-8'):
+    if isinstance(s, text_type):
+        return s.encode(encoding)
+    else:
+        return s
+
+
 def none_or_str(x):
     if x is not None and not isinstance(x, str):
         return str(x)
@@ -179,6 +186,7 @@ def ascii2unicode(x):
     if isinstance(x, (text_type, type(None))):
         return x
     return text_type(x, 'ascii')
+
 
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
