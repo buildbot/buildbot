@@ -44,6 +44,9 @@ Features
 * :class:`MailNotifier` now supports a `schedulers` constructor argument that
   allows you to send mail only for builds triggered by the specified list of
   schedulers.
+* :class:`MailNotifier` now supports a `branches` constructor argument that
+  allows you to send mail only for builds triggered by the specified list of
+  branches.
 
 Fixes
 ~~~~~

@@ -315,6 +315,11 @@ MailNotifier arguments
     A list of scheduler names to serve status information for.
     Defaults to ``None`` (all schedulers).
 
+``branches``
+    (list of strings).
+    A list of branch names to serve status information for.
+    Defaults to ``None`` (all branches).
+
 ``addLogs``
     (boolean).
     If ``True``, include all build logs as attachments to the messages.
