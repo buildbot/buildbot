@@ -192,7 +192,6 @@ class LibVirtWorker(AbstractLatentWorker):
             name = yield d.name()
             if name.startswith(self.workername):
                 self.domain = d
-                self.substantiated = True
                 break
 
         self.ready = True

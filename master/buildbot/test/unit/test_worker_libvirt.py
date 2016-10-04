@@ -59,7 +59,6 @@ class TestLibVirtWorker(unittest.TestCase):
         yield bs._find_existing_deferred
 
         self.assertEqual(bs.domain.domain, d)
-        self.assertEqual(bs.substantiated, True)
 
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
