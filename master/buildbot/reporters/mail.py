@@ -111,8 +111,7 @@ class MailNotifier(service.BuildbotService):
                     messageFormatter=None, extraHeaders=None,
                     addPatch=True, useTls=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None
-                    ):
+                    name=None, schedulers=None, branches=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
@@ -143,6 +142,10 @@ class MailNotifier(service.BuildbotService):
                 self.name += "_tags_" + "+".join(tags)
             if builders is not None:
                 self.name += "_builders_" + "+".join(builders)
+            if schedulers is not None:
+                self.name += "_schedulers_" + "+".join(schedulers)
+            if branches is not None:
+                self.name += "_branches_" + "+".join(branches)
 
         if '\n' in subject:
             config.error(
@@ -171,8 +174,7 @@ class MailNotifier(service.BuildbotService):
                         messageFormatter=None, extraHeaders=None,
                         addPatch=True, useTls=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None
-                        ):
+                        name=None, schedulers=None, branches=None):
 
         if extraRecipients is None:
             extraRecipients = []
@@ -183,6 +185,8 @@ class MailNotifier(service.BuildbotService):
         self.mode = self.computeShortcutModes(mode)
         self.tags = tags
         self.builders = builders
+        self.schedulers = schedulers
+        self.branches = branches
         self.addLogs = addLogs
         self.relayhost = relayhost
         self.subject = subject
@@ -269,8 +273,14 @@ class MailNotifier(service.BuildbotService):
     def isMailNeeded(self, build):
         # here is where we actually do something.
         builder = build['builder']
+        scheduler = build['properties'].get('scheduler', [None])[0]
+        branch = build['properties'].get('branch', [None])[0]
         results = build['results']
         if self.builders is not None and builder['name'] not in self.builders:
+            return False  # ignore this build
+        if self.schedulers is not None and scheduler not in self.schedulers:
+            return False  # ignore this build
+        if self.branches is not None and branch not in self.branches:
             return False  # ignore this build
         if self.tags is not None and \
                 not self.matchesAnyTag(builder['tags']):
@@ -315,8 +325,7 @@ class MailNotifier(service.BuildbotService):
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
                                       'title': title,
-                                      'builder': builderName,
-                                      }
+                                      'builder': builderName}
 
         assert '\n' not in subject, \
             "Subject cannot contain newlines"

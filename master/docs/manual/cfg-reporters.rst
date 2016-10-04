@@ -310,6 +310,16 @@ MailNotifier arguments
     Defaults to ``None`` (all tags).
     Use either builders or tags, but not both.
 
+``schedulers``
+    (list of strings).
+    A list of scheduler names to serve status information for.
+    Defaults to ``None`` (all schedulers).
+
+``branches``
+    (list of strings).
+    A list of branch names to serve status information for.
+    Defaults to ``None`` (all branches).
+
 ``addLogs``
     (boolean).
     If ``True``, include all build logs as attachments to the messages.
