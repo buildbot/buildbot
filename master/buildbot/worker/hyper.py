@@ -24,11 +24,11 @@ import time
 from twisted.internet import reactor as global_reactor
 from twisted.internet import defer
 from twisted.internet import threads
-from twisted.logger import Logger
 from twisted.python import threadpool
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
 
 try:
