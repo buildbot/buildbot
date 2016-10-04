@@ -16,6 +16,7 @@
 # N.B.: don't import anything that might pull in a reactor yet. Some of our
 # subcommands want to load modules that need the gtk reactor.
 
+from __future__ import division
 from __future__ import print_function
 
 import os

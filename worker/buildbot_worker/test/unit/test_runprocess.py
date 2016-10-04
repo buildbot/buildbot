@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import division
+from __future__ import print_function
 
 import os
 import re
@@ -773,7 +775,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
     def testSendChunked(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
-        data = "x" * (runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
+        data = "x" * int(runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
         s._addToBuffers('stdout', data)
         s._sendBuffers()
         self.failUnlessEqual(len(b.updates), 2)

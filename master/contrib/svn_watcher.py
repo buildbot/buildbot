@@ -20,6 +20,7 @@
 # 22.03.10 by Johnnie Pittman, added support for category and interval
 # options.
 
+from __future__ import division
 from __future__ import print_function
 
 import subprocess

@@ -13,6 +13,9 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
+from __future__ import division
+from __future__ import print_function
+
 import time
 
 from twisted.internet import defer

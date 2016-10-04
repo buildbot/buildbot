@@ -17,6 +17,7 @@
 # machine. You will also need the Python/XML distribution installed (the
 # "python2.3-xml" package under debian).
 
+from __future__ import division
 from __future__ import print_function
 
 import commands

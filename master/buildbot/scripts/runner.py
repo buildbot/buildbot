@@ -18,6 +18,7 @@
 #
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
+from __future__ import division
 from __future__ import print_function
 
 import sys

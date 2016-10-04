@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from __future__ import division
+from __future__ import print_function
+
 from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
@@ -245,10 +248,10 @@ def human_readable_delta(start, end):
     if delta.days > 0:
         result.append('%d days' % (delta.days,))
     if delta.seconds > 0:
-        hours = delta.seconds / 3600
+        hours = int(delta.seconds / 3600)
         if hours > 0:
             result.append('%d hours' % (hours,))
-        minutes = (delta.seconds - hours * 3600) / 60
+        minutes = int((delta.seconds - hours * 3600) / 60)
         if minutes:
             result.append('%d minutes' % (minutes,))
         seconds = delta.seconds % 60

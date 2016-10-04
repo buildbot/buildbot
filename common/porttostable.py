@@ -1,4 +1,6 @@
+from __future__ import division
 from __future__ import print_function
+
 import os
 from subprocess import CalledProcessError
 from subprocess import check_output

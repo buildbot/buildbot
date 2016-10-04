@@ -11,6 +11,7 @@
 # Original Author: Chris AtLee <catlee@mozilla.com>
 # Licensed under the MPL version 2.0
 
+from __future__ import division
 from __future__ import print_function
 
 import sys
