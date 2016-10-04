@@ -128,3 +128,13 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         self.assertIsNotNone(worker.client)
         self.assertEqual(worker.instance, None)
         # teardown makes sure all containers are cleaned up
+
+    def test_start_worker_but_already_created_with_same_name(self):
+        worker = self.makeWorker(image="cool")
+        worker.maybeCreateSingletons()
+        worker.client.create_container(image="foo", name=worker.getContainerName())
+        d = worker.substantiate(None, FakeBuild())
+        self.reactor.advance(.1)
+        worker.attached(FakeBot())
+        self.successResultOf(d)
+        self.assertIsNotNone(worker.client)

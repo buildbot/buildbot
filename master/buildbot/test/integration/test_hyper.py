@@ -24,7 +24,6 @@ from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker import hyper as workerhyper
 from buildbot.worker.hyper import HyperLatentWorker
 
-
 # This integration test creates a master and hyper worker environment,
 # It requires hyper creds to be configured locally with 'hyper config'
 
@@ -32,6 +31,11 @@ from buildbot.worker.hyper import HyperLatentWorker
 # you can use ngrok tcp 9989
 # and then, according to ngrok choice of port something like:
 # export masterFQDN=0.tcp.ngrok.io:17994
+
+# following environment variable can be used to stress concurent worker startup
+NUM_CONCURRENT = int(os.environ.get("HYPER_TEST_NUM_CONCURRENT_BUILD", 1))
+
+
 class HyperMaster(RunMasterBase):
 
     def setUp(self):
@@ -55,7 +59,8 @@ class HyperMaster(RunMasterBase):
                       )
         yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
         builds = yield self.master.data.get(("builds",))
-        self.assertEqual(len(builds), 2)
+        # if there are some retry, there will be more builds
+        self.assertEqual(len(builds), 1 + NUM_CONCURRENT)
         for b in builds:
             self.assertEqual(b['results'], SUCCESS)
 
@@ -68,16 +73,20 @@ def masterConfig():
     from buildbot.plugins import steps, schedulers
 
     c['schedulers'] = [
-        schedulers.Triggerable(
-            name="trigsched",
-            builderNames=["build"]),
         schedulers.AnyBranchScheduler(
             name="sched",
             builderNames=["testy"])]
+    triggereables = []
+    for i in range(NUM_CONCURRENT):
+        c['schedulers'].append(
+            schedulers.Triggerable(
+                name="trigsched" + str(i),
+                builderNames=["build"]))
+        triggereables.append("trigsched" + str(i))
 
     f = BuildFactory()
     f.addStep(steps.ShellCommand(command='echo hello'))
-    f.addStep(steps.Trigger(schedulerNames=['trigsched'],
+    f.addStep(steps.Trigger(schedulerNames=triggereables,
                             waitForFinish=True,
                             updateSourceStamp=True))
     f.addStep(steps.ShellCommand(command='echo world'))
@@ -85,10 +94,10 @@ def masterConfig():
     f2.addStep(steps.ShellCommand(command='echo ola'))
     c['builders'] = [
         BuilderConfig(name="testy",
-                      workernames=["hyper1"],
+                      workernames=["hyper0"],
                       factory=f),
         BuilderConfig(name="build",
-                      workernames=["hyper1"],
+                      workernames=["hyper" + str(i) for i in range(NUM_CONCURRENT)],
                       factory=f2)]
     hyperconfig = workerhyper.Hyper.guess_config()
     if isinstance(hyperconfig, string_types):
@@ -96,9 +105,10 @@ def masterConfig():
     hyperhost, hyperconfig = hyperconfig['clouds'].items()[0]
     masterFQDN = os.environ.get('masterFQDN')
     c['workers'] = [
-        HyperLatentWorker('hyper1', 'passwd', hyperhost, hyperconfig['accesskey'],
-            hyperconfig['secretkey'], 'buildbot/buildbot-worker:master',
-            masterFQDN=masterFQDN)
+        HyperLatentWorker('hyper' + str(i), 'passwd', hyperhost, hyperconfig['accesskey'],
+                          hyperconfig['secretkey'], 'buildbot/buildbot-worker:master',
+                          masterFQDN=masterFQDN)
+        for i in range(NUM_CONCURRENT)
     ]
     # if the masterFQDN is forced (proxy case), then we use 9989 default port
     # else, we try to find a free port
