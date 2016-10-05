@@ -139,7 +139,6 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         # sibling == self is using ComparableMixin's implementation
         # only compare compare_attrs
         if self.configured and sibling == self:
-
             return defer.succeed(None)
         self.configured = True
         return self.reconfigService(*sibling._config_args,

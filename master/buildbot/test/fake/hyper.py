@@ -19,34 +19,41 @@ class Client(object):
 
     def __init__(self, config):
         self.config = config
-        self.containers = {}
+        self._containers = {}
         # there should be only one Client instance during tests
         # if this is not the case then tests are leaking between each other
         assert Client.instance is None
         Client.instance = self
 
     def start(self, container):
-        self.containers[container["Id"]]['started'] = True
+        self._containers[container["Id"]]['started'] = True
 
     def close(self):
         # we should never close if we have live containers
-        assert len(self.containers) == 0, self.containers
+        assert len(self._containers) == 0, self._containers
         Client.instance = None
 
     def stop(self, id):
-        self.containers[id]['started'] = False
+        self._containers[id]['started'] = False
 
     def wait(self, id):
         return 0
 
-    def create_container(self, image, *args, **kwargs):
+    def containers(self, filters=None, *args, **kwargs):
+        if filters is not None:
+            return [c for c in self._containers.values() if c['name'] == filters['name']]
+        return self._containers.values()
+
+    def create_container(self, image, name=None, *args, **kwargs):
         if 'buggy' in image:
             raise Exception("we could not create this container")
-
+        for c in self._containers.values():
+            if c['name'] == name:
+                raise Exception("cannot create with same name")
         ret = {'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
                'Warnings': None}
-        self.containers[ret['Id']] = {'started': False, 'image': image}
+        self._containers[ret['Id']] = {'started': False, 'image': image, 'Id': ret['Id'], "name": name}
         return ret
 
     def remove_container(self, id, **kwargs):
-        del self.containers[id]
+        del self._containers[id]
