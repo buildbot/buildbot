@@ -41,6 +41,20 @@ class Db2DataMixin(object):
             'waited_for': dbdict['waited_for'],
         }
         return defer.succeed(data)
+    fieldMapping = {
+        'buildrequestid': 'buildrequests.id',
+        'buildsetid': 'buildrequests.buildsetid',
+        'builderid': 'buildrequests.builderid',
+        'priority': 'buildrequests.priority',
+        'complete': 'buildrequests.complete',
+        'results': 'buildrequests.results',
+        'submitted_at': 'buildrequests.submitted_at',
+        'complete_at': 'buildrequests.complete_at',
+        'waited_for': 'buildrequests.waited_for',
+        # br claim
+        'claimed_at': 'buildrequest_claims.claimed_at',
+        'claimed_by_masterid': 'buildrequest_claims.masterid',
+    }
 
 
 class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
@@ -118,11 +132,13 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             claimed = resultSpec.popBooleanFilter('claimed')
 
         bsid = resultSpec.popOneFilter('buildsetid', 'eq')
+        resultSpec.fieldMapping = self.fieldMapping
         buildrequests = yield self.master.db.buildrequests.getBuildRequests(
             builderid=builderid,
             complete=complete,
             claimed=claimed,
-            bsid=bsid)
+            bsid=bsid,
+            resultSpec=resultSpec)
         defer.returnValue(
             [(yield self.db2data(br)) for br in buildrequests])
 

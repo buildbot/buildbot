@@ -28,6 +28,7 @@ from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import reactor
 
+from buildbot.data import resultspec
 from buildbot.db import buildrequests
 from buildbot.db import changesources
 from buildbot.db import schedulers
@@ -649,6 +650,33 @@ class FakeDBComponent(object):
         self.db = db
         self.t = testcase
         self.setUp()
+
+    def mapFilter(self, f, fieldMapping):
+        field = fieldMapping[f.field].split(".")[-1]
+        return resultspec.Filter(field, f.op, f.values)
+
+    def mapOrder(self, o, fieldMapping):
+        if o.startswith('-'):
+            reverse, o = o[0], o[1:]
+        else:
+            reverse = ""
+        o = fieldMapping[o].split(".")[-1]
+        return reverse + o
+
+    def applyResultSpec(self, data, rs):
+        def applicable(field):
+            if field.startswith('-'):
+                field = field[1:]
+            return field in rs.fieldMapping
+        filters = [self.mapFilter(f, rs.fieldMapping) for f in rs.filters if applicable(f.field)]
+        order = []
+        offset = limit = None
+        if rs.order:
+            order = [self.mapOrder(o, rs.fieldMapping) for o in rs.order if applicable(o)]
+        if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
+            offset, limit = rs.offset, rs.limit
+        rs = resultspec.ResultSpec(filters=filters, order=order, limit=limit, offset=offset)
+        return rs.apply(data)
 
 
 class FakeChangeSourcesComponent(FakeDBComponent):
@@ -1644,7 +1672,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None):
+                         bsid=None, branch=None, repository=None, resultSpec=None):
         rv = []
         for br in itervalues(self.reqs):
             if builderid and br.builderid != builderid:
@@ -1691,6 +1719,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             builder = yield self.db.builders.getBuilder(br.builderid)
             br.buildername = builder["name"]
             rv.append(self._brdictFromRow(br))
+        if resultSpec is not None:
+            rv = self.applyResultSpec(rv, resultSpec)
         defer.returnValue(rv)
 
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
@@ -1826,7 +1856,7 @@ class FakeBuildsComponent(FakeDBComponent):
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         ret = []
         for (id, row) in iteritems(self.builds):
             if builderid is not None and row['builderid'] != builderid:
@@ -1838,7 +1868,8 @@ class FakeBuildsComponent(FakeDBComponent):
             if complete is not None and complete != (row['complete_at'] is not None):
                 continue
             ret.append(self._row2dict(row))
-
+        if resultSpec is not None:
+            ret = self.applyResultSpec(ret, resultSpec)
         return defer.succeed(ret)
 
     def addBuild(self, builderid, buildrequestid, workerid, masterid,

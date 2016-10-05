@@ -62,7 +62,10 @@ properties:
         description: the id of the buildset that contains this buildrequest
         type: integer
     claimed:
-        description: true if this buildrequest has been claimed
+        description: |
+            True if this buildrequest has been claimed.
+            Note that this is a calculated field (from claimed_at != None).
+            Ordering by this field is not optimized by the database layer.
         type: boolean
     claimed_at?:
         description: |
