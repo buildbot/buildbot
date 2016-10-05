@@ -31,6 +31,7 @@ class ProxyMixin():
     def __init__(self, impl):
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
+        self._disconnect_listeners = []
 
     def callRemote(self, message, *args, **kw):
         method = getattr(self.impl, "remote_%s" % message, None)

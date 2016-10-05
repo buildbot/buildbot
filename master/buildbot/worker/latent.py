@@ -38,7 +38,6 @@ class AbstractLatentWorker(AbstractWorker):
     See ec2.py for a concrete example.
     """
 
-    substantiated = False
     substantiation_build = None
     insubstantiating = False
     build_wait_timer = None
@@ -79,8 +78,12 @@ class AbstractLatentWorker(AbstractWorker):
         # responsible for shutting down instance.
         raise NotImplementedError
 
+    @property
+    def substantiated(self):
+        return self.conn is not None
+
     def substantiate(self, sb, build):
-        if self.substantiated:
+        if self.conn is not None:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
             return defer.succeed(True)
@@ -144,7 +147,6 @@ class AbstractLatentWorker(AbstractWorker):
             return
         log.msg(r"Worker %s substantiated \o/" % (self.name,))
 
-        self.substantiated = True
         if not self._substantiation_notifier:
             log.msg("No substantiation deferred for %s" % (self.name,))
         else:
@@ -203,7 +205,8 @@ class AbstractLatentWorker(AbstractWorker):
         assert not sb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
-                self.insubstantiate()
+                # we insubstantiate asynchronously to trigger more bugs with the fake reactor
+                self.master.reactor.callLater(0, self.insubstantiate)
                 # insubstantiate will automatically retry to create build for this worker
             else:
                 self._setBuildWaitTimer()
@@ -229,7 +232,6 @@ class AbstractLatentWorker(AbstractWorker):
         self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
-        self.substantiated = False
         try:
             yield d
         except Exception as e:
