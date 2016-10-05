@@ -43,8 +43,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     def getBuildByNumber(self, builderid, number):
         return self._getBuild(
-            (self.db.model.builds.c.builderid == builderid)
-            & (self.db.model.builds.c.number == number))
+            (self.db.model.builds.c.builderid == builderid) &
+            (self.db.model.builds.c.number == number))
 
     def _getRecentBuilds(self, whereclause, offset=0, limit=1):
         def thd(conn):
@@ -127,7 +127,6 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                        whereclause=(tbl.c.builderid == builderid)))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
-
             # insert until we are succesful..
             while True:
                 if _race_hook:
@@ -140,8 +139,10 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                           workerid=workerid, masterid=masterid,
                                           started_at=started_at, complete_at=None,
                                           state_string=state_string))
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    new_number += 1
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                    # pg 9.5 gives this error which makes it pass some build numbers
+                    if 'duplicate key value violates unique constraint "builds_pkey"' not in str(e):
+                        new_number += 1
                     continue
                 return r.inserted_primary_key[0], new_number
         return self.db.pool.do(thd)
