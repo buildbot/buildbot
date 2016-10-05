@@ -3,13 +3,18 @@
 # This example docker file show how to customize the base worker docker image
 # to add build dependencies to build the python+nodejs buildbot_www package
 
-FROM        buildbot/buildbot-worker
+FROM        buildbot/buildbot-worker:master
 MAINTAINER  Buildbot maintainers
 
-# Install required npm packages
-RUN apt-get install -y python-software-properties software-properties-common  && \
-    add-apt-repository -y ppa:chris-lea/node.js && \
-    apt-get update
+# This will make apt-get install without question
+ARG         DEBIAN_FRONTEND=noninteractive
 
-RUN apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
-    nodejs git libmysqlclient-dev
+user root
+# Install required npm packages
+RUN  curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
+        apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
+        nodejs \
+        git && \
+    rm -rf /var/lib/apt/lists/*
+
+user buildbot

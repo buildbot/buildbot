@@ -1,4 +1,5 @@
 # developer utilities
+DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 
 .PHONY: docs pylint flake8
 
@@ -55,8 +56,14 @@ isort:
 	git diff --name-only --stat "HEAD" | grep '.py$$' | xargs autopep8 -i
 	git commit -a -m "isort+autopep8 run"
 
-docker:
-	git ls-files | grep Dockerfile | while read line ;\
-	do \
-		(cd `dirname $${line}`; docker build . )  || exit 1 ;\
-	done
+
+docker: docker-buildbot-worker docker-buildbot-worker-node docker-buildbot-master docker-buildbot-master-ubuntu
+	echo done
+docker-buildbot-worker:
+	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
+docker-buildbot-worker-node:
+	$(DOCKERBUILD) -t buildbot/buildbot-worker-node:master master/contrib/docker/pythonnode_worker
+docker-buildbot-master:
+	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
+docker-buildbot-master-ubuntu:
+	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
