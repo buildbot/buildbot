@@ -831,6 +831,18 @@ class BuildStep(object, properties.PropertiesMixin):
                 self._pendingLogObservers.remove((logname, observer))
 
     def addURL(self, name, url):
+        """
+        Adds the given URL as a hyperlink in the build step's Artifacts
+        URLs must start with 'http://' or they will be treated as relative to the current build's URL
+        @param name: the displayed text for the hyperlink
+        @param url: the URL to add.
+        """
+
+        # Replace keywords in the URL with actual build-exclusive variables
+        if "<<BuilderName>>" in url:
+            url = url.replace("<<BuilderName>>", "%s" % self.build.builder.name)
+        if "<<BuildNumber>>" in url:
+            url = url.replace("<<BuildNumber>>", "%s" % self.build.build_status.number)
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
@@ -867,14 +879,15 @@ class LoggingBuildStep(BuildStep):
 
     progressMetrics = ('output',)
     logfiles = {}
+    urls = {}
 
-    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func']
+    parms = BuildStep.parms + ['logfiles', 'lazylogfiles', 'log_eval_func', 'urls']
     cmd = None
 
     renderables = [ 'logfiles', 'lazylogfiles' ]
 
     def __init__(self, logfiles={}, lazylogfiles=False, log_eval_func=None,
-                 timestamp_stdio=False, *args, **kwargs):
+                 timestamp_stdio=False, urls=dict(), *args, **kwargs):
         BuildStep.__init__(self, *args, **kwargs)
 
         if logfiles and not isinstance(logfiles, dict):
@@ -890,6 +903,22 @@ class LoggingBuildStep(BuildStep):
             config.error(
                 "the 'log_eval_func' paramater must be a callable")
         self.log_eval_func = log_eval_func
+
+        # URLs must be in the format {"name": name, "url": url}
+        if urls:
+            if not isinstance(urls, dict):
+                config.error("The 'urls' parameter must be a dictionary, in the format {name, url}")
+            for urlName, urlLink in urls.iteritems():
+                # Check that the URL is in a valid format.
+                # Note that this check could be removed - beyond this point in the code, any URL not starting with
+                #  http will be treated as relative to the current build's URL
+                #  (eg: "www.value.com would become http://current.build.url/www.value.com")
+                #  Since we don't have a use for that right now, it's best to assume such URLs are a mistake.
+                if not str(urlLink).startswith("http://") and not str(urlLink).startswith("https://"):
+                    config.error("The URL for %s is in an incorrect format "
+                                 "(%s must start with http:// or https://)" % (urlName, urlLink))
+            self.urls = urls
+
         self.timestamp_stdio = timestamp_stdio
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 
@@ -976,7 +1005,9 @@ class LoggingBuildStep(BuildStep):
         return self.finished(RETRY)
 
     def commandComplete(self, cmd):
-        pass
+        # Now that the build is complete, add any URLs that the buildstep had to the buildstep's status
+        for urlName, urlLink in self.urls.iteritems():
+            self.addURL(urlName, urlLink)
 
     def createSummary(self, stdio):
         pass

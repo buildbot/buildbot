@@ -120,6 +120,28 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertRaisesConfigError("__init__ got unexpected keyword argument(s) ['oogaBooga']",
                 lambda: buildstep.BuildStep(oogaBooga=5))
 
+    def test_UrlKeywordReplacement(self):
+        """
+        Makes sure that URLs are being added properly and that keywords in a URL are replaced with actual values
+        """
+        class FakeFinishableStatus():
+            urls = []
+            def addURL(self, name, url):
+                self.urls.append(dict(url = url, name = name))
+
+        url_list = {"urlLabel1": "http://www.url-<<BuilderName>>.com", "urlLabel2": "https://url<<BuildNumber>>.com"}
+        corrected_url_list = [{"url":"http://www.url-testName.com", "name":"urlLabel1"}, {"url":"https://url1000.com", "name":"urlLabel2"}]
+
+        step = buildstep.LoggingBuildStep(urls=url_list)
+        step.build = mock.Mock()
+        step.build.builder.name = "testName"
+        step.build.build_status.number = 1000
+        step.setStepStatus(FakeFinishableStatus())
+        # The URLs are set in the CommandComplete step
+        step.commandComplete(None)
+
+        self.assertEquals(step.step_status.urls, corrected_url_list)
+
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
