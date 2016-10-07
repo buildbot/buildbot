@@ -41,9 +41,17 @@ class ForceAction(ActionResource):
         owner = self.getAuthz(req).getUsernameFull(req)
         schedulername = req.args.get("forcescheduler", ["<unknown>"])[0]
         if schedulername == "<unknown>":
-            defer.returnValue((path_to_builder(req, self.builder_status),
-                               "forcescheduler arg not found"))
-            return
+            try:
+                for sch in master.allSchedulers():
+                    if isinstance(sch, ForceScheduler) and builderNames[0] in sch.builderNames:
+                        schedulername = sch.name
+                        break
+                else:
+                    raise RuntimeError("Could not find force scheduler")
+            except:
+                defer.returnValue((path_to_builder(req, self.builder_status),
+                                   "forcescheduler arg not found, and could not find a default force scheduler for builderName"))
+                return
 
         args = {}
         # decode all of the args
