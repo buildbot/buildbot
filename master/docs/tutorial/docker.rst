@@ -37,6 +37,14 @@ Installation
 ------------
 
 * Use the `Docker installation instructions <https://docs.docker.com/engine/installation/>`_ for your operating system.
+
+* Make sure you install docker-compose.
+  As root or inside a virtualenv, run:
+
+  .. code-block:: bash
+
+    pip install docker-compose
+
 * Test docker is happy in your environment:
 
   .. code-block:: bash
@@ -48,11 +56,11 @@ Building and running Buildbot
 
 .. code-block:: bash
 
-  # Download Buildbot docker-compose.yml.
-  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/docker/docker-compose.yml
-  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/docker/db.env
+  # clone the example repository
+  git clone --depth 1 https://github.com/buildbot/buildbot-docker-example-config
 
   # Build the Buildbot container (it will take a few minutes to download packages)
+  cd buildbot-docker-example-config/simple
   docker-compose up
 
 
@@ -61,7 +69,7 @@ You should now be able to go to http://localhost:8010 and see a web page similar
 .. image:: _images/index.png
    :alt: index page
 
-Click on the `Waterfall Display link <http://localhost:8010/waterfall>`_ and you get this:
+Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and you get this:
 
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
@@ -79,18 +87,23 @@ This docker-compose configuration is made as a basis for what you would put in p
 - Containers are linked together so that the only port exposed to external is the web server
 - The default master container is based on Alpine linux for minimal footprint
 - The default worker container is based on more widely known Ubuntu distribution, as this is the container you want to customize.
+- Download the config from a tarball accessible via a web server
 
 Playing with your Buildbot containers
 -------------------------------------
 
 If you've come this far, you have a Buildbot environment that you can freely experiment with.
-The container is storing all its valuable information in /var/lib/buildbot and /var/lib/buildbot_db
 
-You can access your buildbot configuration in /var/lib/buildbot
+In order to modify the configuration, you need to fork the project on github https://github.com/buildbot/buildbot-docker-example-config
+Then you can clone your own fork, and start the docker-compose again.
 
-.. code-block:: bash
+To modify your config, edit the master.cfg file, commit your changes, and push to your fork.
+You can use the command buildbot check-config in order to make sure the config is valid before the push.
+You will need to change ``docker-compose.yml`` the variable ``BUILDBOT_CONFIG_URL`` in order to point to your github fork.
 
-  vi /var/lib/buildbot/master.cfg
+The ``BUILDBOT_CONFIG_URL`` may point to a ``.tar.gz`` file accessible from HTTP.
+Several git servers like github can generate that tarball automatically from the master branch of a git repository
+If the ``BUILDBOT_CONFIG_URL`` does not end with ``.tar.gz``, it is considered to be the URL to a ``master.cfg`` file accessible from HTTP.
 
 Customize your Worker container
 -------------------------------
@@ -99,6 +112,17 @@ An example DockerFile is available in the contrib directory of buildbot:
 
 https://github.com/buildbot/buildbot/blob/master/master/contrib/docker/pythonnode_worker/Dockerfile
 
+Multi-master
+------------
+A multi-master environment can be setup using the ``multimaster/docker-compose.yml`` file in the example repository
+
+  # Build the Buildbot container (it will take a few minutes to download packages)
+  cd buildbot-docker-example-config/simple
+  docker-compose up -d
+  docker-compose scale buildbot=4
+
+Going forward
+-------------
 
 You've got a taste now, but you're probably curious for more.
 Let's step it up a little in the second tutorial by changing the configuration and doing an actual build.

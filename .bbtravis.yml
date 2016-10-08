@@ -1,9 +1,5 @@
 # BBTravis CI configuration file
 
-services:
-  - mysql
-  - postgresql
-
 language: python
 
 # Available Python versions:

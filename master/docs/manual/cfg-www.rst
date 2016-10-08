@@ -391,8 +391,8 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
 
 
     server {
-            # Enable SSL and SPDY
-            listen 443 ssl spdy default_server;
+            # Enable SSL and http2
+            listen 443 ssl http2 default_server;
 
             server_name yourdomain.com;
 
@@ -406,7 +406,6 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             # put a one day session timeout for websockets to stay longer
             ssl_session_cache      shared:SSL:1440m;
             ssl_session_timeout  1440m;
-            add_header        Alternate-Protocol  443:npn-spdy/3;
 
             # please consult latest nginx documentation for current secure encryption settings
             ssl_protocols ..

@@ -35,3 +35,14 @@ package contains the buildmaster as well as a complete set of documentation.
 
 See http://buildbot.net for more information and for an online version of the
 Buildbot documentation.
+
+Docker Image:
+
+Here are the list of configuration variable for the buildbot/buildbot-worker image
+
+- BUILDMASTER: the dns or IP address of the master to connect to
+- BUILDMASTER_PORT: the port of the worker protocol
+- WORKERNAME: the name of the worker as declared in the master configuration
+- WORKERPASS: the password of the worker as declared in the master configuration
+- WORKER_ENVIRONMENT_BLACKLIST: the worker environment variable to remove before starting the worker
+  As the environment variables are accessible from the build, and displayed in the log, it is better to remove secret variables like $WORKERPASS

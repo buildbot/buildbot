@@ -99,7 +99,7 @@ setup_args = {
     },
     'entry_points': {
         'console_scripts': [
-            'buildbot_worker=buildbot_worker.scripts.runner:run',
+            'buildbot-worker=buildbot_worker.scripts.runner:run',
             # this will also be shipped on non windows :-(
             'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
         ]}
