@@ -1,8 +1,9 @@
 version: '2'
 services:
   buildbot:
-    image: buildbot/buildbot-master:latest
-    env_file: db.env
+    image: buildbot/buildbot-master:master
+    env_file:
+        - db.env
     environment:
         - BUILDBOT_CONFIG_DIR=config
         - BUILDBOT_CONFIG_URL=https://github.com/buildbot/buildbot-docker-example-config/archive/master.tar.gz
@@ -16,7 +17,8 @@ services:
     ports:
       - "8080:8080"
   db:
-    env_file: db.env
+    env_file:
+        - db.env
     image: "postgres:9.4"
     expose:
         - 5432
