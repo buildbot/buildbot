@@ -58,8 +58,9 @@ class TextLog(Resource, ContextMixin):
     # it, so we can afford to track the request in the Resource.
     implements(IHTMLLog)
 
-    asText = False
+    asDownload = False
     withHeaders = False
+    newWindow = False
     subscribed = False
     iFrame = False
 
@@ -69,11 +70,18 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path == "text":
-            self.asText = True
+        if path == "download":
+            self.asDownload = True
             return self
-        if path == "text_with_headers":
-            self.asText = True
+        if path == "download_with_headers":
+            self.asDownload = True
+            self.withHeaders = True
+            return self
+        if path == "plaintext":
+            self.newWindow = True
+            return self
+        if path == "plaintext_with_headers":
+            self.newWindow = True
             self.withHeaders = True
             return self
         if path == "iframe":
@@ -91,7 +99,7 @@ class TextLog(Resource, ContextMixin):
             
             is_header = type == logfile.HEADER
 
-            if not self.asText:
+            if not self.asDownload:
                 # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
                 if not isinstance(entry, unicode):
                     entry = unicode(entry, 'utf-8', 'replace')
@@ -101,7 +109,7 @@ class TextLog(Resource, ContextMixin):
             elif not is_header:
                 text_data += entry
 
-        if self.asText:
+        if self.asDownload:
             return text_data
         else:
             return self.chunk_template.module.chunks(html_entries)
@@ -123,13 +131,17 @@ class TextLog(Resource, ContextMixin):
             req.setHeader("Cache-Control", "no-cache")
 
         # If plaintext is requested just return the content of the logfile
-        if self.asText:
+        if self.asDownload:
             with_headers = "_with_headers" if self.withHeaders else ""
             base_name = self.original.step.getName() + "_" + self.original.getName() + with_headers
             base_name = base_name.replace(" ", "_") + ".log"
-            req.setHeader("Content-Disposition", "inline; filename =\"" + base_name + "\"")
+            req.setHeader("Content-Disposition", "attachment; filename =\"" + base_name + "\"")
             return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
+        # Or open in new window
+        if self.newWindow:
+            req.setHeader("Content-Disposition", "inline")
+            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
         # Else render the logs template
         
@@ -152,9 +164,11 @@ class TextLog(Resource, ContextMixin):
         builder_status = build.builder
         project = builder_status.getProject()
         cxt["pageTitle"] = "Log File Contents"
+        cxt["new_window_url"] = req.path + "/plaintext"
+        cxt["new_window_with_headers_url"] = req.path + "/plaintext_with_headers"
+        cxt["download_url"] = req.path + "/download"
+        cxt["download_with_headers_url"] = req.path + "/download_with_headers"
         cxt["iframe_url"] = req.path + "/iframe"
-        cxt["plaintext_url"] = req.path + "/text"
-        cxt["plaintext_with_headers_url"] = req.path + "/text_with_headers"
         cxt["builder_name"] = builder.getFriendlyName()
         cxt['path_to_builder'] = path_to_builder(req, builder_status)
         cxt['path_to_builders'] = path_to_builders(req, project)
@@ -172,7 +186,7 @@ class TextLog(Resource, ContextMixin):
 
 
     def _setContentType(self, req):
-        if self.asText:
+        if self.asDownload or self.newWindow:
             req.setHeader("content-type", "text/plain; charset=utf-8")
         else:
             req.setHeader("content-type", "text/html; charset=utf-8")
@@ -181,7 +195,7 @@ class TextLog(Resource, ContextMixin):
         if not self.req:
             return
         try:
-            if not self.asText:
+            if not self.asDownload:
                 data = self.chunk_template.module.page_footer()
                 data = data.encode('utf-8')
                 self.req.write(data)
