@@ -27,6 +27,8 @@ else
             sleep 1
         done
 
+        ln -sf $B/$BUILDBOT_CONFIG_DIR/master.cfg $B/master.cfg
+
         if [ -f $B/$BUILDBOT_CONFIG_DIR/buildbot.tac ]
         then
             ln -sf $B/$BUILDBOT_CONFIG_DIR/buildbot.tac $B/buildbot.tac

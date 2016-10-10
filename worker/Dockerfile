@@ -22,7 +22,7 @@ ARG         DEBIAN_FRONTEND=noninteractive
 # Install security updates and required packages
 RUN         apt-get update && \
             apt-get -y upgrade && \
-            apt-get -y install -q  -o APT::Get::Install-Recommends="false"  -o APT::Get::Install-Suggests="false" \
+            apt-get -y install -q  --no-install-recommend \
                 build-essential \
                 git \
                 subversion \
