@@ -28,6 +28,7 @@ from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, Co
 from buildbot.status.web.xmltestresults import XMLTestResource
 from buildbot.status.web.jsontestresults import JSONTestResource
 
+import re
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -134,7 +135,7 @@ class TextLog(Resource, ContextMixin):
         if self.asDownload:
             with_headers = "_with_headers" if self.withHeaders else ""
             base_name = self.original.step.getName() + "_" + self.original.getName() + with_headers
-            base_name = base_name.replace(" ", "_") + ".log"
+            base_name = re.sub(r'[\W]', '_', base_name) + ".log"
             req.setHeader("Content-Disposition", "attachment; filename =\"" + base_name + "\"")
             return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
