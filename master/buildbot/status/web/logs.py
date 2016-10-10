@@ -126,7 +126,7 @@ class TextLog(Resource, ContextMixin):
         if self.asText:
             with_headers = "_with_headers" if self.withHeaders else ""
             base_name = self.original.step.getName() + "_" + self.original.getName() + with_headers
-            base_name = base_name.replace(" ", "_") + ".txt"
+            base_name = base_name.replace(" ", "_") + ".log"
             req.setHeader("Content-Disposition", "inline; filename =\"" + base_name + "\"")
             return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
