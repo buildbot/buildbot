@@ -294,7 +294,7 @@ class Mercurial(Source):
         return d
 
     def fresh(self, _):
-        command = ['--config', 'extensions.purge=', 'purge', '--all', '--abort-on-err']
+        command = ['--config', 'extensions.purge=', 'purge', '--all']
         self.applyPurgePattern(command)
         d = self._dovccmd(command, collectStdout=True, collectStderr=True, evaluateCommandFunc=self._checkPurge)
         d.addCallback(lambda rc: self.clobber(rc) if rc != SUCCESS else SUCCESS)
