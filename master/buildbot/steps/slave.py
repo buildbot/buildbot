@@ -21,7 +21,8 @@ from buildbot.interfaces import BuildSlaveTooOldError
 
 class SlaveBuildStep(buildstep.BuildStep):
     def describe(self, done=False):
-        return self.descriptionDone if done else self.description
+        description = self.descriptionDone if done else self.description
+        return description or [self.name]
 
 class SetPropertiesFromEnv(SlaveBuildStep):
     """
@@ -202,6 +203,10 @@ class RemoveDirectory(SlaveBuildStep):
 
         self.step_status.setText(description)
         self.finished(SUCCESS)
+
+    def describe(self, done=False):
+        description = self.descriptionDone if done else self.description
+        return  description or ['rmdir', self.dir]
 
 
 class MakeDirectory(SlaveBuildStep):
