@@ -673,7 +673,7 @@ class Builder(config.ReconfigurableServiceMixin,
 
         # then translate False and True properly
         if mergeRequests_fn is False:
-            mergeRequests_fn = None
+            mergeRequests_fn = Builder._skipMergeRequestFn
         elif mergeRequests_fn is True:
             mergeRequests_fn = Builder._defaultMergeRequestFn
 
@@ -702,6 +702,8 @@ class Builder(config.ReconfigurableServiceMixin,
             return req1.canBeMergedWith(req2)
         return False
 
+    def _skipMergeRequestFn(self, req1, req2):
+        return False
 
 class BuilderControl:
     implements(interfaces.IBuilderControl)

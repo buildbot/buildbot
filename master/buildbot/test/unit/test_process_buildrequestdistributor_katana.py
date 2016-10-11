@@ -888,6 +888,7 @@ class TestKatanaMaybeStartBuildsOnBuilder(KatanaBuildRequestDistributorTestSetup
             can = bldr.config.canStartBuild
             return not can or can(*args)
         bldr.canStartBuild = canStartBuild
+        bldr.master = self.master
 
         return bldr
 

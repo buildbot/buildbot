@@ -154,7 +154,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
 
         if fn == builder.Builder._defaultMergeRequestFn:
             fn = "default"
-        elif fn is cble:
+        elif fn is cble or fn == builder.Builder._skipMergeRequestFn:
             fn = 'callable'
         self.assertEqual(fn, expected)
 
@@ -165,7 +165,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         self.do_test_getMergeRequestsFn(None, True, 'default')
 
     def test_getMergeRequestsFn_global_False(self):
-        self.do_test_getMergeRequestsFn(None, False, None)
+        self.do_test_getMergeRequestsFn(None, False, 'callable')
 
     def test_getMergeRequestsFn_global_function(self):
         self.do_test_getMergeRequestsFn(None, 'callable', 'callable')
@@ -174,7 +174,7 @@ class TestBuilderBuildCreation(BuilderMixin, unittest.TestCase):
         self.do_test_getMergeRequestsFn(True, False, "default")
 
     def test_getMergeRequestsFn_builder_False(self):
-        self.do_test_getMergeRequestsFn(False, True, None)
+        self.do_test_getMergeRequestsFn(False, None, 'callable')
 
     def test_getMergeRequestsFn_builder_function(self):
         self.do_test_getMergeRequestsFn('callable', None, 'callable')

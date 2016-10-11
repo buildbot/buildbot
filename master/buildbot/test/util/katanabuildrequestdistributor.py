@@ -32,6 +32,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
         self.master = self.botmaster.master = mock.Mock(name='master')
         self.master.db = self.db
         self.master.caches = cache.CacheManager()
+        self.master.config.mergeRequests = None
         self.processedBuilds = []
         self.mergedBuilds = []
         self.addRunningBuilds = False
@@ -161,6 +162,7 @@ class KatanaBuildRequestDistributorTestSetup(connector_component.ConnectorCompon
                                   addRunningBuilds)
 
         self.botmaster.builders[name] = bldr
+        bldr.master = self.master
         return bldr
 
     def getBuildSetTestData(self, xrange):
