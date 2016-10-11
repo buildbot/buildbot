@@ -58,7 +58,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def tearDown(self):
         if self.worker is not None:
-            self.worker.stopService()
+            self.worker.master.stopService()
             self.reactor.pump([.1])
         self.assertIsNone(hyper.Client.instance)
         _setReactor(None)
@@ -67,7 +67,6 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         worker = HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy')
         # class instanciation configures nothing
         self.assertEqual(worker.client, None)
-        self.assertEqual(worker.client_args, None)
 
     def test_constructor_nohyper(self):
         self.patch(workerhyper, 'Hyper', None)
@@ -85,15 +84,13 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         master = fakemaster.make_master(testcase=self, wantData=True)
         worker.setServiceParent(master)
         worker.reactor = self.reactor
-        self.successResultOf(worker.startService())
+        self.successResultOf(master.startService())
         return worker
 
     def test_start_service(self):
         worker = self.worker = self.makeWorker()
-        self.assertEqual(worker.client_args, {'clouds': {'tcp://hyper.sh/': {
-            'secretkey': 'bar', 'accesskey': 'foo'}}})
         # client is lazily created on worker substantiation
-        self.assertEqual(worker.client, None)
+        self.assertNotEqual(worker.client, None)
 
     def test_start_worker(self):
         worker = self.makeWorker()
@@ -131,7 +128,6 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_start_worker_but_already_created_with_same_name(self):
         worker = self.makeWorker(image="cool")
-        worker.maybeCreateSingletons()
         worker.client.create_container(image="foo", name=worker.getContainerName())
         d = worker.substantiate(None, FakeBuild())
         self.reactor.advance(.1)
