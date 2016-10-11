@@ -17,7 +17,7 @@ import stat
 from twisted.trial import unittest
 from twisted.internet import defer
 from buildbot.steps import slave
-from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION
+from buildbot.status.results import SUCCESS, FAILURE, EXCEPTION, SKIPPED
 from buildbot.process import properties, buildstep
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.util import steps, compat
@@ -236,6 +236,18 @@ class TestRemoveDirectory(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                 status_text=["Custom"])
+        return self.runStep()
+
+    def test_defaultDescriptionStepSkipped(self):
+        self.setupStep(slave.RemoveDirectory(dir="d", doStepIf=False))
+        self.expectOutcome(result=SKIPPED,
+                status_text=["rmdir", "d", 'skipped'])
+        return self.runStep()
+
+    def test_customDescriptionStepSkipped(self):
+        self.setupStep(slave.RemoveDirectory(dir="d", doStepIf=False, descriptionDone="Custom"))
+        self.expectOutcome(result=SKIPPED,
+                status_text=["Custom", 'skipped'])
         return self.runStep()
 
 class TestMakeDirectory(steps.BuildStepMixin, unittest.TestCase):
