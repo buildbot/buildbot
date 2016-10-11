@@ -199,9 +199,6 @@ class BasicBuildChooser(BuildChooserBase):
     # fails the generic test.
 
     def __init__(self, bldr, master):
-        # By default katana  merges Requests
-        if bldr.config.mergeRequests is None:
-            bldr.config.mergeRequests = True
         BuildChooserBase.__init__(self, bldr, master)
 
         self.nextSlave = self.bldr.config.nextSlave
@@ -376,10 +373,6 @@ class KatanaBuildChooser(BasicBuildChooser):
         self.resumeBrdicts = None
 
     def setupNextBuildRequest(self, bldr, breq):
-        # by default katana merges buildrequests
-        if bldr.config.mergeRequests is None:
-            bldr.config.mergeRequests = True
-
         self.bldr = bldr
 
         self.nextSlave = self.bldr.config.nextSlave
@@ -621,7 +614,7 @@ class KatanaBuildChooser(BasicBuildChooser):
 
         for brdict in brdicts:
             req = yield self._getBuildRequestForBrdict(brdict)
-            canMerge = yield self.mergeRequestsFn(self.bldr, breq, req)
+            canMerge = self.mergeRequestsFn(self.bldr, breq, req)
             if canMerge and req.id != breq.id:
                 mergedRequests.append(req)
 
