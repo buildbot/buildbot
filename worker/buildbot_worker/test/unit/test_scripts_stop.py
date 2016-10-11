@@ -19,6 +19,7 @@ import signal
 import time
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot_worker.scripts import stop

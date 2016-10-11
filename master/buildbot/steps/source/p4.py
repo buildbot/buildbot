@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
+from future.utils import string_types
+
 import re
 from types import StringType
 
-from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import log
 

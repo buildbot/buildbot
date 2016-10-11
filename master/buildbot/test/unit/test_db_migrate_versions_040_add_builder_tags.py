@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
 from twisted.trial import unittest
 
 from buildbot.test.util import migration

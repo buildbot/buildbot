@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import os
 import shutil
 import stat
@@ -19,8 +21,8 @@ import tarfile
 import tempfile
 from cStringIO import StringIO
 
-from future.utils import iteritems
 from mock import Mock
+
 from twisted.trial import unittest
 
 from buildbot import config
@@ -316,7 +318,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testWorker2_16(self):
         self.setupStep(
-            transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir),
+            transfer.DirectoryUpload(
+                workersrc="srcdir", masterdest=self.destdir),
             worker_version={'*': '2.16'})
 
         self.expectCommands(

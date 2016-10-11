@@ -15,6 +15,7 @@
 import calendar
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -88,7 +89,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             change["comments"], "Update Catalan translation to e38cb41.")
         self.assertEqual(change["branch"], "master")
         self.assertEqual(change[
-                          "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
+            "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
         change = self.changeHook.master.addedChanges[1]
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
@@ -104,7 +105,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["comments"], "fixed readme")
         self.assertEqual(change["branch"], "master")
         self.assertEqual(change[
-                          "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
+            "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
         self.assertEqual(change.get("project"), project)
         self.assertEqual(change.get("codebase"), codebase)

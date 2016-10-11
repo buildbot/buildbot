@@ -1,4 +1,5 @@
 from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -69,7 +70,8 @@ class HipChatStatusPush(HttpStatusPushBase):
         }
         return event_messages.get(event_name, '')
 
-    # use this as an extension point to inject extra parameters into your postData
+    # use this as an extension point to inject extra parameters into your
+    # postData
     def getExtraParams(self, build, event_name):
         return {}
 
@@ -84,9 +86,11 @@ class HipChatStatusPush(HttpStatusPushBase):
 
         urls = []
         if 'id_or_email' in postData:
-            urls.append(self.user_notify % (self.endpoint, postData.pop('id_or_email'), self.auth_token))
+            urls.append(self.user_notify % (self.endpoint,
+                                            postData.pop('id_or_email'), self.auth_token))
         if 'room_id_or_name' in postData:
-            urls.append(self.room_notify % (self.endpoint, postData.pop('room_id_or_name'), self.auth_token))
+            urls.append(self.room_notify % (self.endpoint,
+                                            postData.pop('room_id_or_name'), self.auth_token))
 
         if urls:
             for url in urls:

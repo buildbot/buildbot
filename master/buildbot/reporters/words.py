@@ -15,13 +15,13 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
+from future.utils import text_type
 
 import random
 import re
 import shlex
 
-from future.builtins import range
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -595,8 +595,8 @@ class Contact(service.AsyncService):
             prevResult = prevBuild['results']
 
             required_notification_control_string = ''.join((self.results_descriptions.get(prevResult)[0].lower(),
-                                                         'To',
-                                                         self.results_descriptions.get(build['results'])[0].capitalize()))
+                                                            'To',
+                                                            self.results_descriptions.get(build['results'])[0].capitalize()))
 
             if (self.notify_for(required_notification_control_string)):
                 defer.returnValue(True)

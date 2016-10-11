@@ -12,12 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import datetime
 import os
 import signal
 import socket
 
-from future.utils import iteritems
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import task
@@ -290,7 +291,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield service.AsyncMultiService.startService(self)
 
             # We make sure the housekeeping is done before configuring in order to cleanup
-            # any remaining claimed schedulers or change sources from zombie masters
+            # any remaining claimed schedulers or change sources from zombie
+            # masters
             yield self.data.updates.expireMasters(forceHouseKeeping=True)
 
             # give all services a chance to load the new configuration, rather
@@ -322,7 +324,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
     def sendBuildbotNetUsageData(self):
         if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetUsageData is not None:
-            raise RuntimeError("Shoud not enable buildbotNetUsageData in trial tests!")
+            raise RuntimeError(
+                "Shoud not enable buildbotNetUsageData in trial tests!")
         sendBuildbotNetUsageData(self)
 
     @defer.inlineCallbacks

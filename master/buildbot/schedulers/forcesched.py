@@ -12,12 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import re
-import traceback
-
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import string_types
+
+import re
+import traceback
+
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
 

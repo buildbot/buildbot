@@ -23,6 +23,9 @@ try:
 except ImportError:
     # Python 3
     import builtins
+from future.utils import PY3
+from future.utils import string_types
+
 import errno
 import os
 import re
@@ -32,8 +35,7 @@ from io import BytesIO
 from io import StringIO
 
 import mock
-from future.utils import PY3
-from future.utils import string_types
+
 from twisted.python import log
 
 from buildbot_worker.scripts import base

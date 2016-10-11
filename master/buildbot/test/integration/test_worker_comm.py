@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor

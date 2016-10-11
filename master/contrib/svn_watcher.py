@@ -212,7 +212,8 @@ if __name__ == '__main__':
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
         oldRevision = -1
-        print("Watching for changes in repo %s for master %s." % (repo_url, bbmaster))
+        print("Watching for changes in repo %s for master %s." %
+              (repo_url, bbmaster))
         while True:
             try:
                 oldRevision = checkChanges(repo_url, bbmaster, oldRevision)

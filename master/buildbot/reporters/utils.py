@@ -15,6 +15,7 @@
 from future.moves.collections import UserList
 from future.utils import lrange
 from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -170,8 +171,10 @@ def getResponsibleUsersForBuild(master, buildid):
             blamelist.add(owner)
         else:
             blamelist.update(owner)
-            log.msg("Warning: owner property is a list for buildid {}. ".format(buildid))
-            log.msg("Please report a bug: changes: {}. properties: {}".format(changes, properties))
+            log.msg(
+                "Warning: owner property is a list for buildid {}. ".format(buildid))
+            log.msg("Please report a bug: changes: {}. properties: {}".format(
+                changes, properties))
 
     # add owner from properties
     if 'owners' in properties:

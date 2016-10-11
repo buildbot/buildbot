@@ -15,9 +15,11 @@
 """
 Support for buildsets in the database
 """
-import sqlalchemy as sa
 from future.utils import integer_types
 from future.utils import iteritems
+
+import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 

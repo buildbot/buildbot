@@ -18,13 +18,14 @@ A complete re-implementation of the database connector components, but without
 using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
+from future.utils import iteritems
+from future.utils import itervalues
+from future.utils import text_type
+
 import base64
 import copy
 import hashlib
 
-from future.utils import iteritems
-from future.utils import itervalues
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -668,14 +669,17 @@ class FakeDBComponent(object):
             if field.startswith('-'):
                 field = field[1:]
             return field in rs.fieldMapping
-        filters = [self.mapFilter(f, rs.fieldMapping) for f in rs.filters if applicable(f.field)]
+        filters = [self.mapFilter(f, rs.fieldMapping)
+                   for f in rs.filters if applicable(f.field)]
         order = []
         offset = limit = None
         if rs.order:
-            order = [self.mapOrder(o, rs.fieldMapping) for o in rs.order if applicable(o)]
+            order = [self.mapOrder(o, rs.fieldMapping)
+                     for o in rs.order if applicable(o)]
         if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
             offset, limit = rs.offset, rs.limit
-        rs = resultspec.ResultSpec(filters=filters, order=order, limit=limit, offset=offset)
+        rs = resultspec.ResultSpec(
+            filters=filters, order=order, limit=limit, offset=offset)
         return rs.apply(data)
 
 

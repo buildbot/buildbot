@@ -20,14 +20,14 @@ Tested with Python boto 1.5c
 """
 from __future__ import division
 from __future__ import print_function
+from future.utils import integer_types
+from future.utils import iteritems
+from future.utils import string_types
 
 import os
 import re
 import time
 
-from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
@@ -179,12 +179,12 @@ class EC2LatentWorker(AbstractLatentWorker):
 
                 if region_found is not None:
                     self.session = boto3.Session(
-                            region_name=region,
-                            aws_access_key_id=identifier,
-                            aws_secret_access_key=secret_identifier)
+                        region_name=region,
+                        aws_access_key_id=identifier,
+                        aws_secret_access_key=secret_identifier)
                 else:
                     raise ValueError(
-                            'The specified region does not exist: ' + region)
+                        'The specified region does not exist: ' + region)
 
             else:
                 # boto2 defaulted to us-east-1 when region was unset, we
@@ -193,10 +193,10 @@ class EC2LatentWorker(AbstractLatentWorker):
                 if region is None:
                     region = 'us-east-1'
                 self.session = boto3.Session(
-                        aws_access_key_id=identifier,
-                        aws_secret_access_key=secret_identifier,
-                        region_name=region
-                        )
+                    aws_access_key_id=identifier,
+                    aws_secret_access_key=secret_identifier,
+                    region_name=region
+                )
 
         self.ec2 = self.session.resource('ec2')
 
@@ -258,7 +258,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             # Using ec2.vpc_addresses.filter(PublicIps=[elastic_ip]) throws a
             # NotImplementedError("Filtering not supported in describe_address.") in moto
             # https://github.com/spulec/moto/blob/100ec4e7c8aa3fde87ff6981e2139768816992e4/moto/ec2/responses/elastic_ip_addresses.py#L52
-            addresses = self.ec2.meta.client.describe_addresses(PublicIps=[elastic_ip])['Addresses']
+            addresses = self.ec2.meta.client.describe_addresses(
+                PublicIps=[elastic_ip])['Addresses']
             if not addresses:
                 raise ValueError(
                     'Could not find EIP for IP: ' + elastic_ip)
@@ -267,10 +268,12 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.elastic_ip = elastic_ip
         self.subnet_id = subnet_id
         self.security_group_ids = security_group_ids
-        self.classic_security_groups = [self.security_name] if self.security_name else None
+        self.classic_security_groups = [
+            self.security_name] if self.security_name else None
         self.instance_profile_name = instance_profile_name
         self.tags = tags
-        self.block_device_map = self.create_block_device_mapping(block_device_map) if block_device_map else None
+        self.block_device_map = self.create_block_device_mapping(
+            block_device_map) if block_device_map else None
 
     def create_block_device_mapping(self, mapping_definitions):
         if isinstance(mapping_definitions, list):
@@ -284,7 +287,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             "Use of dict value to 'block_device_map' of EC2LatentWorker "
             "constructor is deprecated. Please use a list matching the AWS API "
             "https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_BlockDeviceMapping.html"
-            )
+        )
         return self._convert_deprecated_block_device_mapping(mapping_definitions)
 
     def _convert_deprecated_block_device_mapping(self, mapping_definitions):
@@ -294,13 +297,18 @@ class EC2LatentWorker(AbstractLatentWorker):
             new_dev_config['DeviceName'] = dev_name
             if dev_config:
                 new_dev_config['Ebs'] = {}
-                new_dev_config['Ebs']['DeleteOnTermination'] = dev_config.get('delete_on_termination', True)
-                new_dev_config['Ebs']['Encrypted'] = dev_config.get('encrypted')
+                new_dev_config['Ebs']['DeleteOnTermination'] = dev_config.get(
+                    'delete_on_termination', True)
+                new_dev_config['Ebs'][
+                    'Encrypted'] = dev_config.get('encrypted')
                 new_dev_config['Ebs']['Iops'] = dev_config.get('iops')
-                new_dev_config['Ebs']['SnapshotId'] = dev_config.get('snapshot_id')
+                new_dev_config['Ebs'][
+                    'SnapshotId'] = dev_config.get('snapshot_id')
                 new_dev_config['Ebs']['VolumeSize'] = dev_config.get('size')
-                new_dev_config['Ebs']['VolumeType'] = dev_config.get('volume_type')
-                new_dev_config['Ebs'] = self._remove_none_opts(new_dev_config['Ebs'])
+                new_dev_config['Ebs'][
+                    'VolumeType'] = dev_config.get('volume_type')
+                new_dev_config['Ebs'] = self._remove_none_opts(
+                    new_dev_config['Ebs'])
             new_mapping_definitions.append(new_dev_config)
         return new_mapping_definitions
         if not mapping_definitions:
@@ -390,12 +398,12 @@ class EC2LatentWorker(AbstractLatentWorker):
             SubnetId=self.subnet_id, SecurityGroupIds=self.security_group_ids,
             IamInstanceProfile=self._remove_none_opts(
                 Name=self.instance_profile_name,
-                ),
+            ),
             BlockDeviceMappings=self.block_device_map
-            )
+        )
         launch_opts = self._remove_none_opts(launch_opts)
         reservations = self.ec2.create_instances(
-                **launch_opts
+            **launch_opts
         )
 
         self.instance = reservations[0]
@@ -403,7 +411,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         if None not in [instance_id, image.id, start_time]:
             if len(self.tags) > 0:
                 self.instance.create_tags(Tags=[{"Key": k, "Value": v}
-                                          for k, v in self.tags.items()])
+                                                for k, v in self.tags.items()])
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
@@ -423,7 +431,8 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _attach_volumes(self):
         for volume_id, device_node in self.volumes:
             vol = self.ec2.Volume(volume_id)
-            vol.attach_to_instance(InstanceId=self.instance.id, Device=device_node)
+            vol.attach_to_instance(
+                InstanceId=self.instance.id, Device=device_node)
             log.msg('Attaching EBS volume %s to %s.' %
                     (volume_id, device_node))
 
@@ -487,25 +496,26 @@ class EC2LatentWorker(AbstractLatentWorker):
         log.msg('%s %s requesting spot instance with price %0.4f' %
                 (self.__class__.__name__, self.workername, bid_price))
         reservations = self.ec2.meta.client.request_spot_instances(
-                SpotPrice=str(bid_price),
-                LaunchSpecification=self._remove_none_opts(
-                    ImageId=self.ami,
-                    KeyName=self.keypair_name,
-                    SecurityGroups=self.classic_security_groups,
-                    UserData=self.user_data,
-                    InstanceType=self.instance_type,
-                    Placement=self._remove_none_opts(
-                        AvailabilityZone=self.placement,
-                        ),
-                    SubnetId=self.subnet_id,
-                    SecurityGroupIds=self.security_group_ids,
-                    BlockDeviceMappings=self.block_device_map,
-                    IamInstanceProfile=self._remove_none_opts(
-                        Name=self.instance_profile_name,
-                        )
-                    )
+            SpotPrice=str(bid_price),
+            LaunchSpecification=self._remove_none_opts(
+                ImageId=self.ami,
+                KeyName=self.keypair_name,
+                SecurityGroups=self.classic_security_groups,
+                UserData=self.user_data,
+                InstanceType=self.instance_type,
+                Placement=self._remove_none_opts(
+                    AvailabilityZone=self.placement,
+                ),
+                SubnetId=self.subnet_id,
+                SecurityGroupIds=self.security_group_ids,
+                BlockDeviceMappings=self.block_device_map,
+                IamInstanceProfile=self._remove_none_opts(
+                    Name=self.instance_profile_name,
                 )
-        request, success = self._wait_for_request(reservations['SpotInstanceRequests'][0])
+            )
+        )
+        request, success = self._wait_for_request(
+            reservations['SpotInstanceRequests'][0])
         if not success:
             raise LatentWorkerFailedToSubstantiate()
         instance_id = request['InstanceId']

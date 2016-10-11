@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-import re
 from future.utils import text_type
+
+import re
 
 
 class RevlinkMatch(object):
@@ -43,7 +44,8 @@ GithubRevlink = RevlinkMatch(
 class GitwebMatch(RevlinkMatch):
 
     def __init__(self, repo_urls, revlink):
-        RevlinkMatch.__init__(self, repo_urls=repo_urls, revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
+        RevlinkMatch.__init__(self, repo_urls=repo_urls,
+                              revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
 
 SourceforgeGitRevlink = GitwebMatch(
     repo_urls=[r'^git://([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
@@ -54,7 +56,8 @@ SourceforgeGitRevlink = GitwebMatch(
 
 # SourceForge recently upgraded to another platform called Allura
 # See introduction: https://sourceforge.net/p/forge/documentation/Classic%20vs%20New%20SourceForge%20projects/
-# And as reference: https://sourceforge.net/p/forge/community-docs/SVN%20and%20project%20upgrades/
+# And as reference:
+# https://sourceforge.net/p/forge/community-docs/SVN%20and%20project%20upgrades/
 SourceforgeGitRevlink_AlluraPlatform = RevlinkMatch(
     repo_urls=[r'git://git.code.sf.net/p/(?P<repo>.*)$',
                r'http://git.code.sf.net/p/(?P<repo>.*)$',

@@ -15,12 +15,13 @@
 """
 Push events to Gerrit
 """
+from future.builtins import range
+from future.utils import iteritems
+
 import time
 import warnings
 from distutils.version import LooseVersion
 
-from future.builtins import range
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol

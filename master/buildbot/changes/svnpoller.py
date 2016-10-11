@@ -15,11 +15,12 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
+from future.moves.urllib.parse import quote_plus as urlquote_plus
+from future.utils import text_type
+
 import os
 import xml.dom.minidom
 
-from future.moves.urllib.parse import quote_plus as urlquote_plus
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log

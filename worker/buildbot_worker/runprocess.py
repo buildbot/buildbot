@@ -17,6 +17,11 @@
 Support for running 'shell commands'
 """
 
+from future.builtins import range
+from future.utils import iteritems
+from future.utils import string_types
+from future.utils import text_type
+
 import os
 import pprint
 import re
@@ -28,10 +33,6 @@ import traceback
 from collections import deque
 from tempfile import NamedTemporaryFile
 
-from future.builtins import range
-from future.utils import iteritems
-from future.utils import string_types
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import protocol

@@ -13,11 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from future.builtins import range
+from future.moves.collections import UserList
+
 import copy
 import re
 
-from future.builtins import range
-from future.moves.collections import UserList
 from twisted.internet import defer
 
 from buildbot.data import exceptions

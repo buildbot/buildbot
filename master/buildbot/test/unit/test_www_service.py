@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import mock
+
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest

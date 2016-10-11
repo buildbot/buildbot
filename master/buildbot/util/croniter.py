@@ -7,6 +7,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import re
 from datetime import datetime
@@ -14,7 +15,6 @@ from time import mktime
 from time import time
 
 from dateutil.relativedelta import relativedelta
-from future.builtins import range
 
 search_re = re.compile(r'^([^-]+)-([^-/]+)(/(.*))?$')
 only_int_re = re.compile(r'^\d+$')

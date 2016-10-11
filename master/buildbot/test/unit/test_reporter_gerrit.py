@@ -13,11 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from future.builtins import range
+
 import warnings
 
-from future.builtins import range
 from mock import Mock
 from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

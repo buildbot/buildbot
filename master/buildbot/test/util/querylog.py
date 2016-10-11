@@ -54,7 +54,8 @@ class _QueryToTwistedHandler(logging.Handler):
 
 
 def start_log_queries(log_query_result=False, record_mode=False):
-    handler = _QueryToTwistedHandler(log_query_result=log_query_result, record_mode=record_mode)
+    handler = _QueryToTwistedHandler(
+        log_query_result=log_query_result, record_mode=record_mode)
 
     # In 'sqlalchemy.engine' logging namespace SQLAlchemy outputs SQL queries
     # on INFO level, and SQL queries results on DEBUG level.
@@ -105,4 +106,5 @@ class SqliteMaxVariableMixin(object):
         finally:
             stop_log_queries(handler)
             for line in handler.records:
-                self.assertFalse(line.count("?") > 999, "too much variables in " + line)
+                self.assertFalse(line.count("?") > 999,
+                                 "too much variables in " + line)

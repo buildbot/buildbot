@@ -12,11 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import string_types
+
 import json
 import os
 from unittest.case import SkipTest
 
-from future.utils import string_types
 from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
@@ -40,7 +41,8 @@ class HyperMaster(RunMasterBase):
 
     def setUp(self):
         if "TEST_HYPER" not in os.environ:
-            raise SkipTest("hyper integration tests only run when environment variable TEST_HYPER is set")
+            raise SkipTest(
+                "hyper integration tests only run when environment variable TEST_HYPER is set")
         if workerhyper.Hyper is None:
             raise SkipTest("hyper is not installed")
         try:
@@ -99,7 +101,8 @@ def masterConfig():
                       workernames=["hyper0"],
                       factory=f),
         BuilderConfig(name="build",
-                      workernames=["hyper" + str(i) for i in range(NUM_CONCURRENT)],
+                      workernames=["hyper" + str(i)
+                                   for i in range(NUM_CONCURRENT)],
                       factory=f2)]
     hyperconfig = workerhyper.Hyper.guess_config()
     if isinstance(hyperconfig, string_types):
@@ -108,7 +111,8 @@ def masterConfig():
     masterFQDN = os.environ.get('masterFQDN')
     c['workers'] = [
         HyperLatentWorker('hyper' + str(i), 'passwd', hyperhost, hyperconfig['accesskey'],
-                          hyperconfig['secretkey'], 'buildbot/buildbot-worker:master',
+                          hyperconfig[
+                              'secretkey'], 'buildbot/buildbot-worker:master',
                           masterFQDN=masterFQDN)
         for i in range(NUM_CONCURRENT)
     ]

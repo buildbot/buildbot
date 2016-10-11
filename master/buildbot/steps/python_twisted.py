@@ -15,9 +15,10 @@
 """
 BuildSteps that are specific to the Twisted source tree
 """
+from future.builtins import range
+
 import re
 
-from future.builtins import range
 from twisted.python import log
 
 from buildbot.process import logobserver

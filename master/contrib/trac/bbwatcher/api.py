@@ -1,7 +1,8 @@
+from future.builtins import range
+
 import urlparse
 import xmlrpclib
 
-from future.builtins import range
 from model import Build
 from model import Builder
 
@@ -14,7 +15,8 @@ class BuildBotSystem(object):
             url = '%s://%s/xmlrpc' % (scheme, loc)
             self.server = xmlrpclib.ServerProxy(url)
         except Exception as e:
-            raise ValueError('Invalid BuildBot XML-RPC server %s: %s' % (url, e))
+            raise ValueError(
+                'Invalid BuildBot XML-RPC server %s: %s' % (url, e))
 
     def getAllBuildsInInterval(self, start, stop):
         return self.server.getAllBuildsInInterval(start, stop)

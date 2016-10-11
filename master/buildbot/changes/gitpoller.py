@@ -13,14 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import itertools
-import os
-import re
-
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iterkeys
 from future.utils import itervalues
 from future.utils import text_type
+
+import itertools
+import os
+import re
+
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -314,7 +315,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             failures = [r[1] for r in results if not r[0]]
             if failures:
                 for failure in failures:
-                    log.error(failure, "while processing changes for {} {}".format(newRev, branch))
+                    log.error(
+                        failure, "while processing changes for {} {}".format(newRev, branch))
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
 

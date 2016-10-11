@@ -14,10 +14,10 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import mock
 
-from future.builtins import range
 from twisted.internet import defer
 from twisted.trial import unittest
 

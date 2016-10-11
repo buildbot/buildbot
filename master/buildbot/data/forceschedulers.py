@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from future.utils import text_type
+
 from twisted.internet import defer
 
 from buildbot.data import base

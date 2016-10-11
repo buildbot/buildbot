@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import iteritems
+
 from twisted.python import log
 
 from buildbot.data import base
@@ -94,7 +95,8 @@ class Filter(FieldBase):
 
 def nonecmp(a, b):
     # Some fields are nullable, and could raise TypeException, when REST is requesting sorting
-    # I order to fix that, we create a custom cmp function which treats None as smaller than anything
+    # I order to fix that, we create a custom cmp function which treats None
+    # as smaller than anything
     if a is None and b is None:
         return 0
     if a is None:
@@ -106,7 +108,8 @@ def nonecmp(a, b):
 
 class ResultSpec(object):
 
-    __slots__ = ['filters', 'fields', 'properties', 'order', 'limit', 'offset', 'fieldMapping']
+    __slots__ = ['filters', 'fields', 'properties',
+                 'order', 'limit', 'offset', 'fieldMapping']
 
     def __init__(self, filters=None, fields=None, properties=None, order=None,
                  limit=None, offset=None):
@@ -217,12 +220,14 @@ class ResultSpec(object):
         order = self.order
         unmatched_filters = []
         unmatched_order = []
-        # apply the filters if the name of field is found in the model, and db2data
+        # apply the filters if the name of field is found in the model, and
+        # db2data
         for f in filters:
             try:
                 query = self.applyFilterToSQLQuery(query, f)
             except KeyError:
-                # if filter is unmatched, we will do the filtering manually in self.apply
+                # if filter is unmatched, we will do the filtering manually in
+                # self.apply
                 unmatched_filters.append(f)
 
         # apply order if necessary
@@ -231,7 +236,8 @@ class ResultSpec(object):
                 try:
                     query = self.applyOrderToSQLQuery(query, o)
                 except KeyError:
-                    # if order is unmatched, we will do the ordering manually in self.apply
+                    # if order is unmatched, we will do the ordering manually
+                    # in self.apply
                     unmatched_order.append(o)
 
         # we cannot limit in sql if there is missing filtering or ordering

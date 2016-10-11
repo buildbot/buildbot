@@ -12,16 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.moves.urllib.parse import unquote as urlunquote
+from future.utils import integer_types
+from future.utils import iteritems
+
 import cgi
 import os
 from cStringIO import StringIO
 from uuid import uuid1
 
-import mock
 import pkg_resources
-from future.moves.urllib.parse import unquote as urlunquote
-from future.utils import integer_types
-from future.utils import iteritems
+
+import mock
+
 from twisted.internet import defer
 from twisted.web import server
 

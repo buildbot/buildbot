@@ -14,8 +14,10 @@
 # Copyright Buildbot Team Members
 import hashlib
 
-import mock
 import sqlalchemy as sa
+
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

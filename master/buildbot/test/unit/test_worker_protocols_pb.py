@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
 from twisted.internet import defer
 from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest

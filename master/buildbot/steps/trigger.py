@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -221,13 +222,15 @@ class Trigger(BuildStep):
         schedulers_and_props_list = []
 
         # To be back compatible we need to differ between old and new style
-        # schedulers_and_props can either consist of 2 elements tuple or dictionary
+        # schedulers_and_props can either consist of 2 elements tuple or
+        # dictionary
         for element in schedulers_and_props:
             if isinstance(element, dict):
                 schedulers_and_props_list = schedulers_and_props
                 break
             else:
-                # Old-style back compatibility: Convert tuple to dict and make it important
+                # Old-style back compatibility: Convert tuple to dict and make
+                # it important
                 d = {
                     'sched_name': element[0],
                     'props_to_set': element[1],

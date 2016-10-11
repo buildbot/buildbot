@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from mock import Mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
@@ -567,6 +568,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     def test_getSchedulersAndProperties_back_comp(self):
         class DynamicTrigger(trigger.Trigger):
+
             def getSchedulersAndProperties(self):
                 return [("a", {}, False), ("b", {}, True)]
 
@@ -578,7 +580,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_unimportantsShedulerNames(self):
-        self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'], unimportantSchedulerNames=['b']))
+        self.setupStep(trigger.Trigger(schedulerNames=[
+                       'a', 'b'], unimportantSchedulerNames=['b']))
         self.scheduler_a.result = SUCCESS
         self.scheduler_b.result = FAILURE
         self.expectOutcome(result=SUCCESS, state_string='triggered a, b')
@@ -586,7 +589,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_unimportantsShedulerNames_with_more_brids_for_bsid(self):
-        self.setupStep(trigger.Trigger(schedulerNames=['a', 'c'], unimportantSchedulerNames=['c']))
+        self.setupStep(trigger.Trigger(schedulerNames=[
+                       'a', 'c'], unimportantSchedulerNames=['c']))
         self.scheduler_a.result = SUCCESS
         self.scheduler_c.result = FAILURE
         self.expectOutcome(result=SUCCESS, state_string='triggered a, c')

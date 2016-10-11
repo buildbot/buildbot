@@ -20,11 +20,12 @@ Use of old API generates Python warning which may be logged, ignored or treated
 as an error using Python builtin warnings API.
 """
 
+from future.utils import iteritems
+
 import functools
 import sys
 import warnings
 
-from future.utils import iteritems
 from twisted.python.deprecate import deprecatedModuleAttribute as _deprecatedModuleAttribute
 from twisted.python.deprecate import getWarningMethod
 from twisted.python.deprecate import setWarningMethod

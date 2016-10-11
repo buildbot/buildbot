@@ -18,6 +18,7 @@ from __future__ import print_function
 import os
 
 import jinja2
+
 from twisted.internet import defer
 
 from buildbot.test.fake import fakemaster

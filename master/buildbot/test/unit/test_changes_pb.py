@@ -16,6 +16,7 @@ from __future__ import division
 from __future__ import print_function
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

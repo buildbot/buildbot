@@ -13,12 +13,11 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import text_type
 
 import cStringIO
 import os
 import sys
-
-from future.utils import text_type
 
 import buildbot
 

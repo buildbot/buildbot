@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import copy
 import os
@@ -22,7 +23,6 @@ import sys
 import traceback
 from contextlib import contextmanager
 
-from future.builtins import range
 from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage

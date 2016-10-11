@@ -23,8 +23,6 @@ Generates changelog information using git.
 __docformat__ = 'restructuredtext'
 
 
-
-
 def print_err(msg):
     """
     Wrapper to make printing to stderr nicer.

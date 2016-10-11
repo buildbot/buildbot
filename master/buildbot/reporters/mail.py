@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+from future.utils import string_types
+
 import re
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
@@ -22,8 +25,6 @@ from email.mime.text import MIMEText
 from email.utils import formatdate
 from StringIO import StringIO
 
-from future.utils import iteritems
-from future.utils import string_types
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log as twlog

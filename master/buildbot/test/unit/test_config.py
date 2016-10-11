@@ -23,13 +23,15 @@ try:
 except ImportError:
     # Python 3
     import builtins
+from future.builtins import range
+from future.utils import iteritems
+
 import os
 import re
 import textwrap
 
 import mock
-from future.builtins import range
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer
@@ -474,7 +476,8 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         with assertProducesWarning(
                 config.ConfigWarning,
                 message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
-            self.do_test_load_global(dict(eventHorizon=10, buildbotNetUsageData=None))
+            self.do_test_load_global(
+                dict(eventHorizon=10, buildbotNetUsageData=None))
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)

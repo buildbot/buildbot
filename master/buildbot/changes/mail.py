@@ -16,6 +16,8 @@
 """
 Parse various kinds of 'CVS notify' email.
 """
+from future.utils import text_type
+
 import calendar
 import datetime
 import re
@@ -26,7 +28,6 @@ from email.utils import mktime_tz
 from email.utils import parseaddr
 from email.utils import parsedate_tz
 
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer

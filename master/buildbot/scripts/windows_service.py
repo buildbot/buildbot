@@ -65,12 +65,11 @@
 
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import os
 import sys
 import threading
-
-from future.builtins import range
 
 import pywintypes
 import servicemanager
@@ -234,7 +233,8 @@ class BBService(win32serviceutil.ServiceFramework):
             self.info("Starting BuildBot in directory '%s'" % (bbdir, ))
             hstop = self.hWaitStop
 
-            cmd = '%s --spawn %d start --nodaemon %s' % (self.runner_prefix, hstop, bbdir)
+            cmd = '%s --spawn %d start --nodaemon %s' % (
+                self.runner_prefix, hstop, bbdir)
             # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))

@@ -12,10 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import re
 
 import mock
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -147,18 +149,23 @@ class TestContactChannel(unittest.TestCase):
         yield self.do_test_command('notify', exp_UsageError=True)
         yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
         yield self.do_test_command('notify', args="on")
-        self.assertEqual(self.sent, ["The following events are being notified: ['started', 'finished']"])
+        self.assertEqual(
+            self.sent, ["The following events are being notified: ['started', 'finished']"])
         yield self.do_test_command('notify', args="off")
-        self.assertEqual(self.sent, ['The following events are being notified: []'])
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
         yield self.do_test_command('notify', args="on started")
-        self.assertEqual(self.sent, ["The following events are being notified: ['started']"])
+        self.assertEqual(
+            self.sent, ["The following events are being notified: ['started']"])
         yield self.do_test_command('notify', args="off started")
-        self.assertEqual(self.sent, ['The following events are being notified: []'])
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
         yield self.assertFailure(
             self.do_test_command('notify', args="off finished"),
             KeyError)
         yield self.do_test_command('notify', args="list")
-        self.assertEqual(self.sent, ['The following events are being notified: []'])
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
 
     @defer.inlineCallbacks
     def notify_build_test(self, notify_args):

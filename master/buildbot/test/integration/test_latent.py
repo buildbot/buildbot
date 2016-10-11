@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from future.builtins import range
+
 import os
 
-from future.builtins import range
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python import threadpool
@@ -69,7 +70,8 @@ class Tests(SynchronousTestCase):
         self.assertFalse(self.master.running, "master is still running!")
 
     def getMaster(self, config_dict):
-        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
         return master
 
     def createBuildrequest(self, master, builder_ids):
@@ -108,7 +110,8 @@ class Tests(SynchronousTestCase):
             'multiMaster': True,
         }
         master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(master.data.updates.findBuilderId('testy'))
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
 
         # Request two builds.
         for i in range(2):
@@ -389,7 +392,8 @@ class Tests(SynchronousTestCase):
         # The worker succeed to substantiate
         def remote_setBuilderList(self, dirs):
             raise TestException("can't create dir")
-        controller.patchBot(self, 'remote_setBuilderList', remote_setBuilderList)
+        controller.patchBot(self, 'remote_setBuilderList',
+                            remote_setBuilderList)
         controller.start_instance(True)
         controller.connect_worker(self)
 
@@ -405,13 +409,15 @@ class Tests(SynchronousTestCase):
         self.assertEqual(len(logs), 2)
         logs_by_name = {}
         for _log in logs:
-            fulllog = self.successResultOf(master.data.get(("logs", str(_log['logid']), "raw")))
+            fulllog = self.successResultOf(
+                master.data.get(("logs", str(_log['logid']), "raw")))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
         for i in ["err_text", "err_html"]:
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
-            self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
+            self.assertIn(os.path.join(
+                "integration", "test_latent.py"), logs_by_name[i])
         controller.auto_stop(True)
 
     def test_failed_ping_get_requeued(self):
@@ -468,13 +474,15 @@ class Tests(SynchronousTestCase):
         self.assertEqual(len(logs), 2)
         logs_by_name = {}
         for _log in logs:
-            fulllog = self.successResultOf(master.data.get(("logs", str(_log['logid']), "raw")))
+            fulllog = self.successResultOf(
+                master.data.get(("logs", str(_log['logid']), "raw")))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
         for i in ["err_text", "err_html"]:
             self.assertIn("can't ping", logs_by_name[i])
             # make sure stacktrace is present in html
-            self.assertIn(os.path.join("integration", "test_latent.py"), logs_by_name[i])
+            self.assertIn(os.path.join(
+                "integration", "test_latent.py"), logs_by_name[i])
         controller.auto_stop(True)
 
     def test_worker_close_connection_while_building(self):

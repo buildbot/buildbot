@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import iteritems
+
 import abc
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import log
 

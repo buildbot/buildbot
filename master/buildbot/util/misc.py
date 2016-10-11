@@ -17,6 +17,7 @@ Miscellaneous utilities; these should be imported from C{buildbot.util}, not
 directly from this module.
 """
 from future.utils import string_types
+
 from twisted.internet import reactor
 
 

@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-import datetime
-import re
-
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import integer_types
 from future.utils import iteritems
 from future.utils import text_type
+
+import datetime
+import re
 
 from buildbot.util import UTC
 from buildbot.util import json
