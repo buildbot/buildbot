@@ -37,6 +37,7 @@ except ImportError:
 
 @implementer(IBuildStepFactory)
 class StepController(object):
+
     def __init__(self, **kwargs):
         self.kwargs = kwargs
         self.steps = []
@@ -95,7 +96,8 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),
@@ -150,7 +152,8 @@ class Tests(SynchronousTestCase):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        self.master = master = self.successResultOf(getMaster(self, self.reactor, config_dict))
+        self.master = master = self.successResultOf(
+            getMaster(self, self.reactor, config_dict))
         builder_ids = [
             self.successResultOf(master.data.updates.findBuilderId('testy-1')),
             self.successResultOf(master.data.updates.findBuilderId('testy-2')),

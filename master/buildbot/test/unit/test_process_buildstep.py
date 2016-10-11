@@ -14,10 +14,11 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
-
-import mock
 from future.utils import itervalues
 from future.utils import text_type
+
+import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -543,7 +544,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.locks = []
         step.renderables = []
         step.build.render = lambda x: defer.succeed(x)
-        step.master.data.updates.addStep = lambda **kwargs: defer.succeed((0, 0, 0))
+        step.master.data.updates.addStep = lambda **kwargs: defer.succeed(
+            (0, 0, 0))
         step.addLogWithFailure = lambda x: defer.succeed(None)
         step.run = lambda: defer.fail(RuntimeError('got exception'))
         res = yield step.startStep(mock.Mock())

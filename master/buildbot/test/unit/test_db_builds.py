@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import lrange
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -327,7 +328,8 @@ class RealTests(Tests):
 
     @defer.inlineCallbacks
     def test_getBuilds_resultSpecFilter(self):
-        rs = resultspec.ResultSpec(filters=[resultspec.Filter('complete_at', 'ne', [None])])
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('complete_at', 'ne', [None])])
         rs.fieldMapping = {'complete_at': 'builds.complete_at'}
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
@@ -343,14 +345,17 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
 
-        # applying the spec in the db layer should have emptied the order in resultSpec
+        # applying the spec in the db layer should have emptied the order in
+        # resultSpec
         self.assertEqual(rs.order, None)
-        # assert applying the same order at the data layer will give the same results
+        # assert applying the same order at the data layer will give the same
+        # results
         rs = resultspec.ResultSpec(order=['-started_at'])
         ordered_bdicts = rs.apply(bdicts)
         self.assertEqual(ordered_bdicts, bdicts)
 
-        # assert applying a oposite order at the data layer will give different results
+        # assert applying a oposite order at the data layer will give different
+        # results
         rs = resultspec.ResultSpec(order=['started_at'])
         ordered_bdicts = rs.apply(bdicts)
         self.assertNotEqual(ordered_bdicts, bdicts)
@@ -361,11 +366,13 @@ class RealTests(Tests):
         rs.fieldMapping = {'started_at': 'builds.started_at'}
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
-        # applying the spec in the db layer should have emptied the limit and offset in resultSpec
+        # applying the spec in the db layer should have emptied the limit and
+        # offset in resultSpec
         self.assertEqual(rs.limit, None)
         self.assertEqual(rs.offset, None)
 
-        # assert applying the same filter at the data layer will give the same results
+        # assert applying the same filter at the data layer will give the same
+        # results
         rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
         bdicts2 = yield self.db.builds.getBuilds()
         ordered_bdicts = rs.apply(bdicts2)

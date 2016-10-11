@@ -14,12 +14,13 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
+from future.utils import itervalues
 
 import StringIO
 import sys
 
 import mock
-from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath
@@ -110,7 +111,7 @@ class RunMasterBase(unittest.TestCase):
         m = yield getMaster(self, reactor, config_dict)
         self.master = m
         self.assertFalse(stop.called,
-                    "startService tried to stop the reactor; check logs")
+                         "startService tried to stop the reactor; check logs")
 
         if not startWorker:
             return

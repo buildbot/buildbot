@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-
 from future.utils import iteritems
 
 from buildbot.test.fake import fakedb
@@ -58,7 +57,8 @@ class ReporterTestMixin(object):
         ])
         for i, results in enumerate(buildResults):
             self.db.insertTestData([
-                fakedb.BuildRequest(id=11 + i, buildsetid=98, builderid=79 + i),
+                fakedb.BuildRequest(
+                    id=11 + i, buildsetid=98, builderid=79 + i),
                 fakedb.Build(id=20 + i, number=i, builderid=79 + i, buildrequestid=11 + i, workerid=13,
                              masterid=92, results=results, state_string=u"buildText"),
                 fakedb.Step(id=50 + i, buildid=20 + i, number=5, name='make'),
@@ -66,8 +66,10 @@ class ReporterTestMixin(object):
                            num_lines=7),
                 fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
                                 content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-                fakedb.BuildProperty(buildid=20 + i, name="workername", value="sl"),
-                fakedb.BuildProperty(buildid=20 + i, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=20 + i, name="workername", value="sl"),
+                fakedb.BuildProperty(
+                    buildid=20 + i, name="reason", value="because"),
             ])
             for k, v in iteritems(self.TEST_PROPS):
                 self.db.insertTestData([

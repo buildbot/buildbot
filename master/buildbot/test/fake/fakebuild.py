@@ -16,6 +16,7 @@
 import posixpath
 
 import mock
+
 from twisted.python import components
 
 from buildbot import config

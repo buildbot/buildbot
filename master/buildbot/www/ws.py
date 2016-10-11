@@ -12,11 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
+from future.utils import itervalues
+from future.utils import string_types
+
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
-from future.utils import itervalues
-from future.utils import string_types
 from twisted.internet import defer
 from twisted.python import log
 

@@ -24,7 +24,6 @@ from twisted.spread import pb
 '''
 
 
-
 # We have hackish "-d" handling here rather than in the Options
 # subclass below because a common error will be to not have twisted in
 # PYTHONPATH; we want to be able to print that error to the log if

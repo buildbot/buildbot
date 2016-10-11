@@ -14,8 +14,9 @@
 #
 # Copyright Buildbot Team Members
 
-import os
 from future.utils import lrange
+
+import os
 
 from twisted.internet import process
 from twisted.python import log

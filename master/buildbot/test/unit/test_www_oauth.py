@@ -16,6 +16,7 @@ import os
 import webbrowser
 
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import threads

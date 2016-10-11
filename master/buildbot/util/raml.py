@@ -12,12 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import iteritems
+
 import copy
 import json
 import os
 
 import ramlfications
-from future.utils import iteritems
 
 try:
     from collections import OrderedDict
@@ -39,7 +40,8 @@ class RamlSpec(object):
         # waiting for raml1.0 support in ramlfications
         # we cannot use its raml parser
         # so we just use its loader
-        fn = os.path.join(os.path.dirname(__file__), os.pardir, 'spec', 'api.raml')
+        fn = os.path.join(os.path.dirname(__file__),
+                          os.pardir, 'spec', 'api.raml')
         self.api = ramlfications.load(fn)
         with open(fn) as f:
             self.rawraml = f.read()

@@ -31,6 +31,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
+
 from twisted.python import log
 
 from buildbot.util import sautils

@@ -17,6 +17,7 @@
 # no current implementation utilizes it aside from scripts.runner.
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

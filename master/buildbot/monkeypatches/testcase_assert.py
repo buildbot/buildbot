@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from future.utils import string_types
+
 import re
 import unittest
-from future.utils import string_types
 
 
 def _assertRaisesRegexp(self, expected_exception, expected_regexp,

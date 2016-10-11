@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
+
 import os
 
-from future.utils import text_type
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python.procutils import which

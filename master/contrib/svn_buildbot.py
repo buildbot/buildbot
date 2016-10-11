@@ -18,6 +18,7 @@
 
 from __future__ import division
 from __future__ import print_function
+from future.utils import text_type
 
 import commands
 import os
@@ -25,7 +26,6 @@ import re
 import sets
 import sys
 
-from future.utils import text_type
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -40,7 +40,6 @@ from twisted.spread import pb
 /path/to/svn_buildbot.py --repository "$REPOS" --revision "$REV" \
 --bbserver localhost --bbport 9989 --username myuser --auth passwd
 '''
-
 
 
 # We have hackish "-d" handling here rather than in the Options

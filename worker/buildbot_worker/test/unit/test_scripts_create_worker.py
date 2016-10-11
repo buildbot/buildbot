@@ -16,6 +16,7 @@
 import os
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot_worker.scripts import create_worker
@@ -645,7 +646,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         won't break generated TAC file.
         """
 
-        p = mock.patch.dict(self.options, {"basedir": r"C:\buildbot-worker dir\\"})
+        p = mock.patch.dict(
+            self.options, {"basedir": r"C:\buildbot-worker dir\\"})
         p.start()
         try:
             self.assertTACFileContents(self.options)

@@ -33,6 +33,8 @@ Basic architecture:
 """
 from __future__ import division
 from __future__ import print_function
+from future.utils import iteritems
+from future.utils import lrange
 
 import gc
 import os
@@ -40,8 +42,6 @@ import sys
 from collections import defaultdict
 from collections import deque
 
-from future.utils import iteritems
-from future.utils import lrange
 from twisted.application import service
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall

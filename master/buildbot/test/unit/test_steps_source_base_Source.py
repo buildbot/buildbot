@@ -15,6 +15,7 @@
 from exceptions import AttributeError
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot.steps.source import Source

@@ -14,6 +14,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

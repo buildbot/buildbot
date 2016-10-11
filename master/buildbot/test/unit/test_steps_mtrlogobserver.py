@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
 from twisted.enterprise import adbapi
 from twisted.trial import unittest
 

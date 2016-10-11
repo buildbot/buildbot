@@ -13,9 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
+
 import inspect
 
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.python import reflect
 

@@ -17,6 +17,7 @@ import copy
 import sys
 
 from mock import Mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

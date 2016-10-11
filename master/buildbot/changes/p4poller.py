@@ -17,12 +17,14 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
+from future.utils import text_type
+
 import datetime
 import os
 import re
 
 import dateutil.tz
-from future.utils import text_type
+
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor

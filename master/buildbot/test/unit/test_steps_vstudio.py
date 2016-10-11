@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from mock import Mock
+
 from twisted.trial import unittest
 
 from buildbot.process.properties import Property

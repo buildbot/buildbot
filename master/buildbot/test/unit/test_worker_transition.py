@@ -17,6 +17,7 @@ import re
 import sys
 
 import mock
+
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 from twisted.trial import unittest

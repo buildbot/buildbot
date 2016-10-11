@@ -13,9 +13,10 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from future.utils import itervalues
+
 import time
 
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -94,7 +95,8 @@ class AbstractLatentWorker(AbstractWorker):
                     self.missing_timeout,
                     self._substantiation_failed, defer.TimeoutError())
             self.substantiation_build = build
-            # if substantiate fails synchronously we need to have the deferred ready to be notified
+            # if substantiate fails synchronously we need to have the deferred
+            # ready to be notified
             d = self._substantiation_notifier.wait()
             if self.conn is None:
                 self._substantiate(build)
@@ -108,7 +110,8 @@ class AbstractLatentWorker(AbstractWorker):
         try:
             d = self.start_instance(build)
         except Exception:
-            # if start_instance crashes without defer, we still handle the cleanup
+            # if start_instance crashes without defer, we still handle the
+            # cleanup
             d = defer.fail(failure.Failure())
 
         def start_instance_result(result):
@@ -205,13 +208,16 @@ class AbstractLatentWorker(AbstractWorker):
         assert not sb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
-                # we insubstantiate asynchronously to trigger more bugs with the fake reactor
+                # we insubstantiate asynchronously to trigger more bugs with
+                # the fake reactor
                 self.master.reactor.callLater(0, self.insubstantiate)
-                # insubstantiate will automatically retry to create build for this worker
+                # insubstantiate will automatically retry to create build for
+                # this worker
             else:
                 self._setBuildWaitTimer()
 
-        # AbstractWorker.buildFinished() will try to start the next build for that worker
+        # AbstractWorker.buildFinished() will try to start the next build for
+        # that worker
         AbstractWorker.buildFinished(self, sb)
 
     def _clearBuildWaitTimer(self):
@@ -242,7 +248,8 @@ class AbstractLatentWorker(AbstractWorker):
 
         self.insubstantiating = False
         if self._substantiation_notifier:
-            self._substantiation_notifier.notify(failure.Failure(LatentWorkerSubstantiatiationCancelled()))
+            self._substantiation_notifier.notify(
+                failure.Failure(LatentWorkerSubstantiatiationCancelled()))
         self.botmaster.maybeStartBuildsForWorker(self.name)
 
     @defer.inlineCallbacks

@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -140,7 +141,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                           started_at=started_at, complete_at=None,
                                           state_string=state_string))
                 except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
-                    # pg 9.5 gives this error which makes it pass some build numbers
+                    # pg 9.5 gives this error which makes it pass some build
+                    # numbers
                     if 'duplicate key value violates unique constraint "builds_pkey"' not in str(e):
                         new_number += 1
                     continue

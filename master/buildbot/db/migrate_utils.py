@@ -14,9 +14,10 @@
 # Copyright Buildbot Team Members
 
 
+from future.utils import text_type
+
 import sqlalchemy as sa
 
-from future.utils import text_type
 from buildbot.util import sautils
 
 

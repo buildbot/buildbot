@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -27,7 +28,8 @@ from buildbot.test.fake import fakemaster
 class TestCleanShutdown(unittest.TestCase):
 
     def setUp(self):
-        self.master = master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = master = fakemaster.make_master(
+            testcase=self, wantData=True)
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(master)
         self.reactor = mock.Mock()

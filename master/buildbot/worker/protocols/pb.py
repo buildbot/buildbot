@@ -15,10 +15,10 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from future.utils import itervalues
 
 import contextlib
 
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log

@@ -2,12 +2,10 @@
 
 from __future__ import division
 from __future__ import print_function
+from future.utils import lrange
 
 import sys
 import urllib
-
-from future.utils import lrange
-
 
 """check_buildbot.py -H hostname -p httpport [options]
 
@@ -53,7 +51,8 @@ def main():
     options, args = parser.parse_args()
 
     if options.hostname and options.httpport:
-        url = "http://%s:%s/json/metrics" % (options.hostname, options.httpport)
+        url = "http://%s:%s/json/metrics" % (options.hostname,
+                                             options.httpport)
     elif options.url:
         url = options.url
     else:
@@ -83,7 +82,8 @@ def main():
             alarm_code = STATUS_CODES[alarm_state[0]]
         except (KeyError, IndexError):
             status = UNKNOWN
-            messages.append("%s has unknown alarm state %s" % (alarm_name, alarm_state))
+            messages.append("%s has unknown alarm state %s" %
+                            (alarm_name, alarm_state))
             continue
 
         status = max(status, alarm_code)

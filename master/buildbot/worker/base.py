@@ -13,11 +13,12 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
+from future.utils import itervalues
+
 import time
 from email.message import Message
 from email.utils import formatdate
 
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
@@ -597,8 +598,10 @@ class AbstractWorker(service.BuildbotService, object):
     def putInQuarantine(self):
         if self.quarantine_timer:  # already in quarantine
             return
-        self.quarantine_timer = self.master.reactor.callLater(self.quarantine_timeout, self.exitQuarantine)
-        log.msg("{} has been put in quarantine for {}s".format(self.name, self.quarantine_timeout))
+        self.quarantine_timer = self.master.reactor.callLater(
+            self.quarantine_timeout, self.exitQuarantine)
+        log.msg("{} has been put in quarantine for {}s".format(
+            self.name, self.quarantine_timeout))
         # next we will wait twice as long
         self.quarantine_timeout *= 2
         if self.quarantine_timeout > self.quarantine_max_timeout:

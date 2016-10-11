@@ -20,12 +20,13 @@
 # pages and texinfo documentation.
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import sys
 import textwrap
 
 import sqlalchemy as sa
-from future.builtins import range
+
 from twisted.python import reflect
 from twisted.python import usage
 

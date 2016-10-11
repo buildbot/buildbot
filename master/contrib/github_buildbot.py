@@ -13,6 +13,8 @@ This version of github_buildbot.py parses v3 of the github webhook api, with the
 
 """
 
+from future.utils import iteritems
+
 import hmac
 import logging
 import os
@@ -25,7 +27,6 @@ from httplib import INTERNAL_SERVER_ERROR
 from httplib import OK
 from optparse import OptionParser
 
-from future.utils import iteritems
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb

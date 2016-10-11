@@ -14,8 +14,8 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
-
 from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.trial import unittest
 

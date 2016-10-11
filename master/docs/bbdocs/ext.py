@@ -13,8 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from docutils import nodes
 from future.utils import iteritems
+
+from docutils import nodes
 from sphinx import addnodes
 from sphinx.domains import Domain
 from sphinx.domains import Index
@@ -72,7 +73,8 @@ class BBRefTargetDirective(Directive):
             else:
                 indextype = 'single'
                 indexentry = tpl % (fullname,)
-            entries.append((indextype, indexentry, targetname, targetname, None))
+            entries.append(
+                (indextype, indexentry, targetname, targetname, None))
 
         if entries:
             inode = addnodes.index(entries=entries)
@@ -216,10 +218,10 @@ class BBDomain(Domain):
                                               'single: %s Build Step',
                                           ]),
         'reporter': make_ref_target_directive('reporter',
-                                            indextemplates=[
-                                                'single: Reporter Targets; %s',
-                                                'single: %s Reporter Target',
-                                            ]),
+                                              indextemplates=[
+                                                  'single: Reporter Targets; %s',
+                                                  'single: %s Reporter Target',
+                                              ]),
         'worker': make_ref_target_directive('worker',
                                             indextemplates=[
                                                 'single: Build Workers; %s',
@@ -239,7 +241,8 @@ class BBDomain(Domain):
                                          doc_field_types=[
                                              TypedField('key', label='Keys', names=('key',),
                                                         typenames=('type',), can_collapse=True),
-                                             Field('var', label='Variable', names=('var',)),
+                                             Field('var', label='Variable',
+                                                   names=('var',)),
                                          ]),
         'event': make_ref_target_directive('event',
                                            indextemplates=[
@@ -271,16 +274,16 @@ class BBDomain(Domain):
                                                           can_collapse=True),
                                            ]),
         'raction': make_ref_target_directive('raction',
-                                           indextemplates=[
-                                               'single: Resource Action; %s',
-                                           ],
-                                           name_annotation='POST with method:',
-                                           has_content=True,
-                                           doc_field_types=[
-                                               TypedField('body', label='Body keys',
-                                                          names=('body',), typenames=('type',),
-                                                          can_collapse=True),
-                                           ]),
+                                             indextemplates=[
+                                                 'single: Resource Action; %s',
+                                             ],
+                                             name_annotation='POST with method:',
+                                             has_content=True,
+                                             doc_field_types=[
+                                                 TypedField('body', label='Body keys',
+                                                            names=('body',), typenames=('type',),
+                                                            can_collapse=True),
+                                             ]),
     }
 
     roles = {

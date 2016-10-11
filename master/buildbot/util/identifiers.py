@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
-import re
-
 from future.utils import string_types
 from future.utils import text_type
+
+import re
+
 from buildbot import util
 
 ident_re = re.compile('^[a-zA-Z_-][a-zA-Z0-9_-]*$')

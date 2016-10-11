@@ -15,12 +15,12 @@
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
+from future.utils import text_type
 
 import os
 import re
 import sys
 
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor

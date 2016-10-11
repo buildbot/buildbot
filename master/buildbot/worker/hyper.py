@@ -44,7 +44,8 @@ log = Logger()
 class HyperLatentWorker(AbstractLatentWorker):
     """hyper.sh is a docker CaaS company"""
     instance = None
-    ALLOWED_SIZES = ['s1', 's2', 's3', 's4', 'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
+    ALLOWED_SIZES = ['s1', 's2', 's3', 's4',
+                     'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
     threadPool = None
     client = None
     image = None
@@ -68,12 +69,14 @@ class HyperLatentWorker(AbstractLatentWorker):
                          " HyperLatentWorker")
 
         if hyper_size not in self.ALLOWED_SIZES:
-            config.error("Size is not valid %s vs %r".format(hyper_size, self.ALLOWED_SIZES))
+            config.error("Size is not valid %s vs %r".format(
+                hyper_size, self.ALLOWED_SIZES))
 
     def reconfigService(self, name, password, hyper_host,
                         hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
         AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
-        self.confighash = hashlib.sha1(hyper_host + hyper_accesskey + hyper_secretkey).hexdigest()[:6]
+        self.confighash = hashlib.sha1(
+            hyper_host + hyper_accesskey + hyper_secretkey).hexdigest()[:6]
         self.masterhash = hashlib.sha1(self.master.name).hexdigest()[:6]
         self.size = hyper_size
 
@@ -104,7 +107,8 @@ class HyperLatentWorker(AbstractLatentWorker):
         if self.registration is not None:
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
         if ":" in self.masterFQDN:
-            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
+            result["BUILDMASTER"], result[
+                "BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
     def runInThread(self, meth, *args, **kwargs):
@@ -115,9 +119,11 @@ class HyperLatentWorker(AbstractLatentWorker):
         if self.threadPool is None:
             key = self.confighash
             if key not in HyperLatentWorker.class_singletons:
-                threadPool = threadpool.ThreadPool(minthreads=10, maxthreads=10, name='hyper')
+                threadPool = threadpool.ThreadPool(
+                    minthreads=10, maxthreads=10, name='hyper')
                 threadPool.start()
-                # simple reference counter to stop the pool when the last latent worker is stopped
+                # simple reference counter to stop the pool when the last
+                # latent worker is stopped
                 threadPool.refs = 0
                 client = Hyper(self.client_args)
                 HyperLatentWorker.class_singletons[key] = (threadPool, client)
@@ -135,7 +141,8 @@ class HyperLatentWorker(AbstractLatentWorker):
                 self.client.close()
                 yield self.threadPool.stop()
                 key = self.confighash
-                # if key in not in the singleton, there is a bug somewhere so this will raise
+                # if key in not in the singleton, there is a bug somewhere so
+                # this will raise
                 del HyperLatentWorker.class_singletons[key]
 
             self.threadPool = self.client = None
@@ -153,7 +160,8 @@ class HyperLatentWorker(AbstractLatentWorker):
         return ('%s-%s' % ('buildbot' + self.masterhash, self.workername)).replace("_", "-")
 
     def _thd_cleanup_instance(self):
-        instances = self.client.containers(filters=dict(name=self.getContainerName()))
+        instances = self.client.containers(
+            filters=dict(name=self.getContainerName()))
         for instance in instances:
             self.client.remove_container(instance['Id'], v=True, force=True)
 

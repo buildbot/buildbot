@@ -45,8 +45,6 @@ buildbot.master.makeApp (this service is turned ON by default).
 """
 
 
-
-
 def done(*args):
     reactor.stop()
 

@@ -17,6 +17,7 @@ import migrate
 import migrate.versioning.repository
 import sqlalchemy as sa
 from migrate import exceptions
+
 from twisted.python import log
 from twisted.python import util
 
@@ -33,6 +34,7 @@ except ImportError:
 
 
 class EightUpgradeError(Exception):
+
     def __init__(self):
         message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
         This is not supported. Please start from a clean database
@@ -837,7 +839,8 @@ class Model(base.DBConnectorComponent):
             # if the migrate_version table exists, we can just let migrate
             # take care of this process.
             if table_exists(engine, 'migrate_version'):
-                r = engine.execute("select version from migrate_version limit 1")
+                r = engine.execute(
+                    "select version from migrate_version limit 1")
                 old_version = r.scalar()
                 if old_version < 40:
                     raise EightUpgradeError()

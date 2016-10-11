@@ -140,13 +140,14 @@
 # This would strip everything until (and including) the 4th "/" in the repo's
 # path leaving only "myrepo" left.  This would then be append to the base URL.
 
+from future.builtins import range
+
 import json
 import os
 import os.path
 
 import requests
 
-from future.builtins import range
 from mercurial.encoding import fromlocal
 from mercurial.node import hex
 from mercurial.node import nullid

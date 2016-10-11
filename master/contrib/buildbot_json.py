@@ -31,6 +31,10 @@
 
 from __future__ import division
 from __future__ import print_function
+from future.builtins import range
+from future.utils import lrange
+from future.utils import string_types
+from future.utils import text_type
 
 import code
 import datetime
@@ -42,11 +46,6 @@ import sys
 import time
 import urllib
 import urllib2
-
-from future.builtins import range
-from future.utils import lrange
-from future.utils import string_types
-from future.utils import text_type
 
 """Queries buildbot through the json interface.
 """
@@ -188,7 +187,8 @@ class AddressableDataNode(AddressableBaseDataNode):  # pylint: disable=W0223
     """Automatically encodes the url."""
 
     def __init__(self, parent, url, data):
-        super(AddressableDataNode, self).__init__(parent, urllib.quote(url), data)
+        super(AddressableDataNode, self).__init__(
+            parent, urllib.quote(url), data)
 
 
 class NonAddressableDataNode(Node):  # pylint: disable=W0223
@@ -434,7 +434,8 @@ class AddressableNodeList(NodeList):
                 if not (child in self._cache and self._cache[child].cached_data)
             ]
             if to_fetch:
-                # Similar to cache(). The only reason to sort is to simplify testing.
+                # Similar to cache(). The only reason to sort is to simplify
+                # testing.
                 params = '&'.join(
                     'select=%s' % urllib.quote(str(v)) for v in sorted(to_fetch))
                 data = self.read('?' + params)
@@ -1038,7 +1039,8 @@ def CMDpending(parser, args):
                     print('  revision: %s' % pending['source']['revision'])
                 for change in pending['source']['changes']:
                     print('  change:')
-                    print('    comment: %r' % text_type(change['comments'][:50]))
+                    print('    comment: %r' %
+                          text_type(change['comments'][:50]))
                     print('    who:     %s' % change['who'])
     return 0
 
@@ -1127,7 +1129,8 @@ def find_idle_busy_slaves(parser, args, show_idle):
         builder = buildbot.builders[builder]
         if options.slaves:
             # Only the subset of slaves connected to the builder.
-            slaves = list(set(options.slaves).intersection(set(builder.slaves.names)))
+            slaves = list(set(options.slaves).intersection(
+                set(builder.slaves.names)))
             if not slaves:
                 continue
         else:
@@ -1156,7 +1159,8 @@ def last_failure(
         builder = buildbot.builders[builder]
         if slaves:
             # Only the subset of slaves connected to the builder.
-            builder_slaves = list(set(slaves).intersection(set(builder.slaves.names)))
+            builder_slaves = list(
+                set(slaves).intersection(set(builder.slaves.names)))
             if not builder_slaves:
                 continue
         else:
@@ -1372,7 +1376,8 @@ def CMDcount(parser, args):
     align_name = max(len(b) for b in counts)
     align_number = max(len(str(c)) for c in counts.itervalues())
     for builder in sorted(counts):
-        print('%*s: %*d' % (align_name, builder, align_number, counts[builder]))
+        print('%*s: %*d' %
+              (align_name, builder, align_number, counts[builder]))
     print('Total: %d' % sum(counts.itervalues()))
     return 0
 

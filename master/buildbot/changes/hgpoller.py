@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
+
 import os
 import time
 
-from future.utils import text_type
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log

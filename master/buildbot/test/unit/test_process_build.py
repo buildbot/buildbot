@@ -16,6 +16,7 @@ import operator
 
 from mock import Mock
 from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer

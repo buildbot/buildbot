@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -82,7 +83,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     # As we stop the builds, builder.building might change during loop
                     # so we need to copy the list
                     for build in list(builder.building):
-                        # if build is waited for then this is a sub-build, so no need to retry it
+                        # if build is waited for then this is a sub-build, so
+                        # no need to retry it
                         if sum(br.waitedFor for br in build.requests):
                             results = CANCELLED
                         else:
@@ -109,7 +111,8 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             for builder in self.builders.values():
                 if builder.building:
                     num_builds = len(builder.building)
-                    log.msg("Builder %s has %i builds running" % (builder, num_builds))
+                    log.msg("Builder %s has %i builds running" %
+                            (builder, num_builds))
                     n += num_builds
             if n > 0:
                 log.msg(

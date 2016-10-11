@@ -18,6 +18,7 @@ Unit tests for the plugin framework
 import re
 
 import mock
+
 from twisted.trial import unittest
 from zope.interface import implementer
 

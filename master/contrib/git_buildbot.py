@@ -23,6 +23,9 @@
 #
 # Largely based on contrib/hooks/post-receive-email from git.
 
+from future.utils import iteritems
+from future.utils import text_type
+
 import commands
 import logging
 import os
@@ -31,8 +34,6 @@ import subprocess
 import sys
 from optparse import OptionParser
 
-from future.utils import iteritems
-from future.utils import text_type
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor

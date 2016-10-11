@@ -1,6 +1,7 @@
+from future.utils import string_types
+
 import urllib
 
-from future.utils import string_types
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.web import client

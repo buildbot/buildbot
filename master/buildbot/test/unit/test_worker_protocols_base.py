@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 import mock
+
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster

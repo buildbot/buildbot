@@ -13,10 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import string_types
+
 import itertools
 import textwrap
 import time
-from future.utils import string_types
 
 
 def remove_userpassword(url):
