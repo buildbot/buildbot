@@ -1,4 +1,4 @@
-# This file is part of Buildbot.  Buildbot is free software: you can
+# This file is part of Buildbot. Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
 #
@@ -12,11 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import hashlib
+
 from future.utils import itervalues
 
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
+from twisted.python import failure
 from twisted.python import log
 from twisted.python import reflect
 
@@ -71,7 +74,10 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def startService(self):
         service.Service.startService(self)
         l = []
-        for svc in self:
+        # if a service attaches another service during the reconfiguration
+        # then the service will be started twice, so we dont use iter, but rather
+        # copy in a list
+        for svc in list(self):
             # handle any deferreds, passing up errors and success
             l.append(defer.maybeDeferred(svc.startService))
         return defer.gatherResults(l, consumeErrors=True)
@@ -108,6 +114,42 @@ class MasterService(AsyncMultiService):
     @property
     def master(self):
         return self
+
+
+class SingletonService(AsyncMultiService):
+    """a service that is created only once per parameter set in a parent service"""
+
+    @classmethod
+    def getService(cls, parent, *args, **kwargs):
+        name = cls.getName(*args, **kwargs)
+        if name in parent.namedServices:
+            return defer.succeed(parent.namedServices[name])
+        try:
+            o = cls(*args, **kwargs)
+        except Exception:
+            return defer.fail(failure.Failure())
+        o.name = name
+        d = o.setServiceParent(parent)
+
+        @d.addCallback
+        def returnObject(res):
+            # we put the service on top of the list, so that it is stopped the last
+            # This make sense as the singleton service is used as a dependency
+            # for other service
+            parent.services.remove(o)
+            parent.services.insert(0, o)
+            return o
+        return d
+
+    @classmethod
+    def getName(cls, *args, **kwargs):
+        h = hashlib.sha1()
+        for a in args:
+            h.update(str(a))
+        for a, b in kwargs.items():
+            h.update(str(a))
+            h.update(str(b))
+        return cls.__name__ + "_" + h.hexdigest()
 
 
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,

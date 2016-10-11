@@ -886,6 +886,44 @@ For example, a particular daily scheduler could be configured on multiple master
         Therefore, in this method it is safe to reassign the "active" status to another instance.
         This method may return a Deferred.
 
+.. py:class:: SingletonService
+
+    This class implements a generic Service that needs to be instantiated as a singleton according to its parameters.
+    It is a common use case to need this for accessing remote services.
+    Having a singleton to access a remote allows to limit the number of simultaneous access to the same services.
+    Thus, several completely independent buildbot services can use that singleton to access the service, and automatically synchronize themselves to not overwhelm it.
+
+    .. py:method:: __init__(self, *args, **kwargs)
+
+        Constructor of the service.
+
+        Note that unlike :py:class:`BuildbotService` SingletonService is not reconfigurable, and uses the classical constructor method
+
+        Reconfigurability would mean to add some kind of reference counting of the users, which will make the design much more complicated to use.
+        This means that the SingletonService will not be destroyed when there is no more users, it will be destroyed at the master's stopService
+
+        The lifecycle of the SingletonService is the same as a service, it must implement startService and stopService in order to allocate and free its resources.
+
+    .. py:method:: getName(cls, *args, **kwargs)
+
+        Class method.
+        Takes same arguments as the constructor of the service.
+        Get a unique name for that instance of a service.
+        Used to decide if we need to create a new object.
+        Default implementation will hash args and kwargs and use ``<classname>_<hash>`` as the name
+
+    .. py:method:: getService(cls, parentService, *args, **kwargs)
+
+        :param parentService: an AsyncMultiService class where to lookup and register the singleton (usually the root service, the master)
+        :returns: instance of the service via Deferred
+
+        Class method.
+        Takes same arguments as the constructor of the service (plus the `parentService` at the beginning of the list).
+        Construct an instance of the service if needed, and place it at the beginning of the `parentService` service list.
+        Placing it at the beginning will guarantee that the singleton will be stopped after the other services.
+
+
+
 .. py:class:: BuildbotService
 
     This class is the combinations of all `Service` classes implemented in buildbot.
