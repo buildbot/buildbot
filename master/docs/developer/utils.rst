@@ -891,7 +891,7 @@ For example, a particular daily scheduler could be configured on multiple master
     This class implements a generic Service that needs to be instantiated as a singleton according to its parameters.
     It is a common use case to need this for accessing remote services.
     Having a singleton to access a remote allows to limit the number of simultaneous access to the same services.
-    Thus, several completely independent buildbot services can use that singleton to access the service, and automatically synchronize themselves to not overwhelm it.
+    Thus, several completely independent Buildbot services can use that singleton to access the service, and automatically synchronize themselves to not overwhelm it.
 
     .. py:method:: __init__(self, *args, **kwargs)
 
@@ -909,8 +909,8 @@ For example, a particular daily scheduler could be configured on multiple master
         Class method.
         Takes same arguments as the constructor of the service.
         Get a unique name for that instance of a service.
-        Used to decide if we need to create a new object.
-        Default implementation will hash args and kwargs and use ``<classname>_<hash>`` as the name
+        This returned name is the key inside the parent's service dictionary that is used to decide if the instance has already been created before or if there is a need to create a new object.
+        Default implementation will hash args and kwargs and use ``<classname>_<hash>`` as the name.
 
     .. py:method:: getService(cls, parentService, *args, **kwargs)
 
@@ -921,8 +921,6 @@ For example, a particular daily scheduler could be configured on multiple master
         Takes same arguments as the constructor of the service (plus the `parentService` at the beginning of the list).
         Construct an instance of the service if needed, and place it at the beginning of the `parentService` service list.
         Placing it at the beginning will guarantee that the singleton will be stopped after the other services.
-
-
 
 .. py:class:: BuildbotService
 
