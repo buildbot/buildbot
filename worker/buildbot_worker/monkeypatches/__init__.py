@@ -26,14 +26,14 @@ def patch_bug4881():
         return
 
     # this bug was only present in Twisted-10.2.0
-    if twisted.version == versions.Version('twisted', 10, 2, 0):
+    if twisted.version == versions.Version(twisted.version.package, 10, 2, 0):
         from buildbot_worker.monkeypatches import bug4881
         bug4881.patch()
 
 
 def patch_bug5079():
     # this bug will hopefully be patched in Twisted-12.0.0
-    if twisted.version < versions.Version('twisted', 12, 0, 0):
+    if twisted.version < versions.Version(twisted.version.package, 12, 0, 0):
         from buildbot_worker.monkeypatches import bug5079
         bug5079.patch()
 
