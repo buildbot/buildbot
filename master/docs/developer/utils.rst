@@ -1040,3 +1040,101 @@ For example, a particular daily scheduler could be configured on multiple master
         c['services'] = [
             MyService(arg1=1)
         ]
+
+:py:mod:`buildbot.util.httpclientservice`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: HTTPClientService
+
+    This class implements a SharedService for doing http client access.
+    The module automatically chooses from txrequests and treq and uses whichever is installed.
+    It provides minimalistic API similar to the one from txrequests and treq.
+    Having a SharedService for this allows to limits the number of simultaneous connection for the same host.
+    While twisted application can managed thousands of connections at the same time, this is often not the case for the services buildbot controls.
+    Both txrequests and treq use keep-alive connection polling.
+    Lots of HTTP REST API will however force a connection close in the end of a transaction.
+
+    .. note::
+
+        The API described here is voluntary minimalistic, and reflects what is tested.
+        As most of this module is implemented as a pass-through to the underlying libraries, other options can work but have not been tested to work in both backends.
+        If there is a need for more functionality, please add new tests before using them.
+
+    .. py:staticmethod:: getService(master, base_url, auth=None)
+
+        :param master: the instance of the master service (available in self.master for all the :py:class:`BuildbotService` instances)
+        :param base_url: The base http url of the service to access. e.g. ``http://github.com/``
+        :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
+            It can also be a :mod:`requests.auth` authentication plugin.
+            In this case txrequests will be forced, and treq cannot be used.
+        :returns: instance of :`HTTPClientService`
+
+        Get an instance of the SharedService.
+        There is one instance per base_url and auth.
+
+        The constructor initialize the service, and store the config arguments in private attributes.
+
+        This should *not* be overriden by subclasses, as they should rather override checkConfig.
+
+
+    .. py:method:: get(endpoint, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``GET``
+
+    .. py:method:: delete(endpoint, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``DELETE``
+
+    .. py:method:: post(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``POST``
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+    .. py:method:: put(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``PUT``
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+.. py:class:: IHTTPResponse
+
+    .. note::
+
+        The API described here is voluntary minimalistic, and reflects what is tested and reliable to use with both backends.
+        Notably:
+
+        * There is no api to automatically decode content, as this is not implemented the same in both backends.
+        * There is no api to stream content as the two libraries have very different way for doing it, and we do not see use-case where buildbot would need to transfer large content to the master.
+
+    .. py:method:: content()
+
+        :returns: raw (``bytes``) content of the response via deferred
+
+    .. py:method:: json()
+
+        :returns: json decoded content of the response via deferred
