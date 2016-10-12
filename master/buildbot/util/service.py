@@ -12,9 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import hashlib
-
 from future.utils import itervalues
+
+import hashlib
 
 from twisted.application import service
 from twisted.internet import defer
@@ -125,31 +125,35 @@ class SingletonService(AsyncMultiService):
         if name in parent.namedServices:
             return defer.succeed(parent.namedServices[name])
         try:
-            o = cls(*args, **kwargs)
+            instance = cls(*args, **kwargs)
         except Exception:
             return defer.fail(failure.Failure())
-        o.name = name
-        d = o.setServiceParent(parent)
+        # The class is not required to initialized its name
+        # but we use the name to identify the instance in the parent service
+        # so we force it with the name we used
+        instance.name = name
+        d = instance.setServiceParent(parent)
 
         @d.addCallback
-        def returnObject(res):
+        def returnInstance(res):
             # we put the service on top of the list, so that it is stopped the last
             # This make sense as the singleton service is used as a dependency
             # for other service
-            parent.services.remove(o)
-            parent.services.insert(0, o)
-            return o
+            parent.services.remove(instance)
+            parent.services.insert(0, instance)
+            # hook the return value to the instance object
+            return instance
         return d
 
     @classmethod
     def getName(cls, *args, **kwargs):
-        h = hashlib.sha1()
-        for a in args:
-            h.update(str(a))
-        for a, b in kwargs.items():
-            h.update(str(a))
-            h.update(str(b))
-        return cls.__name__ + "_" + h.hexdigest()
+        _hash = hashlib.sha1()
+        for arg in args:
+            _hash.update(str(arg))
+        for k, v in kwargs.items():
+            _hash.update(str(k))
+            _hash.update(str(v))
+        return cls.__name__ + "_" + _hash.hexdigest()
 
 
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,

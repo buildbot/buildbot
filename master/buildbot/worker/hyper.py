@@ -53,9 +53,8 @@ class HyperLatentManager(service.SingletonService):
 
     def __init__(self, hyper_host, hyper_accesskey, hyper_secretkey):
         service.SingletonService.__init__(self)
-        self.name = self.getName(hyper_host, hyper_accesskey, hyper_secretkey)
         # Prepare the parameters for the Docker Client object.
-        self.client_args = {'clouds': {
+        self._client_args = {'clouds': {
             hyper_host: {
                 "accesskey": hyper_accesskey,
                 "secretkey": hyper_secretkey
@@ -63,17 +62,21 @@ class HyperLatentManager(service.SingletonService):
         }}
 
     def startService(self):
-        self.threadPool = threadpool.ThreadPool(
+        self._threadPool = threadpool.ThreadPool(
             minthreads=1, maxthreads=self.MAX_THREADS, name='hyper')
-        self.threadPool.start()
-        self.client = Hyper(self.client_args)
+        self._threadPool.start()
+        self._client = Hyper(self._client_args)
+
+    @property
+    def client(self):
+        return self._client
 
     def stopService(self):
         self.client.close()
-        return self.threadPool.stop()
+        return self._threadPool.stop()
 
-    def runInThread(self, reactor, meth, *args, **kwargs):
-        return threads.deferToThreadPool(reactor, self.threadPool, meth, *args, **kwargs)
+    def deferToThread(self, reactor, meth, *args, **kwargs):
+        return threads.deferToThreadPool(reactor, self._threadPool, meth, *args, **kwargs)
 
 
 class HyperLatentWorker(AbstractLatentWorker):
@@ -81,8 +84,6 @@ class HyperLatentWorker(AbstractLatentWorker):
     instance = None
     ALLOWED_SIZES = ['s1', 's2', 's3', 's4',
                      'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
-    threadPool = None
-    client = None
     image = None
     reactor = global_reactor
 
@@ -139,8 +140,8 @@ class HyperLatentWorker(AbstractLatentWorker):
                 "BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
-    def runInThread(self, meth, *args, **kwargs):
-        return self.manager.runInThread(self.reactor, meth, *args, **kwargs)
+    def deferToThread(self, meth, *args, **kwargs):
+        return self.manager.deferToThread(self.reactor, meth, *args, **kwargs)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -148,7 +149,7 @@ class HyperLatentWorker(AbstractLatentWorker):
             raise ValueError('instance active')
 
         image = yield build.render(self.image)
-        yield self.runInThread(self._thd_start_instance, image)
+        yield self.deferToThread(self._thd_start_instance, image)
         defer.returnValue(True)
 
     def getContainerName(self):
@@ -193,7 +194,7 @@ class HyperLatentWorker(AbstractLatentWorker):
             # instance never attached, and it's because, somehow, we never
             # started.
             return defer.succeed(None)
-        return self.runInThread(self._thd_stop_instance, fast)
+        return self.deferToThread(self._thd_stop_instance, fast)
 
     @property
     def shortid(self):
