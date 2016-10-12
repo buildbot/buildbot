@@ -715,31 +715,31 @@ class BuildbotServiceManager(unittest.TestCase):
             'name': 'services'})
 
 
-class UnderTestSingletonService(service.SingletonService):
+class UnderTestSharedService(service.SharedService):
     def __init__(self, arg1=None):
-        service.SingletonService.__init__(self)
+        service.SharedService.__init__(self)
 
 
 class UnderTestDependentService(service.AsyncService):
     @defer.inlineCallbacks
     def startService(self):
-        self.dependent = yield UnderTestSingletonService.getService(self.parent)
+        self.dependent = yield UnderTestSharedService.getService(self.parent)
 
     def stopService(self):
         assert self.dependent.running
 
 
-class SingletonService(unittest.SynchronousTestCase):
+class SharedService(unittest.SynchronousTestCase):
     def test_bad_constructor(self):
         parent = service.AsyncMultiService()
-        self.failureResultOf(UnderTestSingletonService.getService(parent, arg2="foo"))
+        self.failureResultOf(UnderTestSharedService.getService(parent, arg2="foo"))
 
     def test_creation(self):
         parent = service.AsyncMultiService()
-        r = self.successResultOf(UnderTestSingletonService.getService(parent))
-        r2 = self.successResultOf(UnderTestSingletonService.getService(parent))
-        r3 = self.successResultOf(UnderTestSingletonService.getService(parent, "arg1"))
-        r4 = self.successResultOf(UnderTestSingletonService.getService(parent, "arg1"))
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        r2 = self.successResultOf(UnderTestSharedService.getService(parent))
+        r3 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
+        r4 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
         self.assertIdentical(r, r2)
         self.assertNotIdentical(r, r3)
         self.assertIdentical(r3, r4)
@@ -748,7 +748,7 @@ class SingletonService(unittest.SynchronousTestCase):
     def test_startup(self):
         """the service starts when parent starts and stop"""
         parent = service.AsyncMultiService()
-        r = self.successResultOf(UnderTestSingletonService.getService(parent))
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
         self.assertEqual(r.running, 0)
         self.successResultOf(parent.startService())
         self.assertEqual(r.running, 1)
@@ -759,9 +759,9 @@ class SingletonService(unittest.SynchronousTestCase):
         """the service starts during the getService if parent already started"""
         parent = service.AsyncMultiService()
         self.successResultOf(parent.startService())
-        r = self.successResultOf(UnderTestSingletonService.getService(parent))
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
         self.assertEqual(r.running, 1)
-        # then we stop the parent, and the singleton stops
+        # then we stop the parent, and the shared service stops
         self.successResultOf(parent.stopService())
         self.assertEqual(r.running, 0)
 

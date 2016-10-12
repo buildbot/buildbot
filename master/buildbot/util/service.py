@@ -116,7 +116,7 @@ class MasterService(AsyncMultiService):
         return self
 
 
-class SingletonService(AsyncMultiService):
+class SharedService(AsyncMultiService):
     """a service that is created only once per parameter set in a parent service"""
 
     @classmethod
@@ -137,7 +137,7 @@ class SingletonService(AsyncMultiService):
         @d.addCallback
         def returnInstance(res):
             # we put the service on top of the list, so that it is stopped the last
-            # This make sense as the singleton service is used as a dependency
+            # This make sense as the shared service is used as a dependency
             # for other service
             parent.services.remove(instance)
             parent.services.insert(0, instance)

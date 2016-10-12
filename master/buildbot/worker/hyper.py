@@ -42,8 +42,8 @@ except ImportError:
 log = Logger()
 
 
-class HyperLatentManager(service.SingletonService):
-    """A singleton class that manages all the connections to the hyper cloud
+class HyperLatentManager(service.SharedService):
+    """A shared service class that manages all the connections to the hyper cloud
 
     There is one instance of this manager per host, accesskey, secretkey tuple.
     This manager manages its own thread pull, as Hyper_sh is blocking
@@ -52,7 +52,7 @@ class HyperLatentManager(service.SingletonService):
     MAX_THREADS = 5
 
     def __init__(self, hyper_host, hyper_accesskey, hyper_secretkey):
-        service.SingletonService.__init__(self)
+        service.SharedService.__init__(self)
         # Prepare the parameters for the Docker Client object.
         self._client_args = {'clouds': {
             hyper_host: {
