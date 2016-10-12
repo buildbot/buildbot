@@ -1,16 +1,29 @@
-describe 'force', () ->
-    it 'should create a build', () ->
-        browser.get('#/builders/1')
-        lastbuild = element.all(By.css('span.badge-status.results_SUCCESS')).count()
-        browser.get('#/builders/1/force/force')
-        browser.waitForAngular()
-        element(By.buttonText('Start Build')).click()
-        browser.get('#/builders/1')
-        successBuildIncrease =  ->
-            lastbuild.then (lastbuild)->
-                element.all(By.css('span.badge-status.results_SUCCESS'))
-                .count().then (nextbuild)->
-                    return +nextbuild == +lastbuild + 1
-        browser.wait(successBuildIncrease, 20000)
-        browser.get('#/waterfall')
-        expect(element.all(By.css('rect.success')).count()).toBeGreaterThan(0)
+# coffee script
+# test goal: checks the capability to define a reason and to cancel/start the build
+
+forcePage = require('./force.coffee')
+builderPage = require('./builder.coffee')
+
+describe('', () ->
+    force = null
+    builder = null
+
+    beforeEach(() ->
+        builder = new builderPage('runtest', 'force')
+        force =  new forcePage()
+        builder.goDefault()
+    )
+
+    lastbuild = null
+    describe 'force', () ->
+        it 'should create a build', () ->
+
+            lastbuild = 0
+            builder.go()
+            builder.getBuildCount().then (lastbuild) ->
+                builder.goForce()
+                force.getStartButton().click()
+                builder.go()
+                builder.waitNextBuildFinished(lastbuild)
+                expect(element.all(By.css('rect.success')).count()).toBeGreaterThan(0)
+)
