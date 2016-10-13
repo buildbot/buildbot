@@ -46,9 +46,14 @@ class HyperLatentManager(service.SharedService):
     """A shared service class that manages all the connections to the hyper cloud
 
     There is one instance of this manager per host, accesskey, secretkey tuple.
-    This manager manages its own thread pull, as Hyper_sh is blocking
+    This manager manages its own thread pull, as Hyper_sh is blocking.
+
+    You can change the maximum number of concurent access to hyper using
+
+    import buildbot.worker.hyper
+    buildbot.worker.hyper.HyperLatentManager.MAX_THREADS = 1
+    This feature is undocumented for now, as we are not sure if this is ideal API.
     """
-    name = "HyperLatentManager"
     MAX_THREADS = 5
 
     def __init__(self, hyper_host, hyper_accesskey, hyper_secretkey):

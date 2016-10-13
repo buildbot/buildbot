@@ -127,6 +127,7 @@ class SharedService(AsyncMultiService):
         try:
             instance = cls(*args, **kwargs)
         except Exception:
+            # we transform all exceptions into failure
             return defer.fail(failure.Failure())
         # The class is not required to initialized its name
         # but we use the name to identify the instance in the parent service
