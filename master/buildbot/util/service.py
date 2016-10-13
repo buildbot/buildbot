@@ -1,4 +1,4 @@
-# This file is part of Buildbot.  Buildbot is free software: you can
+# This file is part of Buildbot. Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
 #
@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 from future.utils import itervalues
 
+import hashlib
+
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
+from twisted.python import failure
 from twisted.python import log
 from twisted.python import reflect
 
@@ -71,7 +74,10 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def startService(self):
         service.Service.startService(self)
         l = []
-        for svc in self:
+        # if a service attaches another service during the reconfiguration
+        # then the service will be started twice, so we dont use iter, but rather
+        # copy in a list
+        for svc in list(self):
             # handle any deferreds, passing up errors and success
             l.append(defer.maybeDeferred(svc.startService))
         return defer.gatherResults(l, consumeErrors=True)
@@ -108,6 +114,47 @@ class MasterService(AsyncMultiService):
     @property
     def master(self):
         return self
+
+
+class SharedService(AsyncMultiService):
+    """a service that is created only once per parameter set in a parent service"""
+
+    @classmethod
+    def getService(cls, parent, *args, **kwargs):
+        name = cls.getName(*args, **kwargs)
+        if name in parent.namedServices:
+            return defer.succeed(parent.namedServices[name])
+        try:
+            instance = cls(*args, **kwargs)
+        except Exception:
+            # we transform all exceptions into failure
+            return defer.fail(failure.Failure())
+        # The class is not required to initialized its name
+        # but we use the name to identify the instance in the parent service
+        # so we force it with the name we used
+        instance.name = name
+        d = instance.setServiceParent(parent)
+
+        @d.addCallback
+        def returnInstance(res):
+            # we put the service on top of the list, so that it is stopped the last
+            # This make sense as the shared service is used as a dependency
+            # for other service
+            parent.services.remove(instance)
+            parent.services.insert(0, instance)
+            # hook the return value to the instance object
+            return instance
+        return d
+
+    @classmethod
+    def getName(cls, *args, **kwargs):
+        _hash = hashlib.sha1()
+        for arg in args:
+            _hash.update(str(arg))
+        for k, v in kwargs.items():
+            _hash.update(str(k))
+            _hash.update(str(v))
+        return cls.__name__ + "_" + _hash.hexdigest()
 
 
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,

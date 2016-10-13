@@ -66,6 +66,9 @@ Changes for Developers
 Features
 ~~~~~~~~
 
+* New :class:`SharedService` can be used by steps, reporters, etc to implement per master resource limit.
+
+
 Fixes
 ~~~~~
 

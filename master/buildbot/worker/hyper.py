@@ -28,6 +28,7 @@ from twisted.python import threadpool
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util import service
 from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
 
@@ -41,17 +42,55 @@ except ImportError:
 log = Logger()
 
 
+class HyperLatentManager(service.SharedService):
+    """A shared service class that manages all the connections to the hyper cloud
+
+    There is one instance of this manager per host, accesskey, secretkey tuple.
+    This manager manages its own thread pull, as Hyper_sh is blocking.
+
+    You can change the maximum number of concurent access to hyper using
+
+    import buildbot.worker.hyper
+    buildbot.worker.hyper.HyperLatentManager.MAX_THREADS = 1
+    This feature is undocumented for now, as we are not sure if this is ideal API.
+    """
+    MAX_THREADS = 5
+
+    def __init__(self, hyper_host, hyper_accesskey, hyper_secretkey):
+        service.SharedService.__init__(self)
+        # Prepare the parameters for the Docker Client object.
+        self._client_args = {'clouds': {
+            hyper_host: {
+                "accesskey": hyper_accesskey,
+                "secretkey": hyper_secretkey
+            }
+        }}
+
+    def startService(self):
+        self._threadPool = threadpool.ThreadPool(
+            minthreads=1, maxthreads=self.MAX_THREADS, name='hyper')
+        self._threadPool.start()
+        self._client = Hyper(self._client_args)
+
+    @property
+    def client(self):
+        return self._client
+
+    def stopService(self):
+        self.client.close()
+        return self._threadPool.stop()
+
+    def deferToThread(self, reactor, meth, *args, **kwargs):
+        return threads.deferToThreadPool(reactor, self._threadPool, meth, *args, **kwargs)
+
+
 class HyperLatentWorker(AbstractLatentWorker):
     """hyper.sh is a docker CaaS company"""
     instance = None
     ALLOWED_SIZES = ['s1', 's2', 's3', 's4',
                      'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
-    threadPool = None
-    client = None
     image = None
     reactor = global_reactor
-    client_args = None
-    class_singletons = {}
 
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
@@ -72,31 +111,26 @@ class HyperLatentWorker(AbstractLatentWorker):
             config.error("Size is not valid %s vs %r".format(
                 hyper_size, self.ALLOWED_SIZES))
 
+    @property
+    def client(self):
+        if self.manager is None:
+            return None
+        return self.manager.client
+
+    @defer.inlineCallbacks
     def reconfigService(self, name, password, hyper_host,
                         hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
-        AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
-        self.confighash = hashlib.sha1(
-            hyper_host + hyper_accesskey + hyper_secretkey).hexdigest()[:6]
+        yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+
+        self.manager = yield HyperLatentManager.getService(self.master, hyper_host, hyper_accesskey,
+                                                           hyper_secretkey)
         self.masterhash = hashlib.sha1(self.master.name).hexdigest()[:6]
         self.size = hyper_size
 
-        # Prepare the parameters for the Docker Client object.
-        self.client_args = {'clouds': {
-            hyper_host: {
-                "accesskey": hyper_accesskey,
-                "secretkey": hyper_secretkey
-            }
-        }}
         self.image = image
         if not masterFQDN:  # also match empty string (for UI)
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
-
-    @defer.inlineCallbacks
-    def stopService(self):
-        # stopService will call stop_instance if the worker was up.
-        yield AbstractLatentWorker.stopService(self)
-        yield self.maybeDeleteSingletons()
 
     def createEnvironment(self):
         result = {
@@ -111,41 +145,8 @@ class HyperLatentWorker(AbstractLatentWorker):
                 "BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
-    def runInThread(self, meth, *args, **kwargs):
-        self.maybeCreateSingletons()
-        return threads.deferToThreadPool(self.reactor, self.threadPool, meth, *args, **kwargs)
-
-    def maybeCreateSingletons(self):
-        if self.threadPool is None:
-            key = self.confighash
-            if key not in HyperLatentWorker.class_singletons:
-                threadPool = threadpool.ThreadPool(
-                    minthreads=10, maxthreads=10, name='hyper')
-                threadPool.start()
-                # simple reference counter to stop the pool when the last
-                # latent worker is stopped
-                threadPool.refs = 0
-                client = Hyper(self.client_args)
-                HyperLatentWorker.class_singletons[key] = (threadPool, client)
-            else:
-                threadPool, client = HyperLatentWorker.class_singletons[key]
-            threadPool.refs += 1
-            self.threadPool = threadPool
-            self.client = client
-
-    @defer.inlineCallbacks
-    def maybeDeleteSingletons(self):
-        if self.threadPool is not None:
-            self.threadPool.refs -= 1
-            if self.threadPool.refs == 0:
-                self.client.close()
-                yield self.threadPool.stop()
-                key = self.confighash
-                # if key in not in the singleton, there is a bug somewhere so
-                # this will raise
-                del HyperLatentWorker.class_singletons[key]
-
-            self.threadPool = self.client = None
+    def deferToThread(self, meth, *args, **kwargs):
+        return self.manager.deferToThread(self.reactor, meth, *args, **kwargs)
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -153,7 +154,7 @@ class HyperLatentWorker(AbstractLatentWorker):
             raise ValueError('instance active')
 
         image = yield build.render(self.image)
-        yield self.runInThread(self._thd_start_instance, image)
+        yield self.deferToThread(self._thd_start_instance, image)
         defer.returnValue(True)
 
     def getContainerName(self):
@@ -198,7 +199,7 @@ class HyperLatentWorker(AbstractLatentWorker):
             # instance never attached, and it's because, somehow, we never
             # started.
             return defer.succeed(None)
-        return self.runInThread(self._thd_stop_instance, fast)
+        return self.deferToThread(self._thd_stop_instance, fast)
 
     @property
     def shortid(self):
