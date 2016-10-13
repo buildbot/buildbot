@@ -1047,11 +1047,11 @@ For example, a particular daily scheduler could be configured on multiple master
 .. py:class:: HTTPClientService
 
     This class implements a SharedService for doing http client access.
-    The module automatically chooses from txrequests and treq and uses whichever is installed.
-    It provides minimalistic API similar to the one from txrequests and treq.
+    The module automatically chooses from `txrequests`_ and `treq`_ and uses whichever is installed.
+    It provides minimalistic API similar to the one from `txrequests`_ and `treq`_.
     Having a SharedService for this allows to limits the number of simultaneous connection for the same host.
     While twisted application can managed thousands of connections at the same time, this is often not the case for the services buildbot controls.
-    Both txrequests and treq use keep-alive connection polling.
+    Both `txrequests`_ and `treq`_ use keep-alive connection polling.
     Lots of HTTP REST API will however force a connection close in the end of a transaction.
 
     .. note::
@@ -1066,7 +1066,7 @@ For example, a particular daily scheduler could be configured on multiple master
         :param base_url: The base http url of the service to access. e.g. ``http://github.com/``
         :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
             It can also be a :mod:`requests.auth` authentication plugin.
-            In this case txrequests will be forced, and treq cannot be used.
+            In this case `txrequests`_ will be forced, and `treq`_ cannot be used.
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.
@@ -1138,3 +1138,6 @@ For example, a particular daily scheduler could be configured on multiple master
     .. py:method:: json()
 
         :returns: json decoded content of the response via deferred
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
