@@ -121,21 +121,18 @@ class HTTPClientService(service.SharedService):
         url, kwargs = self._prepareRequest(ep, kwargs)
 
         class ResponseWrapper(object):
-            """ treq response API is more adapted to"""
-            def __init__(self, deferred):
-                self._deferred = deferred
+            def __init__(self, res):
+                self._res = res
 
             def content(self):
-                @self._deferred.addCallback
-                def makeContent(res):
-                    return res.content
-                return self._deferred
+                return defer.succeed(self._res.content)
 
             def json(self):
-                @self._deferred.addCallback
-                def makeText(res):
-                    return res.json()
-                return self._deferred
+                return defer.succeed(self._res.json())
+
+            @property
+            def code(self):
+                return self._res.status_code
 
         def readContent(session, res):
             # this forces reading of the content
@@ -143,8 +140,9 @@ class HTTPClientService(service.SharedService):
             return res
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
-        return defer.succeed(ResponseWrapper(
-            self._session.request(method, url, **kwargs)))
+        d = self._session.request(method, url, **kwargs)
+        d.addCallback(ResponseWrapper)
+        return d
 
     def _doTReq(self, method, ep, data=None, json=None, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
@@ -162,13 +160,13 @@ class HTTPClientService(service.SharedService):
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
-        return self._doRequest("get", ep, **kwargs)
+        return self._doRequest('get', ep, **kwargs)
 
     def put(self, ep, **kwargs):
-        return self._doRequest("put", ep, **kwargs)
+        return self._doRequest('put', ep, **kwargs)
 
     def delete(self, ep, **kwargs):
-        return self._doRequest("delete", ep, **kwargs)
+        return self._doRequest('delete', ep, **kwargs)
 
     def post(self, ep, **kwargs):
-        return self._doRequest("post", ep, **kwargs)
+        return self._doRequest('post', ep, **kwargs)

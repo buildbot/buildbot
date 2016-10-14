@@ -1126,6 +1126,8 @@ For example, a particular daily scheduler could be configured on multiple master
     .. note::
 
         The API described here is voluntary minimalistic, and reflects what is tested and reliable to use with both backends.
+        The api is preferably a subset of the treq API, so that treq can be implemented as passthrough.
+        
         Notably:
 
         * There is no api to automatically decode content, as this is not implemented the same in both backends.
@@ -1138,6 +1140,10 @@ For example, a particular daily scheduler could be configured on multiple master
     .. py:method:: json()
 
         :returns: json decoded content of the response via deferred
+
+    .. py:attribute:: code
+
+        :returns: http status code of the request's response (e.g 200)
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
