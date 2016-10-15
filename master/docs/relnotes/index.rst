@@ -23,6 +23,8 @@ Features
 
 * :bb:sched:`Triggerable` now accepts a ``reason`` parameter.
 
+* new steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
+
 Fixes
 ~~~~~
 
