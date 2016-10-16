@@ -465,3 +465,23 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
              "--message 'bla'", '--verified 1', 'revision'])
+
+        # now test the notify argument, even though _gerrit_notify
+        # is private, work around that
+        gsp._gerrit_notify = 'OWNER'
+        gsp.processVersion('2.6', lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
+             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'])
+
+        # gerrit versions <= 2.5 uses other syntax
+        gsp.processVersion('2.4', lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
+             "--message 'bla'", '--verified 1', 'revision'])
