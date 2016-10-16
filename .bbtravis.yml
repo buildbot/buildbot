@@ -18,6 +18,7 @@ env:
 
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js
+  - TWISTED=latest SQLALCHEMY=latest TESTS=tarballs
 
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
@@ -26,13 +27,13 @@ env:
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
   # Helps to detect issues with incorrect database setup/cleanup in tests.
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
   # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest&storage_engine=InnoDB
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest&storage_engine=InnoDB
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
-  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
   # Test different versions of SQLAlchemy
   - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
@@ -161,6 +162,14 @@ script:
   - title: linkcheck
     condition: TESTS == "docs" and not TRAVIS_PULL_REQUEST
     cmd: make -C master/docs SPHINXOPTS=-q linkcheck
+
+  - title: maketarballs
+    condition: TESTS == "tarballs"
+    cmd: ./common/maketarballs.sh
+
+  - title: maketarballs
+    condition: TESTS == "smokes"
+    cmd: ./common/smokedist.sh
 
 notifications:
   email: false
