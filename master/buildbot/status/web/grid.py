@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from buildbot import util
 from buildbot.sourcestamp import SourceStamp
 from buildbot.status.web.base import HtmlResource
 from buildbot.status.web.base import build_get_class
@@ -205,7 +206,7 @@ class GridStatusResource(HtmlResource, GridStatusMixin):
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                     })
 
-        sortedBuilderNames = sorted(status.getBuilderNames())
+        sortedBuilderNames = util.naturalSort(status.getBuilderNames())
 
         cxt['builders'] = []
 
@@ -274,7 +275,7 @@ class TransposedGridStatusResource(HtmlResource, GridStatusMixin):
                     'stamps': [map(SourceStamp.asDict, sstamp) for sstamp in stamps],
                     })
 
-        sortedBuilderNames = sorted(status.getBuilderNames())
+        sortedBuilderNames = util.naturalSort(status.getBuilderNames())
 
         cxt['sorted_builder_names'] = sortedBuilderNames
         cxt['builder_builds'] = builder_builds = []

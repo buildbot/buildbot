@@ -316,7 +316,7 @@ class ConsoleStatusResource(HtmlResource):
         for tag in builderList:
             count += len(builderList[tag])
 
-        tags = sorted(builderList.keys())
+        tags = util.naturalSort(builderList.keys())
 
         cs = []
 
