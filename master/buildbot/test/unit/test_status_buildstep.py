@@ -111,3 +111,19 @@ class TestBuildStepStatus(unittest.TestCase):
         self.assertEqual(bss1.logs[0].content_type, content_type1)
         self.assertEqual(bss1.logs[1].content_type, None)
         self.assertEqual(bss1.logs[2].content_type, content_type2)
+
+
+    def test_addURLs(self):
+        b = self.setupBuilder('builder_1')
+        self.setupStatus(b)
+        bs = b.newBuild()
+        bss1 = bs.addStepWithName('step_1', None)
+        bss1.stepStarted()
+
+        urlList = dict()
+        urlList["URL"] = "http://www.url"
+        urlList["URL2"] = "http://www.url2"
+
+        bss1.addURL("URL", "http://www.url")
+        bss1.addURL("URL2", "http://www.url2")
+        self.assertEquals(bss1.getURLs(), urlList)
