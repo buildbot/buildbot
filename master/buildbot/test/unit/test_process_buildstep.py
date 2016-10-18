@@ -129,12 +129,14 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
             def addURL(self, name, url):
                 self.urls.append(dict(url = url, name = name))
 
-        url_list = {"urlLabel1": "http://www.url-<<BuilderName>>.com", "urlLabel2": "https://url<<BuildNumber>>.com"}
+        url_list = {"urlLabel1": "http://www.url-{builder.name}.com", "urlLabel2": "https://url{build_status.number}.com"}
         corrected_url_list = [{"url":"http://www.url-testName.com", "name":"urlLabel1"}, {"url":"https://url1000.com", "name":"urlLabel2"}]
 
         step = buildstep.LoggingBuildStep(urls=url_list)
         step.build = mock.Mock()
+        step.build.builder = mock.Mock()
         step.build.builder.name = "testName"
+        step.build.build_status = mock.Mock()
         step.build.build_status.number = 1000
         step.setStepStatus(FakeFinishableStatus())
         # The URLs are set in the CommandComplete step

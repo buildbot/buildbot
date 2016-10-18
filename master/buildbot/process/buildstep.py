@@ -833,16 +833,14 @@ class BuildStep(object, properties.PropertiesMixin):
     def addURL(self, name, url):
         """
         Adds the given URL as a hyperlink in the build step's Artifacts
+        Replace variables in braces with corresponding varaible in self.build.
+        (EG: http://{builder.name}.{build_status.number}.com can become http://proj0-ABuildVerification.1.com)
         URLs must start with 'http://' or they will be treated as relative to the current build's URL
         @param name: the displayed text for the hyperlink
         @param url: the URL to add.
         """
 
-        # Replace keywords in the URL with actual build-exclusive variables
-        if "<<BuilderName>>" in url:
-            url = url.replace("<<BuilderName>>", "%s" % self.build.builder.name)
-        if "<<BuildNumber>>" in url:
-            url = url.replace("<<BuildNumber>>", "%s" % self.build.build_status.number)
+        url = url.format(**self.build.__dict__)
         self.step_status.addURL(name, url)
 
     def runCommand(self, c):
