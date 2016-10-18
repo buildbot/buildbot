@@ -28,6 +28,7 @@ from buildbot.status.web.base import IHTMLLog, HtmlResource, getCodebasesArg, Co
 from buildbot.status.web.xmltestresults import XMLTestResource
 from buildbot.status.web.jsontestresults import JSONTestResource
 
+import re
 
 class ChunkConsumer:
     implements(interfaces.IStatusLogConsumer)
@@ -58,7 +59,9 @@ class TextLog(Resource, ContextMixin):
     # it, so we can afford to track the request in the Resource.
     implements(IHTMLLog)
 
-    asText = False
+    asDownload = False
+    withHeaders = False
+    newWindow = False
     subscribed = False
     iFrame = False
 
@@ -68,8 +71,19 @@ class TextLog(Resource, ContextMixin):
         self.pageTitle = "Log"
 
     def getChild(self, path, req):
-        if path == "text":
-            self.asText = True
+        if path == "download":
+            self.asDownload = True
+            return self
+        if path == "download_with_headers":
+            self.asDownload = True
+            self.withHeaders = True
+            return self
+        if path == "plaintext":
+            self.newWindow = True
+            return self
+        if path == "plaintext_with_headers":
+            self.newWindow = True
+            self.withHeaders = True
             return self
         if path == "iframe":
             self.iFrame = True
@@ -86,7 +100,7 @@ class TextLog(Resource, ContextMixin):
             
             is_header = type == logfile.HEADER
 
-            if not self.asText:
+            if not self.asDownload:
                 # jinja only works with unicode, or pure ascii, so assume utf-8 in logs
                 if not isinstance(entry, unicode):
                     entry = unicode(entry, 'utf-8', 'replace')
@@ -96,7 +110,7 @@ class TextLog(Resource, ContextMixin):
             elif not is_header:
                 text_data += entry
 
-        if self.asText:
+        if self.asDownload:
             return text_data
         else:
             return self.chunk_template.module.chunks(html_entries)
@@ -117,45 +131,63 @@ class TextLog(Resource, ContextMixin):
         else:
             req.setHeader("Cache-Control", "no-cache")
 
-        if not self.asText:
-            self.template = req.site.buildbot_service.templates.get_template("logs.html")
-            self.chunk_template = req.site.buildbot_service.templates.get_template("log_chunk.html")
-            builder = self.original.step.build.builder
-            build_id = self.original.step.build.number
-            url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
+        # If plaintext is requested just return the content of the logfile
+        if self.asDownload:
+            with_headers = "_with_headers" if self.withHeaders else ""
+            base_name = self.original.step.getName() + "_" + self.original.getName() + with_headers
+            base_name = re.sub(r'[\W]', '_', base_name) + ".log"
+            req.setHeader("Content-Disposition", "attachment; filename =\"" + base_name + "\"")
+            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
-            if self.iFrame:
-                data = self.chunk_template.module.page_header(version)
-                data = data.encode('utf-8')
-                req.write(data)
-                self.original.subscribeConsumer(ChunkConsumer(req, self))
-                return server.NOT_DONE_YET
+        # Or open in new window
+        if self.newWindow:
+            req.setHeader("Content-Disposition", "inline")
+            return self.original.getTextWithHeaders() if self.withHeaders else self.original.getText()
 
+        # Else render the logs template
+        
+        self.template = req.site.buildbot_service.templates.get_template("logs.html")
+        self.chunk_template = req.site.buildbot_service.templates.get_template("log_chunk.html")
+        builder = self.original.step.build.builder
+        build_id = self.original.step.build.number
+        url_dict = self.original.master.status.getURLForBuild(builder.getName(), build_id)
 
-            cxt = self.getContext(req)
-            build = self.original.step.build
-            builder_status = build.builder
-            project = builder_status.getProject()
-            cxt["pageTitle"] = "Log File Contents"
-            cxt["iframe_url"] = req.path + "/iframe"
-            cxt["builder_name"] = builder.getFriendlyName()
-            cxt['path_to_builder'] = path_to_builder(req, builder_status)
-            cxt['path_to_builders'] = path_to_builders(req, project)
-            cxt["builder_url"] = url_dict['path'] + getCodebasesArg(request=req)
-            cxt['path_to_codebases'] = path_to_codebases(req, project)
-            cxt['path_to_build'] = path_to_build(req, build)
-            cxt['build_number'] = build.getNumber()
-            cxt['selectedproject'] = project
-
-            data = self.template.render(**cxt)
+        if self.iFrame:
+            data = self.chunk_template.module.page_header(version)
             data = data.encode('utf-8')
             req.write(data)
+            self.original.subscribeConsumer(ChunkConsumer(req, self))
+            return server.NOT_DONE_YET
 
-            return ""
+
+        cxt = self.getContext(req)
+        build = self.original.step.build
+        builder_status = build.builder
+        project = builder_status.getProject()
+        cxt["pageTitle"] = "Log File Contents"
+        cxt["new_window_url"] = req.path + "/plaintext"
+        cxt["new_window_with_headers_url"] = req.path + "/plaintext_with_headers"
+        cxt["download_url"] = req.path + "/download"
+        cxt["download_with_headers_url"] = req.path + "/download_with_headers"
+        cxt["iframe_url"] = req.path + "/iframe"
+        cxt["builder_name"] = builder.getFriendlyName()
+        cxt['path_to_builder'] = path_to_builder(req, builder_status)
+        cxt['path_to_builders'] = path_to_builders(req, project)
+        cxt["builder_url"] = url_dict['path'] + getCodebasesArg(request=req)
+        cxt['path_to_codebases'] = path_to_codebases(req, project)
+        cxt['path_to_build'] = path_to_build(req, build)
+        cxt['build_number'] = build.getNumber()
+        cxt['selectedproject'] = project
+
+        data = self.template.render(**cxt)
+        data = data.encode('utf-8')
+        req.write(data)
+
+        return ""
 
 
     def _setContentType(self, req):
-        if self.asText:
+        if self.asDownload or self.newWindow:
             req.setHeader("content-type", "text/plain; charset=utf-8")
         else:
             req.setHeader("content-type", "text/html; charset=utf-8")
@@ -164,7 +196,7 @@ class TextLog(Resource, ContextMixin):
         if not self.req:
             return
         try:
-            if not self.asText:
+            if not self.asDownload:
                 data = self.chunk_template.module.page_footer()
                 data = data.encode('utf-8')
                 self.req.write(data)
