@@ -66,7 +66,7 @@ class HTTPClientService(service.SharedService):
     checkAvailable = mock.Mock()
 
     def expect(self, method, ep, params=None, data=None, json=None, code=200,
-                content=None, content_json=None):
+               content=None, content_json=None):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
 
