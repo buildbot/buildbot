@@ -195,6 +195,9 @@ class AbstractLatentWorker(AbstractWorker):
         return self._mail_missing_message(subject, text)
 
     def canStartBuild(self):
+        # we were disconnected, but all the builds are not yet cleaned up.
+        if self.conn is None and self.building:
+            return False
         if self.insubstantiating:
             return False
         return AbstractWorker.canStartBuild(self)

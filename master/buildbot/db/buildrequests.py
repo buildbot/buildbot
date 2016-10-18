@@ -22,6 +22,7 @@ from twisted.python import log
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.process.results import RETRY
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
@@ -202,6 +203,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def completeBuildRequests(self, brids, results, complete_at=None,
                               _reactor=reactor):
+        assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -231,7 +233,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
-                    log.msg("tried to complete %d buildreqests, "
+                    log.msg("tried to complete %d buildrequests, "
                             "but only completed %d" % (len(batch), res.rowcount))
                     transaction.rollback()
                     raise NotClaimedError

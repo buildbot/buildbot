@@ -21,6 +21,7 @@ from buildbot.data import types
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildrequests import NotClaimedError
 from buildbot.process import results
+from buildbot.process.results import RETRY
 
 
 class Db2DataMixin(object):
@@ -218,6 +219,7 @@ class BuildRequest(base.ResourceType):
     @defer.inlineCallbacks
     def completeBuildRequests(self, brids, results, complete_at=None,
                               _reactor=reactor):
+        assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
             defer.returnValue(True)

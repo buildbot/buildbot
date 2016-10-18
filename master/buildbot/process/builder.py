@@ -28,7 +28,7 @@ from buildbot.data import resultspec
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
-from buildbot.status.builder import RETRY
+from buildbot.process.results import RETRY
 from buildbot.util import service as util_service
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
