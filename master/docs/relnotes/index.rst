@@ -64,6 +64,9 @@ Fixes
 
 * Fix the UI to better adapt to different screen width (:bug:`3614`)
 
+* Don't log :class:`AlreadyClaimedError`.
+  They are normal in case of :bb:step:`Trigger` cancelling, and in a multimaster configuration.
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
