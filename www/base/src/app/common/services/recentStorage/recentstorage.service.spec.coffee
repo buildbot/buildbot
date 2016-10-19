@@ -8,7 +8,8 @@ describe 'recent storage service', ->
         $window = $injector.get('$window')
         $rootScope = $injector.get('$rootScope')
         recentStorage = $injector.get('recentStorage')
-
+        if navigator.userAgent.indexOf("PhantomJS") > 0
+            pending()
     beforeEach (inject(injected))
 
     it 'should store recent builds', (done) ->
