@@ -308,7 +308,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     rendered = False  # true if attributes are rendered
     _workdir = None
     _waitingForLocks = False
-    _run_finished_hook = lambda self: None  # for tests
+
+    def _run_finished_hook(self):
+        return None  # override in tests
 
     def __init__(self, **kwargs):
         self.worker = None
@@ -340,6 +342,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.logs = {}
         self._running = False
         self.stepid = None
+        self.results = None
         self._start_unhandled_deferreds = None
 
     def __new__(klass, *args, **kwargs):
@@ -426,13 +429,13 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getResultSummary must return a dictionary: '
-                                + methodInfo(self.getCurrentSummary))
+                raise TypeError('getResultSummary must return a dictionary: ' +
+                                methodInfo(self.getCurrentSummary))
         else:
             summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getCurrentSummary must return a dictionary: '
-                                + methodInfo(self.getCurrentSummary))
+                raise TypeError('getCurrentSummary must return a dictionary: ' +
+                                methodInfo(self.getCurrentSummary))
 
         stepResult = summary.get('step', u'finished')
         if not isinstance(stepResult, text_type):
@@ -968,8 +971,8 @@ class LoggingBuildStep(BuildStep):
                 # The dummy default argument local_logname is a work-around for
                 # Python name binding; default values are bound by value, but
                 # captured variables in the body are bound by name.
-                callback = lambda cmd_arg, local_logname=logname: self.addLog(
-                    local_logname)
+                def callback(cmd_arg, local_logname=logname):
+                    return self.addLog(local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
@@ -1024,8 +1027,8 @@ class LoggingBuildStep(BuildStep):
                 # we're affecting the overall build, so tell them why
                 return self.getText2(cmd, results)
         else:
-            if (self.haltOnFailure or self.flunkOnFailure
-                    or self.warnOnFailure):
+            if (self.haltOnFailure or self.flunkOnFailure or
+                    self.warnOnFailure):
                 # we're affecting the overall build, so tell them why
                 return self.getText2(cmd, results)
         return []
@@ -1196,8 +1199,8 @@ class ShellMixin(object):
         for logname, remotefilename in iteritems(self.logfiles):
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
-                callback = lambda cmd_arg, logname=logname: self.addLog(
-                    logname)
+                def callback(cmd_arg, local_logname=logname):
+                    return self.addLog(local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
