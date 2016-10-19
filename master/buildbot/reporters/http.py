@@ -98,13 +98,19 @@ class HttpStatusPushBase(service.BuildbotService):
 class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
 
-    def checkConfig(self, serverUrl, user, password, **kwargs):
+    def checkConfig(self, serverUrl, user=None, password=None, auth=None, **kwargs):
+        if user is not None and auth is not None:
+            config.error("Only one of user/password or auth must be given")
+        if user is not None:
+            config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
         HttpStatusPushBase.checkConfig(self, **kwargs)
 
-    def reconfigService(self, serverUrl, user, password, **kwargs):
+    def reconfigService(self, serverUrl, user=None, password=None, auth=None, **kwargs):
         HttpStatusPushBase.reconfigService(self, **kwargs)
         self.serverUrl = serverUrl
-        self.auth = (user, password)
+        self.auth = auth
+        if user is not None:
+            self.auth = (user, password)
 
     @defer.inlineCallbacks
     def send(self, build):
