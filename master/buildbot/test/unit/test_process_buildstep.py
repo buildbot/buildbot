@@ -103,6 +103,31 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.expectHidden(expect)
 
     # tests
+    def test_doStepIfTypes(self):
+        """
+        doStepIf must be a function/boolean or a list of those types.
+        """
+        func = lambda x:True
+        VALID = [
+            True,
+            [True],
+            func,
+            [func],
+            [True, func],
+        ]
+        for doStepIf in VALID:
+            buildstep.BuildStep(doStepIf=doStepIf)
+
+        INVALID = [
+            'string',
+            [True, [True]],
+            [True, [func]],
+        ]
+        for doStepIf in INVALID:
+            self.assertRaisesConfigError(
+                "doStepIf (must be callable/bool or a list containing those types)",
+                lambda: buildstep.BuildStep(doStepIf=doStepIf)
+            )
 
     def test_nameIsntString(self):
         """
