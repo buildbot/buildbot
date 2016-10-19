@@ -225,10 +225,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # object that came from the config, and get its properties
         worker_properties = workerforbuilder.worker.properties
         self.getProperties().updateFromProperties(worker_properties)
+
         if workerforbuilder.worker.worker_basedir:
             worker_basedir = workerforbuilder.worker.worker_basedir
             if not isinstance(worker_basedir, string_types):
                 worker_basedir = worker_basedir.decode("utf-8")
+
             workerbuilddir = self.builder.config.workerbuilddir
             if not isinstance(workerbuilddir, string_types):
                 workerbuilddir = workerbuilddir.decode("utf-8")
