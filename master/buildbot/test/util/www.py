@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.moves.urllib.parse import unquote as urlunquote
+from future.utils import PY3
 from future.utils import integer_types
 from future.utils import iteritems
 
@@ -23,11 +24,6 @@ from uuid import uuid1
 import pkg_resources
 
 import mock
-
-from future.moves.urllib.parse import unquote as urlunquote
-from future.utils import PY3
-from future.utils import integer_types
-from future.utils import iteritems
 
 from twisted.internet import defer
 from twisted.web import server

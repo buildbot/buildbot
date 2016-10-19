@@ -14,9 +14,10 @@
 # Copyright 2011, Louis Opter <kalessin@kalessin.fr>
 #
 # Quite inspired from the github hook.
+from future.utils import text_type
+
 import hmac
 
-from future.utils import text_type
 from twisted.python import log
 
 from buildbot.util import json

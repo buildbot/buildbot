@@ -14,13 +14,12 @@
 # Copyright Buildbot Team Members
 from __future__ import division
 from __future__ import print_function
-
 from future.utils import PY3
 from future.utils import itervalues
 
-import mock
-
 import sys
+
+import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor

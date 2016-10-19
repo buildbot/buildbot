@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 from future.utils import PY3
+
 from twisted.internet import defer
 
 from buildbot.test.util.decorators import flaky

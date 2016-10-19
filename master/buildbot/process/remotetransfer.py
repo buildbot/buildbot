@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
+
 import os
 import tarfile
 import tempfile
 from io import BytesIO
-
-from future.utils import text_type
 
 from buildbot.worker.protocols import base
 

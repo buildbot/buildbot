@@ -12,12 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import text_type
+
 import os
 import sys
 import time
 from hashlib import md5
-
-from future.utils import text_type
 
 
 def tryserver(config):

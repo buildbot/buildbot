@@ -15,6 +15,7 @@
 #
 # Written from the github change hook unit test
 from future.utils import PY3
+
 from twisted.trial import unittest
 
 import buildbot.www.change_hook as change_hook
@@ -95,7 +96,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             self.assertEqual(change["comments"], "Print a message")
             self.assertEqual(change["branch"], "test")
             self.assertEqual(change[
-                              "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
+                "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
 
         d.addCallback(check_changes)
         return d

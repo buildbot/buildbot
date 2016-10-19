@@ -2,7 +2,6 @@
 
 from __future__ import division
 from __future__ import print_function
-
 from future.utils import lrange
 
 import sys
