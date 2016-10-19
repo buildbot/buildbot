@@ -22,16 +22,12 @@ See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
 Master
 ------
 
+Features
+~~~~~~~~
+
 * Add support for hyper.sh via :class:`HyperLatentWorker`
   Hyper_ is a CaaS solution for hosting docker container in the cloud, billed to the second.
   It forms a very cost efficient solution to run your CI in the cloud.
-
-.. _Hyper: https://hyper.sh
-
-* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
-
-Features
-~~~~~~~~
 
 * The :bb:step:`Trigger` step now supports ``unimportantSchedulerNames``
 
@@ -55,6 +51,24 @@ Features
 
 * Add a ``format_fn`` parameter to the ``HttpStatusPush`` reporter to customize the information being pushed.
 
+* Latent Workers can now start in parallel.
+
+    * The build started by latent worker will be created while the latent worker is substantiated.
+
+    * Latent Workers will now report startup issues in the UI.
+
+* Workers will be temporarily put in quarantine in case of build preparation issues.
+    This avoids master and database overload in case of bad worker configuration.
+    The quarantine is implemented with an exponential back-off timer.
+
+* Master Stop will now stop all builds, and wait for all workers to properly disconnect.
+  Previously, the worker connections was stopped, which incidently made all their builds marked retried.
+  Now, builds started with a :class:`Triggereable` scheduler will be cancelled, while other builds will be retried.
+  The master will make sure that all latent workers are stopped.
+
+
+.. _Hyper: https://hyper.sh
+
 Fixes
 ~~~~~
 
@@ -66,6 +80,10 @@ Fixes
 
 * Don't log :class:`AlreadyClaimedError`.
   They are normal in case of :bb:step:`Trigger` cancelling, and in a multimaster configuration.
+
+* Fix issues with worker disconnection.
+  When a worker disconnects, its current buildstep must be interrupted and the buildrequests should be retried.
+
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
@@ -139,6 +157,7 @@ Deprecations, Removals, and Non-Compatible Changes
     As this script has been written in 2006, has only inline documentation and no unit tests, it is not guaranteed to be working.
     Please help improving the windows situation.
 
+* :class:`AbstractLatentWorker` is now in :py:mod:`buildbot.worker.latent` instead of :py:mod:`buildbot.worker.base`.
 
 Details
 -------
