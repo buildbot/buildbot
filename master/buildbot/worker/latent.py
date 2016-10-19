@@ -47,12 +47,11 @@ class AbstractLatentWorker(AbstractWorker):
                     build_wait_timeout=60 * 10,
                     **kwargs):
         AbstractWorker.checkConfig(self, name, password, **kwargs)
-        self.build_wait_timeout = build_wait_timeout
-        self._substantiation_notifier = Notifier()
 
     def reconfigService(self, name, password,
                         build_wait_timeout=60 * 10,
                         **kwargs):
+        self._substantiation_notifier = Notifier()
         self.build_wait_timeout = build_wait_timeout
         return AbstractWorker.reconfigService(self, name, password, **kwargs)
 
@@ -210,7 +209,7 @@ class AbstractLatentWorker(AbstractWorker):
             if self.build_wait_timeout == 0:
                 # we insubstantiate asynchronously to trigger more bugs with
                 # the fake reactor
-                self.master.reactor.callLater(0, self.insubstantiate)
+                self.master.reactor.callLater(0, self._soft_disconnect)
                 # insubstantiate will automatically retry to create build for
                 # this worker
             else:
@@ -296,6 +295,7 @@ class AbstractLatentWorker(AbstractWorker):
     def stopService(self):
         if self.conn is not None or self._substantiation_notifier:
             yield self._soft_disconnect()
+        self._clearBuildWaitTimer()
         res = yield AbstractWorker.stopService(self)
         defer.returnValue(res)
 
