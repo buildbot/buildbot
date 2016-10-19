@@ -786,6 +786,7 @@ It requires `txrequests`_ package to allow interaction with http server.
     :param string password: the BasicAuth user's password
     :param auth: the authentication method to use.
         Refer to the documentation of the requests library for more information.
+    :param function format_fn: a function that takes the build as parameter and returns a dictionnary to be pushed to the server.
     :param list builders: only send update for specified builders
     :param boolean wantProperties: include 'properties' in the build dictionary
     :param boolean wantSteps: include 'steps' in the build dictionary
@@ -810,7 +811,8 @@ The default json object sent is a build object agremented wih some more data as 
     }
 
 
-If you want another format, don't hesitate to subclass, and modify the :py:meth:`send` method.
+If you want another format, don't hesitate to use the ``format_fn`` parameter to customize the payload.
+The ``build`` parameter given to that function is of type :bb:rtype:`build`.
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 

@@ -98,23 +98,28 @@ class HttpStatusPushBase(service.BuildbotService):
 class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
 
-    def checkConfig(self, serverUrl, user=None, password=None, auth=None, **kwargs):
+    def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
         if user is not None:
             config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
+        if (format_fn is not None) and not callable(format_fn):
+            config.error("format_fn must be a function")
         HttpStatusPushBase.checkConfig(self, **kwargs)
 
-    def reconfigService(self, serverUrl, user=None, password=None, auth=None, **kwargs):
+    def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
         HttpStatusPushBase.reconfigService(self, **kwargs)
         self.serverUrl = serverUrl
         self.auth = auth
         if user is not None:
             self.auth = (user, password)
+        self.format_fn = format_fn
+        if format_fn is None:
+            self.format_fn = lambda x: x
 
     @defer.inlineCallbacks
     def send(self, build):
-        response = yield self.session.post(self.serverUrl, build, auth=self.auth)
+        response = yield self.session.post(self.serverUrl, self.format_fn(build), auth=self.auth)
         if response.status_code != 200:
             log.msg("%s: unable to upload status: %s" %
                     (response.status_code, response.content))
