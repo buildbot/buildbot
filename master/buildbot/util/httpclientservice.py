@@ -24,8 +24,10 @@ import urlparse
 from twisted.internet import defer
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
+from zope.interface import implementer
 
 from buildbot import config
+from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util.logger import Logger
 
@@ -36,10 +38,28 @@ except ImportError:
 
 try:
     import treq
+    implementer(IHttpResponse)(treq.response._Response)
+
 except ImportError:
     treq = None
 
 log = Logger()
+
+
+@implementer(IHttpResponse)
+class TxRequestsResponseWrapper(object):
+    def __init__(self, res):
+        self._res = res
+
+    def content(self):
+        return defer.succeed(self._res.content)
+
+    def json(self):
+        return defer.succeed(self._res.json())
+
+    @property
+    def code(self):
+        return self._res.status_code
 
 
 class HTTPClientService(service.SharedService):
@@ -120,28 +140,15 @@ class HTTPClientService(service.SharedService):
     def _doTxRequest(self, method, ep, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
 
-        class ResponseWrapper(object):
-            def __init__(self, res):
-                self._res = res
-
-            def content(self):
-                return defer.succeed(self._res.content)
-
-            def json(self):
-                return defer.succeed(self._res.json())
-
-            @property
-            def code(self):
-                return self._res.status_code
-
         def readContent(session, res):
-            # this forces reading of the content
+            # this forces reading of the content inside the thread
             res.content
             return res
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
         d = self._session.request(method, url, **kwargs)
-        d.addCallback(ResponseWrapper)
+        d.addCallback(TxRequestsResponseWrapper)
+        d.addCallback(IHttpResponse)
         return d
 
     def _doTReq(self, method, ep, data=None, json=None, **kwargs):
@@ -149,14 +156,18 @@ class HTTPClientService(service.SharedService):
         # treq requires header values to be an array
         kwargs['headers'] = dict([(k, [v]) for k, v in kwargs['headers'].items()])
         kwargs['agent'] = self._agent
+
         if isinstance(json, dict):
             data = jsonmodule.dumps(json)
             kwargs['headers']['Content-Type'] = ['application/json']
-            return getattr(treq, method)(url, data=data, **kwargs)
+            kwargs['data'] = data
+
         if isinstance(data, dict):
-            return getattr(treq, method)(url, data=data, **kwargs)
-        else:
-            return getattr(treq, method)(url, **kwargs)
+            kwargs['data'] = data
+
+        d = getattr(treq, method)(url, **kwargs)
+        d.addCallback(IHttpResponse)
+        return d
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):

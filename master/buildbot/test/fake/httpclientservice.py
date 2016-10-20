@@ -22,13 +22,16 @@ import json as jsonmodule
 import mock
 
 from twisted.internet import defer
+from zope.interface import implementer
 
+from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
 from buildbot.util.logger import Logger
 
 log = Logger()
 
 
+@implementer(IHttpResponse)
 class ResponseWrapper(object):
     def __init__(self, code, content):
         self._content = content

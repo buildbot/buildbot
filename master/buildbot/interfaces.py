@@ -1055,3 +1055,17 @@ class IConfigLoader(Interface):
 
         :return MasterConfig:
         """
+
+
+class IHttpResponse(Interface):
+
+    def content():
+        """
+        :returns: raw (``bytes``) content of the response via deferred
+        """
+    def json():
+        """
+        :returns: json decoded content of the response via deferred
+        """
+    master = Attribute('code',
+                       "http status code of the request's response (e.g 200)")
