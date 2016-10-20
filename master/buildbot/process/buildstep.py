@@ -485,6 +485,17 @@ class BuildStep(object, properties.PropertiesMixin):
             if kwargs.has_key(p):
                 setattr(self, p, kwargs[p])
                 del kwargs[p]
+        if isinstance(self.doStepIf, (list,tuple)):
+            doStepCheck = self.doStepIf
+        else:
+            doStepCheck = [self.doStepIf]
+
+        for condition in doStepCheck:
+            if not callable(condition) and not isinstance(condition, bool):
+                config.error("%s.__init__ got unexpected doStepIf " \
+                    "(must be callable/bool or a list containing those types): doStepIf=%r" \
+                    % (self.__class__, self.doStepIf))
+
         if kwargs:
             config.error("%s.__init__ got unexpected keyword argument(s) %s" \
                   % (self.__class__, kwargs.keys()))
