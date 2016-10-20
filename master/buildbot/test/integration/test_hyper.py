@@ -25,7 +25,6 @@ from buildbot.config import BuilderConfig
 from buildbot.plugins import schedulers
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
-from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.step import BuildStepController

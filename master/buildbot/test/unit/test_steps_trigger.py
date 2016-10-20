@@ -43,6 +43,7 @@ class FakeTriggerable(object):
     brids = {}
     exception = False
     never_finish = False
+
     def __init__(self, name):
         self.name = name
 

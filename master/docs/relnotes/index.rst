@@ -62,7 +62,7 @@ Features
     The quarantine is implemented with an exponential back-off timer.
 
 * Master Stop will now stop all builds, and wait for all workers to properly disconnect.
-  Previously, the worker connections was stopped, which incidently made all their builds marked retried.
+  Previously, the worker connections was stopped, which incidentally made all their builds marked retried.
   Now, builds started with a :class:`Triggereable` scheduler will be cancelled, while other builds will be retried.
   The master will make sure that all latent workers are stopped.
 
