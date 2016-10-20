@@ -469,6 +469,9 @@ class BuilderStatus(styles.Versioned):
     def getProject(self):
         return self.project
 
+    def getBuilderConfig(self):
+        return self.master.botmaster.getBuilderConfig(name=self.name)
+
     def getBuild(self, number):
         if number < 0:
             number = self.nextBuildNumber + number
