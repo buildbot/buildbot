@@ -110,12 +110,14 @@ class HttpStatusPush(HttpStatusPushBase):
     def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
         HttpStatusPushBase.reconfigService(self, **kwargs)
         self.serverUrl = serverUrl
-        self.auth = auth
         if user is not None:
             self.auth = (user, password)
-        self.format_fn = format_fn
+        else:
+            self.auth = auth
         if format_fn is None:
             self.format_fn = lambda x: x
+        else:
+            self.format_fn = format_fn
 
     @defer.inlineCallbacks
     def send(self, build):
