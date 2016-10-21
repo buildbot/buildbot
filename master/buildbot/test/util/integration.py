@@ -184,7 +184,6 @@ class RunMasterBase(unittest.TestCase):
 
         # wait until we receive the build finished event
         buildrequest = yield d
-        print(buildrequest)
         builds = yield self.master.data.get(
             ('builds',),
             filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
