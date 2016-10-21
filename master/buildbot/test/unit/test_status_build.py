@@ -84,6 +84,22 @@ class TestBuildProperties(unittest.TestCase):
         self.build_status.render("xyz")
         self.build_status.properties.render.assert_called_with("xyz")
 
+    def test_getCustomUrlsBuildFinished(self):
+        customUrls = [{'name': 'test tool', 'link': 'test link'}]
+        self.build_status.finished = True
+        builderConfig = mock.Mock()
+        builderConfig.getCustomBuildUrls = lambda buildNumber: customUrls
+        self.build_status.builder.getBuilderConfig = lambda: builderConfig
+        self.assertEquals(customUrls, self.build_status.getCustomUrls())
+
+    def test_getCustomUrlsBuildRunning(self):
+        customUrls = [{'name': 'test tool', 'link': 'test link'}]
+        self.build_status.finished = None
+        builderConfig = mock.Mock()
+        builderConfig.getCustomBuildUrls = lambda buildnumber: customUrls
+        self.build_status.builder.getBuilderConfig = lambda: builderConfig
+        self.assertEquals([], self.build_status.getCustomUrls())
+
 class TestBuildGetSourcestamps(unittest.TestCase):
     """
     Test that a BuildStatus has the necessary L{IProperties} methods and that
