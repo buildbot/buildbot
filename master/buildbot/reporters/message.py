@@ -32,6 +32,7 @@ class MessageFormatter(object):
     template_type = 'plain'
     wantProperties = True
     wantSteps = False
+    wantLogs = False
 
     def __init__(self, template_name=None, template_dir=None, template=None, template_type=None):
 

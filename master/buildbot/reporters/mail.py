@@ -242,7 +242,8 @@ class MailNotifier(service.BuildbotService):
             self.master, bsid,
             wantProperties=self.messageFormatter.wantProperties,
             wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild())
+            wantPreviousBuild=self.wantPreviousBuild(),
+            wantLogs=self.messageFormatter.wantLogs)
 
         builds = res['builds']
         buildset = res['buildset']
@@ -262,7 +263,8 @@ class MailNotifier(service.BuildbotService):
             self.master, buildset, [build],
             wantProperties=self.messageFormatter.wantProperties,
             wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild())
+            wantPreviousBuild=self.wantPreviousBuild(),
+            wantLogs=self.messageFormatter.wantLogs)
         # only include builds for which isMailNeeded returns true
         if self.isMailNeeded(build):
             self.buildMessage(
