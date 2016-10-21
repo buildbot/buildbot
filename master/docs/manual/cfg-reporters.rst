@@ -109,26 +109,16 @@ If you want to require Transport Layer Security (TLS), then you can also set ``u
    If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or to a missing `PyOpenSSL`_ package on the BuildMaster system.
 
 In some cases it is desirable to have different information then what is provided in a standard MailNotifier message.
-For this purpose MailNotifier provides the argument ``messageFormatter`` (a function) which allows for the creation of messages with unique content.
+For this purpose MailNotifier provides the argument ``messageFormatter`` (an instance of ``MessageFormatter``) which allows for the creation of messages with unique content.
 
 For example, if only short emails are desired (e.g., for delivery to phones)::
 
-    from buildbot.plugins import reporters, util
-    def messageFormatter(mode, name, build, results, master_status):
-        result = util.Results[results]
-
-        text = list()
-        text.append("STATUS: %s" % result.title())
-        return {
-            'body' : "\n".join(text),
-            'type' : 'plain'
-        }
-
+    from buildbot.plugins import reporters
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
                                 mode=('problem',),
                                 extraRecipients=['listaddr@example.org'],
-                                messageFormatter=messageFormatter)
+                                messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
 
 Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step is given below::
 
