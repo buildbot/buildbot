@@ -66,6 +66,7 @@ Features
   Now, builds started with a :class:`Triggereable` scheduler will be cancelled, while other builds will be retried.
   The master will make sure that all latent workers are stopped.
 
+* The ``MessageFormatter`` class also allows inline-templates with the ``template`` parameter.
 
 .. _Hyper: https://hyper.sh
 
