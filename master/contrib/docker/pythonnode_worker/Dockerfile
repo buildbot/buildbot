@@ -12,7 +12,7 @@ ARG         DEBIAN_FRONTEND=noninteractive
 user root
 # Install required npm packages
 RUN  curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
-        apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
+        apt-get update && apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
         nodejs \
         git && \
     rm -rf /var/lib/apt/lists/*
