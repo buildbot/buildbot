@@ -1,6 +1,6 @@
 class Builder extends Controller
     constructor: ($rootScope, $scope, dataService, $stateParams, resultsService, recentStorage,
-        glBreadcrumbService, $state, glTopbarContextualActionsService, $q) ->
+        glBreadcrumbService, $state, glTopbarContextualActionsService, $q, $window) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         data = dataService.open().closeOnDestroy($scope)
@@ -9,6 +9,8 @@ class Builder extends Controller
         $scope.is_cancelling = false
 
         data.getBuilders(builderid).onNew = (builder) ->
+            $window.document.title = $state.current.data.pageTitle
+                builder: builder['name']
             $scope.builder = builder
             breadcrumb = [
                     caption: "Builders"

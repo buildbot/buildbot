@@ -24,7 +24,6 @@ class Log extends Controller
                                 sref: "build({builder:#{builder.builderid}, build:#{build.number}})"
                             ,
                                 caption: step.name
-                                sref: "step({builder:#{builder.builderid}, build:#{build.number}, step:#{step.number}})"
                             ,
                                 caption: log.name
                                 sref: "log({builder:#{builder.builderid}, build:#{build.number}, step:#{step.number}, log:'#{log.slug}'})"

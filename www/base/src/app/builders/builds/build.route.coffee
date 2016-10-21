@@ -10,6 +10,7 @@ class State extends Config
             templateUrl: "views/#{name}.html"
             name: name
             url: '/builders/:builder/builds/:build'
-            data: {}
+            data:
+                pageTitle: _.template("Buildbot: builder <%= builder %> build <%= build %>")
 
         $stateProvider.state(state)
