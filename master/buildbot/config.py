@@ -823,11 +823,12 @@ class BuilderConfig:
         """
         Validates that customBuildUrls is a dictionary containing only strings and in the format {'name': 'url'}
         """
-        checkDictionaryContainsOnlyString = all(isinstance(key, str) and isinstance(value, str)
-                                                for key, value in self.customBuildUrls.iteritems())
+        def checkDictionaryContainsOnlyString():
+            return all(isinstance(key, str) and isinstance(value, str)
+                       for key, value in self.customBuildUrls.iteritems())
 
         if not isinstance(self.customBuildUrls, dict) or (
-            self.customBuildUrls and not checkDictionaryContainsOnlyString):
+            self.customBuildUrls and not checkDictionaryContainsOnlyString()):
             error("customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}")
 
     def getCustomBuildUrls(self, buildNumber):

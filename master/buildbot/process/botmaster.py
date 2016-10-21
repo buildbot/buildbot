@@ -153,10 +153,10 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         :return: BuilderConfig
         :rtype: buildbot.config.BuilderConfig
         """
-        builderConfig = None
-        if name in self.builders:
-            builderConfig=self.builders[name].config
-        return builderConfig
+        try:
+            return self.builders[name].config
+        except KeyError:
+            return None
 
     def startService(self):
         def buildRequestAdded(notif):
