@@ -68,6 +68,8 @@ Features
 
 * The ``MessageFormatter`` class also allows inline-templates with the ``template`` parameter.
 
+* The ``MessageFormatter`` class allows custom mail's subjects with the ``subject`` and ``subject_name`` parameters.
+
 .. _Hyper: https://hyper.sh
 
 Fixes
