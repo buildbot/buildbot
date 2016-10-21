@@ -34,28 +34,40 @@ class MessageFormatter(object):
     wantSteps = False
     wantLogs = False
 
-    def __init__(self, template_name=None, template_dir=None, template=None, template_type=None):
+    def __init__(self, template_name=None, template_dir=None, template=None,
+                 subject_name=None, subject=None, template_type=None):
 
         if (template is not None) and ((template_name is not None) or (template_dir is not None)):
             config.error("Only one of template or template path can be given")
 
-        if template is None:
-            if template_dir is None:
-                template_dir = os.path.join(os.path.dirname(__file__), "templates")
-
-            loader = jinja2.FileSystemLoader(template_dir)
-            env = jinja2.Environment(
-                loader=loader, undefined=jinja2.StrictUndefined)
-
-            if template_name is not None:
-                self.template_name = template_name
-
-            self.template = env.get_template(self.template_name)
-        else:
-            self.template = jinja2.Template(template)
+        self.body_template = self.getTemplate(template_name, template_dir, template)
+        self.subject_template = None
+        if subject_name or subject:
+            self.subject_template = self.getTemplate(subject_name, template_dir, subject)
 
         if template_type is not None:
             self.template_type = template_type
+
+
+    def getTemplate(self, filename, dirname, content):
+        if content and filename:
+            config.error("Only one of template or template path can be given")
+
+        if content:
+            return jinja2.Template(content)
+
+        if dirname is None:
+            dirname = os.path.join(os.path.dirname(__file__), "templates")
+
+        loader = jinja2.FileSystemLoader(dirname)
+        env = jinja2.Environment(
+            loader=loader, undefined=jinja2.StrictUndefined)
+
+        if filename is None:
+            filename = self.template_name
+
+        return env.get_template(filename)
+
 
     def getDetectedStatus(self, mode, results, previous_results):
 
@@ -135,8 +147,8 @@ class MessageFormatter(object):
         return text
 
     def __call__(self, mode, buildername, buildset, build, master, previous_results, blamelist):
-        """Generate a buildbot mail message and return a tuple of message text
-            and type."""
+        """Generate a buildbot mail message and return a dictionnary
+           containing the message body, type and subject."""
         ss_list = buildset['sourcestamps']
         results = build['results']
 
@@ -158,5 +170,8 @@ class MessageFormatter(object):
                    summary=self.messageSummary(build, results),
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
-        contents = self.template.render(cxt)
-        return {'body': contents, 'type': self.template_type}
+        body = self.body_template.render(cxt)
+        email = {'body': body, 'type': self.template_type}
+        if self.subject_template is not None:
+            email['subject'] = self.subject_template.render(cxt)
+        return email
