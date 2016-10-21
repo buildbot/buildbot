@@ -713,7 +713,7 @@ class BuilderConfig:
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
             properties=None, mergeRequests=None, project=None, friendly_name=None, tags=[], description=None,
-            canStartBuild=None, excludeGlobalFactory=False, customBuildUrls=None):
+            canStartBuild=None, excludeGlobalFactory=False, customBuildUrls={}):
 
         # name is required, and can't start with '_'
         if not name or not isinstance(name, basestring):
@@ -821,14 +821,14 @@ class BuilderConfig:
 
     def _validateCustomBuildUrls(self):
         """
-        Validates that customBuildUrls  contains strings in the format {'name': 'url'}
+        Validates that customBuildUrls is a dictionary containing only strings and in the format {'name': 'url'}
         """
         checkDictionaryContainsOnlyString = all(isinstance(key, str) and isinstance(value, str)
                                                 for key, value in self.customBuildUrls.iteritems())
 
         if not isinstance(self.customBuildUrls, dict) or (
             self.customBuildUrls and not checkDictionaryContainsOnlyString):
-            error("customBuildUrls # URLs must be strings in the format {'name': 'url'}")
+            error("customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}")
 
     def getCustomBuildUrls(self, buildNumber):
         """

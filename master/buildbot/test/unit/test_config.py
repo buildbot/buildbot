@@ -1242,7 +1242,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         }
 
         self.assertRaisesConfigError(
-            "customBuildUrls # URLs must be strings in the format {'name': 'url'}",
+            "customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}",
             lambda : config.BuilderConfig(name='builder',
                                    slavename='s1',
                                    project="project",
