@@ -23,11 +23,14 @@ class MessageFormatter(object):
             template_dir = os.path.join(os.path.dirname(__file__), "templates")
 
         loader = jinja2.FileSystemLoader(template_dir)
-        self.env = jinja2.Environment(
+        env = jinja2.Environment(
             loader=loader, undefined=jinja2.StrictUndefined)
 
         if template_name is not None:
             self.template_name = template_name
+
+        self.template = env.get_template(self.template_name)
+
         if template_type is not None:
             self.template_type = template_type
 
@@ -114,7 +117,6 @@ class MessageFormatter(object):
         ss_list = buildset['sourcestamps']
         results = build['results']
 
-        tpl = self.env.get_template(self.template_name)
         cxt = dict(results=build['results'],
                    mode=mode,
                    buildername=buildername,
@@ -133,5 +135,5 @@ class MessageFormatter(object):
                    summary=self.messageSummary(build, results),
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
-        contents = tpl.render(cxt)
+        contents = self.template.render(cxt)
         return {'body': contents, 'type': self.template_type}
