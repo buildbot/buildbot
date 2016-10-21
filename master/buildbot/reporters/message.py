@@ -78,7 +78,7 @@ class MessageFormatter(object):
             else:
                 text = "failed build"
         elif results == WARNINGS:
-            text = "The Buildbot has detected a problem in the build"
+            text = "problem in the build"
         elif results == SUCCESS:
             if "change" in mode and previous_results is not None and previous_results != results:
                 text = "restored build"
