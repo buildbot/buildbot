@@ -449,6 +449,8 @@ else:
 
     # Unit test dependencies.
     test_deps = [
+        # http client libraries
+        'treq',
         'txrequests',
         # pyjade required for custom templates tests
         'pyjade',

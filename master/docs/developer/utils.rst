@@ -23,7 +23,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 .. py:class:: ComparableMixin
 
     This mixin class adds comparability to a subclass.
-    Use it like this::
+    Use it like this:
+
+    .. code-block:: python
 
         class Widget(FactoryProduct, ComparableMixin):
             compare_attrs = ( 'radius', 'thickness' )
@@ -35,7 +37,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     If they differ, the old object is removed from the buildmaster and the new object added.
 
     For use in configuration objects (schedulers, changesources, etc.), include any attributes which are set in the constructor based on the user's configuration.
-    Be sure to also include the superclass's list, e.g.::
+    Be sure to also include the superclass's list, e.g.:
+
+    .. code-block:: python
 
         class MyScheduler(base.BaseScheduler):
             compare_attrs = base.BaseScheduler.compare_attrs + ('arg1', 'arg2')
@@ -73,7 +77,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     A ``datetime.tzinfo`` subclass representing UTC time.
     A similar class has finally been added to Python in version 3.2, but the implementation is simple enough to include here.
-    This is mostly used in tests to create timezone-aware datetime objects in UTC::
+    This is mostly used in tests to create timezone-aware datetime objects in UTC:
+
+    .. code-block:: python
 
         dt = datetime.datetime(1978, 6, 15, 12, 31, 15, tzinfo=UTC)
 
@@ -177,7 +183,9 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     This is a sentinel value used to indicate that no branch is specified.
     It is necessary since schedulers and change sources consider ``None`` a valid name for a branch.
-    This is generally used as a default value in a method signature, and then tested against with ``is``::
+    This is generally used as a default value in a method signature, and then tested against with ``is``:
+
+    .. code-block:: python
 
         if branch is NotABranch:
             pass # ...
@@ -322,7 +330,7 @@ This package provides a few useful collection objects.
     This is a collection of named sets.
     In principal, it contains an empty set for every name, and you can add things to sets, discard things from sets, and so on.
 
-    ::
+    .. code-block:: python
 
         >>> ks = KeyedSets()
         >>> ks['tim']                   # get a named set
@@ -349,7 +357,9 @@ This package provides a few useful collection objects.
 .. py:module:: buildbot.util.eventual
 
 This function provides a simple way to say "please do this later".
-For example::
+For example
+
+.. code-block:: python
 
     from buildbot.util.eventual import eventually
     def do_what_I_say(what, where):
@@ -457,7 +467,9 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 
     If a previous invocation of the method has not completed when the interval expires, then the next invocation is skipped and the interval timer starts again.
 
-    A common idiom is to call ``start`` and ``stop`` from ``startService`` and ``stopService``::
+    A common idiom is to call ``start`` and ``stop`` from ``startService`` and ``stopService``:
+
+    .. code-block:: python
 
         class WatchThings(object):
 
@@ -500,7 +512,9 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 .. py:module:: buildbot.util.json
 
 This package is just an import of the best available JSON module.
-Use it instead of a more complex conditional import of :mod:`simplejson` or :mod:`json`::
+Use it instead of a more complex conditional import of :mod:`simplejson` or :mod:`json`:
+
+.. code-block:: python
 
     from buildbot.util import json
 
@@ -554,7 +568,9 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
     :param lock: a :py:class:`twisted.internet.defer.DeferredLock` instance or a string naming an instance attribute containing one
 
     This is a decorator to wrap an event-driven method (one returning a ``Deferred``) in an acquire/release pair of a designated :py:class:`~twisted.internet.defer.DeferredLock`.
-    For simple functions with a static lock, this is as easy as::
+    For simple functions with a static lock, this is as easy as:
+
+    .. code-block:: python
 
         someLock = defer.DeferredLock()
 
@@ -563,7 +579,9 @@ On the receiving end, there's a need to watch a maildir for incoming messages an
             # ..
             return d
 
-    For class methods which must access a lock that is an instance attribute, the lock can be specified by a string, which will be dynamically resolved to the specific instance at runtime::
+    For class methods which must access a lock that is an instance attribute, the lock can be specified by a string, which will be dynamically resolved to the specific instance at runtime:
+
+    .. code-block:: python
 
         def __init__(self):
             self.someLock = defer.DeferredLock()
@@ -651,12 +669,16 @@ This module contains a few utilities that are not included with SQLAlchemy.
 
     A tuple of strings matches a pattern if the lengths are identical, every variable matches and has the correct type, and every non-variable pattern element matches exactly.
 
-    A matcher object takes patterns using dictionary-assignment syntax::
+    A matcher object takes patterns using dictionary-assignment syntax:
+
+    .. code-block:: python
 
         ep = ChangeEndpoint()
         matcher[('change', 'n:changeid')] = ep
 
-    and performs matching using the dictionary-lookup syntax::
+    and performs matching using the dictionary-lookup syntax:
+
+    .. code-block:: python
 
         changeEndpoint, kwargs = matcher[('change', '13')]
         # -> (ep, {'changeid': 13})
@@ -1002,7 +1024,9 @@ For example, a particular daily scheduler could be configured on multiple master
     As such, they can be used to factorize access to external services, available e.g using a REST api.
     Having a single service will help with caching, and rate-limiting access of those APIs.
 
-    Here is an example on how you would integrate and configure a simple service in your `master.cfg`::
+    Here is an example on how you would integrate and configure a simple service in your `master.cfg`:
+
+    .. code-block:: python
 
         class MyShellCommand(ShellCommand):
 
@@ -1040,3 +1064,185 @@ For example, a particular daily scheduler could be configured on multiple master
         c['services'] = [
             MyService(arg1=1)
         ]
+
+:py:mod:`buildbot.util.httpclientservice`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: HTTPClientService
+
+    This class implements a SharedService for doing http client access.
+    The module automatically chooses from `txrequests`_ and `treq`_ and uses whichever is installed.
+    It provides minimalistic API similar to the one from `txrequests`_ and `treq`_.
+    Having a SharedService for this allows to limits the number of simultaneous connection for the same host.
+    While twisted application can managed thousands of connections at the same time, this is often not the case for the services buildbot controls.
+    Both `txrequests`_ and `treq`_ use keep-alive connection polling.
+    Lots of HTTP REST API will however force a connection close in the end of a transaction.
+
+    .. note::
+
+        The API described here is voluntary minimalistic, and reflects what is tested.
+        As most of this module is implemented as a pass-through to the underlying libraries, other options can work but have not been tested to work in both backends.
+        If there is a need for more functionality, please add new tests before using them.
+
+    .. py:staticmethod:: getService(master, base_url, auth=None)
+
+        :param master: the instance of the master service (available in self.master for all the :py:class:`BuildbotService` instances)
+        :param base_url: The base http url of the service to access. e.g. ``http://github.com/``
+        :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
+            It can also be a :mod:`requests.auth` authentication plugin.
+            In this case `txrequests`_ will be forced, and `treq`_ cannot be used.
+        :returns: instance of :`HTTPClientService`
+
+        Get an instance of the SharedService.
+        There is one instance per base_url and auth.
+
+        The constructor initialize the service, and store the config arguments in private attributes.
+
+        This should *not* be overriden by subclasses, as they should rather override checkConfig.
+
+
+    .. py:method:: get(endpoint, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``GET``
+
+    .. py:method:: delete(endpoint, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``DELETE``
+
+    .. py:method:: post(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``POST``
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+    .. py:method:: put(endpoint, data=None, json=None, params=None)
+
+        :param endpoint: endpoint relative to the base_url (starts with ``/``)
+        :param data: optional dictionary that will be encoded in the body of the http requests as ``application/x-www-form-urlencoded``
+        :param json: optional dictionary that will be encoded in the body of the http requests as ``application/json``
+        :param params: optional dictionary that will be encoded in the query part of the url (e.g. ``?param1=foo``)
+        :returns: implementation of :`IHTTPResponse` via deferred
+
+        Performs a HTTP ``PUT``
+
+        .. note::
+
+            json and data cannot be used at the same time.
+
+.. py:class:: IHTTPResponse
+
+    .. note::
+
+        :class:`IHTTPResponse` is a subset of `treq`_ :py:class:`Response` API described `here <https://treq.readthedocs.io/en/latest/api.html#module-treq.response>`_
+        The API it is voluntarily minimalistic and reflects what is tested and reliable to use with the three backends (including fake).
+        The api is a subset of the `treq`_ API, which is itself a superset of `twisted IResponse API`_.
+        `treq`_ is thus implemented as passthrough.
+
+        Notably:
+
+        * There is no api to automatically decode content, as this is not implemented the same in both backends.
+        * There is no api to stream content as the two libraries have very different way for doing it, and we do not see use-case where buildbot would need to transfer large content to the master.
+
+    .. py:method:: content()
+
+        :returns: raw (``bytes``) content of the response via deferred
+
+    .. py:method:: json()
+
+        :returns: json decoded content of the response via deferred
+
+    .. py:attribute:: code
+
+        :returns: http status code of the request's response (e.g 200)
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
+.. _twisted IResponse API: https://twistedmatrix.com/documents/current/api/twisted.web.iweb.IResponse.html
+
+:py:mod:`buildbot.test.fake.httpclientservice`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: HTTPClientService
+
+    This class implements a fake version of the :class:`buildbot.util.httpclientservice.HTTPClientService` that needs to be used for testing services which needs http client access.
+    It implements the same APIs as :class:`buildbot.util.httpclientservice.HTTPClientService`, plus one that should be used to register the expectations.
+    It should be registered by the test case before the tested service actually requests an HTTPClientService instance, with the same parameters.
+    It will then replace the original implementation automatically (no need to patch anything).
+    The testing methodology is based on `AngularJS ngMock`_.
+
+    .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200,
+                          content=None, content_json=None):
+
+        :param method: expected HTTP method
+        :param ep: expected endpoint
+        :param params: optional expected query parameters
+        :param data: optional expected non-json data (bytes)
+        :param json: optional expected json data (dictionary or list or string)
+        :param code: optional http code that will be received
+        :param content: optional content that will be received
+        :param content_json: optional content encoded in json that will be received
+
+        Records an expectation of HTTP requests that will happen during the test.
+        The order of the requests is important.
+        All the request expectation must be defined in the test.
+
+        example:
+
+        .. code-block:: python
+
+            from twisted.internet import defer
+            from twisted.trial import unittest
+            from buildbot.test.fake import httpclientservice as fakehttpclientservice
+            from buildbot.util import httpclientservice
+            from buildbot.util import service
+
+
+            class myTestedService(service.BuildbotService):
+                name = 'myTestedService'
+
+                @defer.inlineCallbacks
+                def reconfigService(self, baseurl):
+                    self.http = yield httpclientservice.HTTPClientService.getService(self.master, baseurl)
+
+                @defer.inlineCallbacks
+                def doGetRoot(self):
+                    res = yield self.http.get("/")
+                    res_json = yield res.json()
+                    defer.returnValue(res_json)
+
+
+            class Test(unittest.SynchronousTestCase):
+
+                def setUp(self):
+                    baseurl = 'http://127.0.0.1:8080'
+                    self.parent = service.MasterService()
+                    self.http = self.successResultOf(fakehttpclientservice.HTTPClientService.getService(
+                        self.parent, baseurl))
+                    self.tested = myTestedService(baseurl)
+
+                    self.successResultOf(self.tested.setServiceParent(self.parent))
+                    self.successResultOf(self.parent.startService())
+
+                def test_root(self):
+                    self.http.expect("get", "/", content_json={'foo': 'bar'})
+
+                    response = self.successResultOf(self.tested.doGetRoot())
+                    self.assertEqual(response, {'foo': 'bar'})
+
+.. _AngularJS ngMock: https://docs.angularjs.org/api/ngMock/service/$httpBackend
