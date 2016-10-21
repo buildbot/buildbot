@@ -99,6 +99,7 @@ class Trigger(BuildStep):
         self.ended = False
         self.brids = []
         self.triggeredNames = None
+        self.waitForFinishDeferred = None
         BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
@@ -115,6 +116,9 @@ class Trigger(BuildStep):
                                      ("buildrequests", brid))
         if self.running and not self.ended:
             self.ended = True
+            # if we are interrupted because of a connection lost, we interrupt synchronously
+            if self.build.conn is None and self.waitForFinishDeferred is not None:
+                self.waitForFinishDeferred.cancel()
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self, properties):
@@ -285,7 +289,11 @@ class Trigger(BuildStep):
         self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
-            rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=1)
+            try:
+                rclist = yield self.waitForFinishDeferred
+            except defer.CancelledError:
+                pass
             # we were interrupted, don't bother update status
             if self.ended:
                 defer.returnValue(CANCELLED)

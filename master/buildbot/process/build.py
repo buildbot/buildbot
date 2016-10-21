@@ -36,8 +36,8 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.process.results import Results
 from buildbot.process.results import computeResultAndTermination
+from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util.eventual import eventually
@@ -143,7 +143,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         return files
 
     def __repr__(self):
-        return "<Build %s>" % (self.builder.name,)
+        return "<Build %s number:%r results:%s>" % (
+            self.builder.name, self.number, statusToString(self.results))
 
     def blamelist(self):
         # FIXME: kill this. This belongs to reporter.utils
@@ -501,12 +502,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
-        log.msg(" step '%s' complete: %s" % (step.name, Results[results]))
+        log.msg(" step '%s' complete: %s" % (step.name, statusToString(results)))
         if text:
             self.text.extend(text)
         self.results, terminate = computeResultAndTermination(step, results,
                                                               self.results)
         if not self.conn:
+            # force the results to retry if the connection was lost
+            self.results = RETRY
             terminate = True
         return terminate
 
@@ -516,12 +519,13 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # TODO: see if we can resume the build when it reconnects.
         log.msg("%s.lostRemote" % self)
         self.conn = None
-        if self.currentStep:
+        self.text = ["lost", "connection"]
+        self.results = RETRY
+        if self.currentStep and self.currentStep.results is None:
             # this should cause the step to finish.
             log.msg(" stopping currentStep", self.currentStep)
             self.currentStep.interrupt(Failure(error.ConnectionLost()))
         else:
-            self.results = RETRY
             self.text = ["lost", "connection"]
             self.stopped = True
             if self._acquiringLock:
@@ -545,7 +549,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             return
         # TODO: include 'reason' in this point event
         self.stopped = True
-        if self.currentStep:
+        if self.currentStep and self.currentStep.results is None:
             self.currentStep.interrupt(reason)
 
         self.results = results

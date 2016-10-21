@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet.defer import Deferred
+from twisted.internet import defer
 
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import CANCELLED
@@ -30,12 +30,18 @@ class BuildStepController(object):
     def __init__(self, **kwargs):
         self.step = ControllableBuildStep(self, **kwargs)
         self.running = False
+        self.auto_finish_results = None
 
     def finish_step(self, result):
         assert self.running
         self.running = False
         d, self._run_deferred = self._run_deferred, None
         d.callback(result)
+
+    def auto_finish_step(self, result):
+        self.auto_finish_results = result
+        if self.running:
+            self.finish_step(result)
 
 
 class ControllableBuildStep(BuildStep):
@@ -50,10 +56,11 @@ class ControllableBuildStep(BuildStep):
         self._controller = controller
 
     def run(self):
+        if self._controller.auto_finish_results is not None:
+            return defer.succeed(self._controller.auto_finish_results)
         assert not self._controller.running
-
         self._controller.running = True
-        self._controller._run_deferred = Deferred()
+        self._controller._run_deferred = defer.Deferred()
         return self._controller._run_deferred
 
     def interrupt(self, reason):

@@ -35,6 +35,7 @@ from buildbot.worker import AbstractLatentWorker
 try:
     import docker
     from hyper_sh import Client as Hyper
+    from docker.errors import NotFound
     [docker, Hyper]
 except ImportError:
     Hyper = None
@@ -95,12 +96,6 @@ class HyperLatentWorker(AbstractLatentWorker):
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
-        # Set build_wait_timeout to 0s if not explicitely set: Starting a
-        # container is almost immediate, we can affort doing so for each build.
-
-        if 'build_wait_timeout' not in kwargs:
-            kwargs['build_wait_timeout'] = 0
-
         AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
 
         if not Hyper:
@@ -120,6 +115,12 @@ class HyperLatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, hyper_host,
                         hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
+        # Set build_wait_timeout to 0s if not explicitely set: Starting a
+        # container is almost immediate, we can affort doing so for each build.
+
+        if 'build_wait_timeout' not in kwargs:
+            kwargs['build_wait_timeout'] = 0
+
         yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
         self.manager = yield HyperLatentManager.getService(self.master, hyper_host, hyper_accesskey,
@@ -150,9 +151,6 @@ class HyperLatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        if self.instance is not None:
-            raise ValueError('instance active')
-
         image = yield build.render(self.image)
         yield self.deferToThread(self._thd_start_instance, image)
         defer.returnValue(True)
@@ -162,9 +160,13 @@ class HyperLatentWorker(AbstractLatentWorker):
 
     def _thd_cleanup_instance(self):
         instances = self.client.containers(
+            all=1,
             filters=dict(name=self.getContainerName()))
         for instance in instances:
-            self.client.remove_container(instance['Id'], v=True, force=True)
+            try:
+                self.client.remove_container(instance['Id'], v=True, force=True)
+            except NotFound:
+                pass  # that's a race condition
 
     def _thd_start_instance(self, image):
         t1 = time.time()
@@ -213,7 +215,15 @@ class HyperLatentWorker(AbstractLatentWorker):
         log.debug('{name}:{containerid}: Stopping container', name=self.name,
                   containerid=self.shortid)
         t1 = time.time()
-        self.client.stop(self.instance['Id'])
+        try:
+            self.client.stop(self.instance['Id'])
+        except NotFound:
+            # That's ok. container was already deleted, probably by an admin
+            # lets fail nicely
+            log.warn('{name}:{containerid}: container was already deleted!', name=self.name,
+                     containerid=self.shortid)
+            self.instance = None
+            return
         t2 = time.time()
         if not fast:
             self.client.wait(self.instance['Id'])

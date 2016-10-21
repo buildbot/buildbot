@@ -20,6 +20,8 @@ Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "c
 
 
 def statusToString(status):
+    if status is None:
+        return "not finished"
     if status < 0 or status >= len(Results):
         return "Invalid status"
     else:

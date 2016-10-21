@@ -28,6 +28,7 @@ from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot.config import MasterConfig
+from buildbot.data import resultspec
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
 from buildbot.plugins import worker
@@ -155,24 +156,24 @@ class RunMasterBase(unittest.TestCase):
 
         # in order to allow trigger based integration tests
         # we wait until the first started build is finished
-        self.firstBuildId = None
+        self.firstBuildRequestId = None
 
         def newCallback(_, data):
-            if self.firstBuildId is None:
-                self.firstBuildId = data['buildid']
+            if self.firstBuildRequestId is None:
+                self.firstBuildRequestId = data['buildrequestid']
                 newConsumer.stopConsuming()
 
         def finishedCallback(_, data):
-            if self.firstBuildId == data['buildid']:
+            if self.firstBuildRequestId == data['buildrequestid']:
                 d.callback(data)
 
         newConsumer = yield self.master.mq.startConsuming(
             newCallback,
-            ('builds', None, 'new'))
+            ('buildrequests', None, 'new'))
 
         finishedConsumer = yield self.master.mq.startConsuming(
             finishedCallback,
-            ('builds', None, 'finished'))
+            ('buildrequests', None, 'complete'))
 
         if useChange is False:
             # use data api to force a build
@@ -182,7 +183,12 @@ class RunMasterBase(unittest.TestCase):
             yield self.master.data.updates.addChange(**useChange)
 
         # wait until we receive the build finished event
-        build = yield d
+        buildrequest = yield d
+        builds = yield self.master.data.get(
+            ('builds',),
+            filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
+        # if the build has been retried, there will be several matching builds. We return the last build
+        build = builds[-1]
         finishedConsumer.stopConsuming()
         yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
         defer.returnValue(build)

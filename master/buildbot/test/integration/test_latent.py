@@ -28,7 +28,7 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
-from buildbot.process.results import CANCELLED
+from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
@@ -523,7 +523,7 @@ class Tests(SynchronousTestCase):
         controller.disconnect_worker(self)
         builds = self.successResultOf(
             master.data.get(("builds",)))
-        self.assertEqual(builds[0]['results'], CANCELLED)
+        self.assertEqual(builds[0]['results'], RETRY)
 
         # Request one build.
         self.createBuildrequest(master, [builder_id])

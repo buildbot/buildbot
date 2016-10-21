@@ -42,6 +42,7 @@ class FakeTriggerable(object):
     bsid = 1
     brids = {}
     exception = False
+    never_finish = False
 
     def __init__(self, name):
         self.name = name
@@ -52,12 +53,13 @@ class FakeTriggerable(object):
         idsDeferred = defer.Deferred()
         idsDeferred.callback((self.bsid, self.brids))
         resultsDeferred = defer.Deferred()
-        if self.exception:
-            reactor.callLater(
-                0, resultsDeferred.errback, RuntimeError('oh noes'))
-        else:
-            reactor.callLater(
-                0, resultsDeferred.callback, (self.result, self.brids))
+        if not self.never_finish:
+            if self.exception:
+                reactor.callLater(
+                    0, resultsDeferred.errback, RuntimeError('oh noes'))
+            else:
+                reactor.callLater(
+                    0, resultsDeferred.callback, (self.result, self.brids))
         return (idsDeferred, resultsDeferred)
 
 
@@ -106,6 +108,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         m = self.master
         m.db.checkForeignKeys = True
         self.build.builder.botmaster = m.botmaster
+        self.build.conn = object()
         m.status = master.Status()
         m.status.setServiceParent(m)
         m.config.buildbotURL = "baseurl/"
@@ -562,6 +565,22 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
         # interrupt before the callLater representing the Triggerable
         # schedulers completes
+        self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
+
+        return d
+
+    def test_waitForFinish_interrupt_no_connection(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a'],
+                                       waitForFinish=True))
+
+        self.expectOutcome(result=CANCELLED, state_string='interrupted')
+        self.expectTriggeredWith(a=(True, [], {}))
+        self.scheduler_a.never_finish = True
+        d = self.runStep()
+
+        # interrupt before the callLater representing the Triggerable
+        # schedulers completes
+        self.build.conn = None
         self.step.interrupt(failure.Failure(RuntimeError('oh noes')))
 
         return d

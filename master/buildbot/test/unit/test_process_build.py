@@ -208,6 +208,7 @@ class TestBuild(unittest.TestCase):
 
         step = Mock()
         step.return_value = step
+        step.results = None
         b.setStepFactories([FakeStepFactory(step)])
 
         def startStep(*args, **kw):
@@ -233,9 +234,11 @@ class TestBuild(unittest.TestCase):
         step1 = Mock()
         step1.return_value = step1
         step1.alwaysRun = False
+        step1.results = None
         step2 = Mock()
         step2.return_value = step2
         step2.alwaysRun = True
+        step2.results = None
         b.setStepFactories([
             FakeStepFactory(step1),
             FakeStepFactory(step2),
