@@ -89,6 +89,13 @@ class TestMessage(unittest.TestCase):
              -The Buildbot'''))
 
     @defer.inlineCallbacks
+    def test_inline_template(self):
+        self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        self.assertEqual(res['type'], "plain")
+        self.assertEqual(res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+
+    @defer.inlineCallbacks
     def test_message_failure(self):
         res = yield self.doOneTest(SUCCESS, FAILURE)
         self.assertIn(

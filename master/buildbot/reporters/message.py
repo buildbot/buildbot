@@ -17,7 +17,7 @@ import os
 
 import jinja2
 
-
+from buildbot import config
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -33,19 +33,25 @@ class MessageFormatter(object):
     wantProperties = True
     wantSteps = False
 
-    def __init__(self, template_name=None, template_dir=None, template_type=None):
+    def __init__(self, template_name=None, template_dir=None, template=None, template_type=None):
 
-        if template_dir is None:
-            template_dir = os.path.join(os.path.dirname(__file__), "templates")
+        if (template is not None) and ((template_name is not None) or (template_dir is not None)):
+            config.error("Only one of template or template path can be given")
 
-        loader = jinja2.FileSystemLoader(template_dir)
-        env = jinja2.Environment(
-            loader=loader, undefined=jinja2.StrictUndefined)
+        if template is None:
+            if template_dir is None:
+                template_dir = os.path.join(os.path.dirname(__file__), "templates")
 
-        if template_name is not None:
-            self.template_name = template_name
+            loader = jinja2.FileSystemLoader(template_dir)
+            env = jinja2.Environment(
+                loader=loader, undefined=jinja2.StrictUndefined)
 
-        self.template = env.get_template(self.template_name)
+            if template_name is not None:
+                self.template_name = template_name
+
+            self.template = env.get_template(self.template_name)
+        else:
+            self.template = jinja2.Template(template)
 
         if template_type is not None:
             self.template_type = template_type
