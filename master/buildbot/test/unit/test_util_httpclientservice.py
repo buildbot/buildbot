@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 import json
+import os
 
 import mock
 
@@ -38,7 +39,7 @@ except ImportError:
 class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
     def setUp(self):
         if httpclientservice.txrequests is None or httpclientservice.treq is None:
-            raise unittest.SkipTest('this test requires txrequest and treq')
+            raise unittest.SkipTest('this test requires txrequests and treq')
         self.patch(httpclientservice, 'txrequests', mock.Mock())
         self.patch(httpclientservice, 'treq', mock.Mock())
         self.parent = service.MasterService()
@@ -199,6 +200,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def setUp(self):
+        if httpclientservice.txrequests is None or httpclientservice.treq is None:
+            raise unittest.SkipTest('this test requires txrequests and treq')
         site = server.Site(MyResource())
         self.listenport = reactor.listenTCP(0, site)
         self.port = self.listenport.getHost().port
@@ -248,19 +251,23 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         self.assertEqual(content, {})
         self.assertEqual(res.code, 200)
 
+    # note that freebsd workers will not like when there are too many parallel connections
+    # we can change this test via environment variable
+    NUM_PARALLEL = os.environ.get("BBTEST_NUM_PARALLEL", 5)
+
     @defer.inlineCallbacks
     def test_lots(self):
-        for i in xrange(100):
+        for i in xrange(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'), content_json=dict(a=['b']))
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per request)
-        for i in xrange(100):
+        for i in xrange(self.NUM_PARALLEL):
             res = yield self.http.get('/', params=dict(a='b'))
             content = yield res.content()
             self.assertEqual(content, '{"a": ["b"]}')
 
     @defer.inlineCallbacks
     def test_lots_parallel(self):
-        for i in xrange(100):
+        for i in xrange(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'), content_json=dict(a=['b']))
 
         # use for benchmarking (txrequests: 3ms per request treq: 11ms per request (!?))
@@ -272,7 +279,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                 return res.content()
 
             return d
-        dl = [oneReq() for i in xrange(100)]
+        dl = [oneReq() for i in xrange(self.NUM_PARALLEL)]
         yield defer.gatherResults(dl)
 
 
