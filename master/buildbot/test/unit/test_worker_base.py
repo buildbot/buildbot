@@ -39,6 +39,11 @@ class ConcreteWorker(base.AbstractWorker):
     pass
 
 
+class FakeBuilder:
+    def getBuilderId(self):
+        return defer.succeed(1)
+
+
 class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_workername(self):
@@ -248,6 +253,31 @@ class TestAbstractWorker(unittest.TestCase):
                                            existingRegistration=False)
         self.assertIn('bot', self.master.workers.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
+
+    @defer.inlineCallbacks
+    def test_reconfigService_builder(self):
+        old = self.createWorker('bot', 'pass')
+        yield self.do_test_reconfigService(old, old)
+
+        # initial configuration, there is no builder configured
+        self.assertEqual(old._configured_builderid_list, [])
+        workers = yield self.master.data.get(('workers',))
+        self.assertEqual(len(workers[0]['configured_on']), 0)
+
+        new = self.createWorker('bot', 'pass', configured=False)
+
+        # we create a fake builder, and associate to the master
+        self.botmaster.builders['bot'] = [FakeBuilder()]
+        self.master.db.insertTestData([
+            fakedb.Builder(id=1, name='builder'),
+            fakedb.BuilderMaster(builderid=1, masterid=824)
+        ])
+        # on reconfig, the db should see the builder configured for this worker
+        yield old.reconfigServiceWithSibling(new)
+        self.assertEqual(old._configured_builderid_list, [1])
+        workers = yield self.master.data.get(('workers',))
+        self.assertEqual(len(workers[0]['configured_on']), 1)
+        self.assertEqual(workers[0]['configured_on'][0]['builderid'], 1)
 
     @defer.inlineCallbacks
     def test_stopService(self):
