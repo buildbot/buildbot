@@ -1,8 +1,8 @@
 set -e
 gulp scripts vendors
-npm link
+yarn link || true
 cd test
-npm install
-npm link guanlecoja
+yarn install
+yarn link guanlecoja ||true
 gulp
 gulp --coverage

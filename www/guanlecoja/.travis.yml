@@ -7,7 +7,7 @@ node_js:
   - "6.1"
 
 before_install:
-  - npm install -g gulp
+  - npm install -g gulp yarn
 
 script:
   - ./test.sh

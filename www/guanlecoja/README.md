@@ -10,7 +10,7 @@ It integrates several web technologies and methodologies together to accelerate 
 - Angularjs: MVC framework
 - Less: CSS preprocessor
 - Coffee-script: Javascript language
-- Jade: template engine
+- pug: template engine (formerly known as jade)
 - Bootstrap: css framework
 - bower: js library
 
@@ -111,7 +111,7 @@ https://github.com/buildbot/guanlecoja/blob/master/defaultconfig.coffee
 * `files.tests`(list of globs): tests source code. Can be coffee or JS. built in `tests.js`
 * `files.fixtures`(list of globs): fixtures for tests. Those fixtures can be json files, or text files, are built in `tests.js`, and populated in window.FIXTURES global variable in the test environment.
 * `files.templates`(list of globs): references the templates. All the templates are built in `scripts.js`, and loaded automatically in angularjs's template cache.
-* `files.index`: references the jade file that generates main `index.htm` entrypoint for your SPA. Your index.jade should load built `scripts.js`, and `styles.css`
+* `files.index`: references the pug/jade file that generates main `index.htm` entrypoint for your SPA. Your index.pug should load built `scripts.js`, and `styles.css`
 * `files.less`: references the less files. By default they can be anywhere in the source code, and are concatenated in styles.css. Order is undefined, so make sure to not have order dependent styling.
 * `files.images`: those images are just copied to `#{config.dir.build}/img`
 * `files.fonts`: those fonts are just copied to `#{config.dir.build}/fonts`
@@ -250,6 +250,9 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.8.1: Some jade->pug fixes. beware that with jade-pug the default extension is .pug so extends "layout" will look for layout.pug
+         You can just rename your layout file or extend with explicit file extension
+* 0.8.0: upgrade dependencies. (gulp-minify-css -> gulp-clean-css,  gulp-jade -> gulp-pug). Fix node dependencies to make yarn work.
 * 0.7.2: upgrade gulp-if: fixes issue with node6
 * 0.7.0: upgrade gulp-bower-deps. This gives you BOWERDEPS global variable
 * 0.6.2: fix and upgrade phantomjs to 2.1.1. This will help on the stability of the builds.

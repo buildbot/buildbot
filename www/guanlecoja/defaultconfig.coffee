@@ -52,11 +52,13 @@ module.exports =
 
         # Jade templates
         templates: [
+            'src/**/*.tpl.pug'
             'src/**/*.tpl.jade'
         ]
 
         # Jade index
         index: [
+            'src/app/index.pug'
             'src/app/index.jade'
         ]
         # Less stylesheets
@@ -93,7 +95,7 @@ module.exports =
     # produce a templates.js file with all the jade templates in it.
     templates_apart: false
 
-    # produce jade templates as js code, instead of html in angular's templatesCache
+    # produce pug/jade templates as js code, instead of html in angular's templatesCache
     # templates function will be available in templates_global
     templates_as_js: false
     templates_global: "TEMPLATES"

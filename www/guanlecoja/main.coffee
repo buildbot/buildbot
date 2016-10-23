@@ -95,7 +95,7 @@ module.exports =  (gulp) ->
     catch_errors = (s) ->
         s.on "error", (e) ->
             error = gutil.colors.bold.red
-            if e.filename?
+            if e.filename? and e.location?
                 gutil.log(error("#{e.plugin}:#{e.name}: #{e.filename} +#{e.location.first_line}"))
             else if e.fileName?
                 gutil.log(error("#{e.plugin}:#{e.name}: #{e.fileName} +#{e.lineNumber}"))
@@ -106,7 +106,7 @@ module.exports =  (gulp) ->
             s.end()
             s.emit("end")
             if not dev
-                throw e
+                throw "stopping because of previous error"
             return null
         s
 
@@ -166,6 +166,7 @@ module.exports =  (gulp) ->
             .pipe(catch_errors(gif("*.coffee", coffeeCompile())))
             # jade build
             .pipe(catch_errors(gif("*.jade", jadeCompile())))
+            .pipe(catch_errors(gif("*.pug", jadeCompile())))
             .pipe remember('scripts')
             .pipe(gif("*.html", templateCache({module:config.name})))
             .pipe(catch_errors(gif("*.jjs", jadeConcat())))
@@ -197,6 +198,7 @@ module.exports =  (gulp) ->
         gulp.src config.files.templates
             # jade build
             .pipe(catch_errors(gif("*.jade", jade())))
+            .pipe(catch_errors(gif("*.pug", jade())))
             .pipe gif "*.html", rename (p) ->
                 if config.name? and config.name isnt 'app'
                     p.dirname = path.join(config.name, "views")
