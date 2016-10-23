@@ -37,7 +37,7 @@
             span(ng-show="tags_filter.length > 0")
                 span.label.label-danger(ng-click="tags_filter = []") x
           th(style="width:20%px;") Workers
-        tr(ng-repeat='builder in builders | filter: isBuilderFiltered | orderBy: "name"')
+      tr(ng-repeat='builder in builders | filter: isBuilderFiltered | orderBy: "name"')
           td(style="width:200px")
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
