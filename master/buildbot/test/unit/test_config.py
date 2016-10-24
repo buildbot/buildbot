@@ -1238,8 +1238,19 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_customBuildUrlsFails(self):
         customBuildUrls={
             'Open My Tests Tool': "http://tool.com/Build/View?builderName={builderName}&buildNumber={buildNumber}",
-            1:2
+            1: 2
         }
+
+        self.assertRaisesConfigError(
+            "customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}",
+            lambda : config.BuilderConfig(name='builder',
+                                   slavename='s1',
+                                   project="project",
+                                   factory=self.factory,
+                                   customBuildUrls=customBuildUrls))
+
+    def test_customBuildUrlsFailsInvalidValue(self):
+        customBuildUrls="Test Tool"
 
         self.assertRaisesConfigError(
             "customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}",

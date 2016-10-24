@@ -713,7 +713,7 @@ class BuilderConfig:
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
             properties=None, mergeRequests=None, project=None, friendly_name=None, tags=[], description=None,
-            canStartBuild=None, excludeGlobalFactory=False, customBuildUrls={}):
+            canStartBuild=None, excludeGlobalFactory=False, customBuildUrls=None):
 
         # name is required, and can't start with '_'
         if not name or not isinstance(name, basestring):
