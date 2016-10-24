@@ -425,7 +425,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -446,8 +446,9 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn, builds = yield self.setupBuildMessage(mode=("change",))
 
         build = builds[0]
-        mn.messageFormatter.assert_called_with(('change',), 'mybldr', build['buildset'], build, self.master,
-                                               None, [u'me@foo'])
+        mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master,
+            None, [u'me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with([u'me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
@@ -559,6 +560,24 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             self.assertRaises(
                 ConfigErrors, MailNotifier,
                 'foo@example.com', extraRecipients=[invalid])
+
+    @defer.inlineCallbacks
+    def test_workerMissingSendEmail(self):
+
+        mn = yield self.setupMailNotifier('from@example.org')
+
+        mn.sendMessage = Mock()
+        yield mn.workerMissing('worker.98.complete',
+                               dict(name='myworker',
+                                    notify=["workeradmin@example.org"],
+                                    workerinfo=dict(admin="myadmin"),
+                                    last_connection="yesterday"))
+
+        mail = mn.sendMessage.call_args[0][0]
+        recipients = mn.sendMessage.call_args[0][1]
+        self.assertEqual(recipients, ['workeradmin@example.org'])
+        text = mail.get_payload()
+        self.assertIn("has noticed that the worker named myworker went away", text)
 
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):

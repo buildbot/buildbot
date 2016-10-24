@@ -17,6 +17,8 @@ import os
 
 import jinja2
 
+from twisted.internet import defer
+
 from buildbot import config
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
@@ -27,20 +29,15 @@ from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 
 
-class MessageFormatter(object):
+class MessageFormatterBase(object):
     template_filename = 'default_mail.txt'
     template_type = 'plain'
 
     def __init__(self, template_dir=None,
-                 template_filename=None, template=None, template_name=None,
+                 template_filename=None, template=None,
                  subject_filename=None, subject=None,
                  template_type=None, ctx=None,
-                 wantProperties=True, wantSteps=False, wantLogs=False):
-
-        if template_name is not None:
-            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
-            template_filename = template_name
-
+                 ):
         self.body_template = self.getTemplate(template_filename, template_dir, template)
         self.subject_template = None
         if subject_filename or subject:
@@ -53,9 +50,6 @@ class MessageFormatter(object):
             ctx = {}
 
         self.ctx = ctx
-        self.wantProperties = wantProperties
-        self.wantSteps = wantSteps
-        self.wantLogs = wantLogs
 
     def getTemplate(self, filename, dirname, content):
         if content and (filename or dirname):
@@ -75,6 +69,39 @@ class MessageFormatter(object):
             filename = self.template_filename
 
         return env.get_template(filename)
+
+    def buildAdditionalContext(self, master, ctx):
+        ctx.update(self.ctx)
+
+    def renderMessage(self, ctx):
+        body = self.body_template.render(ctx)
+        msgdict = {'body': body, 'type': self.template_type}
+        if self.subject_template is not None:
+            msgdict['subject'] = self.subject_template.render(ctx)
+        return msgdict
+
+
+class MessageFormatter(MessageFormatterBase):
+    template_filename = 'default_mail.txt'
+    template_type = 'plain'
+
+    def __init__(self, template_dir=None,
+                 template_filename=None, template=None, template_name=None,
+                 subject_filename=None, subject=None,
+                 template_type=None, ctx=None,
+                 wantProperties=True, wantSteps=False, wantLogs=False):
+
+        if template_name is not None:
+            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
+            template_filename = template_name
+        MessageFormatterBase.__init__(self,
+                                      template_dir=template_dir,
+                                      template_filename=template_filename, template=template,
+                                      subject_filename=subject_filename, subject=subject,
+                                      template_type=template_type, ctx=ctx)
+        self.wantProperties = wantProperties
+        self.wantSteps = wantSteps
+        self.wantLogs = wantLogs
 
     def getDetectedStatus(self, mode, results, previous_results):
 
@@ -153,7 +180,8 @@ class MessageFormatter(object):
 
         return text
 
-    def __call__(self, mode, buildername, buildset, build, master, previous_results, blamelist):
+    @defer.inlineCallbacks
+    def formatMessageForBuildResults(self, mode, buildername, buildset, build, master, previous_results, blamelist):
         """Generate a buildbot mail message and return a dictionary
            containing the message body, type and subject."""
         ss_list = buildset['sourcestamps']
@@ -177,9 +205,19 @@ class MessageFormatter(object):
                    summary=self.messageSummary(build, results),
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
-        ctx.update(self.ctx)
-        body = self.body_template.render(ctx)
-        email = {'body': body, 'type': self.template_type}
-        if self.subject_template is not None:
-            email['subject'] = self.subject_template.render(ctx)
-        return email
+        yield self.buildAdditionalContext(master, ctx)
+        msgdict = self.renderMessage(ctx)
+        defer.returnValue(msgdict)
+
+
+class MessageFormatterMissingWorker(MessageFormatterBase):
+    template_filename = 'missing_mail.txt'
+
+    @defer.inlineCallbacks
+    def formatMessageForMissingWorker(self, master, worker):
+        ctx = dict(buildbot_title=master.config.title,
+                   buildbot_url=master.config.buildbotURL,
+                   worker=worker)
+        yield self.buildAdditionalContext(master, ctx)
+        msgdict = self.renderMessage(ctx)
+        defer.returnValue(msgdict)

@@ -32,6 +32,7 @@ class TestMessage(unittest.TestCase):
                                              wantData=True, wantDb=True, wantMq=True)
 
         self.message = message.MessageFormatter()
+        self.messageMissing = message.MessageFormatterMissingWorker()
 
     def setupDb(self, results1, results2):
 
@@ -63,8 +64,9 @@ class TestMessage(unittest.TestCase):
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
         build = res['builds'][0]
         buildset = res['buildset']
-        res = self.message(mode, "Builder1", buildset, build, self.master,
-                           lastresults, ["him@bar", "me@foo"])
+        res = yield self.message.formatMessageForBuildResults(
+            mode, "Builder1", buildset, build, self.master,
+            lastresults, ["him@bar", "me@foo"])
         defer.returnValue(res)
 
     @defer.inlineCallbacks
@@ -131,3 +133,14 @@ class TestMessage(unittest.TestCase):
         res = yield self.doOneTest(FAILURE, FAILURE, "change")
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
+
+    @defer.inlineCallbacks
+    def test_missing_worker(self):
+        self.setupDb(SUCCESS, SUCCESS)
+        workers = yield self.master.data.get(('workers',))
+        worker = workers[0]
+        worker['notify'] = ['e@mail']
+        worker['last_connection'] = ['yesterday']
+        res = yield self.messageMissing.formatMessageForMissingWorker(self.master, worker)
+        text = res['body']
+        self.assertIn("has noticed that the worker named wrkr went away", text)

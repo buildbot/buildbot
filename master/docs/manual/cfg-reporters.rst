@@ -287,6 +287,11 @@ MailNotifier arguments
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
+``messageFormatterMissingWorker``
+    This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
+
 
 MessageFormatter arguments
 ++++++++++++++++++++++++++
@@ -317,6 +322,9 @@ The constructor to that class takes the following arguments:
 ``ctx``
     This is an extension of the standard context that will be given to the templates.
     Use this to add content to the templates that is otherwise not available.
+
+    Alternatively, you can subclass MessageFormatter and override the :py:method`buildAdditionalContext` in order to grab more context from the data API.
+    :py:method`buildAdditionalContext` is given a master instance, and the ctx object, can modify the ctx object, and return a deferred.
 
 ``wantProperties``
     This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
@@ -362,6 +370,57 @@ Worker name
 
 List of responsible users
     ``{{ blamelist | join(', ') }}``
+
+
+MessageFormatterMissingWorkers arguments
++++++++++++++++++++++++++++++++++++++++++
+The easiest way to use the ``messageFormatterMissingWorkers`` parameter is to create a new instance of the ``reporters.MessageFormatterMissingWorkers`` class.
+
+The constructor to that class takes the following arguments:
+
+``template_dir``
+    This is the directory that is used to look for the various templates.
+
+``template_filename``
+    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
+    It defaults to ``default_mail.txt``.
+
+``template``
+    If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
+
+``template_type``
+    This indicates the type of the generated template.
+    Use either 'plain' (the default) or 'html'.
+
+``subject_filename``
+    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
+
+``subject``
+    Alternatively, this is the content of the subject of the mail as string.
+
+``ctx``
+    This is an extension of the standard context that will be given to the templates.
+    Use this to add content to the templates that is otherwise not available.
+
+    Alternatively, you can subclass MessageFormatter and override the :py:method`buildAdditionalContext` in order to grab more context from the data API.
+    :py:method`buildAdditionalContext` is given a master instance, and the ctx object, can modify the ctx object, and return a deferred.
+
+The default ctx for the missing worker email is made of:
+
+``buildbot_title``
+    The buildbot title as per ``c['title']`` from the ``master.cfg``
+
+``buildbot_url``
+    The buildbot title as per ``c['title']`` from the ``master.cfg``
+
+``worker``
+    The worker object as defined in the REST api plus two attributes:
+
+    ``notify``
+        List of emails to be notified for this worker.
+
+    ``last_connection``
+        String describing the approximate the time of last connection for this worker.
 
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
 
@@ -888,10 +947,10 @@ It uses private token auth, and the token owner is required to have at least dev
 
 .. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
 
-    :param string token: Private token of user permitted to update status for commits 
-    :param string startDescription: Description used when build starts 
-    :param string endDescription: Description used when build ends 
-    :param string context: Name of your build system, eg. continuous-integration/buildbot 
+    :param string token: Private token of user permitted to update status for commits
+    :param string startDescription: Description used when build starts
+    :param string endDescription: Description used when build ends
+    :param string context: Name of your build system, eg. continuous-integration/buildbot
     :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
 
