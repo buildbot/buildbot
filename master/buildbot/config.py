@@ -833,9 +833,11 @@ class BuilderConfig:
 
     def getCustomBuildUrls(self, serverName, buildNumber):
         """
-        Format configured customBuildUrls to include the builder name and build number
+        Format configured customBuildUrls to include the server name, builder name and build number
         :param buildNumber:
         :type buildNumber: int
+        :parameter serverName:
+        :type serverName: str
         :return: customBuildUrls in the format [{'name': name, 'url': ur}]
         """
         customBuildUrls = []
