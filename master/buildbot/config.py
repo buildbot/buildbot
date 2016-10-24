@@ -831,18 +831,20 @@ class BuilderConfig:
             self.customBuildUrls and not checkDictionaryContainsOnlyString()):
             error("customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}")
 
-    def getCustomBuildUrls(self, buildNumber):
+    def getCustomBuildUrls(self, serverName, buildNumber):
         """
-        Format configured customBuildUrls to include the builder name and build number
+        Format configured customBuildUrls to include the server name, builder name and build number
         :param buildNumber:
         :type buildNumber: int
+        :parameter serverName:
+        :type serverName: str
         :return: customBuildUrls in the format [{'name': name, 'url': ur}]
         """
         customBuildUrls = []
         for key, value in self.customBuildUrls.iteritems():
             customBuildUrls.append({
                 'name': key,
-                'url': value.format(builderName=self.name, buildNumber=buildNumber)
+                'url': value.format(serverName=serverName, builderName=self.name, buildNumber=buildNumber)
             })
         return customBuildUrls
 

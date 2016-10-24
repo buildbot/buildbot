@@ -62,6 +62,14 @@ class TestBuildProperties(unittest.TestCase):
                                               self.BUILD_NUMBER)
         self.build_status.properties = mock.Mock()
 
+    def customUrlTestSetup(self):
+        customUrls = [{'name': 'test tool', 'link': 'test link'}]
+        builderConfig = mock.Mock()
+        builderConfig.getCustomBuildUrls = lambda serverName, buildNumber: customUrls
+        self.build_status.master.status.getBuildbotURL = lambda: "http://localhost/"
+        self.build_status.builder.getBuilderConfig = lambda: builderConfig
+        return customUrls
+
     def test_getProperty(self):
         self.build_status.getProperty('x')
         self.build_status.properties.getProperty.assert_called_with('x', None)
@@ -85,19 +93,13 @@ class TestBuildProperties(unittest.TestCase):
         self.build_status.properties.render.assert_called_with("xyz")
 
     def test_getCustomUrlsBuildFinished(self):
-        customUrls = [{'name': 'test tool', 'link': 'test link'}]
+        customUrls = self.customUrlTestSetup()
         self.build_status.finished = True
-        builderConfig = mock.Mock()
-        builderConfig.getCustomBuildUrls = lambda buildNumber: customUrls
-        self.build_status.builder.getBuilderConfig = lambda: builderConfig
         self.assertEquals(customUrls, self.build_status.getCustomUrls())
 
     def test_getCustomUrlsBuildRunning(self):
-        customUrls = [{'name': 'test tool', 'link': 'test link'}]
+        self.customUrlTestSetup()
         self.build_status.finished = None
-        builderConfig = mock.Mock()
-        builderConfig.getCustomBuildUrls = lambda buildnumber: customUrls
-        self.build_status.builder.getBuilderConfig = lambda: builderConfig
         self.assertEquals([], self.build_status.getCustomUrls())
 
 class TestBuildGetSourcestamps(unittest.TestCase):

@@ -254,7 +254,10 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
         if self.isFinished():
             builderConfig = self.builder.getBuilderConfig()
             if builderConfig:
-                customUrls = builderConfig.getCustomBuildUrls(buildNumber=self.number)
+                customUrls = builderConfig.getCustomBuildUrls(
+                        serverName=self.master.status.getBuildbotURL(),
+                        buildNumber=self.number
+                )
         return customUrls
 
     # subscription interface

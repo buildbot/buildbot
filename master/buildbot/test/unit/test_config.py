@@ -1213,8 +1213,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_customBuildUrls(self):
         customBuildUrls={
-            'Open My Tests Tool': "http://tool.com/Build/View?builderName={builderName}&buildNumber={buildNumber}",
-            'name':'url2'
+            'Open My Tests Tool':
+                "http://tool.com/Build/View?katanaServer={serverName}"
+                "&builderName={builderName}&buildNumber={buildNumber}",
+            'name': 'url2'
         }
 
         cfg = config.BuilderConfig(
@@ -1226,11 +1228,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         )
 
         expectedLinks = {
-            'Open My Tests Tool': "http://tool.com/Build/View?builderName=builder&buildNumber=1",
+            'Open My Tests Tool': "http://tool.com/Build/View?katanaServer=test&builderName=builder&buildNumber=1",
             'name': 'url2'
         }
 
-        for link in cfg.getCustomBuildUrls(1):
+        for link in cfg.getCustomBuildUrls(serverName="test", buildNumber=1):
             self.assertTrue('name' in link and 'url' in link)
             self.assertTrue(link['name'] in customBuildUrls)
             self.assertEquals(expectedLinks[link['name']], link['url'])
