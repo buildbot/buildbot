@@ -366,6 +366,15 @@
                 <a class="small-head" href={{ request.uri+query_symbol+"debug=true" }}>Show hidden steps</a>
             </div>
             {% endif %}
+
+            {% for link in customBuildUrls %}
+            <div>
+                <a class="small-head" target="_blank" href='{{ link.url }}'>
+                    {{ link.name }}
+                </a>
+            </div>
+            {% endfor %}
+
             {% if result_css is defined and result_css == "failure" and slave_debug_url %}
             <div>
                 <a class="small-head" target="_blank" href={{ slave_debug_url }}>

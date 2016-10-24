@@ -1211,6 +1211,54 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             'slavenames': ['s2', 's1'],
         })
 
+    def test_customBuildUrls(self):
+        customBuildUrls={
+            'Open My Tests Tool': "http://tool.com/Build/View?builderName={builderName}&buildNumber={buildNumber}",
+            'name':'url2'
+        }
+
+        cfg = config.BuilderConfig(
+                name='builder',
+                slavename='s1',
+                project="project",
+                factory=self.factory,
+                customBuildUrls=customBuildUrls
+        )
+
+        expectedLinks = {
+            'Open My Tests Tool': "http://tool.com/Build/View?builderName=builder&buildNumber=1",
+            'name': 'url2'
+        }
+
+        for link in cfg.getCustomBuildUrls(1):
+            self.assertTrue('name' in link and 'url' in link)
+            self.assertTrue(link['name'] in customBuildUrls)
+            self.assertEquals(expectedLinks[link['name']], link['url'])
+
+    def test_customBuildUrlsFails(self):
+        customBuildUrls={
+            'Open My Tests Tool': "http://tool.com/Build/View?builderName={builderName}&buildNumber={buildNumber}",
+            1: 2
+        }
+
+        self.assertRaisesConfigError(
+            "customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}",
+            lambda : config.BuilderConfig(name='builder',
+                                   slavename='s1',
+                                   project="project",
+                                   factory=self.factory,
+                                   customBuildUrls=customBuildUrls))
+
+    def test_customBuildUrlsFailsInvalidValue(self):
+        customBuildUrls="Test Tool"
+
+        self.assertRaisesConfigError(
+            "customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}",
+            lambda : config.BuilderConfig(name='builder',
+                                   slavename='s1',
+                                   project="project",
+                                   factory=self.factory,
+                                   customBuildUrls=customBuildUrls))
 
 
 class FakeService(config.ReconfigurableServiceMixin,

@@ -245,6 +245,18 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
                 logs.append(loog)
         return logs
 
+    def getCustomUrls(self):
+        """
+        If the build is finished returns formated custom urls
+        :return: Configured custom build urls in the format [{'name': name, 'url': ur}]
+        """
+        customUrls = []
+        if self.isFinished():
+            builderConfig = self.builder.getBuilderConfig()
+            if builderConfig:
+                customUrls = builderConfig.getCustomBuildUrls(buildNumber=self.number)
+        return customUrls
+
     # subscription interface
 
     def subscribe(self, receiver, updateInterval=None):

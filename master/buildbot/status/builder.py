@@ -469,6 +469,13 @@ class BuilderStatus(styles.Versioned):
     def getProject(self):
         return self.project
 
+    def getBuilderConfig(self):
+        """
+        :return: Builder configuration associated with this builder
+        :rtype: buildbot.config.BuilderConfig
+        """
+        return self.master.botmaster.getBuilderConfig(name=self.name)
+
     def getBuild(self, number):
         if number < 0:
             number = self.nextBuildNumber + number

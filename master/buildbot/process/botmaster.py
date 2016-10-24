@@ -146,6 +146,18 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
     def getBuilders(self):
         return self.builders.values()
 
+    def getBuilderConfig(self, name):
+        """
+        Gets the BuilderConfiguration by it's name
+        :param name: builder name
+        :return: BuilderConfig
+        :rtype: buildbot.config.BuilderConfig
+        """
+        try:
+            return self.builders[name].config
+        except KeyError:
+            return None
+
     def startService(self):
         def buildRequestAdded(notif):
             self.maybeStartBuildsForBuilder(notif['buildername'])

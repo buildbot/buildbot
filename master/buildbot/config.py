@@ -713,7 +713,7 @@ class BuilderConfig:
             builddir=None, slavebuilddir=None, factory=None, category=None,
             nextSlave=None, nextBuild=None, locks=None, env=None,
             properties=None, mergeRequests=None, project=None, friendly_name=None, tags=[], description=None,
-            canStartBuild=None, excludeGlobalFactory=False):
+            canStartBuild=None, excludeGlobalFactory=False, customBuildUrls=None):
 
         # name is required, and can't start with '_'
         if not name or not isinstance(name, basestring):
@@ -816,6 +816,35 @@ class BuilderConfig:
 
         self.description = description
 
+        self.customBuildUrls = customBuildUrls or {}
+        self._validateCustomBuildUrls()
+
+    def _validateCustomBuildUrls(self):
+        """
+        Validates that customBuildUrls is a dictionary containing only strings and in the format {'name': 'url'}
+        """
+        def checkDictionaryContainsOnlyString():
+            return all(isinstance(key, str) and isinstance(value, str)
+                       for key, value in self.customBuildUrls.iteritems())
+
+        if not isinstance(self.customBuildUrls, dict) or (
+            self.customBuildUrls and not checkDictionaryContainsOnlyString()):
+            error("customBuildUrls must be a a dictionary containing only strings and in the format {'name': 'url'}")
+
+    def getCustomBuildUrls(self, buildNumber):
+        """
+        Format configured customBuildUrls to include the builder name and build number
+        :param buildNumber:
+        :type buildNumber: int
+        :return: customBuildUrls in the format [{'name': name, 'url': ur}]
+        """
+        customBuildUrls = []
+        for key, value in self.customBuildUrls.iteritems():
+            customBuildUrls.append({
+                'name': key,
+                'url': value.format(builderName=self.name, buildNumber=buildNumber)
+            })
+        return customBuildUrls
 
     def getConfigDict(self):
         # note: this method will disappear eventually - put your smarts in the
