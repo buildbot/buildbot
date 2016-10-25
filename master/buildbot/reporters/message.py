@@ -35,7 +35,7 @@ class MessageFormatter(object):
     wantLogs = False
 
     def __init__(self, template_name=None, template_dir=None, template=None,
-                 subject_name=None, subject=None, template_type=None):
+                 subject_name=None, subject=None, template_type=None, ctx=None):
 
         if (template is not None) and ((template_name is not None) or (template_dir is not None)):
             config.error("Only one of template or template path can be given")
@@ -47,6 +47,11 @@ class MessageFormatter(object):
 
         if template_type is not None:
             self.template_type = template_type
+
+        if ctx is None:
+            ctx = {}
+
+        self.ctx = ctx
 
 
     def getTemplate(self, filename, dirname, content):
@@ -152,7 +157,7 @@ class MessageFormatter(object):
         ss_list = buildset['sourcestamps']
         results = build['results']
 
-        cxt = dict(results=build['results'],
+        ctx = dict(results=build['results'],
                    mode=mode,
                    buildername=buildername,
                    workername=build['properties'].get(
@@ -170,8 +175,9 @@ class MessageFormatter(object):
                    summary=self.messageSummary(build, results),
                    sourcestamps=self.messageSourceStamps(ss_list)
                    )
-        body = self.body_template.render(cxt)
+        ctx.update(self.ctx)
+        body = self.body_template.render(ctx)
         email = {'body': body, 'type': self.template_type}
         if self.subject_template is not None:
-            email['subject'] = self.subject_template.render(cxt)
+            email['subject'] = self.subject_template.render(ctx)
         return email
