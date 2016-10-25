@@ -72,6 +72,8 @@ Features
 
 * The ``MessageFormatter`` class allows extending the context given to the Templates via the ``ctx`` parameter.
 
+* The new ``MessageFormatterMissingWorker`` class allows to customize the message sent when a worker is missing.
+
 .. _Hyper: https://hyper.sh
 
 Fixes
@@ -89,6 +91,7 @@ Fixes
 * Fix issues with worker disconnection.
   When a worker disconnects, its current buildstep must be interrupted and the buildrequests should be retried.
 
+* Fix the worker missing email notification.
 
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
