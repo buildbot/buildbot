@@ -53,7 +53,6 @@ class MessageFormatter(object):
 
         self.ctx = ctx
 
-
     def getTemplate(self, filename, dirname, content):
         if content and filename:
             config.error("Only one of template or template path can be given")
@@ -72,7 +71,6 @@ class MessageFormatter(object):
             filename = self.template_name
 
         return env.get_template(filename)
-
 
     def getDetectedStatus(self, mode, results, previous_results):
 
