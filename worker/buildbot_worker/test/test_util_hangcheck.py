@@ -6,7 +6,6 @@ from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.endpoints import TCP4ClientEndpoint
 from twisted.internet.endpoints import TCP4ServerEndpoint
-from twisted.internet.protocol import Factory
 from twisted.internet.protocol import Protocol
 from twisted.internet.task import Clock
 from twisted.spread.pb import PBClientFactory
@@ -17,18 +16,9 @@ from twisted.trial.unittest import TestCase
 from twisted.web.server import Site
 from twisted.web.static import Data
 
-from buildbot_worker.hangcheck import HangCheckProtocol
+from ..util import HangCheckFactory
+from ..util._hangcheck import HangCheckProtocol
 
-
-class HangCheckFactory(Factory):
-
-    def __init__(self, wrapped_factory, hung_callback):
-        self._wrapped_factory = wrapped_factory
-        self._hung_callback = hung_callback
-
-    def buildProtocol(self, addr):
-        protocol = self._wrapped_factory.buildProtocol(addr)
-        return HangCheckProtocol(protocol, hung_callback=self._hung_callback)
 
 
 class HangCheckTests(SynchronousTestCase):

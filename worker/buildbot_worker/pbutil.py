@@ -24,8 +24,6 @@ from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
-from .util import HangCheckProtocol
-
 
 class ReconnectingPBClientFactory(PBClientFactory,
                                   protocol.ReconnectingClientFactory):
@@ -72,8 +70,7 @@ class ReconnectingPBClientFactory(PBClientFactory,
         self.gotRootObject(self._root)
 
     def buildProtocol(self, addr):
-        protocol = PBClientFactory.buildProtocol(self, addr)
-        return HangCheckProtocol(protocol, self._hung_connection)
+        return PBClientFactory.buildProtocol(self, addr)
 
     def _hung_connection(self):
         log.msg("connection attempt timed out (is the port number correct?)")

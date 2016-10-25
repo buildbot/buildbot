@@ -1,4 +1,4 @@
-from twisted.internet.interfaces import IProtocol
+from twisted.internet.interfaces import IProtocol, IProtocolFactory
 from twisted.python.components import proxyForInterface
 
 
@@ -51,3 +51,26 @@ class HangCheckProtocol(
         if self._hungConnectionTimer:
             self._hungConnectionTimer.cancel()
         self._hungConnectionTimer = None
+
+
+class HangCheckFactory(
+    proxyForInterface(IProtocolFactory, '_wrapped_factory'), object,
+):
+
+    def __init__(self, wrapped_factory, hung_callback):
+        self._wrapped_factory = wrapped_factory
+        self._hung_callback = hung_callback
+
+    # This is used as a ClientFactory, which doesn't have a specific interface, so forward the additional methods.
+    def buildProtocol(self, addr):
+        protocol = self._wrapped_factory.buildProtocol(addr)
+        return HangCheckProtocol(protocol, hung_callback=self._hung_callback)
+
+    def startedConnecting(self, connector):
+        self._wrapped_factory.startedConnecting(connector)
+
+    def clientConnectionFailed(self, connector, reason):
+        self._wrapped_factory.clientConnectionFailed(connector, reason)
+
+    def clientConnectionLost(self, connector, reason):
+        self._wrapped_factory.clientConnectionLost(connector, reason)
