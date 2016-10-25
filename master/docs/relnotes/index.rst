@@ -70,6 +70,8 @@ Features
 
 * The ``MessageFormatter`` class allows custom mail's subjects with the ``subject`` and ``subject_name`` parameters.
 
+* The ``MessageFormatter`` class allows extending the context given to the Templates via the ``ctx`` parameter.
+
 .. _Hyper: https://hyper.sh
 
 Fixes
