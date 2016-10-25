@@ -5,12 +5,16 @@ from twisted.python.components import proxyForInterface
 def _noop():
     pass
 
+
 class HangCheckProtocol(
     proxyForInterface(IProtocol, '_wrapped_protocol'), object,
 ):
-
-    connected = False
     transport = None
+    _hungConnectionTimer = None
+
+    # hung connections wait for a relatively long time, since a busy master may
+    # take a while to get back to us.
+    _HUNG_CONNECTION_TIMEOUT = 120
 
     def __init__(self, wrapped_protocol, hung_callback=_noop, reactor=None):
         if reactor is None:
@@ -24,7 +28,6 @@ class HangCheckProtocol(
         # because we only care about noticing data received, not
         # sent.
         self.transport = transport
-        self.connected = True
         super(HangCheckProtocol, self).makeConnection(transport)
         self._startHungConnectionTimer()
 
@@ -32,14 +35,12 @@ class HangCheckProtocol(
         self._stopHungConnectionTimer()
         super(HangCheckProtocol, self).dataReceived(data)
 
-    # hung connections wait for a relatively long time, since a busy master may
-    # take a while to get back to us.
-    _hungConnectionTimer = None
-    _HUNG_CONNECTION_TIMEOUT = 120
+    def connectionLost(self, reason):
+        self._stopHungConnectionTimer()
+        super(HangCheckProtocol, self).connectionLost(reason)
+
 
     def _startHungConnectionTimer(self):
-        self._stopHungConnectionTimer()
-
         def hungConnection():
             self._hung_callback()
             self._hungConnectionTimer = None
