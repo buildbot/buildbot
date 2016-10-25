@@ -124,14 +124,13 @@ Another example of a function delivering a customized html email is given below:
 
     from buildbot.plugins import reporters
 
-    # XXX: This is work in progress, use with care.
     template=u'''\
     <h4>Build status: {{ summary }}</h4>
     <p> Worker used: {{ workername }}</p>
     {% for step in build['steps'] %}
     <p> {{ step['name'] }}: {{ step['result'] }}</p>
     {% endfor %}
-    <b> -- The Buildbot</p>
+    <p><b> -- The Buildbot</b></p>
     '''
 
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
@@ -140,7 +139,7 @@ Another example of a function delivering a customized html email is given below:
                                 extraRecipients=['listaddr@example.org'],
                                 messageFormatter=reporters.MessageFormatter(
                                     template=template, template_type='html',
-                                    wantProperties=True, wantSteps=True, wantLogs=True))
+                                    wantProperties=True, wantSteps=True))
 
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 
@@ -279,13 +278,9 @@ MailNotifier arguments
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
 ``messageFormatter``
-    This is a optional function that can be used to generate a custom mail message.
-    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build Data API results (``build``), the result code (``results``), and a reference to the BuildMaster object (``master``), which can then be used to create additional Data API calls.
-    It returns a dictionary.
-    The ``body`` key gives a string that is the complete text of the message.
-    The ``type`` key is the message type ('plain' or 'html').
-    The 'html' type should be used when generating an HTML message.
-    The ``subject`` key is optional, but gives the subject for the email.
+    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
 
 ``extraHeaders``
     (dictionary).
@@ -293,46 +288,82 @@ MailNotifier arguments
     Both the keys and the values may be a `Interpolate` instance.
 
 
-As a help to those writing :func:`messageFormatter` functions, the following table describes how to get some useful pieces of information from the various data objects:
+MessageFormatter arguments
+++++++++++++++++++++++++++
+
+The easiest way to use the ``messageFormatter`` parameter is to create a new instance of the ``reporters.MessageFormatter`` class.
+The constructor to that class takes the following arguments:
+
+``template_dir``
+    This is the directory that is used to look for the various templates.
+
+``template_filename``
+    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
+    It defaults to 'default_mail.txt'.
+
+``template``
+    If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
+
+``template_type``
+    This indicates the type of the generated template.
+    Use either 'plain' (the default) or 'html'.
+
+``subject_filename``
+    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
+
+``subject``
+    Alternatively, this is the content of the subject of the mail as string.
+
+``ctx``
+    This is an extension of the standard context that will be given to the templates.
+    Use this to add content to the templates that is otherwise not available.
+
+``wantProperties``
+    This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
+
+``wantSteps``
+    This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
+    Use it only when necessary as this increases the overhead in term of CPU and memory on the master.
+
+``wantLogs``
+    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the full Logs of each steps from the build.
+    This requires ``wantSteps`` to be True.
+    Use it only when mandatory as this increases the overhead in term of CPU and memory on the master greatly.
+
+
+As a help to those writing Jinja2 templates the following table describes how to get some useful pieces of information from the various data objects:
 
 Name of the builder that generated this event
-    ``name``
+    ``{{ buildername }}``
 
 Title of the BuildMaster
-    ``master.config.title``
+    ``{{ projects }}``
 
 MailNotifier mode
-    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``, ``all``)
-
-Builder result as a string
-
-    ::
-
-        from buildbot.plugins import util
-        result_str = util.Results[results]
-        # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
+    ``{{ mode }}`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``, ``all``)
 
 URL to build page
-    ``reporters.utils.getURLForBuild(master, build['buildid'])``
+    ``{{ build_url }}``
 
 URL to buildbot main page
-    ``master.config.buildbotURL``
+    ``{{ buildbot_url }}``
 
 Build text
-    ``build['state_string']``
+    ``{{ build['state_string'] }}``
 
 Mapping of property names to (values, source)
-    ``build['properties']``
+    ``{{ build['properties'] }}``
+
+For instance the build reason (from a forced build)
+    ``{{ build['properties']['reason'][0] }}``
 
 Worker name
-    ``build['properties']['workername']``
-
-Build reason (from a forced build)
-    ``build['properties']['reason']``
+    ``{{ workername }}``
 
 List of responsible users
-    ``reporters.utils.getResponsibleUsersForBuild(master, build['buildid'])``
+    ``{{ blamelist | join(', ') }}``
 
+.. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
 
 .. bb:reporter:: IRC
 
