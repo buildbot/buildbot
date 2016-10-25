@@ -29,6 +29,7 @@ __all__ = [
     "HangCheckFactory",
 ]
 
+
 def remove_userpassword(url):
     if '@' not in url:
         return url

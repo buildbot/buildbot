@@ -83,7 +83,7 @@ class HangCheckTests(SynchronousTestCase):
         protocol.makeConnection(transport)
         protocol.dataReceived('some-data')
 
-        self.assertEqual(wrapped_protocol.data , "some-data")
+        self.assertEqual(wrapped_protocol.data, "some-data")
 
     def test_data_cancels_timeout(self):
         """

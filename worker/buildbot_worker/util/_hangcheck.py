@@ -58,7 +58,6 @@ class HangCheckProtocol(
         self._stopHungConnectionTimer()
         super(HangCheckProtocol, self).connectionLost(reason)
 
-
     def _startHungConnectionTimer(self):
         """
         Start a timer to detect if the connection is hung.
