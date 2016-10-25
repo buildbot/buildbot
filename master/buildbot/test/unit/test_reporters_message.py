@@ -87,6 +87,20 @@ class TestMessage(unittest.TestCase):
 
             Sincerely,
              -The Buildbot'''))
+        self.assertTrue('subject' not in res)
+
+    @defer.inlineCallbacks
+    def test_inline_template(self):
+        self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        self.assertEqual(res['type'], "plain")
+        self.assertEqual(res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+
+    @defer.inlineCallbacks
+    def test_inline_subject(self):
+        self.message = message.MessageFormatter(subject="subject")
+        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        self.assertEqual(res['subject'], "subject")
 
     @defer.inlineCallbacks
     def test_message_failure(self):

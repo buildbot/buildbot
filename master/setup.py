@@ -299,13 +299,13 @@ setup_args = {
         ]),
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
+            ('buildbot.reporters.message', ['MessageFormatter']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
             ('buildbot.reporters.github', ['GitHubStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
-
         ]),
         ('buildbot.util', [
             # Connection seems to be a way too generic name, though

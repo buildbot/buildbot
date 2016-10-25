@@ -66,6 +66,11 @@ Features
   Now, builds started with a :class:`Triggereable` scheduler will be cancelled, while other builds will be retried.
   The master will make sure that all latent workers are stopped.
 
+* The ``MessageFormatter`` class also allows inline-templates with the ``template`` parameter.
+
+* The ``MessageFormatter`` class allows custom mail's subjects with the ``subject`` and ``subject_name`` parameters.
+
+* The ``MessageFormatter`` class allows extending the context given to the Templates via the ``ctx`` parameter.
 
 .. _Hyper: https://hyper.sh
 
@@ -126,6 +131,8 @@ Deprecations, Removals, and Non-Compatible Changes
     Please help improving the windows situation.
 
 * The ``user`` and ``password`` parameters of the ``HttpStatusPush`` reporter have been deprecated in favor of the ``auth`` parameter.
+
+* The ``template_name`` parameter of the ``MessageFormatter`` class has been deprecated in favor of ``template_filename``.
 
 
 Buildslave
