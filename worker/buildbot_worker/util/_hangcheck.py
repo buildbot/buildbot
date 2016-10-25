@@ -1,3 +1,11 @@
+"""
+Protocol wrapper that will detect hung connections.
+
+In particular, since PB expects the server to talk first and HTTP
+expects the client to talk first, when a PB client talks to an HTTP
+server, neither side will talk, leading to a hung connection. This
+wrapper will disconnect in that case, and inform the caller.
+"""
 from twisted.internet.interfaces import IProtocol, IProtocolFactory
 from twisted.python.components import proxyForInterface
 
@@ -9,6 +17,10 @@ def _noop():
 class HangCheckProtocol(
     proxyForInterface(IProtocol, '_wrapped_protocol'), object,
 ):
+    """
+    Wrap a protocol, so the underlying connection will disconnect if
+    the other end doesn't send data within a given timeout.
+    """
     transport = None
     _hungConnectionTimer = None
 
@@ -17,6 +29,13 @@ class HangCheckProtocol(
     _HUNG_CONNECTION_TIMEOUT = 120
 
     def __init__(self, wrapped_protocol, hung_callback=_noop, reactor=None):
+        """
+        :param IProtocol wrapped_protocol: The protocol to wrap.
+        :param hung_callback: Called when the connection has hung.
+        :type hung_callback: callable taking no arguments.
+        :param IReactorTime reactor: The reactor to use to schedule
+            the hang check.
+        """
         if reactor is None:
             from twisted.internet import reactor
         self._wrapped_protocol = wrapped_protocol
@@ -41,6 +60,9 @@ class HangCheckProtocol(
 
 
     def _startHungConnectionTimer(self):
+        """
+        Start a timer to detect if the connection is hung.
+        """
         def hungConnection():
             self._hung_callback()
             self._hungConnectionTimer = None
@@ -49,6 +71,10 @@ class HangCheckProtocol(
             self._HUNG_CONNECTION_TIMEOUT, hungConnection)
 
     def _stopHungConnectionTimer(self):
+        """
+        Cancel the hang check timer, since we have received data or
+        been closed.
+        """
         if self._hungConnectionTimer:
             self._hungConnectionTimer.cancel()
         self._hungConnectionTimer = None
@@ -57,8 +83,18 @@ class HangCheckProtocol(
 class HangCheckFactory(
     proxyForInterface(IProtocolFactory, '_wrapped_factory'), object,
 ):
+    """
+    Wrap a protocol factory, so the underlying connection will
+    disconnect if the other end doesn't send data within a given
+    timeout.
+    """
 
     def __init__(self, wrapped_factory, hung_callback):
+        """
+        :param IProtocolFactory wrapped_factory: The factory to wrap.
+        :param hung_callback: Called when the connection has hung.
+        :type hung_callback: callable taking no arguments.
+        """
         self._wrapped_factory = wrapped_factory
         self._hung_callback = hung_callback
 
