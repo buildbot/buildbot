@@ -72,7 +72,7 @@ class MessageFormatter(object):
             loader=loader, undefined=jinja2.StrictUndefined)
 
         if filename is None:
-            filename = self.template_name
+            filename = self.template_filename
 
         return env.get_template(filename)
 
