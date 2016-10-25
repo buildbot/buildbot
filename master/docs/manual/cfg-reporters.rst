@@ -299,7 +299,7 @@ The constructor to that class takes the following arguments:
 
 ``template_filename``
     This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
-    It defaults to 'default_mail.txt'.
+    It defaults to ``default_mail.txt``.
 
 ``template``
     If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.

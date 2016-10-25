@@ -132,6 +132,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * The ``user`` and ``password`` parameters of the ``HttpStatusPush`` reporter have been deprecated in favor of the ``auth`` parameter.
 
+* The ``template_name`` parameter of the ``MessageFormatter`` class has been deprecated in favor of ``template_filename``.
+
 
 Buildslave
 ----------
