@@ -28,22 +28,23 @@ from buildbot.reporters import utils
 
 
 class MessageFormatter(object):
-    template_name = 'default_mail.txt'
+    template_filename = 'default_mail.txt'
     template_type = 'plain'
-    wantProperties = True
-    wantSteps = False
-    wantLogs = False
 
-    def __init__(self, template_name=None, template_dir=None, template=None,
-                 subject_name=None, subject=None, template_type=None, ctx=None):
+    def __init__(self, template_dir=None,
+                 template_filename=None, template=None, template_name=None,
+                 subject_filename=None, subject=None,
+                 template_type=None, ctx=None,
+                 wantProperties=True, wantSteps=False, wantLogs=False):
 
-        if (template is not None) and ((template_name is not None) or (template_dir is not None)):
-            config.error("Only one of template or template path can be given")
+        if template_name is not None:
+            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
+            template_filename = template_name
 
-        self.body_template = self.getTemplate(template_name, template_dir, template)
+        self.body_template = self.getTemplate(template_filename, template_dir, template)
         self.subject_template = None
-        if subject_name or subject:
-            self.subject_template = self.getTemplate(subject_name, template_dir, subject)
+        if subject_filename or subject:
+            self.subject_template = self.getTemplate(subject_filename, template_dir, subject)
 
         if template_type is not None:
             self.template_type = template_type
@@ -52,9 +53,12 @@ class MessageFormatter(object):
             ctx = {}
 
         self.ctx = ctx
+        self.wantProperties = wantProperties
+        self.wantSteps = wantSteps
+        self.wantLogs = wantLogs
 
     def getTemplate(self, filename, dirname, content):
-        if content and filename:
+        if content and (filename or dirname):
             config.error("Only one of template or template path can be given")
 
         if content:
@@ -150,7 +154,7 @@ class MessageFormatter(object):
         return text
 
     def __call__(self, mode, buildername, buildset, build, master, previous_results, blamelist):
-        """Generate a buildbot mail message and return a dictionnary
+        """Generate a buildbot mail message and return a dictionary
            containing the message body, type and subject."""
         ss_list = buildset['sourcestamps']
         results = build['results']
