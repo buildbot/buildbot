@@ -5,7 +5,7 @@
           tr
               td Scheduler Name
               td Master
-            tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
+          tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}
       uib-tab(heading="All schedulers by master")
@@ -13,6 +13,6 @@
           tr
               td Scheduler Name
               td Master
-            tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
+          tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}
