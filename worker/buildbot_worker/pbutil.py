@@ -72,9 +72,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def buildProtocol(self, addr):
         return PBClientFactory.buildProtocol(self, addr)
 
-    def _hung_connection(self):
-        log.msg("connection attempt timed out (is the port number correct?)")
-
     # newcred methods
 
     def login(self, *args):
