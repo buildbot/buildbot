@@ -510,7 +510,6 @@ class AbstractWorker(service.BuildbotService, object):
 
         return True
 
-
     def _gracefulChanged(self, graceful):
         """This is called when our graceful shutdown setting changes"""
         self.maybeShutdown()

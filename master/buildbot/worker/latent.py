@@ -15,8 +15,6 @@
 # Portions Copyright Canonical Ltd. 2009
 from future.utils import itervalues
 
-import time
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log

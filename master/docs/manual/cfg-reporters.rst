@@ -319,12 +319,20 @@ The constructor to that class takes the following arguments:
 ``subject``
     Alternatively, this is the content of the subject of the mail as string.
 
+
 ``ctx``
     This is an extension of the standard context that will be given to the templates.
     Use this to add content to the templates that is otherwise not available.
 
-    Alternatively, you can subclass MessageFormatter and override the :py:method`buildAdditionalContext` in order to grab more context from the data API.
-    :py:method`buildAdditionalContext` is given a master instance, and the ctx object, can modify the ctx object, and return a deferred.
+    Alternatively, you can subclass MessageFormatter and override the :py:meth:`buildAdditionalContext` in order to grab more context from the data API.
+
+    .. py:method:: buildAdditionalContext(master, ctx)
+
+        :param master: the master object
+        :param ctx: the context dictionary to enhance
+        :returns: optionally deferred
+
+        default implementation will add ``self.ctx`` into the current template context
 
 ``wantProperties``
     This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
@@ -373,39 +381,12 @@ List of responsible users
 
 
 MessageFormatterMissingWorkers arguments
-+++++++++++++++++++++++++++++++++++++++++
+++++++++++++++++++++++++++++++++++++++++
 The easiest way to use the ``messageFormatterMissingWorkers`` parameter is to create a new instance of the ``reporters.MessageFormatterMissingWorkers`` class.
 
-The constructor to that class takes the following arguments:
+The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``wantProperties``, ``wantSteps``.
 
-``template_dir``
-    This is the directory that is used to look for the various templates.
-
-``template_filename``
-    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
-    It defaults to ``default_mail.txt``.
-
-``template``
-    If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
-
-``template_type``
-    This indicates the type of the generated template.
-    Use either 'plain' (the default) or 'html'.
-
-``subject_filename``
-    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
-
-``subject``
-    Alternatively, this is the content of the subject of the mail as string.
-
-``ctx``
-    This is an extension of the standard context that will be given to the templates.
-    Use this to add content to the templates that is otherwise not available.
-
-    Alternatively, you can subclass MessageFormatter and override the :py:method`buildAdditionalContext` in order to grab more context from the data API.
-    :py:method`buildAdditionalContext` is given a master instance, and the ctx object, can modify the ctx object, and return a deferred.
-
-The default ctx for the missing worker email is made of:
+The default ``ctx`` for the missing worker email is made of:
 
 ``buildbot_title``
     The buildbot title as per ``c['title']`` from the ``master.cfg``
