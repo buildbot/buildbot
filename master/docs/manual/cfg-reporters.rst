@@ -124,10 +124,6 @@ Another example of a function delivering a customized html email is given below:
 
     from buildbot.plugins import reporters
 
-    class DetailledMessageFormatter(reporters.MessageFormatter):
-        wantSteps = True
-        wantLogs = True
-
     # XXX: This is work in progress, use with care.
     template=u'''\
     <h4>Build status: {{ summary }}</h4>
@@ -142,7 +138,9 @@ Another example of a function delivering a customized html email is given below:
                                 sendToInterestedUsers=False,
                                 mode=('failing',),
                                 extraRecipients=['listaddr@example.org'],
-                                messageFormatter=DetailledMessageFormatter(template=template, template_type='html'))
+                                messageFormatter=reporters.MessageFormatter(
+                                    template=template, template_type='html',
+                                    wantProperties=True, wantSteps=True, wantLogs=True))
 
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 
