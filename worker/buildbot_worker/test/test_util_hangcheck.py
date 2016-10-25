@@ -1,3 +1,7 @@
+"""
+Tests for `buildbot_worker.util._hangcheck`.
+"""
+
 from twisted.internet import reactor
 from twisted.internet.defer import Deferred
 from twisted.internet.endpoints import TCP4ClientEndpoint

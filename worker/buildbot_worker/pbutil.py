@@ -24,7 +24,7 @@ from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
 
-from .hangcheck import HangCheckProtocol
+from .util import HangCheckProtocol
 
 
 class ReconnectingPBClientFactory(PBClientFactory,
