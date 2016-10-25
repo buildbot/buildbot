@@ -6,7 +6,8 @@ expects the client to talk first, when a PB client talks to an HTTP
 server, neither side will talk, leading to a hung connection. This
 wrapper will disconnect in that case, and inform the caller.
 """
-from twisted.internet.interfaces import IProtocol, IProtocolFactory
+from twisted.internet.interfaces import IProtocol
+from twisted.internet.interfaces import IProtocolFactory
 from twisted.python.components import proxyForInterface
 
 
