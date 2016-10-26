@@ -724,7 +724,7 @@ It requires either `txrequests`_ or `treq`_ to be installed to allow interaction
     :param boolean wantSteps: include 'steps' in the build dictionary
     :param boolean wantLogs: include 'logs' in the steps dictionaries.
         This needs wantSteps=True.
-        This dumps the *full* content of logs and may consume lots of memory and cpu depending on the log size.
+        This dumps the *full* content of logs and may consume lots of memory and CPU depending on the log size.
     :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
 
 Json object spec
@@ -744,7 +744,7 @@ The default json object sent is a build object agremented wih some more data as 
 
 
 If you want another format, don't hesitate to use the ``format_fn`` parameter to customize the payload.
-The ``build`` parameter given to that function is of type :bb:rtype:`build`, optionaly enhanced with properties, steps, and logs information.
+The ``build`` parameter given to that function is of type :bb:rtype:`build`, optionally enhanced with properties, steps, and logs information.
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
