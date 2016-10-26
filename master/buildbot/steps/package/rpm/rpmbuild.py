@@ -159,6 +159,6 @@ class RpmBuild(ShellCommand):
                     break
 
     def createSummary(self, log):
-        self.addCompleteLog('RPM Command Log', "".join(self.rpmcmdlog))
+        self.addCompleteLog('RPM Command Log', "\n".join(self.rpmcmdlog))
         if self.rpmerrors:
-            self.addCompleteLog('RPM Errors', "".join(self.rpmerrors))
+            self.addCompleteLog('RPM Errors', "\n".join(self.rpmerrors))
