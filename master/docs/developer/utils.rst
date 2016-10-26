@@ -1249,6 +1249,9 @@ For example, a particular daily scheduler could be configured on multiple master
                     self.successResultOf(self.tested.setServiceParent(self.parent))
                     self.successResultOf(self.parent.startService())
 
+                def tearDown(self):
+                    self.http.assertNoOutstanding(self)
+
                 def test_root(self):
                     self.http.expect("get", "/", content_json={'foo': 'bar'})
 
