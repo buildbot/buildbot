@@ -535,7 +535,7 @@ class Trial(ShellCommand):
 
         if warnings:
             lines = sorted(warnings.keys())
-            self.addCompleteLog("warnings", "\n".join(lines))
+            self.addCompleteLog("warnings", "".join(lines))
 
     def evaluateCommand(self, cmd):
         return self.results
