@@ -107,7 +107,6 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
         self.bsp.buildFinished(('build', 20, 'finished'), build)
 
 
-
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
 
     def parse(self, repourl):
