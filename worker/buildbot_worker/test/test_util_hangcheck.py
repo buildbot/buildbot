@@ -186,6 +186,9 @@ def reportUnhandledErrors(case, d):
     Make sure that any unhandled errors from the
     given deferred are reported when the test case
     ends.
+
+    :param case: The test case that will handle cleanup.
+    :param Deferred d: The deferred to check for unhandled errors.
     """
     def cleanup():
         if isinstance(d.result, Failure):
@@ -198,6 +201,10 @@ def listen(case, endpoint, factory):
     """
     Listen on an endpoint and cleanup when the
     test case ends.
+
+    :param case: The test case that will handle cleanup.
+    :param IStreamServerEndpoint endpoint: The endpoint to listen on.
+    :param IProtocolFactory factory: The factory for the server protocol.
     """
     d = endpoint.listen(factory)
 
