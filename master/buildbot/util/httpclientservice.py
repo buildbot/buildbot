@@ -95,6 +95,11 @@ class HTTPClientService(service.SharedService):
         self._headers = headers
         self._session = None
 
+    def updateHeaders(self, headers):
+        if self._headers is None:
+            self._headers = {}
+        self._headers.update(headers)
+
     @staticmethod
     def checkAvailable(from_module):
         """Call me at checkConfig time to properly report config error

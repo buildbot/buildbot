@@ -62,9 +62,15 @@ class HTTPClientService(service.SharedService):
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
+
         self._headers = headers
         self._session = None
         self._expected = []
+
+    def updateHeaders(self, headers):
+        if self._headers is None:
+            self._headers = {}
+        self._headers.update(headers)
 
     @classmethod
     def getFakeService(cls, master, case, *args, **kwargs):
@@ -113,9 +119,9 @@ class HTTPClientService(service.SharedService):
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
                 expect['data'] != data or expect['json'] != json):
             raise AssertionError(
-                "expecting:"
+                "expecting:\n"
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}\n"
-                "got      :"
+                "got      :\n"
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
                     expect['method'], expect['ep'], expect['params'], expect['data'], expect['json'],
                     method, ep, params, data, json,
