@@ -146,7 +146,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         comments=u'pull-request #%d: %s\n%s' % (
                             nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
-                        branch=self.branch,
+                        branch=branch,
                         category=self.category,
                         project=self.project,
                         repository=ascii2unicode(repo),
