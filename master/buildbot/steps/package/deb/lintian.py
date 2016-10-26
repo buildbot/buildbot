@@ -90,10 +90,10 @@ class DebLintian(ShellCommand):
         errors = self.obs.errors
 
         if warnings:
-            self.addCompleteLog('%d Warnings' % len(warnings), "".join(warnings))
+            self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
             self.warnCount = len(warnings)
         if errors:
-            self.addCompleteLog('%d Errors' % len(errors), "".join(errors))
+            self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))
             self.errCount = len(errors)
 
     def evaluateCommand(self, cmd):
