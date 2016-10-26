@@ -162,6 +162,7 @@ def upgradeMaster(config, _noMonkey=False):
         print "UNEXPECTED ERROR: %s" % str(e)
         print "Buildmaster failed to upgrade." % str(e)
         defer.returnValue(1)
+        return
 
     if not config['quiet']:
         print "upgrade complete"
