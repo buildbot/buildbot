@@ -215,6 +215,28 @@ def listen(case, endpoint, factory):
     return reportUnhandledErrors(case, d)
 
 
+def connected_server_and_client(case, server_factory, client_factory):
+    """
+    Create a server and client connected to that server.
+
+    :param case: The test case that will handle cleanup.
+    :param IProtocolFactory server_factory: The factory for the server protocol.
+    :param IProtocolFactory client_factory: The factory for the client protocol.
+
+    :return: A deferred that fires when the client has connected.
+
+    .. todo:
+
+       Figure out what a sensible value to return is. The existing caller doesn't
+       use the return value.
+    """
+
+    def connect_client(listening_port):
+        return TCP4ClientEndpoint(reactor, '127.0.0.1', listening_port.getHost().port).connect(client_factory)
+
+    return listen(case, TCP4ServerEndpoint(reactor, 0), server_factory).addCallback(connect_client)
+
+
 class EndToEndHangCheckTests(TestCase):
     """
     End to end test for HangCheckProtocol.
@@ -233,14 +255,9 @@ class EndToEndHangCheckTests(TestCase):
 
         self.patch(HangCheckProtocol, '_HUNG_CONNECTION_TIMEOUT', 0.1)
 
-        listen(self, TCP4ServerEndpoint(
-            reactor, 0), site).addCallback(
-                lambda listening_port:
-                TCP4ClientEndpoint(
-                    reactor, '127.0.0.1', listening_port.getHost().port)
-                .connect(client)
-
-            )
+        connected_server_and_client(
+            self, site, client,
+        )
 
         timer = reactor.callLater(2, result.cancel)
         result.addCallback(lambda _: timer.cancel())
