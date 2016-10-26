@@ -25,6 +25,7 @@ from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
+from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util.logger import Logger
 
@@ -65,6 +66,22 @@ class HTTPClientService(service.SharedService):
         self._session = None
         self._expected = []
 
+    @classmethod
+    def getFakeService(cls, master, case, *args, **kwargs):
+        ret = cls.getService(master, *args, **kwargs)
+
+        def assertNotCalled(self, *_args, **_kwargs):
+            case.fail(("HTTPClientService called with *{!r}, **{!r}"
+                       "while should be called *{!r} **{!r}").format(
+                _args, _kwargs, args, kwargs))
+        case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
+
+        @ret.addCallback
+        def assertNoOutstanding(fake):
+            fake.case = case
+            case.addCleanup(fake.assertNoOutstanding)
+            return fake
+        return ret
     # tests should ensure this has been called
     checkAvailable = mock.Mock()
 
@@ -79,6 +96,10 @@ class HTTPClientService(service.SharedService):
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
             content=content))
+
+    def assertNoOutstanding(self):
+        self.case.assertEqual(0, len(self._expected),
+                              "expected more http requests:\n {!r}".format(self._expected))
 
     def _doRequest(self, method, ep, params=None, data=None, json=None):
         log.debug("{method} {ep} {params!r} <- {data!r}",

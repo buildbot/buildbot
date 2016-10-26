@@ -704,7 +704,7 @@ HttpStatusPush
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
 It is useful to create a status front end outside of Buildbot for better scalability.
 
-It requires `txrequests`_ package to allow interaction with http server.
+It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
 
 .. note::
 
@@ -718,13 +718,13 @@ It requires `txrequests`_ package to allow interaction with http server.
     :param string password: the BasicAuth user's password
     :param auth: the authentication method to use.
         Refer to the documentation of the requests library for more information.
-    :param function format_fn: a function that takes the build as parameter and returns a dictionnary to be pushed to the server.
+    :param function format_fn: a function that takes the build as parameter and returns a dictionnary to be pushed to the server (as json).
     :param list builders: only send update for specified builders
     :param boolean wantProperties: include 'properties' in the build dictionary
     :param boolean wantSteps: include 'steps' in the build dictionary
     :param boolean wantLogs: include 'logs' in the steps dictionaries.
         This needs wantSteps=True.
-        This dumps the *full* content of logs.
+        This dumps the *full* content of logs and may consume lots of memory and cpu depending on the log size.
     :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
 
 Json object spec
@@ -744,9 +744,10 @@ The default json object sent is a build object agremented wih some more data as 
 
 
 If you want another format, don't hesitate to use the ``format_fn`` parameter to customize the payload.
-The ``build`` parameter given to that function is of type :bb:rtype:`build`.
+The ``build`` parameter given to that function is of type :bb:rtype:`build`, optionaly enhanced with properties, steps, and logs information.
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
 
 .. bb:reporter:: GitHubStatusPush
 
@@ -888,10 +889,10 @@ It uses private token auth, and the token owner is required to have at least dev
 
 .. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
 
-    :param string token: Private token of user permitted to update status for commits 
-    :param string startDescription: Description used when build starts 
-    :param string endDescription: Description used when build ends 
-    :param string context: Name of your build system, eg. continuous-integration/buildbot 
+    :param string token: Private token of user permitted to update status for commits
+    :param string startDescription: Description used when build starts
+    :param string endDescription: Description used when build ends
+    :param string context: Name of your build system, eg. continuous-integration/buildbot
     :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
 

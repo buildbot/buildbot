@@ -1186,6 +1186,16 @@ For example, a particular daily scheduler could be configured on multiple master
     It will then replace the original implementation automatically (no need to patch anything).
     The testing methodology is based on `AngularJS ngMock`_.
 
+    .. py:method:: getFakeService(cls, master, case, *args, **kwargs):
+
+        :param master: the instance of a fake master service
+        :param case: a :py:class:`twisted.python.unittest.TestCase` instance
+
+        :py:meth:`getFakeService` returns a fake :py:class:`HTTPClientService`, and should be used in place of :py:meth:`getService`.
+
+        on top of :py:meth:`getService` it will make sure the original :py:class:`HTTPClientService` is not called, and assert that all expected http requests have been described in the test case.
+
+
     .. py:method:: expect(self, method, ep, params=None, data=None, json=None, code=200,
                           content=None, content_json=None):
 
