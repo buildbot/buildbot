@@ -844,7 +844,7 @@ This feature allows integrators to build with several pending interdependent cha
 
 ``util.repo.DownloadsFromChangeSource`` can be used as a renderable of the ``repoDownload`` parameter
 
-This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use the :command:`repo download` command of repo to download the additionnal changes introduced by a pending changeset.
+This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use the :command:`repo download` command of repo to download the additional changes introduced by a pending changeset.
 
 .. note::
 

@@ -1125,7 +1125,7 @@ GerritChangeFilter
 .. py:class:: buildbot.changes.gerritchangesource.GerritChangeFilter
 
 :class:`GerritChangeFilter` is a ready to use :class:`ChangeFilter` you can pass to :bb:sched:`AnyBranchScheduler` in order to filter changes, to create pre-commit builders or post-commit schedulers.
-It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additionnal `eventtype` set of filter (can as well be specified as value, list, regular expression or callable)
+It has the same api as :ref:`Change Filter <Change-Filters>`, except it has additional `eventtype` set of filter (can as well be specified as value, list, regular expression or callable)
 
 An example is following:
 

@@ -1,8 +1,6 @@
 accessor
 acknowledgements
 addCallbacks
-additionnal
-addressible
 admin
 admins
 adress
@@ -22,7 +20,6 @@ app
 apparmor
 appart
 apps
-appyling
 ar
 arg
 args
