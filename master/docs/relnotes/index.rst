@@ -98,6 +98,14 @@ Features
 
 * New :class:`SharedService` can be used by steps, reporters, etc to implement per master resource limit.
 
+* New :class:`HttpClientService` can be used by steps, reporters, etc to implement HTTP client.
+  This class will automatically choose between `treq`_ and `txrequests`_, whichever is installed, in order to access HTTP servers.
+  This class comes with a fake implementation helping to write unit tests.
+
+* All HTTP reporters have been ported to :class:`HttpClientService`
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
 
 Fixes
 ~~~~~
