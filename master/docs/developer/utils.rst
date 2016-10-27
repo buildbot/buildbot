@@ -252,7 +252,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     If the result of the ``miss_fn`` is ``None``, then the value is not cached; this is intended to avoid caching negative results.
 
-    This is based on `Raymond Hettinger's implementation <http://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/>`_, licensed under the PSF license, which is GPL-compatiblie.
+    This is based on `Raymond Hettinger's implementation <http://code.activestate.com/recipes/498245-lru-and-lfu-cache-decorators/>`_, licensed under the PSF license, which is GPL-compatible.
 
     .. py:attribute:: hits
 

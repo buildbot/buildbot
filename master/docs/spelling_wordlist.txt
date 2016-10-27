@@ -177,7 +177,6 @@ commandId
 commandline
 committer
 compatability
-compatiblie
 completly
 conditionalize
 config
