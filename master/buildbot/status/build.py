@@ -255,7 +255,7 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             builderConfig = self.builder.getBuilderConfig()
             if builderConfig:
                 customUrls = builderConfig.getCustomBuildUrls(
-                        serverName=self.master.status.getBuildbotURL(),
+                        buildbotUrl=self.master.status.getBuildbotURL(),
                         buildNumber=self.number
                 )
         return customUrls

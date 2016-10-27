@@ -65,7 +65,7 @@ class TestBuildProperties(unittest.TestCase):
     def customUrlTestSetup(self):
         customUrls = [{'name': 'test tool', 'link': 'test link'}]
         builderConfig = mock.Mock()
-        builderConfig.getCustomBuildUrls = lambda serverName, buildNumber: customUrls
+        builderConfig.getCustomBuildUrls = lambda buildbotUrl, buildNumber: customUrls
         self.build_status.master.status.getBuildbotURL = lambda: "http://localhost/"
         self.build_status.builder.getBuilderConfig = lambda: builderConfig
         return customUrls
