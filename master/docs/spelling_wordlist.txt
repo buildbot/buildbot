@@ -43,7 +43,6 @@ autoconf
 autodetected
 automake
 autoreconf
-availabale
 avoied
 backend
 backends

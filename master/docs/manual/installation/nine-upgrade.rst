@@ -92,7 +92,7 @@ Status Reporters
 
 In fact, the whole ``c['status']`` configuration parameter is gone.
 
-Many of the status listeners used in the status hierarchy in 0.8.x have been replaced with "reporters" that are availabale as buildbot plugins.
+Many of the status listeners used in the status hierarchy in 0.8.x have been replaced with "reporters" that are available as buildbot plugins.
 However, note that not all status listeners have yet been ported.
 See the release notes for details.
 
