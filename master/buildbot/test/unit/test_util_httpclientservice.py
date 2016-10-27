@@ -208,7 +208,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         self.parent = parent = service.MasterService()
         self.parent.reactor = reactor
         yield parent.startService()
-        self._http = yield self._httpFactory(parent)
+        self._http = yield self.httpFactory(parent)
 
     @defer.inlineCallbacks
     def tearDown(self):
