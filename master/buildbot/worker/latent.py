@@ -15,8 +15,6 @@
 # Portions Copyright Canonical Ltd. 2009
 from future.utils import itervalues
 
-import time
-
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
@@ -178,21 +176,12 @@ class AbstractLatentWorker(AbstractWorker):
         if not self.parent or not self.notify_on_missing:
             return
 
-        buildmaster = self.botmaster.master
-        status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the latent worker named %s \n" %
-                 self.name)
-        text += "never substantiated after a request\n"
-        text += "\n"
-        text += ("The request was made at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout))  # approx
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: worker %s never substantiated" % (self.name,)
-        return self._mail_missing_message(subject, text)
+        return self.master.data.updates.workerMissing(
+            workerid=self.workerid,
+            masterid=self.master.masterid,
+            last_connection="Latent worker never connected",
+            notify=self.notify_on_missing
+        )
 
     def canStartBuild(self):
         # we were disconnected, but all the builds are not yet cleaned up.

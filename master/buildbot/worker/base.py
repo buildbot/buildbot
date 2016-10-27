@@ -16,8 +16,6 @@
 from future.utils import itervalues
 
 import time
-from email.message import Message
-from email.utils import formatdate
 
 from twisted.internet import defer
 from twisted.python import log
@@ -28,7 +26,6 @@ from buildbot import config
 from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
-from buildbot.reporters.mail import MailNotifier
 from buildbot.status.worker import WorkerStatus
 from buildbot.util import ascii2unicode
 from buildbot.util import service
@@ -304,26 +301,13 @@ class AbstractWorker(service.BuildbotService, object):
         # notify people, but only if we're still in the config
         if not self.parent:
             return
-
-        buildmaster = self.botmaster.master
-        status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the worker named %s went away\n" %
-                 self.name)
-        text += "\n"
-        text += ("It last disconnected at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout))  # approx
-        text += "\n"
-        text += "The admin on record (as reported by WORKER:info/admin)\n"
-        text += "was '%s'.\n" % self.worker_status.getAdmin()
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getTitleURL()
-        text += "\n"
-        text += "%s\n" % status.getURLForThing(self.worker_status)
-        subject = "Buildbot: worker %s was lost" % (self.name,)
-        return self._mail_missing_message(subject, text)
+        last_connection = time.ctime(time.time() - self.missing_timeout)
+        yield self.master.data.updates.workerMissing(
+            workerid=self.workerid,
+            masterid=self.master.masterid,
+            last_connection=last_connection,
+            notify=self.notify_on_missing
+        )
 
     def updateWorker(self):
         """Called to add or remove builders after the worker has connected.
@@ -525,35 +509,6 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         return True
-
-    def _mail_missing_message(self, subject, text):
-        # FIXME: This should be handled properly via the event api
-        # we should send a missing message on the mq, and let any reporter
-        # handle that
-
-        # first, see if we have a MailNotifier we can use. This gives us a
-        # fromaddr and a relayhost.
-        buildmaster = self.botmaster.master
-        for st in buildmaster.services:
-            if isinstance(st, MailNotifier):
-                break
-        else:
-            # if not, they get a default MailNotifier, which always uses SMTP
-            # to localhost and uses a dummy fromaddr of "buildbot".
-            log.msg("worker-missing msg using default MailNotifier")
-            st = MailNotifier("buildbot")
-        # now construct the mail
-
-        m = Message()
-        m.set_payload(text)
-        m['Date'] = formatdate(localtime=True)
-        m['Subject'] = subject
-        m['From'] = st.fromaddr
-        recipients = self.notify_on_missing
-        m['To'] = ", ".join(recipients)
-        d = st.sendMessage(m, recipients)
-        # return the Deferred for testing purposes
-        return d
 
     def _gracefulChanged(self, graceful):
         """This is called when our graceful shutdown setting changes"""

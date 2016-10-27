@@ -137,6 +137,14 @@ class Worker(base.ResourceType):
         self.produceEvent(bs, 'disconnected')
 
     @base.updateMethod
+    @defer.inlineCallbacks
+    def workerMissing(self, workerid, masterid, last_connection, notify):
+        bs = yield self.master.data.get(('workers', workerid))
+        bs['last_connection'] = last_connection
+        bs['notify'] = notify
+        self.produceEvent(bs, 'missing')
+
+    @base.updateMethod
     def deconfigureAllWorkersForMaster(self, masterid):
         # unconfigure all workers for this master
         return self.master.db.workers.deconfigureAllWorkersForMaster(

@@ -42,6 +42,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
+from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
@@ -175,7 +176,8 @@ class MailNotifier(service.BuildbotService):
                         messageFormatter=None, extraHeaders=None,
                         addPatch=True, useTls=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None, schedulers=None, branches=None):
+                        name=None, schedulers=None, branches=None,
+                        messageFormatterMissingWorker=None):
 
         if extraRecipients is None:
             extraRecipients = []
@@ -199,6 +201,9 @@ class MailNotifier(service.BuildbotService):
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter()
         self.messageFormatter = messageFormatter
+        if messageFormatterMissingWorker is None:
+            messageFormatterMissingWorker = MessageFormatterMissingWorker()
+        self.messageFormatterMissingWorker = messageFormatterMissingWorker
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
@@ -219,6 +224,9 @@ class MailNotifier(service.BuildbotService):
         self._buildCompleteConsumer = yield startConsuming(
             self.buildComplete,
             ('builds', None, 'finished'))
+        self._workerMissingConsumer = yield startConsuming(
+            self.workerMissing,
+            ('worker', None, 'missing'))
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -229,6 +237,9 @@ class MailNotifier(service.BuildbotService):
         if self._buildCompleteConsumer is not None:
             yield self._buildCompleteConsumer.stopConsuming()
             self._buildCompleteConsumer = None
+        if self._workerMissingConsumer is not None:
+            yield self._workerMissingConsumer.stopConsuming()
+            self._workerMissingConsumer = None
 
     def wantPreviousBuild(self):
         return "change" in self.mode or "problem" in self.mode
@@ -426,8 +437,9 @@ class MailNotifier(service.BuildbotService):
             else:
                 previous_results = None
             blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
-            build_msgdict = self.messageFormatter(self.mode, name, build['buildset'], build, self.master,
-                                                  previous_results, blamelist)
+            build_msgdict = yield self.messageFormatter.formatMessageForBuildResults(
+                self.mode, name, build['buildset'], build, self.master,
+                previous_results, blamelist)
             users.update(set(blamelist))
             msgdict['type'] = build_msgdict['type']
             msgdict['body'] += build_msgdict['body']
@@ -516,3 +528,21 @@ class MailNotifier(service.BuildbotService):
         s = m.as_string()
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
         return self.sendmail(s, recipients)
+
+    @defer.inlineCallbacks
+    def workerMissing(self, key, worker):
+        if not worker['notify']:
+            return
+        msgdict = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
+        text = msgdict['body'].encode(ENCODING)
+        m = Message()
+        m.set_payload(text, ENCODING)
+        m.set_type("text/%s" % msgdict['type'])
+        m['Date'] = formatdate(localtime=True)
+        if 'subject' in msgdict:
+            m['Subject'] = msgdict['subject']
+        else:
+            m['Subject'] = "Buildbot worker {name} missing".format(**worker)
+        m['From'] = self.fromaddr
+        recipients = self.processRecipients(worker['notify'], m)
+        yield self.sendMessage(m, recipients)
