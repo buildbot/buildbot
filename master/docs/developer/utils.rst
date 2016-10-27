@@ -1218,6 +1218,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
             from twisted.internet import defer
             from twisted.trial import unittest
+
             from buildbot.test.fake import httpclientservice as fakehttpclientservice
             from buildbot.util import httpclientservice
             from buildbot.util import service
@@ -1228,12 +1229,16 @@ For example, a particular daily scheduler could be configured on multiple master
 
                 @defer.inlineCallbacks
                 def reconfigService(self, baseurl):
-                    self.http = yield httpclientservice.HTTPClientService.getService(self.master, baseurl)
+                    self._http = yield httpclientservice.HTTPClientService.getService(self.master, baseurl)
 
                 @defer.inlineCallbacks
                 def doGetRoot(self):
-                    res = yield self.http.get("/")
+                    res = yield self._http.get("/")
+                    # note that at this point, only the http response headers are received
+                    if res.code != 200:
+                        raise Exception("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
+                    # res.json() returns a deferred to account for the time needed to fetch the entire body
                     defer.returnValue(res_json)
 
 
@@ -1242,20 +1247,23 @@ For example, a particular daily scheduler could be configured on multiple master
                 def setUp(self):
                     baseurl = 'http://127.0.0.1:8080'
                     self.parent = service.MasterService()
-                    self.http = self.successResultOf(fakehttpclientservice.HTTPClientService.getService(
-                        self.parent, baseurl))
+                    self._http = self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
+                        self.parent, self, baseurl))
                     self.tested = myTestedService(baseurl)
 
                     self.successResultOf(self.tested.setServiceParent(self.parent))
                     self.successResultOf(self.parent.startService())
 
-                def tearDown(self):
-                    self.http.assertNoOutstanding(self)
-
                 def test_root(self):
-                    self.http.expect("get", "/", content_json={'foo': 'bar'})
+                    self._http.expect("get", "/", content_json={'foo': 'bar'})
 
                     response = self.successResultOf(self.tested.doGetRoot())
                     self.assertEqual(response, {'foo': 'bar'})
+
+                def test_root_error(self):
+                    self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
+
+                    response = self.failureResultOf(self.tested.doGetRoot())
+                    self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
 
 .. _AngularJS ngMock: https://docs.angularjs.org/api/ngMock/service/$httpBackend
