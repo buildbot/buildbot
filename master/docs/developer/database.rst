@@ -32,7 +32,7 @@ Schema
 ------
 
 The database schema is maintained with `SQLAlchemy-Migrate
-<http://code.google.com/p/sqlalchemy-migrate/>`_.  This package handles the
+<https://github.com/openstack/sqlalchemy-migrate>`_.  This package handles the
 details of upgrading users between different schema versions.
 
 The schema itself is considered an implementation detail, and may change
