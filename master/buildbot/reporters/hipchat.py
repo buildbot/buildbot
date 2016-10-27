@@ -34,7 +34,7 @@ class HipChatStatusPush(HttpStatusPushBase):
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         yield HttpStatusPushBase.reconfigService(self, **kwargs)
-        self.http = yield httpclientservice.HTTPClientService.getService(
+        self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, endpoint)
 
         self.auth_token = auth_token
@@ -93,7 +93,7 @@ class HipChatStatusPush(HttpStatusPushBase):
             urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
 
         for url in urls:
-            response = yield self.http.post(url, params=dict(auth_token=self.auth_token), json=postData)
+            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
             if response.code != 200:
                 content = yield response.content()
                 log.error("%s: unable to upload status: %s" %

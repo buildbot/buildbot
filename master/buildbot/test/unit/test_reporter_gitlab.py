@@ -39,7 +39,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
                                              wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
-        self.http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'})
         self.sp = sp = GitLabStatusPush('XXYYZZ')
@@ -59,26 +59,26 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
-        self.http.expect(
+        self._http.expect(
             'get',
             '/api/v3/projects/buildbot%2Fbuildbot', content_json={
                 "id": 1
             })
-        self.http.expect(
+        self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'pending',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'd34db33fd43db33f',
                   'description': 'Build started.', 'name': 'buildbot/'})
-        self.http.expect(
+        self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'success',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'd34db33fd43db33f',
                   'description': 'Build done.', 'name': 'buildbot/'})
-        self.http.expect(
+        self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'failed',

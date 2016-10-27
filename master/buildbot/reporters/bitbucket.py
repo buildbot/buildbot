@@ -49,7 +49,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
         if base_url.endswith('/'):
             base_url = base_url[:-1]
 
-        self.http = yield httpclientservice.HTTPClientService.getService(
+        self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url)
 
         self.oauthhttp = yield httpclientservice.HTTPClientService.getService(
@@ -86,11 +86,11 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
 
             owner, repo = self.get_owner_and_repo(sourcestamp['repository'])
 
-            self.http.updateHeaders({'Authorization': 'Bearer ' + token})
+            self._http.updateHeaders({'Authorization': 'Bearer ' + token})
 
             bitbucket_uri = '/' + '/'.join([owner, repo, 'commit', sha, 'statuses', 'build'])
 
-            response = yield self.http.post(bitbucket_uri, json=body)
+            response = yield self._http.post(bitbucket_uri, json=body)
             if response.code != 201:
                 content = yield response.content()
                 log.error("%s: unable to upload Bitbucket status: %s" %

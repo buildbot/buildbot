@@ -42,7 +42,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     def createReporter(self, **kwargs):
         kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
         self.sp = HipChatStatusPush(**kwargs)
-        self.http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             kwargs.get('endpoint', HOSTED_BASE_URL))
         yield self.sp.setServiceParent(self.master)
@@ -80,7 +80,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_build_started(self):
         yield self.createReporter(builder_user_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token='abc'),
@@ -92,7 +92,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_build_finished(self):
         yield self.createReporter(builder_room_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/room/123/notification',
             params=dict(auth_token='abc'),
@@ -107,7 +107,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.getExtraParams = Mock()
         self.sp.getExtraParams.return_value = {'format': 'html'}
         build = yield self.setupBuildResults()
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/room/123/notification',
             params=dict(auth_token='abc'),
@@ -139,7 +139,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token=token),
@@ -156,7 +156,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'room_id_or_name': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/room/123/notification',
             params=dict(auth_token=token),
@@ -173,12 +173,12 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'room_id_or_name': '123', 'id_or_email': '456'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/user/456/message',
             params=dict(auth_token=token),
             json=message)
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/room/123/notification',
             params=dict(auth_token=token),
@@ -195,7 +195,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
-        self.http.expect(
+        self._http.expect(
             'post',
             '/v2/user/123/message',
             params=dict(auth_token=token),

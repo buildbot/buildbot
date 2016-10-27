@@ -49,7 +49,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
 
-        self.http = yield httpclientservice.HTTPClientService.getService(
+        self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, headers={'Authorization': 'token ' + token})
         self.verbose = verbose
 
@@ -79,7 +79,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['context'] = context
 
-        return self.http.post(
+        return self._http.post(
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload)
 

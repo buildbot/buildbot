@@ -39,7 +39,7 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
                                              wantData=True, wantDb=True, wantMq=True)
 
         yield self.master.startService()
-        self.http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             HOSTED_BASE_URL, headers={'Authorization': 'token XXYYZZ'})
         self.sp = sp = GitHubStatusPush('XXYYZZ')
@@ -59,19 +59,19 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
-        self.http.expect(
+        self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'pending',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'description': 'Build started.', 'context': 'buildbot/'})
-        self.http.expect(
+        self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'success',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/'})
-        self.http.expect(
+        self._http.expect(
             'post',
             '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
             json={'state': 'failure',

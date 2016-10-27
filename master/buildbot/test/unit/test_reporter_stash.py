@@ -35,7 +35,7 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             'serv', auth=('username', 'passwd'))
         self.sp = sp = StashStatusPush("serv", "username", "passwd")
@@ -56,17 +56,17 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
                   'state': 'INPROGRESS', 'key': u'Builder0'})
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
                   'state': 'SUCCESSFUL', 'key': u'Builder0'})
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',

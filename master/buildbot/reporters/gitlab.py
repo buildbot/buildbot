@@ -51,7 +51,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
-        self.http = yield httpclientservice.HTTPClientService.getService(
+        self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, headers={'PRIVATE-TOKEN': token})
         self.verbose = verbose
         self.project_ids = {}
@@ -81,7 +81,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['name'] = context
 
-        return self.http.post('/api/v3/projects/%d/statuses/%s' % (
+        return self._http.post('/api/v3/projects/%d/statuses/%s' % (
             project_id, sha),
             json=payload)
 
@@ -127,7 +127,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             repoName.encode('utf-8'))
 
         if project_full_name not in self.project_ids:
-            proj = yield self.http.get('/api/v3/projects/%s' % (project_full_name))
+            proj = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
             proj = yield proj.json()
             self.project_ids[project_full_name] = proj['id']
 

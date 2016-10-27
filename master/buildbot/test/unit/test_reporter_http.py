@@ -66,7 +66,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
-        self.http = yield fakehttpclientservice.HTTPClientService.getService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             "serv", auth=("username", "passwd"))
         self.sp = sp = HttpStatusPush("serv", auth=("username", "passwd"), **kwargs)
@@ -86,8 +86,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
-        self.http.expect("post", "", json=BuildLookAlike(complete=False))
-        self.http.expect("post", "", json=BuildLookAlike(complete=True))
+        self._http.expect("post", "", json=BuildLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildLookAlike(complete=True))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "new"), build)
@@ -103,7 +103,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_filteringPass(self):
         yield self.createReporter(builders=['Builder0'])
-        self.http.expect("post", "", json=BuildLookAlike())
+        self._http.expect("post", "", json=BuildLookAlike())
         build = yield self.setupBuildResults(SUCCESS)
         self.sp.buildFinished(("build", 20, "finished"), build)
 
@@ -117,7 +117,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_wantKwargsCheck(self):
         yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
                                   wantPreviousBuild=True, wantLogs=True)
-        self.http.expect("post", "", json=BuildLookAlike(keys=['steps', 'prev_build']))
+        self._http.expect("post", "", json=BuildLookAlike(keys=['steps', 'prev_build']))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)

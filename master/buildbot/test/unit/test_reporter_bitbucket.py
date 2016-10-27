@@ -38,7 +38,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             _BASE_URL)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getFakeService(
@@ -65,7 +65,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
         self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         # we make sure proper calls to txrequests have been made
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
@@ -76,7 +76,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
             code=201),
         self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={
@@ -87,7 +87,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
             code=201),
         self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
-        self.http.expect(
+        self._http.expect(
             'post',
             u'/user/repo/commit/d34db33fd43db33f/statuses/build',
             json={

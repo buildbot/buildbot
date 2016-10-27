@@ -34,7 +34,7 @@ class StashStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, **kwargs):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
-        self.http = yield httpclientservice.HTTPClientService.getService(
+        self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password))
 
     @defer.inlineCallbacks
@@ -48,7 +48,7 @@ class StashStatusPush(http.HttpStatusPushBase):
             sha = sourcestamp['revision']
             body = {'state': status, 'key': build[
                 'builder']['name'], 'url': build['url']}
-            response = yield self.http.post('/rest/build-status/1.0/commits/' + sha,
+            response = yield self._http.post('/rest/build-status/1.0/commits/' + sha,
                                             json=body)
             if response.code != 204:
                 content = yield response.content()
