@@ -1764,7 +1764,7 @@ Modifying the Database Schema
 -----------------------------
 
 Changes to the schema are accomplished through migration scripts, supported by
-`SQLAlchemy-Migrate <http://code.google.com/p/sqlalchemy-migrate/>`_.  In fact,
+`SQLAlchemy-Migrate <https://github.com/openstack/sqlalchemy-migrate>`_.  In fact,
 even new databases are created with the migration scripts -- a new database is
 a migrated version of an empty database.
 
