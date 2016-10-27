@@ -324,7 +324,7 @@ Changes for Developers
 
 * The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the slave that match a given shell-style pattern.
 
-* The :py:class:`BuilderStatus` now allows you to pass a ``filter_fn`` arguent to ``generateBuilds``.
+* The :py:class:`BuilderStatus` now allows you to pass a ``filter_fn`` argument to ``generateBuilds``.
 
 Slave
 -----
