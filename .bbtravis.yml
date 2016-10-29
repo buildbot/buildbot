@@ -91,13 +91,13 @@ install:
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
                   -e 'master[tls,test]' \
-                  -e worker \
+                  -e 'worker[test]' \
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
                   codecov
 
-      [ $TESTS != trial_worker ] || pip install -e worker
+      [ $TESTS != trial_worker ] || pip install -e 'worker[test]'
 
       [ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www
       [ $TESTS != py3 ] || pip install -e worker future
