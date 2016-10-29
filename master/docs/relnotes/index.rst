@@ -74,6 +74,9 @@ Features
 
 * The new ``MessageFormatterMissingWorker`` class allows to customize the message sent when a worker is missing.
 
+* The :bb:worker:`OpenStackLatentWorker` worker now supports rendering the block device parameters.
+  The ``volume_size`` parameter will be automatically calculated if it is ``None``.
+
 .. _Hyper: https://hyper.sh
 
 Fixes
