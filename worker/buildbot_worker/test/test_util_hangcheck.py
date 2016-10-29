@@ -14,11 +14,11 @@ from twisted.python.failure import Failure
 from twisted.spread.pb import PBClientFactory
 from twisted.test.proto_helpers import AccumulatingProtocol
 from twisted.test.proto_helpers import StringTransport
-from twisted.trial.unittest import SynchronousTestCase
 from twisted.trial.unittest import TestCase
 from twisted.web.server import Site
 from twisted.web.static import Data
 
+from ..backports import SynchronousTestCase
 from ..util import HangCheckFactory
 from ..util._hangcheck import HangCheckProtocol
 
