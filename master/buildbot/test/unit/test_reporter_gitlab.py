@@ -20,14 +20,14 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.github import HOSTED_BASE_URL
-from buildbot.reporters.github import GitHubStatusPush
+from buildbot.reporters.gitlab import HOSTED_BASE_URL
+from buildbot.reporters.gitlab import GitLabStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
     # project must be in the form <owner>/<project>
     TEST_PROJECT = u'buildbot/buildbot'
 
@@ -41,8 +41,8 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            HOSTED_BASE_URL, headers={'Authorization': 'token XXYYZZ'})
-        self.sp = sp = GitHubStatusPush('XXYYZZ')
+            HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'})
+        self.sp = sp = GitLabStatusPush('XXYYZZ')
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
 
@@ -60,23 +60,31 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
+            'get',
+            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        self._http.expect(
             'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+            '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'pending',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build started.', 'context': 'buildbot/'})
+                  'ref': 'd34db33fd43db33f',
+                  'description': 'Build started.', 'name': 'buildbot/'})
         self._http.expect(
             'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+            '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'success',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/'})
+                  'ref': 'd34db33fd43db33f',
+                  'description': 'Build done.', 'name': 'buildbot/'})
         self._http.expect(
             'post',
-            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-            json={'state': 'failure',
+            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'failed',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                  'description': 'Build done.', 'context': 'buildbot/'})
+                  'ref': 'd34db33fd43db33f',
+                  'description': 'Build done.', 'name': 'buildbot/'})
 
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)

@@ -25,6 +25,7 @@ from twisted.internet import defer
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
+from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util.logger import Logger
 
@@ -61,10 +62,32 @@ class HTTPClientService(service.SharedService):
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
+
         self._headers = headers
         self._session = None
         self._expected = []
 
+    def updateHeaders(self, headers):
+        if self._headers is None:
+            self._headers = {}
+        self._headers.update(headers)
+
+    @classmethod
+    def getFakeService(cls, master, case, *args, **kwargs):
+        ret = cls.getService(master, *args, **kwargs)
+
+        def assertNotCalled(self, *_args, **_kwargs):
+            case.fail(("HTTPClientService called with *{!r}, **{!r}"
+                       "while should be called *{!r} **{!r}").format(
+                _args, _kwargs, args, kwargs))
+        case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
+
+        @ret.addCallback
+        def assertNoOutstanding(fake):
+            fake.case = case
+            case.addCleanup(fake.assertNoOutstanding)
+            return fake
+        return ret
     # tests should ensure this has been called
     checkAvailable = mock.Mock()
 
@@ -80,6 +103,10 @@ class HTTPClientService(service.SharedService):
             method=method, ep=ep, params=params, data=data, json=json, code=code,
             content=content))
 
+    def assertNoOutstanding(self):
+        self.case.assertEqual(0, len(self._expected),
+                              "expected more http requests:\n {!r}".format(self._expected))
+
     def _doRequest(self, method, ep, params=None, data=None, json=None):
         log.debug("{method} {ep} {params!r} <- {data!r}",
                   method=method, ep=ep, params=params, data=data or json)
@@ -92,9 +119,9 @@ class HTTPClientService(service.SharedService):
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
                 expect['data'] != data or expect['json'] != json):
             raise AssertionError(
-                "expecting:"
+                "expecting:\n"
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}\n"
-                "got      :"
+                "got      :\n"
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
                     expect['method'], expect['ep'], expect['params'], expect['data'], expect['json'],
                     method, ep, params, data, json,

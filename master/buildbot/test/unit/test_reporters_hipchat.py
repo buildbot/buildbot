@@ -13,14 +13,15 @@
 #
 # Copyright Buildbot Team Members
 from mock import Mock
-from mock import call
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process.results import SUCCESS
+from buildbot.reporters.hipchat import HOSTED_BASE_URL
 from buildbot.reporters.hipchat import HipChatStatusPush
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -29,23 +30,23 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
 
     def setUp(self):
         # ignore config error if txrequests is not installed
-        config._errors = Mock()
+        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(
             testcase=self, wantData=True, wantDb=True, wantMq=True)
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.sp.stopService()
-        self.assertEqual(self.sp.session.close.call_count, 1)
-        config._errors = None
+        yield self.master.stopService()
 
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
         kwargs['auth_token'] = kwargs.get('auth_token', 'abc')
         self.sp = HipChatStatusPush(**kwargs)
-        self.sp.sessionFactory = Mock(return_value=Mock())
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self,
+            kwargs.get('endpoint', HOSTED_BASE_URL))
         yield self.sp.setServiceParent(self.master)
-        yield self.sp.startService()
+        yield self.master.startService()
 
     @defer.inlineCallbacks
     def setupBuildResults(self):
@@ -79,22 +80,26 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_build_started(self):
         yield self.createReporter(builder_user_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
+        self._http.expect(
+            'post',
+            '/v2/user/123/message',
+            params=dict(auth_token='abc'),
+            json={'message':
+                  'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})
         self.sp.buildStarted(('build', 20, 'new'), build)
-        expected = [call(
-            'https://api.hipchat.com/v2/user/123/message?auth_token=abc',
-                    {'message': 'Buildbot started build Builder0 here: http://localhost:8080/#builders/79/builds/0'})]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_build_finished(self):
         yield self.createReporter(builder_room_map={'Builder0': '123'})
         build = yield self.setupBuildResults()
+        self._http.expect(
+            'post',
+            '/v2/room/123/notification',
+            params=dict(auth_token='abc'),
+            json={'message':
+                  'Buildbot finished build Builder0 with result success '
+                  'here: http://localhost:8080/#builders/79/builds/0'})
         self.sp.buildFinished(('build', 20, 'finished'), build)
-        expected = [call(
-            'https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
-                    {'message': 'Buildbot finished build Builder0 with result success '
-                     'here: http://localhost:8080/#builders/79/builds/0'})]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_inject_extra_params(self):
@@ -102,27 +107,27 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.getExtraParams = Mock()
         self.sp.getExtraParams.return_value = {'format': 'html'}
         build = yield self.setupBuildResults()
+        self._http.expect(
+            'post',
+            '/v2/room/123/notification',
+            params=dict(auth_token='abc'),
+            json={'message': 'Buildbot finished build Builder0 with result success '
+                  'here: http://localhost:8080/#builders/79/builds/0',
+                  'format': 'html'})
+
         self.sp.buildFinished(('build', 20, 'finished'), build)
-        expected = [call(
-            'https://api.hipchat.com/v2/room/123/notification?auth_token=abc',
-                    {'message': 'Buildbot finished build Builder0 with result success '
-                     'here: http://localhost:8080/#builders/79/builds/0',
-                     'format': 'html'})]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_no_message_sent_empty_message(self):
         yield self.createReporter()
         build = yield self.setupBuildResults()
         self.sp.send(build, 'unknown')
-        assert not self.sp.session.post.called
 
     @defer.inlineCallbacks
     def test_no_message_sent_without_id(self):
         yield self.createReporter()
         build = yield self.setupBuildResults()
         self.sp.send(build, 'new')
-        assert not self.sp.session.post.called
 
     @defer.inlineCallbacks
     def test_private_message_sent_with_user_id(self):
@@ -134,10 +139,12 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
+        self._http.expect(
+            'post',
+            '/v2/user/123/message',
+            params=dict(auth_token=token),
+            json=message)
         self.sp.send({}, 'test')
-        expected = [
-            call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_room_message_sent_with_room_id(self):
@@ -149,10 +156,12 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'room_id_or_name': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
+        self._http.expect(
+            'post',
+            '/v2/room/123/notification',
+            params=dict(auth_token=token),
+            json=message)
         self.sp.send({}, 'test')
-        expected = [
-            call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_private_and_room_message_sent_with_both_ids(self):
@@ -164,11 +173,17 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'room_id_or_name': '123', 'id_or_email': '456'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
+        self._http.expect(
+            'post',
+            '/v2/user/456/message',
+            params=dict(auth_token=token),
+            json=message)
+        self._http.expect(
+            'post',
+            '/v2/room/123/notification',
+            params=dict(auth_token=token),
+            json=message)
         self.sp.send({}, 'test')
-        expected = [call(
-            '%s/v2/user/456/message?auth_token=%s' % (endpoint, token), message),
-            call('%s/v2/room/123/notification?auth_token=%s' % (endpoint, token), message)]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)
 
     @defer.inlineCallbacks
     def test_postData_values_passed_through(self):
@@ -180,7 +195,9 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         postData = dict(message)
         postData.update({'id_or_email': '123'})
         self.sp.getBuildDetailsAndSendMessage.return_value = postData
+        self._http.expect(
+            'post',
+            '/v2/user/123/message',
+            params=dict(auth_token=token),
+            json=message)
         self.sp.send({}, 'test')
-        expected = [
-            call('%s/v2/user/123/message?auth_token=%s' % (endpoint, token), message)]
-        self.assertEqual(self.sp.session.post.mock_calls, expected)

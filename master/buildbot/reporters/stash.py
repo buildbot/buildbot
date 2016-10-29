@@ -14,10 +14,13 @@
 # Copyright Buildbot Team Members
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
+from buildbot.util import httpclientservice
+from buildbot.util.logger import Logger
+
+log = Logger()
 
 # Magic words understood by Stash REST API
 STASH_INPROGRESS = 'INPROGRESS'
@@ -31,10 +34,8 @@ class StashStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, **kwargs):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
-        if not base_url.endswith('/'):
-            base_url += '/'
-        self.base_url = '%srest/build-status/1.0/commits/' % (base_url,)
-        self.auth = (user, password)
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, base_url, auth=(user, password))
 
     @defer.inlineCallbacks
     def send(self, build):
@@ -47,8 +48,9 @@ class StashStatusPush(http.HttpStatusPushBase):
             sha = sourcestamp['revision']
             body = {'state': status, 'key': build[
                 'builder']['name'], 'url': build['url']}
-            stash_uri = self.base_url + sha
-            response = yield self.session.post(stash_uri, json=body, auth=self.auth)
-            if response.status_code != 204:
-                log.msg("%s: unable to upload stash status: %s" %
-                        (response.status_code, response.content))
+            response = yield self._http.post('/rest/build-status/1.0/commits/' + sha,
+                                            json=body)
+            if response.code != 204:
+                content = yield response.content()
+                log.error("%s: unable to upload stash status: %s" %
+                          (response.code, content))

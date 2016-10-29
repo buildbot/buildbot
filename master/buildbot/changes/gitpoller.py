@@ -315,7 +315,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             failures = [r[1] for r in results if not r[0]]
             if failures:
                 for failure in failures:
-                    log.error(
+                    log.err(
                         failure, "while processing changes for {} {}".format(newRev, branch))
                 # just fail on the first error; they're probably all related!
                 failures[0].raiseException()
