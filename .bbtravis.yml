@@ -42,6 +42,12 @@ env:
   # Configuration to run `python setup.py test` to check this test runner.
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
 
+  # Tests for the worker on old versions of twisted.
+  - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker
+
 cache:
   directories:
     - $HOME/.cache/pip
