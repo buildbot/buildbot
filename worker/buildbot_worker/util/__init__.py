@@ -19,6 +19,16 @@ import itertools
 import textwrap
 import time
 
+from ._hangcheck import HangCheckFactory
+
+__all__ = [
+    "remove_userpassword",
+    "now",
+    "Obfuscated",
+    "rewrap",
+    "HangCheckFactory",
+]
+
 
 def remove_userpassword(url):
     if '@' not in url:
