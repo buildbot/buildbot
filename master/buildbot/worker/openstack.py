@@ -124,12 +124,6 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             source_type = rendered_block_device['source_type']
             source_uuid = rendered_block_device['uuid']
             volume_size = self._determineVolumeSize(source_type, source_uuid)
-            if volume_size is None:
-                size_msg = ("The volume size for device %s, uuid %s"
-                            " could not be determined.") % (
-                                rendered_block_device['device_name'],
-                                source_uuid)
-                raise ValueError(size_msg)
             rendered_block_device['volume_size'] = volume_size
         defer.returnValue(rendered_block_device)
 
@@ -154,6 +148,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         elif source_type == 'snapshot':
             snap = nova.volume_snapshots.get(source_uuid)
             return snap.size
+        else:
+            unknown_source = ("The source type '%s' for UUID '%s' is"
+                              " unknown" % (source_type, source_uuid))
+            raise ValueError(unknown_source)
 
     @defer.inlineCallbacks
     def _getImage(self, build):
