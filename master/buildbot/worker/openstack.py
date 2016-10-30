@@ -119,7 +119,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def _renderBlockDevice(self, block_device, build):
         """Render all of the block device's values."""
-        rendered_block_device = yield build.render(block_device.copy())
+        rendered_block_device = yield build.render(block_device)
         if rendered_block_device['volume_size'] is None:
             source_type = rendered_block_device['source_type']
             source_uuid = rendered_block_device['uuid']
