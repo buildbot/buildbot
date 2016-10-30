@@ -96,6 +96,9 @@ Fixes
 
 * Fix the worker missing email notification.
 
+* Fix issue with worker builder list not being updated in UI when buildmaster is reconfigured (:bug:`3629`)
+
+
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 

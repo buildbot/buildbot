@@ -118,6 +118,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.conn = None
 
         self._old_builder_list = None
+        self._configured_builderid_list = None
 
     def __repr__(self):
         return "<%s %r>" % (self.__class__.__name__, self.name)
@@ -262,14 +263,22 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.updateLocks()
 
-        bids = [
-            b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
-        yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+    @defer.inlineCallbacks
+    def reconfigServiceWithSibling(self, sibling):
+        # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
+        # However, the worker configuration depends on which builder it is configured
+        yield service.BuildbotService.reconfigServiceWithSibling(self, sibling)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
-        yield self.updateWorker()
+        bids = [
+            b.getBuilderId() for b in self.botmaster.getBuildersForWorker(self.name)]
+        bids = yield defer.gatherResults(bids, consumeErrors=True)
+        if self._configured_builderid_list != bids:
+            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+            yield self.updateWorker()
+            self._configured_builderid_list = bids
 
     @defer.inlineCallbacks
     def stopService(self):
