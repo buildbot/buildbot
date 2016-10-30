@@ -42,8 +42,7 @@ class TestOpenStackWorker(unittest.TestCase):
     def setUp(self):
         self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
-        self.build = Properties(
-            image=novaclient.TEST_UUIDS['image'])
+        self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
         self.patch(openstack, "nce", None)
