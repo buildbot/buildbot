@@ -119,7 +119,7 @@ except ImportError:
     pass
 else:
     setup_args['install_requires'] = [
-        'twisted >= 8.0.0',
+        'twisted >= 10.2.0',
         'future',
     ]
 

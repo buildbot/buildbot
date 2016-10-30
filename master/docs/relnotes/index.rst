@@ -149,13 +149,6 @@ Deprecations, Removals, and Non-Compatible Changes
 * The ``template_name`` parameter of the ``MessageFormatter`` class has been deprecated in favor of ``template_filename``.
 
 
-Buildslave
-----------
-
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 Worker
 ------
 
@@ -167,6 +160,8 @@ Changes for Developers
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+* The worker now requires at least Twisted 10.2.0.
 
 * setup.py 'scripts' have been converted to console_scripts entry point.
   This makes them more portable and compatible with wheel format.

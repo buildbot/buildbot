@@ -83,15 +83,15 @@ install:
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
-                  -e master[tls,test] \
-                  -e worker \
+                  -e 'master[tls,test]' \
+                  -e 'worker[test]' \
                   MySQL-python \
                   psycopg2 \
                   pg8000 \
 
   - |
       [ $TESTS != trial_worker ] || \
-      pip install -e worker
+      pip install -e 'worker[test]'
 
   # install buildbot_www from pip in order to run the www tests
   - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
