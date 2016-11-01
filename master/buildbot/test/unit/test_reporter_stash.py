@@ -60,17 +60,20 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0'})
+                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'description': 'Build started.'})
         self._http.expect(
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': u'Builder0'})
+                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'description': 'Build done.'})
         self._http.expect(
             'post',
             u'/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': u'Builder0'})
+                  'state': 'FAILED', 'key': u'Builder0',
+                  'description': 'Build done.'})
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
         build['complete'] = True
