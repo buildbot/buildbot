@@ -78,8 +78,6 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  # pycparser wheel is broken, and sometime mistakingly re-publish the wheels
-  - pip install --no-binary pycparser
   # codecov is the interface to codecov.io; see after_success
   # Install MySQL-python for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
