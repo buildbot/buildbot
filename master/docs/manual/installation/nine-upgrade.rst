@@ -7,6 +7,19 @@ Upgrading a Buildbot instance from 0.8.x to 0.9.x may require a number of change
 Those changes are summarized here.
 If you are starting fresh with 0.9.0 or later, you can safely skip this section.
 
+First important note is that Buildbot does not support an upgrade of a 0.8.x instance to 0.9.x.
+Notably the build data and logs will not be accessible anymore if you upgraded, thus the database migration scripts have been dropped.
+
+You should not ``pip upgrade -U buildbot``, but rather start from a clean virtualenv aside from your old master.
+You can keep your old master instance to serve the old build status.
+
+Buildbot is now composed of several Python packages and Javascript UI, and the easiest way to install it is to run the following command within a virtualenv:
+
+.. code-block:: bash
+
+  pip install 'buildbot[bundle]'
+
+
 Config File Syntax
 ------------------
 
