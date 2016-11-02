@@ -30,7 +30,7 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import service
 from buildbot.util.logger import Logger
-from buildbot.worker import AbstractLatentWorker
+from buildbot.worker.docker import DockerBaseWorker
 
 try:
     import docker
@@ -85,7 +85,7 @@ class HyperLatentManager(service.SharedService):
         return threads.deferToThreadPool(reactor, self._threadPool, meth, *args, **kwargs)
 
 
-class HyperLatentWorker(AbstractLatentWorker):
+class HyperLatentWorker(DockerBaseWorker):
     """hyper.sh is a docker CaaS company"""
     instance = None
     ALLOWED_SIZES = ['s1', 's2', 's3', 's4',
@@ -96,7 +96,7 @@ class HyperLatentWorker(AbstractLatentWorker):
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
-        AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
+        DockerBaseWorker.checkConfig(self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
 
         if not Hyper:
             config.error("The python modules 'docker-py>=1.4' and 'hyper_sh' are needed to use a"
@@ -115,13 +115,8 @@ class HyperLatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, hyper_host,
                         hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
-        # Set build_wait_timeout to 0s if not explicitely set: Starting a
-        # container is almost immediate, we can affort doing so for each build.
-
-        if 'build_wait_timeout' not in kwargs:
-            kwargs['build_wait_timeout'] = 0
-
-        yield AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+        yield DockerBaseWorker.reconfigService(self, name, password, image=image,
+                                               masterFQDN=masterFQDN, **kwargs)
 
         self.manager = yield HyperLatentManager.getService(self.master, hyper_host, hyper_accesskey,
                                                            hyper_secretkey)
@@ -132,19 +127,6 @@ class HyperLatentWorker(AbstractLatentWorker):
         if not masterFQDN:  # also match empty string (for UI)
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
-
-    def createEnvironment(self):
-        result = {
-            "BUILDMASTER": self.masterFQDN,
-            "WORKERNAME": self.name,
-            "WORKERPASS": self.password
-        }
-        if self.registration is not None:
-            result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
-        if ":" in self.masterFQDN:
-            result["BUILDMASTER"], result[
-                "BUILDMASTER_PORT"] = self.masterFQDN.split(":")
-        return result
 
     def deferToThread(self, meth, *args, **kwargs):
         return self.manager.deferToThread(self.reactor, meth, *args, **kwargs)

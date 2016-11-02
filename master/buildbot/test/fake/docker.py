@@ -33,9 +33,7 @@ class Client(object):
 
     def build(self, fileobj, tag):
         if fileobj.read() == 'BUG':
-            logs = []
-            for line in logs:
-                yield line
+            pass
         else:
             logs = []
             for line in logs:

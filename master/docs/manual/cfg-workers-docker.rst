@@ -9,6 +9,7 @@ Docker latent worker
 
 .. @cindex DockerLatentWorker
 .. py:class:: buildbot.worker.docker.DockerLatentWorker
+.. py:class:: buildbot.plugins.worker.DockerLatentWorker
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
 Using the Docker latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
@@ -82,13 +83,9 @@ Each Docker image has a single purpose.
 Our worker image will be running a buildbot worker.
 
 Docker uses ``Dockerfile``\s to describe the steps necessary to build an image.
-The following example will build a minimal worker.
-Don't forget to add your dependencies in there to get a succesfull build !
+The following example will build a minimal worker. This example is voluntarily simplistic, and should probably not be used in production, see next paragraph.
 
-..
-    XXX(sa2ajj): with Pygments 2.0 or better the following 'none' can be replaced with Docker to get proper syntax highlighting.
-
-.. code-block:: none
+.. code-block:: Docker
     :linenos:
     :emphasize-lines: 11
 
@@ -123,13 +120,11 @@ Reuse same image for different workers
 
 Previous simple example hardcodes the worker name into the dockerfile, which will not work if you want to share your docker image between workers.
 
-You can find in buildbot source code in ``master/contrib/docker`` two example configurations:
-
-``worker``
-    the base worker configuration, including a custom ``buildbot.tac``, which takes environment variables into account for setting the correct worker name, and connect to the correct master.
+You can find in buildbot source code in ``master/contrib/docker`` one example configurations:
 
 ``pythonnode_worker``
     a worker with Python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.
+    It is based on the official ``buildbot/buildbot-worker`` image.
 
 The master setups several environment variables before starting the workers:
 
@@ -176,6 +171,11 @@ The following example will add a Docker latent worker for docker running at the 
                                   image='my_project_worker')
     ]
 
+``password``
+    (mandatory)
+    The worker password part of the :ref:`Latent-Workers` API.
+    If the password is ``None``, then it will be automatically generated from random number, and transmitted to the container via environment variable.
+
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`DockerLatentWorker` will accept the following extra ones:
 
 ``docker_host``
@@ -183,7 +183,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     This is the address the master will use to connect with a running Docker instance.
 
 ``image``
-    (optional if ``dockerfile`` is given)
+
     This is the name of the image that will be started by the build master. It should start a worker.
     This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
 
@@ -247,6 +247,7 @@ Buildbot supports using Hyper_ to host your latent workers.
 
 .. @cindex HyperLatentWorker
 .. py:class:: buildbot.worker.hyper.HyperLatentWorker
+.. py:class:: buildbot.plugins.worker.HyperLatentWorker
 
 Using the Hyper latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
 Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
@@ -254,8 +255,12 @@ See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this beh
 
 .. _Hyper: https://hyper.sh
 
-
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`HyperLatentWorker` will accept the following extra ones:
+
+``password``
+    (mandatory)
+    The worker password part of the :ref:`Latent-Workers` API.
+    If the password is ``None``, then it will be automatically generated from random number, and transmitted to the container via environment variable.
 
 ``hyper_host``
     (mandatory)
