@@ -81,6 +81,12 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         self.assertEqual(bs.image, 'worker')
         self.assertEqual(bs.command, [])
 
+    def test_constructor_nopassword(self):
+        # when no password, it is created automatically
+        bs = self.setupWorker('bot', None, 'tcp://1234:2375', 'worker')
+        self.assertEqual(bs.workername, 'bot')
+        self.assertEqual(len(bs.password), 20)
+
     def test_constructor_all_docker_parameters(self):
         # Volumes have their own tests
         bs = self.setupWorker('bot', 'pass', 'unix:///var/run/docker.sock', 'worker_img', ['/bin/sh'],

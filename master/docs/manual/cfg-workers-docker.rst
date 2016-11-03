@@ -83,7 +83,8 @@ Each Docker image has a single purpose.
 Our worker image will be running a buildbot worker.
 
 Docker uses ``Dockerfile``\s to describe the steps necessary to build an image.
-The following example will build a minimal worker. This example is voluntarily simplistic, and should probably not be used in production, see next paragraph.
+The following example will build a minimal worker.
+This example is voluntarily simplistic, and should probably not be used in production, see next paragraph.
 
 .. code-block:: Docker
     :linenos:

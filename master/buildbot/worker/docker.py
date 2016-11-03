@@ -65,8 +65,6 @@ class DockerBaseWorker(AbstractLatentWorker):
         # container is almost immediate, we can affort doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        if password is None:
-            password = self.getRandomPass()
         if masterFQDN is None:
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
@@ -81,6 +79,8 @@ class DockerBaseWorker(AbstractLatentWorker):
         # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
+        if password is None:
+            password = self.getRandomPass()
         self.image = image
         return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
@@ -95,6 +95,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         if ":" in self.masterFQDN:
             result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
+
 
 class DockerLatentWorker(DockerBaseWorker):
     instance = None
