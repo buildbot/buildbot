@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import hashlib
 import socket
 from io import BytesIO
 
@@ -33,6 +34,7 @@ from buildbot.worker import AbstractLatentWorker
 try:
     import docker
     from docker import client
+    from docker.errors import NotFound
     _hush_pyflakes = [docker, client]
 except ImportError:
     client = None
@@ -65,12 +67,10 @@ class DockerBaseWorker(AbstractLatentWorker):
         # container is almost immediate, we can affort doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        if masterFQDN is None:
-            masterFQDN = socket.getfqdn()
-        self.masterFQDN = masterFQDN
         if image is not None and not isinstance(image, str):
             if not hasattr(image, 'getRenderingFor'):
                 config.error("image must be a string")
+
         AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
 
     def reconfigService(self, name, password=None, image=None,
@@ -81,8 +81,22 @@ class DockerBaseWorker(AbstractLatentWorker):
             kwargs['build_wait_timeout'] = 0
         if password is None:
             password = self.getRandomPass()
+        if masterFQDN is None:
+            masterFQDN = socket.getfqdn()
+        self.masterFQDN = masterFQDN
         self.image = image
+        self.masterhash = hashlib.sha1(self.master.name).hexdigest()[:6]
         return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+
+    def getContainerName(self):
+        return ('%s-%s' % ('buildbot' + self.masterhash, self.workername)).replace("_", "-")
+
+    @property
+    def shortid(self):
+        if self.instance is None:
+            return None
+        return self.instance['Id'][:6]
+
 
     def createEnvironment(self):
         result = {
@@ -186,6 +200,15 @@ class DockerLatentWorker(DockerBaseWorker):
 
     def _thd_start_instance(self, image, volumes):
         docker_client = client.Client(**self.client_args)
+        # cleanup the old instances
+        instances = docker_client.containers(
+            all=1,
+            filters=dict(name=self.getContainerName()))
+        for instance in instances:
+            try:
+                docker_client.remove_container(instance['Id'], v=True, force=True)
+            except NotFound:
+                pass  # that's a race condition
 
         found = False
         if image is not None:
@@ -213,7 +236,7 @@ class DockerLatentWorker(DockerBaseWorker):
         instance = docker_client.create_container(
             image,
             self.command,
-            name='%s_%s' % (self.workername, id(self)),
+            name=self.getContainerName(),
             volumes=self.volumes,
             environment=self.createEnvironment(),
             host_config=host_conf
