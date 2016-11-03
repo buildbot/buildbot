@@ -29,7 +29,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
-    def setUp(self):
+    def setupReporter(self, **kwargs):
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(testcase=self,
@@ -38,7 +38,7 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
             'serv', auth=('username', 'passwd'))
-        self.sp = sp = StashStatusPush("serv", "username", "passwd")
+        self.sp = sp = StashStatusPush("serv", "username", "passwd", **kwargs)
         yield sp.setServiceParent(self.master)
         yield self.master.startService()
 
@@ -54,6 +54,7 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_basic(self):
+        self.setupReporter()
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
