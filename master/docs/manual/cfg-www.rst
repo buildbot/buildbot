@@ -328,7 +328,7 @@ Currently only one provider is available:
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
 
-     Example::
+Example::
 
             from buildbot.plugins import util
 
@@ -354,7 +354,7 @@ Currently only one provider is available:
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
-        .. note::
+.. note::
 
             In order to use this module, you need to install the ``python3-ldap`` module:
 
@@ -362,7 +362,7 @@ Currently only one provider is available:
 
                 pip install python3-ldap
 
-        In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
+In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
 
                 from buildbot.plugins import util
                 userInfoProvider = util.LdapUserInfo(...)
