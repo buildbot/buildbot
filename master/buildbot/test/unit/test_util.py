@@ -464,3 +464,45 @@ class TestRewrap(unittest.TestCase):
 
         for text, expected, width in tests:
             self.assertEqual(util.rewrap(text, width=width), expected)
+
+
+class TestMerge(unittest.TestCase):
+
+    def test_merge(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1}
+                },
+                {
+                    'a': {'c': 2}
+                }),
+            {
+                'a': {'b': 1, 'c': 2}
+            })
+
+    def test_overwrite(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1}
+                },
+                {
+                    'a': 1
+                }),
+            {
+                'a': 1
+            })
+
+    def test_overwrite2(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1, 'c': 2}
+                },
+                {
+                    'a': {'b': [1, 2, 3]}
+                }),
+            {
+                'a': {'b': [1, 2, 3], 'c': 2}
+            })

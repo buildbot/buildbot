@@ -307,3 +307,69 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 .. _Hyper: https://hyper.sh
 .. _HyperPricing: https://hyper.sh/pricing.html
 .. _DockerHub: https://hub.docker.com/
+
+
+
+Marathon latent worker
+======================
+
+Marathon_ Marathon is a production-grade container orchestration platform for Mesosphere's Datacenter Operating System (DC/OS) and Apache Mesos.
+
+Buildbot supports using Marathon_ to host your latent workers.
+It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
+
+.. @cindex MarathonLatentWorker
+.. py:class:: buildbot.worker.marathon.MarathonLatentWorker
+.. py:class:: buildbot.plugins.worker.MarathonLatentWorker
+
+Using the Marathon latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
+
+In addition to the arguments available for any :ref:`Latent-Workers`, :class:`MarathonLatentWorker` will accept the following extra ones:
+    name,
+    marathon_url,
+    image,
+    marathon_auth=None,
+    marathon_extra_config=None,
+    marathon_app_prefix="buildbot-worker/",
+    masterFQDN=None,
+
+``marathon_url``
+    (mandatory)
+    This is the URL to Marathon_ server.
+    Its REST API will be used to start docker containers.
+
+``marathon_auth``
+    (optional)
+    This is the optional ``('userid', 'password')`` ``BasicAuth`` credential.
+    If txrequests_ is installed, this can be be a `requests authentication plugin`_.
+
+``image``
+    (mandatory)
+    This is the name of the image that will be started by the build master. It should start a worker.
+    This option can be a renderable, like :ref:`Interpolate`, so that it generates from the build request properties.
+    Images are by pulled from the default docker registry.
+    MarathonLatentWorker does not support starting a worker built from a Dockerfile.
+
+``masterFQDN``
+    (optional, defaults to socket.getfqdn())
+    Address of the master the worker should connect to. Use if you master machine does not have proper fqdn.
+    This value is passed to the docker image via environment variable ``BUILDMASTER``
+
+    If the value contains a colon (``:``), then BUILDMASTER and BUILDMASTER_PORT environment variables will be passed, following scheme: ``masterFQDN="$BUILDMASTER:$BUILDMASTER_PORT"``
+
+``marathon_extra_config``
+    (optional, defaults to ``{}```)
+    Extra configuration to be passed to `Marathon API`_.
+    This implementation will setup the minimal configuration to run a worker (docker image, ``BRIDGED`` network)
+    It will let the default for everything else, including memory size, volume mounting, etc.
+    This configuration is voluntarily very raw so that it is easy to use new marathon features.
+    This dictionary will be merged into the Buildbot generated config, and recursively override it.
+    See `Marathon API`_ documentation to learn what to include in this config.
+
+.. _Marathon: https://mesosphere.github.io/marathon/
+.. _Marathon API: http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
+.. _requests authentication plugin: http://docs.python-requests.org/en/master/user/authentication/

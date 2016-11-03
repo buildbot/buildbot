@@ -118,6 +118,7 @@ class HTTPClientService(service.SharedService):
                 "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
                     method, ep, params, data, json))
         expect = self._expected.pop(0)
+        log.debug("{method} {ep} {params!r} <- {data!r}", **expect)
         if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
                 expect['data'] != data or expect['json'] != json):
             raise AssertionError(

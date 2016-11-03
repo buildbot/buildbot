@@ -415,6 +415,18 @@ def rewrap(text, width=None):
     return wrapped_text
 
 
+def dictionary_merge(a, b):
+    """merges dictionary b into a
+       Like dict.update, but recursive
+    """
+    for key, value in b.items():
+        if key in a and isinstance(a[key], dict) and isinstance(value, dict):
+                dictionary_merge(a[key], b[key])
+                continue
+        a[key] = b[key]
+    return a
+
+
 __all__ = [
     'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
     'safeTranslate', 'none_or_str',
