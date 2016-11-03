@@ -292,6 +292,7 @@ setup_args = {
                 'FileDownload', 'StringDownload', 'JSONStringDownload',
                 'JSONPropertiesDownload']),
             ('buildbot.steps.trigger', ['Trigger']),
+            ('buildbot.steps.cmake', ['CMake']),
             ('buildbot.steps.vstudio', [
                 'VC6', 'VC7', 'VS2003', 'VC8', 'VS2005', 'VCExpress9', 'VC9',
                 'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
