@@ -112,4 +112,4 @@ class HttpStatusPush(HttpStatusPushBase):
         response = yield self._http.post("", json=self.format_fn(build))
         if response.code != 200:
             log.msg("%s: unable to upload status: %s" %
-                    (response.status_code, response.content))
+                    (response.code, response.content))
