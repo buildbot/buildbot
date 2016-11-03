@@ -56,12 +56,55 @@ def _handle_stream_line(line):
             yield streamline
 
 
-class DockerLatentWorker(AbstractLatentWorker):
+class DockerBaseWorker(AbstractLatentWorker):
+
+    def checkConfig(self, name, password=None, image=None,
+                    masterFQDN=None, **kwargs):
+
+        # Set build_wait_timeout to 0 if not explicitely set: Starting a
+        # container is almost immediate, we can affort doing so for each build.
+        if 'build_wait_timeout' not in kwargs:
+            kwargs['build_wait_timeout'] = 0
+        if masterFQDN is None:
+            masterFQDN = socket.getfqdn()
+        self.masterFQDN = masterFQDN
+        if image is not None and not isinstance(image, str):
+            if not hasattr(image, 'getRenderingFor'):
+                config.error("image must be a string")
+        AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
+
+    def reconfigService(self, name, password=None, image=None,
+                        masterFQDN=None, **kwargs):
+        # Set build_wait_timeout to 0 if not explicitely set: Starting a
+        # container is almost immediate, we can afford doing so for each build.
+        if 'build_wait_timeout' not in kwargs:
+            kwargs['build_wait_timeout'] = 0
+        if password is None:
+            password = self.getRandomPass()
+        self.image = image
+        return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+
+    def createEnvironment(self):
+        result = {
+            "BUILDMASTER": self.masterFQDN,
+            "WORKERNAME": self.name,
+            "WORKERPASS": self.password
+        }
+        if self.registration is not None:
+            result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
+        if ":" in self.masterFQDN:
+            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
+        return result
+
+
+class DockerLatentWorker(DockerBaseWorker):
     instance = None
 
-    def __init__(self, name, password, docker_host, image=None, command=None,
-                 volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                 masterFQDN=None, hostconfig=None, **kwargs):
+    def checkConfig(self, name, password, docker_host, image=None, command=None,
+                    volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
+                    masterFQDN=None, hostconfig=None, **kwargs):
+
+        DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
 
         if not client:
             config.error("The python module 'docker-py>=1.4' is needed to use a"
@@ -69,10 +112,6 @@ class DockerLatentWorker(AbstractLatentWorker):
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"
                          " an image name, or a dockerfile")
-
-        self.volumes = volumes or []
-        self.binds = {}
-        self.followStartupLogs = followStartupLogs
 
         # Following block is only for checking config errors,
         # actual parsing happens in self.parse_volumes()
@@ -88,18 +127,18 @@ class DockerLatentWorker(AbstractLatentWorker):
                                  "%s. Skipping..." % volume_string)
                     continue
 
-        # Set build_wait_timeout to 0 if not explicitely set: Starting a
-        # container is almost immediate, we can affort doing so for each build.
-        if 'build_wait_timeout' not in kwargs:
-            kwargs['build_wait_timeout'] = 0
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+    @defer.inlineCallbacks
+    def reconfigService(self, name, password, docker_host, image=None, command=None,
+                        volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
+                        masterFQDN=None, hostconfig=None, **kwargs):
 
-        self.image = image
+        yield DockerBaseWorker.reconfigService(self, name, password, image, masterFQDN, **kwargs)
+        self.volumes = volumes or []
+        self.binds = {}
+        self.followStartupLogs = followStartupLogs
+
         self.command = command or []
         self.dockerfile = dockerfile
-        if masterFQDN is None:
-            masterFQDN = socket.getfqdn()
-        self.masterFQDN = masterFQDN
         self.hostconfig = hostconfig or {}
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
@@ -125,16 +164,6 @@ class DockerLatentWorker(AbstractLatentWorker):
 
             self.volumes.append(volume)
             self.binds[bind] = {'bind': volume, 'ro': ro}
-
-    def createEnvironment(self):
-        result = {
-            "BUILDMASTER": self.masterFQDN,
-            "WORKERNAME": self.name,
-            "WORKERPASS": self.password
-        }
-        if self.registration is not None:
-            result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
-        return result
 
     @defer.inlineCallbacks
     def start_instance(self, build):
