@@ -863,8 +863,6 @@ It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txgithub <https://pypi.python.org/pypi/txrequests>`_ package to allow interaction with GitHub API.
-
 It requires `txrequests`_ package to allow interaction with Stash REST API.
 
 It uses HTTP Basic AUTH.
