@@ -71,7 +71,11 @@ class StashStatusPush(http.HttpStatusPushBase):
                 payload['name'] = yield props.render(self.statusName)
             response = yield self._http.post('/rest/build-status/1.0/commits/' + sha,
                                              json=payload)
-            if response.code != 204:
+            if response.code == 204:
+                if self.verbose:
+                    log.msg('Status "{status}" sent for {sha}.'.format(
+                            status=status, sha=sha))
+            else:
                 content = yield response.content()
                 log.error("%s: unable to upload stash status: %s" %
                           (response.code, content))
