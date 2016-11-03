@@ -363,6 +363,11 @@ URL to build page
 
 URL to buildbot main page
     ``{{ buildbot_url }}``
+    
+Status of the build as string.
+    This require extending the context of the Formatter via the ``ctx`` parameter with: ``ctx=dict(statuses=util.Results)``.
+    
+    ``{{ statuses[results] }}``
 
 Build text
     ``{{ build['state_string'] }}``
