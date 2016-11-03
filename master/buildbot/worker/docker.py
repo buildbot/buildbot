@@ -97,7 +97,6 @@ class DockerBaseWorker(AbstractLatentWorker):
             return None
         return self.instance['Id'][:6]
 
-
     def createEnvironment(self):
         result = {
             "BUILDMASTER": self.masterFQDN,

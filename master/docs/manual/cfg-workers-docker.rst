@@ -313,7 +313,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 Marathon latent worker
 ======================
 
-Marathon_ Marathon is a production-grade container orchestration platform for Mesosphere's Datacenter Operating System (DC/OS) and Apache Mesos.
+Marathon_ Marathon is a production-grade container orchestration platform for Mesosphere's Data-center Operating System (DC/OS) and Apache ``Mesos``.
 
 Buildbot supports using Marathon_ to host your latent workers.
 It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
@@ -327,13 +327,6 @@ Each image will be discarded once the worker finished processing the build queue
 See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
 
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`MarathonLatentWorker` will accept the following extra ones:
-    name,
-    marathon_url,
-    image,
-    marathon_auth=None,
-    marathon_extra_config=None,
-    marathon_app_prefix="buildbot-worker/",
-    masterFQDN=None,
 
 ``marathon_url``
     (mandatory)
