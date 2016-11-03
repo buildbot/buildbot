@@ -81,3 +81,34 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_setting_options(self):
+        self.setupReporter(statusName='Build', startDescription='Build started.',
+                           endDescription='Build finished.')
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'name': 'Build', 'description': 'Build started.'})
+        self._http.expect(
+            'post',
+            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'name': 'Build', 'description': 'Build finished.'})
+        self._http.expect(
+            'post',
+            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'FAILED', 'key': u'Builder0',
+                  'name': 'Build', 'description': 'Build finished.'})
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
