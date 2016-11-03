@@ -419,19 +419,19 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
 
             # you could use / if you use domain based proxy instead of path based proxy
             location /buildbot/ {
-                proxy_pass http://localhost:5000/;
+                proxy_pass http://127.0.0.1:5000/;
             }
             location /buildbot/sse/ {
                 # proxy buffering will prevent sse to work
                 proxy_buffering off;
-                proxy_pass http://localhost:5000/sse/;
+                proxy_pass http://127.0.0.1:5000/sse/;
             }
             # required for websocket
             location /buildbot/ws {
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection "upgrade";
-                  proxy_pass http://localhost:5000/ws;
+                  proxy_pass http://127.0.0.1:5000/ws;
                   # raise the proxy timeout for the websocket
                   proxy_read_timeout 6000s;
             }
@@ -449,13 +449,13 @@ Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), direct
         ServerAdmin webmaster@buildbot.example
 
         <Location /ws>
-          ProxyPass ws://localhost:8020/ws
-          ProxyPassReverse ws://localhost:8020/ws
+          ProxyPass ws://127.0.0.1:8020/ws
+          ProxyPassReverse ws://127.0.0.1:8020/ws
         </Location>
 
         ProxyPass /ws !
-        ProxyPass / http://localhost:8020/
-        ProxyPassReverse / http://localhost:8020/
+        ProxyPass / http://127.0.0.1:8020/
+        ProxyPassReverse / http://127.0.0.1:8020/
 
         SetEnvIf X-Url-Scheme https HTTPS=1
         ProxyPreserveHost On
