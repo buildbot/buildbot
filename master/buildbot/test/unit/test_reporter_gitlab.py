@@ -70,21 +70,21 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
             json={'state': 'pending',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'd34db33fd43db33f',
-                  'description': 'Build started.', 'name': 'buildbot/'})
+                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'success',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'd34db33fd43db33f',
-                  'description': 'Build done.', 'name': 'buildbot/'})
+                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'failed',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'd34db33fd43db33f',
-                  'description': 'Build done.', 'name': 'buildbot/'})
+                  'description': 'Build done.', 'name': 'buildbot/Builder0'})
 
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
