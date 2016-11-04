@@ -70,6 +70,8 @@ class ReporterTestMixin(object):
                     buildid=20 + i, name="workername", value="sl"),
                 fakedb.BuildProperty(
                     buildid=20 + i, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=20 + i, name="buildername", value="Builder0"),
             ])
             for k, v in iteritems(self.TEST_PROPS):
                 self.db.insertTestData([
