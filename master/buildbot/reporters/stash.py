@@ -73,9 +73,9 @@ class StashStatusPush(http.HttpStatusPushBase):
                                              json=payload)
             if response.code == 204:
                 if self.verbose:
-                    log.msg('Status "{status}" sent for {sha}.'.format(
-                            status=status, sha=sha))
+                    log.info('Status "{status}" sent for {sha}.',
+                             status=status, sha=sha)
             else:
                 content = yield response.content()
-                log.error("%s: unable to upload stash status: %s" %
-                          (response.code, content))
+                log.error("Unable to send Stash status ({code}): {content}",
+                          code=response.code, content=content)
