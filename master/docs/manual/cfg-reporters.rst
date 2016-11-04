@@ -840,6 +840,8 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verbose: if True, logs a message for each successful status push
     :param list builders: only send update for specified builders
 
+.. bb:reporter:: StashStatusPush
+
 StashStatusPush
 ~~~~~~~~~~~~~~~
 
@@ -851,8 +853,8 @@ StashStatusPush
     from buildbot.plugins import reporters
 
     ss = reporters.StashStatusPush('https://stash.example.com:8080/',
-                                'stash_username',
-                                'secret_password')
+                                   'stash_username',
+                                   'secret_password')
     c['services'].append(ss)
 
 :class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
@@ -861,19 +863,25 @@ It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txgithub <https://pypi.python.org/pypi/txrequests>`_ package to allow interaction with GitHub API.
-
 It requires `txrequests`_ package to allow interaction with Stash REST API.
 
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
 
-.. py:class:: StashStatusPush(base_url, user, password, builders = None)
+.. py:class:: StashStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
 
-    :param string base_url: the base url of the stash host, up to and optionally including the first `/` of the path.
-    :param string user: the stash user to post as
-    :param string password: the stash user's password
-    :param list builders: only send update for specified builders
+    :param string base_url: The base url of the Stash host, up to and optionally including the first `/` of the path.
+    :param string user: The Stash user to post as.
+    :param string password: The Stash user's password.
+    :param renderable string key: Passed to Stash to differentiate between statuses.
+        A static string can be passed or :class:`Interpolate` for dynamic substitution.
+        The default key is `%(prop:buildername)s`.
+    :param renderable string statusName: The name that is displayed for this status.
+        The default name is nothing, so Stash will use the ``key`` parameter.
+    :param renderable string startDescription: Custom start message (default: 'Build started.')
+    :param renderable string endDescription: Custom end message (default: 'Build done.')
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param list builders: Only send update for specified builders.
 
 .. bb:reporter:: BitbucketStatusPush
 
