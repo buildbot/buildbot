@@ -7,8 +7,7 @@
 Docker latent worker
 ====================
 
-.. @cindex DockerLatentWorker
-.. py:class:: buildbot.worker.docker.DockerLatentWorker
+.U. py:class:: buildbot.worker.docker.DockerLatentWorker
 .. py:class:: buildbot.plugins.worker.DockerLatentWorker
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
@@ -246,7 +245,6 @@ It forms a very cost efficient solution to run your CI in the cloud.
 
 Buildbot supports using Hyper_ to host your latent workers.
 
-.. @cindex HyperLatentWorker
 .. py:class:: buildbot.worker.hyper.HyperLatentWorker
 .. py:class:: buildbot.plugins.worker.HyperLatentWorker
 
@@ -308,8 +306,6 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 .. _HyperPricing: https://hyper.sh/pricing.html
 .. _DockerHub: https://hub.docker.com/
 
-
-
 Marathon latent worker
 ======================
 
@@ -317,8 +313,8 @@ Marathon_ Marathon is a production-grade container orchestration platform for Me
 
 Buildbot supports using Marathon_ to host your latent workers.
 It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
+See :class:`HTTPClientService` for details.
 
-.. @cindex MarathonLatentWorker
 .. py:class:: buildbot.worker.marathon.MarathonLatentWorker
 .. py:class:: buildbot.plugins.worker.MarathonLatentWorker
 
