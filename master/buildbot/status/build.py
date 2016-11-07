@@ -256,9 +256,14 @@ class BuildStatus(styles.Versioned, properties.PropertiesMixin):
             if builderConfig:
                 customUrls = builderConfig.getCustomBuildUrls(
                         buildbotUrl=self.master.status.getBuildbotURL(),
-                        buildNumber=self.number
+                        buildNumber=self.number,
+                        buildUrl=self.getBuildUrl()
                 )
         return customUrls
+
+    def getBuildUrl(self):
+        return self.master.status.getURLForThing(self)['path'] if 'path' in self.master.status.getURLForThing(
+            self) else ''
 
     # subscription interface
 
