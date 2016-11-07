@@ -25,11 +25,13 @@ from twisted.persisted import styles
 from twisted.internet import defer
 from twisted.trial import unittest
 import sqlalchemy as sa
+from sqlalchemy.dialects.mysql import LONGTEXT
 from sqlalchemy.engine import reflection
 import migrate
 import migrate.versioning.api
 from migrate.versioning import schemadiff
 from buildbot.db import connector
+from buildbot.db import types as bsa
 from buildbot.test.util import change_import, db, querylog
 from buildbot.test.fake import fakemaster
 
@@ -55,6 +57,21 @@ def getDiffMonkeyPatch(metadata, engine, excludeTables=None):
                       labelA='model',
                       labelB='database',
                       excludeTables=excludeTables)
+
+
+# ColDiff does not take differences in custom types providing different
+# underlying types into consideration. Override it such that the use of it
+# in object_state's value_json column is treated correctly. Only takes
+# type into consideration, does not take precision, length, or other
+# type attributes into consideration.
+class ColDiffOverride(schemadiff.ColDiff):
+    def __init__(self, colA, colB):
+        super(ColDiffOverride, self).__init__(colA, colB)
+        if colA.name == 'value_json' and type(colA.type) is bsa.LongText and (type(colB.type) is sa.TEXT or
+                                                                              type(colB.type) is LONGTEXT):
+            self.diff = False
+            return
+
 
 class UpgradeTestMixin(db.RealDatabaseMixin):
     """Supporting code to test upgrading from older versions by untarring a
@@ -141,6 +158,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                                     "version of sqlalchemy-migrate")
         self.patch(schemadiff, 'getDiffOfModelAgainstDatabase',
                                 getDiffMonkeyPatch)
+        self.patch(schemadiff, 'ColDiff', ColDiffOverride)
+
         def comp(engine):
             # use compare_model_to_db, which gets everything but foreign
             # keys and indexes

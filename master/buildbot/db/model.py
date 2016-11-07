@@ -19,6 +19,7 @@ import migrate.versioning.schema
 import migrate.versioning.repository
 from twisted.python import util, log
 from buildbot.db import base
+from buildbot.db import types as bsa
 
 try:
     from migrate.versioning import exceptions
@@ -322,7 +323,7 @@ class Model(base.DBConnectorComponent):
         # name for this value (local to the object)
         sa.Column("name", sa.String(length=255), nullable=False),
         # value, as a JSON string
-        sa.Column("value_json", sa.Text, nullable=False),
+        sa.Column("value_json", bsa.LongText, nullable=False),
     )
 
     # mastersconfig
