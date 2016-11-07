@@ -87,7 +87,7 @@ Finally, start the master:
   ./bin/buildbot start master
 
 You will now see some log information from the master in this terminal.
-It should ends with lines like these:
+It should end with lines like these:
 
 .. code-block:: none
 
@@ -97,7 +97,7 @@ It should ends with lines like these:
 From now on, feel free to visit the web status page running on the port 8010: http://localhost:8010/
 
 Our master now needs (at least) a worker to execute its commands.
-For that, heads on to the next section !
+For that, head on to the next section !
 
 Creating a worker
 -----------------
