@@ -140,7 +140,7 @@ class Git(Source):
         self.srcdir = 'source'
         self.origin = origin
         Source.__init__(self, **kwargs)
-
+        print "shallow:", shallow
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
         if isinstance(self.mode, string_types):
@@ -441,6 +441,7 @@ class Git(Source):
     @defer.inlineCallbacks
     def _clone(self, shallowClone):
         """Retry if clone failed"""
+        print "shallow:", shallowClone
 
         command = ['clone']
         switchToBranch = False
