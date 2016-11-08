@@ -9,10 +9,10 @@ Goal
 
 This tutorial will take you from zero to running your first buildbot master and worker as quickly as possible, without changing the default configuration.
 
-This tutorial is all about instant gratification and the five minute experience: in five minutes we want to convince you that this project Works, and that you should seriously consider spending some more time learning the system.
+This tutorial is all about instant gratification and the five minute experience: in five minutes we want to convince you that this project works, and that you should seriously consider spending time learning the system.
 In this tutorial no configuration or code changes are done.
 
-This tutorial assumes that you are running on Unix, but might be adaptable easily to Windows.
+This tutorial assumes that you are running Unix, but might be adaptable to Windows.
 
 Thanks to virtualenv_, installing buildbot in a standalone environment is very easy.
 For those more familiar with Docker_, there also exists a :ref:`docker version of these instructions <first-run-docker-label>`.
@@ -27,7 +27,7 @@ Getting ready
 -------------
 
 There are many ways to get the code on your machine.
-We will use here the easiest one: via ``pip`` in a virtualenv_.
+We will use the easiest one: via ``pip`` in a virtualenv_.
 It has the advantage of not polluting your operating system, as everything will be contained in the virtualenv.
 
 To make this work, you will need the following installed:
@@ -97,7 +97,7 @@ It should end with lines like these:
 From now on, feel free to visit the web status page running on the port 8010: http://localhost:8010/
 
 Our master now needs (at least) a worker to execute its commands.
-For that, head on to the next section !
+For that, head on to the next section!
 
 Creating a worker
 -----------------
@@ -152,7 +152,7 @@ It should end with lines like these:
   2014-11-01 15:56:51+0100 [Broker,client] message from master: attached
   The worker appears to have (re)started correctly.
 
-Meanwhile, from the other terminal, in the master log (:file:``twisted.log`` in the master directory), you should see lines like these:
+Meanwhile, from the other terminal, in the master log (:file:`twisted.log` in the master directory), you should see lines like these:
 
 .. code-block:: none
 
