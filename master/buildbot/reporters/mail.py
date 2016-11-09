@@ -27,6 +27,7 @@ from StringIO import StringIO
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.internet import ssl
 from twisted.python import log as twlog
 from zope.interface import implementer
 
@@ -111,7 +112,7 @@ class MailNotifier(service.BuildbotService):
                     lookup=None, extraRecipients=None,
                     sendToInterestedUsers=True,
                     messageFormatter=None, extraHeaders=None,
-                    addPatch=True, useTls=False,
+                    addPatch=True, useTls=False, useSsl=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
                     name=None, schedulers=None, branches=None):
         if ESMTPSenderFactory is None:
@@ -174,7 +175,7 @@ class MailNotifier(service.BuildbotService):
                         lookup=None, extraRecipients=None,
                         sendToInterestedUsers=True,
                         messageFormatter=None, extraHeaders=None,
-                        addPatch=True, useTls=False,
+                        addPatch=True, useTls=False, useSsl=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
                         name=None, schedulers=None, branches=None,
                         messageFormatterMissingWorker=None):
@@ -207,6 +208,7 @@ class MailNotifier(service.BuildbotService):
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
+        self.useSsl = useSsl
         self.smtpUser = smtpUser
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
@@ -520,7 +522,10 @@ class MailNotifier(service.BuildbotService):
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
-        reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
+        if self.useSsl:
+            reactor.connectSSL(self.relayhost, self.smtpPort, sender_factory, ssl.ClientContextFactory())
+        else:
+            reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
 
         return result
 
