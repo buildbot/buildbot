@@ -161,7 +161,7 @@ class Change:
         return data
 
     def asDict(self):
-        '''returns a dictonary with suitable info for html/mail rendering'''
+        '''returns a dictionary with suitable info for html/mail rendering'''
         files = [dict(name=f) for f in self.files]
         files.sort(key=lambda a: a['name'])
 

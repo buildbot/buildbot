@@ -119,7 +119,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
     The :bb:cfg:`www` configuration gives the settings for the webserver.
     In simple cases, the ``buildbotURL`` contains the hostname and port of the master, e.g., ``http://master.example.com:8010/``.
-    In more complex cases, with multiple masters, web proxies, or load balancers, the correspondance may be less obvious.
+    In more complex cases, with multiple masters, web proxies, or load balancers, the correspondence may be less obvious.
 
 .. _Web-Authentication:
 

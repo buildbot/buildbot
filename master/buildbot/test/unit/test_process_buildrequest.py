@@ -413,7 +413,7 @@ class TestBuildRequest(unittest.TestCase):
             Merge cannot be performd and raises error:
               Merging requests requires both requests to have the same codebases
         """
-        brDicts = []  # list of buildrequests dictionnary
+        brDicts = []  # list of buildrequests dictionary
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([

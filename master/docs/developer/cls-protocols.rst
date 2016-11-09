@@ -57,7 +57,7 @@ to know about protocol calls or handle protocol specific exceptions.
 
         :returns: Deferred
 
-        Get worker information, commands and version, put them in dictonary
+        Get worker information, commands and version, put them in dictionary
         then return back
 
     .. py:method:: remoteSetBuilderList(builders)

@@ -57,7 +57,7 @@ external tools, so the values are fixed.
     :param result: the new result
     :param previousResult: the previous aggregated result
 
-    Building on :py:func:`worst_status`, this function determines what the aggreagated overall status is, as well as whether the attempt should be terminated, based on the configuration in ``obj``.
+    Building on :py:func:`worst_status`, this function determines what the aggregated overall status is, as well as whether the attempt should be terminated, based on the configuration in ``obj``.
 
 .. py:class:: ResultComputingConfigMixin
 

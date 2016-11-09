@@ -132,7 +132,7 @@ class Waterfall extends Controller
     ###
     loadMore: ->
         if @builds.length < @buildLimit
-            # last query returned less build than expected, so we went to the begining of time
+            # last query returned less build than expected, so we went to the beginning of time
             # no need to query again
             return
         @buildLimit = @builds.length + @c.limit

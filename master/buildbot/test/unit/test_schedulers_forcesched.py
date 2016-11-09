@@ -264,7 +264,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                                 'bar'],
                                                             codebases=[]))
 
-        # codebases cannot be a dictionnary
+        # codebases cannot be a dictionary
         self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' should be a list of strings or CodebaseParameter, not <type 'dict'>",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=[
