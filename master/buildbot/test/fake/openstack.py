@@ -26,7 +26,8 @@ UNKNOWN = 'UNKNOWN'
 # Parts used from novaclient
 class Client():
 
-    def __init__(self, version, username, password, tenant_name, auth_url):
+    def __init__(self, version, username, password, tenant_name, auth_url,
+                 region_name):
         self.images = Images()
         self.servers = Servers()
 
