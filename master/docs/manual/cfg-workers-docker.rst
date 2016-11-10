@@ -11,7 +11,7 @@ Docker latent worker
 .. py:class:: buildbot.plugins.worker.DockerLatentWorker
 
 Docker_ is an open-source project that automates the deployment of applications inside software containers.
-Using the Docker latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+The :class:`DockerLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds.
 Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
 See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
 
@@ -248,7 +248,7 @@ Buildbot supports using Hyper_ to host your latent workers.
 .. py:class:: buildbot.worker.hyper.HyperLatentWorker
 .. py:class:: buildbot.plugins.worker.HyperLatentWorker
 
-Using the Hyper latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+The :class:`HyperLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds.
 Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
 See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
 
@@ -318,7 +318,7 @@ See :class:`HTTPClientService` for details.
 .. py:class:: buildbot.worker.marathon.MarathonLatentWorker
 .. py:class:: buildbot.plugins.worker.MarathonLatentWorker
 
-Using the Marathon latent worker, an attempt is made at instantiating a fresh image upon each build, assuring consistency of the environment between builds.
+The :class:`MarathonLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds.
 Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
 See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
 
