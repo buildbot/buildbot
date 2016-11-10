@@ -48,7 +48,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     A point to note is that the compare_attrs list is cumulative; that is, when a subclass also has a compare_attrs and the parent class has a compare_attrs, the subclass' compare_attrs also includes the parent class' compare_attrs.
 
     This class also implements the :py:class:`buildbot.interfaces.IConfigured` interface.
-    The configuration is automatically generated, beeing the dict of all ``compare_attrs``.
+    The configuration is automatically generated, being the dict of all ``compare_attrs``.
 
 .. py:function:: safeTranslate(str)
 
@@ -427,7 +427,7 @@ The ``debounce.method(wait)`` decorator is the tool for the job.
         This functionality is similar to Underscore's ``debounce``, except that the Underscore method resets its timer on every call.
 
     The decorated method is an instance of :py:class:`Debouncer`, allowing it to be started and stopped.
-    This is useful when the method is a part of a Buidbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
+    This is useful when the method is a part of a Buildbot service: call ``method.start()`` from ``startService`` and ``method.stop()`` from ``stopService``, handling its Deferred appropriately.
 
 .. py:class:: Debouncer
 
@@ -991,7 +991,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
         Please override this method to check the parameters of your config.
         Please use :py:func:`buildbot.config.error` for error reporting.
-        You can replace them ``*args, **kwargs`` by actual contructor like arguments with default args, and it have to match self.reconfigService
+        You can replace them ``*args, **kwargs`` by actual constructor like arguments with default args, and it have to match self.reconfigService
         This method is synchronous, and executed in the context of the master.cfg.
         Please don't block, or use deferreds in this method.
         Remember that the object that runs checkConfig is not always the object that is actually started.
@@ -1002,7 +1002,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
         This method is called at buildbot startup, and buildbot reconfig.
         `*args` and `**kwargs` are the configuration arguments passed to the constructor in master.cfg.
-        You can replace ``them *args, **kwargs`` by actual contructor like arguments with default args, and it have to match self.checkConfig
+        You can replace ``them *args, **kwargs`` by actual constructor like arguments with default args, and it have to match self.checkConfig
 
         Returns a deferred that should fire when the service is ready.
         Builds are not started until all services are configured.

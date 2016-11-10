@@ -23,7 +23,7 @@ Buildbot is now composed of several Python packages and Javascript UI, and the e
 Config File Syntax
 ------------------
 
-In preparation for compatibility with Python 3, Buildbot coniguration files no longer allow the print statement:
+In preparation for compatibility with Python 3, Buildbot configuration files no longer allow the print statement:
 
 .. code-block:: python
 

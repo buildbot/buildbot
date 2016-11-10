@@ -73,7 +73,7 @@ Fixes
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* Providing Latent AWS EC2 credentails by the :file:`.ec2/aws_id` file is deprecated:
+* Providing Latent AWS EC2 credentials by the :file:`.ec2/aws_id` file is deprecated:
   Use the standard :file:`.aws/credentials` file, instead.
 
 Details

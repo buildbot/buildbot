@@ -63,7 +63,7 @@ Worker
 ------
 
 Package `buildbot-slave` is being renamed `buildbot-worker`.
-As the work is not completly finished, neither `buildbot-slave==0.9.0b8` or `buildbot-worker==0.9.0b8` have been released.
+As the work is not completely finished, neither `buildbot-slave==0.9.0b8` or `buildbot-worker==0.9.0b8` have been released.
 
 You can safely use any version of `buildbot-slave` with `buildbot==0.9.0b8`, either `buildbot-slave==0.8.12` or `buildbot-slave==0.9.0b7`.
 

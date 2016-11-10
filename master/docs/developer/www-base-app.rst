@@ -48,7 +48,7 @@ Extensibility
 Buildbot UI is designed for extensibility.
 The base application should be pretty minimal, and only include very basic status pages.
 Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
-You can also completly replace the default application by another application more suitable to your needs.
+You can also completely replace the default application by another application more suitable to your needs.
 The ``md_base`` application is an example rewrite of the app using material design libraries.
 
 Some Web plugins are maintained inside buildbot's git repository, but this is absolutely not necessary.

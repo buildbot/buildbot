@@ -277,7 +277,7 @@ Fixes
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
-* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+* The ``revlink`` in changes produced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
 * :bb:chsrc:`PBChangeSource`'s git hook :file:`contrib/git_buildbot.py` now supports git tags
 
   A pushed git tag generates a change event with the ``branch`` property equal to the tag name.
@@ -346,7 +346,7 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * ``buildbot.libvirtbuildslave`` is removed; use ``buildbot.buildslave.libvirt`` instead.
 
-* `buildbot.util.flatten` falttens lists and tuples by default (previously only lists).
+* `buildbot.util.flatten` flattens lists and tuples by default (previously only lists).
   Additionally, flattening something that isn't the type to flatten has different behaviour.
   Previously, it would return the original value.
   Instead, it now returns an array with the original value as the sole element.
@@ -487,7 +487,7 @@ Changes and Removals
 
 * :bb:chsrc:`SVNPoller`'s svnurl parameter has been changed to repourl.
 
-* Providing Latent AWS EC2 credentails by the :file:`.ec2/aws_id` file is deprecated:
+* Providing Latent AWS EC2 credentials by the :file:`.ec2/aws_id` file is deprecated:
   Use the standard :file:`.aws/credentials` file, instead.
 
 Changes for Developers

@@ -172,7 +172,7 @@ Collections
 ``.hasOwnProperty(id)``: returns true if this id is known by this collection.
 
 ``.close()``: forcefully unsubscribe this connection from auto-update.
-   Normally, this is done automatically on scope destruction, but sometimes, when you got enough data, you want to save bandwith and disconnect the collection.
+   Normally, this is done automatically on scope destruction, but sometimes, when you got enough data, you want to save bandwidth and disconnect the collection.
 
 ``.put(object)``: insert one plain object to the collection.
    As an external API, this method is only useful for the unit tests to simulate new data coming asynchronously.

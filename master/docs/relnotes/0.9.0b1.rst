@@ -198,7 +198,7 @@ Fixes
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
-* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+* The ``revlink`` in changes produced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
 * :bb:chsrc:`PBChangeSource`'s git hook :file:`contrib/git_buildbot.py` now supports git tags
 
   A pushed git tag generates a change event with the ``branch`` property equal to the tag name.
@@ -247,7 +247,7 @@ Deprecations, Removals, and Non-Compatible Changes
 ..
     TODO: 0.9.0 release notes should include a warning similar to that in 0.8.9 about new-style steps
 
-* `buildbot.util.flatten` falttens lists and tuples by default (previously only lists).
+* `buildbot.util.flatten` flattens lists and tuples by default (previously only lists).
   Additionally, flattening something that isn't the type to flatten has different behaviour.
   Previously, it would return the original value.
   Instead, it now returns an array with the original value as the sole element.

@@ -272,7 +272,7 @@ Builder Configuration
 
     .. py:attribute:: env
 
-        The builder's environmnet variables.
+        The builder's environment variables.
 
     .. py:attribute:: properties
 

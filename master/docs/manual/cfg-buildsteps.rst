@@ -848,7 +848,7 @@ This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automa
 
 .. note::
 
-   You can use the two above Rendereable in conjuction by using the class ``buildbot.process.properties.FlattenList``
+   You can use the two above Rendereable in conjunction by using the class ``buildbot.process.properties.FlattenList``
 
 For example::
 
@@ -1709,7 +1709,7 @@ To use this facility, create an instance of :class:`twisted.enterprise.adbapi.Co
 The necessary tables can be created automatically by setting ``autoCreateTables`` to ``True``, or manually using the SQL found in the :file:`mtrlogobserver.py` source file.
 
 One problem with specifying a database is that each reload of the configuration will get a new instance of ``ConnectionPool`` (even if the connection parameters are the same).
-To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equiality operation that avoids this problem.
+To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equality operation that avoids this problem.
 
 Example use::
 

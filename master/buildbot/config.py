@@ -472,7 +472,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             return
         self.protocols = protocols
 
-        # saved for backward compatability
+        # saved for backward compatibility
         if 'slavePortnum' in config_dict:
             reportDeprecatedWorkerNameUsage(
                 "c['slavePortnum'] key is deprecated, use "

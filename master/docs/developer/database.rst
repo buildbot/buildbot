@@ -272,7 +272,7 @@ builds
         :param integer builderid: builder to get builds for
         :param integer number: the current build number. Previous build will be taken from this number
         :param list ssBuild: the list of sourcestamps for the current build number
-        :returns: None or a build dictionnary
+        :returns: None or a build dictionary
 
         Returns the last successful build from the current build number with the same repository/repository/codebase
 
@@ -920,7 +920,7 @@ changes
         :param sourcestampid: ID of the sourcestampid
         :returns: chdict via Deferred
 
-        returns the change dictionnary related to the sourcestamp ID.
+        returns the change dictionary related to the sourcestamp ID.
 
 changesources
 ~~~~~~~~~~~~~
@@ -1261,7 +1261,7 @@ state
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
 
-    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environnement)
+    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environment)
 
 users
 ~~~~~
@@ -1799,10 +1799,10 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-PostgreSQL and SQlite db backends are checking the foreign keys consistancy.
+PostgreSQL and SQlite db backends are checking the foreign keys consistency.
 :bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
 
-To maintain consistency with real db, fakedb can check the foreign key consistancy of your test data. for this, just enable it with::
+To maintain consistency with real db, fakedb can check the foreign key consistency of your test data. For this, just enable it with::
 
     self.db = fakedb.FakeDBConnector(self.master, self)
     self.db.checkForeignKeys = True

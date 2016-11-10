@@ -81,7 +81,7 @@ def flatten(l, types=(list, )):
 
     This is safe to call on something not a list/tuple - the original input is returned as a list
     """
-    # For backwards compatability, this returned a list, not an iterable.
+    # For backwards compatibility, this returned a list, not an iterable.
     # Changing to return an iterable could break things.
     if not isinstance(l, types):
         return l

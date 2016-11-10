@@ -118,7 +118,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
-        # trigger contact contructor, which in turn subscribes to notify events
+        # trigger contact constructor, which in turn subscribes to notify events
         self.getContact(channel=channel)
 
     def left(self, channel):

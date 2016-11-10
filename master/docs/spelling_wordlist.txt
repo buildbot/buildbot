@@ -3,12 +3,8 @@ acknowledgements
 addCallbacks
 admin
 admins
-adress
 afterwards
-aggreagated
-agremented
 al
-alignement
 Allura
 analyse
 angularjs
@@ -29,7 +25,6 @@ Async
 asymmetrics
 Async
 Atlassian
-attricutes
 attrs
 auth
 Auth
@@ -39,7 +34,6 @@ autoconf
 autodetected
 automake
 autoreconf
-avoied
 backend
 backends
 Backends
@@ -47,7 +41,6 @@ backoff
 backported
 balancer
 balancers
-bandwith
 basedir
 Basestring
 basetgz
@@ -57,8 +50,6 @@ bb
 bbcollections
 bbproto
 bdist
-beeing
-begining
 behaviour
 Bitbucket
 Bitbuckets
@@ -77,14 +68,11 @@ br
 brdict
 brdicts
 Brini
-broduced
 Browserid
 bsdict
 bsdicts
 bsid
 bugfix
-Buidbot
-Builbot
 buildbot
 Buildbot
 buildCacheSize
@@ -172,23 +160,15 @@ collapseRequests
 commandId
 commandline
 committer
-compatability
-completly
 conditionalize
 config
 Config
 configs
 Configs
-coniguration
-conjuction
-consistancy
 contrib
 Contrib
-controled
-contructor
 coolproject
 coredump
-correspondance
 cowbuilder
 cp
 cpdir
@@ -196,7 +176,6 @@ cppcheck
 Cppcheck
 CPython
 Cred
-credentails
 creds
 cron
 Cron
@@ -240,8 +219,6 @@ dependant
 deserialization
 dev
 Dict
-dictionnary
-dictonary
 dicts
 diff
 diffs
@@ -260,7 +237,6 @@ Dockerfile
 dockerfiles
 docstring
 docstrings
-documenation
 doesnt
 dom
 dont
@@ -274,13 +250,9 @@ emacs
 emption
 Encodings
 endsWith
-enpoints
 entityType
 entrypoint
-environmnet
-environnement
 eq
-equiality
 errback
 errbacks
 errorCb
@@ -291,7 +263,6 @@ failover
 failsafe
 fakedb
 fallback
-falttens
 favour
 fileIsImportant
 filename
@@ -301,7 +272,6 @@ Filenames
 filesystem
 Filesystem
 Firefox
-flexiblie
 fn
 fo
 foo
@@ -897,7 +867,6 @@ whitespace
 Whitespace
 Whlie
 wich
-wih
 wikis
 wil
 wildcard
