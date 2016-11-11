@@ -1,7 +1,7 @@
 Buildbot: The Continuous Integration Framework
 ==============================================
 
-:Site: http://buildbot.net
+:Site: https://buildbot.net
 :Original author: Brian Warner <warner-buildbot @ lothar . com>
 :Current maintainer: Dustin J. Mitchell <dustin@buildbot.net>
 
@@ -22,7 +22,7 @@ Buildbot is an open-source continuous integration framework for automating softw
 Documentation
 -------------
 
-See http://docs.buildbot.net/current/ for documentation of the current version of Buildbot.
+See https://docs.buildbot.net/current/ for documentation of the current version of Buildbot.
 
 Docker container
 ----------------
@@ -43,7 +43,7 @@ Following environment variables are supported for configuration:
 Requirements
 ------------
 
-See http://docs.buildbot.net/current/manual/installation/index.html
+See https://docs.buildbot.net/current/manual/installation/index.html
 
 Briefly: python, Twisted, Jinja2, simplejson, and SQLite.
 Simplejson and SQLite are included with recent versions of Python.
@@ -56,7 +56,7 @@ Please send your patches to https://github.com/buildbot/buildbot/
 Support
 -------
 
-Please send questions, bugs, patches, etc, to the buildbot-devel mailing list reachable through http://buildbot.net/, so that everyone can see them.
+Please send questions, bugs, patches, etc, to the buildbot-devel mailing list reachable through https://buildbot.net/, so that everyone can see them.
 
 Copying
 -------
