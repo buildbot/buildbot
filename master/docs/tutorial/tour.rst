@@ -149,7 +149,7 @@ Once you've logged in, you will see some new options that allow you to force a b
 .. image:: _images/force-build.png
    :alt: force a build.
 
-Click *Force Build* - there's no need to fill in any of the fields in this case.
+Click *Start Build* - there's no need to fill in any of the fields in this case.
 Next, click on `view in waterfall <http://localhost:8010/waterfall?show=runtests>`_.
 
 You will now see:
@@ -166,7 +166,7 @@ First, start an IRC client of your choice, connect to irc.freenode.org and join 
 In this example we will use ``#buildbot-test``, so go join that channel.
 (*Note: please do not join the main buildbot channel!*)
 
-Edit :file:'master.cfg' and look for the *STATUS TARGETS* section.
+Edit :file:`master.cfg` and look for the *STATUS TARGETS* section.
 At the end of that section add the lines::
 
   from buildbot.status import irc
