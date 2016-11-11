@@ -19,7 +19,6 @@ import sys
 from mock import Mock
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot import config
@@ -30,8 +29,8 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.reporters import utils
 from buildbot.reporters import mail
+from buildbot.reporters import utils
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -581,7 +580,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         text = mail.get_payload()
         self.assertIn("has noticed that the worker named myworker went away", text)
 
-
     @defer.inlineCallbacks
     def do_test_sendMessage(self, **mnKwargs):
         fakeSenderFactory = Mock()
@@ -593,7 +591,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
         mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
-                                            "subject": "subject"}
+                                                                         "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(spec=mn.findInterrestedUsersEmails)
         mn.findInterrestedUsersEmails.return_value = "<recipients>"
@@ -602,7 +600,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.processRecipients.return_value = "<processedrecipients>"
 
         mn.createEmail = Mock(spec=mn.createEmail)
-        mn.createEmail.return_value.as_string = Mock(return_value = "<email>")
+        mn.createEmail.return_value.as_string = Mock(return_value="<email>")
 
         yield mn.buildMessage("mybldr", builds, SUCCESS)
         defer.returnValue((mn, builds))
@@ -626,6 +624,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[0][3]), {}), fakereactor.method_calls)
+
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
     unibody = u'Unicode body with non-ascii (%s).' % funny_chars
