@@ -253,8 +253,8 @@ MailNotifier arguments
 
 ``useTls``
     (boolean).
-    When this argument is ``True`` (default is ``False``) ``MailNotifier`` sends emails using TLS and authenticates with the ``relayhost``.
-    When using TLS the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
+    When this argument is ``True`` (default is ``False``) ``MailNotifier`` requires that STARTTLS encryption is used for the connection with the ``relayhost``.
+    Authentication is required for STARTTLS so the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
 
 ``useSmtps``
     (boolean).
