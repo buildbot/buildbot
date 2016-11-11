@@ -19,6 +19,7 @@ import sys
 from mock import Mock
 
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot import config
@@ -30,6 +31,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import utils
+from buildbot.reporters import mail
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -579,6 +581,51 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         text = mail.get_payload()
         self.assertIn("has noticed that the worker named myworker went away", text)
 
+
+    @defer.inlineCallbacks
+    def do_test_sendMessage(self, **mnKwargs):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+
+        _, builds = yield self.setupBuildResults(SUCCESS)
+        mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
+
+        mn.messageFormatter = Mock(spec=mn.messageFormatter)
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+                                            "subject": "subject"}
+
+        mn.findInterrestedUsersEmails = Mock(spec=mn.findInterrestedUsersEmails)
+        mn.findInterrestedUsersEmails.return_value = "<recipients>"
+
+        mn.processRecipients = Mock(spec=mn.processRecipients)
+        mn.processRecipients.return_value = "<processedrecipients>"
+
+        mn.createEmail = Mock(spec=mn.createEmail)
+        mn.createEmail.return_value.as_string = Mock(return_value = "<email>")
+
+        yield mn.buildMessage("mybldr", builds, SUCCESS)
+        defer.returnValue((mn, builds))
+
+    @defer.inlineCallbacks
+    def test_sendMessageOverTcp(self):
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+
+        mn, builds = yield self.do_test_sendMessage()
+
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
+
+    @defer.inlineCallbacks
+    def test_sendMessageOverSsl(self):
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+
+        mn, builds = yield self.do_test_sendMessage(useSmtps=True)
+
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[0][3]), {}), fakereactor.method_calls)
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
     unibody = u'Unicode body with non-ascii (%s).' % funny_chars
