@@ -112,7 +112,7 @@ class MailNotifier(service.BuildbotService):
                     lookup=None, extraRecipients=None,
                     sendToInterestedUsers=True,
                     messageFormatter=None, extraHeaders=None,
-                    addPatch=True, useTls=False, useSsl=False,
+                    addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
                     name=None, schedulers=None, branches=None):
         if ESMTPSenderFactory is None:
@@ -175,7 +175,7 @@ class MailNotifier(service.BuildbotService):
                         lookup=None, extraRecipients=None,
                         sendToInterestedUsers=True,
                         messageFormatter=None, extraHeaders=None,
-                        addPatch=True, useTls=False, useSsl=False,
+                        addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
                         name=None, schedulers=None, branches=None,
                         messageFormatterMissingWorker=None):
@@ -208,7 +208,7 @@ class MailNotifier(service.BuildbotService):
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
-        self.useSsl = useSsl
+        self.useSmtps = useSmtps
         self.smtpUser = smtpUser
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
@@ -522,7 +522,7 @@ class MailNotifier(service.BuildbotService):
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
-        if self.useSsl:
+        if self.useSmtps:
             reactor.connectSSL(self.relayhost, self.smtpPort, sender_factory, ssl.ClientContextFactory())
         else:
             reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)

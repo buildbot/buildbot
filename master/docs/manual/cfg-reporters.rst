@@ -256,9 +256,10 @@ MailNotifier arguments
     When this argument is ``True`` (default is ``False``) ``MailNotifier`` sends emails using TLS and authenticates with the ``relayhost``.
     When using TLS the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
 
-``useSsl``
+``useSmtps``
     (boolean).
-    When this argument is ``True`` (default is ``False``) ``MailNotifier`` sends emails using SSL and authenticates with the ``relayhost``.
+    When this argument is ``True`` (default is ``False``) ``MailNotifier`` connects to ``relayhost`` over an encrypted SSL/TLS connection.
+    This configuration is typically used over port 465.
 
 ``smtpUser``
     (string).
