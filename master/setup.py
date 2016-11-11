@@ -225,6 +225,7 @@ setup_args = {
                 'SVNCommitEmailMaildirSource',
                 'BzrLaunchpadEmailMaildirSource']),
             ('buildbot.changes.bitbucket', ['BitbucketPullrequestPoller']),
+            ('buildbot.changes.github', ['GitHubPullrequestPoller']),
             ('buildbot.changes.bonsaipoller', ['BonsaiPoller']),
             ('buildbot.changes.gerritchangesource', ['GerritChangeSource']),
             ('buildbot.changes.gitpoller', ['GitPoller']),
