@@ -43,7 +43,7 @@ Following environment variables are supported for configuration:
 Requirements
 ------------
 
-See http://docs.buildbot.net/current/manual/installation.html
+See http://docs.buildbot.net/current/manual/installation/index.html
 
 Briefly: python, Twisted, Jinja2, simplejson, and SQLite.
 Simplejson and SQLite are included with recent versions of Python.
