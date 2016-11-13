@@ -499,18 +499,28 @@ It allows or denies access to the REST APIs according to rules.
     }
 
 - Roles is a label that you give to a user.
-  It is similar to the notion of group, but with more flexibility.
-  For an example of how it is different to group, there is the ``owner`` role, which can be given to a user for a build that he is at the origin.
 
-- Endpoint matchers associates role requirements to REST API endpoints.
+  It is similar but different to the usual notion of group:
 
-- Role matchers associates authenticated users to roles.
+  - a user can have several roles, and a role can be given to several users.
+  - Role is an application specific notion, while group is more organization specific notion.
+  - Groups are given by the auth plugin, e.g ``ldap``, ``github``, and are not always in the precise control of the buildbot admins.
+  - Roles can be dynamically assigned, according to the context.
+    For example, there is the ``owner`` role, which can be given to a user for a build that he is at the origin, so that he can stop or rebuild only builds of his own.
+
+- Endpoint matchers associate role requirements to REST API endpoints.
+  The default policy is allow in case no matcher matches (see below why)
+
+- Role matchers associate authenticated users to roles.
+
+Authz Configuration
++++++++++++++++++++
 
 .. py:class:: buildbot.www.authz.Authz(allowRules=[], roleMatcher=[], stringsMatcher=util.fnmatchStrMatcher)
 
-    :param allowRules: List of EndpointMatchers processed in order for each endpoint grant request.
+    :param allowRules: List of :py:class:`EndpointMatcherBase` processed in order for each endpoint grant request.
     :param roleMatcher: List of RoleMatchers
-    :param stringsMatcher: Selects algorithm used to make string comparaison.
+    :param stringsMatcher: Selects algorithm used to make strings comparison (used to compare roles and builder names).
        can be :py:class:`util.fnmatchStrMatcher` or :py:class:`util.reStrMatcher` from ``from buildbot.plugins import util``
 
     :py:class:`Authz` needs to be configured in ``c['www']['authz']``
@@ -519,8 +529,13 @@ Endpoint matchers
 +++++++++++++++++
 
 Endpoint matchers are responsible for creating rules to match REST endpoints, and requiring roles for them.
-Endpoint matchers are process in the order they are configured.
-The first that matches stop the sequence unless ``defaultDeny=False`` is passed.
+Endpoint matchers are processed in the order they are configured.
+The first rule matching an endpoint will prevent further rules from being checked.
+To continue checking other rules when the result is `deny`, set `defaultDeny=False`.
+If not endpoint matcher matches, then the access is granted.
+
+One can implement the default deny policy by putting an :py:class:`AnyEndpointMatcher` with nonexistent role in the end of the list.
+Please note that this will deny all REST apis, and most of the UI do not implement proper access denied message in case of such error.
 
 The following sequence is implemented by each EndpointMatcher class.
 
