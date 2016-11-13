@@ -476,17 +476,71 @@ Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), direct
 Authorization rules
 ~~~~~~~~~~~~~~~~~~~
 
+The authorization framework in Buildbot is very generic and flexible.
+Drawback is that it is not very obvious for new comers.
+The 'simple' example will however allow you to easily start by implementing an admins-have-all-rights setup.
+
+Please carefully read the following documentation to understand how to setup authorization in Buildbot.
+
+Authorization framework is tightly coupled to the REST API.
+Authorization framework only works for HTTP, not for other means of interaction like IRC or try scheduler.
+It allows or denies access to the REST APIs according to rules.
+
+.. blockdiag::
+
+    blockdiag {
+      User -> AuthenticatedUser [label = Auth];
+      AuthenticatedUser -> "RoleMatcher" -> Role <- "EndpointMatcher" <- "REST API Endpoint"
+
+      User  [shape = actor];
+      AuthenticatedUser  [shape = actor];
+      RoleMatcher [shape = diamond];
+      EndpointMatcher [shape = diamond];
+    }
+
+- Roles is a label that you give to a user.
+  It is similar to the notion of group, but with more flexibility.
+  For an example of how it is different to group, there is the ``owner`` role, which can be given to a user for a build that he is at the origin.
+
+- Endpoint matchers associates role requirements to REST API endpoints.
+
+- Role matchers associates authenticated users to roles.
+
+.. py:class:: buildbot.www.authz.Authz(allowRules=[], roleMatcher=[], stringsMatcher=util.fnmatchStrMatcher)
+
+    :param allowRules: List of EndpointMatchers processed in order for each endpoint grant request.
+    :param roleMatcher: List of RoleMatchers
+    :param stringsMatcher: Selects algorithm used to make string comparaison.
+       can be :py:class:`util.fnmatchStrMatcher` or :py:class:`util.reStrMatcher` from ``from buildbot.plugins import util``
+
+    :py:class:`Authz` needs to be configured in ``c['www']['authz']``
+
 Endpoint matchers
 +++++++++++++++++
 
 Endpoint matchers are responsible for creating rules to match REST endpoints, and requiring roles for them.
-The following sequence is implemented by each EndpointMatcher class
+Endpoint matchers are process in the order they are configured.
+The first that matches stop the sequence unless ``defaultDeny=False`` is passed.
+
+The following sequence is implemented by each EndpointMatcher class.
 
 - Check whether the requested endpoint is supported by this matcher
 - Get necessary info from data api, and decides whether it matches.
-- Looks if the users has the required role.
+- Look if the users has the required role.
 
-Several endpoints  matchers are currently implemented
+Several endpoints matchers are currently implemented.
+If you need a very complex setup, you may need to implement your own endpoint matchers.
+In this case, you can look at the source code for detailed examples on how to write endpoint matchers.
+
+.. py:class:: buildbot.www.authz.endpointmatchers.EndpointMatcherBase(role, defaultDeny=True)
+
+    :param role: The role which grants access to this endpoint.
+        List of roles is not supported, but a ``fnmatch`` expression can be provided to match several roles.
+
+    :param defaultDeny: The role matcher algorithm will stop if this value is true, and if the endpoint matched.
+
+    This is the base endpoint matcher.
+    Its arguments are inherited by all the other endpoint matchers.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.AnyEndpointMatcher(role)
 
