@@ -558,6 +558,20 @@ You can grant roles from groups information provided by the Auth plugins, or if 
             RolesFromOwner(role="owner")
         ]
 
+.. py:class:: buildbot.www.authz.roles.RolesFromUsername(roles, usernames)
+
+    :param roles: roles to assign when the username matches.
+    :param usernames: list of usernames that have the roles.
+
+    RolesFromUsername grants the given roles when the ``username`` property is within the list of usernames.
+
+    ex::
+
+        roleMatchers=[
+            RolesFromUsername(roles=["admins"], usernames=["root"]),
+            RolesFromUsername(roles=["developers", "integrators"], usernames=["Alice", "Bob"])
+        ]
+
 
 Example Configs
 +++++++++++++++

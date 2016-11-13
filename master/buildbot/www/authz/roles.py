@@ -70,3 +70,17 @@ class RolesFromOwner(RolesFromBase):
             if userDetails['email'] == owner and owner is not None:
                 return [self.role]
         return []
+
+
+class RolesFromUsername(RolesFromBase):
+    def __init__(self, roles, usernames):
+        self.roles = roles
+        if None in usernames:
+            from buildbot import config
+            config.error('Usernames cannot be None')
+        self.usernames = usernames
+
+    def getRolesFromUser(self, userDetails):
+        if userDetails.get('username') in self.usernames:
+            return self.roles
+        return []
