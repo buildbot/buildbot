@@ -83,13 +83,13 @@ Where in 0.8.x most of the data about a build was available synchronously, it mu
 All classes under the Python package ``buildbot.status`` should be considered deprecated.
 Many have already been removed, and the remainder have limited functionality.
 Any custom code which refers to these classes must be rewritten to use the Data API.
-Avoid the temptatation to reach into the Buildbot source code to find other useful-looking methods!
+Avoid the temptation to reach into the Buildbot source code to find other useful-looking methods!
 
 Common uses of the status API are:
 
  * ``getBuild`` in a custom renderable
  * ``MailNotifier`` message formatters (see below for upgrade hints)
- * ``doIf`` funtions on steps
+ * ``doIf`` functions on steps
 
 Import paths for several classes under the ``buildbot.status`` package but which remain useful have changed.
 Most of these are now available as plugins (see above), but for the remainder, consult the source code.

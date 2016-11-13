@@ -426,7 +426,7 @@ Patches are very welcome for restoring the full functionality.
 
 .. note:: Security Note
 
-Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
 
 
 
