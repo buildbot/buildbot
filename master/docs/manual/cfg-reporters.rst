@@ -1078,7 +1078,7 @@ GerritVerifyStatusPush
 
 .. py:class:: buildbot.status.status_gerrit_verify_status.GerritVerifyStatusPush
 
-:class:`GerritVerifyStatusPush` sends a verify status to gerrit using the verify-status_ Gerrit plugin.
+:class:`GerritVerifyStatusPush` sends a verify status to Gerrit using the verify-status_ Gerrit plugin.
 
 It is an alternate method to :bb:reporter:`GerritStatusPush`, which uses the SSH API to send reviews.
 
@@ -1092,13 +1092,13 @@ Most parameters are :index:`renderables <renderable>`
     verification_name=Interpolate("%(prop:buildername)s"), abstain=False, category=None, reporter=None,
     verbose=False, **kwargs)
 
-   :param string baseURL: Gerrit HTTP base URL
-   :param string auth: a requests authentication configuration.
+    :param string baseURL: Gerrit HTTP base URL
+    :param string auth: a requests authentication configuration.
        if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
        if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
     :param renderable string startDescription: the comment sent when the build is starting.
     :param renderable string endDescription: the comment sent when the build is finishing.
-    :param renderable string verification_name: the name of the job displayed in the gerrit UI.
+    :param renderable string verification_name: the name of the job displayed in the Gerrit UI.
     :param renderable boolean abstain: whether this results should be counted as voting.
     :param renderable boolean category: Category of the build.
     :param renderable boolean reporter: The user that verified this build
@@ -1108,9 +1108,8 @@ Most parameters are :index:`renderables <renderable>`
 This reporter is integrated with :class:`GerritChangeSource`, and will update changes detected by this change source.
 
 This reporter can also send reports for changes triggered manually provided that there is a property in the build named ``gerrit_changes``, containing the list of changes that were tested.
-This property must be a list of dictionaries, containing ``change_id`` and ``revision_id`` keys, as defined in the revision endpoints of the `gerrit documentation`_
+This property must be a list of dictionaries, containing ``change_id`` and ``revision_id`` keys, as defined in the revision endpoints of the `Gerrit documentation`_
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
-.. _verify-status_: https://gerrit.googlesource.com/plugins/verify-status
-verify-status_
-.. _gerrit documentation: https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#revision-endpoints
+.. _verify-status: https://gerrit.googlesource.com/plugins/verify-status
+.. _Gerrit documentation: https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#revision-endpoints
