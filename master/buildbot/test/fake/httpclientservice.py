@@ -57,6 +57,7 @@ class HTTPClientService(service.SharedService):
 
     getName from the fake and getName from the real must return the same values.
     """
+    quiet = False
 
     def __init__(self, base_url, auth=None, headers=None):
         service.SharedService.__init__(self)
@@ -108,8 +109,9 @@ class HTTPClientService(service.SharedService):
                               "expected more http requests:\n {!r}".format(self._expected))
 
     def _doRequest(self, method, ep, params=None, data=None, json=None):
-        log.debug("{method} {ep} {params!r} <- {data!r}",
-                  method=method, ep=ep, params=params, data=data or json)
+        if not self.quiet:
+            log.debug("{method} {ep} {params!r} <- {data!r}",
+                      method=method, ep=ep, params=params, data=data or json)
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
@@ -126,8 +128,9 @@ class HTTPClientService(service.SharedService):
                     expect['method'], expect['ep'], expect['params'], expect['data'], expect['json'],
                     method, ep, params, data, json,
                 ))
-        log.debug("{method} {ep} -> {code} {content!r}",
-                  method=method, ep=ep, code=expect['code'], content=expect['content'])
+        if not self.quiet:
+            log.debug("{method} {ep} -> {code} {content!r}",
+                      method=method, ep=ep, code=expect['code'], content=expect['content'])
         return defer.succeed(ResponseWrapper(expect['code'], expect['content']))
 
     # lets be nice to the auto completers, and don't generate that code

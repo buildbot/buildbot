@@ -32,3 +32,7 @@ class LoggingMixin(object):
                 return
         self.fail(
             "%r not matched in log output.\n%s " % (regexp, self._logEvents))
+
+    def assertWasQuiet(self):
+        self.assertEqual([
+            log.textFromEventDict(event) for event in self._logEvents], [])
