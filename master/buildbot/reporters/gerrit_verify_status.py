@@ -48,10 +48,17 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     DEFAULT_RESULT = -1
 
     @defer.inlineCallbacks
-    def reconfigService(self, baseURL, auth,
-                        startDescription=None, endDescription=None,
-                        verification_name=None, abstain=False, category=None, reporter=None,
-                        verbose=False, **kwargs):
+    def reconfigService(self,
+                        baseURL,
+                        auth,
+                        startDescription=None,
+                        endDescription=None,
+                        verification_name=None,
+                        abstain=False,
+                        category=None,
+                        reporter=None,
+                        verbose=False,
+                        **kwargs):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
         if baseURL.endswith('/'):
@@ -60,18 +67,27 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, auth=auth)
 
-        self.verification_name = verification_name or Interpolate('%(prop:buildername)s')
-        self.reporter = reporter or "buildbot"
-        self.abstain = abstain
-        self.category = category
-        self.startDescription = startDescription or 'Build started.'
-        self.endDescription = endDescription or 'Build done.'
-        self.verbose = verbose
+        self._verification_name = verification_name or Interpolate(
+            '%(prop:buildername)s')
+        self._reporter = reporter or "buildbot"
+        self._abstain = abstain
+        self._category = category
+        self._startDescription = startDescription or 'Build started.'
+        self._endDescription = endDescription or 'Build done.'
+        self._verbose = verbose
 
     def createStatus(self,
-                     change_id, revision_id, name, value, abstain=None,
-                     rerun=None, comment=None, url=None, reporter=None,
-                     category=None, duration=None):
+                     change_id,
+                     revision_id,
+                     name,
+                     value,
+                     abstain=None,
+                     rerun=None,
+                     comment=None,
+                     url=None,
+                     reporter=None,
+                     category=None,
+                     duration=None):
         """
         Abstract the POST REST api documented here:
         https://gerrit.googlesource.com/plugins/verify-status/+/master/src/main/resources/Documentation/rest-api-changes.md
@@ -92,9 +108,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
 
         :return: A deferred with the result from Gerrit.
         """
-        payload = {
-            'name': name,
-            'value': value}
+        payload = {'name': name, 'value': value}
 
         if abstain is not None:
             payload['abstain'] = abstain
@@ -117,13 +131,18 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         if duration is not None:
             payload['duration'] = duration
 
-        if self.verbose:
-            log.info(
+        if self._verbose:
+            log.debug(
                 'Sending Gerrit status for {change_id}/{revision_id}: data={data}',
-                change_id=change_id, revision_id=revision_id, data=payload)
+                change_id=change_id,
+                revision_id=revision_id,
+                data=payload)
 
-        return self._http.post('/'.join([
-            '/a/changes', str(change_id), 'revisions', str(revision_id), 'verify-status~verifications']),
+        return self._http.post(
+            '/'.join([
+                '/a/changes', str(change_id), 'revisions', str(revision_id),
+                'verify-status~verifications'
+            ]),
             json=payload)
 
     def formatDuration(self, duration):
@@ -137,21 +156,26 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         hours, remainder = divmod(duration.seconds, 3600)
         minutes, seconds = divmod(remainder, 60)
         if days:
-            return '{} day{} {}h {}m {}s'.format(
-                days, "s" if days > 1 else "",
-                hours, minutes, seconds)
+            return '{} day{} {}h {}m {}s'.format(days, "s" if days > 1 else "",
+                                                 hours, minutes, seconds)
         elif hours:
             return '{}h {}m {}s'.format(hours, minutes, seconds)
         else:
             return '{}m {}s'.format(minutes, seconds)
 
-    def getGerritChanges(self, props):
+    @staticmethod
+    def getGerritChanges(props):
         """ Get the gerrit changes
 
-            Must return a list of dictionary with at list change_id, and revision_id,
-            which format is the one accepted by the gerrit REST API as of
-            /changes/:change_id/revision/:revision_id paths (see gerrit doc)
+            This method could be overriden if really needed to accomodate for other
+            custom steps method for fetching gerrit changes.
+
             :param props: an IProperty
+
+            :return: (optionally via deferred) a list of dictionary with at list
+                change_id, and revision_id,
+                which format is the one accepted by the gerrit REST API as of
+                /changes/:change_id/revision/:revision_id paths (see gerrit doc)
         """
         if 'gerrit_changes' in props:
             return props.getProperty('gerrit_changes')
@@ -159,28 +183,28 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         if 'event.change.number' in props:
             return [{
                 'change_id': props.getProperty('event.change.number'),
-                'revision_id': props.getProperty('event.patchSet.number')}
-            ]
+                'revision_id': props.getProperty('event.patchSet.number')
+            }]
         return []
 
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
         if build['complete']:
-            value = self.RESULTS_TABLE.get(build['results'], self.DEFAULT_RESULT)
-            comment = yield props.render(self.endDescription)
-            duration = self.formatDuration(build['complete_at'] - build['started_at'])
-
+            value = self.RESULTS_TABLE.get(build['results'],
+                                           self.DEFAULT_RESULT)
+            comment = yield props.render(self._endDescription)
+            duration = self.formatDuration(build['complete_at'] - build[
+                'started_at'])
         else:
             value = 0
-            comment = yield props.render(self.startDescription)
+            comment = yield props.render(self._startDescription)
             duration = 'pending'
 
-        print build['results'], value
-        name = yield props.render(self.verification_name)
-        reporter = yield props.render(self.reporter)
-        category = yield props.render(self.category)
-        abstain = yield props.render(self.abstain)
+        name = yield props.render(self._verification_name)
+        reporter = yield props.render(self._reporter)
+        category = yield props.render(self._category)
+        abstain = yield props.render(self._abstain)
         # TODO: find reliable way to find out whether its a rebuild
         rerun = None
 
@@ -188,11 +212,17 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         for change in changes:
             try:
                 yield self.createStatus(
-                    change['change_id'], change['revision_id'],
-                    name, value, abstain=abstain,
-                    rerun=rerun, comment=comment, url=build['url'], reporter=reporter,
-                    category=category, duration=duration)
+                    change['change_id'],
+                    change['revision_id'],
+                    name,
+                    value,
+                    abstain=abstain,
+                    rerun=rerun,
+                    comment=comment,
+                    url=build['url'],
+                    reporter=reporter,
+                    category=category,
+                    duration=duration)
             except Exception:
                 log.failure(
-                    'Failed to send status!',
-                    failure=failure.Failure())
+                    'Failed to send status!', failure=failure.Failure())
