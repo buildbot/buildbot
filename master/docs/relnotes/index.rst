@@ -27,6 +27,8 @@ Features
 
 * :bb:reporter:`StashStatusPush` now accepts ``key``, ``buildName``, ``endDescription``, ``startDescription``, and ``verbose``  parameters to control the JSON sent to Stash.
 
+* New :bb:reporter:`GerritVerifyStatusPush` can send multiple review status for the same gerrit change.
+
 Fixes
 ~~~~~
 
