@@ -57,94 +57,26 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     return username
 
 
-class GerritChangeSource(base.ChangeSource):
+class GerritChangeSourceBase(base.ChangeSource):
 
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
     compare_attrs = ("gerritserver", "gerritport")
-
-    STREAM_GOOD_CONNECTION_TIME = 120
-    "(seconds) connections longer than this are considered good, and reset the backoff timer"
-
-    STREAM_BACKOFF_MIN = 0.5
-    "(seconds) minimum, but nonzero, time to wait before retrying a failed connection"
-
-    STREAM_BACKOFF_EXPONENT = 1.5
-    "multiplier used to increase the backoff from MIN to MAX on repeated failures"
-
-    STREAM_BACKOFF_MAX = 60
-    "(seconds) maximum time to wait before retrying a failed connection"
-
     name = None
 
     def checkConfig(self,
-                    gerritserver,
-                    username,
-                    gerritport=29418,
-                    identity_file=None,
                     handled_events=("patchset-created", "ref-updated"),
                     debug=False):
-        if self.name is None:
-            self.name = u"GerritChangeSource:%s@%s:%d" % (
-                username, gerritserver, gerritport)
+        pass
 
     def reconfigService(self,
-                        gerritserver,
-                        username,
-                        gerritport=29418,
-                        identity_file=None,
-                        name=None,
                         handled_events=("patchset-created", "ref-updated"),
                         debug=False):
-        self.gerritserver = gerritserver
-        self.gerritport = gerritport
-        self.username = username
-        self.identity_file = identity_file
         self.handled_events = list(handled_events)
-        self.process = None
-        self.wantProcess = False
         self.debug = debug
-        self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
 
-    class LocalPP(ProcessProtocol):
-
-        def __init__(self, change_source):
-            self.change_source = change_source
-            self.data = ""
-
-        @defer.inlineCallbacks
-        def outReceived(self, data):
-            """Do line buffering."""
-            self.data += data
-            lines = self.data.split("\n")
-            # last line is either empty or incomplete
-            self.data = lines.pop(-1)
-            for line in lines:
-                if self.change_source.debug:
-                    log.msg("gerrit: %s" % line)
-                yield self.change_source.lineReceived(line)
-
-        def errReceived(self, data):
-            if self.change_source.debug:
-                log.msg("gerrit stderr: %s" % data)
-
-        def processEnded(self, status_object):
-            self.change_source.streamProcessStopped()
-
-    def lineReceived(self, line):
-        try:
-            event = json.loads(line.decode('utf-8'))
-        except ValueError:
-            msg = "bad json line: %s"
-            log.msg(msg % line)
-            return defer.succeed(None)
-
-        if not(isinstance(event, dict) and "type" in event):
-            msg = "no type in event %s"
-            log.msg(msg % line)
-            return defer.succeed(None)
-
+    def eventReceived(self, event):
         if not (event['type'] in self.handled_events):
             msg = "the event type '%s' is not setup to handle"
             log.msg(msg % event['type'])
@@ -230,6 +162,98 @@ class GerritChangeSource(base.ChangeSource):
             files=[u"unknown"],
             category=event["type"],
             properties=properties))
+
+
+class GerritChangeSource(GerritChangeSourceBase):
+
+    """This source will maintain a connection to gerrit ssh server
+    that will provide us gerrit events in json format."""
+
+    compare_attrs = ("gerritserver", "gerritport")
+
+    STREAM_GOOD_CONNECTION_TIME = 120
+    "(seconds) connections longer than this are considered good, and reset the backoff timer"
+
+    STREAM_BACKOFF_MIN = 0.5
+    "(seconds) minimum, but nonzero, time to wait before retrying a failed connection"
+
+    STREAM_BACKOFF_EXPONENT = 1.5
+    "multiplier used to increase the backoff from MIN to MAX on repeated failures"
+
+    STREAM_BACKOFF_MAX = 60
+    "(seconds) maximum time to wait before retrying a failed connection"
+
+    name = None
+
+    def checkConfig(self,
+                    gerritserver,
+                    username,
+                    gerritport=29418,
+                    identity_file=None,
+                    handled_events=("patchset-created", "ref-updated"),
+                    debug=False):
+        if self.name is None:
+            self.name = u"GerritChangeSource:%s@%s:%d" % (
+                username, gerritserver, gerritport)
+        GerritChangeSourceBase.checkConfig(self, handled_events=handled_events, debug=debug)
+
+    def reconfigService(self,
+                        gerritserver,
+                        username,
+                        gerritport=29418,
+                        identity_file=None,
+                        name=None,
+                        handled_events=("patchset-created", "ref-updated"),
+                        debug=False):
+
+        GerritChangeSourceBase.reconfigService(self, handled_events=handled_events, debug=debug)
+        self.gerritserver = gerritserver
+        self.gerritport = gerritport
+        self.username = username
+        self.identity_file = identity_file
+        self.process = None
+        self.wantProcess = False
+        self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+
+    class LocalPP(ProcessProtocol):
+
+        def __init__(self, change_source):
+            self.change_source = change_source
+            self.data = ""
+
+        @defer.inlineCallbacks
+        def outReceived(self, data):
+            """Do line buffering."""
+            self.data += data
+            lines = self.data.split("\n")
+            # last line is either empty or incomplete
+            self.data = lines.pop(-1)
+            for line in lines:
+                if self.change_source.debug:
+                    log.msg("gerrit: %s" % line)
+                yield self.change_source.lineReceived(line)
+
+        def errReceived(self, data):
+            if self.change_source.debug:
+                log.msg("gerrit stderr: %s" % data)
+
+        def processEnded(self, status_object):
+            self.change_source.streamProcessStopped()
+
+    def lineReceived(self, line):
+        try:
+            event = json.loads(line.decode('utf-8'))
+        except ValueError:
+            msg = "bad json line: %s"
+            log.msg(msg % line)
+            return defer.succeed(None)
+
+        if not(isinstance(event, dict) and "type" in event):
+            msg = "no type in event %s"
+            log.msg(msg % line)
+            return defer.succeed(None)
+
+        return self.eventReceived(event)
 
     def streamProcessStopped(self):
         self.process = None
