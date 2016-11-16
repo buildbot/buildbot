@@ -61,6 +61,7 @@ class HTTPClientService(service.SharedService):
 
     def __init__(self, base_url, auth=None, headers=None):
         service.SharedService.__init__(self)
+        assert not base_url.endswith("/"), "baseurl should not end with /"
         self._base_url = base_url
         self._auth = auth
 
