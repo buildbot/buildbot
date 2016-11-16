@@ -363,10 +363,10 @@ URL to build page
 
 URL to buildbot main page
     ``{{ buildbot_url }}``
-    
+
 Status of the build as string.
     This require extending the context of the Formatter via the ``ctx`` parameter with: ``ctx=dict(statuses=util.Results)``.
-    
+
     ``{{ statuses[results] }}``
 
 Build text
@@ -1070,3 +1070,46 @@ Here's a complete example:
                 result['color'] = 'green' if build['results'] == 0 else 'red'
                 result['notify'] = (build['results'] != 0)
             return result
+
+.. bb:reporter:: GerritVerifyStatusPush
+
+GerritVerifyStatusPush
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.status.status_gerrit_verify_status.GerritVerifyStatusPush
+
+:class:`GerritVerifyStatusPush` sends a verify status to Gerrit using the verify-status_ Gerrit plugin.
+
+It is an alternate method to :bb:reporter:`GerritStatusPush`, which uses the SSH API to send reviews.
+
+The verify-status_ plugin allows several CI statuses to be sent for the same change, and display them separately in the Gerrit UI.
+
+Most parameters are :index:`renderables <renderable>`
+
+.. py:class:: GerritVerifyStatusPush(
+    baseURL, auth,
+    startDescription="Build started.", endDescription="Build done.",
+    verification_name=Interpolate("%(prop:buildername)s"), abstain=False, category=None, reporter=None,
+    verbose=False, **kwargs)
+
+    :param string baseURL: Gerrit HTTP base URL
+    :param string auth: a requests authentication configuration.
+       if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
+       if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    :param renderable string startDescription: the comment sent when the build is starting.
+    :param renderable string endDescription: the comment sent when the build is finishing.
+    :param renderable string verification_name: the name of the job displayed in the Gerrit UI.
+    :param renderable boolean abstain: whether this results should be counted as voting.
+    :param renderable boolean category: Category of the build.
+    :param renderable boolean reporter: The user that verified this build
+    :param boolean verbose: Whether to log every requests.
+    :param list builders: only send update for specified builders
+
+This reporter is integrated with :class:`GerritChangeSource`, and will update changes detected by this change source.
+
+This reporter can also send reports for changes triggered manually provided that there is a property in the build named ``gerrit_changes``, containing the list of changes that were tested.
+This property must be a list of dictionaries, containing ``change_id`` and ``revision_id`` keys, as defined in the revision endpoints of the `Gerrit documentation`_
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _verify-status: https://gerrit.googlesource.com/plugins/verify-status
+.. _Gerrit documentation: https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#revision-endpoints
