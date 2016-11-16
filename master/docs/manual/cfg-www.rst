@@ -477,7 +477,7 @@ Authorization rules
 ~~~~~~~~~~~~~~~~~~~
 
 The authorization framework in Buildbot is very generic and flexible.
-Drawback is that it is not very obvious for new comers.
+Drawback is that it is not very obvious for newcomers.
 The 'simple' example will however allow you to easily start by implementing an admins-have-all-rights setup.
 
 Please carefully read the following documentation to understand how to setup authorization in Buildbot.
@@ -502,7 +502,7 @@ It allows or denies access to the REST APIs according to rules.
 
   It is similar but different to the usual notion of group:
 
-  - a user can have several roles, and a role can be given to several users.
+  - A user can have several roles, and a role can be given to several users.
   - Role is an application specific notion, while group is more organization specific notion.
   - Groups are given by the auth plugin, e.g ``ldap``, ``github``, and are not always in the precise control of the buildbot admins.
   - Roles can be dynamically assigned, according to the context.
@@ -532,7 +532,7 @@ Endpoint matchers are responsible for creating rules to match REST endpoints, an
 Endpoint matchers are processed in the order they are configured.
 The first rule matching an endpoint will prevent further rules from being checked.
 To continue checking other rules when the result is `deny`, set `defaultDeny=False`.
-If not endpoint matcher matches, then the access is granted.
+If no endpoint matcher matches, then the access is granted.
 
 One can implement the default deny policy by putting an :py:class:`AnyEndpointMatcher` with nonexistent role in the end of the list.
 Please note that this will deny all REST apis, and most of the UI do not implement proper access denied message in case of such error.
