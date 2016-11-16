@@ -30,7 +30,6 @@ RUN         apt-get update && \
                 libffi-dev \
                 libssl-dev \
                 python-pip \
-                python-virtualenv \
                 curl && \
             rm -rf /var/lib/apt/lists/* && \
 # Test runs produce a great quantity of dead grandchild processes.  In a
@@ -38,6 +37,8 @@ RUN         apt-get update && \
 # so we need to simulate that here.  See https://github.com/Yelp/dumb-init
             curl -Lo /usr/local/bin/dumb-init https://github.com/Yelp/dumb-init/releases/download/v1.1.3/dumb-init_1.1.3_amd64 && \
             chmod +x /usr/local/bin/dumb-init && \
+# ubuntu pip version has issues so we should upgrade it: https://github.com/pypa/pip/pull/3287
+            pip install -U pip virtualenv && \
 # Install required python packages, and twisted
             pip --no-cache-dir install \
                 'twisted[tls]' && \
