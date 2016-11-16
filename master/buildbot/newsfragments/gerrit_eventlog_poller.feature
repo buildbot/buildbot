@@ -1,1 +1,1 @@
-* New :bb:chsrc:`_GerritEventLogPoller` poller to poll gerrit changes via http API.
+New :bb:chsrc:`GerritEventLogPoller` poller to poll Gerrit changes via http API.

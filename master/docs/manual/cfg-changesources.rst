@@ -1121,6 +1121,7 @@ A configuration for this source might look like:
 
 See :file:`master/docs/examples/git_gerrit.cfg` or :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution for a full example setup of Git+Gerrit or Repo+Gerrit of :bb:chsrc:`GerritChangeSource`.
 
+.. bb:chsrc:: GerritEventLogPoller
 
 .. _GerritEventLogPoller:
 
@@ -1138,8 +1139,8 @@ The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 
 ``auth``
     a requests authentication configuration.
-   if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
-   if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
+    if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
 
 ``handled_events``
     event to be handled (optional).
@@ -1159,7 +1160,7 @@ The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
 
-The same customization can be done as :bb:chsrc:`_GerritChangeSource` for handling special events.
+The same customization can be done as :bb:chsrc:`GerritChangeSource` for handling special events.
 
 .. _events-log: https://gerrit.googlesource.com/plugins/events-log/
 
