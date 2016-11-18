@@ -100,12 +100,12 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             return workdir
         return os.path.join(self.master.basedir, workdir)
 
-    def _getRevDetails(self, rev):
+    def _getRevDetails(self, node):
         """Return a deferred for (date, author, comments) of given rev.
 
         Deferred will be in error if rev is unknown.
         """
-        args = ['log', '-r', rev, r'--template={date|hgdate}\n{author}\n{desc|strip}']
+        args = ['log', '-r', node, r'--template={date|hgdate}\n{author}\n{desc|strip}']
         # Mercurial fails with status 255 if rev is unknown
         d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
                                    env=os.environ, errortoo=False )
@@ -178,7 +178,7 @@ class HgPoller(base.PollingChangeSource, StateMixin):
     def _processBranches(self, output):
 
         search = 'last(:tip,{0}) and head() and not closed() or bookmark()'.format(self.commits_checked)
-        args = ['log', '-r', search, '--template', '{branch} {bookmarks} {rev}:{node|short}\n']
+        args = ['log', '-r', search, '--template', '{branch} {bookmarks} {node}\n']
 
         results = yield utils.getProcessOutput(self.hgbin, args,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
@@ -252,19 +252,19 @@ class HgPoller(base.PollingChangeSource, StateMixin):
             # we could have used current = -1 convention as well (as hg does)
             revrange = '%s:%s' % (head, head)
         else:
-            revrange = '%d:%s' % (int(current.split(":")[0]) + 1, head)
+            revrange = '%s:%s' % (current, head)
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
         revListArgs = ['log', '-b', branch, '-r', revrange,
-                       r'--template={rev}:{node}\n']
+                       r'--template={node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False )
 
-        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
+        revNodeList = [rn for rn in results.strip().split()]
 
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (len(revNodeList), revNodeList, self._absWorkdir()))
-        for rev, node in revNodeList:
+        for node in revNodeList:
             timestamp, author, comments = yield self._getRevDetails(
                 node)
             yield self.master.addChange(
