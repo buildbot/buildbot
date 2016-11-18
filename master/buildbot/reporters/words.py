@@ -38,6 +38,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import utils
 from buildbot.util import service
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
@@ -550,25 +551,21 @@ class Contact(service.AsyncService):
 
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+            r = "Build %s containing revision(s) [%s] is complete: %s" % \
                 (builderName, ','.join(revisions), results[0])
         else:
-            r = "Hey! build %s #%d is complete: %s" % \
+            r = "Build %s #%d is complete: %s" % \
                 (builderName, buildNumber, results[0])
 
         r += ' [%s]' % maybeColorize(build['state_string'],
                                      results[1], self.useColors)
-        self.send(r)
 
         # FIXME: where do we get the list of changes for a build ?
         # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
         #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
-
-        # FIXME: where do we get the base_url? Then do we use the build Link to
-        # make the URL?
-        buildurl = None  # self.bot.status.getBuildbotURL() + build
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        r += " - %s" % utils.getURLForBuild(
+                        self.master, builder['builderid'], buildNumber)
+        self.send(r)
 
     results_descriptions = {
         SUCCESS: ("Success", 'GREEN'),
@@ -622,21 +619,19 @@ class Contact(service.AsyncService):
         results = self.getResultsDescriptionAndColor(build['results'])
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+            r = "Build %s containing revision(s) [%s] is complete: %s" % \
                 (builder_name, ','.join(revisions), results[0])
         else:
-            r = "Hey! build %s #%d is complete: %s" % \
+            r = "Build %s #%d is complete: %s" % \
                 (builder_name, buildnum, results[0])
 
         r += ' [%s]' % maybeColorize(build['state_string'],
                                      results[1], self.useColors)
-        self.send(r)
 
-        # FIXME: where do we get the base_url? Then do we use the build Link to
-        # make the URL?
-        buildurl = None  # self.bot.status.getBuildbotURL() + build
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        r += " - %s" % utils.getURLForBuild(
+                self.master, builder['builderid'], buildnum)
+
+        self.send(r)
 
     @defer.inlineCallbacks
     def command_FORCE(self, args):
