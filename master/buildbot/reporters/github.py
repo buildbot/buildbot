@@ -52,7 +52,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, baseURL, headers={
                 'Authorization': 'token ' + token,
-                'User-Agent': 'buildbot'
+                'User-Agent': 'Buildbot'
             })
         self.verbose = verbose
 
