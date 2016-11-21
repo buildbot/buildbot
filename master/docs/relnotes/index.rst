@@ -1,3 +1,5 @@
+Release Notes
+~~~~~~~~~~~~~
 ..
     Don't write to this file anymore!!
 
@@ -6,9 +8,13 @@
 
     Each PR should come with a file in the master/buildbot/newsfragment directory
 
+.. towncrier release notes start
 
-Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
-Newer versions are also available here:
+
+
+
+Older Release Notes
+~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
     :maxdepth: 1
