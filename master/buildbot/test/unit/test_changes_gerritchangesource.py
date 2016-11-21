@@ -220,8 +220,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                                unittest.TestCase):
     NOW_TIMESTAMP = 1479302598
     EVENT_TIMESTAMP = 1479302599
-    NOW_FORMATTED = '2016-16-11 14:23:18'
-    EVENT_FORMATTED = '2016-16-11 14:23:19'
+    NOW_FORMATTED = '2016-16-11 13:23:18'
+    EVENT_FORMATTED = '2016-16-11 13:23:19'
     OBJECTID = 1234
 
     @defer.inlineCallbacks
@@ -271,7 +271,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
             fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
                           class_name='GerritEventLogPoller')])
         yield self.newChangeSource()
-        self.changesource.now = lambda: datetime.datetime.fromtimestamp(self.NOW_TIMESTAMP)
+        self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(self.NOW_TIMESTAMP)
         self._http.expect(method='get', ep='/plugins/events-log/events/',
                           params={'t1': self.NOW_FORMATTED},
                           content_json=dict(
