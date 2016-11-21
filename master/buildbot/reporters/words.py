@@ -83,7 +83,7 @@ def maybeColorize(text, color, useColors):
     ]
 
     if useColors:
-        return "%c%d%s%c" % (3, irc_colors.index(color), text, 3)
+        return "%c%d%s%c" % (3, irc_colors.index(color), text, 15)
     else:
         return text
 
