@@ -518,7 +518,8 @@ class TestContactChannel(unittest.TestCase):
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
-            'Hey! build builder1 #6 is complete: Success []', self.sent)
+                "Build builder1 #6 is complete: Success [] - "
+                "http://localhost:8080/#builders/23/builds/6", self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch_builder1(self):
