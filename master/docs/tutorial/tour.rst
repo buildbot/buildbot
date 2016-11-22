@@ -142,9 +142,7 @@ Your First Build
 By now you're probably thinking: "All this time spent and still not done a single build? What was the name of this project again?"
 
 On the `waterfall <http://localhost:8010/waterfall>`_ page, click on the runtests link.
-You'll see a builder page, and in the upper-right corner is a box where you can login.
-The default username and password are both "pyflakes".
-Once you've logged in, you will see some new options that allow you to force a build:
+You'll see a builder page, and an option that allow you to force a build:
 
 .. image:: _images/force-build.png
    :alt: force a build.
@@ -162,16 +160,19 @@ Enabling the IRC Bot
 
 Buildbot includes an IRC bot that you can tell to join a channel and control to report on the status of buildbot.
 
-First, start an IRC client of your choice, connect to irc.freenode.org and join an empty channel.
+.. note:: Security Note
+
+    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+
+First, start an IRC client of your choice, connect to irc.freenode.net and join an empty channel.
 In this example we will use ``#buildbot-test``, so go join that channel.
 (*Note: please do not join the main buildbot channel!*)
 
-Edit :file:`master.cfg` and look for the *STATUS TARGETS* section.
+Edit :file:`master.cfg` and look for the *BUILDBOT SERVICES* section.
 At the end of that section add the lines::
 
-  from buildbot.status import irc
-  c['status'].append(irc.IRC(host="irc.freenode.org", nick="bbtest",
-                             channels=["#buildbot-test"]))
+  c['services'].append(reporters.IRC(host="irc.freenode.net", nick="bbtest",
+                                     channels=["#buildbot-test"]))
 
 Reconfigure the build master then do:
 
@@ -183,8 +184,8 @@ The log output should contain a line like this:
 
 .. code-block:: none
 
-  2015-08-14 20:00:33+0000 [-] Starting factory <buildbot.status.words.IrcStatusFactory instance at 0x7fee15c640e0>
-  2015-08-14 20:00:48+0000 [IrcStatusBot,client] <buildbot.status.words.IrcStatusBot instance at 0x7fee1653f1b8>: I have joined #buildbot-test
+  2016-11-13 15:53:06+0100 [-] Starting factory <buildbot.reporters.irc.IrcStatusFactory instance at 0x7ff2b4b72710>
+  2016-11-13 15:53:19+0100 [IrcStatusBot,client] <buildbot.reporters.irc.IrcStatusBot object at 0x7ff2b5075750>: I have joined #buildbot-test
 
 You should see the bot now joining in your IRC client.
 In your IRC channel, type:
@@ -203,85 +204,47 @@ Let's tell the bot to notify certain events, to learn which EVENTS we can notify
 
 Now let's set some event notifications:
 
-.. code-block:: none
+.. code-block:: irc
 
-  bbtest: notify on started
-  bbtest: notify on finished
-  bbtest: notify on failure
+  <@lsblakk> bbtest: notify on started finished failure
+  < bbtest> The following events are being notified: ['started', 'failure', 'finished']
 
-The bot should have responded to each of the commands:
+Now, go back to the web interface and force another build. Alternatively, ask the bot to force a build:
 
 .. code-block:: irc
 
-    <@lsblakk> bbtest: notify on started
-    <bbtest> The following events are being notified: ['started']
-    <@lsblakk> bbtest: notify on finished
-    <bbtest> The following events are being notified: ['started', 'finished']
-    <@lsblakk> bbtest: notify on failure
-    <bbtest> The following events are being notified: ['started', 'failure', 'finished']
-
-Now, go back to the web interface and force another build.
-
-Notice how the bot tells you about the start and finish of this build:
-
-.. code-block:: irc
-
-  < bbtest> build #1 of runtests started, including []
-  < bbtest> build #1 of runtests is complete: Success [build successful]  Build details are at http://localhost:8010/builders/runtests/builds/1
-
-You can also use the bot to force a build:
-
-.. code-block:: none
-
-  bbtest: force build runtests test build
-
-But to allow this, you'll need to have ``allowForce`` in the IRC configuration::
-
-  c['status'].append(irc.IRC(host="irc.freenode.org", nick="bbtest",
-                             allowForce=True,
-                             channels=["#buildbot-test"]))
-
-This time, the bot is giving you more output, as it's specifically responding to your direct request to force a build, and explicitly tells you when the build finishes:
-
-.. code-block:: irc
-
-  <@lsblakk> bbtest: force build runtests test build
-  < bbtest> build #2 of runtests started, including []
-  < bbtest> build forced [ETA 0 seconds]
-  < bbtest> I'll give a shout when the build finishes
-  < bbtest> build #2 of runtests is complete: Success [build successful]  Build details are at http://localhost:8010/builders/runtests/builds/2
+  <@lsblakk> bbtest: force build --codebase= runtests
+  < bbtest> build #1 of runtests started
+  < bbtest> Hey! build runtests #1 is complete: Success [finished]
 
 You can also see the new builds in the web interface.
 
 .. image:: _images/irc-testrun.png
    :alt: a successful test run from IRC happened.
 
+The full documentation is available at :bb:reporter:`IRC`.
+
 Setting Authorized Web Users
 ----------------------------
 
-Further down, look for the WebStatus configuration::
+The default configuration allows everyone to perform any task like creating or stopping builds via the web interface. To restrict this to a user, look for::
 
-   c['status'] = []
+  c['www'] = dict(port=8010,
+                   plugins=dict(waterfall_view={}, console_view={}))
 
-   from buildbot.status import html
-   from buildbot.status.web import authz, auth
+and append::
 
-   authz_cfg=authz.Authz(
-       # change any of these to True to enable; see the manual for more
-       # options
-       auth=auth.BasicAuth([("pyflakes","pyflakes")]),
-       gracefulShutdown = False,
-       forceBuild = 'auth',  # use this to test your worker once it is set up
-       forceAllBuilds = False,
-       pingBuilder = False,
-       stopBuild = False,
-       stopAllBuilds = False,
-       cancelPendingBuild = False,
-   )
-   c['status'].append(html.WebStatus(http_port=8010, authz=authz_cfg))
+  c['www']['authz'] = util.Authz(
+          allowRules = [
+              util.AnyEndpointMatcher(role="admins")
+          ],
+          roleMatchers = [
+              util.RolesFromUsername(roles=['admins'], usernames=['Alice'])
+          ]
+  )
+  c['www']['auth'] = util.UserPasswordAuth([('Alice','Password1')])
 
-The ``auth.BasicAuth()`` define authorized users and their passwords.
-You can change these or add new ones.
+For more details, see :ref:`Web-Authentication`.
 
 Debugging with Manhole
 ----------------------

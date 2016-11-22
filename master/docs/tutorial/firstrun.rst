@@ -51,27 +51,34 @@ Creating a master
 -----------------
 
 The first necessary step is to create a virtualenv for our master.
-All our operations will happen in this directory:
+We will also use a separate directory to demonstrate the distinction between a master and worker:
 
 .. code-block:: bash
 
   cd
   mkdir tmp
   cd tmp
-  virtualenv --no-site-packages bb-master
-  cd bb-master
+  mkdir buildbot
+  cd buildbot
+  virtualenv --no-site-packages sandbox
+  source sandbox/bin/activate
+
+.. note:: *Python 3*
+
+    Python 3 support is work in progress, if your default interpreter is Python 3, then you must pass the ``--python=python2`` option to ``virtualenv``.
 
 Now that we are ready, we need to install buildbot:
 
 .. code-block:: bash
 
-  ./bin/pip install buildbot[bundle]
+  pip install --upgrade pip
+  pip install 'buildbot[bundle]'
 
 Now that buildbot is installed, it's time to create the master:
 
 .. code-block:: bash
 
-  ./bin/buildbot create-master master
+  buildbot create-master master
  
 Buildbot's activity is controlled by a configuration file.
 We will use the sample configuration file unchanged:
@@ -84,7 +91,7 @@ Finally, start the master:
 
 .. code-block:: bash
 
-  ./bin/buildbot start master
+  buildbot start master
 
 You will now see some log information from the master in this terminal.
 It should end with lines like these:
@@ -113,21 +120,22 @@ It would however be completely ok to do this on another computer - as long as th
 .. code-block:: bash
 
   cd
-  cd tmp
-  virtualenv --no-site-packages bb-worker
-  cd bb-worker
+  mkdir tmp/bb-worker
+  cd tmp/bb-worker
+  virtualenv --no-site-packages sandbox
+  source sandbox/bin/activate
 
 Install the ``buildbot-worker`` command:
 
 .. code-block:: bash
 
-   ./bin/pip install buildbot-worker
+   pip install buildbot-worker
 
 Now, create the worker:
 
 .. code-block:: bash
 
-  ./bin/buildbot-worker create-worker worker localhost example-worker pass
+  buildbot-worker create-worker worker localhost example-worker pass
 
 .. note:: If you decided to create this from another computer, you should replace ``localhost`` with the name of the computer where your master is running.
 
@@ -135,13 +143,13 @@ The username (``example-worker``), and password (``pass``) should be the same as
 
 .. code-block:: bash
 
-  cat master/master.cfg
+  cat ../bb-master/master/master.cfg
 
 And finally, start the worker:
 
 .. code-block:: bash
 
-  ./bin/buildbot-worker start worker
+  buildbot-worker start worker
 
 Check the worker's output.
 It should end with lines like these:
@@ -181,4 +189,4 @@ You've got a taste now, but you're probably curious for more.
 Let's step it up a little in the second tutorial by changing the configuration and doing an actual build.
 Continue on to :ref:`quick-tour-label`.
 
-.. _git: http://git-scm.com/
+.. _git: https://git-scm.com/
