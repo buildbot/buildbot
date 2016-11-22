@@ -76,6 +76,7 @@ Git
 Repo/Gerrit
 
 * :bb:chsrc:`GerritChangeSource` connects to Gerrit via SSH to get a live stream of changes
+* :bb:chsrc:`GerritEventLogPoller` connects to Gerrit via HTTP with the help of the plugin events-log_
 
 Monotone
 
@@ -1119,6 +1120,49 @@ A configuration for this source might look like:
         handled_events=["patchset-created", "change-merged"])
 
 See :file:`master/docs/examples/git_gerrit.cfg` or :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution for a full example setup of Git+Gerrit or Repo+Gerrit of :bb:chsrc:`GerritChangeSource`.
+
+.. bb:chsrc:: GerritEventLogPoller
+
+.. _GerritEventLogPoller:
+
+GerritEventLogPoller
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.changes.gerritchangesource.GerritEventLogPoller
+
+The :bb:chsrc:`GerritEventLogPoller` class is similar to :bb:chsrc:`GerritChangeSource` but connects to the Gerrit server by its HTTP interface and uses the events-log_ plugin.
+
+The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
+
+``baseURL``
+    the HTTP url where to find Gerrit
+
+``auth``
+    a requests authentication configuration.
+    if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
+    if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+
+``handled_events``
+    event to be handled (optional).
+    By default processes `patchset-created` and `ref-updated`
+
+``pollInterval``
+    interval in seconds between polls, default is 30 seconds
+
+``pollAtLaunch``
+    Determines when the first poll occurs.
+    True = immediately on launch (default), False = wait for one pollInterval.
+
+``gitBaseURL``
+    The git URL where Gerrit is accessible via git+ssh protocol
+
+``debug``
+    Print Gerrit event in the log (default `False`).
+    This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
+
+The same customization can be done as :bb:chsrc:`GerritChangeSource` for handling special events.
+
+.. _events-log: https://gerrit.googlesource.com/plugins/events-log/
 
 GerritChangeFilter
 ~~~~~~~~~~~~~~~~~~
