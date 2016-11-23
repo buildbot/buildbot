@@ -98,7 +98,6 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         self.assertEqual(bs.command, ['/bin/sh'])
         self.assertEqual(bs.dockerfile, "FROM ubuntu")
         self.assertEqual(bs.volumes, [])
-        self.assertEqual(bs.binds, {})
         self.assertEqual(bs.client_args, {
                          'base_url': 'unix:///var/run/docker.sock', 'version': '1.9', 'tls': True})
         self.assertEqual(
@@ -109,25 +108,36 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
                               volumes=[Interpolate('/data:/buildslave/%(kw:builder)s/build',
                                        builder=Property('builder'))])
         id, name = self.successResultOf(bs.start_instance(self.build))
-        self.assertEqual(bs.volumes, ['/buildslave/docker_worker/build'])
+        client = docker.Client.latest
+        self.assertEqual(len(client.call_args_create_container), 1)
+        self.assertEqual(client.call_args_create_container[0]['volumes'],
+                         ['/buildslave/docker_worker/build'])
 
     def test_volume_no_suffix(self):
         bs = self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'], volumes=['/src/webapp:/opt/webapp'])
         self.successResultOf(bs.start_instance(self.build))
-        self.assertEqual(bs.volumes, ['/opt/webapp'])
-        self.assertEqual(
-            bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
+        client = docker.Client.latest
+        self.assertEqual(len(client.call_args_create_container), 1)
+        self.assertEqual(len(client.call_args_create_host_config), 1)
+        self.assertEqual(client.call_args_create_container[0]['volumes'],
+                         ['/opt/webapp'])
+        self.assertEqual(client.call_args_create_host_config[0]['binds'],
+                         {'/src/webapp': {'bind': '/opt/webapp', 'ro': False}})
 
     def test_volume_ro_rw(self):
         bs = self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
                               volumes=['/src/webapp:/opt/webapp:ro',
                                        '~:/backup:rw'])
         self.successResultOf(bs.start_instance(self.build))
-        self.assertEqual(
-            bs.volumes, ['/opt/webapp', '/backup'])
-        self.assertEqual(bs.binds, {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
-                                    '~': {'bind': '/backup', 'ro': False}})
+        client = docker.Client.latest
+        self.assertEqual(len(client.call_args_create_container), 1)
+        self.assertEqual(len(client.call_args_create_host_config), 1)
+        self.assertEqual(client.call_args_create_container[0]['volumes'],
+                         ['/opt/webapp', '/backup'])
+        self.assertEqual(client.call_args_create_host_config[0]['binds'],
+                         {'/src/webapp': {'bind': '/opt/webapp', 'ro': True},
+                          '~': {'bind': '/backup', 'ro': False}})
 
     def test_volume_bad_format(self):
         self.assertRaises(config.ConfigErrors, self.setupWorker, 'bot', 'pass', 'http://localhost:2375',

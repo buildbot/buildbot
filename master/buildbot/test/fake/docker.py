@@ -15,7 +15,12 @@
 
 
 class Client(object):
+    latest = None
+
     def __init__(self, base_url):
+        Client.latest = self
+        self.call_args_create_container = []
+        self.call_args_create_host_config = []
         self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
         self._containers = {}
 
@@ -49,15 +54,16 @@ class Client(object):
         return self._containers.values()
 
     def create_host_config(self, *args, **kwargs):
-        pass
+        self.call_args_create_host_config.append(kwargs)
 
     def create_container(self, image, *args, **kwargs):
+        self.call_args_create_container.append(kwargs)
         name = kwargs.get('name', None)
         if 'buggy' in image:
-            raise Exception("we could not create this container")
+            raise Exception('we could not create this container')
         for c in self._containers.values():
             if c['name'] == name:
-                raise Exception("cannot create with same name")
+                raise Exception('cannot create with same name')
         ret = {
             'Id':
             '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
@@ -67,7 +73,7 @@ class Client(object):
             'started': False,
             'image': image,
             'Id': ret['Id'],
-            "name": name
+            'name': name
         }
         return ret
 
