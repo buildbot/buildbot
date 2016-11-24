@@ -126,13 +126,13 @@ describe 'buildstep', ->
         # The first log button is selected
         expect(firstlog.hasClass('selected')).toBe(true)
         expect(secondlog.hasClass('selected')).toBe(false)
-        expect(download.attr('href')).toBe("/api/v2/logs/#{ oldlog.logid }/raw")
+        expect(download.attr('href')).toBe("api/v2/logs/#{ oldlog.logid }/raw")
 
         # The second log button is selected
         secondlog.triggerHandler 'click'
         expect(firstlog.hasClass('selected')).toBe(false)
         expect(secondlog.hasClass('selected')).toBe(true)
-        expect(download.attr('href')).toBe("/api/v2/logs/#{ newlog.logid }/raw")
+        expect(download.attr('href')).toBe("api/v2/logs/#{ newlog.logid }/raw")
 
         # collapse logs
         meta.triggerHandler 'click'

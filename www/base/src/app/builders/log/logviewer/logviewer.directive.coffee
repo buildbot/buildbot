@@ -18,7 +18,7 @@ class Logviewer extends Directive
                     if n?
                         unwatch()
                         log = self.scope.log
-                        self.scope.raw_url = "/api/v2/logs/#{log.logid}/raw"
+                        self.scope.raw_url = "api/v2/logs/#{log.logid}/raw"
                         if log.type == 'h'
                             restService.get("logs/#{log.logid}/contents").then (content) ->
                                 self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
