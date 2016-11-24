@@ -108,6 +108,7 @@ class OAuth2Auth(auth.AuthBase):
     def createSessionFromToken(self, token):
         s = requests.Session()
         s.params = {'access_token': token['access_token']}
+        s.verify = self.sslVerify
         return s
 
     def get(self, session, path):
