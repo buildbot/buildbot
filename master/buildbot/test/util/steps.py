@@ -133,7 +133,7 @@ class BuildStepMixin(object):
                   wantDb=False, wantMq=False):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
-        to create a I{new} step instance, thereby testing that the the factory
+        to create a I{new} step instance, thereby testing that the factory
         arguments are handled correctly.  It then creates a comfortable
         environment for the worker to run in, replete with a fake build and a
         fake worker.
