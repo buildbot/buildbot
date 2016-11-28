@@ -90,7 +90,7 @@ class WsProtocol(WebSocketServerProtocol):
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
 
         # race conditions handling
-        if path in self.qrefs or self.qrefs is None:
+        if self.qrefs is None or path in self.qrefs:
             qref.stopConsuming()
 
         self.qrefs[path] = qref
