@@ -235,7 +235,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def waitUntilFinished(self):
         d = defer.Deferred()
-        self.finishDefereds.append(d)
+        self.finishDeferreds.append(d)
         self._maybeFinished()
 
 
