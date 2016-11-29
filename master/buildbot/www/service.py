@@ -134,7 +134,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def setupSite(self, new_config):
         self.reconfigurableResources = []
 
-        # we're going to need at least the the base plugin (buildbot-www)
+        # we're going to need at least the base plugin (buildbot-www)
         if 'base' not in self.apps:
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
