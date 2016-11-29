@@ -79,7 +79,7 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         # if it's already subscribed, don't leak a subscription
-        if path in self.qrefs:
+        if self.qrefs is not None and path in self.qrefs:
             yield self.ack(_id=_id)
             return
 
