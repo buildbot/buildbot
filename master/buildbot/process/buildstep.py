@@ -235,7 +235,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def waitUntilFinished(self):
         d = defer.Deferred()
-        self.finishDefereds.append(d)
+        self.finishDeferreds.append(d)
         self._maybeFinished()
 
 
@@ -430,7 +430,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
                 raise TypeError('getResultSummary must return a dictionary: ' +
-                                methodInfo(self.getCurrentSummary))
+                                methodInfo(self.getResultSummary))
         else:
             summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
