@@ -178,6 +178,9 @@ MailNotifier arguments
     (list of strings).
     A combination of:
 
+    ``cancelled``
+        Send mail about builds which were cancelled.
+
     ``change``
         Send mail about builds which change status.
 
