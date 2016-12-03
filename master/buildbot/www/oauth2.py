@@ -212,3 +212,25 @@ class GitLabAuth(OAuth2Auth):
                     email=user["email"],
                     avatar_url=user["avatar_url"],
                     groups=[g["path"] for g in groups])
+
+
+class BitbucketAuth(OAuth2Auth):
+    name = "Bitbucket"
+    faIcon = "fa-bitbucket"
+    authUri = 'https://bitbucket.org/site/oauth2/authorize'
+    tokenUri = 'https://bitbucket.org/site/oauth2/access_token'
+    resourceEndpoint = 'https://api.bitbucket.org/2.0'
+
+    def getUserInfoFromOAuthClient(self, c):
+        user = self.get(c, '/user')
+        emails = self.get(c, '/user/emails')
+        for email in emails["values"]:
+            if email.get('is_primary', False):
+                user['email'] = email['email']
+                break
+        orgs = self.get(c, '/teams?role=member')
+        return dict(full_name=user['display_name'],
+                    email=user['email'],
+                    username=user['username'],
+                    groups=[org['username'] for org in orgs["values"]]
+        )
