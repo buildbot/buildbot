@@ -175,7 +175,7 @@ class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
     authUri = 'https://github.com/login/oauth/authorize'
-    authUriAdditionalParams = {'scope': 'user:email'}
+    authUriAdditionalParams = {'scope': 'user'}
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
@@ -186,7 +186,8 @@ class GitHubAuth(OAuth2Auth):
             if email.get('primary', False):
                 user['email'] = email['email']
                 break
-        orgs = self.get(c, join('/users', user['login'], "orgs"))
+        orgs = self.get(c, '/user/orgs')
+
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
@@ -212,3 +213,25 @@ class GitLabAuth(OAuth2Auth):
                     email=user["email"],
                     avatar_url=user["avatar_url"],
                     groups=[g["path"] for g in groups])
+
+
+class BitbucketAuth(OAuth2Auth):
+    name = "Bitbucket"
+    faIcon = "fa-bitbucket"
+    authUri = 'https://bitbucket.org/site/oauth2/authorize'
+    tokenUri = 'https://bitbucket.org/site/oauth2/access_token'
+    resourceEndpoint = 'https://api.bitbucket.org/2.0'
+
+    def getUserInfoFromOAuthClient(self, c):
+        user = self.get(c, '/user')
+        emails = self.get(c, '/user/emails')
+        for email in emails["values"]:
+            if email.get('is_primary', False):
+                user['email'] = email['email']
+                break
+        orgs = self.get(c, '/teams?role=member')
+        return dict(full_name=user['display_name'],
+                    email=user['email'],
+                    username=user['username'],
+                    groups=[org['username'] for org in orgs["values"]]
+        )
