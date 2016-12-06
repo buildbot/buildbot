@@ -93,8 +93,10 @@ class WsProtocol(WebSocketServerProtocol):
         if self.qrefs is None or path in self.qrefs:
             qref.stopConsuming()
 
-        self.qrefs[path] = qref
-        self.ack(_id=_id)
+        # only store and ack if we were not disconnected in between
+        if self.qrefs is not None:
+            self.qrefs[path] = qref
+            self.ack(_id=_id)
 
     @defer.inlineCallbacks
     def cmd_stopConsuming(self, path, _id):
