@@ -406,9 +406,11 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  max_spot_price=1.5,
                                  security_group_ids=[sg.id],
                                  subnet_id=subnet.id,
+                                 region='us-east-1',
+                                 placement='a'
                                  )
 
-        instance_id, _, _ = bs._start_instance()
+        instance_id, _, _ = bs._request_spot_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
@@ -438,9 +440,11 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      secret_identifier='privatekey',
                                      ami=amis[0].id, spot_instance=True,
                                      max_spot_price=1.5,
-                                     product_description=product_description
+                                     product_description=product_description,
+                                     region='us-east-1',
+                                     placement='a'
                                      )
-        instance_id, _, _ = bs._start_instance()
+        instance_id, _, _ = bs._request_spot_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
