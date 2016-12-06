@@ -41,7 +41,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('started_at', sa.Integer),
             sa.Column('complete_at', sa.Integer),
             sa.Column(
-                'state_string', sa.Text, nullable=False, server_default=''),
+                'state_string', sa.Text, nullable=False),
             sa.Column('results', sa.Integer),
             sa.Column('urls_json', sa.Text, nullable=False),
         )
