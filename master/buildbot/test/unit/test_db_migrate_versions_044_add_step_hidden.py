@@ -48,7 +48,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         steps.create()
 
         conn.execute(steps.insert(), [
-            dict(number=3, name='echo', urls_json='[]')])
+            dict(number=3, name='echo', urls_json='[]', state_string='')])
 
     def test_update(self):
         def setup_thd(conn):
