@@ -43,7 +43,7 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
             self.master, self,
             HOSTED_BASE_URL, headers={
                 'Authorization': 'token XXYYZZ',
-                'User-Agent': 'buildbot'
+                'User-Agent': 'Buildbot'
             })
         self.sp = sp = GitHubStatusPush('XXYYZZ')
         sp.sessionFactory = Mock(return_value=Mock())
