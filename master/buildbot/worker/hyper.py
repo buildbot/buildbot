@@ -17,8 +17,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import hashlib
-import socket
 import time
 
 from twisted.internet import reactor as global_reactor
@@ -120,13 +118,7 @@ class HyperLatentWorker(DockerBaseWorker):
 
         self.manager = yield HyperLatentManager.getService(self.master, hyper_host, hyper_accesskey,
                                                            hyper_secretkey)
-        self.masterhash = hashlib.sha1(self.master.name).hexdigest()[:6]
         self.size = hyper_size
-
-        self.image = image
-        if not masterFQDN:  # also match empty string (for UI)
-            masterFQDN = socket.getfqdn()
-        self.masterFQDN = masterFQDN
 
     def deferToThread(self, meth, *args, **kwargs):
         return self.manager.deferToThread(self.reactor, meth, *args, **kwargs)
@@ -136,9 +128,6 @@ class HyperLatentWorker(DockerBaseWorker):
         image = yield build.render(self.image)
         yield self.deferToThread(self._thd_start_instance, image)
         defer.returnValue(True)
-
-    def getContainerName(self):
-        return ('%s-%s' % ('buildbot' + self.masterhash, self.workername)).replace("_", "-")
 
     def _thd_cleanup_instance(self):
         instances = self.client.containers(
@@ -184,12 +173,6 @@ class HyperLatentWorker(DockerBaseWorker):
             # started.
             return defer.succeed(None)
         return self.deferToThread(self._thd_stop_instance, fast)
-
-    @property
-    def shortid(self):
-        if self.instance is None:
-            return None
-        return self.instance['Id'][:6]
 
     def _thd_stop_instance(self, fast):
         if self.instance is None:

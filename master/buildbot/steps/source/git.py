@@ -140,7 +140,6 @@ class Git(Source):
         self.srcdir = 'source'
         self.origin = origin
         Source.__init__(self, **kwargs)
-
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
         if isinstance(self.mode, string_types):
