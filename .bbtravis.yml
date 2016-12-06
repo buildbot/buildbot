@@ -30,10 +30,11 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
   # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest&storage_engine=InnoDB
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
+  # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
   - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
@@ -111,7 +112,10 @@ before_script:
   - condition: '"mysql" in BUILDBOT_TEST_DB_URL'
     cmd: sudo /etc/init.d/mysql start
   - condition: '"postgresql" in BUILDBOT_TEST_DB_URL'
-    cmd: sudo /etc/init.d/postgresql start
+    cmd: |
+        sudo /etc/init.d/postgresql start
+        # for pg8000 driver we can't use peer authentication or empty password, so set a dummy password
+        psql -d bbtest -c 'ALTER USER "buildbot" WITH PASSWORD '"'x'"';'
 
 # Tests running commands
 script:
