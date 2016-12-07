@@ -208,7 +208,7 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
         def check_user(uid):
             # creates a new user
-            self.assertEqual(uid, 2)
+            self.assertNotEqual(uid, 1)
 
             def thd(conn):
                 users_tbl = self.db.model.users
