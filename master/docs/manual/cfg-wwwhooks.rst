@@ -14,10 +14,11 @@ An example www configuration line which enables change_hook and two DIALECTS:
 .. code-block:: python
 
     c['www'] = dict(
+        ...,
         change_hook_dialects={
                               'base': True,
                               'somehook': {'option1':True,
-                                           'option2':False}}))
+                                           'option2':False}})
 
 Within the www config dictionary arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
@@ -74,7 +75,9 @@ The GitHub hook has the following parameters:
     If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
     The default class handles `ping`, `push` and `pull_request` events only.
     If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass `GitHubEventHandler` and add handler methods for the corresponding events.
-    For example, if you'd like to handle `blah` events, your code should look something like this::
+    For example, if you'd like to handle `blah` events, your code should look something like this:
+
+    .. code-block:: python
 
         from buildbot.status.web.hooks.github import GitHubEventHandler
 
@@ -89,14 +92,16 @@ The simples way to use GitHub hook is as follows:
 .. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={'github': { }})
+        change_hook_dialects={'github': {}}
+    )
+
 
 Having added this line, you should add a webhook for your GitHub project (see `Creating Webhooks page at GitHub <https://developer.github.com/webhooks/creating/>`_).
 The parameters are:
 
 :guilabel:`Payload URL`
     This URL should point to ``/change_hook/github`` relative to the root of the web status.
-    For example, if the base URL is ``http://builds.example.com/buildbot``, then point GitHub to ``http://builds.example.com/buildbot/change_hook/github``.
+    For example, if the base URL is ``http://builds.example.com/bbot/#/``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
     To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 :guilabel:`Content Type`
@@ -116,7 +121,7 @@ The parameters are:
                         'strict': True
                     }
                 },
-                ...))
+                ...)
 
 :guilabel:`Which events would you like to trigger this webhook?`
     Leave the default -- ``Just the push event`` -- other kind of events are not currently supported.
@@ -133,7 +138,8 @@ To protect URL against unauthorized access you either specify a secret, or you s
 .. code-block:: python
 
     c['www'] = dict(...,
-          change_hook_auth=["file:changehook.passwd"]))
+        change_hook_auth=["file:changehook.passwd"])
+    )
 
 create a file ``changehook.passwd``:
 
@@ -155,36 +161,82 @@ Patches are welcome to implement: https://developer.github.com/webhooks/securing
 
 .. bb:chsrc:: BitBucket
 
-BitBucket hook
+Bitbucket hook
 ++++++++++++++
 
-The BitBucket hook is as simple as GitHub one and it also takes no options.
+The Bitbucket hook supports both `webhook events <https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html>`_ and `POST` service, however, the Bitbucket `POST` service is `deprecated <https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management>`_.
+
+Bitbucket web hook events
+-------------------------
+
+The Bitbucket hook supporting web hook events is as simple as the GitHub hook.
 
 .. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={ 'bitbucket' : True }))
+        change_hook_dialects={'bitbucket': {}}
+    )
 
-When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
+
+The Bitbucket hook has the following parameters:
+
+``codebase`` (default `None`)
+    The codebase value to include with created changes.
+    If the value is a function (or any other callable), it will be called with the Bitbucket event payload as argument and the function must return the codebase value to use for the event.
+``class`` (default `None`)
+    A class to be used for processing incoming payloads.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.bitbucket.BitbucketEventHandler` -- will be used.
+    The default class handles `ping`, `push` and `pull_request` events only.
+    If you'd like to handle other events (see `List of events <https://confluence.atlassian.com/bitbucket/events-resources-296095220.html#eventsResources-GETalistofevents>`_ for more information), you'd need to subclass `BitbucketEventHandler` and add handler methods for the corresponding events.
+    For example, if you'd like to handle `blah` events, your code should look something like this:
+
+    .. code-block:: python
+
+        from buildbot.status.web.hooks.bitbucket import BitbucketEventHandler
+
+        class MyBlahHandler(BitbucketEventHandler):
+
+            def handle_blah(self, payload):
+                # Do some magic here
+                return [], 'git'
+
+When this is setup you should add a web hook pointing to ``/change_hook/bitbucket`` relative to the root of the web status (see `Bitbucket docs <https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html#Managewebhooks-create_webhook>`_).
+For example, if the home page URL is ``http://builds.example.com/bbot/#/``, then point the Bitbucket web hook to ``http://builds.example.com/bbot/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
-
-Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
-This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
-    Anyone who can access the web status can "fake" a request from BitBucket, potentially causing the buildmaster to run arbitrary code.
+    Anyone who can access the web status can "fake" a request from Bitbucket, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use ``change_hook_auth`` option.
 
 .. code-block:: python
 
-  c['www'] = dict(...,
-        change_hook_auth=["file:changehook.passwd"]))
+    c['www'] = dict(...,
+        change_hook_auth=["file:changehook.passwd"])
+    )
 
-Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
+
+Bitbucket `POST` service
+------------------------
+.. note::
+   As mentioned above, this service is deprecated.
+
+.. code-block:: python
+
+    c['www'] = dict(...,
+        change_hook_dialects={'bitbucket': True}
+    )
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
+For example, if the home page URL is ``http://builds.example.com/bbot/#/``, then point Bitbucket to ``http://builds.example.com/bbot/change_hook/bitbucket``.
+To specify a project associated to the repository, append ``?project=name`` to the URL.
+
+Note that there is a standalone HTTP server available for receiving Bitbucket `POST` service notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
+This script may be useful in cases where you cannot expose the WebStatus for public consumption.
+
+Then, create a Bitbucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -192,7 +244,9 @@ Google Code hook
 ++++++++++++++++
 
 The Google Code hook is quite similar to the GitHub Hook.
-It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate::
+It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate:
+
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
@@ -205,7 +259,9 @@ Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource`
 .. note::
 
    Google Code doesn't send the branch on which the changes were made.
-   So, the hook always returns ``'default'`` as the branch, you can override it with the ``'branch'`` option::
+   So, the hook always returns ``'default'`` as the branch, you can override it with the ``'branch'`` option:
+
+   .. code-block:: python
 
       change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
 
@@ -217,7 +273,9 @@ Poller hook
 The poller hook allows you to use GET or POST requests to trigger polling.
 One advantage of this is your buildbot instance can poll at launch (using the pollAtLaunch flag) to get changes that happened while it was down, but then you can still use a commit hook to get fast notification of new changes.
 
-Suppose you have a poller configured like this::
+Suppose you have a poller configured like this:
+
+.. code-block:: python
 
     c['change_source'] = SVNPoller(
         repourl="https://amanda.svn.sourceforge.net/svnroot/amanda/amanda",
@@ -225,7 +283,9 @@ Suppose you have a poller configured like this::
         pollInterval=24*60*60,
         pollAtLaunch=True)
 
-And you configure your WebStatus to enable this hook::
+And you configure your WebStatus to enable this hook:
+
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'poller': True}
@@ -240,7 +300,9 @@ Then you will be able to trigger a poll of the SVN repository by poking the ``/c
 
 If no ``poller`` argument is provided then the hook will trigger polling of all polling change sources.
 
-You can restrict which pollers the webhook has access to using the ``allowed`` option::
+You can restrict which pollers the webhook has access to using the ``allowed`` option:
+
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
@@ -253,14 +315,14 @@ GitLab hook
 
 The GitLab hook is as simple as GitHub one and it also takes no options.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={ 'gitlab' : True }
+        change_hook_dialects={'gitlab': True}
     )
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
+For example, if the home page URL is ``http://builds.example.com/bbot/#/``, then point GitLab to ``http://builds.example.com/bbot/change_hook/gitlab``.
 The project and/or codebase can also be passed in the URL by appending ``?project=name`` or ``?codebase=foo`` to the URL.
 These parameters will be passed along to the scheduler.
 
@@ -292,14 +354,14 @@ Gitorious Hook
 
 The Gitorious hook is as simple as GitHub one and it also takes no options.
 
-::
+.. code-block:: python
 
     c['www'] = dict(...,
         change_hook_dialects={'gitorious': True}
     )
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitorious`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point Gitorious to ``http://builds.example.com/change_hook/gitorious``.
+For example, if the home page URL is ``http://builds.example.com/bbot/#/``, then point Gitorious to ``http://builds.example.com/bbot/change_hook/gitorious``.
 
 .. warning::
 
