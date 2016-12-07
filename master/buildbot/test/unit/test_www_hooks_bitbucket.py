@@ -166,7 +166,6 @@ def _prepare_request(payload, headers=None, change_dict=None):
     return request
 
 
-
 class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     """Unit tests for BitBucket Change Hook
