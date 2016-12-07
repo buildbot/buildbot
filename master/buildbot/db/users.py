@@ -196,7 +196,8 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     & (tbl_info.c.attr_type == attr_type))
                 res = conn.execute(q, attr_data=attr_data)
                 if res.rowcount == 0:
-                    _race_hook and _race_hook(conn)
+                    if _race_hook is not None:
+                        _race_hook(conn)
 
                     # the update hit 0 rows, so try inserting a new one
                     try:
