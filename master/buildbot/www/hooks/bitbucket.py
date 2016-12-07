@@ -12,10 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import hmac
 import logging
-import re
-from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
@@ -86,7 +83,6 @@ class BitbucketEventHandler(object):
     def handle_pullrequest_created(self, payload):
         return self.handle_pullrequest(payload, 'created_on')
 
-
     def _process_change(self, payload, repo, repo_url, project):
         """
         Consumes the JSON as a python object and returns the changes.
@@ -97,15 +93,15 @@ class BitbucketEventHandler(object):
         """
         changes = []
 
-        # TOFIX: Code from github hook code, is this functionality needed?
-        #refname = payload['ref']
+        #  TOFIX: Code from github hook code, is this functionality needed?
+        # refname = payload['ref']
         #
-        # We only care about regular heads, i.e. branches
-        #match = re.match(r"^refs/heads/(.+)$", refname)
-        #print "match:", match
-        #if not match:
-        #    log.msg("Ignoring refname `%s': Not a branch" % refname)
-        #    return changes
+        #  We only care about regular heads, i.e. branches
+        # match = re.match(r"^refs/heads/(.+)$", refname)
+        # print "match:", match
+        # if not match:
+        #     log.msg("Ignoring refname `%s': Not a branch" % refname)
+        #     return changes
         #
 
         for change_ in payload['push']['changes']:
@@ -124,7 +120,7 @@ class BitbucketEventHandler(object):
                     'when_timestamp': when_timestamp,
                     'branch': branch,
                     'revlink': commit['links']['html']['href'],
-                    'repository': repo_url, # The clone URL used to match in change filter
+                    'repository': repo_url,  # The clone URL used to match in change filter
                     'project': project,
                     'properties': {}
                 }
@@ -151,7 +147,7 @@ class BitbucketEventHandler(object):
             'when_timestamp': dateparse(payload['pullrequest'][timestamp_key]),
             'branch': refname,
             'revlink': payload['pullrequest']['links']['commits']['href'],
-            'repository': repo_url, # The clone URL used to match in change filter
+            'repository': repo_url,  # The clone URL used to match in change filter
             'project': payload['repository']['project']['name'],
             'category': 'pull',
             'author': '%s <%s>' % (payload['pullrequest']['author']['display_name'],
