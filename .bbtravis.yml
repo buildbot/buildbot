@@ -103,7 +103,9 @@ install:
       [ $python != 2.6 ] || pip install 'astroid<1.3.0'
 
       [ $TESTS != lint ] || pip install sphinx 'pylint==1.1.0' 'flake8~=2.6.0'  'astroid==1.3.8'
-      [ $TESTS != docs ] || pip install -e './master[docs]'
+      # until towncrier toml is released, we need to fetch from git :-/
+      [ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/hawkowl/towncrier'
+
       [ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)
       [ $TESTS != setuppy_test ] || pip install autobahn Twisted
 
