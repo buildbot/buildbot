@@ -158,19 +158,43 @@ Patches are welcome to implement: https://developer.github.com/webhooks/securing
 BitBucket hook
 ++++++++++++++
 
-The BitBucket hook is as simple as GitHub one and it also takes no options.
+The Bitbucket hook supports both `webhook events <https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html>`_ and `POST` service, however, the Bitbucket `POST` service is `deprecated <https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management>`_.
+
+
+Bitbucket web hook events
+-------------------------
+
+The Bitbucket hook supporting web hook events is as simple as the GitHub hook.
 
 .. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={ 'bitbucket' : True }))
+        change_hook_dialects={ 'bitbucket' : {} }))
 
-When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
-For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
+
+The Bitbucket hook has the following parameters:
+
+``codebase`` (default `None`)
+    The codebase value to include with created changes.
+    If the value is a function (or any other callable), it will be called with the Bitbucket event payload as argument and the function must return the codebase value to use for the event.
+``class`` (default `None`)
+    A class to be used for processing incoming payloads.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.bitbucket.BitbucketEventHandler` -- will be used.
+    The default class handles `ping`, `push` and `pull_request` events only.
+    If you'd like to handle other events (see `List of events <https://confluence.atlassian.com/bitbucket/events-resources-296095220.html#eventsResources-GETalistofevents>`_ for more information), you'd need to subclass `BitbucketEventHandler` and add handler methods for the corresponding events.
+    For example, if you'd like to handle `blah` events, your code should look something like this::
+
+        from buildbot.status.web.hooks.bitbucket import BitbucketEventHandler
+
+        class MyBlahHandler(BitbucketEventHandler):
+
+            def handle_blah(self, payload):
+                # Do some magic here
+                return [], 'git'
+
+When this is setup you should add a web hook pointing to ``/change_hook/bitbucket`` relative to the root of the web status (see `Bitbucket docs <https://confluence.atlassian.com/bitbucket/manage-webhooks-735643732.html#Managewebhooks-create_webhook>`_).
+For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point the BitBucket web hook to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
-
-Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
-This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
 
@@ -183,6 +207,24 @@ To protect URL against unauthorized access you should use ``change_hook_auth`` o
 
   c['www'] = dict(...,
         change_hook_auth=["file:changehook.passwd"]))
+
+
+Bitbucket `POST` service
+------------------------
+.. note::
+   As mentioned above, this service is deprecated.
+
+.. code-block:: python
+
+    c['www'] = dict(...,
+        change_hook_dialects={ 'bitbucket' : True }))
+
+When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.
+For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
+To specify a project associated to the repository, append ``?project=name`` to the URL.
+
+Note that there is a standalone HTTP server available for receiving BitBucket `POST` service notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
+This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
 
