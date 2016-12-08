@@ -24,6 +24,7 @@ from twisted.web.error import Error
 from buildbot.interfaces import IConfigured
 from buildbot.util import json
 from buildbot.www import resource
+from buildbot.www.authz import Forbidden
 
 
 class IndexResource(resource.Resource):
@@ -122,9 +123,55 @@ class IndexResource(resource.Resource):
         except Error as e:
             config["on_load_warning"] = e.message
 
-        user_info = self.master.www.getUserInfos(request)
-        config.update({"user": user_info})
+        def toJson(obj):
+            obj = IConfigured(obj).getConfigDict()
+            if isinstance(obj, dict):
+                return obj
+            return repr(obj) + " not yet IConfigured"
 
+        user_info = self.master.www.getUserInfos(request)
+
+        try:
+            yield self.master.www.assertUserAllowed(request, tuple(request.postpath), "get", {})
+        except Forbidden as err:
+            user_info = self.master.www.getUserInfos(request)
+            if user_info.get('anonymous', False):
+                self.config['auth'].getLoginResource().render_POST(request)
+            else:
+                self.config['auth'].getLogoutResource().render_GET(request)
+                conf = self.config['auth'].getConfigDict()
+                conf.update(user_info)
+                conf["message"] = err
+                tpl = self.jinja.from_string("""
+<!DOCTYPE html>
+<html class="no-js" xmlns:ng="http://angularjs.org" xmlns:app="ignored" ng-app="app">
+<head>
+<meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+</head>
+<title window-title>Buildbot</title>
+<meta name="description" content="Buildbot web UI">
+<meta name="viewport" content="initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width">
+<link rel="stylesheet" href="styles.css">
+<link rel="icon" href="img/favicon.ico">
+<body ng-cloak>
+<gl-topbar><gl-topbar-contextual-actions></gl-topbar-contextual-actions><loginbar></loginbar>
+</gl-topbar>
+{{ auth.name }} login with user {{ auth.username }} has insufficient privileges: {{ auth.message }}
+</gl-page-with-sidebar>
+</body>
+<script src="scripts.js?_#{(new Date()).getTime()}"></script>{% for app in config.plugins -%}<script src="{{app}}/scripts.js"></script><link rel="stylesheet" href="{{app}}/styles.css"><script>angular.module('app').requires.push('{{app}}')</script>{% endfor %}<script>angular.module("app").constant("config", {{configjson|safe}})</script>{% if custom_templates %}<script>angular.module("app").run(function ($templateCache) {
+{% for name, html in custom_templates.items() %}
+ $templateCache.put("{{ name }}", {{ html|safe }});
+{% endfor %}
+})</script>{% endif %}
+</html>
+""")
+                tpl = tpl.render(configjson=json.dumps(config, default=toJson),
+                                 custom_templates=self.custom_templates,
+                                 config=self.config, auth=conf)
+                defer.returnValue(tpl.encode("ascii"))
+
+        config.update({"user": user_info})
         config.update(self.config)
         config['buildbotURL'] = self.master.config.buildbotURL
         config['title'] = self.master.config.title
@@ -134,12 +181,6 @@ class IndexResource(resource.Resource):
         # delete things that may contain secrets
         if 'change_hook_dialects' in config:
             del config['change_hook_dialects']
-
-        def toJson(obj):
-            obj = IConfigured(obj).getConfigDict()
-            if isinstance(obj, dict):
-                return obj
-            return repr(obj) + " not yet IConfigured"
 
         tpl = self.jinja.get_template('index.html')
         # we use Jinja in order to render some server side dynamic stuff
