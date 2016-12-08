@@ -135,7 +135,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             [  # /user/emails
                 {'email': 'buzz@bar', 'verified': True, 'primary': False},
                 {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [  # /users/bar/orgs
+            [  # /user/orgs
                 dict(login="hello"),
                 dict(login="grp"),
             ]])
