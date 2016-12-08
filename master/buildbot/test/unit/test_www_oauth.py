@@ -85,12 +85,12 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
         res = yield self.githubAuth.getLoginURL('http://redir')
-        exp = ("https://github.com/login/oauth/authorize?scope=user%3Aemail&state="
+        exp = ("https://github.com/login/oauth/authorize?scope=user&state="
                "redirect%3Dhttp%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb%2F"
                "auth%2Flogin&response_type=code&client_id=ghclientID")
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
-        exp = ("https://github.com/login/oauth/authorize?scope=user%3Aemail&redirect_uri="
+        exp = ("https://github.com/login/oauth/authorize?scope=user&redirect_uri="
                "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
         self.assertEqual(res, exp)
 
@@ -135,13 +135,14 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             [  # /user/emails
                 {'email': 'buzz@bar', 'verified': True, 'primary': False},
                 {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [dict(  # /users/bar/orgs
-                login="group",)
-             ]])
+            [  # /user/orgs
+                dict(login="hello"),
+                dict(login="grp"),
+            ]])
         res = yield self.githubAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
-                          'groups': ['group'],
+                          'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks

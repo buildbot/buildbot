@@ -175,7 +175,7 @@ class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
     authUri = 'https://github.com/login/oauth/authorize'
-    authUriAdditionalParams = {'scope': 'user:email'}
+    authUriAdditionalParams = {'scope': 'user'}
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
@@ -186,7 +186,8 @@ class GitHubAuth(OAuth2Auth):
             if email.get('primary', False):
                 user['email'] = email['email']
                 break
-        orgs = self.get(c, join('/users', user['login'], "orgs"))
+        orgs = self.get(c, '/user/orgs')
+
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
