@@ -232,10 +232,30 @@ The available classes are described here:
         from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': util.GitLabAuth("https://gitlab.com", "clientid", clientsecret"),
+            'auth': util.GitLabAuth("https://gitlab.com", "clientid", "clientsecret"),
         }
 
 .. _GitLab: http://doc.gitlab.com/ce/integration/oauth_provider.html
+
+.. py:class:: buildbot.www.oauth2.BitbucketAuth(clientId, clientSecret)
+
+    :param clientId: The client ID of your buildbot application
+    :param clientSecret: The client secret of your buildbot application
+
+    This class implements an authentication with Bitbucket_ single sign-on.
+    It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
+
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+
+    Example::
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.BitbucketAuth("clientid", "clientsecret"),
+        }
+
+.. _Bitbucket: https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html
 
 .. py:class:: buildbot.www.auth.RemoteUserAuth
 
