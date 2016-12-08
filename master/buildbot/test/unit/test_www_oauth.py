@@ -135,13 +135,14 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             [  # /user/emails
                 {'email': 'buzz@bar', 'verified': True, 'primary': False},
                 {'email': 'bar@foo', 'verified': True, 'primary': True}],
-            [dict(  # /users/bar/orgs
-                login="group",)
-             ]])
+            [  # /users/bar/orgs
+                dict(login="hello"),
+                dict(login="grp"),
+            ]])
         res = yield self.githubAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
-                          'groups': ['group'],
+                          'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
