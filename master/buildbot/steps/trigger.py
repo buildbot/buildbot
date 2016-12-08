@@ -216,7 +216,7 @@ class Trigger(BuildStep):
                     for build in builds:
                         num = build['number']
                         url = self.master.status.getURLForBuild(builderid, num)
-                        yield self.addURL("%s: %s #%d" % (statusToString(results),
+                        yield self.addURL("%s: %s #%d" % (statusToString(build["results"]),
                                                           builderDict["name"], num), url)
 
     @defer.inlineCallbacks

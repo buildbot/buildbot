@@ -512,6 +512,18 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredLinks('afailed')
         return self.runStep()
 
+    def test_waitForFinish_split_failure(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
+                                       waitForFinish=True))
+        self.scheduler_a.result = FAILURE
+        self.scheduler_b.result = SUCCESS
+        self.expectOutcome(result=FAILURE, state_string='triggered a, b')
+        self.expectTriggeredWith(
+            a=(True, [], {}),
+            b=(True, [], {}))
+        self.expectTriggeredLinks('afailed', 'b')
+        return self.runStep()
+
     @defer.inlineCallbacks
     def test_waitForFinish_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
