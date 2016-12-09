@@ -45,7 +45,7 @@ class FakeBot(object):
         self.n()
 
 
-class TestHyperLatentWorker(unittest.SynchronousTestCase):
+class TestMarathonLatentWorker(unittest.SynchronousTestCase):
     def setUp(self):
         self.reactor = TestReactor()
         _setReactor(self.reactor)
@@ -62,19 +62,19 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         _setReactor(None)
 
     def test_constructor_normal(self):
-        worker = MarathonLatentWorker('bot', 'tcp://marathon.local/', 'foo',
+        worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
                                       'bar', 'debian:wheezy')
         # class instanciation configures nothing
         self.assertEqual(worker._http, None)
 
     def makeWorker(self, **kwargs):
         kwargs.setdefault('image', 'debian:wheezy')
-        worker = MarathonLatentWorker('bot', 'tcp://marathon.local/', **kwargs)
+        worker = MarathonLatentWorker('bot', 'tcp://marathon.local', **kwargs)
         self.worker = worker
         master = fakemaster.make_master(testcase=self, wantData=True)
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
-                master, self, 'tcp://marathon.local/', auth=kwargs.get(
+                master, self, 'tcp://marathon.local', auth=kwargs.get(
                     'auth')))
         worker.setServiceParent(master)
         worker.reactor = self.reactor
