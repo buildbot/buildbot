@@ -46,6 +46,5 @@ def upgrade(migrate_engine):
 
     for args, kwargs in fks_to_change:
         fk = ForeignKeyConstraint(*args, **kwargs)
-        if migrate_engine.dialect.name != 'sqlite':
-            fk.drop()
+        fk.drop()
         fk.create()
