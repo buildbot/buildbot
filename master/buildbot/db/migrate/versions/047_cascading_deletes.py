@@ -15,6 +15,7 @@
 
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
+from migrate.exceptions import NotSupportedError
 
 from buildbot.util import sautils
 
@@ -47,5 +48,8 @@ def upgrade(migrate_engine):
     for table, args, kwargs in fks_to_change:
         fk = ForeignKeyConstraint(*args, **kwargs)
         table.append_constraint(fk)
-        fk.drop()
+        try:
+            fk.drop()
+        except NotSupportedError:
+            pass  # some versions of sqlite do not support drop, but will still update the fk
         fk.create()
