@@ -36,7 +36,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.master.stopService()
+        if self.master.running:
+            yield self.master.stopService()
 
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
@@ -59,9 +60,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.createReporter(auth_token=2)
         config._errors.addError.assert_any_call('auth_token must be a string')
 
-    @defer.inlineCallbacks
     def test_endpointTypeCheck(self):
-        yield self.createReporter(endpoint=2)
+        HipChatStatusPush(auth_token="2", endpoint=2)
         config._errors.addError.assert_any_call('endpoint must be a string')
 
     @defer.inlineCallbacks

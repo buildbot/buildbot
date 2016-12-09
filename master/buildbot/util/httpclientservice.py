@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import json as jsonmodule
 import textwrap
-import urlparse
 
 from twisted.internet import defer
 from twisted.web.client import Agent
@@ -89,6 +88,7 @@ class HTTPClientService(service.SharedService):
     MAX_THREADS = 5
 
     def __init__(self, base_url, auth=None, headers=None):
+        assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
@@ -133,7 +133,8 @@ class HTTPClientService(service.SharedService):
             return self._pool.closeCachedConnections()
 
     def _prepareRequest(self, ep, kwargs):
-        url = urlparse.urljoin(self._base_url, ep)
+        assert ep.startswith("/"), "ep should start with /: " + ep
+        url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth
         headers = kwargs.get('headers', {})
