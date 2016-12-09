@@ -147,7 +147,6 @@ class DockerLatentWorker(DockerBaseWorker):
 
         yield DockerBaseWorker.reconfigService(self, name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
-        self.binds = {}
         self.followStartupLogs = followStartupLogs
 
         self.command = command or []
@@ -160,8 +159,9 @@ class DockerLatentWorker(DockerBaseWorker):
         if tls is not None:
             self.client_args['tls'] = tls
 
-    def parse_volumes(self, volumes):
-        self.volumes = []
+    def _thd_parse_volumes(self, volumes):
+        volume_list = []
+        binds = {}
         for volume_string in (volumes or []):
             try:
                 bind, volume = volume_string.split(":", 1)
@@ -175,8 +175,9 @@ class DockerLatentWorker(DockerBaseWorker):
                 ro = volume[-2:] == 'ro'
                 volume = volume[:-3]
 
-            self.volumes.append(volume)
-            self.binds[bind] = {'bind': volume, 'ro': ro}
+            volume_list.append(volume)
+            binds[bind] = {'bind': volume, 'ro': ro}
+        return volume_list, binds
 
     @defer.inlineCallbacks
     def start_instance(self, build):
@@ -228,15 +229,16 @@ class DockerLatentWorker(DockerBaseWorker):
                 'Image "%s" not found on docker host.' % image
             )
 
-        self.parse_volumes(volumes)
-        self.hostconfig['binds'] = self.binds
-        host_conf = docker_client.create_host_config(**self.hostconfig)
+        volumes, binds = self._thd_parse_volumes(volumes)
+        host_conf = self.hostconfig.copy()
+        host_conf['binds'] = binds
+        host_conf = docker_client.create_host_config(**host_conf)
 
         instance = docker_client.create_container(
             image,
             self.command,
             name=self.getContainerName(),
-            volumes=self.volumes,
+            volumes=volumes,
             environment=self.createEnvironment(),
             host_config=host_conf
         )

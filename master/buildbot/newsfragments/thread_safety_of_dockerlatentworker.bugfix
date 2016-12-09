@@ -1,0 +1,1 @@
+fix threading issue in :py:class:`~buildbot.plugins.worker.DockerLatentWorker`
