@@ -42,9 +42,10 @@ def upgrade(migrate_engine):
                     # migrate.xx.ForeignKeyConstraint is changing the model so initializing here
                     # would break the iteration (Set changed size during iteration)
                     fks_to_change.append((
-                        (fk.columns, [c.column]), dict(name=fk.name, ondelete='CASCADE')))
+                        table, (fk.columns, [c.column]), dict(name=fk.name, ondelete='CASCADE')))
 
-    for args, kwargs in fks_to_change:
+    for table, args, kwargs in fks_to_change:
         fk = ForeignKeyConstraint(*args, **kwargs)
+        table.append_constraint(fk)
         fk.drop()
         fk.create()
