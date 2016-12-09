@@ -497,6 +497,7 @@ else:
             'idna >= 0.6',
         ],
         'docs': [
+            'docutils<0.13.0'
             'sphinx>1.4.0',
             'sphinxcontrib-blockdiag',
             'sphinxcontrib-spelling',
