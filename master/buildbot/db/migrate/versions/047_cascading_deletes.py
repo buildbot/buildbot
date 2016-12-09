@@ -29,16 +29,23 @@ def upgrade(migrate_engine):
     builder_masters = sautils.Table('builder_masters', metadata, autoload=True)
     configured_workers = sautils.Table('configured_workers', metadata,
                                        autoload=True)
+    fks_to_change = []
+    # we need to parse the reflected model in order to find the automatic fk name that was put
+    # mysql and pgsql have different naming convention so this is not very easy to have generic code working.
+    for table, keys in [(builder_masters, (builders.c.id, masters.c.id)),
+                        (configured_workers, (builder_masters.c.id, workers.c.id))]:
+        for fk in table.constraints:
+            if not isinstance(fk, sa.ForeignKeyConstraint):
+                continue
+            for c in fk.elements:
+                if c.column in keys:
+                    # migrate.xx.ForeignKeyConstraint is changing the model so initializing here
+                    # would break the iteration (Set changed size during iteration)
+                    fks_to_change.append((
+                        table, (fk.columns, [c.column]), dict(name=fk.name, ondelete='CASCADE')))
 
-    for fk in (ForeignKeyConstraint([builder_masters.c.builderid],
-                                    [builders.c.id], ondelete='CASCADE'),
-               ForeignKeyConstraint([builder_masters.c.masterid],
-                                    [masters.c.id], ondelete='CASCADE'),
-               ForeignKeyConstraint([configured_workers.c.buildermasterid],
-                                    [builder_masters.c.id], ondelete='CASCADE'),
-               ForeignKeyConstraint([configured_workers.c.workerid],
-                                    [workers.c.id], ondelete='CASCADE'),
-               ):
-        if migrate_engine.dialect.name != 'sqlite':
-            fk.drop()
+    for table, args, kwargs in fks_to_change:
+        fk = ForeignKeyConstraint(*args, **kwargs)
+        table.append_constraint(fk)
+        fk.drop()
         fk.create()
