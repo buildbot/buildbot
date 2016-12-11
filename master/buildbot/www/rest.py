@@ -337,6 +337,8 @@ class V2RootResource(resource.Resource):
             request.write(json.dumps(dict(error=msg)))
 
         with self.handleErrors(writeError):
+            yield self.master.www.assertUserAllowed(request, tuple(request.postpath), request.method, {})
+
             ep, kwargs = self.getEndpoint(request)
 
             rspec = self.decodeResultSpec(request, ep)
