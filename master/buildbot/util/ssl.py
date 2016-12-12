@@ -18,7 +18,7 @@
 """
 
 try:
-    from twisted.internet.ssl import *  # noqa
+    from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import
     ssl_import_error = None
     has_ssl = True
 except ImportError as e:
