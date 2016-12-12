@@ -3,7 +3,7 @@
     package_dir = "master"
     filename = "master/docs/relnotes/index.rst"
     template = "master/docs/relnotes.rst.jinja"
-    title_format = "{name} ``{version}``\n===================================\n"
+    title_format = "{name} ``{version}``(``{project_date}``)\n===================================================\n"
     [[tool.towncrier.section]]
         path = ""
 

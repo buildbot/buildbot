@@ -110,7 +110,7 @@ install:
   - "[ $TESTS != lint ] || pip install sphinx"
   # Install docs dependencies for running the tests
   # until towncrier toml is released, we need to fetch from git :-/
-  - "[ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/hawkowl/towncrier'"
+  - "[ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'"
 
   # Check that Twisted is not installed during previous steps on setuppy_test configuration.
   # In setuppy_test all dependencies should be installed by setuptools during tests.
