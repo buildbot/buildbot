@@ -35,6 +35,7 @@ from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import ssl
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
@@ -615,6 +616,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
 
+    @ssl.skipUnless
     @defer.inlineCallbacks
     def test_sendMessageOverSsl(self):
         fakereactor = Mock()
