@@ -218,6 +218,10 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
+        def allow(*args, **kw):
+            return
+        self.master.www.assertUserAllowed = allow
+
         endpoint.TestEndpoint.rtype = mock.MagicMock()
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
         endpoint.Test.isCollection = True
@@ -586,6 +590,43 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.request.args = {'property': expected_props}
         spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
         self.assertEqual(spec.properties[0].values, expected_props)
+
+    @defer.inlineCallbacks
+    def test_authz_forbidden(self):
+
+        def deny(request, ep, action, options):
+            if "test" in ep:
+                raise authz.Forbidden("no no")
+            return None
+        self.master.www.assertUserAllowed = deny
+
+        yield self.render_resource(self.rsrc, '/test')
+        self.assertRestAuthError(message=re.compile('no no'), responseCode=403)
+
+    def assertRestAuthError(self, message, responseCode=400):
+        got = {}
+        got['contentType'] = self.request.headers['content-type']
+        got['responseCode'] = self.request.responseCode
+        content = json.loads(self.request.written)
+
+        if 'error' not in content:
+            self.fail("response does not have proper error form: %r"
+                      % (content,))
+        got['error'] = content['error']
+
+        exp = {}
+        exp['contentType'] = ['text/plain; charset=utf-8']
+        exp['responseCode'] = responseCode
+        exp['error'] = message
+
+        # process a regular expression for message, if given
+        if not isinstance(message, string_types):
+            if message.match(got['error']):
+                exp['error'] = got['error']
+            else:
+                exp['error'] = "MATCHING: %s" % (message.pattern,)
+
+        self.assertEqual(got, exp)
 
 
 class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):

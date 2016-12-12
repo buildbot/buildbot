@@ -1,0 +1,1 @@
+Implement support for authentication in REST API in :py:class:`~buildbot.www.rest.V2RootResource`.
