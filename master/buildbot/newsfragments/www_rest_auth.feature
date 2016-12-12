@@ -1,1 +1,1 @@
-Implement support for authentication in REST API in :py:class:`~buildbot.www.rest.V2RootResource`.
+Buildbot can know be configured to deny read access to REST api resources based on authorization rules.
