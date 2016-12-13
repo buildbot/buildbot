@@ -57,10 +57,11 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         self.project_ids = {}
 
     def createStatus(self,
-                     project_id, sha, state, target_url=None,
+                     project_id, branch, sha, state, target_url=None,
                      description=None, context=None):
         """
         :param project_id: Project ID from GitLab
+        :param branch: Branch name to create the status for.
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'error'
                       or 'failure'.
@@ -70,7 +71,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         :return: A defered with the result from GitLab.
 
         """
-        payload = {'state': state, 'ref': sha}
+        payload = {'state': state, 'ref': branch}
 
         if description is not None:
             payload['description'] = description
@@ -109,6 +110,9 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         sourcestamps = build['buildset']['sourcestamps']
         project = sourcestamps[0]['project']
 
+        # default to master if not found
+        branch = sourcestamps[0].get('branch', 'master')
+
         if project:
             repoOwner, repoName = project.split('/')
         else:
@@ -137,6 +141,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             try:
                 res = yield self.createStatus(
                     project_id=proj_id,
+                    branch=branch.encode('utf-8'),
                     sha=sha.encode('utf-8'),
                     state=state.encode('utf-8'),
                     target_url=build['url'].encode('utf-8'),
