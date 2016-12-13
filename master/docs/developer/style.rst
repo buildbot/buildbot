@@ -96,6 +96,7 @@ code for a particular function or method within the same indented block, using
 nested functions::
 
     def getRevInfo(revname):
+        # for example only! See above a better implementation with inlineCallbacks
         results = {}
         d = defer.succeed(None)
         def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
@@ -121,6 +122,15 @@ Deferred.  As a shortcut, ``d.addCallback`` works as a decorator::
     @d.addCallback
     def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
         return utils.getProcessOutput(git, [ 'rev-parse', revname ])
+
+.. note::
+
+    ``d.addCallback`` is not really a decorator as it does not return a modified function.
+    As a result in previous code, ``rev_parse`` value is actually the Deferred.
+    In general the :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to read.
+    As a general rule of thumb, when you need more than 2 callbacks in the same method, its time to switch it to  :class:`inlineCallbacks`.
+    This would be for example the case for previous :py:func:`getRevInfo`.
+    See this `discussion <https://github.com/buildbot/buildbot/pull/2523>`_ with twisted experts for more information.
 
 Be careful with local variables. For example, if ``parse_rev_parse``, above,
 merely assigned ``rev = res.strip()``, then that variable would be local to
@@ -175,6 +185,19 @@ it is easy to represent a loop, or even nested loops, in this style without
 losing any readability.
 
 Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
+
+The previous :py:func:`getRevInfo` example implementation should rather be written as:
+
+.. code-block::
+
+    @defer.inlineCallbacks
+    def getRevInfo(revname):
+        results = {}
+        res = yield utils.getProcessOutput(git, [ 'rev-parse', revname ])
+        results['rev'] = res.strip()
+        res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
+        results['comments'] = res.strip()
+        defer.returnValue(results)
 
 Locking
 .......
