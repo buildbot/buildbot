@@ -3,10 +3,12 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class waterfallPage
+class consolePage
     constructor: ->
 
     go: ->
-        browser.get('#/waterfall')
+        browser.get('#/console')
+    countSuccess: () ->
+        element.all(By.css('.badge-status.results_SUCCESS')).count()
 
-module.exports = waterfallPage
+module.exports = consolePage
