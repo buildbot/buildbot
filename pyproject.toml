@@ -14,7 +14,7 @@
 
     [[tool.towncrier.type]]
         directory = "bugfix"
-        name = "Bugfixes"
+        name = "Bug fixes"
         showcontent = true
 
     [[tool.towncrier.type]]
