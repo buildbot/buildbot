@@ -19,13 +19,16 @@ class builderPage
         element.all(By.partialLinkText(@builder)).first().click()
         element.all(By.buttonText(@forceName)).first().click()
 
-    getBuildCount: () ->
-        return element.all(By.css('span.badge-status.results_SUCCESS')).get(0).getText()
+    getLastSuccessBuildNumber: () ->
+        element.all(By.css('span.badge-status.results_SUCCESS')).then (elements)->
+            if elements.length == 0
+                return 0
+            return elements[0].getText()
 
     waitNextBuildFinished: (reference) ->
         self = this
         buildCountIncrement = () ->
-            self.getBuildCount().then (currentBuildCount) ->
+            self.getLastSuccessBuildNumber().then (currentBuildCount) ->
                 return +currentBuildCount == +reference + 1
         browser.wait(buildCountIncrement, 10000)
 

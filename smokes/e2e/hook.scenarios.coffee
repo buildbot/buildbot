@@ -10,7 +10,7 @@ describe 'change hook', () ->
     )
     it 'should create a build', () ->
         builder.go()
-        builder.getBuildCount().then (lastbuild) ->
+        builder.getLastSuccessBuildNumber().then (lastbuild) ->
             browser.executeAsyncScript (done)->
                 $.post('change_hook/base', {
                     comments:'sd',
