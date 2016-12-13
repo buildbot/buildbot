@@ -27,7 +27,6 @@ from StringIO import StringIO
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.internet import ssl
 from twisted.python import log as twlog
 from zope.interface import implementer
 
@@ -45,6 +44,7 @@ from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
+from buildbot.util import ssl
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 
@@ -53,7 +53,6 @@ try:
     ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
 except ImportError:
     ESMTPSenderFactory = None
-
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non
@@ -161,6 +160,9 @@ class MailNotifier(service.BuildbotService):
         if extraHeaders:
             if not isinstance(extraHeaders, dict):
                 config.error("extraHeaders must be a dictionary")
+
+        if useSmtps:
+            ssl.ensureHasSSL(self.__class__.__name__)
 
         # you should either limit on builders or tags, not both
         if builders is not None and tags is not None:

@@ -492,7 +492,7 @@ else:
             # There are bugs with extras inside extras:
             # <https://github.com/pypa/pip/issues/3516>
             # so we explicitly include Twisted[tls] dependencies.
-            'pyopenssl >= 0.13',
+            'pyopenssl >= 16.0.0',
             'service_identity',
             'idna >= 0.6',
         ],

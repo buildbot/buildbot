@@ -1267,3 +1267,22 @@ For example, a particular daily scheduler could be configured on multiple master
                     self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
 
 .. _AngularJS ngMock: https://docs.angularjs.org/api/ngMock/service/$httpBackend
+
+:py:mod:`buildbot.util.ssl`
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This module is a copy of :py:mod:`twisted.internet.ssl` except it won't crash with :py:class:`ImportError` if :py:mod:`pyopenssl` is not installed.
+If you need to use :py:mod:`twisted.internet.ssl`, please instead use :py:mod:`buildbot.util.ssl`, and call :py:func:`ssl.ensureHasSSL` in :py:meth:`checkConfig` to provide helpful message to the user, only if he enabled SSL for your plugin.
+
+.. py:function:: ensureHasSSL(plugin_name)
+
+    :param plugin_name: name of the plugin. Usually ``self.__class__.__name__``
+
+    Call this function to provide helpful config error to the user in case of ``OpenSSL`` not installed.
+
+
+.. py:function:: skipUnless(f)
+
+    :param f: decorated test
+
+    Test decorator which will skip the test if ``OpenSSL`` is not installed.
