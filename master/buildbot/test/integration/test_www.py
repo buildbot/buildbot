@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+import mock
+
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -28,6 +30,7 @@ from buildbot.test.util import www
 from buildbot.util import json
 from buildbot.www import service as wwwservice
 from buildbot.www import auth
+from buildbot.www import authz
 
 SOMETIME = 1348971992
 OTHERTIME = 1008971992
@@ -80,12 +83,14 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
             port='tcp:0:interface=127.0.0.1',
             debug=True,
             auth=auth.NoAuth(),
+            authz=authz.Authz(),
             avatar_methods=[],
             logfileName='http.log')
         master.www = wwwservice.WWWService()
         master.www.setServiceParent(master)
         yield master.www.startService()
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
+        master.www.site.sessionFactory = mock.Mock(return_value=mock.Mock())
 
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't
