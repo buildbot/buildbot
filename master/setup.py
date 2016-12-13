@@ -28,6 +28,7 @@ from distutils.core import setup
 from distutils.version import LooseVersion
 
 import pkg_resources
+
 from buildbot import version
 
 if "bdist_wheel" in sys.argv:
@@ -493,7 +494,7 @@ else:
             # There are bugs with extras inside extras:
             # <https://github.com/pypa/pip/issues/3516>
             # so we explicitly include Twisted[tls] dependencies.
-            'pyopenssl >= 0.13',
+            'pyopenssl >= 16.0.0',
             'service_identity',
             'idna >= 0.6',
         ],
@@ -506,6 +507,7 @@ else:
             'docutils>=0.8',
             'ramlfications',
             'sphinx-jinja',
+            'towncrier'
         ],
     }
 

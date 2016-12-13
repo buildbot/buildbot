@@ -67,3 +67,5 @@ def getVersion(init_file):
 
 
 version = getVersion(__file__)
+
+__version__ = version

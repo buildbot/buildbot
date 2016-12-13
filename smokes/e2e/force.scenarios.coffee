@@ -25,5 +25,4 @@ describe('', () ->
                 force.getStartButton().click()
                 builder.go()
                 builder.waitNextBuildFinished(lastbuild)
-                expect(element.all(By.css('rect.success')).count()).toBeGreaterThan(0)
 )
