@@ -1,1 +1,0 @@
-:bb:reporter:`IRC` :py:meth:`maybeColorize` is able to highlight single words and stop colorization at the end. The previous implementation only stopped colorization but not boldface.

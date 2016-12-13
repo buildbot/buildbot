@@ -1,1 +1,0 @@
-Fixed `ref` to point to `branch` instead of commit `sha` in :py:class:`~buildbot.reporters.GitlabStatusPush`
