@@ -10,7 +10,7 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``0.9.2``(``2016-12-13``)
+Buildbot ``0.9.2`` ( ``2016-12-13`` )
 ===================================================
 
 Bug fixes
@@ -33,7 +33,7 @@ Bug fixes
 Features
 --------
 
-- Implement `:py:class:`~buildbot.www.oauth2.BitbucketAuth`.
+- Implement :py:class:`~buildbot.www.oauth2.BitbucketAuth`.
 - New :bb:chsrc:`GerritEventLogPoller` poller to poll Gerrit changes via http
   API.
 - New :bb:reporter:`GerritVerifyStatusPush` can send multiple review status for
