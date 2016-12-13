@@ -102,7 +102,7 @@ install:
       [ $TESTS != py3 ] || pip install -e worker future
       [ $python != 2.6 ] || pip install 'astroid<1.3.0'
 
-      [ $TESTS != lint ] || pip install sphinx 'pylint==1.1.0' 'flake8~=2.6.0'  'astroid==1.3.8'
+      [ $TESTS != lint ] || pip install -e './master[docs,test]'
       # until towncrier toml is released, we need to fetch from git :-/
       [ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'
 
@@ -148,10 +148,10 @@ script:
     condition: TESTS == "py3"
     cmd: trial  --reporter=text --rterrors buildbot_worker.test"
 
-  # Run additional tests in their separate job (TODO pylint crashes on our docker image)
-  # - title: pylint
-  #   condition: TESTS == "lint"
-  #   cmd: make pylint
+  # Run additional tests in their separate job
+  - title: pylint
+    condition: TESTS == "lint"
+    cmd: make pylint
 
   - title: flake8
     condition: TESTS == "lint"

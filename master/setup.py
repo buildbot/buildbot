@@ -482,6 +482,7 @@ else:
             'pylint==1.1.0',
             'astroid==1.3.8',
             'pyflakes',
+            'flake8~=2.6.0',
         ] + test_deps,
         'bundle': [
             "buildbot-www=={0}".format(bundle_version),
