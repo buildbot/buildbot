@@ -18,7 +18,7 @@ describe('', () ->
     describe 'force', () ->
         it 'should create a build', () ->
             builder.go()
-            builder.getBuildCount().then (lastbuild) ->
+            builder.getLastSuccessBuildNumber().then (lastbuild) ->
                 builder.goForce()
                 force.getStartButton().click()
                 builder.go()
