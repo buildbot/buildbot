@@ -67,3 +67,14 @@ docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
 docker-buildbot-master-ubuntu:
 	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
+
+
+release:
+	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
+	yes | towncrier --version $(VERSION) --date `date -u  +%F`
+	git commit -m "relnotes for $(VERSION)"
+	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
+	./common/maketarballs.sh
+	./common/smokedist.sh
+	make docs
+	echo twine upload --sign dist/*

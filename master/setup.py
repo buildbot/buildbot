@@ -28,6 +28,7 @@ from distutils.core import setup
 from distutils.version import LooseVersion
 
 import pkg_resources
+
 from buildbot import version
 
 if "bdist_wheel" in sys.argv:
@@ -505,6 +506,7 @@ else:
             'docutils>=0.8',
             'ramlfications',
             'sphinx-jinja',
+            'towncrier'
         ],
     }
 
