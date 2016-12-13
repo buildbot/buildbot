@@ -1,1 +1,0 @@
-fix compatibility issue with mysql5 (do not set default value for TEXT column).

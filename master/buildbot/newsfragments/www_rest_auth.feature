@@ -1,1 +1,0 @@
-Buildbot can now be configured to deny read access to REST api resources based on authorization rules.

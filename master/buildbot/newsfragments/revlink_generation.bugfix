@@ -1,1 +1,0 @@
-Fixed `addChange` in :py:class:`~buildbot.data.changes.Change` to use the `revlink` configuration option to generate the revlink.
