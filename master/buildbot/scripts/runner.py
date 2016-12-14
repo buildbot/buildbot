@@ -244,8 +244,7 @@ class SendChangeOptions(base.SubcommandOptions):
          "Read the log messages from this file (- for stdin)"),
         ("when", "w", None, "timestamp to use as the change time"),
         ("revlink", "l", '', "Revision link (revlink)"),
-        ("encoding", "e", 'utf8',
-            "Encoding of other parameters (default utf8)"),
+        ("encoding", "e", 'utf8', "Encoding of other parameters"),
     ]
 
     buildbotOptions = [
