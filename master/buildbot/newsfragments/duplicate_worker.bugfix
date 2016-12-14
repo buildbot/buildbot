@@ -1,0 +1,1 @@
+Fix duplicate worker usecase, where a worker with the same name would make the other worker also disconnect (:bug:`3656`)

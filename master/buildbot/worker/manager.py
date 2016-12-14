@@ -114,6 +114,8 @@ class WorkerManager(MeasuredBuildbotServiceManager):
                 old_conn.loseConnection()
                 log.msg("Connected worker '%s' ping timed out after %d seconds"
                         % (workerName, self.PING_TIMEOUT))
+            except RuntimeError:
+                raise
             except Exception as e:
                 old_conn.loseConnection()
                 log.msg("Got error while trying to ping connected worker %s:"

@@ -181,15 +181,15 @@ class TestWorkerComm(unittest.TestCase):
         self.buildworker = None
         self.port = None
         self.workerworker = None
-        self.connector = None
+        self.connectors = []
         self._detach_deferreds = []
 
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
     def tearDown(self):
-        if self.connector:
-            self.connector.disconnect()
+        for connector in self.connectors:
+            connector.disconnect()
         deferreds = self._detach_deferreds + [
             self.pbmanager.stopService(),
             self.botmaster.stopService(),
@@ -254,7 +254,8 @@ class TestWorkerComm(unittest.TestCase):
 
             return workerworker
 
-        self.connector = reactor.connectTCP("127.0.0.1", self.port, factory)
+        self.connectors.append(
+            reactor.connectTCP("127.0.0.1", self.port, factory))
 
         if not waitForBuilderList:
             return login_d
@@ -282,7 +283,6 @@ class TestWorkerComm(unittest.TestCase):
         # wait for the resulting detach
         yield worker.waitForDetach()
 
-    @flaky(bugNumber=2761)
     @defer.inlineCallbacks
     def test_duplicate_worker(self):
         yield self.addWorker()
