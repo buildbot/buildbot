@@ -17,6 +17,8 @@ from future.builtins import range
 import base64
 import textwrap
 
+import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -465,8 +467,48 @@ class RealTests(Tests):
             'content': lz4.dumps(line),
             'compressed': 3})
 
-    # TODO: test compressing with >64k
-    # TODO: test compressing compressed size >64k
+    @defer.inlineCallbacks
+    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=u'xy' * 70 + '\n' * 3):
+        if chunk.endswith("\n"):
+            chunk = chunk[:-1]
+        linesperchunk = chunk.count("\n") + 1
+        test_data = [
+            fakedb.LogChunk(logid=201, first_line=i * linesperchunk,
+                            last_line=i * linesperchunk + linesperchunk - 1, compressed=0,
+                            content=chunk)
+            for i in xrange(NUM_CHUNKS)
+        ]
+        yield self.insertTestData(
+            self.backgroundData + [
+                fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                           complete=0, num_lines=NUM_CHUNKS * 3, type=u's')] +
+            test_data)
+        wholeLog = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
+        for i in xrange(10):
+            yield self.db.logs.compressLog(201)
+            wholeLog2 = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
+            self.assertEqual(wholeLog, wholeLog2)
+        self.assertEqual(wholeLog, wholeLog2)
+
+        def countChunk(conn):
+            tbl = self.db.model.logchunks
+            q = sa.select([sa.func.count(tbl.c.content)])
+            q = q.where(tbl.c.logid == 201)
+            return conn.execute(q).fetchone()[0]
+
+        chunks = yield self.db.pool.do(countChunk)
+        # make sure MAX_CHUNK_LINES is taken in account
+        self.assertGreaterEqual(
+            chunks, NUM_CHUNKS * linesperchunk / logs.LogsConnectorComponent.MAX_CHUNK_LINES)
+
+    def test_addLogLines_huge_log(self):
+        return self.do_addLogLines_huge_log()
+
+    def test_addLogLines_huge_log_lots_line(self):
+        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'x\n' * 50)
+
+    def test_addLogLines_huge_log_lots_snowmans(self):
+        return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'\N{SNOWMAN}\n' * 50)
 
 
 class TestFakeDB(unittest.TestCase, Tests):
