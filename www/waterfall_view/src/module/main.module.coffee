@@ -50,7 +50,7 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        @$scope.builders = @builders = @dataAccessor.getBuilders(order: 'builderid')
+        @$scope.builders = @builders = @dataAccessor.getBuilders(order: 'name')
         @$scope.builders.queryExecutor.isFiltered = (v) ->
             return not v.masterids? or v.masterids.length > 0
         @buildLimit = @c.limit
