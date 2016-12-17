@@ -35,7 +35,6 @@ def doCleanupDatabase(config, master_cfg):
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
-    print(master.config.logCompressionMethod)
     db = master.db
     yield db.setup(check_version=False, verbose=not config['quiet'])
     res = yield db.logs.getLogs()
@@ -43,7 +42,7 @@ def doCleanupDatabase(config, master_cfg):
     percent = 0
     saved = 0
     for log in res:
-        saved += yield db.logs.compressLog(log['id'])
+        saved += yield db.logs.compressLog(log['id'], force=config['force'])
         i += 1
         if not config['quiet'] and percent != i * 100 / len(res):
             percent = i * 100 / len(res)

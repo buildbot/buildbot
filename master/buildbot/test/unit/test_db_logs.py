@@ -132,7 +132,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_compressLog(self):
         @self.assertArgSpecMatches(self.db.logs.compressLog)
-        def compressLog(self, logid):
+        def compressLog(self, logid, force=False):
             pass
 
     # method tests

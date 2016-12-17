@@ -246,7 +246,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thdfinishLog)
 
     @defer.inlineCallbacks
-    def compressLog(self, logid):
+    def compressLog(self, logid, force=False):
         def thdcompressLog(conn):
             tbl = self.db.model.logchunks
             q = sa.select([tbl.c.first_line, tbl.c.last_line, sa.func.length(tbl.c.content),
@@ -267,7 +267,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             for row in rows:
                 if (todo_length + row.length_1 > self.MAX_CHUNK_SIZE or
                         (row.last_line - todo_first_line) > self.MAX_CHUNK_LINES):
-                    if todo_numchunks > 1:
+                    if todo_numchunks > 1 or (force and todo_numchunks):
                         # this group is worth re-compressing
                         todo_gather_list.append((todo_first_line, todo_last_line))
                     todo_first_line = row.first_line
@@ -283,10 +283,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 numchunks += 1
             rows.close()
 
-            if numchunks > 1:
+            if todo_numchunks > 1 or (force and todo_numchunks):
                 # last chunk group
                 todo_gather_list.append((todo_first_line, todo_last_line))
-
             for todo_first_line, todo_last_line in todo_gather_list:
                 # decompress this group of chunks. Note that the content is binary bytes.
                 # no need to decode anything as we are going to put in back stored as bytes anyway

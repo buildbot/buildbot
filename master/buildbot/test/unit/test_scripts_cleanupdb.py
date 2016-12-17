@@ -37,7 +37,7 @@ except ImportError:
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'))
+    config = dict(quiet=False, basedir=os.path.abspath('basedir'), force=True)
     config.update(kwargs)
     return config
 
@@ -88,6 +88,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {dburl}
+                c['buildbotNetUsageData'] = None
                 c['multiMaster'] = True  # dont complain for no builders
                 {extraconfig}
             """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
@@ -158,9 +159,9 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
             # retrieve the actual data size in db using raw sqlalchemy
             def thd(conn):
                 tbl = self.db.model.logchunks
-                q = sa.select([tbl.c.content])
+                q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
                 q = q.where(tbl.c.logid == logid)
-                return sum([len(row.content) for row in conn.execute(q)])
+                return conn.execute(q).fetchone()[0]
             lengths[mode] = yield self.db.pool.do(thd)
 
         self.assertDictAlmostEqual(
