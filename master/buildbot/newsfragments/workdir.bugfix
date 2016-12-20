@@ -1,0 +1,1 @@
+fix issue with factory.workdir AttributeError are not properly reported.
