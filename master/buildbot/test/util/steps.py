@@ -26,6 +26,7 @@ from twisted.python import log
 from buildbot import interfaces
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process import buildstep
+from buildbot.process.results import EXCEPTION
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
@@ -249,6 +250,7 @@ class BuildStepMixin(object):
         self.exp_missing_properties = []
         self.exp_logfiles = {}
         self.exp_hidden = False
+        self.exp_exception = None
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
@@ -294,6 +296,13 @@ class BuildStepMixin(object):
         Set whether the step is expected to be hidden.
         """
         self.exp_hidden = hidden
+
+    def expectException(self, exception_class):
+        """
+        Set whether the step is expected to raise an exception.
+        """
+        self.exp_exception = exception_class
+        self.expectOutcome(EXCEPTION)
 
     def runStep(self):
         """
@@ -356,6 +365,9 @@ class BuildStepMixin(object):
                 if got != exp:
                     log.msg("Unexpected log output:\n" + got)
                     raise AssertionError("Unexpected log output; see logs")
+            if self.exp_exception:
+                self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)
+
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
