@@ -468,7 +468,7 @@ class RealTests(Tests):
             'compressed': 3})
 
     @defer.inlineCallbacks
-    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=u'xy' * 70 + '\n' * 3):
+    def do_addLogLines_huge_log(self, NUM_CHUNKS=3000, chunk=(u'xy' * 70 + u'\n') * 3):
         if chunk.endswith("\n"):
             chunk = chunk[:-1]
         linesperchunk = chunk.count("\n") + 1
