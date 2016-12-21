@@ -661,6 +661,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.cleanupdb.cleanupDatabase"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["force", "f", "Force log recompression (useful when changing compression algorithm)"],
         # when this command has several maintainance jobs, we should make
         # them optional here. For now there is only one.
     ]

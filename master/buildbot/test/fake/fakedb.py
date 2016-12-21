@@ -2142,7 +2142,7 @@ class FakeLogsComponent(FakeDBComponent):
             self.logs['id'].complete = 1
         return defer.succeed(None)
 
-    def compressLog(self, logid):
+    def compressLog(self, logid, force=False):
         return defer.succeed(None)
 
 
