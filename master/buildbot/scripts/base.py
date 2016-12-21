@@ -121,9 +121,9 @@ def getConfigFromTac(basedir, quiet=False):
         tacGlobals = {'__file__': tacFile}
         try:
             exec(open(tacFile).read(), tacGlobals)
-        except Exception as e:
+        except Exception:
             if not quiet:
-                print(e)
+                traceback.print_exc()
             raise
         return tacGlobals
     return None
