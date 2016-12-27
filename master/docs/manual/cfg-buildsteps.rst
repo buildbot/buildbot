@@ -345,7 +345,7 @@ The Git step takes the following arguments:
 
 ``branch``
    (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
-   If this this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
+   If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
