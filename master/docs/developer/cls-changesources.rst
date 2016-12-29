@@ -4,7 +4,7 @@ Change Sources
 .. py:module:: buildbot.changes.base
 
 ChangeSource
-============
+------------
 
 .. py:class:: ChangeSource
 
@@ -15,7 +15,7 @@ ChangeSource
     Change sources which are active on every master should, instead, override ``startService`` and ``stopService``.
 
 PollingChangeSource
-===================
+-------------------
 
 .. py:class:: PollingChangeSource
 
