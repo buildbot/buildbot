@@ -186,6 +186,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when1),
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }, {
                 'author': u'bob',
                 'branch': u'branch_b',
@@ -200,6 +202,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when2),
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }, {
                 'author': u'bob',
                 'branch': u'branch_c',
@@ -214,6 +218,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when2),
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
             self.assertAllCommandsRan()
         d.addCallback(check_second_check)
@@ -360,6 +366,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }, {
                 'author': u'mpatel',
                 'branch': u'branch_b',
@@ -374,6 +382,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
             self.assertEqual(self.changesource.last_change, 5)
             self.assertAllCommandsRan()

@@ -497,6 +497,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'svn',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
             self.assertEqual(s.last_change, 2)
         d.addCallback(check_third)
@@ -522,6 +524,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'svn',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }, {
                 'author': u'warner',
                 'branch': None,
@@ -536,6 +540,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'svn',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
             self.assertEqual(s.last_change, 4)
             self.assertAllCommandsRan()

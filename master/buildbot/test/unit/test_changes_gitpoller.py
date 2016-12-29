@@ -480,6 +480,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     'revlink': '',
                     'src': 'git',
                     'when_timestamp': 1273258009,
+                    'sub_repo_name': None,
+                    'sub_repo_revision': None,
                 },
                 {
                     'author': u'by:64a5dc2a',
@@ -495,6 +497,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     'revlink': '',
                     'src': 'git',
                     'when_timestamp': 1273258009,
+                    'sub_repo_name': None,
+                    'sub_repo_revision': None,
                 },
                 {
                     'author': u'by:9118f4ab',
@@ -510,6 +514,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                     'revlink': '',
                     'src': 'git',
                     'when_timestamp': 1273258009,
+                    'sub_repo_name': None,
+                    'sub_repo_revision': None,
                 }
             ])
 
@@ -619,7 +625,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
              'revision': u'4423cdbcbb89c14e50dd5f4152415afd686c5241',
              'revlink': u'',
              'src': u'git',
-             'when_timestamp': 1273258009}]
+             'when_timestamp': 1273258009,
+             'sub_repo_name': None,
+             'sub_repo_revision': None,}]
         )
 
     def test_poll_allBranches_single(self):
@@ -1083,6 +1091,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'git',
                 'when_timestamp': 1273258009,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }, {
                 'author': 'by:64a5dc2a',
                 'branch': 'master',
@@ -1097,6 +1107,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'revlink': '',
                 'src': 'git',
                 'when_timestamp': 1273258009,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
             self.assertAllCommandsRan()
 

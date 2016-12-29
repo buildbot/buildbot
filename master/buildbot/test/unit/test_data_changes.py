@@ -135,6 +135,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         'repository': u'git://warner',
         'revision': u'0e92a098b',
         'revlink': u'http://warner/0e92a098b',
+        'sub_repo_name': '',
+        'sub_repo_revision': '',
         'when_timestamp': 256738404,
         'sourcestamp': {
             'branch': u'warnerdb',
@@ -161,7 +163,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink=u'', properties=None, repository=u'', codebase=None,
-                      project=u'', src=None):
+                      project=u'', src=None, sub_repo_name=None,
+                      sub_repo_revision=None):
             pass
 
     def do_test_addChange(self, kwargs,
@@ -191,7 +194,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={u'foo': 20}, sub_repo_name=None,
+                      sub_repo_revision=None)
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
         expectedRow = fakedb.Change(
@@ -207,6 +211,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             codebase='',
             project='Buildbot',
             sourcestampid=100,
+            sub_repo_name='',
+            sub_repo_revision='',
         )
         return self.do_test_addChange(kwargs,
                                       expectedRoutingKey, expectedMessage, expectedRow)
@@ -221,7 +227,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20}, src=u'git', codebase=u'cb')
+                      properties={u'foo': 20}, src=u'git', codebase=u'cb',
+                      sub_repo_name=None, sub_repo_revision=None)
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -237,6 +244,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'repository': u'git://warner',
             'revision': u'0e92a098b',
             'revlink': u'http://warner/0e92a098b',
+            'sub_repo_name': '',
+            'sub_repo_revision': '',
             'when_timestamp': 256738404,
             'sourcestamp': {
                 'branch': u'warnerdb',
@@ -262,6 +271,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             repository='git://warner',
             codebase='cb',
             project='Buildbot',
+            sub_repo_name=None,
+            sub_repo_revision=None,
             sourcestampid=100,
         )
         d = self.do_test_addChange(kwargs,
@@ -287,7 +298,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       project=u'Buildbot', repository=u'git://warner',
                       revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={u'foo': 20}, sub_repo_name=None,
+                      sub_repo_revision=None)
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
             'author': u'warner',
@@ -304,6 +316,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'revision': u'0e92a098b',
             'revlink': u'http://warner/0e92a098b',
             'when_timestamp': 256738404,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
             'sourcestamp': {
                 'branch': u'warnerdb',
                 'codebase': u'cb-devel',
@@ -328,6 +342,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             repository='git://warner',
             codebase='cb-devel',
             project='Buildbot',
+            sub_repo_name=None,
+            sub_repo_revision=None,
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
@@ -342,7 +358,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       files=[u'master/buildbot/__init__.py'],
                       project=u'Buildbot', repository=u'git://warner',
                       codebase=u'', revision=u'0e92a098b', when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={u'foo': 20}, sub_repo_name=None,
+                      sub_repo_revision=None)
         expectedRoutingKey = ('changes', '500', 'new')
         # When no revlink is passed to addChange, but a repository and revision is
         # passed, the revlink should be constructed by calling the revlink callable
@@ -362,6 +379,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             'revision': u'0e92a098b',
             'revlink': u'foogit://warnerbar0e92a098bbaz',
             'when_timestamp': 256738404,
+            'sub_repo_name': '',
+            'sub_repo_revision': '',
             'sourcestamp': {
                 'branch': u'warnerdb',
                 'codebase': u'',
@@ -386,6 +405,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             repository='git://warner',
             codebase='',
             project='Buildbot',
+            sub_repo_name=None,
+            sub_repo_revision=None,
             sourcestampid=100,
         )
         return self.do_test_addChange(kwargs,
