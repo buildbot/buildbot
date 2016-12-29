@@ -113,20 +113,25 @@ def isBuildmasterDir(dir):
     return True
 
 
-def getConfigFromTac(basedir):
+def getConfigFromTac(basedir, quiet=False):
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
         # don't mess with the global namespace, but set __file__ for
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
-        exec(open(tacFile).read(), tacGlobals)
+        try:
+            exec(open(tacFile).read(), tacGlobals)
+        except Exception:
+            if not quiet:
+                traceback.print_exc()
+            raise
         return tacGlobals
     return None
 
 
-def getConfigFileFromTac(basedir):
+def getConfigFileFromTac(basedir, quiet=False):
     # execute the .tac file to see if its configfile location exists
-    config = getConfigFromTac(basedir)
+    config = getConfigFromTac(basedir, quiet=quiet)
     if config:
         return config.get("configfile", "master.cfg")
     else:

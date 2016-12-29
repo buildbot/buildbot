@@ -46,11 +46,11 @@ def checkconfig(config):
     if os.path.isdir(configFile):
         basedir = configFile
         try:
-            configFile = getConfigFileFromTac(basedir)
-        except (SyntaxError, ImportError) as e:
+            configFile = getConfigFileFromTac(basedir, quiet=quiet)
+        except Exception:
             if not quiet:
+                # the exception is already printed in base.py
                 print("Unable to load 'buildbot.tac' from '%s':" % basedir)
-                print(e)
             return 1
     else:
         basedir = os.getcwd()
