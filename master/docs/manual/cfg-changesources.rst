@@ -746,7 +746,12 @@ It accepts the following arguments:
     True = immediately on launch, False = wait for one pollInterval (default).
 
 ``buildPushesWithNoCommits``
-    Determine if a push on a new branch with already known commits should trigger a build. (defaults to False).
+    Determine if a push on a new branch or update of an already known branch with
+    already known commits should trigger a build.
+    This is useful in case you have build steps depending on the name of the
+    branch and you use topic branches for development. When you merge your topic
+    branch into "master" (for instance), a new build will be triggered.
+    (defaults to False).
 
 ``gitbin``
     path to the Git binary, defaults to just ``'git'``
