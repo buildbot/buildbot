@@ -53,7 +53,7 @@ But the devil is in the details:
  * For a single master, nothing else is required.
 
 Note for distro package maintainers: The npm dependency hell
-.............................................................
+............................................................
 
 In order to *build* the ``buildbot-www`` package, you'll need Node.
 
