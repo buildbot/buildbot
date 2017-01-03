@@ -380,6 +380,8 @@ Deprecations, Removals, and Non-Compatible Changes
 
 * ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
 
+* ``/json`` web status was removed. :ref:`Data_API` should be used instead.
+
 WebStatus
 .........
 
