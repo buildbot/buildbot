@@ -270,14 +270,20 @@ For example::
             command.extend(['-j', str(cpus+1)])
         else:
             command.extend(['-j', '2'])
-        command.extend(['all'])
+        command.extend([Interpolate('%(prop:MAKETARGET)s')])
         return command
 
     f.addStep(steps.ShellCommand(command=makeCommand))
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
-Note: Config errors with Renderables may not always be caught via checkconfig
+.. note::
+
+    Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or containers containing :class:`~buildbot.interfaces.IRenderable`.
+
+.. note::
+
+    Config errors with Renderables may not always be caught via checkconfig
 
 .. index:: single: Properties; Transform
 
@@ -431,3 +437,43 @@ For this you can use a special custom renderer as following::
     from buildbot.plugins import *
 
     ShellCommand(command=['make', Interpolate('BUILDURL=%(kw:url)s', url=util.URLForBuild)])
+
+.. _SetProperties:
+
+:class:`SetProperties` step
++++++++++++++++++++++++++++
+
+Sometimes you need to compute some properties based on other properties to reuse them in several other steps.
+the
+For this you can use a special custom renderer as following:
+
+.. code-block:: python
+
+    """Example borrowed from Julia's master.cfg"""
+    from buildbot.plugins import *
+
+    @util.renderer
+    def compute_artifact_filename(props):
+        # Get the output of the `make print-BINARYDIST_FILENAME` step
+        reported_filename = props.getProperty('artifact_filename')
+
+        # First, see if we got a BINARYDIST_FILENAME output
+        if reported_filename[:26] == "BINARYDIST_FILENAME=":
+            local_filename = util.Interpolate(reported_filename[26:].strip()+"%(prop:os_pkg_ext)s")
+        else:
+            # If not, use non-sf/consistent_distnames naming
+            if is_mac(props):
+                local_filename = util.Interpolate("contrib/mac/app/Julia-%(prop:version)s-%(prop:shortcommit)s.%(prop:os_pkg_ext)s")
+            elif is_winnt(props):
+                local_filename = util.Interpolate("julia-%(prop:version)s-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+            else:
+                local_filename = util.Interpolate("julia-%(prop:shortcommit)s-Linux-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+
+        # upload_filename always follows sf/consistent_distname rules
+        upload_filename = util.Interpolate("julia-%(prop:shortcommit)s-%(prop:os_name)s%(prop:bits)s.%(prop:os_pkg_ext)s")
+        return {
+            "local_filename": local_filename
+            "upload_filename": upload_filename
+        }
+
+    f1.addStep(steps.SetProperties(properties=compute_artifact_filename))
