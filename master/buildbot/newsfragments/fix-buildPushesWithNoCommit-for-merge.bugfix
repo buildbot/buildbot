@@ -1,1 +1,1 @@
-:py:class:`~buildbot.changes.GitPoller`: buildPushesWithNoCommits now rebuilds for a known branch that was updated to an existing commit.
+:py:class:`~buildbot.changes.GitPoller`: ``buildPushesWithNoCommits`` now rebuilds for a known branch that was updated to an existing commit.
