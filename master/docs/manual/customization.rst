@@ -466,17 +466,23 @@ The skeleton of such a project would look like::
 Factory Workdir Functions
 -------------------------
 
+.. note::
+
+    While factory workdir function is still supported, it is better to just use the fact that workdir is a :index:`renderables <renderable>` attribute of every steps.
+    A Renderable has access to much more contextual information, and also can return a deferred.
+    So you could say ``build_factory.workdir = util.Interpolate("%(src:repository)s`` to achieve similar goal.
+
 It is sometimes helpful to have a build's workdir determined at runtime based on the parameters of the build.
 To accomplish this, set the ``workdir`` attribute of the build factory to a callable.
-That callable will be invoked with the :class:`SourceStamp` for the build, and should return the appropriate workdir.
+That callable will be invoked with the list of :class:`SourceStamp` for the build, and should return the appropriate workdir.
 Note that the value must be returned immediately - Deferreds are not supported.
 
 This can be useful, for example, in scenarios with multiple repositories submitting changes to Buildbot.
 In this case you likely will want to have a dedicated workdir per repository, since otherwise a sourcing step with mode = "update" will fail as a workdir with a working copy of repository A can't be "updated" for changes from a repository B.
 Here is an example how you can achieve workdir-per-repo::
 
-        def workdir(source_stamp):
-            return hashlib.md5(source_stamp.repository).hexdigest()[:8]
+        def workdir(source_stamps):
+            return hashlib.md5(source_stamps[0].repository).hexdigest()[:8]
 
         build_factory = factory.BuildFactory()
         build_factory.workdir = workdir

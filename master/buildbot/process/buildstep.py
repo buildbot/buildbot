@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import raise_with_traceback
 from future.utils import string_types
 from future.utils import text_type
 
@@ -70,6 +71,11 @@ class BuildStepFailed(Exception):
 
 class BuildStepCancelled(Exception):
     # used internally for signalling
+    pass
+
+
+class CallableAttributeError(Exception):
+    # attribute error raised from a callable run inside a property
     pass
 
 # old import paths for these classes
@@ -373,7 +379,14 @@ class BuildStep(results.ResultComputingConfigMixin,
             # see :ref:`Factory-Workdir-Functions` for details on how to
             # customize this
             if callable(self.build.workdir):
-                return self.build.workdir(self.build.sources)
+                try:
+                    return self.build.workdir(self.build.sources)
+                except AttributeError as e:
+                    # if the callable raises an AttributeError
+                    # python thinks it is actually workdir that is not existing.
+                    # python will then swallow the attribute error and call __getattr__ from worker_transition
+                    raise raise_with_traceback(CallableAttributeError(e))
+                    # we re-raise the original exception by changing its type, but keeping its stacktrace
             else:
                 return self.build.workdir
 

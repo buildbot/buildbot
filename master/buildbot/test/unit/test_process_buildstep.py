@@ -984,6 +984,36 @@ class TestShellMixin(steps.BuildStepMixin,
         yield self.runStep()
 
     @defer.inlineCallbacks
+    def test_example_build_workdir_callable(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = lambda x: '/alternate'
+        self.expectCommands(
+            ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_example_build_workdir_rendereable(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = properties.Property("myproperty")
+        self.properties.setProperty("myproperty", "/myproperty", "test")
+        self.expectCommands(
+            ExpectShell(workdir='/myproperty', command=['./cleanup.sh'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_example_build_workdir_callable_attribute_error(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = lambda x: x.p  # will raise AttributeError
+        self.expectException(buildstep.CallableAttributeError)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
     def test_example_step_workdir(self):
         self.setupStep(ShellMixinExample(workdir='/alternate'))
         self.build.workdir = '/overridden'
