@@ -1052,6 +1052,7 @@ class MyPropertiesThing(PropertiesMixin):
 def adaptMyProperties(mp):
     return mp.properties
 
+
 components.registerAdapter(adaptMyProperties, MyPropertiesThing, IProperties)
 
 

@@ -41,9 +41,11 @@ def getCommand(name):
             return possibles_exe[0]
     return possibles[0]
 
+
 # this just keeps pyflakes happy on non-Windows systems
 if runtime.platformType != 'win32':
     WindowsError = RuntimeError
+
 
 if runtime.platformType == 'win32':  # pragma: no cover
     def rmdirRecursive(dir):

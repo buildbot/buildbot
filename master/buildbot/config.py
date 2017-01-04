@@ -61,7 +61,9 @@ class ConfigErrors(Exception):
     def __nonzero__(self):
         return len(self.errors)
 
+
 _errors = None
+
 
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 

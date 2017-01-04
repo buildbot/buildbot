@@ -85,6 +85,7 @@ class chainedProtocolFactory:
     def __call__(self):
         return insults.ServerProtocol(manhole.ColoredManhole, self.namespace)
 
+
 if conchc:
     class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):
 

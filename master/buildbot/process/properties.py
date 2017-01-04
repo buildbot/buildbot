@@ -339,6 +339,7 @@ class _NotHasKey(util.ComparableMixin):
     """
     compare_attrs = ()
 
+
 # any instance of _NotHasKey would do, yet we don't want to create and delete
 # them all the time
 _notHasKey = _NotHasKey()
@@ -408,6 +409,8 @@ class _PropertyDict(object):
 
     def getRenderingFor(self, build):
         return build.getProperties()
+
+
 _thePropertyDict = _PropertyDict()
 
 
@@ -756,6 +759,7 @@ class _DefaultRenderer(object):
     def getRenderingFor(self, build):
         return self.renderer(build)
 
+
 registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
@@ -771,6 +775,7 @@ class _ListRenderer(object):
 
     def getRenderingFor(self, build):
         return defer.gatherResults([build.render(e) for e in self.value])
+
 
 registerAdapter(_ListRenderer, list, IRenderable)
 
@@ -790,6 +795,7 @@ class _TupleRenderer(object):
         d.addCallback(tuple)
         return d
 
+
 registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
@@ -808,6 +814,7 @@ class _DictRenderer(object):
         d = self.value.getRenderingFor(build)
         d.addCallback(dict)
         return d
+
 
 registerAdapter(_DictRenderer, dict, IRenderable)
 

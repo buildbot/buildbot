@@ -277,5 +277,6 @@ class AnyBranchScheduler(BaseBasicScheduler):
             sched_id, branch=branch, repository=repository,
             codebase=codebase, project=project)
 
+
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent

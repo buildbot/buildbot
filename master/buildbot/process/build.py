@@ -657,6 +657,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     # stopBuild is defined earlier
 
+
 components.registerAdapter(
     lambda build: interfaces.IProperties(build.properties),
     Build, interfaces.IProperties)

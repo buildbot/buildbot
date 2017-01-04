@@ -365,6 +365,8 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
+
+
 deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
                                 compat_name="BuildslaveChoiceParameter")
 
@@ -450,6 +452,7 @@ class NestedParameter(BaseParameter):
         ret = BaseParameter.getSpec(self)
         ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
+
 
 ParameterGroup = NestedParameter
 

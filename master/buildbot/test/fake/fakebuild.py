@@ -60,6 +60,7 @@ class FakeBuildStatus(properties.PropertiesMixin, object):
 
     getBuilder = mock.Mock()
 
+
 components.registerAdapter(
     lambda build_status: build_status.properties,
     FakeBuildStatus, interfaces.IProperties)
