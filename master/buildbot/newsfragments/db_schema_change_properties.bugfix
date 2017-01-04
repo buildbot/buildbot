@@ -1,0 +1,1 @@
+Change properties 'value' changed from String(1024) to Text. Requires upgrade master. (:bug:`3197`)
