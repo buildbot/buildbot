@@ -1,1 +1,1 @@
-new :ref:`SetProperties` which allows to generate and transform properties separately.
+new :bb:step:`SetProperties` which allows to generate and transform properties separately.
