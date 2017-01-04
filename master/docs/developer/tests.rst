@@ -4,6 +4,37 @@ Buildbot's Test Suite
 Buildbot's master tests are under ``buildbot.test``, ``buildbot-worker`` package tests are under ``buildbot_worker.test``.
 Tests for the workers are similar to the master, although in some cases helpful functionality on the master is not re-implemented on the worker.
 
+Quick-Start
+-----------
+
+Buildbot uses Twisted `trial <http://twistedmatrix.com/trac/wiki/TwistedTrial>`_ to run its test suite.
+Following is a quick shell session to put you on the right track.
+
+.. code-block:: bash
+
+    # the usual buildbot development bootstrap with git and virtualenv
+    git clone https://github.com/buildbot/buildbot
+    cd buildbot
+    virtualenv venv
+    . ./venv/bin/activate
+    pip install -U pip  # make sure you have latest version of pip
+
+    # install the buildbot master with the test dependencies
+    pip install -e './master[test]'
+    # install the buildbot worker (required for the integration tests)
+    pip install -e './worker'
+    # install the buildbot www package from pip (required for the integration and www tests)
+    pip install buildbot_www
+
+    # now we run the test suite
+    trial buildbot
+
+    # find all tests that talk about mail
+    trial -n --reporter=bwverbose buildbot | grep mail
+
+    # run only one test module
+    trial buildbot.test.unit.test_reporters_mail
+
 Suites
 ------
 
