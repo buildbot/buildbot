@@ -176,7 +176,7 @@ parser.add_option("-p", "--property", dest='properties', action="callback", call
             """))
 parser.add_option("-r", "--repository", dest='repository', metavar="PATH",
                   help=textwrap.dedent("""\
-            Repository for use by buildbot slaves to checkout code.
+            Repository for use by buildbot workers to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
             """))
