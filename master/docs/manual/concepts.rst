@@ -611,6 +611,12 @@ multiple *source steps* - one for each codebase
 Multimaster
 -----------
 
+.. Warning::
+
+    Buildbot Multimaster is considered experimental.
+    There are still some companies using it in production.
+    Don't hesitate to use the mailing lists to share your experience.
+
 .. blockdiag::
 
     blockdiag multimaster {

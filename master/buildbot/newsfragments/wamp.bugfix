@@ -1,0 +1,2 @@
+Fix :ref:`mq-Wamp` :bb:cfg:`mq` support by removing ``debug``, ``debug_amp`` and ``debug_app`` from the :bb:cfg:`mq` config, which is not available in latest version of `Python Autobahn <http://autobahn.ws>`_.
+You can now use ``wamp_debug_level`` option instead.
