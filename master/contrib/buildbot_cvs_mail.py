@@ -172,7 +172,7 @@ parser.add_option("-C", "--category", dest='category', metavar="CAT",
             """))
 parser.add_option("-c", "--cvsroot", dest='cvsroot', metavar="PATH",
                   help=textwrap.dedent("""\
-            CVSROOT for use by buildbot slaves to checkout code.
+            CVSROOT for use by buildbot workers to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
             """))
