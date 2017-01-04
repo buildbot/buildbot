@@ -45,6 +45,7 @@ def isTrueOrIsExactlyZero(v):
     # all other false-ish values are false
     return False
 
+
 git_describe_flags = [
     # on or off
     ('all', lambda v: ['--all'] if v else None),

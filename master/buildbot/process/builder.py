@@ -44,6 +44,8 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
             return workername == workerforbuilder.worker.workername
 
     return True
+
+
 deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
 
 

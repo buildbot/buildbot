@@ -106,6 +106,7 @@ class StatusReceiverService(StatusReceiverBase, service.AsyncService,
                             util.ComparableMixin):
     pass
 
+
 StatusReceiver = StatusReceiverService
 
 

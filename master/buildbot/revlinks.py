@@ -32,6 +32,7 @@ class RevlinkMatch(object):
             if m:
                 return m.expand(self.revlink) % rev
 
+
 GithubRevlink = RevlinkMatch(
     repo_urls=[r'https://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
                r'git://github.com/([^/]*)/([^/]*?)(?:\.git)?$',
@@ -46,6 +47,7 @@ class GitwebMatch(RevlinkMatch):
     def __init__(self, repo_urls, revlink):
         RevlinkMatch.__init__(self, repo_urls=repo_urls,
                               revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
+
 
 SourceforgeGitRevlink = GitwebMatch(
     repo_urls=[r'^git://([^.]*).git.sourceforge.net/gitroot/(?P<repo>.*)$',
@@ -76,6 +78,7 @@ class RevlinkMultiplexer(object):
             url = revlink(rev, repo)
             if url:
                 return url
+
 
 default_revlink_matcher = RevlinkMultiplexer(GithubRevlink,
                                              SourceforgeGitRevlink,

@@ -41,6 +41,8 @@ if boto3 is not None:
 def skip_ec2(f):
     f.skip = "boto3 or moto is not installed"
     return f
+
+
 if boto3 is None:
     mock_ec2 = skip_ec2
 

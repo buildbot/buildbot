@@ -72,6 +72,7 @@ class BuildStepCancelled(Exception):
     # used internally for signalling
     pass
 
+
 # old import paths for these classes
 RemoteCommand = remotecommand.RemoteCommand
 LoggedRemoteCommand = remotecommand.LoggedRemoteCommand
@@ -1240,6 +1241,7 @@ def regex_log_evaluator(cmd, _, regexes):
                 if err.search(l.getText()):
                     worst = possible_status
     return worst
+
 
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes

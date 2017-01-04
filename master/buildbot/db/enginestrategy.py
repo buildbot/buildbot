@@ -285,6 +285,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         engine.buildbot_basedir = basedir
         return engine
 
+
 BuildbotEngineStrategy()
 
 # this module is really imported for the side-effects, but pyflakes will like

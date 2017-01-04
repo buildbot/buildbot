@@ -332,6 +332,8 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
 
     def didFail(self):
         return self.results() == FAILURE
+
+
 LoggedRemoteCommand = RemoteCommand
 
 

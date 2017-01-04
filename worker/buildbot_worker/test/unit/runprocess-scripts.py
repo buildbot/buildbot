@@ -54,6 +54,7 @@ def wait_for_parent_death(orig_parent_pid):
         except OSError:  # Probably ENOSUCH
             return
 
+
 script_fns = {}
 
 
@@ -109,6 +110,7 @@ def assert_stdin_closed():
             return  # succcess!
         if time.time() > bail_at:
             assert False  # failure :(
+
 
 # make sure this process dies if necessary
 

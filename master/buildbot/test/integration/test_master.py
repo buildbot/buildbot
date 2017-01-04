@@ -49,6 +49,7 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
     def test_master2(self):
         return self.do_test_master()
 
+
 # master configuration
 
 # Note that the *same* configuration objects are used for both runs of the
