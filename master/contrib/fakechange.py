@@ -38,7 +38,7 @@ Each call to .addChange injects a single Change object: each Change
 represents multiple files, all changed by the same person, and all with the
 same checkin comments.
 
-The port that this script connects to is the same 'slavePort' that the
+The port that this script connects to is the same 'workerPort' that the
 workers and other debug tools use. The ChangeMaster service will only be
 available on that port if 'change' is in the list of services passed to
 buildbot.master.makeApp (this service is turned ON by default).
