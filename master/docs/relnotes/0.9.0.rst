@@ -53,7 +53,7 @@ But the devil is in the details:
  * For a single master, nothing else is required.
 
 Note for distro package maintainers: The npm dependency hell
-.............................................................
+............................................................
 
 In order to *build* the ``buildbot-www`` package, you'll need Node.
 
@@ -379,6 +379,8 @@ Deprecations, Removals, and Non-Compatible Changes
   Documentation was updated with suggestions to use third party web server for serving static file.
 
 * ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
+
+* ``/json`` web status was removed. :ref:`Data_API` should be used instead.
 
 WebStatus
 .........
