@@ -41,6 +41,7 @@ def mkconfig(**kwargs):
     config.update(kwargs)
     return config
 
+
 fake_master_tac = """\
 from twisted.application import service
 from twisted.internet import reactor

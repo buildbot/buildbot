@@ -163,6 +163,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
             if out:
                 self.counts['successes'] = int(out.group(1))
 
+
 UNSPECIFIED = ()  # since None is a valid choice
 
 

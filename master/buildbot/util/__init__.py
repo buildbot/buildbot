@@ -157,6 +157,7 @@ def diffSets(old, new):
         new = set(new)
     return old - new, new - old
 
+
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
 badchars_map = bytes.maketrans(b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
@@ -179,6 +180,7 @@ def ascii2unicode(x):
     if isinstance(x, (text_type, type(None))):
         return x
     return text_type(x, 'ascii')
+
 
 # place a working json module at 'buildbot.util.json'.  Code is adapted from
 # Paul Wise <pabs@debian.org>:
@@ -215,6 +217,8 @@ class NotABranch:
 
     def __nonzero__(self):
         return False
+
+
 NotABranch = NotABranch()
 
 # time-handling methods

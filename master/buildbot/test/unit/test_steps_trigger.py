@@ -81,6 +81,7 @@ class FakeSourceStamp(object):
 class FakeSchedulerManager(object):
     pass
 
+
 # Magic numbers that relate brid to other build settings
 BRID_TO_BSID = lambda brid: brid + 2000
 BRID_TO_BID = lambda brid: brid + 3000

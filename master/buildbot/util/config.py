@@ -31,6 +31,7 @@ class _DefaultConfigured(object):
     def getConfigDict(self):
         return self.value
 
+
 registerAdapter(_DefaultConfigured, object, IConfigured)
 
 
@@ -42,6 +43,7 @@ class _ListConfigured(object):
 
     def getConfigDict(self):
         return [IConfigured(e).getConfigDict() for e in self.value]
+
 
 registerAdapter(_ListConfigured, list, IConfigured)
 
@@ -55,6 +57,7 @@ class _DictConfigured(object):
     def getConfigDict(self):
         return dict([(k, IConfigured(v).getConfigDict()) for k, v in iteritems(self.value)])
 
+
 registerAdapter(_DictConfigured, dict, IConfigured)
 
 
@@ -66,6 +69,7 @@ class _SREPatternConfigured(object):
 
     def getConfigDict(self):
         return dict(name="re", pattern=self.value.pattern)
+
 
 registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 

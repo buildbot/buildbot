@@ -558,4 +558,5 @@ class Control:
         b = self.master.botmaster.builders[name]
         return BuilderControl(b, self)
 
+
 components.registerAdapter(Control, BuildMaster, interfaces.IControl)

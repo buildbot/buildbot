@@ -34,6 +34,8 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 # This class is deprecated and should no longer be used.
 class NoSlaveError(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
                                 compat_name="NoSlaveError",
                                 new_name="")
@@ -45,12 +47,16 @@ class BuilderInUseError(Exception):
 
 class WorkerTooOldError(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(
     locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(
     locals(), LatentWorkerFailedToSubstantiate,
     compat_name="LatentBuildSlaveFailedToSubstantiate")
@@ -166,6 +172,8 @@ class ILogObserver(Interface):
 class IWorker(IPlugin):
     # callback methods from the manager
     pass
+
+
 deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
 
 
@@ -198,6 +206,8 @@ class ILatentWorker(IWorker):
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
+
+
 deprecatedWorkerModuleAttribute(
     locals(), ILatentWorker, compat_name="ILatentBuildSlave")
 
@@ -338,11 +348,14 @@ class IStatus(Interface):
     def getTitle():
         """Return the name of the project that this Buildbot is working
         for."""
+
     def getTitleURL():
         """Return the URL of this Buildbot's project."""
+
     def getBuildbotURL():
         """Return the URL of the top-most Buildbot status page, or None if
         this Buildbot does not provide a web status page."""
+
     def getURLForThing(thing):
         """Return the URL of a page which provides information on 'thing',
         which should be an object that implements one of the status
@@ -361,6 +374,7 @@ class IStatus(Interface):
 
     def getBuilderNames(tags=None):
         """Return a list of the names of all current Builders."""
+
     def getBuilder(name):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
@@ -368,6 +382,7 @@ class IStatus(Interface):
     def getWorkerNames():
         """Return a list of worker names, suitable for passing to
         getWorker()."""
+
     def getWorker(name):
         """Return the IWorkerStatus object for a given named worker."""
 
@@ -440,6 +455,7 @@ class IBuildSetStatus(Interface):
         """Return the BuildSet's ID string, if any. The 'try' feature uses a
         random string as a BuildSetID to relate submitted jobs with the
         resulting BuildSet."""
+
     def getResponsibleUsers():
         pass  # not implemented
 
@@ -451,12 +467,14 @@ class IBuildSetStatus(Interface):
         do builds.
 
         @returns: list of names via Deferred"""
+
     def isFinished():
         pass
 
     def waitUntilFinished():
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
+
     def getResults():
         """Return SUCCESS/FAILURE, or None if the buildset is not finished
         yet"""
@@ -494,8 +512,10 @@ class IBuildRequestStatus(Interface):
         a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
+
     def unsubscribe(observer):
         """Unregister the callable that was registered with subscribe()."""
+
     def getSubmitTime():
         """Return the time when this request was submitted.  Returns a
         Deferred."""
@@ -518,6 +538,8 @@ class IWorkerStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the worker."""
+
+
 deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
 
 

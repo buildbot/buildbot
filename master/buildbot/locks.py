@@ -338,4 +338,6 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         # list of tuples
         self._maxCountForWorkerList = tuple(
             sorted(self.maxCountForWorker.items()))
+
+
 deprecatedWorkerModuleAttribute(locals(), WorkerLock)

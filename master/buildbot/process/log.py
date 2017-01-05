@@ -137,12 +137,14 @@ class TextLog(PlainLog):
 
     pass
 
+
 Log._byType['t'] = TextLog
 
 
 class HtmlLog(PlainLog):
 
     pass
+
 
 Log._byType['h'] = HtmlLog
 
@@ -185,5 +187,6 @@ class StreamLog(Log):
         for lbf in itervalues(self.lbfs):
             yield lbf.flush()
         yield super(StreamLog, self).finish()
+
 
 Log._byType['s'] = StreamLog

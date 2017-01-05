@@ -301,6 +301,7 @@ class Selector(Validator):
                 return
         yield "no match for selector argument %r" % (arg,)
 
+
 # Type definitions
 
 message = {}

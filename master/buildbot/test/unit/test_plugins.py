@@ -103,6 +103,7 @@ class ClassWithNoInterface(object):
     just a class
     """
 
+
 # NOTE: buildbot.plugins.db prepends the group with common namespace --
 # 'buildbot.'
 _FAKE_ENTRIES = {

@@ -79,6 +79,7 @@ class MetricTimeEvent(MetricEvent):
         self.timer = timer
         self.elapsed = elapsed
 
+
 ALARM_OK, ALARM_WARN, ALARM_CRIT = lrange(3)
 ALARM_TEXT = ["OK", "WARN", "CRIT"]
 

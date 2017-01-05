@@ -78,6 +78,7 @@ class CallableAttributeError(Exception):
     # attribute error raised from a callable run inside a property
     pass
 
+
 # old import paths for these classes
 RemoteCommand = remotecommand.RemoteCommand
 LoggedRemoteCommand = remotecommand.LoggedRemoteCommand
@@ -1253,6 +1254,7 @@ def regex_log_evaluator(cmd, _, regexes):
                 if err.search(l.getText()):
                     worst = possible_status
     return worst
+
 
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes
