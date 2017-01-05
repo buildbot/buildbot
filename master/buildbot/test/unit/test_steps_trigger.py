@@ -81,10 +81,18 @@ class FakeSourceStamp(object):
 class FakeSchedulerManager(object):
     pass
 
+
 # Magic numbers that relate brid to other build settings
-BRID_TO_BSID = lambda brid: brid + 2000
-BRID_TO_BID = lambda brid: brid + 3000
-BRID_TO_BUILD_NUMBER = lambda brid: brid + 4000
+def BRID_TO_BSID(brid):
+    return brid + 2000
+
+
+def BRID_TO_BID(brid):
+    return brid + 3000
+
+
+def BRID_TO_BUILD_NUMBER(brid):
+    return brid + 4000
 
 
 class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
@@ -123,12 +131,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         b.brids = {78: 22}
         c.brids = {79: 33, 80: 44}
 
-        make_fake_br = lambda brid, builderid: fakedb.BuildRequest(
-            id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
-        make_fake_build = lambda brid: fakedb.Build(
-            buildrequestid=brid, id=BRID_TO_BID(brid),
-            number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
-            workerid=13)
+        def make_fake_br(brid, builderid):
+            return fakedb.BuildRequest(
+                id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
+
+        def make_fake_build(brid):
+            return fakedb.Build(
+                buildrequestid=brid, id=BRID_TO_BID(brid),
+                number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
+                workerid=13)
 
         m.db.insertTestData([
             fakedb.Builder(id=77, name='A'),
