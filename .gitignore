@@ -42,3 +42,4 @@ master/setuptools_trial*
 master/buildbot/www/static/js/default/
 sandbox
 .idea/
+.vagrant/
