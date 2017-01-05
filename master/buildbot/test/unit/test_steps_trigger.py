@@ -83,9 +83,16 @@ class FakeSchedulerManager(object):
 
 
 # Magic numbers that relate brid to other build settings
-BRID_TO_BSID = lambda brid: brid + 2000
-BRID_TO_BID = lambda brid: brid + 3000
-BRID_TO_BUILD_NUMBER = lambda brid: brid + 4000
+def BRID_TO_BSID(brid):
+    return brid + 2000
+
+
+def BRID_TO_BID(brid):
+    return brid + 3000
+
+
+def BRID_TO_BUILD_NUMBER(brid):
+    return brid + 4000
 
 
 class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
@@ -124,12 +131,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         b.brids = {78: 22}
         c.brids = {79: 33, 80: 44}
 
-        make_fake_br = lambda brid, builderid: fakedb.BuildRequest(
-            id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
-        make_fake_build = lambda brid: fakedb.Build(
-            buildrequestid=brid, id=BRID_TO_BID(brid),
-            number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
-            workerid=13)
+        def make_fake_br(brid, builderid):
+            return fakedb.BuildRequest(
+                id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
+
+        def make_fake_build(brid):
+            return fakedb.Build(
+                buildrequestid=brid, id=BRID_TO_BID(brid),
+                number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
+                workerid=13)
 
         m.db.insertTestData([
             fakedb.Builder(id=77, name='A'),
@@ -165,7 +175,13 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.exp_c_trigger = None
         self.exp_added_urls = []
 
-    def runStep(self):
+    @defer.inlineCallbacks
+    def runStep(self, results_dict=None):
+        if results_dict is None:
+            results_dict = {}
+        if self.step.waitForFinish:
+            for i in [11, 22, 33, 44]:
+                yield self.master.db.builds.finishBuild(BRID_TO_BID(i), results_dict.get(i, SUCCESS))
         d = steps.BuildStepMixin.runStep(self)
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
@@ -174,34 +190,29 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         else:
             self.assertTrue(d.called)
 
-        def check(_):
-            self.assertEqual(self.scheduler_a.triggered_with,
-                             self.exp_a_trigger)
-            self.assertEqual(self.scheduler_b.triggered_with,
-                             self.exp_b_trigger)
+        yield d
+        self.assertEqual(self.scheduler_a.triggered_with,
+                         self.exp_a_trigger)
+        self.assertEqual(self.scheduler_b.triggered_with,
+                         self.exp_b_trigger)
 
-            # check the URLs
-            stepUrls = self.master.data.updates.stepUrls
-            if stepUrls:
-                got_added_urls = stepUrls[list(stepUrls)[0]]
-            else:
-                got_added_urls = []
-            self.assertEqual(sorted(got_added_urls),
-                             sorted(self.exp_added_urls))
+        # check the URLs
+        stepUrls = self.master.data.updates.stepUrls
+        if stepUrls:
+            got_added_urls = stepUrls[list(stepUrls)[0]]
+        else:
+            got_added_urls = []
+        self.assertEqual(sorted(got_added_urls),
+                         sorted(self.exp_added_urls))
 
-            if self.exp_add_sourcestamp:
-                self.assertEqual(self.addSourceStamp_kwargs,
-                                 self.exp_add_sourcestamp)
-        d.addCallback(check)
+        if self.exp_add_sourcestamp:
+            self.assertEqual(self.addSourceStamp_kwargs,
+                             self.exp_add_sourcestamp)
 
         # pause runStep's completion until after any other callLater's are done
-        def wait(_):
-            d = defer.Deferred()
-            reactor.callLater(0, d.callback, None)
-            return d
-        d.addCallback(wait)
-
-        return d
+        d = defer.Deferred()
+        reactor.callLater(0, d.callback, None)
+        yield d
 
     def expectTriggeredWith(self, a=None, b=None, c=None):
         self.exp_a_trigger = a
@@ -511,7 +522,19 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         self.expectTriggeredWith(a=(True, [], {}))
         self.expectTriggeredLinks('afailed')
-        return self.runStep()
+        return self.runStep(results_dict={11: FAILURE})
+
+    def test_waitForFinish_split_failure(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['a', 'b'],
+                                       waitForFinish=True))
+        self.scheduler_a.result = FAILURE
+        self.scheduler_b.result = SUCCESS
+        self.expectOutcome(result=FAILURE, state_string='triggered a, b')
+        self.expectTriggeredWith(
+            a=(True, [], {}),
+            b=(True, [], {}))
+        self.expectTriggeredLinks('afailed', 'b')
+        return self.runStep(results_dict={11: FAILURE})
 
     @defer.inlineCallbacks
     def test_waitForFinish_exception(self):
