@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.moves.urllib.parse import quote as urlquote
-from future.utils import iterkeys
 from future.utils import itervalues
 from future.utils import text_type
 
@@ -272,12 +271,19 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return
         rebuild = False
         if newRev in itervalues(self.lastRev):
-            if self.buildPushesWithNoCommits and \
-               branch not in iterkeys(self.lastRev):
-                # we know the newRev but not for this branch
-                log.msg('gitpoller: rebuilding %s for new branch "%s"' %
-                        (newRev, branch))
-                rebuild = True
+            if self.buildPushesWithNoCommits:
+                existingRev = self.lastRev.get(branch)
+                if existingRev is None:
+                    # This branch was completely unknown, rebuild
+                    log.msg('gitpoller: rebuilding %s for new branch "%s"' %
+                            (newRev, branch))
+                    rebuild = True
+                elif existingRev != newRev:
+                    # This branch is known, but it now points to a different
+                    # commit than last time we saw it, rebuild.
+                    log.msg('gitpoller: rebuilding %s for updated branch "%s"' %
+                            (newRev, branch))
+                    rebuild = True
 
         # get the change list
         revListArgs = ([r'--format=%H', r'%s' % newRev] +
