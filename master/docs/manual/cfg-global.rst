@@ -114,39 +114,56 @@ For example, if a change is received, but the master shuts down before the sched
 
 The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
 
+.. _mq-Wamp:
+
 Wamp
 ++++
+
+.. note::
+
+    At the moment, wamp is the only message queue implementation for multimaster.
+    It has been privileged as this is the only message queue that have very solid support for Twisted.
+    Other more common message queue systems like ``RabbitMQ`` (using the ``AMQP`` protocol) do not have convincing driver for twisted, and this would require to run on threads, which will add an important performance overhead.
 
 .. code-block:: python
 
     c['mq'] = {
         'type' : 'wamp',
-        'router_url': 'ws://url/to/crossbar'
-        'realm': 'buildbot'
-        'debug' : False,
-        'debug_websockets' : False,
-        'debug_lowlevel' : False,
+        'router_url': 'ws://localhost:8080',
+        'realm': 'realm1',
+        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
 
 This is a MQ implementation using `wamp <http://wamp.ws/>`_ protocol.
-This implementation uses `Python Autobahn <http://autobahn.ws>`_ wamp client library, and is fully asynchronous (no use of threads)
+This implementation uses `Python Autobahn <http://autobahn.ws>`_ wamp client library, and is fully asynchronous (no use of threads).
 To use this implementation, you need a wamp router like `Crossbar <http://crossbar.io>`_.
-The implementation does not yet support wamp authentication yet.
+
+Please refer to Crossbar documentation for more details, but the default Crossbar setup will just work with Buildbot, provided you use the example ``mq`` configuration above, and start Crossbar with:
+
+.. code-block:: bash
+
+    # of course, you should work in a virtualenv...
+    pip install crossbar
+    crossbar init
+    crossbar start
+
+The implementation does not yet support wamp authentication.
 This MQ allows buildbot to run in multi-master mode.
 
 Note that this implementation also does not support message persistence across a restart of the master.
 For example, if a change is received, but the master shuts down before the schedulers can create build requests for it, then those schedulers will not be notified of the change when the master starts again.
 
-`router_url` key is mandatory, and should point to your router websocket url.
-Buildbot is only supporting wamp over websocket, which is a sub-protocol of http.
-SSL is supported using ``wss://`` instead of ``ws://``.
+``router_url`` (mandatory): points to your router websocket url.
+    Buildbot is only supporting wamp over websocket, which is a sub-protocol of http.
+    SSL is supported using ``wss://`` instead of ``ws://``.
+
+``realm`` (optional, defaults to ``buildbot``): defines the wamp realm to use for your buildbot messages.
+
+``wamp_debug_level`` (optional, defaults to ``error``): defines the log level of autobahn.
+
 You must use a router with very reliable connection to the master.
 If for some reason, the wamp connection is lost, then the master will stop, and should be restarted via a process manager.
 
-`realm` key is optional and defaults to ``buildbot``, and configures the wamp realm to use for your buildbot messages.
-
-The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
-``debug_websocket`` and ``debug_lowlevel``, enable more debug logs in autobahn.
 
 .. bb:cfg:: multiMaster
 
@@ -155,31 +172,13 @@ The ``debug`` key, which defaults to False, can be used to enable logging of eve
 Multi-master mode
 ~~~~~~~~~~~~~~~~~
 
-Normally buildbot operates using a single master process that uses the configured database to save state.
+See :ref:`Multimaster` for details on the Multi-master mode in Buildbot Nine.
 
-It is possible to configure buildbot to have multiple master processes that share state in the same database.
-This has been well tested using a MySQL database.
-There are several benefits of Multi-master mode:
+By default, Buildbot makes coherency checks that prevents typo in your ``master.cfg``
+It make sure schedulers are not referencing unknown builders, and enforces there is at least one builder.
 
-* You can have large numbers of workers handling the same queue of build requests.
-  A single master can only handle so many workers (the number is based on a number of factors including type of builds, number of builds, and master and worker IO and CPU capacity--there is no fixed formula).
-  By adding another master which shares the queue of build requests, you can attach more workers to this additional master, and increase your build throughput.
-* You can shut one master down to do maintenance, and other masters will continue to do builds.
-
-State that is shared in the database includes:
-
-  * List of changes
-  * Scheduler names and internal state
-  * Build requests, including the builder name
-
-Because of this shared state, you are strongly encouraged to:
-
-* Ensure that each named scheduler runs on only one master.
-  If the same scheduler runs on multiple masters, it will trigger duplicate builds and may produce other undesirable behaviors.
-* Ensure builder names are unique for a given build factory implementation.
-  You can have the same builder name configured on many masters, but if the build factories differ, you will get different results depending on which master claims the build.
-
-One suggested configuration is to have one buildbot master configured with just the scheduler and change sources; and then other masters configured with just the builders.
+In the case of a asymmetric multimaster, those coherency checks can be harmful and prevent you to implement what you want.
+For example you might want to have one master dedicated to the UI, so that a big load generated by builds will not impact page load times.
 
 To enable multi-master mode in this configuration, you will need to set the :bb:cfg:`multiMaster` option so that buildbot doesn't warn about missing schedulers or builders.
 
@@ -188,9 +187,14 @@ To enable multi-master mode in this configuration, you will need to set the :bb:
     # Enable multiMaster mode; disables warnings about unknown builders and
     # schedulers
     c['multiMaster'] = True
-    # Check for new build requests every 60 seconds
     c['db'] = {
         'db_url' : 'mysql://...',
+    }
+    c['mq'] = {  # Need to enable multimaster aware mq. Wamp is the only option for now.
+        'type' : 'wamp',
+        'router_url': 'ws://localhost:8080',
+        'realm': 'realm1',
+        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
 
 .. bb:cfg:: buildbotURL
@@ -229,7 +233,6 @@ Log Handling
 
 ::
 
-    c['logCompressionLimit'] = 16384
     c['logCompressionMethod'] = 'gz'
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768

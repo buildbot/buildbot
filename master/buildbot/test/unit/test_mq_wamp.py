@@ -148,10 +148,7 @@ class WampMQ(unittest.TestCase):
 
 
 class FakeConfig(object):
-    mq = dict(type='wamp', router_url="wss://foo", realm="buildbot",
-              debug_websockets=False,  # set if connection looks bad
-              debug_lowlevel=False,  # set if protocol looks bad
-              )
+    mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
 
 
 class WampMQReal(unittest.TestCase):
@@ -162,7 +159,10 @@ class WampMQReal(unittest.TestCase):
     """
     HOW_TO_RUN = textwrap.dedent("""\
         define WAMP_ROUTER_URL to a wamp router to run this test
-        e.g: WAMP_ROUTER_URL=ws://localhost:8000/ws""")
+        > crossbar init
+        > crossbar start &
+        > export WAMP_ROUTER_URL=ws://localhost:8080/ws
+        > trial buildbot.unit.test_mq_wamp""")
     # if connection is bad, this test can timeout easily
     # we reduce the timeout to help maintain the sanity of the developer
     timeout = 2

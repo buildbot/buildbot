@@ -42,7 +42,8 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     @classmethod
     def messageTopic(cls, routingKey):
-        ifNone = lambda v, default: default if v is None else v
+        def ifNone(v, default):
+            return default if v is None else v
         # replace None values by "" in routing key
         routingKey = [ifNone(key, "") for key in routingKey]
         # then join them with "dot", and add the prefix
