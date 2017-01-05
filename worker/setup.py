@@ -87,6 +87,10 @@ setup_args = {
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
+        "buildbot_worker.test",
+        "buildbot_worker.test.fake",
+        "buildbot_worker.test.unit",
+        "buildbot_worker.test.util",
     ],
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
