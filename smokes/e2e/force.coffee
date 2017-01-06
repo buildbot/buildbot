@@ -32,12 +32,15 @@ class forcePage
         return @setInputText("revision", RevisionName)
 
     getStartButton: ->
-        element(By.buttonText('Start Build'))
+        return element(By.buttonText('Start Build'))
 
     getCancelButton: ->
         return element(By.buttonText('Cancel'))
 
     getCancelWholeQueue: ->
-        element(By.buttonText('Cancel Whole Queue'))
+        return element(By.buttonText('Cancel Whole Queue'))
+
+    getStopButton: ->
+        return element(By.buttonText('Stop'))
 
 module.exports = forcePage
