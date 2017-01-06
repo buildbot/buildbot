@@ -42,18 +42,13 @@
             | #{' '}
             i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':step.fulldisplay}", ng-if="step.logs.length")
             | #{' '} {{step.name}}
-        div.anim-stepdetails(ng-show="step.fulldisplay")
-          ul
-            li(ng-repeat="log in step.logs")
-              a(ng-href="api/v2/logs/{{log.logid}}/raw")
-                  i.fa.fa-download
-              | #{' '}
-              a(ui-sref="log({builder:buildsummary.build.builderid, build:buildsummary.build.number, step: step.number, log:log.slug})")
-                  | {{log.name}}
-              | #{' '}({{log.num_lines}} line{{log.num_lines > 1?'s':''}})
         ul
           li(ng-if='!(buildsummary.isBuildRequestURL(url.url) || buildsummary.isBuildURL(url.url))', ng-repeat="url in step.urls")
             a(target="_blank", ng-href="{{url.url}}") {{url.name}}
         ul.list-unstyled
           li(ng-if='buildsummary.isBuildRequestURL(url.url)', ng-repeat="url in step.urls")
             buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='buildsummary.getBuildRequestIDFromURL(url.url)')
+        div.anim-stepdetails(ng-if="step.fulldisplay")
+          logpreview(ng-repeat="log in step.logs", log="log",
+                     builderid="buildsummary.build.builderid", buildnumber="buildsummary.build.number",
+                     step="step")
