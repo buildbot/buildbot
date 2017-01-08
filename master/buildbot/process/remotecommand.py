@@ -178,9 +178,9 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         return None
 
     def remote_update(self, updates):
-        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
-        I am called by the worker's L{buildbot.slave.bot.SlaveBuilder} so
+        I am called by the worker's
+        L{buildbot_worker.base.WorkerForBuilderBase.sendUpdate} so
         I can receive updates from the running remote command.
 
         @type  updates: list of [object, int]
@@ -203,9 +203,9 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         return max_updatenum
 
     def remote_complete(self, failure=None):
-        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
-        Called by the worker's L{buildbot.slave.bot.SlaveBuilder} to
+        Called by the worker's
+        L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
         notify me the remote command has finished.
 
         @type  failure: L{twisted.python.failure.Failure} or None
