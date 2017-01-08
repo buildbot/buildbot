@@ -16,12 +16,10 @@ import os
 
 import mock
 
-from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.python.filepath import FilePath
-from twisted.spread import pb
 
 from buildbot import util
 from buildbot.clients import tryclient
@@ -38,50 +36,6 @@ def waitFor(fn):
         if res:
             defer.returnValue(res)
         yield util.asyncSleep(.01)
-
-
-class FakeRemoteWorker(pb.Referenceable):
-    # the bare minimum to connect to a master and convince it that the worker is
-    # ready
-
-    def __init__(self, port):
-        self.port = port
-
-    @defer.inlineCallbacks
-    def start(self):
-        f = pb.PBClientFactory()
-        d = f.login(credentials.UsernamePassword('local1', 'localpw'), self)
-        reactor.connectTCP('127.0.0.1', self.port, f)
-        # we need to hold a reference to this, otherwise the broker will sever
-        # the connection
-        self.mind = yield d
-
-    def stop(self):
-        self.mind.broker.transport.loseConnection()
-        self.mind = None
-
-    # Worker methods
-
-    def remote_print(self, message):
-        log.msg("from master: %s" % (message,))
-
-    def remote_getSlaveInfo(self):
-        return {}
-
-    def remote_getCommands(self):
-        return {}
-
-    def remote_getVersion(self):
-        return '0.0'
-
-    def remote_setMaster(self, master):
-        pass
-
-    def remote_setBuilderList(self, wanted):
-        return {'a': self}
-
-    def remote_startBuild(self):
-        return
 
 
 class Schedulers(RunMasterBase, www.RequiresWwwMixin):
@@ -136,7 +90,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         return self.jobdir
 
     @defer.inlineCallbacks
-    def startMaster(self, sch, startWorker=False):
+    def startMaster(self, sch):
         extra_config = {
             'schedulers': [sch],
             'status': [],
@@ -165,8 +119,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_no_wait(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startWorker=False)
+            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
@@ -186,8 +139,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_wait(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startWorker=True)
+            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
@@ -211,8 +163,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_list_builders(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]),
-            startWorker=False)
+            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
@@ -231,9 +182,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_jobdir_no_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(
-            trysched.Try_Jobdir('try', ['a'], jobdir),
-            startWorker=False)
+        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
         yield self.runClient({
             'connect': 'ssh',
             'master': '127.0.0.1',
@@ -253,9 +202,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_jobdir_wait(self):
         jobdir = self.setupJobdir()
-        yield self.startMaster(
-            trysched.Try_Jobdir('try', ['a'], jobdir),
-            startWorker=False)
+        yield self.startMaster(trysched.Try_Jobdir('try', ['a'], jobdir))
         yield self.runClient({
             'connect': 'ssh',
             'wait': True,
