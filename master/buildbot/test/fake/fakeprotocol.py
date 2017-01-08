@@ -39,7 +39,7 @@ class FakeConnection(base.Connection):
 
     def remoteGetWorkerInfo(self):
         self.remoteCalls.append(('remoteGetWorkerInfo',))
-        return defer.succeed(self.slaveInfo)
+        return defer.succeed(self.info)
 
     def remoteSetBuilderList(self, builders):
         self.remoteCalls.append(('remoteSetBuilderList', builders[:]))
