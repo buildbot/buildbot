@@ -381,7 +381,7 @@ class Trial(ShellCommand):
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
                 # this bit produces a list, which can be used
-                # by buildslave.runprocess.RunProcess
+                # by buildbot_worker.runprocess.RunProcess
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]
