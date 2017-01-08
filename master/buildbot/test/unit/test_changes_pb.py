@@ -202,7 +202,7 @@ class TestPBChangeSource(
 
         self.assertNotRegistered()
 
-        config.slavePortnum = '1234'
+        config.protocols = {'pb': {'port': '1234'}}
 
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
