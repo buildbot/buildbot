@@ -293,14 +293,20 @@ For example::
             command.extend(['-j', str(cpus+1)])
         else:
             command.extend(['-j', '2'])
-        command.extend(['all'])
+        command.extend([Interpolate('%(prop:MAKETARGET)s')])
         return command
 
     f.addStep(steps.ShellCommand(command=makeCommand))
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
-Note: Config errors with Renderables may not always be caught via checkconfig
+.. note::
+
+    Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or containers containing :class:`~buildbot.interfaces.IRenderable`.
+
+.. note::
+
+    Config errors with Renderables may not always be caught via checkconfig
 
 .. index:: single: Properties; Transform
 

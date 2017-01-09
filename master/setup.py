@@ -28,7 +28,6 @@ from distutils.core import setup
 from distutils.version import LooseVersion
 
 import pkg_resources
-
 from buildbot import version
 
 if "bdist_wheel" in sys.argv:
@@ -253,7 +252,7 @@ setup_args = {
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
                 'OPTIONS']),
             ('buildbot.steps.master', [
-                'MasterShellCommand', 'SetProperty', 'LogRenderable']),
+                'MasterShellCommand', 'SetProperty', 'SetProperties', 'LogRenderable']),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
             ('buildbot.steps.mtrlogobserver', ['MTR']),

@@ -1318,6 +1318,16 @@ class Renderer(unittest.TestCase):
         self.failUnlessFailure(d, RuntimeError)
         return d
 
+    def test_renderer_recursive(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p):
+            return Interpolate("x%(prop:x)sx")
+        d = self.build.render(rend)
+        d.addCallback(self.assertEqual, 'xXx')
+        return d
+
 
 class Compare(unittest.TestCase):
 

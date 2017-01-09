@@ -192,6 +192,24 @@ class SetProperty(BuildStep):
         return defer.succeed(SUCCESS)
 
 
+class SetProperties(BuildStep):
+    name = 'SetProperties'
+    description = ['Setting Properties..']
+    descriptionDone = ['Properties Set']
+    renderables = ['properties']
+
+    def __init__(self, properties=None, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.properties = properties
+
+    def run(self):
+        if self.properties is None:
+            return defer.succeed(SUCCESS)
+        for k, v in iteritems(self.properties):
+            self.setProperty(k, v, self.name, runtime=True)
+        return defer.succeed(SUCCESS)
+
+
 class LogRenderable(BuildStep):
     name = 'LogRenderable'
     description = ['Logging']

@@ -729,10 +729,16 @@ class FlattenList(util.ComparableMixin):
 @implementer(IRenderable)
 class _Renderer(util.ComparableMixin, object):
 
-    compare_attrs = ('getRenderingFor',)
+    compare_attrs = ('fn',)
 
     def __init__(self, fn):
-        self.getRenderingFor = fn
+        self.fn = fn
+
+    def getRenderingFor(self, props):
+        # We allow the renderer fn to return a renderable for convenience
+        d = defer.maybeDeferred(self.fn, props)
+        d.addCallback(props.render)
+        return d
 
     def __repr__(self):
         return 'renderer(%r)' % (self.getRenderingFor,)
