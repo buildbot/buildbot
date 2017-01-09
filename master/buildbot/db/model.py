@@ -129,7 +129,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('number', sa.Integer, nullable=False),
         sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
         # note that there is 1:N relationship here.
-        # In case of slave loss, build has results RETRY
+        # In case of worker loss, build has results RETRY
         # and buildrequest is unclaimed.
         # We use use_alter to prevent circular reference
         # (buildrequests -> buildsets -> builds).

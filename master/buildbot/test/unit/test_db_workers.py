@@ -529,7 +529,7 @@ class Tests(interfaces.InterfaceTests):
             {'builderid': 20, 'masterid': 11}]))
 
     @defer.inlineCallbacks
-    def test_deconfiguredAllSlaves(self):
+    def test_deconfiguredAllWorkers(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 
         res = yield self.db.workers.getWorkers(masterid=11)

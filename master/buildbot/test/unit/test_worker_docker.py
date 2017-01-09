@@ -104,14 +104,15 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
             bs.hostconfig, {'network_mode': 'fake', 'dns': ['1.1.1.1', '1.2.3.4']})
 
     def test_start_instance_volume_renderable(self):
-        bs = self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
-                              volumes=[Interpolate('/data:/buildslave/%(kw:builder)s/build',
-                                       builder=Property('builder'))])
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'worker', ['bin/bash'],
+            volumes=[Interpolate('/data:/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
         id, name = self.successResultOf(bs.start_instance(self.build))
         client = docker.Client.latest
         self.assertEqual(len(client.call_args_create_container), 1)
         self.assertEqual(client.call_args_create_container[0]['volumes'],
-                         ['/buildslave/docker_worker/build'])
+                         ['/worker/docker_worker/build'])
 
     def test_volume_no_suffix(self):
         bs = self.setupWorker(
@@ -145,9 +146,10 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
                           volumes=['abcd=efgh'])
 
     def test_volume_bad_format_renderable(self):
-        bs = self.setupWorker('bot', 'pass', 'http://localhost:2375', image="worker",
-                              volumes=[Interpolate('/data==/buildslave/%(kw:builder)s/build',
-                                       builder=Property('builder'))])
+        bs = self.setupWorker(
+            'bot', 'pass', 'http://localhost:2375', image="worker",
+            volumes=[Interpolate('/data==/worker/%(kw:builder)s/build',
+                                 builder=Property('builder'))])
         f = self.failureResultOf(bs.start_instance(self.build))
         f.check(config.ConfigErrors)
 

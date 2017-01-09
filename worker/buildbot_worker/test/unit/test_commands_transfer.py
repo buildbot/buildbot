@@ -377,9 +377,6 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         return d
 
-    # this is just a subclass of SlaveUpload, so the remaining permutations
-    # are already tested
-
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
