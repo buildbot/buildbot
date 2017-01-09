@@ -84,7 +84,7 @@ epydoc_output = '''\
   [...............
 +---------------------------------------------------------------------
 | In /home/dustin/code/buildbot/t/buildbot/master/buildbot/
-| ec2buildslave.py:
+| ec2.py:
 | Import failed (but source code parsing was successful).
 |     Error: ImportError: No module named boto (line 19)
 |
@@ -93,7 +93,7 @@ Warning: Unable to extract the base list for
          twisted.web.resource.EncodingResourceWrapper: Bad dotted name
   [......
 +---------------------------------------------------------------------
-| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/buildslave/
+| In /home/dustin/code/buildbot/t/buildbot/master/buildbot/worker/
 | ec2.py:
 | Import failed (but source code parsing was successful).
 |     Error: ImportError: No module named boto (line 28)
