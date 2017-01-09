@@ -184,8 +184,9 @@ class DockerLatentWorker(DockerBaseWorker):
         if self.instance is not None:
             raise ValueError('instance active')
         image = yield build.render(self.image)
+        dockerfile = yield build.render(self.dockerfile)
         volumes = yield build.render(self.volumes)
-        res = yield threads.deferToThread(self._thd_start_instance, image, volumes)
+        res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes)
         defer.returnValue(res)
 
     def _image_exists(self, client, name):
@@ -198,7 +199,7 @@ class DockerLatentWorker(DockerBaseWorker):
                     return True
         return False
 
-    def _thd_start_instance(self, image, volumes):
+    def _thd_start_instance(self, image, dockerfile, volumes):
         docker_client = client.Client(**self.client_args)
         # cleanup the old instances
         instances = docker_client.containers(
@@ -215,10 +216,10 @@ class DockerLatentWorker(DockerBaseWorker):
             found = self._image_exists(docker_client, image)
         else:
             image = '%s_%s_image' % (self.workername, id(self))
-        if (not found) and (self.dockerfile is not None):
+        if (not found) and (dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
                     image)
-            for line in docker_client.build(fileobj=BytesIO(self.dockerfile.encode('utf-8')),
+            for line in docker_client.build(fileobj=BytesIO(dockerfile.encode('utf-8')),
                                             tag=image):
                 for streamline in _handle_stream_line(line):
                     log.msg(streamline)
