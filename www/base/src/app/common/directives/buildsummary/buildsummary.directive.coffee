@@ -22,7 +22,6 @@ class _buildsummary extends Controller('common')
             "#{baseurl}#buildrequests/{buildrequestid:[0-9]+}")
         buildURLMatcher = $urlMatcherFactory.compile(
             "#{baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
-
         # to get an update of the current builds every seconds, we need to update self.now
         # but we want to stop counting when the scope destroys!
         stop = $interval =>
@@ -96,13 +95,13 @@ class _buildsummary extends Controller('common')
                     self.steps = build.getSteps()
 
                     self.steps.onNew = (step) ->
-                        step.loadLogs()
+                        step.logs = step.getLogs()
                         # onUpdate is only called onUpdate, not onNew
                         # but we need to update our additional needed attributes
                         self.steps.onUpdate(step)
 
                     self.steps.onUpdate = (step) ->
-                        step.fulldisplay = step.complete == 0 || step.results > 0
+                        step.fulldisplay = step.complete == false || step.results > 0
                         if step.complete
                             step.duration = step.complete_at - step.started_at
         $scope.$watch (=> @parentbuild), (build,o) ->
