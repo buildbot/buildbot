@@ -46,6 +46,7 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_no_Application(self):
+        # Loading of pre-0.9.0 buildbot.tac file should fail.
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
             f.write("foo\nx = Application('buildslave')\nbar")
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
