@@ -190,7 +190,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # IWorkerStatus
         if interfaces.IWorkerStatus.providedBy(thing):
             worker = thing
-            return prefix + "#buildslaves/%s" % (
+            return prefix + "#workers/%s" % (
                 urlquote(worker.getName(), safe=''),
             )
 
