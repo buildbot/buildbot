@@ -114,8 +114,10 @@ class Scroll extends Directive
                         tempScope.$destroy()
 
                     # init with 1 row 0 size padding
-                    buffer[0] = padding(0)
-                    element.after(buffer[0])
+                    buffer[0] = padding(0,0)
+                    parent = angular.element("<div>")
+                    element.after(parent)
+                    parent.append(buffer[0])
 
                     viewportScope = viewport.scope() || $rootScope
 
@@ -221,9 +223,10 @@ class Scroll extends Directive
                         if newSize > buffer.length
                             lastElementIndex = findElement(buffer.length - 1)
                             lastElement = buffer[lastElementIndex]
+                            parent.height(newSize*rowHeight)
+                            buffer[newSize - 1] = undefined
                             if lastElement._height?
                                 lastElement.set_height(newSize - lastElementIndex)
-                            buffer[newSize - 1] = undefined
 
                             $timeout -> maybeUpdateView()
 
