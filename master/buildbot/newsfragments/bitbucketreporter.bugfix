@@ -1,1 +1,1 @@
-Fix :bb:reporters`BitbucketStatusPush` ``ep should start with /`` assertion error.
+Fix :bb:reporter:`BitbucketStatusPush` ``ep should start with /`` assertion error.

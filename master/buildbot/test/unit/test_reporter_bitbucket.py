@@ -144,6 +144,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
         self.assertLogged('This commit is unknown to us')
         self.assertLogged('invalid_commit')
 
+
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
 
     def parse(self, repourl):
