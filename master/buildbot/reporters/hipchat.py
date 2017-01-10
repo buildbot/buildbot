@@ -96,5 +96,5 @@ class HipChatStatusPush(HttpStatusPushBase):
             response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
             if response.code != 200:
                 content = yield response.content()
-                log.error("%s: unable to upload status: %s" %
-                          (response.code, content))
+                log.error("{code}: unable to upload status: {content}",
+                          code=response.code, content=content)

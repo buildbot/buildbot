@@ -77,5 +77,5 @@ class StashStatusPush(http.HttpStatusPushBase):
                              status=status, sha=sha)
             else:
                 content = yield response.content()
-                log.error("Unable to send Stash status ({code}): {content}",
+                log.error("{code}: Unable to send Stash status: {content}",
                           code=response.code, content=content)

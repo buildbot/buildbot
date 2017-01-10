@@ -23,10 +23,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.stash import StashStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestStashStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
     def setupReporter(self, **kwargs):
@@ -112,3 +113,23 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_error(self):
+        self.setupReporter()
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            json={'url': 'http://localhost:8080/#builders/79/builds/0',
+                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'description': 'Build started.'},
+            code=404,
+            content_json={
+                "error_description": "This commit is unknown to us",
+                "error": "invalid_commit"})
+        build['complete'] = False
+        self.setUpLogging()
+        self.sp.buildStarted(("build", 20, "started"), build)
+        self.assertLogged('404: Unable to send Stash status')

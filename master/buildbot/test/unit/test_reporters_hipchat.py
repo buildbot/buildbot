@@ -23,10 +23,11 @@ from buildbot.reporters.hipchat import HOSTED_BASE_URL
 from buildbot.reporters.hipchat import HipChatStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
 
     def setUp(self):
         # ignore config error if txrequests is not installed
@@ -201,3 +202,25 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin):
             params=dict(auth_token=token),
             json=message)
         self.sp.send({}, 'test')
+
+    @defer.inlineCallbacks
+    def test_postData_error(self):
+        token = 'tok'
+        endpoint = 'example.com'
+        yield self.createReporter(auth_token=token, endpoint=endpoint)
+        self.sp.getBuildDetailsAndSendMessage = Mock()
+        message = {'message': 'hi', 'notify': True, 'message_format': 'html'}
+        postData = dict(message)
+        postData.update({'id_or_email': '123'})
+        self.sp.getBuildDetailsAndSendMessage.return_value = postData
+        self._http.expect(
+            'post',
+            '/v2/user/123/message',
+            params=dict(auth_token=token),
+            json=message, code=404,
+            content_json={
+                "error_description": "This user is unknown to us",
+                "error": "invalid_user"})
+        self.setUpLogging()
+        self.sp.send({}, 'test')
+        self.assertLogged('404: unable to upload status')
