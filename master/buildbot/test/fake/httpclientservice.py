@@ -110,6 +110,7 @@ class HTTPClientService(service.SharedService):
                               "expected more http requests:\n {!r}".format(self._expected))
 
     def _doRequest(self, method, ep, params=None, data=None, json=None):
+        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
                       method=method, ep=ep, params=params, data=data or json)

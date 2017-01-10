@@ -62,7 +62,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
 
-        self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -74,7 +74,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                 'key': u'Builder0',
                 'name': u'Builder0'},
             code=201),
-        self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
             'post',
@@ -85,7 +85,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                 'key': u'Builder0',
                 'name': u'Builder0'},
             code=201),
-        self.oauthhttp.expect('post', '', json={'grant_type': 'client_credentials'},
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
             'post',
@@ -105,6 +105,16 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
 
         build['results'] = FAILURE
         self.bsp.buildFinished(('build', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_unable_to_authenticate(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'}, code=400,
+                              content_json={
+                                  "error_description": "Unsupported grant type: None",
+                                  "error": "invalid_grant"})
+        self.bsp.buildStarted(('build', 20, 'started'), build)
 
 
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
