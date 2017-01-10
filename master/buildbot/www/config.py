@@ -136,9 +136,15 @@ class IndexResource(resource.Resource):
             del config['change_hook_dialects']
 
         def toJson(obj):
-            obj = IConfigured(obj).getConfigDict()
+            try:
+                obj = IConfigured(obj).getConfigDict()
+            except TypeError:
+                # this happens for old style classes (not deriving objects)
+                pass
             if isinstance(obj, dict):
                 return obj
+            # dont leak object memory address
+            obj = obj.__class__.__module__ + "." + obj.__class__.__name__
             return repr(obj) + " not yet IConfigured"
 
         tpl = self.jinja.get_template('index.html')
