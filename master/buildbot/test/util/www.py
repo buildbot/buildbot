@@ -18,6 +18,7 @@ from future.utils import iteritems
 
 import cgi
 import os
+import pkg_resources
 from cStringIO import StringIO
 from uuid import uuid1
 
@@ -26,7 +27,6 @@ import mock
 from twisted.internet import defer
 from twisted.web import server
 
-import pkg_resources
 from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
