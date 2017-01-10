@@ -133,7 +133,7 @@ class HTTPClientService(service.SharedService):
             return self._pool.closeCachedConnections()
 
     def _prepareRequest(self, ep, kwargs):
-        assert ep.startswith("/"), "ep should start with /: " + ep
+        assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth

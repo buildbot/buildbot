@@ -59,15 +59,14 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
     def send(self, build):
         results = build['results']
         oauth_request = yield self.oauthhttp.post("",
-                                                  json=_GET_TOKEN_DATA)
+                                                  data=_GET_TOKEN_DATA)
         if oauth_request.code == 200:
             content_json = yield oauth_request.json()
             token = content_json['access_token']
         else:
             content = yield oauth_request.content()
-            log.error("{}: unable to authenticate to Bitbucket {}".format(
-                oauth_request.code, content
-            ))
+            log.error("{code}: unable to authenticate to Bitbucket {content}",
+                      code=oauth_request.code, content=content)
             return
 
         if build['complete']:
@@ -93,8 +92,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
             response = yield self._http.post(bitbucket_uri, json=body)
             if response.code != 201:
                 content = yield response.content()
-                log.error("%s: unable to upload Bitbucket status: %s" %
-                        (response.code, content))
+                log.error("{code}: unable to upload Bitbucket status {content}",
+                          code=response.code, content=content)
 
     @staticmethod
     def get_owner_and_repo(repourl):
@@ -116,6 +115,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
 
         if path.endswith('.git'):
             path = path[:-4]
+        while path.endswith('/'):
+            path = path[:-1]
 
         parts = path.split('/')
 
