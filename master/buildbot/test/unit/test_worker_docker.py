@@ -48,7 +48,7 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
 
         _setReactor(self.reactor)
         self.build = Properties(
-            image="busybox:latest", builder="docker_worker")
+            image='busybox:latest', builder='docker_worker', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
 
     def test_constructor_nodocker(self):
@@ -192,6 +192,14 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
     def test_start_instance_noimage_gooddockerfile(self):
         bs = self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'customworker', dockerfile='FROM debian:wheezy')
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'customworker')
+
+    def test_start_instance_noimage_renderabledockerfile(self):
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'customworker',
+            dockerfile=Interpolate('FROM debian:%(kw:distro)s',
+                                   distro=Property('distro')))
         id, name = self.successResultOf(bs.start_instance(self.build))
         self.assertEqual(name, 'customworker')
 
