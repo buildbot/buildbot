@@ -17,9 +17,8 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
-from types import StringTypes
-
 from pkg_resources import iter_entry_points
+from types import StringTypes
 
 from zope.interface import Invalid
 from zope.interface.verify import verifyClass

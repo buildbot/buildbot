@@ -15,10 +15,9 @@ from __future__ import division
 from __future__ import print_function
 
 import os
+import pkg_resources
 import sys
 import textwrap
-
-import pkg_resources
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the

@@ -1,9 +1,8 @@
 from __future__ import division
 from __future__ import print_function
 
-import re
-
 import pkg_resources
+import re
 
 from api import BuildBotSystem
 from genshi.builder import tag

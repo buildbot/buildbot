@@ -16,7 +16,6 @@ from future.builtins import range
 from future.utils import PY3
 
 import inspect
-
 import pkg_resources
 
 from twisted.trial import unittest

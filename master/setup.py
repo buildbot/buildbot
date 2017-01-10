@@ -21,13 +21,13 @@ Standard setup script.
 
 import glob
 import os
+import pkg_resources
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.core import setup
 from distutils.version import LooseVersion
 
-import pkg_resources
 from buildbot import version
 
 if "bdist_wheel" in sys.argv:
@@ -303,7 +303,8 @@ setup_args = {
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.message', ['MessageFormatter']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
-            ('buildbot.reporters.gerrit_verify_status', ['GerritVerifyStatusPush']),
+            ('buildbot.reporters.gerrit_verify_status',
+             ['GerritVerifyStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
             ('buildbot.reporters.github', ['GitHubStatusPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
