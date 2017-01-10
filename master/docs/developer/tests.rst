@@ -15,16 +15,10 @@ Following is a quick shell session to put you on the right track.
     # the usual buildbot development bootstrap with git and virtualenv
     git clone https://github.com/buildbot/buildbot
     cd buildbot
-    virtualenv venv
-    . ./venv/bin/activate
-    pip install -U pip  # make sure you have latest version of pip
 
-    # install the buildbot master with the test dependencies
-    pip install -e './master[test]'
-    # install the buildbot worker (required for the integration tests)
-    pip install -e './worker'
-    # install the buildbot www package from pip (required for the integration and www tests)
-    pip install buildbot_www
+    # helper script which creates the virtualenv for development
+    make virtualenv
+    . .venv/bin/activate
 
     # now we run the test suite
     trial buildbot
