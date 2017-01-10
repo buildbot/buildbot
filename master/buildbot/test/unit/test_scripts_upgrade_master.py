@@ -12,8 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import PY3
+
 import os
-import StringIO
 import sys
 
 import mock
@@ -30,6 +31,11 @@ from buildbot.scripts import upgrade_master
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util import www
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 def mkconfig(**kwargs):
@@ -205,7 +211,7 @@ class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
     def test_upgradeDatabaseFail(self):
         setup = mock.Mock(side_effect=lambda **kwargs: defer.succeed(None))
         self.patch(connector.DBConnector, 'setup', setup)
-        self.patch(sys, 'stderr', StringIO.StringIO())
+        self.patch(sys, 'stderr', StringIO())
         upgrade = mock.Mock(
             side_effect=lambda **kwargs: defer.fail(Exception("o noz")))
         self.patch(model.Model, 'upgrade', upgrade)

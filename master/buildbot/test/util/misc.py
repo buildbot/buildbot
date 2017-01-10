@@ -13,13 +13,18 @@
 #
 # Copyright Buildbot Team Members
 from __future__ import print_function
+from future.utils import PY3
 from future.utils import text_type
 
-import cStringIO
 import os
 import sys
 
 import buildbot
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class PatcherMixin(object):
@@ -47,7 +52,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = cStringIO.StringIO()
+        self.stdout = StringIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

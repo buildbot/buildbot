@@ -16,8 +16,7 @@
 # pylint: disable=C0111
 from future.utils import iteritems
 from future.utils import itervalues
-
-from types import StringTypes
+from future.utils import string_types
 
 from pkg_resources import iter_entry_points
 
@@ -145,7 +144,7 @@ class _NSNode(object):
             child.load()
 
     def add(self, name, entry):
-        assert isinstance(name, StringTypes) and isinstance(entry,
+        assert isinstance(name, string_types) and isinstance(entry,
                                                             _PluginEntry)
         self._add(name, entry)
 
@@ -184,12 +183,12 @@ class _NSNode(object):
             return child
 
     def info(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, string_types)
 
         return self._get(name).info
 
     def get(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, string_types)
 
         return self._get(name).value
 

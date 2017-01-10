@@ -14,13 +14,18 @@
 # Copyright 2011 Louis Opter <kalessin@kalessin.fr>
 #
 # Written from the github change hook unit test
-import StringIO
+from future.utils import PY3
 
 from twisted.trial import unittest
 
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 # Sample Google Code commit payload extracted from a Google Code test project
 # {
@@ -50,7 +55,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
     def setUp(self):
         self.request = FakeRequest()
         # Google Code simply transmit the payload as an UTF-8 JSON body
-        self.request.content = StringIO.StringIO(googleCodeJsonBody)
+        self.request.content = StringIO(googleCodeJsonBody)
         self.request.received_headers = {
             'Google-Code-Project-Hosting-Hook-Hmac': '85910bf93ba5c266402d9328b0c7a856',
             'Content-Length': '509',
@@ -91,7 +96,7 @@ class TestChangeHookConfiguredWithGoogleCodeChange(unittest.TestCase):
             self.assertEqual(change["comments"], "Print a message")
             self.assertEqual(change["branch"], "test")
             self.assertEqual(change[
-                              "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
+                "revlink"], "http://webhook-test.googlecode.com/hg-history/68e5df283a8e751cdbf95516b20357b2c46f93d4/")
 
         d.addCallback(check_changes)
         return d

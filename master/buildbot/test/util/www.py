@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 from future.moves.urllib.parse import unquote as urlunquote
+from future.utils import PY3
 from future.utils import integer_types
 from future.utils import iteritems
 
 import cgi
 import os
-from cStringIO import StringIO
 from uuid import uuid1
 
 import pkg_resources
@@ -32,6 +32,11 @@ from buildbot.test.fake import fakemaster
 from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class FakeSession(object):

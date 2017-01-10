@@ -129,12 +129,12 @@ class Row(object):
         # copied from master/buildbot/db/base.py
         def encode(x):
             try:
-                return x.encode('utf8')
+                return x.encode('utf-8')
             except AttributeError:
                 if x is None:
-                    return '\xf5'
-                return str(x)
-        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+                    return b'\xf5'
+                return bytes(x)
+        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):

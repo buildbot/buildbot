@@ -12,9 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import PY3
+
 import os
 import sys
-from cStringIO import StringIO
+from io import BytesIO
+from io import StringIO
 
 from twisted.trial import unittest
 
@@ -31,7 +34,10 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
 
     def test_trycmd(self):
         config = dict(jobdir='jobdir')
-        inputfile = StringIO('this is my try job')
+        if PY3:
+            inputfile = StringIO(u'this is my try job')
+        else:
+            inputfile = BytesIO(b'this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
         rc = tryserver.tryserver(config)

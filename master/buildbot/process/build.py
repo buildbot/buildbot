@@ -15,6 +15,7 @@
 
 from __future__ import division
 from __future__ import print_function
+from future.utils import string_types
 
 from functools import reduce
 
@@ -225,10 +226,16 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # object that came from the config, and get its properties
         worker_properties = workerforbuilder.worker.properties
         self.getProperties().updateFromProperties(worker_properties)
+
         if workerforbuilder.worker.worker_basedir:
-            builddir = self.path_module.join(
-                workerforbuilder.worker.worker_basedir,
-                self.builder.config.workerbuilddir)
+            worker_basedir = workerforbuilder.worker.worker_basedir
+            if not isinstance(worker_basedir, string_types):
+                worker_basedir = worker_basedir.decode("utf-8")
+
+            workerbuilddir = self.builder.config.workerbuilddir
+            if not isinstance(workerbuilddir, string_types):
+                workerbuilddir = workerbuilddir.decode("utf-8")
+            builddir = self.path_module.join(worker_basedir, workerbuilddir)
             self.setProperty("builddir", builddir, "worker")
 
         self.workername = workerforbuilder.worker.workername

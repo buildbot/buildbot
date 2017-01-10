@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import string_types
 
@@ -23,7 +24,6 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from StringIO import StringIO
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -45,6 +45,11 @@ from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatt
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
 from buildbot.util import ssl
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 

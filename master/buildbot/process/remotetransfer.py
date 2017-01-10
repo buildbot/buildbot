@@ -13,17 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from future.utils import text_type
+
 import os
 import tarfile
 import tempfile
+from io import BytesIO
 
 from buildbot.worker.protocols import base
-
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
 
 
 """
@@ -154,7 +151,7 @@ class FileReader(base.FileReaderImpl):
         @rtype: C{string} of bytes read from file
         """
         if self.fp is None:
-            return ''
+            return b''
 
         data = self.fp.read(maxlength)
         return data
@@ -178,7 +175,7 @@ class StringFileWriter(base.FileWriterImpl):
     """
 
     def __init__(self):
-        self.buffer = ""
+        self.buffer = b""
 
     def remote_write(self, data):
         self.buffer += data
@@ -197,4 +194,6 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        FileReader.__init__(self, StringIO(s))
+        if isinstance(s, text_type):
+            s = s.encode("utf-8")
+        FileReader.__init__(self, BytesIO(s))

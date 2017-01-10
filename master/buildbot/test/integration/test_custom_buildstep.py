@@ -12,9 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import PY3
 from future.utils import iteritems
-
-from StringIO import StringIO
 
 import mock
 
@@ -36,6 +35,11 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.worker.base import Worker
+
+if PY3:
+    from io import StringIO
+else:
+    from io import BytesIO as StringIO
 
 
 class TestLogObserver(buildstep.LogObserver):

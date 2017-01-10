@@ -175,19 +175,19 @@ class Try_Jobdir(TryBase):
                 parsed_job[key] = parsed_job.get(key, '')
             parsed_job['properties'] = parsed_job.get('properties', {})
 
-        if ver <= "4":
+        if ver <= b"4":
             i = int(ver) - 1
             extract_netstrings(p, keys[i])
             parsed_job['builderNames'] = p.strings[len(keys[i]):]
             postprocess_parsed_job()
-        elif ver == "5":
+        elif ver == b"5":
             try:
                 parsed_job = json.loads(p.strings[0])
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
             postprocess_parsed_job()
         else:
-            raise BadJobfile("unknown version '%s'" % ver)
+            raise BadJobfile("unknown version '%r'" % ver)
         return parsed_job
 
     def handleJobFile(self, filename, f):

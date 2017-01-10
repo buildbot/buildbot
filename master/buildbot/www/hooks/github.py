@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+from future.utils import text_type
+
 import hmac
 import logging
 import re
@@ -74,7 +76,13 @@ class GitHubEventHandler(object):
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: %s' % (hash_type,))
 
-            mac = hmac.new(self._secret, msg=content, digestmod=sha1)
+            _secret = self._secret
+            if isinstance(_secret, text_type):
+                _secret = _secret.encode("utf-8")
+            _content = content
+            if isinstance(_content, text_type):
+                _content = _content.encode("utf-8")
+            mac = hmac.new(_secret, msg=_content, digestmod=sha1)
             # NOTE: hmac.compare_digest should be used, but it's only available
             # starting Python 2.7.7
             if mac.hexdigest() != hexdigest:
