@@ -1,0 +1,203 @@
+{
+   "repository": {
+      "full_name": "team_name/repo_name",
+      "owner": {
+         "display_name": "Team_Name",
+         "type": "team",
+         "username": "team_name",
+         "uuid": "{1a6c626d-8394-4b11-b256-a51f3401aec1}",
+         "links": {
+            "self": {
+               "href": "https://api.bitbucket.org/2.0/teams/team_name"
+            },
+            "avatar": {
+               "href": "https://bitbucket.org/account/team_name/avatar/32/"
+            },
+            "html": {
+               "href": "https://bitbucket.org/team_name/"
+            }
+         }
+      },
+      "uuid": "{c7ba4614-f171-1310-10cf-a4b72aeebd31}",
+      "scm": "git",
+      "website": "",
+      "name": "repo_name",
+      "is_private": true,
+      "type": "repository",
+      "links": {
+         "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name"
+         },
+         "avatar": {
+            "href": "https://bitbucket.org/team_name/repo_name/avatar/32/"
+         },
+         "html": {
+            "href": "https://bitbucket.org/team_name/repo_name"
+         }
+      },
+      "project": {
+         "name": "repo_name",
+         "type": "project",
+         "links": {
+            "self": {
+               "href": "https://api.bitbucket.org/2.0/teams/team_name/projects/PKEY"
+            },
+            "avatar": {
+               "href": "https://bitbucket.org/account/user/team_name/projects/PKEY/avatar/32"
+            },
+            "html": {
+               "href": "https://bitbucket.org/account/user/team_name/projects/PKEY"
+            }
+         },
+         "uuid": "{b8de53c2-3361-233a-1c61-aea422adcb61}",
+         "key": "PKEY"
+      }
+   },
+   "actor": {
+      "display_name": "Emma",
+      "type": "user",
+      "username": "emmap1",
+      "uuid": "{a54f16da-24e9-4d7f-a3a7-b1ba2cd98aa3}",
+      "links": {
+         "self": {
+            "href": "https://api.bitbucket.org/2.0/users/emmap1"
+         },
+         "avatar": {
+            "href": "https://bitbucket.org/account/emmap1/avatar/32/"
+         },
+         "html": {
+            "href": "https://bitbucket.org/emmap1/"
+         }
+      }
+   },
+   "pullrequest": {
+      "id": 2,
+      "task_count": 0,
+      "reason": "",
+      "title": "Master buildbot test",
+      "comment_count": 0,
+      "destination": {
+         "repository": {
+            "name": "repo_name",
+            "links": {
+               "self": {
+                  "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name"
+               },
+               "avatar": {
+                  "href": "https://bitbucket.org/team_name/repo_name/avatar/32/"
+               },
+               "html": {
+                  "href": "https://bitbucket.org/team_name/repo_name"
+               }
+            },
+            "full_name": "team_name/repo_name",
+            "uuid": "{c7ba4614-f171-1310-10cf-a4b72aeebd31}",
+            "type": "repository"
+         },
+         "branch": {
+            "name": "master-buildbot-test2"
+         },
+         "commit": {
+            "hash": "e715de0a3ec1",
+            "links": {
+               "self": {
+                  "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/commit/e7259e0d3ec5"
+               }
+            }
+         }
+      },
+      "state": "OPEN",
+      "type": "pullrequest",
+      "author": {
+         "display_name": "Emma",
+         "type": "user",
+         "username": "emmap1",
+         "uuid": "{a54f16da-24e9-4d7f-a3a7-b1ba2cd98aa3}",
+         "links": {
+            "self": {
+               "href": "https://api.bitbucket.org/2.0/users/emmap1"
+            },
+            "avatar": {
+               "href": "https://bitbucket.org/account/emmap1/avatar/32/"
+            },
+            "html": {
+               "href": "https://bitbucket.org/emmap1/"
+            }
+         }
+      },
+      "reviewers": [
+
+      ],
+      "created_on": "2016-12-06T15:34:56.496384+00:00",
+      "close_source_branch": false,
+      "merge_commit": null,
+      "description": "* Trigger Webhook\\r\\n\\r\\n* Trigger Webhook\\r\\n\\r\\n* Trigger Webhook\\r\\n\\r\\n* Trigger Webhook\\r\\n\\r\\n* Trigger Webhook",
+      "participants": [
+
+      ],
+      "links": {
+         "merge": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/merge"
+         },
+         "activity": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/activity"
+         },
+         "decline": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/decline"
+         },
+         "statuses": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/statuses"
+         },
+         "diff": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/diff"
+         },
+         "self": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2"
+         },
+         "approve": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/approve"
+         },
+         "comments": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/comments"
+         },
+         "commits": {
+            "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/pullrequests/2/commits"
+         },
+         "html": {
+            "href": "https://bitbucket.org/team_name/repo_name/pull-requests/2"
+         }
+      },
+      "closed_by": null,
+      "source": {
+         "repository": {
+            "name": "repo_name",
+            "links": {
+               "self": {
+                  "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name"
+               },
+               "avatar": {
+                  "href": "https://bitbucket.org/team_name/repo_name/avatar/32/"
+               },
+               "html": {
+                  "href": "https://bitbucket.org/team_name/repo_name"
+               }
+            },
+            "full_name": "team_name/repo_name",
+            "uuid": "{c7ba4614-f171-1310-10cf-a4b72aeebd31}",
+            "type": "repository"
+         },
+         "branch": {
+            "name": "master-buildbot-test"
+         },
+         "commit": {
+            "hash": "af319f4c0f50",
+            "links": {
+               "self": {
+                  "href": "https://api.bitbucket.org/2.0/repositories/team_name/repo_name/commit/df98dc8f0f53"
+               }
+            }
+         }
+      },
+      "updated_on": "2016-12-06T15:34:56.517784+00:00"
+   }
+}
