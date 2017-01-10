@@ -1,7 +1,7 @@
 # developer utilities
 DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg https_proxy=$$https_proxy
 
-.PHONY: docs pylint flake8
+.PHONY: docs pylint flake8 virtualenv
 
 PIP?=pip
 
@@ -39,12 +39,6 @@ frontend_install_tests:
 	$(PIP) install mock wheel
 	trial pkg/test_buildbot_pkg.py
 
-prebuilt_frontend:
-	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_www-1latest-py2-none-any.whl
-	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_codeparameter-1latest-py2-none-any.whl
-	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_console_view-1latest-py2-none-any.whl
-	$(PIP) install -U http://ftp.buildbot.net/pub/latest/buildbot_waterfall_view-1latest-py2-none-any.whl
-
 # install git hooks for validating patches at commit time
 hooks:
 	cp common/hooks/* `git rev-parse --git-dir`/hooks
@@ -68,8 +62,22 @@ docker-buildbot-master:
 docker-buildbot-master-ubuntu:
 	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
+.venv:
+		virtualenv .venv
+		.venv/bin/pip install -U pip
+		.venv/bin/pip install -e pkg \
+			-e 'master[tls,test,docs]' \
+			-e 'worker[test]' \
+			buildbot_www \
+			'git+https://github.com/tardyp/towncrier'
 
-release:
+# helper for virtualenv creation
+virtualenv: .venv
+	@echo now you can type following command  to activate your virtualenv
+	@echo . .venv/bin/activate
+
+# helper for release creation
+release: .venv
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
 	git commit -m "relnotes for $(VERSION)"
