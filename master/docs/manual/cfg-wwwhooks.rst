@@ -159,12 +159,8 @@ And then press the ``Add Webhook`` button.
     The incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web server can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-
-and change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
-
-See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
-
-Note that not using ``change_hook_auth`` can expose you to security risks.
+To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
+Then change the the ``Payload URL`` of your GitHub webhook to ``https://user:password@builds.example.com/bbot/change_hook/github``.
 
 Patches are welcome to implement: https://developer.github.com/webhooks/securing/
 
@@ -197,8 +193,7 @@ This script may be useful in cases where you cannot expose the WebStatus for pub
     Anyone who can access the web status can "fake" a request from BitBucket, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
-
-Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/bitbucket``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -288,8 +283,7 @@ These parameters will be passed along to the scheduler.
     Anyone who can access the web status can "fake" a request from your GitLab server, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
-
-Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
+Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
@@ -315,8 +309,7 @@ For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then po
     Anyone who can access the web status can "fake" a request from your Gitorious server, potentially causing the buildmaster to run arbitrary code.
 
 To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
-
-Then, create a Gitorious web hook with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitorious``.
+Then, create a Gitorious web hook with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitorious``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
