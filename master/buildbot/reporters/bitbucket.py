@@ -115,6 +115,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
 
         if path.endswith('.git'):
             path = path[:-4]
+        while path.endswith('/'):
+            path = path[:-1]
 
         parts = path.split('/')
 
