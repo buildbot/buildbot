@@ -28,10 +28,13 @@ class LoggingMixin(object):
         r = re.compile(regexp)
         for event in self._logEvents:
             msg = log.textFromEventDict(event)
+            if msg is not None:
+                assert not msg.startswith("Unable to format event"), msg
             if msg is not None and r.search(msg):
                 return
         self.fail(
-            "%r not matched in log output.\n%s " % (regexp, self._logEvents))
+            "%r not matched in log output.\n%s " % (
+                regexp, [log.textFromEventDict(e) for e in self._logEvents]))
 
     def assertWasQuiet(self):
         self.assertEqual([

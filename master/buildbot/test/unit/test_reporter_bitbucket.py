@@ -25,10 +25,11 @@ from buildbot.reporters.bitbucket import _OAUTH_URL
 from buildbot.reporters.bitbucket import BitbucketStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
+class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
     TEST_REPO = u'https://example.org/user/repo'
 
     @defer.inlineCallbacks
@@ -114,8 +115,34 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin):
                               content_json={
                                   "error_description": "Unsupported grant type: None",
                                   "error": "invalid_grant"})
+        self.setUpLogging()
         self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.assertLogged('400: unable to authenticate to Bitbucket')
 
+    @defer.inlineCallbacks
+    def test_unable_to_send_status(self):
+        build = yield self.setupBuildResults(SUCCESS)
+
+        self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
+                              content_json={'access_token': 'foo'})
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            u'/user/repo/commit/d34db33fd43db33f/statuses/build',
+            json={
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'state': 'INPROGRESS',
+                'key': u'Builder0',
+                'name': u'Builder0'},
+            code=404,
+            content_json={
+                "error_description": "This commit is unknown to us",
+                "error": "invalid_commit"}),
+        self.setUpLogging()
+        self.bsp.buildStarted(('build', 20, 'started'), build)
+        self.assertLogged('404: unable to upload Bitbucket status')
+        self.assertLogged('This commit is unknown to us')
+        self.assertLogged('invalid_commit')
 
 class TestBitbucketStatusPushRepoParsing(unittest.TestCase):
 
