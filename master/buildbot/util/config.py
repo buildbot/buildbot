@@ -16,6 +16,7 @@ from future.utils import iteritems
 
 import re
 
+from twisted.cred.checkers import FilePasswordDB
 from twisted.python.components import registerAdapter
 from zope.interface import implementer
 
@@ -79,3 +80,16 @@ class ConfiguredMixin(object):
 
     def getConfigDict(self):
         return {'name': self.name}
+
+
+@implementer(IConfigured)
+class _FilePasswordDBConfigured(object):
+
+    def __init__(self, value):
+        pass
+
+    def getConfigDict(self):
+        return {'type': 'file'}
+
+
+registerAdapter(_FilePasswordDBConfigured, FilePasswordDB, IConfigured)

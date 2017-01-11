@@ -18,10 +18,9 @@ from future.utils import iteritems
 
 import cgi
 import os
+import pkg_resources
 from cStringIO import StringIO
 from uuid import uuid1
-
-import pkg_resources
 
 import mock
 
@@ -60,6 +59,7 @@ class FakeRequest(object):
             path, argstring = x
             self.path = path
             self.args = cgi.parse_qs(argstring, 1)
+        self.uri = self.path
         self.postpath = list(map(urlunquote, path[1:].split('/')))
 
         self.deferred = defer.Deferred()
@@ -81,10 +81,11 @@ class FakeRequest(object):
         else:
             self.deferred.callback(self.written)
 
-    def setResponseCode(self, code):
+    def setResponseCode(self, code, text=None):
         # twisted > 16 started to assert this
         assert isinstance(code, integer_types)
         self.responseCode = code
+        self.responseText = text
 
     def setHeader(self, hdr, value):
         self.headers.setdefault(hdr, []).append(value)

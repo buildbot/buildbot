@@ -63,17 +63,10 @@ def patch_decorators():
     decorators.patch()
 
 
-@onlyOnce
-def patch_mock_asserts():
-    from buildbot.monkeypatches import mock_asserts
-    mock_asserts.patch()
-
-
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
         patch_testcase_assert_raises_regexp()
         patch_decorators()
-        patch_mock_asserts()
 
     patch_python14653()

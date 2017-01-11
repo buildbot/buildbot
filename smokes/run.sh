@@ -2,7 +2,7 @@
 set -e
 set -v
 cd `dirname $0`
-npm install
+yarn install
 rm -rf workdir
 buildbot create-master workdir
 cp master.cfg workdir
