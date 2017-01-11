@@ -14,8 +14,16 @@ class State extends Config
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/workers'
+            url: '/workers?numbuilds'
             data: cfg
+
+        # worker page is actually same as worker, just filtered
+        $stateProvider.state
+            controller: "#{name}Controller"
+            templateUrl: "views/#{name}.html"
+            name: 'worker'
+            url: '/workers/:worker?numbuilds'
+            data: {}
 
         bbSettingsServiceProvider.addSettingsGroup
             name:'Workers'

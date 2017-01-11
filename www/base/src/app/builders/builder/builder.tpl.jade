@@ -23,31 +23,6 @@
               | {{br.submitted_at | timeago }}
           td
           td
-  .row
-    h4 Builds:
-    span(ng-hide='builds.length>0')
-      | None
-    table.table.table-hover.table-striped.table-condensed(ng-show='builds.length>0')
-      tr
-        td(width='100px') #
-        td(width='150px') Started At
-        td(width='150px') Duration
-        td(width='200px') Owner
-        td Status
-      tr(ng-repeat='build in builds | orderBy:"-started_at"')
-          td
-            a(ui-sref="build({builder:builder.builderid, build:build.number})")
-              span.badge-status(ng-class="results2class(build, 'pulse')")
-                  .badge-inactive {{build.number}}
-                  .badge-active {{results2text(build)}}
-          td
-            span(title="{{build.started_at | dateformat:'LLL'}}")
-              | {{build.started_at | timeago }}
-          td
-            span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
-              | {{(build.complete_at - build.started_at)| duration }}
-          td
-          td
-            ul.list-inline
-              li
-                | {{build.state_string}}
+  builds-table(builder="builder", builds="builds")
+  a.btn.btn-default(ui-sref='builder({builder: builder.builderid, numbuilds: numbuilds + 100})', ng-if="builds.length>=numbuilds")
+      | more

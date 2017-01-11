@@ -10,11 +10,17 @@ class State extends Config
             caption: 'Build Masters'
 
         # Register new state
-        state =
+        $stateProvider.state
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
             url: '/masters'
             data: cfg
 
-        $stateProvider.state(state)
+        # master page is actually same as masters, just filtered
+        $stateProvider.state
+            controller: "#{name}Controller"
+            templateUrl: "views/#{name}.html"
+            name: 'master'
+            url: '/masters/:master'
+            data: {}

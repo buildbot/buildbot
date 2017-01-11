@@ -1,5 +1,6 @@
 class Builders extends Controller
-    constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams, $location) ->
+    constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams,
+        $location, dataGrouperService) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         $scope.connected2class = (worker) ->
@@ -94,38 +95,15 @@ class Builders extends Controller
                 $scope.tags_filter.splice(i, 1)
 
         data = dataService.open().closeOnDestroy($scope)
-        byNumber = (a, b) -> return a.number - b.number
-        workersByBuilderId = {}
-        buildsByBuilderId = {}
 
         $scope.builders = data.getBuilders()
         $scope.builders.onNew = (builder) ->
-            builder.workers ?= workersByBuilderId[builder.builderid] || []
-            builder.builds ?= buildsByBuilderId[builder.builderid] || []
             builder.loadMasters()
 
         # as there is usually lots of builders, its better to get the overall
         # list of workers, and builds and then associate by builder
         # @todo, we cannot do same optims for masters due to lack of data api
-
         workers = data.getWorkers()
-        workers.onNew = workers.onUpdate =  (worker) ->
-            worker.configured_on?.forEach (conf) ->
-                # the builder might not be yet loaded, so we need to store the worker list
-                if $scope.builders.hasOwnProperty(conf.builderid)
-                    builder = []
-                    workerslist = $scope.builders.get(conf.builderid).workers ?= []
-                else
-                    workerslist = workersByBuilderId[conf.builderid] ?= []
-                workerslist.push(worker)
-
         builds = data.getBuilds(limit: 200, order: '-started_at')
-        builds.onNew = builds.onUpdate = (build) ->
-            # the builder might not be yet loaded, so we need to store the worker list
-            if $scope.builders.hasOwnProperty(build.builderid)
-                builder = []
-                buildslist = $scope.builders.get(build.builderid).builds ?= []
-            else
-                buildslist = buildsByBuilderId[build.builderid] ?= []
-            buildslist.push(build)
-            buildslist.sort(byNumber)
+        dataGrouperService.groupBy($scope.builders, workers, 'builderid', 'workers', 'configured_on')
+        dataGrouperService.groupBy($scope.builders, builds, 'builderid', 'builds')

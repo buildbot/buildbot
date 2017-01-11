@@ -14,7 +14,7 @@ class State extends Config
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/builders/:builder'
+            url: '/builders/:builder?numbuilds'
             data: cfg
 
         $stateProvider.state(state)

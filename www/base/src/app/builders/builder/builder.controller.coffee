@@ -95,7 +95,10 @@ class Builder extends Controller
                 # reinstall contextual actions when coming back from forcesched
                 $scope.$on '$stateChangeSuccess', ->
                     refreshContextMenu()
-            $scope.builds = builder.getBuilds(limit:20, order:'-number')
+            $scope.numbuilds = 200
+            if $stateParams.numbuilds?
+                $scope.numbuilds = +$stateParams.numbuilds
+            $scope.builds = builder.getBuilds(limit:$scope.numbuilds, order:'-number')
             $scope.buildrequests = builder.getBuildrequests(claimed:false)
             $scope.builds.onChange=refreshContextMenu
             $scope.buildrequests.onChange=refreshContextMenu
