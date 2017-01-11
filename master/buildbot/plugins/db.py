@@ -17,6 +17,7 @@
 from future.utils import iteritems
 from future.utils import itervalues
 
+import traceback
 from pkg_resources import iter_entry_points
 from types import StringTypes
 
@@ -254,6 +255,8 @@ class _Plugins(object):
         try:
             result = entry.load()
         except Exception as err:
+            # log full traceback of the bad entry to help support
+            traceback.print_exc()
             raise PluginDBError('Unable to load %s:%s: %s' %
                                 (self._group, entry.name, str(err)))
         if self._interface:
