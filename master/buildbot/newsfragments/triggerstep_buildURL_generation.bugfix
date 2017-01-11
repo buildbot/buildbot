@@ -1,1 +1,0 @@
-Fixed `addBuildURLs` in `:py:class: `~buildbot.steps.trigger.Trigger` to use results from triggered builds to include in the URL name exposed by API.

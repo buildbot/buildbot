@@ -10,6 +10,49 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.3`` ( ``2017-01-11`` )
+===================================================
+
+Bug fixes
+---------
+
+- Fix :bb:reporter:`BitbucketStatusPush` ``ep should start with /`` assertion
+  error.
+- Fix duplicate worker use case, where a worker with the same name would make
+  the other worker also disconnect (:bug:`3656`)
+- :py:class:`~buildbot.changes.GitPoller`: ``buildPushesWithNoCommits`` now
+  rebuilds for a known branch that was updated to an existing commit.
+- Fix issue with log viewer not staying at bottom of the log when loading log
+  lines.
+- Fixed `addBuildURLs` in `:py:class: `~buildbot.steps.trigger.Trigger` to use
+  results from triggered builds to include in the URL name exposed by API.
+- Fix :ref:`mq-Wamp` :bb:cfg:`mq` support by removing ``debug``, ``debug_amp``
+  and ``debug_app`` from the :bb:cfg:`mq` config, which is not available in
+  latest version of `Python Autobahn <http://autobahn.ws>`_. You can now use
+  ``wamp_debug_level`` option instead.
+- fix issue with factory.workdir AttributeError are not properly reported.
+
+Features
+--------
+
+- Optimize the memory consumption of the log compression process. Buildbot do
+  not load the whole log into memory anymore. This should improve a lot
+  buildbot memory footprint.
+- Changed the build page so that the preview of the logs are shown in live. It
+  is a preview means the last lines of log. How many lines is configurable per
+  user in the user settings page.
+- Log viewer line numbers are no longer selectable, so that it is easier to
+  copy paste.
+- :py:class:`~buildbot.plugins.worker.DockerLatentWorker` accepts now
+  renderable Dockerfile
+- :ref:`Renderer` function can now return
+  :class:`~buildbot.interfaces.IRenderable` objects.
+- new :bb:step:`SetProperties` which allows to generate and transform
+  properties separately.
+- Handle new workers in `windows_service.py` script.
+- Sort the builders in the waterfall view by name instead of ID.
+
+
 Buildbot ``0.9.2`` ( ``2016-12-13`` )
 ===================================================
 
