@@ -465,7 +465,7 @@ else:
         # txgithub required to run buildbot.status.github module tests
         'txgithub',
         'ramlfications',
-        'mock',
+        'mock>=2.0.0',
     ]
     if sys.platform != 'win32':
         test_deps += [
