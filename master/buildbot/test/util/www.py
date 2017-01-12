@@ -17,6 +17,7 @@ from future.utils import integer_types
 from future.utils import iteritems
 
 import cgi
+import json
 import os
 import pkg_resources
 from cStringIO import StringIO
@@ -28,7 +29,6 @@ from twisted.internet import defer
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
-from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
 

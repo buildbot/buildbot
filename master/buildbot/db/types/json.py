@@ -12,10 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+import json
+
 from sqlalchemy.types import Text
 from sqlalchemy.types import TypeDecorator
-
-from buildbot.util import json
 
 
 class JsonObject(TypeDecorator):

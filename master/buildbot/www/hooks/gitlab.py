@@ -12,13 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+import json
 import re
 
 from dateutil.parser import parse as dateparse
 
 from twisted.python import log
-
-from buildbot.util import json
 
 
 def _process_change(payload, user, repo, repo_url, project, codebase=None):

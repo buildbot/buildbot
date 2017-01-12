@@ -25,6 +25,7 @@ from future.utils import text_type
 import base64
 import copy
 import hashlib
+import json
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -35,7 +36,6 @@ from buildbot.db import changesources
 from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
-from buildbot.util import json
 from buildbot.util import service
 
 

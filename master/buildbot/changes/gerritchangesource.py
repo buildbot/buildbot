@@ -15,6 +15,7 @@
 from future.utils import iteritems
 
 import datetime
+import json
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -26,7 +27,6 @@ from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
 from buildbot.util import httpclientservice
-from buildbot.util import json
 
 
 class GerritChangeFilter(ChangeFilter):

@@ -13,13 +13,13 @@
 #
 # Copyright Buildbot Team Members
 import datetime
+import json
 
 from twisted.trial import unittest
 
 from buildbot.test.unit import test_data_changes
 from buildbot.test.util import www
 from buildbot.util import datetime2epoch
-from buildbot.util import json
 from buildbot.www import sse
 
 
