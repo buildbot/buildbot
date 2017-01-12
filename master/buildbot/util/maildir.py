@@ -18,6 +18,10 @@ linux dirwatcher API (if available) to look for new files. The
 .messageReceived method is invoked with the filename of the new message,
 relative to the top of the maildir (so it will look like "new/blahblah").
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 from twisted.application import internet

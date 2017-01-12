@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet.defer import Deferred
 from twisted.internet.defer import succeed
 from twisted.python.filepath import FilePath

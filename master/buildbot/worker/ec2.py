@@ -18,6 +18,8 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 
 Tested with Python boto 1.5c
 """
+
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from future.utils import integer_types

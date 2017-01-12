@@ -14,6 +14,10 @@
 # Copyright 2011 Louis Opter <kalessin@kalessin.fr>
 #
 # Written from the github change hook unit test
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import StringIO
 
 from twisted.trial import unittest

@@ -16,6 +16,7 @@
 # edit your svn-repository/hooks/post-commit file, and add lines that look
 # like this:
 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from future.utils import text_type

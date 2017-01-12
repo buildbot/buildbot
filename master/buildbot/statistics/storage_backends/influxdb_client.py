@@ -12,15 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-try:
-    from influxdb import InfluxDBClient
-except ImportError:
-    InfluxDBClient = None
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 from twisted.python import log
 
 from buildbot import config
 from buildbot.statistics.storage_backends.base import StatsStorageBase
+
+try:
+    from influxdb import InfluxDBClient
+except ImportError:
+    InfluxDBClient = None
 
 
 class InfluxStorageService(StatsStorageBase):

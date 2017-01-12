@@ -22,6 +22,9 @@ Define the interfaces that are implemented by various buildbot classes.
 # pylint: disable=no-self-argument
 # pylint: disable=no-method-argument
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from zope.interface import Attribute
 from zope.interface import Interface
 

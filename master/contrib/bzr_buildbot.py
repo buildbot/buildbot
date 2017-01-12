@@ -95,15 +95,8 @@ Contact Information
 Maintainer/author: gary.poster@canonical.com
 """
 
-try:
-    import buildbot.util
-    import buildbot.changes.base
-    import buildbot.changes.changes
-except ImportError:
-    DEFINE_POLLER = False
-else:
-    DEFINE_POLLER = True
-
+from __future__ import absolute_import
+from __future__ import print_function
 
 # Work around Twisted bug.
 # See http://twistedmatrix.com/trac/ticket/3591
@@ -125,6 +118,15 @@ from twisted.python import failure
 import bzrlib.branch
 import bzrlib.errors
 import bzrlib.trace
+
+try:
+    import buildbot.util
+    import buildbot.changes.base
+    import buildbot.changes.changes
+except ImportError:
+    DEFINE_POLLER = False
+else:
+    DEFINE_POLLER = True
 
 
 #

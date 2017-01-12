@@ -19,6 +19,9 @@
 Standard setup script.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import glob
 import os
 import pkg_resources

@@ -16,6 +16,9 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder as _AbstractWorkerForBuilder
 from buildbot.process.workerforbuilder import LatentWorkerForBuilder as _LatentWorkerForBuilder
 from buildbot.process.workerforbuilder import WorkerForBuilder as _WorkerForBuilder

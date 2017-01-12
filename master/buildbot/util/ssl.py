@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-"""This modules acts the same as twisted.internet.ssl except it does not raise ImportError
 
-    Modules using this should call ensureHasSSL in order to make sure that the user installed buildbot[tls]
 """
+This modules acts the same as twisted.internet.ssl except it does not raise ImportError
+
+Modules using this should call ensureHasSSL in order to make sure that the user installed buildbot[tls]
+"""
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 try:
     from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import
