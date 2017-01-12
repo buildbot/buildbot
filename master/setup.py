@@ -416,17 +416,9 @@ if 'a' in version or 'b' in version:
         if LooseVersion(pip_dist.version) < LooseVersion('1.4'):
             raise RuntimeError(VERSION_MSG)
 
-if sys.version_info[:2] == (2, 6):
-    # Twisted-15.4.0, txaio >=2.3.0 and autobahn >=0.13.0 don't support Python
-    # 2.6 anymore
-    twisted_ver = ">= 14.0.1, < 15.4.0"
-    autobahn_ver = ">= 0.10.2, < 0.13.0"
-    txaio_ver = "== 2.2.2"
-
-else:
-    twisted_ver = ">= 14.0.1"
-    autobahn_ver = ">= 0.16.0"
-    txaio_ver = ">= 2.2.2"
+twisted_ver = ">= 14.0.1"
+autobahn_ver = ">= 0.16.0"
+txaio_ver = ">= 2.2.2"
 
 bundle_version = version.split("-")[0]
 
