@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+
 import json
 
 from sqlalchemy.types import Text
