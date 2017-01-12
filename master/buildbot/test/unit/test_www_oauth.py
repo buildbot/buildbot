@@ -278,7 +278,6 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest(
                 "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
         from buildbot.www import oauth2
         self.auth = self._instantiateAuth(
