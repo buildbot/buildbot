@@ -25,8 +25,9 @@ import pkg_resources
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
-from distutils.core import setup
 from distutils.version import LooseVersion
+
+from setuptools import setup
 
 from buildbot import version
 
@@ -429,99 +430,92 @@ else:
 
 bundle_version = version.split("-")[0]
 
-try:
-    # If setuptools is installed, then we'll add setuptools-specific arguments
-    # to the setup args.
-    import setuptools
-    [setuptools]
-except ImportError:
-    pass
-else:
-    # dependencies
-    setup_args['install_requires'] = [
-        'Twisted ' + twisted_ver,
-        'Jinja2 >= 2.1',
-        # required for tests, but Twisted requires this anyway
-        'zope.interface >= 4.1.1',
-        # python-future required for py2/3 compatibility
-        'future',
-        'sqlalchemy>=0.8.0',
-        'sqlalchemy-migrate>=0.9',
-        'python-dateutil>=1.5',
-        'txaio ' + txaio_ver,
-        'autobahn ' + autobahn_ver,
+# dependencies
+setup_args['install_requires'] = [
+    'setuptools >= 8.0',
+    'Twisted ' + twisted_ver,
+    'Jinja2 >= 2.1',
+    # required for tests, but Twisted requires this anyway
+    'zope.interface >= 4.1.1',
+    # python-future required for py2/3 compatibility
+    'future',
+    'sqlalchemy>=0.8.0',
+    'sqlalchemy-migrate>=0.9',
+    'python-dateutil>=1.5',
+    'txaio ' + txaio_ver,
+    'autobahn ' + autobahn_ver,
+]
+
+# Unit test dependencies.
+test_deps = [
+    # http client libraries
+    'treq',
+    'txrequests',
+    # pyjade required for custom templates tests
+    'pyjade',
+    # boto3 and moto required for running EC2 tests
+    'boto3',
+    'moto',
+    # txgithub required to run buildbot.status.github module tests
+    'txgithub',
+    'ramlfications',
+    'mock>=2.0.0',
+]
+if sys.platform != 'win32':
+    test_deps += [
+        # LZ4 fails to build on Windows:
+        # https://github.com/steeve/python-lz4/issues/27
+        # lz4 required for log compression tests.
+        'lz4',
     ]
 
-    # Unit test dependencies.
-    test_deps = [
-        # http client libraries
-        'treq',
-        'txrequests',
-        # pyjade required for custom templates tests
-        'pyjade',
-        # boto3 and moto required for running EC2 tests
-        'boto3',
-        'moto',
-        # txgithub required to run buildbot.status.github module tests
-        'txgithub',
+setup_args['tests_require'] = test_deps
+
+setup_args['extras_require'] = {
+    'test': [
+        'setuptools_trial',
+        'isort',
+        'pylint==1.1.0',
+        'astroid==1.3.8',
+        'pyflakes',
+        'flake8~=2.6.0',
+    ] + test_deps,
+    'bundle': [
+        "buildbot-www=={0}".format(bundle_version),
+        "buildbot-worker=={0}".format(bundle_version),
+        "buildbot-waterfall-view=={0}".format(bundle_version),
+        "buildbot-console-view=={0}".format(bundle_version),
+    ],
+    'tls': [
+        'Twisted[tls] ' + twisted_ver,
+        # There are bugs with extras inside extras:
+        # <https://github.com/pypa/pip/issues/3516>
+        # so we explicitly include Twisted[tls] dependencies.
+        'pyopenssl >= 16.0.0',
+        'service_identity',
+        'idna >= 0.6',
+    ],
+    'docs': [
+        'docutils<0.13.0',
+        'sphinx>1.4.0',
+        'sphinxcontrib-blockdiag',
+        'sphinxcontrib-spelling',
+        'pyenchant',
+        'docutils>=0.8',
         'ramlfications',
-        'mock>=2.0.0',
+        'sphinx-jinja',
+        'towncrier'
+    ],
+}
+
+if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
+    setup_args['setup_requires'] = [
+        'setuptools_trial',
     ]
-    if sys.platform != 'win32':
-        test_deps += [
-            # LZ4 fails to build on Windows:
-            # https://github.com/steeve/python-lz4/issues/27
-            # lz4 required for log compression tests.
-            'lz4',
-        ]
 
-    setup_args['tests_require'] = test_deps
-
-    setup_args['extras_require'] = {
-        'test': [
-            'setuptools_trial',
-            'isort',
-            'pylint==1.1.0',
-            'astroid==1.3.8',
-            'pyflakes',
-            'flake8~=2.6.0',
-        ] + test_deps,
-        'bundle': [
-            "buildbot-www=={0}".format(bundle_version),
-            "buildbot-worker=={0}".format(bundle_version),
-            "buildbot-waterfall-view=={0}".format(bundle_version),
-            "buildbot-console-view=={0}".format(bundle_version),
-        ],
-        'tls': [
-            'Twisted[tls] ' + twisted_ver,
-            # There are bugs with extras inside extras:
-            # <https://github.com/pypa/pip/issues/3516>
-            # so we explicitly include Twisted[tls] dependencies.
-            'pyopenssl >= 16.0.0',
-            'service_identity',
-            'idna >= 0.6',
-        ],
-        'docs': [
-            'docutils<0.13.0',
-            'sphinx>1.4.0',
-            'sphinxcontrib-blockdiag',
-            'sphinxcontrib-spelling',
-            'pyenchant',
-            'docutils>=0.8',
-            'ramlfications',
-            'sphinx-jinja',
-            'towncrier'
-        ],
-    }
-
-    if '--help-commands' in sys.argv or 'trial' in sys.argv or 'test' in sys.argv:
-        setup_args['setup_requires'] = [
-            'setuptools_trial',
-        ]
-
-    if os.getenv('NO_INSTALL_REQS'):
-        setup_args['install_requires'] = None
-        setup_args['extras_require'] = None
+if os.getenv('NO_INSTALL_REQS'):
+    setup_args['install_requires'] = None
+    setup_args['extras_require'] = None
 
 setup(**setup_args)
 
