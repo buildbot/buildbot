@@ -1,1 +1,1 @@
-``setuptools`` is now explictly required as required. The dependency was previously implicit.
+``setuptools`` is now explicitly marked as required. The dependency was previously implicit.
