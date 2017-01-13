@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import hashlib
+import json
 import socket
 from io import BytesIO
 
@@ -28,7 +29,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util import json
 from buildbot.worker import AbstractLatentWorker
 
 try:

@@ -12,6 +12,8 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+import json
 import os
 import webbrowser
 
@@ -26,7 +28,6 @@ from twisted.web.resource import Resource
 from twisted.web.server import Site
 
 from buildbot.test.util import www
-from buildbot.util import json
 
 try:
     import requests
@@ -277,7 +278,6 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest(
                 "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
         from buildbot.www import oauth2
         self.auth = self._instantiateAuth(

@@ -19,6 +19,7 @@ from future.utils import text_type
 import cgi
 import datetime
 import fnmatch
+import json
 import re
 from contextlib import contextmanager
 
@@ -28,7 +29,6 @@ from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
