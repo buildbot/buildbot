@@ -18,6 +18,7 @@ from future.utils import itervalues
 from future.utils import string_types
 from future.utils import text_type
 
+import json
 import re
 
 import mock
@@ -27,7 +28,6 @@ from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
-from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES

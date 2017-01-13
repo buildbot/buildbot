@@ -12,6 +12,7 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 from __future__ import division
 from __future__ import print_function
 
@@ -28,9 +29,12 @@ import locale
 import re
 import textwrap
 import time
+import json
 
 from future.utils import text_type
 from twisted.python import reflect
+from twisted.python.versions import Version
+from twisted.python.deprecate import deprecatedModuleAttribute
 
 from zope.interface import implementer
 
@@ -181,26 +185,14 @@ def ascii2unicode(x):
         return x
     return text_type(x, 'ascii')
 
+_hush_pyflakes = [json]
 
-# place a working json module at 'buildbot.util.json'.  Code is adapted from
-# Paul Wise <pabs@debian.org>:
-#   http://lists.debian.org/debian-python/2010/02/msg00016.html
-# json doesn't exist as a standard module until python2.6
-# However python2.6's json module is much slower than simplejson, so we prefer
-# to use simplejson if available.
-try:
-    import simplejson as json
-    assert json
-except ImportError:
-    import json  # python 2.6 or 2.7
-try:
-    _tmp = json.loads
-except AttributeError:
-    import warnings
-    import sys
-    warnings.warn("Use simplejson, not the old json module.")
-    sys.modules.pop('json')  # get rid of the bad json module
-    import simplejson as json
+deprecatedModuleAttribute(
+    Version("buildbot", 0, 9, 4),
+    message="Use json from the standard library instead.",
+    moduleName="buildbot.util",
+    name="json",
+)
 
 
 def toJson(obj):
@@ -432,7 +424,7 @@ def dictionary_merge(a, b):
 
 
 __all__ = [
-    'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
+    'naturalSort', 'now', 'formatInterval', 'ComparableMixin',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'UTC',
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',

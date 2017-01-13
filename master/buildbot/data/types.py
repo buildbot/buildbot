@@ -19,10 +19,10 @@ from future.utils import iteritems
 from future.utils import text_type
 
 import datetime
+import json
 import re
 
 from buildbot import util
-from buildbot.util import json
 
 
 class Type(object):

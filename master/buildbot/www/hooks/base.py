@@ -17,7 +17,8 @@
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
-from buildbot.util import json
+
+import json
 
 
 def getChanges(request, options=None):

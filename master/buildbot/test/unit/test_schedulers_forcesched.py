@@ -16,6 +16,8 @@ from __future__ import division
 from __future__ import print_function
 from future.utils import iteritems
 
+import json
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -36,7 +38,6 @@ from buildbot.schedulers.forcesched import oneCodebase
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
