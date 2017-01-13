@@ -1,1 +1,1 @@
-setuptools is now marked as required to install buildbot (non-setuptools install was not tested and broken).
+setuptools is now explictly required as required. The dependency was previously implicit.
