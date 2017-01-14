@@ -17,9 +17,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import text_type
 
-import cStringIO
 import os
 import sys
+
+from twisted.python.compat import NativeStringIO
 
 import buildbot
 
@@ -49,7 +50,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = cStringIO.StringIO()
+        self.stdout = NativeStringIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

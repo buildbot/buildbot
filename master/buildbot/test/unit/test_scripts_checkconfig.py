@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 
-import cStringIO
 import os
 import re
 import sys
@@ -25,6 +24,7 @@ import textwrap
 
 import mock
 
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import base
@@ -59,8 +59,8 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
                 f.write(contents)
 
         old_stdout, old_stderr = sys.stdout, sys.stderr
-        stdout = sys.stdout = cStringIO.StringIO()
-        stderr = sys.stderr = cStringIO.StringIO()
+        stdout = sys.stdout = NativeStringIO()
+        stderr = sys.stderr = NativeStringIO()
         try:
             checkconfig._loadConfig(
                 basedir='configdir', configFile="master.cfg", quiet=False)

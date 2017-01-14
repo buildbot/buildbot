@@ -16,13 +16,13 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import cStringIO
 import os
 import string
 import textwrap
 
 from twisted.python import runtime
 from twisted.python import usage
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot import config as config_module
@@ -36,7 +36,7 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
-        self.stdout = cStringIO.StringIO()
+        self.stdout = NativeStringIO()
         self.setUpStdoutAssertions()
 
     def test_isBuildmasterDir_no_dir(self):
