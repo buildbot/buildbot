@@ -17,12 +17,9 @@
 # We need to use the native __builtin__ module on Python 2,
 # and builtins module on Python 3, because we need to override
 # the actual native open method.
-try:
-    # Python 2
-    import __builtin__ as builtins
-except ImportError:
-    # Python 3
-    import builtins
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.builtins import range
 from future.utils import iteritems
 
@@ -53,6 +50,13 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
+
+try:
+    # Python 2
+    import __builtin__ as builtins
+except ImportError:
+    # Python 3
+    import builtins
 
 global_defaults = dict(
     title='Buildbot',

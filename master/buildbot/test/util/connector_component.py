@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from buildbot.db import model
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db

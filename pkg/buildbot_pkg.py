@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
 import distutils.cmd
@@ -123,7 +126,7 @@ class BuildJsCommand(distutils.cmd.Command):
         if os.path.exists("gulpfile.js"):
             yarn_version = check_output("yarn --version")
             npm_version = check_output("npm -v")
-            print "yarn:", yarn_version, "npm: ", npm_version
+            print("yarn:", yarn_version, "npm: ", npm_version)
             npm_bin = check_output("npm bin").strip()
             assert npm_version != "", "need nodejs and npm installed in current PATH"
             assert LooseVersion(npm_version) >= LooseVersion(

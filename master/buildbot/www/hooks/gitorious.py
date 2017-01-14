@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 #
 # note: this file is based on github.py
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from dateutil.parser import parse as dateparse

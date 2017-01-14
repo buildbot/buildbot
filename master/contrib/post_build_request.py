@@ -16,6 +16,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 OpenGamma Inc. and the OpenGamma group of companies
 
+from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 

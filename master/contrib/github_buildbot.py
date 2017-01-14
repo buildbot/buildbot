@@ -13,6 +13,8 @@ This version of github_buildbot.py parses v3 of the github webhook api, with the
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 
 import hmac

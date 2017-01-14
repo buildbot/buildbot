@@ -140,6 +140,8 @@
 # This would strip everything until (and including) the 4th "/" in the repo's
 # path leaving only "myrepo" left.  This would then be append to the base URL.
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.builtins import range
 
 import json
