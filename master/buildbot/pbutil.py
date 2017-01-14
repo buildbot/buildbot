@@ -17,6 +17,9 @@
 """Base classes handy for use with PB clients.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.spread import pb

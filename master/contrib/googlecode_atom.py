@@ -23,6 +23,9 @@
 #   c['change_source'] = [ poller ]
 #
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import datetime
 from xml.dom import minidom
 

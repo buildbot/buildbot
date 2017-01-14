@@ -14,6 +14,9 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Marius Rieder <marius.rieder@durchmesser.ch>
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from buildbot.process import logobserver
 
 

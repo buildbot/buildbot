@@ -18,6 +18,10 @@ This files implement buildbotNetUsageData options
 It uses urllib2 instead of requests in order to avoid requiring another dependency for statistics feature.
 urllib2 supports http_proxy already urllib2 is blocking and thus everything is done from a thread.
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import hashlib
 import inspect
 import json

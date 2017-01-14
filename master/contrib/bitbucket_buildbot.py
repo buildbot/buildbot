@@ -11,6 +11,8 @@ bitbucket repository for the user who initiated bitbucket_buildbot.py
 bitbucket_buildbot.py is based on github_buildbot.py
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 
 import logging
