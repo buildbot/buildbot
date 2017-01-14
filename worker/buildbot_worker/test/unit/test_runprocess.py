@@ -421,8 +421,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(
-                not re.match('\bPATH=', headers), "got:\n" + headers)
+            self.assertFalse(
+                re.match('\bPATH=', headers), "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -436,7 +436,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(not re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
+            self.assertFalse(re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
                             "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -451,7 +451,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(not re.match('\bFOO=a%sb\b' % (os.pathsep), headers),
+            self.assertFalse(re.match('\bFOO=a%sb\b' % (os.pathsep), headers),
                             "got:\n" + headers)
         d.addCallback(check)
         return d
