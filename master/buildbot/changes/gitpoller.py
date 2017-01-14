@@ -13,6 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
 from future.utils import text_type

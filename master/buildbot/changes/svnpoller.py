@@ -15,6 +15,9 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.moves.urllib.parse import quote_plus as urlquote_plus
 from future.utils import text_type
 

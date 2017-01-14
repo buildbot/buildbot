@@ -84,6 +84,9 @@
 # A variant of this script has been deployed in our shop for
 # about six months, and has proven quite useful.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import json
 import os
 import random

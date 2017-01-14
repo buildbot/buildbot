@@ -23,6 +23,8 @@
 #
 # Largely based on contrib/hooks/post-receive-email from git.
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import text_type
 

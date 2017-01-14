@@ -16,6 +16,9 @@
 # This module is left for backward compatibility of old-named worker API.
 # It should never be imported by Buildbot.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from buildbot.db.workers import WorkersConnectorComponent as _WorkersConnectorComponent
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerModuleUsage
