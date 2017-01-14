@@ -545,7 +545,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions(create_worker.CreateWorkerError("err-msg"))
 
         # call createWorker() and check that we get error exit code
-        self.assertEquals(create_worker.createWorker(self.options), 1,
+        self.assertEqual(create_worker.createWorker(self.options), 1,
                           "unexpected exit code")
 
         # check that correct error message was printed on stdout
@@ -560,7 +560,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(self.options), 0,
+        self.assertEqual(create_worker.createWorker(self.options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -714,7 +714,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
+        self.assertEqual(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -740,7 +740,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
+        self.assertEqual(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
@@ -765,7 +765,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
+        self.assertEqual(create_worker.createWorker(options), 0,
                           "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
