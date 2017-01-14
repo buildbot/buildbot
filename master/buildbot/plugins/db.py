@@ -19,10 +19,10 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import string_types
 
 import traceback
 from pkg_resources import iter_entry_points
-from types import StringTypes
 
 from zope.interface import Invalid
 from zope.interface.verify import verifyClass
@@ -148,7 +148,7 @@ class _NSNode(object):
             child.load()
 
     def add(self, name, entry):
-        assert isinstance(name, StringTypes) and isinstance(entry,
+        assert isinstance(name, string_types) and isinstance(entry,
                                                             _PluginEntry)
         self._add(name, entry)
 
@@ -187,12 +187,12 @@ class _NSNode(object):
             return child
 
     def info(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, string_types)
 
         return self._get(name).info
 
     def get(self, name):
-        assert isinstance(name, StringTypes)
+        assert isinstance(name, string_types)
 
         return self._get(name).value
 
