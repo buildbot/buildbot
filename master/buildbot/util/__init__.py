@@ -20,6 +20,7 @@ from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
 from future.utils import string_types
+from future.utils import text_type
 
 import calendar
 import datetime
@@ -31,7 +32,6 @@ import textwrap
 import time
 import json
 
-from future.utils import text_type
 from twisted.python import reflect
 from twisted.python.versions import Version
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -191,6 +191,12 @@ def ascii2unicode(x):
     if isinstance(x, (text_type, type(None))):
         return x
     return text_type(x, 'ascii')
+
+
+def unicode2bytes(x, encoding='utf8'):
+    if isinstance(x, text_type):
+        x = x.encode(encoding)
+    return x
 
 _hush_pyflakes = [json]
 
