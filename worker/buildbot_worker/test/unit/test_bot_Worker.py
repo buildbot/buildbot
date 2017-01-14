@@ -103,7 +103,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.realm = MasterRealm(perspective, on_attachment)
         p = portal.Portal(self.realm)
         p.registerChecker(
-            checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
+            checkers.InMemoryUsernamePasswordDatabaseDontUse(testy=b"westy"))
         self.listeningport = reactor.listenTCP(
             0, pb.PBServerFactory(p), interface='127.0.0.1')
         # return the dynamically allocated port number
