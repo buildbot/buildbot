@@ -140,7 +140,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
-            self.failUnlessEquals(s.stdout, nl('hello\n'))
+            self.assertEqual(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -179,7 +179,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             self.failUnless({'stderr': nl('hello\n')} in b.updates, b.show())
             self.failUnless({'rc': 0} in b.updates, b.show())
-            self.failUnlessEquals(s.stderr, nl('hello\n'))
+            self.assertEqual(s.stderr, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -624,7 +624,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile_d.addCallback(check_alive)
 
         def check_dead(_):
-            self.failUnlessEqual(self.receivedSIGTERM, True)
+            self.assertEqual(self.receivedSIGTERM, True)
             self.assertDead(self.pid)
         runproc_d.addCallback(check_dead)
         return defer.gatherResults([pidfile_d, runproc_d])
@@ -752,7 +752,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         s.sendStatus({'stdout': nl('hello\n')})
-        self.failUnlessEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
+        self.assertEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
 
     def testSendBuffered(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -760,7 +760,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.failUnlessEqual(b.updates, [{'stdout': 'hello world'}], b.show())
+        self.assertEqual(b.updates, [{'stdout': 'hello world'}], b.show())
 
     def testSendBufferedInterleaved(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -769,7 +769,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s._addToBuffers('stderr', 'DIEEEEEEE')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.failUnlessEqual(b.updates, [
+        self.assertEqual(b.updates, [
             {'stdout': 'hello '},
             {'stderr': 'DIEEEEEEE'},
             {'stdout': 'world'},
@@ -781,14 +781,14 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         data = "x" * int(runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
         s._addToBuffers('stdout', data)
         s._sendBuffers()
-        self.failUnlessEqual(len(b.updates), 2)
+        self.assertEqual(len(b.updates), 2)
 
     def testSendNotimeout(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
         s._addToBuffers('stdout', data)
-        self.failUnlessEqual(len(b.updates), 1)
+        self.assertEqual(len(b.updates), 1)
 
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
