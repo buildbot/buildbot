@@ -546,7 +546,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # call createWorker() and check that we get error exit code
         self.assertEqual(create_worker.createWorker(self.options), 1,
-                          "unexpected exit code")
+                         "unexpected exit code")
 
         # check that correct error message was printed on stdout
         self.assertStdoutEqual("err-msg\n"
@@ -561,7 +561,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # call createWorker() and check that we get success exit code
         self.assertEqual(create_worker.createWorker(self.options), 0,
-                          "unexpected exit code")
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \
@@ -715,7 +715,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # call createWorker() and check that we get success exit code
         self.assertEqual(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = (create_worker.workerTACTemplate[0] +
@@ -741,7 +741,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # call createWorker() and check that we get success exit code
         self.assertEqual(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         options["allow-shutdown"] = "'signal'"
@@ -766,7 +766,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         # call createWorker() and check that we get success exit code
         self.assertEqual(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \

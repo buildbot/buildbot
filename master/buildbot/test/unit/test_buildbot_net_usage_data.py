@@ -67,7 +67,7 @@ class Tests(unittest.TestCase):
         master = self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
         self.assertEqual(sorted(data.keys()),
-                          sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']))
+                         sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']))
         self.assertEqual(data['plugins']['buildbot/worker/base/Worker'], 3)
         self.assertEqual(sorted(data['plugins'].keys()), sorted(
             ['buildbot/schedulers/forcesched/ForceScheduler', 'buildbot/worker/base/Worker',
@@ -79,8 +79,8 @@ class Tests(unittest.TestCase):
         master = self.getMaster(c)
         data = computeUsageData(master)
         self.assertEqual(sorted(data.keys()),
-                          sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins',
-                                  'builders', 'www_plugins']))
+                         sorted(['versions', 'db', 'installid', 'platform', 'mq', 'plugins',
+                                 'builders', 'www_plugins']))
 
     def test_custom(self):
         c = self.getBaseConfig()
@@ -91,7 +91,7 @@ class Tests(unittest.TestCase):
         master = self.getMaster(c)
         data = computeUsageData(master)
         self.assertEqual(sorted(data.keys()),
-                          sorted(['db']))
+                         sorted(['db']))
 
     def test_urllib2(self):
 
