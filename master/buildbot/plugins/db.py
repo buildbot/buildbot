@@ -23,7 +23,6 @@ from future.utils import string_types
 
 import traceback
 from pkg_resources import iter_entry_points
-from types import StringTypes
 
 from zope.interface import Invalid
 from zope.interface.verify import verifyClass
