@@ -1,5 +1,25 @@
 .container
-  .row
-    ul
-      lu(ng-repeat='master in masters')
-        rawdata(data='master')
+    .row
+        table.table.table-hover.table-striped.table-condensed
+            tr
+                th Active
+                th Name
+                th Recent Builds
+                th Workers
+                th Last Active
+            tr(ng-repeat='master in masters | orderBy: ["-active", "name"]', ng-hide="maybeHideMaster(master)")
+                td 
+                    i.fa.fa-check.text-success(ng-show="master.active")
+                    i.fa.fa-times.text-danger(ng-hide="master.active")
+                td {{ master.name}}
+                td
+                    span(ng-repeat="build in master.builds | orderBy : '-number' |limitTo: '20' ")
+                        a(ui-sref='build({builder: build.builderid, build: build.number})')
+                            span.badge-status(ng-class="results2class(build, 'pulse')")
+                              | {{ builders.get(build.builderid).name }}/{{ build.number }}
+                td
+                    span(ng-repeat="worker in master.workers | orderBy : 'name'")
+                        a(ui-sref='workers({worker: workerid})')
+                            span.badge-status.results_SUCCESS
+                              | {{ worker.name }}
+                td {{master.last_active | timeago}}

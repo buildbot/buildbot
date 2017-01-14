@@ -1,21 +1,52 @@
 class Workers extends Controller
-    constructor: ($scope, dataService, bbSettingsService) ->
-        $scope.maybeGetMasterNameFromBuilderMaster = (buildermaster) ->
-            activeMasters = 0
-            for master in $scope.masters
-                if master.active
-                    activeMasters += 1
-
-            if activeMasters > 1
-                return "(" + $scope.masters.get(buildermaster.masterid).name.split(":")[0] + ")"
-            return ""
+    constructor: ($scope, dataService, bbSettingsService, resultsService, dataGrouperService, $stateParams) ->
+        $scope.capitalize = _.capitalize
+        _.mixin($scope, resultsService)
+        $scope.getUniqueBuilders = (worker) ->
+            builders = {}
+            masters = {}
+            for master in worker.connected_to
+                masters[master.masterid] = true
+            for buildermaster in worker.configured_on
+                if worker.connected_to.length == 0 or masters.hasOwnProperty(buildermaster.masterid)
+                    builder = $scope.builders.get(buildermaster.builderid)
+                    if builder?
+                        builders[buildermaster.builderid] = builder
+            return _.values(builders)
+        $scope.maybeHideWorker = (worker) ->
+            if $stateParams.worker?
+                return worker.workerid != +$stateParams.worker
+            if $scope.settings.show_old_workers.value
+                return worker.configured_on.length == 0
+            return 0
 
         data = dataService.open().closeOnDestroy($scope)
 
         $scope.builders = data.getBuilders()
         $scope.masters = data.getMasters()
         $scope.workers = data.getWorkers()
+        $scope.workers.onChange =  (workers) ->
+            if $stateParams.worker?
+                $scope.worker = workers.get(+$stateParams.worker)
+            $scope.worker_infos = []
+            for worker in workers
+                worker.num_connections = worker.connected_to.length
+                for k, v of worker.workerinfo
+                    # we only count workerinfo that is at least defined in one worker
+                    if v? and v != "" and $scope.worker_infos.indexOf(k) < 0
+                        $scope.worker_infos.push(k)
+            $scope.worker_infos.sort()
 
+        byNumber = (a, b) -> return a.number - b.number
+        $scope.numbuilds = 200
+        if $stateParams.numbuilds?
+            $scope.numbuilds = +$stateParams.numbuilds
+        if $stateParams.worker?
+            $scope.builds = builds = data.getBuilds(
+                limit: $scope.numbuilds, workerid: +$stateParams.worker, order: '-started_at')
+        else
+            builds = data.getBuilds(limit: $scope.numbuilds, order: '-started_at')
+        dataGrouperService.groupBy($scope.workers, builds, 'workerid', 'builds')
         $scope.settings = bbSettingsService.getSettingsGroup("Workers")
         $scope.$watch('settings', ->
             bbSettingsService.save()
