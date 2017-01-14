@@ -112,8 +112,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -126,7 +126,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -138,8 +138,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
             self.assertEqual(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
@@ -152,7 +152,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stderr': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -165,7 +165,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stderr': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -177,8 +177,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stderr': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stderr': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
             self.assertEqual(s.stderr, nl('hello\n'))
         d.addCallback(check)
         return d
@@ -191,8 +191,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -215,8 +215,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': exp} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': exp} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -228,8 +228,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -248,8 +248,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': exp} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': exp} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -270,8 +270,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl(repr(args))} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl(repr(args))} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -286,8 +286,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('a\nb\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('a\nb\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -299,9 +299,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless(
+            self.assertTrue(
                 {'stdout': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': FATAL_RC} in b.updates, b.show())
+            self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
         d.addCallback(check)
         clock.advance(6)
         return d
@@ -314,9 +314,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless(
+            self.assertTrue(
                 {'stdout': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': FATAL_RC} in b.updates, b.show())
+            self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
         d.addCallback(check)
         clock.advance(6)  # should knock out maxTime
         return d
@@ -333,7 +333,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -358,7 +358,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
             stderr = "".join(stderr)
-            self.failUnless("RuntimeError" in stderr, stderr)
+            self.assertTrue("RuntimeError" in stderr, stderr)
         d.addBoth(check)
         d.addBoth(lambda _: self.flushLoggedErrors())
         return d
@@ -373,7 +373,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("FOO=BAR" in headers, "got:\n" + headers)
+            self.assertTrue("FOO=BAR" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -387,7 +387,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("FOO=BAR" not in headers, "got:\n" + headers)
+            self.assertTrue("FOO=BAR" not in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -404,9 +404,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("EXPND=-$" not in headers, "got:\n" + headers)
-            self.failUnless("DOESNT_FIND=--" in headers, "got:\n" + headers)
-            self.failUnless(
+            self.assertTrue("EXPND=-$" not in headers, "got:\n" + headers)
+            self.assertTrue("DOESNT_FIND=--" in headers, "got:\n" + headers)
+            self.assertTrue(
                 "DOESNT_EXPAND=-${---}-" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
