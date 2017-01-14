@@ -84,9 +84,9 @@ class HangCheckTests(SynchronousTestCase):
 
         transport.protocol = protocol
         protocol.makeConnection(transport)
-        protocol.dataReceived('some-data')
+        protocol.dataReceived(b'some-data')
 
-        self.assertEqual(wrapped_protocol.data, "some-data")
+        self.assertEqual(wrapped_protocol.data, b"some-data")
 
     def test_data_cancels_timeout(self):
         """
@@ -98,7 +98,7 @@ class HangCheckTests(SynchronousTestCase):
 
         transport.protocol = protocol
         protocol.makeConnection(transport)
-        protocol.dataReceived('some-data')
+        protocol.dataReceived(b'some-data')
         assert_clock_idle(self, clock)
 
     def test_calls_callback(self):
@@ -176,7 +176,7 @@ class HangCheckTests(SynchronousTestCase):
 
         transport.protocol = protocol
         protocol.makeConnection(transport)
-        protocol.dataReceived("some-data")
+        protocol.dataReceived(b"some-data")
         protocol.connectionLost(
             Failure(ConnectionDone("Bye."))
         )
