@@ -21,6 +21,8 @@ from twisted.internet.interfaces import ITransport
 from twisted.protocols import basic
 from zope.interface import implementer
 
+from buildbot.util import unicode2bytes
+
 
 @implementer(IAddress)
 class NullAddress(object):
@@ -66,6 +68,7 @@ class NetstringParser(basic.NetstringReceiver):
         self.strings = []
 
     def feed(self, data):
+        data = unicode2bytes(data)
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!
         if self.brokenPeer:

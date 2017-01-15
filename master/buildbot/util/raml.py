@@ -93,7 +93,7 @@ class RamlSpec(object):
 
     def iter_actions(self, endpoint):
         ACTIONS_MAGIC = '/actions/'
-        for k, v in endpoint.iteritems():
+        for k, v in iteritems(endpoint):
             if k.startswith(ACTIONS_MAGIC):
                 k = k[len(ACTIONS_MAGIC):]
                 v = v['post']
