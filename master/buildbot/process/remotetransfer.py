@@ -19,14 +19,9 @@ from __future__ import print_function
 import os
 import tarfile
 import tempfile
+from io import BytesIO
 
 from buildbot.worker.protocols import base
-
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
 
 
 """
@@ -200,4 +195,4 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        FileReader.__init__(self, StringIO(s))
+        FileReader.__init__(self, BytesIO(s))
