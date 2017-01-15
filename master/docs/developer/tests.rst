@@ -70,8 +70,9 @@ project.  All new code must meet this requirement.
 
 Unit test modules are be named after the package or class they test, replacing
 ``.`` with ``_`` and omitting the ``buildbot_``. For example,
-:file:`test_status_web_authz_Authz.py` tests the :class:`Authz` class in
-:file:`buildbot/status/web/authz.py`. Modules with only one class, or a few
+:src:`test_schedulers_timed_Periodic.py <buildbot/test/unit/test_schedulers_timed_Periodic.py>`
+tests the :class:`Periodic` class in
+:src:`buildbot/schedulers/timed.py`. Modules with only one class, or a few
 trivial classes, can be tested in a single test module. For more complex
 situations, prefer to use multiple test modules.
 
@@ -107,7 +108,7 @@ context, an interface is any boundary between testable units.
 Ideally, all interfaces, both public and private, should be tested.  Certainly,
 any *public* interfaces need interface tests.
 
-Interface tests are most often found in files named for the "real" implementation, e.g., :file:`test_db_changes.py`.
+Interface tests are most often found in files named for the "real" implementation, e.g., :src:`test_db_changes.py <master/buildbot/test/unit/test_db_changes.py>`.
 When there is ambiguity, test modules should be named after the interface they are testing.
 Interface tests have the following form::
 
