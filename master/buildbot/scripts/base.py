@@ -229,7 +229,7 @@ class SubcommandOptions(usage.Options):
                         raise
                     break
 
-        for k in localDict.keys():
+        for k in list(localDict.keys()):  # pylint: disable=consider-iterating-dictionary
             if k.startswith("__"):
                 del localDict[k]
         return localDict
