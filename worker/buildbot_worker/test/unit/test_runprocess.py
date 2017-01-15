@@ -88,22 +88,22 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     def testCommandEncoding(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, u'abcd', self.basedir)
-        self.assertIsInstance(s.command, str)
-        self.assertIsInstance(s.fake_command, str)
+        self.assertIsInstance(s.command, bytes)
+        self.assertIsInstance(s.fake_command, bytes)
 
     def testCommandEncodingList(self):
         b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, [u'abcd', 'efg'], self.basedir)
-        self.assertIsInstance(s.command[0], str)
-        self.assertIsInstance(s.fake_command[0], str)
+        s = runprocess.RunProcess(b, [u'abcd', b'efg'], self.basedir)
+        self.assertIsInstance(s.command[0], bytes)
+        self.assertIsInstance(s.fake_command[0], bytes)
 
     def testCommandEncodingObfuscated(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b,
                                   [bsutil.Obfuscated(u'abcd', u'ABCD')],
                                   self.basedir)
-        self.assertIsInstance(s.command[0], str)
-        self.assertIsInstance(s.fake_command[0], str)
+        self.assertIsInstance(s.command[0], bytes)
+        self.assertIsInstance(s.fake_command[0], bytes)
 
     def testStart(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -201,8 +201,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b,
                                   [('obfuscated', 'abcd', 'ABCD')],
                                   self.basedir)
-        self.assertEqual(s.command, ['abcd'])
-        self.assertEqual(s.fake_command, ['ABCD'])
+        self.assertEqual(s.command, [b'abcd'])
+        self.assertEqual(s.fake_command, [b'ABCD'])
 
     def testMultiWordStringCommand(self):
         b = FakeWorkerForBuilder(self.basedir)
