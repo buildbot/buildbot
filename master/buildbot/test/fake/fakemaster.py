@@ -170,7 +170,7 @@ class FakeMaster(service.MasterService):
         service.MasterService.__init__(self)
         self._master_id = master_id
         self.reactor = reactor
-        self.objectids = []
+        self.objectids = {}
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
