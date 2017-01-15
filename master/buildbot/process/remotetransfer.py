@@ -21,6 +21,7 @@ import tarfile
 import tempfile
 from io import BytesIO
 
+from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
 
 
@@ -56,6 +57,7 @@ class FileWriter(base.FileWriterImpl):
         @type  data: C{string}
         @param data: String of data to write
         """
+        data = unicode2bytes(data)
         if self.remaining is not None:
             if len(data) > self.remaining:
                 data = data[:self.remaining]
@@ -195,4 +197,5 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
+        s = unicode2bytes(s)
         FileReader.__init__(self, BytesIO(s))
