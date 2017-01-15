@@ -31,6 +31,7 @@ from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
 from twisted.python import versions
+from twisted.python.compat import NativeStringIO
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -60,12 +61,6 @@ from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-
-try:
-    import cStringIO as StringIO
-    assert StringIO
-except ImportError:
-    import StringIO
 
 
 class BuildStepFailed(Exception):
@@ -228,7 +223,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = StringIO.StringIO(alltext)
+        io = NativeStringIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):
