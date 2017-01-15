@@ -198,6 +198,7 @@ def unicode2bytes(x, encoding='utf8'):
         x = x.encode(encoding)
     return x
 
+
 _hush_pyflakes = [json]
 
 deprecatedModuleAttribute(
