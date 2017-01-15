@@ -72,7 +72,7 @@ def sampleSummaryCB(buildInfoList, results, status, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -94,7 +94,7 @@ def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -121,7 +121,7 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True

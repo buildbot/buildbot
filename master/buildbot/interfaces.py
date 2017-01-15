@@ -21,6 +21,7 @@ Define the interfaces that are implemented by various buildbot classes.
 # disable pylint warnings triggered by interface definitions
 # pylint: disable=no-self-argument
 # pylint: disable=no-method-argument
+# pylint: disable=inherit-non-class
 
 from __future__ import absolute_import
 from __future__ import print_function

@@ -244,7 +244,7 @@ class BuilderStatus(styles.Versioned):
                     return
 
     def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
-        if False:
+        if False:  # pylint: disable=using-constant-test
             yield
 
     def subscribe(self, receiver):
