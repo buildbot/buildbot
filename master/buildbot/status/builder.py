@@ -333,6 +333,9 @@ class BuilderStatus(styles.Versioned):
                     else:
                         s.subscribe(receiver)
                     d = s.waitUntilFinished()
+                    # TODO: This actually looks like a bug, but this code
+                    # will be removed anyway.
+                    # pylint: disable=cell-var-from-loop
                     d.addCallback(lambda s: s.unsubscribe(receiver))
             except Exception:
                 log.msg(
