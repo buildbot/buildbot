@@ -479,12 +479,12 @@ class Trial(ShellCommand):
                         (counts['expectedFailures'],
                          counts['expectedFailures'] == 1 and "todo"
                          or "todos"))
-            if 0:  # TODO
+            if 0:  # TODO  pylint: disable=using-constant-test
                 results = WARNINGS
                 if not text2:
                     text2 = "todo"
 
-        if 0:
+        if 0:  # pylint: disable=using-constant-test
             # ignore unexpectedSuccesses for now, but it should really mark
             # the build WARNING
             if counts['unexpectedSuccesses']:

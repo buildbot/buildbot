@@ -137,6 +137,8 @@ class MtrLogObserver(LogLineObserver):
         else:
             m = self._line_re3.search(stripLine)
 
+            # pylint: disable=too-many-boolean-expressions
+
             if m:
                 stuff = m.group(1)
                 self.closeTestFail()

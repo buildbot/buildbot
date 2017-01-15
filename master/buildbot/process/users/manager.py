@@ -36,6 +36,7 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
         # this is easy - kick out all of the old managers, and add the
         # new ones.
 
+        # pylint: disable=cell-var-from-loop
         for mgr in list(self):
             yield defer.maybeDeferred(lambda:
                                       mgr.disownServiceParent())

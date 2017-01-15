@@ -324,6 +324,8 @@ class EC2LatentWorker(AbstractLatentWorker):
         return mapping_definitions
 
     def get_image(self):
+        # pylint: disable=too-many-nested-blocks
+
         if self.image is not None:
             return self.image
         images = self.ec2.images.all()

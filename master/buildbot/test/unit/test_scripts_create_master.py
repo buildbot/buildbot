@@ -121,6 +121,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector, 'DBConnector', self.DBConnector)
 
         basedir = basedir or self.basedir
+        # pylint: disable=unsubscriptable-object
         self.assertEqual(
             dict(basedir=self.DBConnector.call_args[0][1],
                  db_url=self.DBConnector.call_args[0][0].mkconfig.db['db_url'],

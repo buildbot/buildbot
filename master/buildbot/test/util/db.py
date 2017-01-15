@@ -114,6 +114,8 @@ class RealDatabaseMixin(object):
         # Conclusion: use approach 2 with manually teared apart known
         # reference cycles.
 
+        # pylint: disable=too-many-nested-blocks
+
         try:
             meta = MetaData(bind=conn)
 
