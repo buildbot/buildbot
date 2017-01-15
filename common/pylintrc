@@ -126,6 +126,7 @@ disable=
   unused-variable,
   redefined-outer-name,
   redefined-builtin,
+  redefined-variable-type,
   undefined-loop-variable,
   unbalanced-tuple-unpacking,
   unpacking-non-sequence,
