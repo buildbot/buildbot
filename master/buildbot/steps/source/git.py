@@ -311,7 +311,8 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def parseCommitDescription(self, _=None):
-        if self.getDescription == False:  # dict() should not return here
+        # dict() should not return here
+        if isinstance(self.getDescription, bool) and not self.getDescription:
             defer.returnValue(RC_SUCCESS)
             return
 

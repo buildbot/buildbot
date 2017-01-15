@@ -516,10 +516,7 @@ class MailNotifier(service.BuildbotService):
     def sendmail(self, s, recipients):
         result = defer.Deferred()
 
-        if self.smtpUser and self.smtpPassword:
-            useAuth = True
-        else:
-            useAuth = False
+        useAuth = self.smtpUser and self.smtpPassword
 
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
