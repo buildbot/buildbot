@@ -592,7 +592,7 @@ Features
 * The :class:`DockerLatentWorker` image attribute is now renderable (can take properties in account).
 
 * The :class:`DockerLatentWorker` sets environment variables describing how to connect to the master.
-  Example dockerfiles can be found in ``master/contrib/docker``.
+  Example dockerfiles can be found in :src:`master/contrib/docker`.
 
 * :class:`DockerLatentWorker` now has a ``hostconfig`` parameter that can be used to setup host configuration when creating a new container.
 
