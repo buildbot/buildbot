@@ -198,7 +198,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.worker.startService()
 
         def check(ign):
-            self.assertEquals(called, [('shutdown',)])
+            self.assertEqual(called, [('shutdown',)])
         d.addCallback(check)
 
         return d
@@ -229,7 +229,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         worker._checkShutdownFile()
 
         # We shouldn't have called gracefulShutdown
-        self.assertEquals(worker.gracefulShutdown.call_count, 0)
+        self.assertEqual(worker.gracefulShutdown.call_count, 0)
 
         # Pretend that the file exists now, with an mtime of 2
         exists.return_value = True
@@ -237,13 +237,13 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         worker._checkShutdownFile()
 
         # Now we should have changed gracefulShutdown
-        self.assertEquals(worker.gracefulShutdown.call_count, 1)
+        self.assertEqual(worker.gracefulShutdown.call_count, 1)
 
         # Bump the mtime again, and make sure we call shutdown again
         mtime.return_value = 3
         worker._checkShutdownFile()
-        self.assertEquals(worker.gracefulShutdown.call_count, 2)
+        self.assertEqual(worker.gracefulShutdown.call_count, 2)
 
         # Try again, we shouldn't call shutdown another time
         worker._checkShutdownFile()
-        self.assertEquals(worker.gracefulShutdown.call_count, 2)
+        self.assertEqual(worker.gracefulShutdown.call_count, 2)

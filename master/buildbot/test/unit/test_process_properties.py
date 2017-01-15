@@ -1296,7 +1296,7 @@ class Renderer(unittest.TestCase):
         # It's not a function anymore.
         d = defer.maybeDeferred(lambda:
                                 self.build.render(renderer(lambda p: 'x')('y')))
-        self.failUnlessFailure(d, TypeError)
+        self.assertFailure(d, TypeError)
         return d
 
     def test_renderer_decorator(self):
@@ -1319,7 +1319,7 @@ class Renderer(unittest.TestCase):
     def test_renderer_fails(self):
         d = self.build.render(
             renderer(lambda p: defer.fail(RuntimeError("oops"))))
-        self.failUnlessFailure(d, RuntimeError)
+        self.assertFailure(d, RuntimeError)
         return d
 
     def test_renderer_recursive(self):
