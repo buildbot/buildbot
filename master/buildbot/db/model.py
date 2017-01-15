@@ -30,8 +30,7 @@ from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
 try:
-    from migrate.versioning.schema import ControlledSchema
-    assert ControlledSchema  # hush pyflakes
+    from migrate.versioning.schema import ControlledSchema  # pylint: disable=ungrouped-imports
 except ImportError:
     ControlledSchema = None
 

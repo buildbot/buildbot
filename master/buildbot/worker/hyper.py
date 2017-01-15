@@ -31,10 +31,9 @@ from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 try:
-    import docker
-    from hyper_sh import Client as Hyper
+    import docker  # noqa pylint: disable=unused-import
     from docker.errors import NotFound
-    [docker, Hyper]
+    from hyper_sh import Client as Hyper
 except ImportError:
     Hyper = None
 
