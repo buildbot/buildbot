@@ -101,7 +101,7 @@ class HyperLatentWorker(DockerBaseWorker):
                          " HyperLatentWorker")
 
         if hyper_size not in self.ALLOWED_SIZES:
-            config.error("Size is not valid %s vs %r".format(
+            config.error("Size is not valid {!r} vs {!r}".format(
                 hyper_size, self.ALLOWED_SIZES))
 
     @property
