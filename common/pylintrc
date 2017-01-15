@@ -55,6 +55,15 @@ load-plugins=
 # unpacking-non-sequence
 # maybe-no-member
 
+# "bad-continuation" disabled due to conflict with flake8 (and PEP8)
+# See <https://github.com/PyCQA/pylint/issues/747>
+# flake8 wants:
+#     func("..."
+#          )
+# pylint wants:
+#     func("..."
+#         )
+
 disable=
   blacklisted-name,
   invalid-name,
@@ -128,7 +137,8 @@ disable=
   superfluous-parens,
   no-self-argument,
   no-value-for-parameter,
-  interface-not-implemented
+  interface-not-implemented,
+  bad-continuation
 
 [REPORTS]
 
