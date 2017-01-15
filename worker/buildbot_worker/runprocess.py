@@ -305,7 +305,7 @@ class RunProcess(object):
         # unicode strings that can be encoded as ascii (which generates a
         # warning).
 
-        def to_str(cmd):
+        def to_bytes(cmd):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
                     if isinstance(a, text_type):
@@ -314,8 +314,8 @@ class RunProcess(object):
                 cmd = cmd.encode(self.builder.unicode_encoding)
             return cmd
 
-        self.command = to_str(util.Obfuscated.get_real(command))
-        self.fake_command = to_str(util.Obfuscated.get_fake(command))
+        self.command = to_bytes(util.Obfuscated.get_real(command))
+        self.fake_command = to_bytes(util.Obfuscated.get_fake(command))
 
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
@@ -359,7 +359,7 @@ class RunProcess(object):
             self.environ = newenv
         else:  # not environ
             self.environ = os.environ.copy()
-        self.initialStdin = to_str(initialStdin)
+        self.initialStdin = to_bytes(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
