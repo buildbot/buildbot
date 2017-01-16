@@ -200,6 +200,27 @@ def unicode2bytes(x, encoding='utf8'):
     return x
 
 
+def bytes2NativeString(x, encoding='utf-8'):
+    """
+    Convert C{bytes} to a native C{str}.
+
+    On Python 3 and higher, str and bytes
+    are not equivalent.  In this case, decode
+    the bytes, and return a native string.
+
+    On Python 2 and lower, str and bytes
+    are equivalent.  In this case, just
+    just return the native string.
+
+    @param x: a string of type C{bytes}
+    @param encoding: an optional codec, default: 'utf-8'
+    @return: a string of type C{str}
+    """
+    if isinstance(x, bytes) and str != bytes:
+        return x.decode(encoding)
+    return x
+
+
 _hush_pyflakes = [json]
 
 deprecatedModuleAttribute(
