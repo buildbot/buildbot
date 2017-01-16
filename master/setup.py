@@ -470,7 +470,8 @@ setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
         'isort',
-        'pylint',
+        # spellcheck introduced in version 1.4.0  
+        'pylint>=1.4.0',
         'pyenchant',
         'pyflakes',
         'flake8~=2.6.0',

@@ -138,7 +138,8 @@ else:
     setup_args['extras_require'] = {
         'test': [
             'pep8',
-            'pylint',
+            # spellcheck introduced in version 1.4.0
+            'pylint>=1.4.0',
             'pyenchant',
             'pyflakes',
         ] + test_deps,
