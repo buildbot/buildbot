@@ -62,11 +62,15 @@ matrix:
     # Specify SQLALCHEMY=latest to avoid errors installing.
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
-    - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
+    - python: "3.5"
+      env: TWISTED=latest TESTS=trial SQLALCHEMY=latest
+
+  allow_failures:
+    - python: 3.5
+      TESTS: trial
 
 # Dependencies installation commands
 install:
