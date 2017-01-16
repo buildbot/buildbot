@@ -31,6 +31,7 @@ from twisted.spread import pb
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.pbutil import ReconnectingPBClientFactory
 from buildbot_worker.util import HangCheckFactory
 
@@ -167,6 +168,9 @@ class Worker(WorkerBase, service.MultiService):
             self, name, basedir, umask=umask, unicode_encoding=unicode_encoding)
         if keepalive == 0:
             keepalive = None
+
+        name = unicode2bytes(name, self.bot.unicode_encoding)
+        passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
 
         self.numcpus = numcpus
         self.shutdown_loop = None
