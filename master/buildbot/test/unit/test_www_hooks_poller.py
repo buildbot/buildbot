@@ -23,6 +23,7 @@ import buildbot.www.change_hook as change_hook
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.manager import ChangeManager
+from buildbot.test.fake import fakemaster
 from buildbot.test.fake.web import FakeRequest
 
 
@@ -40,34 +41,30 @@ class TestPollingChangeHook(unittest.TestCase):
         self.request = FakeRequest(args=args)
         self.request.uri = "/change_hook/poller"
         self.request.method = "GET"
-        master = self.request.site.master
-
+        www = self.request.site.master.www
+        self.master = master = self.request.site.master = fakemaster.make_master(
+            testcase=self, wantData=True)
+        master.www = www
+        yield self.master.startService()
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
-        master.change_svc.setServiceParent(master)
+        yield master.change_svc.setServiceParent(master)
         self.changesrc = self.Subclass("example", 21)
-        self.changesrc.setServiceParent(master.change_svc)
-        if activate:
-            self.changesrc.activate()
+        yield self.changesrc.setServiceParent(master.change_svc)
 
         self.otherpoller = self.Subclass("otherpoller", 22)
-        self.otherpoller.setServiceParent(master.change_svc)
-        if activate:
-            self.otherpoller.activate()
+        yield self.otherpoller.setServiceParent(master.change_svc)
 
         anotherchangesrc = base.ChangeSource(name='notapoller')
-        anotherchangesrc.setName("notapoller")
-        anotherchangesrc.setServiceParent(master.change_svc)
+        anotherchangesrc.setName(u"notapoller")
+        yield anotherchangesrc.setServiceParent(master.change_svc)
 
         yield self.request.test_render(self.changeHook)
         yield util.asyncSleep(0.1)
 
     def tearDown(self):
-        return defer.gatherResults([
-            self.changesrc.deactivate(),
-            self.otherpoller.deactivate(),
-        ])
+        return self.master.stopService()
 
     @defer.inlineCallbacks
     def test_no_args(self):
@@ -75,13 +72,6 @@ class TestPollingChangeHook(unittest.TestCase):
         self.assertEqual(self.request.written, "no changes found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, True)
-
-    @defer.inlineCallbacks
-    def test_not_active(self):
-        yield self.setUpRequest({}, activate=False)
-        self.assertEqual(self.request.written, "no changes found")
-        self.assertEqual(self.changesrc.called, False)
-        self.assertEqual(self.otherpoller.called, False)
 
     @defer.inlineCallbacks
     def test_no_poller(self):

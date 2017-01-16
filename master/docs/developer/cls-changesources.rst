@@ -14,10 +14,10 @@ ChangeSource
 
     Change sources which are active on every master should, instead, override ``startService`` and ``stopService``.
 
-PollingChangeSource
--------------------
+ReconfigurablePollingChangeSource
+---------------------------------
 
-.. py:class:: PollingChangeSource
+.. py:class:: ReconfigurablePollingChangeSource
 
     This is a subclass of :py:class:`ChangeSource` which adds polling behavior.
     Its constructor accepts the ``pollInterval`` and ``pollAtLaunch`` arguments as documented for most built-in change sources.
@@ -25,3 +25,11 @@ PollingChangeSource
     Subclasses should override the ``poll`` method.
     This method may return a Deferred.
     Calls to ``poll`` will not overlap.
+
+PollingChangeSource
+-------------------
+
+.. py:class:: PollingChangeSource
+
+    This is a legacy class for polling change sources not yet ported to the :py:class::`BuildbotService` component lifecycle.
+    Do not use for new code.

@@ -202,13 +202,17 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
     @defer.inlineCallbacks
     def startService(self):
         if not self.configured:
-            yield self.configureService()
+            try:
+                yield self.configureService()
+            except NotImplementedError:
+                pass
         yield AsyncMultiService.startService(self)
 
-    def checkConfig(self, *args, **kwargs):
-        return defer.succeed(True)
+    def checkConfig(self, name=None, *args, **kwargs):
+        if name is not None:
+            self.name = ascii2unicode(name)
 
-    def reconfigService(self, *args, **kwargs):
+    def reconfigService(self, name=None, *args, **kwargs):
         return defer.succeed(None)
 
 
@@ -484,4 +488,13 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 raise ValueError(
                     "%r: child %r should have a defined name attribute", self, svc)
             config_sibling = new_by_name.get(svc.name)
-            yield svc.reconfigServiceWithSibling(config_sibling)
+            try:
+                yield svc.reconfigServiceWithSibling(config_sibling)
+            except NotImplementedError:
+                # legacy support. Its too painful to transition old code to new Service lifecycle
+                # so we implement switch of child when the service raises NotImplementedError
+                parent = self.parent
+                # Note this means that self will stop, and sibling will take ownership
+                # means that we have a small time where the service is unavailable.
+                yield self.disownServiceParent()
+                yield config_sibling.setServiceParent(parent)

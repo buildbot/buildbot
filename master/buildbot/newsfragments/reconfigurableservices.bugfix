@@ -1,0 +1,1 @@
+:bb:cfg:`schedulers`. and :bb:cfg:`change_source` are now properly taking configuration change in account with ``buildbot reconfig``.

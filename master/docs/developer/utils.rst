@@ -998,6 +998,10 @@ For example, a particular daily scheduler could be configured on multiple master
         BuildbotServices must be aware that during reconfiguration, their methods can still be called by running builds.
         So they should atomically switch old configuration and new configuration, so that the service is always available.
 
+        If this method raises :py:class:`NotImplementedError`, it means the service is legacy, and do not support reconfiguration.
+        The :py:class:`BuildbotServiceManager` parent, will detect this, and swap old service with new service.
+        This behaviour allow smooth transition of old code to new reconfigurable service lifecycle but shall not be used for new code.
+
     .. py:method:: reconfigServiceWithSibling(self, sibling)
 
         Internal method that finds the configuration bits in a sibling, an object with same class that is supposed to replace it from a new configuration.
