@@ -29,6 +29,7 @@ from twisted.python import reflect
 from buildbot import util
 from buildbot.util import ascii2unicode
 from buildbot.util import config
+from buildbot.util import unicode2bytes
 
 
 class ReconfigurableServiceMixin(object):
@@ -153,10 +154,13 @@ class SharedService(AsyncMultiService):
     def getName(cls, *args, **kwargs):
         _hash = hashlib.sha1()
         for arg in args:
-            _hash.update(str(arg))
+            arg = unicode2bytes(str(arg))
+            _hash.update(arg)
         for k, v in kwargs.items():
-            _hash.update(str(k))
-            _hash.update(str(v))
+            k = unicode2bytes(str(k))
+            v = unicode2bytes(str(v))
+            _hash.update(k)
+            _hash.update(v)
         return cls.__name__ + "_" + _hash.hexdigest()
 
 
