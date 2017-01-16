@@ -292,9 +292,9 @@ latex_logo = os.path.join('_images', 'header-text-transparent.png')
 # latex_show_pagerefs = False
 
 # Three possible values for this option (see sphinx config manual) are:
-# 1. 'no' – do not display URLs (default)
-# 2. 'footnote' – display URLs in footnotes
-# 3. 'inline' – display URLs inline in parentheses
+# 1. 'no' - do not display URLs (default)
+# 2. 'footnote' - display URLs in footnotes
+# 3. 'inline' - display URLs inline in parentheses
 latex_show_urls = 'inline'
 
 # Additional stuff for the LaTeX preamble.
