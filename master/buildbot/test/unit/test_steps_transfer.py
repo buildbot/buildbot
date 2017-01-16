@@ -174,8 +174,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             desttimestamp = (os.path.getatime(self.destfile),
                              os.path.getmtime(self.destfile))
 
-            srctimestamp = map(int, timestamp)
-            desttimestamp = map(int, desttimestamp)
+            srctimestamp = [int(t) for t in timestamp]
+            desttimestamp = [int(d) for d in desttimestamp]
 
             self.assertEqual(srctimestamp[0], desttimestamp[0])
             self.assertEqual(srctimestamp[1], desttimestamp[1])
