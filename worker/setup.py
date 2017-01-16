@@ -139,6 +139,7 @@ else:
         'test': [
             'pep8',
             'pylint',
+            'pyenchant',
             'pyflakes',
         ] + test_deps,
     }

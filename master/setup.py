@@ -471,6 +471,7 @@ setup_args['extras_require'] = {
         'setuptools_trial',
         'isort',
         'pylint',
+        'pyenchant',
         'pyflakes',
         'flake8~=2.6.0',
     ] + test_deps,
