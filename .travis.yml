@@ -99,10 +99,6 @@ install:
 
   - "pip install -e worker future"
 
-  # Run additional tests only in latest configuration
-  # Astroid 1.3.0 dropped Python-2.6 spuport
-  - "[ $TRAVIS_PYTHON_VERSION != 2.7 ] || pip install 'astroid<1.3.0'"
-
   - "[ $TESTS != lint ] || pip install 'flake8~=2.6.0'"
   # Install sphinx so that pylint will be able to import it
   - "[ $TESTS != lint ] || pip install sphinx"
