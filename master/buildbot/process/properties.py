@@ -93,7 +93,7 @@ class Properties(util.ComparableMixin):
         return rv
 
     def __nonzero__(self):
-        return not not self.properties
+        return bool(self.properties)
 
     def getPropertySource(self, name):
         return self.properties[name][1]

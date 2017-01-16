@@ -163,6 +163,7 @@ class SubcommandOptions(usage.Options):
             cls.optParameters = op = copy.deepcopy(cls.optParameters)
             if self.buildbotOptions:
                 optfile = self.optionsFile = self.loadOptionsFile()
+                # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i in range(len(op)):
                         if (op[i][0] == option_name
@@ -229,7 +230,7 @@ class SubcommandOptions(usage.Options):
                         raise
                     break
 
-        for k in localDict.keys():
+        for k in list(localDict.keys()):  # pylint: disable=consider-iterating-dictionary
             if k.startswith("__"):
                 del localDict[k]
         return localDict

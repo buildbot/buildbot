@@ -273,17 +273,17 @@ class TestWorkQueue(unittest.TestCase):
 
         @d2.addCallback
         def cb2(res):
-            assert flags[2] == False
+            assert not flags[2]
             flags[2] = True
             assert flags[1]
-            assert flags[3] == False
+            assert not flags[3]
 
         # When third deferred fires, only flags[3] should be unset
         d3 = self.queue.execute(self.delayed_success())
 
         @d3.addCallback
         def cb3(res):
-            assert flags[3] == False
+            assert not flags[3]
             flags[3] = True
             assert flags[1]
             assert flags[2]

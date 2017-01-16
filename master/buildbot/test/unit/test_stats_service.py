@@ -179,7 +179,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
 
         r = svc.thd_postStatsValue("test", "test", "test")
         assert isinstance(r, defer.Deferred)
-        assert r.result == None
+        assert r.result is None
 
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):

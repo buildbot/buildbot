@@ -17,6 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import itervalues
 
+import functools
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -204,7 +206,8 @@ class Expect(object):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary
                     # stuff to make the make sync/async log hack work.
-                    d.addCallback(lambda _: log.unwrap())
+                    d.addCallback(
+                        functools.partial(lambda log, _: log.unwrap(), log))
                     d.addCallback(lambda l: l.flushFakeLogfile())
             return d
         elif behavior == 'err':

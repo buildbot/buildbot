@@ -252,6 +252,9 @@ class BuildStatus():
                 else:
                     step.subscribe(receiver)
                 d = step.waitUntilFinished()
+                # TODO: This actually looks like a bug, but this code
+                # will be removed anyway.
+                # pylint: disable=cell-var-from-loop
                 d.addCallback(lambda step: step.unsubscribe(receiver))
 
         step.waitUntilFinished().addCallback(self._stepFinished)

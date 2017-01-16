@@ -37,7 +37,7 @@ except ImportError:
 
 
 if boto3 is not None:
-    from buildbot.worker import ec2
+    from buildbot.worker import ec2  # pylint: disable=ungrouped-imports
 
 
 # redefine the mock_ec2 decorator to skip the test if boto3 or moto

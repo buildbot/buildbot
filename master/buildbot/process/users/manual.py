@@ -115,6 +115,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         log.msg("perspective_commandline called")
         results = []
 
+        # pylint: disable=too-many-nested-blocks
+
         if ids:
             for user in ids:
                 # get identifier, guaranteed to be in user from checks

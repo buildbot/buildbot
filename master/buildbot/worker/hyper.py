@@ -31,10 +31,9 @@ from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 try:
-    import docker
-    from hyper_sh import Client as Hyper
+    import docker  # noqa pylint: disable=unused-import
     from docker.errors import NotFound
-    [docker, Hyper]
+    from hyper_sh import Client as Hyper
 except ImportError:
     Hyper = None
 
@@ -101,7 +100,7 @@ class HyperLatentWorker(DockerBaseWorker):
                          " HyperLatentWorker")
 
         if hyper_size not in self.ALLOWED_SIZES:
-            config.error("Size is not valid %s vs %r".format(
+            config.error("Size is not valid {!r} vs {!r}".format(
                 hyper_size, self.ALLOWED_SIZES))
 
     @property
