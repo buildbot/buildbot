@@ -175,6 +175,23 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 comment=no
 
 
+[SPELLING]
+
+# Spelling dictionary name.
+spelling-dict=en_US
+
+# List of comma separated words that should not be checked.
+spelling-ignore-words=
+
+# A path to a file that contains private dictionary; one word per line.
+# Path relative to current working directory.
+spelling-private-dict-file=
+
+# Tells whether to store unknown words to indicated private dictionary in
+# --spelling-private-dict-file option instead of raising a message.
+spelling-store-unknown-words=no
+
+
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
