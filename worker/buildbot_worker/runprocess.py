@@ -46,6 +46,7 @@ from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
 from buildbot_worker import util
+from buildbot_worker.compat import bytes2NativeString
 from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
@@ -66,7 +67,7 @@ def win32_batch_quote(cmd_list):
     return ' '.join(map(escape_arg, cmd_list))
 
 
-def shell_quote(cmd_list):
+def shell_quote(cmd_list, unicode_encoding='utf8'):
     # attempt to quote cmd_list such that a shell will properly re-interpret
     # it.  The pipes module is only available on UNIX; also, the quote
     # function is undocumented (although it looks like it will be documented
@@ -76,6 +77,8 @@ def shell_quote(cmd_list):
     # So:
     #  - use pipes.quote on UNIX, handling '' as a special case
     #  - use our own custom function on Windows
+    cmd_list = bytes2NativeString(cmd_list, unicode_encoding)
+
     if runtime.platformType == 'win32':
         return win32_batch_quote(cmd_list)
     else:
@@ -84,6 +87,7 @@ def shell_quote(cmd_list):
         def quote(e):
             if not e:
                 return '""'
+            e = bytes2NativeString(e, unicode_encoding)
             return pipes.quote(e)
         return " ".join([quote(e) for e in cmd_list])
 
@@ -205,11 +209,15 @@ class RunProcessPP(protocol.ProcessProtocol):
     def outReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.outReceived")
+        data = bytes2NativeString(
+                   data, self.command.builder.unicode_encoding)
         self.command.addStdout(data)
 
     def errReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.errReceived")
+        data = bytes2NativeString(
+                   data, self.command.builder.unicode_encoding)
         self.command.addStderr(data)
 
     def processEnded(self, status_object):
@@ -305,7 +313,7 @@ class RunProcess(object):
         # unicode strings that can be encoded as ascii (which generates a
         # warning).
 
-        def to_str(cmd):
+        def to_bytes(cmd):
             if isinstance(cmd, (tuple, list)):
                 for i, a in enumerate(cmd):
                     if isinstance(a, text_type):
@@ -314,8 +322,8 @@ class RunProcess(object):
                 cmd = cmd.encode(self.builder.unicode_encoding)
             return cmd
 
-        self.command = to_str(util.Obfuscated.get_real(command))
-        self.fake_command = to_str(util.Obfuscated.get_fake(command))
+        self.command = to_bytes(util.Obfuscated.get_real(command))
+        self.fake_command = to_bytes(util.Obfuscated.get_fake(command))
 
         self.sendStdout = sendStdout
         self.sendStderr = sendStderr
@@ -359,7 +367,7 @@ class RunProcess(object):
             self.environ = newenv
         else:  # not environ
             self.environ = os.environ.copy()
-        self.initialStdin = to_str(initialStdin)
+        self.initialStdin = to_bytes(initialStdin)
         self.logEnviron = logEnviron
         self.timeout = timeout
         self.ioTimeoutTimer = None
@@ -453,7 +461,7 @@ class RunProcess(object):
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
-        if isinstance(self.command, string_types):
+        if isinstance(self.command, bytes):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -464,7 +472,7 @@ class RunProcess(object):
             else:
                 # for posix, use /bin/sh. for other non-posix, well, doesn't
                 # hurt to try
-                argv = ['/bin/sh', '-c', self.command]
+                argv = [b'/bin/sh', b'-c', self.command]
             display = self.fake_command
         else:
             # On windows, CreateProcess requires an absolute path to the executable.
@@ -484,7 +492,9 @@ class RunProcess(object):
                 argv = self.command
             # Attempt to format this for use by a shell, although the process
             # isn't perfect
-            display = shell_quote(self.fake_command)
+            display = shell_quote(self.fake_command, self.builder.unicode_encoding)
+
+        display = bytes2NativeString(display, self.builder.unicode_encoding)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes
@@ -631,7 +641,10 @@ class RunProcess(object):
         """
         retval = {}
         for logname in msg:
-            data = "".join(msg[logname])
+            data = ""
+            for m in msg[logname]:
+                m = bytes2NativeString(m, self.builder.unicode_encoding)
+                data += m
             if isinstance(logname, tuple) and logname[0] == 'log':
                 retval['log'] = (logname[1], data)
             else:
