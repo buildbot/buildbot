@@ -1,4 +1,3 @@
-abosolute
 abspath
 accesskey
 accomodate
