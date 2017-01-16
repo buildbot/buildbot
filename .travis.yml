@@ -76,14 +76,14 @@ install:
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
-  # Install MySQL-python for tests that uses real MySQL
+  # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
-                  MySQL-python \
+                  mysqlclient \
                   psycopg2 \
                   pg8000 \
 

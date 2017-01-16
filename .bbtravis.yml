@@ -80,7 +80,7 @@ matrix:
 install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
-  # Install MySQL-python for tests that uses real MySQL
+  # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
       # pip installs
@@ -91,7 +91,7 @@ install:
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
-                  MySQL-python \
+                  mysqlclient \
                   psycopg2 \
                   pg8000 \
                   codecov
