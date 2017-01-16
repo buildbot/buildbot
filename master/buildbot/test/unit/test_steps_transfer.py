@@ -1098,8 +1098,9 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEqual(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")
@@ -1128,8 +1129,9 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEqual(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")
