@@ -18,8 +18,8 @@ from __future__ import print_function
 
 import migrate
 import migrate.versioning.repository
-from migrate import exceptions
 import sqlalchemy as sa
+from migrate import exceptions  # pylint: disable=ungrouped-imports
 
 from twisted.python import log
 from twisted.python import util
