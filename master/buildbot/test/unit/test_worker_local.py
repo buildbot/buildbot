@@ -73,7 +73,7 @@ class TestLocalWorker(unittest.TestCase):
         self.assertEqual(old.properties.getProperty('a'), 'c')
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateWorker.called)
-        # make sure that we can provide an abosolute path
+        # make sure that we can provide an absolute path
         self.assertEqual(
             old.remote_worker.bot.basedir, os.path.abspath('custom'))
 
