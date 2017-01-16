@@ -147,7 +147,16 @@ intersphinx_mapping = {
 extlinks = {
     'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
     'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
-    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', None),
+    # Renders as link with whole url, e.g.
+    #   :src-link:`master`
+    # renders as
+    #   "https://github.com/buildbot/buildbot/blob/master/master".
+    # Explicit title can be used for customizing how link looks like:
+    #   :src-link:`master's directory <master>`
+    'src-link': ('https://github.com/buildbot/buildbot/blob/master/%s', None),
+    # "pretty" reference that looks like relative path in Buildbot source tree
+    # by default.
+    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', ''),
 }
 
 # Sphinx' link checker.

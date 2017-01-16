@@ -107,5 +107,5 @@ Again, :samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
 Contrib Scripts
 ~~~~~~~~~~~~~~~
 
-While some features of Buildbot are included in the distribution, others are only available in :file:`contrib/` in the source directory.
+While some features of Buildbot are included in the distribution, others are only available in :src:`master/contrib/` in the source directory.
 The latest versions of such scripts are available at :src:`master/contrib`.
