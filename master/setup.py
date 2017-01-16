@@ -470,8 +470,7 @@ setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
         'isort',
-        'pylint==1.1.0',
-        'astroid==1.3.8',
+        'pylint',
         'pyflakes',
         'flake8~=2.6.0',
     ] + test_deps,

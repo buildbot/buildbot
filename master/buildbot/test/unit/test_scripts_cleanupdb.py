@@ -146,7 +146,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
         # test all methods
         lengths = {}
-        for mode in self.db.logs.COMPRESSION_MODE.keys():
+        for mode in self.db.logs.COMPRESSION_MODE:
             if mode == "lz4" and not hasLz4:
                 # ok.. lz4 is not installed, dont fail
                 lengths["lz4"] = 40

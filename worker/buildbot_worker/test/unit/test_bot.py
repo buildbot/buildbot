@@ -382,19 +382,16 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
     def test_startCommand_missing_args(self):
         # set up a fake step to receive updates
         st = FakeStep()
 
-        d = defer.succeed(None)
-
-        def do_start(_):
+        def do_start():
             return self.sb.callRemote("startCommand", FakeRemote(st),
                                       "13", "shell", dict())
-        d.addCallback(do_start)
-        d.addCallback(lambda _: self.assertTrue(False))
-        d.addErrback(lambda _: True)
-        return d
+
+        yield self.assertFailure(do_start(), ValueError)
 
 
 class TestBotFactory(unittest.TestCase):

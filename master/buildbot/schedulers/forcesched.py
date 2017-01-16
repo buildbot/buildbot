@@ -417,7 +417,7 @@ class NestedParameter(BaseParameter):
 
     def setParent(self, parent):
         BaseParameter.setParent(self, parent)
-        for field in self.fields:
+        for field in self.fields:  # pylint: disable=not-an-iterable
             field.setParent(self)
 
     @defer.inlineCallbacks
@@ -426,7 +426,7 @@ class NestedParameter(BaseParameter):
            called by child classes to fix up the fullName->name conversions."""
 
         childProperties = {}
-        for field in self.fields:
+        for field in self.fields:  # pylint: disable=not-an-iterable
             yield collector.collectValidationErrors(field.fullName,
                                                     field.updateFromKwargs,
                                                     kwargs=kwargs,
@@ -453,6 +453,7 @@ class NestedParameter(BaseParameter):
 
     def getSpec(self):
         ret = BaseParameter.getSpec(self)
+        # pylint: disable=not-an-iterable
         ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
 

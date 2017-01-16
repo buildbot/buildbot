@@ -227,6 +227,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 builder.master = None
                 builder.botmaster = None
 
+                # pylint: disable=cell-var-from-loop
                 yield defer.maybeDeferred(lambda:
                                           builder.disownServiceParent())
 

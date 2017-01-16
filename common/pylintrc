@@ -55,6 +55,15 @@ load-plugins=
 # unpacking-non-sequence
 # maybe-no-member
 
+# "bad-continuation" disabled due to conflict with flake8 (and PEP8)
+# See <https://github.com/PyCQA/pylint/issues/747>
+# flake8 wants:
+#     func("..."
+#          )
+# pylint wants:
+#     func("..."
+#         )
+
 disable=
   blacklisted-name,
   invalid-name,
@@ -117,6 +126,8 @@ disable=
   unused-variable,
   redefined-outer-name,
   redefined-builtin,
+  redefined-variable-type,
+  unidiomatic-typecheck,
   undefined-loop-variable,
   unbalanced-tuple-unpacking,
   unpacking-non-sequence,
@@ -128,7 +139,8 @@ disable=
   superfluous-parens,
   no-self-argument,
   no-value-for-parameter,
-  interface-not-implemented
+  interface-not-implemented,
+  bad-continuation
 
 [REPORTS]
 
@@ -219,8 +231,9 @@ generated-members=REQUEST,acl_users,aq_parent
 
 [BASIC]
 
+# Will be removed in PyLint 2.0
 # Required attributes for module, separated by a comma
-required-attributes=
+#required-attributes=
 
 # List of builtins function names that should not be used, separated by a comma
 bad-functions=map,filter,apply,input
@@ -280,9 +293,10 @@ additional-builtins=
 
 [CLASSES]
 
+# This option will be removed in PyLint 2.0.
 # List of interface methods to ignore, separated by a comma. This is used for
 # instance to not check methods defines in Zope's Interface base class.
-ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
+# ignore-iface-methods=isImplementedBy,deferred,extends,names,namesAndDescriptions,queryDescriptionFor,getBases,getDescriptionFor,getDoc,getName,getTaggedValue,getTaggedValueTags,isEqualOrExtendedBy,setTaggedValue,isImplementedByInstancesOf,adaptWith,is_implemented_by
 
 # List of method names used to declare (i.e. assign) instance attributes.
 defining-attr-methods=__init__,__new__,setUp

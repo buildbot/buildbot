@@ -93,7 +93,7 @@ If your SMTP host requires authentication before it allows you to send emails, t
 
 .. note::
 
-   If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :file:`contrib/check-smtp.py` to see if it works at all.
+   If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :src:`master/contrib/check-smtp.py` to see if it works at all.
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
@@ -281,7 +281,7 @@ MailNotifier arguments
     Most of the time you can use a simple Domain instance.
     As a shortcut, you can pass as string: this will be treated as if you had provided ``Domain(str)``.
     For example, ``lookup='example.com'`` will allow mail to be sent to all developers whose SVN usernames match their ``example.com`` account names.
-    See :file:`buildbot/reporters/mail.py` for more details.
+    See :src:`master/buildbot/reporters/mail.py` for more details.
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
@@ -737,7 +737,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. seealso::
 
-   :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
+   :src:`master/docs/examples/git_gerrit.cfg` and :src:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
 
 
 .. bb:reporter:: HttpStatusPush

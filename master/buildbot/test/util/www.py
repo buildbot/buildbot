@@ -16,10 +16,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.moves.urllib.parse import unquote as urlunquote
+from future.moves.urllib.parse import parse_qs
 from future.utils import integer_types
 from future.utils import iteritems
 
-import cgi
 import json
 import os
 import pkg_resources
@@ -61,7 +61,7 @@ class FakeRequest(object):
         else:
             path, argstring = x
             self.path = path
-            self.args = cgi.parse_qs(argstring, 1)
+            self.args = parse_qs(argstring, 1)
         self.uri = self.path
         self.postpath = list(map(urlunquote, path[1:].split('/')))
 

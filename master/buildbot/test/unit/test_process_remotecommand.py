@@ -56,6 +56,7 @@ class TestRemoteShellCommand(unittest.TestCase):
                                             ("obfuscated", "1", "2", "3"),
                                             ])
 
+    def test_not_obfuscated_arguments(self):
         command = "echo test"
         cmd = remotecommand.RemoteShellCommand("build", command)
         self.assertEqual(cmd.command, command)

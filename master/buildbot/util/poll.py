@@ -120,6 +120,6 @@ def track_poll_methods():
 
 def reset_poll_methods():
     global _poller_instances
-    for instance, attrname in _poller_instances:
+    for instance, attrname in _poller_instances:  # pylint: disable=not-an-iterable
         delattr(instance, attrname)
     _poller_instances = None

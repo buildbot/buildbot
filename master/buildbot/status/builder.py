@@ -244,7 +244,7 @@ class BuilderStatus(styles.Versioned):
                     return
 
     def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
-        if False:
+        if False:  # pylint: disable=using-constant-test
             yield
 
     def subscribe(self, receiver):
@@ -333,6 +333,9 @@ class BuilderStatus(styles.Versioned):
                     else:
                         s.subscribe(receiver)
                     d = s.waitUntilFinished()
+                    # TODO: This actually looks like a bug, but this code
+                    # will be removed anyway.
+                    # pylint: disable=cell-var-from-loop
                     d.addCallback(lambda s: s.unsubscribe(receiver))
             except Exception:
                 log.msg(

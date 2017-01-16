@@ -1791,7 +1791,7 @@ Also, adjust the fake database table definitions in :src:`master/buildbot/test/f
 Your upgrade script should have unit tests.  The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
 Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
-The :file:`master/buildbot/test/integration/test_upgrade.py` also tests
+The :src:`master/buildbot/test/integration/test_upgrade.py <master/buildbot/test/integration/test_upgrade.py>` also tests
 upgrades, and will confirm that the resulting database matches the model.  If
 you encounter implicit indexes on MySQL, that do not appear on SQLite or
 Postgres, add them to ``implied_indexes`` in

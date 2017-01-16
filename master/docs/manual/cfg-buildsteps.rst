@@ -1706,7 +1706,7 @@ Server error logs are added as additional log files, useful to debug test failur
 
 Optionally, data about the test run and any test failures can be inserted into a database for further analysis and report generation.
 To use this facility, create an instance of :class:`twisted.enterprise.adbapi.ConnectionPool` with connections to the database.
-The necessary tables can be created automatically by setting ``autoCreateTables`` to ``True``, or manually using the SQL found in the :file:`mtrlogobserver.py` source file.
+The necessary tables can be created automatically by setting ``autoCreateTables`` to ``True``, or manually using the SQL found in the :src:`mtrlogobserver.py <master/buildbot/steps/mtrlogobserver.py>` source file.
 
 One problem with specifying a database is that each reload of the configuration will get a new instance of ``ConnectionPool`` (even if the connection parameters are the same).
 To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equality operation that avoids this problem.
@@ -1743,7 +1743,7 @@ The :bb:step:`MTR` step's arguments are:
 ``autoCreateTables``
     Boolean, defaults to ``False``.
     If ``True`` (and ``dbpool`` is specified), the necessary database tables will be created automatically if they do not exist already.
-    Alternatively, the tables can be created manually from the SQL statements found in the :file:`mtrlogobserver.py` source file.
+    Alternatively, the tables can be created manually from the SQL statements found in the :src:`mtrlogobserver.py <master/buildbot/steps/mtrlogobserver.py>` source file.
 
 ``test_type``
     Short string that will be inserted into the database in the row for the test run.

@@ -67,9 +67,9 @@ if LooseVersion(mock.__version__) < LooseVersion("0.8"):
 # were emitted.
 # Without explicit load of deprecated modules it's hard to predict when
 # they will be imported and when warning should be catched.
-from buildbot.test.util.warnings import assertProducesWarning  # noqa
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning  # noqa
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa
+from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
+from buildbot.worker_transition import DeprecatedWorkerAPIWarning  # noqa pylint: disable=wrong-import-position
+from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa pylint: disable=wrong-import-position
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,

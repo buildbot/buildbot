@@ -110,7 +110,7 @@ def defaultSummaryCB(buildInfoList, results, master, arg):
             msg += "."
         msgs.append(msg)
 
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True

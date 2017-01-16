@@ -138,7 +138,7 @@ else:
     setup_args['extras_require'] = {
         'test': [
             'pep8',
-            'pylint==1.1.0',
+            'pylint',
             'pyflakes',
         ] + test_deps,
     }
