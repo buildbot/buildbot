@@ -40,7 +40,6 @@ SVN
 * :bb:chsrc:`SVNCommitEmailMaildirSource` (watching for email sent by :file:`commit-email.pl`)
 * :bb:chsrc:`SVNPoller` (polling the SVN repository)
 * :bb:chsrc:`Change Hooks` in WebStatus
-* :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)
 
 Darcs
 
@@ -52,7 +51,6 @@ Mercurial
 * :bb:chsrc:`Change Hooks` in WebStatus (including :src:`master/contrib/hgbuildbot.py`, configurable in a ``changegroup`` hook)
 * `BitBucket change hook <BitBucket hook>`_ (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`HgPoller` (polling a remote Mercurial repository)
-* :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)
 * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 * :ref:`Mail-parsing-ChangeSources`, though there are no ready-to-use recipes
 
@@ -70,7 +68,6 @@ Git
 * :bb:chsrc:`GitHub` change hook (specifically designed for GitHub notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`BitBucket` change hook (specifically designed for BitBucket notifications, but requiring a publicly-accessible WebStatus)
 * :bb:chsrc:`GitPoller` (polling a remote Git repository)
-* :bb:chsrc:`GoogleCodeAtomPoller` (polling the commit feed for a GoogleCode Git repository)
 * :bb:chsrc:`BitbucketPullrequestPoller` (polling Bitbucket for pull requests)
 
 Repo/Gerrit
@@ -1204,38 +1201,6 @@ An example is following:
 Change Hooks (HTTP Notifications)
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-Buildbot already provides a web frontend, and that frontend can easily be used to receive HTTP push notifications of commits from services like GitHub or GoogleCode.
+Buildbot already provides a web frontend, and that frontend can easily be used to receive HTTP push notifications of commits from services like GitHub.
 See :ref:`Change-Hooks` for more information.
 
-.. bb:chsrc:: GoogleCodeAtomPoller
-
-.. _GoogleCodeAtomPoller:
-
-GoogleCodeAtomPoller
-~~~~~~~~~~~~~~~~~~~~
-
-The :bb:chsrc:`GoogleCodeAtomPoller` periodically polls a Google Code Project's commit feed for changes.
-Works on SVN, Git, and Mercurial repositories.
-Branches are not understood (yet).
-It accepts the following arguments:
-
-``feedurl``
-    The commit Atom feed URL of the GoogleCode repository (MANDATORY)
-
-``pollinterval``
-    Polling frequency for the feed (in seconds).
-    Default is 1 hour (OPTIONAL)
-
-As an example, to poll the Ostinato project's commit feed every 3 hours, the configuration would look like this:
-
-.. code-block:: python
-
-    from googlecode_atom import GoogleCodeAtomPoller
-
-    c['change_source'] = GoogleCodeAtomPoller(
-        feedurl="http://code.google.com/feeds/p/ostinato/hgchanges/basic",
-        pollinterval=10800)
-
-.. note::
-
-   You will need to download :src:`master/contrib/googlecode_atom.py` from the Buildbot source and install it somewhere on your :envvar:`PYTHONPATH` first.

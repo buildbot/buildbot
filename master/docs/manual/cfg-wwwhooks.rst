@@ -197,29 +197,6 @@ Then, create a BitBucket service hook (see https://confluence.atlassian.com/disp
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
-Google Code hook
-++++++++++++++++
-
-The Google Code hook is quite similar to the GitHub Hook.
-It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate::
-
-    c['www'] = dict(...,
-        change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
-    )
-
-This will add a "Post-Commit URL" for the project in the Google Code administrative interface, pointing to ``/change_hook/googlecode`` relative to the root of the web status.
-
-Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource` that periodically poll the Google Code commit feed for changes.
-
-.. note::
-
-   Google Code doesn't send the branch on which the changes were made.
-   So, the hook always returns ``'default'`` as the branch, you can override it with the ``'branch'`` option::
-
-      change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
-
-.. bb:chsrc:: Poller
-
 Poller hook
 +++++++++++
 
