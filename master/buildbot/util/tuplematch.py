@@ -16,13 +16,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import itertools
-
 
 def matchTuple(routingKey, filter):
     if len(filter) != len(routingKey):
         return False
-    for k, f in itertools.izip(routingKey, filter):
+    for k, f in zip(routingKey, filter):
         if f is not None and f != k:
             return False
     return True
