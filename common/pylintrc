@@ -179,8 +179,9 @@ comment=no
 
 # Spelling dictionary name.
 # If this value will be non-empty (e.g. 'en_US') and pyenchant will not be
-# installed, pylint will fail, so leave this empty.
-spelling-dict=
+# installed, pylint will fail.
+# If this will be left empty pylint will ignore all spelling errors.
+spelling-dict=en_US
 
 # List of comma separated words that should not be checked.
 spelling-ignore-words=
