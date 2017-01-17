@@ -19,7 +19,6 @@ from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
 from future.utils import text_type
 
-import itertools
 import os
 import re
 
@@ -241,8 +240,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         @d.addCallback
         def process(git_output):
-            fileList = [decode_file(file) for file in itertools.ifilter(
-                lambda s: len(s), git_output.splitlines())]
+            fileList = [decode_file(file)
+                        for file in
+                        [s for s in git_output.splitlines() if len(s)]]
             return fileList
         return d
 
