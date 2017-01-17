@@ -1173,7 +1173,7 @@ Example::
         builds = []
         for builder in ["builder1","builder2"]:
             builder_status = status.getBuilder(builder)
-            for num in xrange(1,40): # 40 last builds
+            for num in range(1,40): # 40 last builds
                 b = builder_status.getBuild(-num)
                 if not b:
                     continue
