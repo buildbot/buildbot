@@ -140,5 +140,5 @@ class Instance():
 # Parts used from novaclient.exceptions.
 
 
-class NotFound():
+class NotFound(Exception):
     pass

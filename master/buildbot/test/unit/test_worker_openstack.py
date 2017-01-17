@@ -152,7 +152,7 @@ class TestOpenStackWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_getImage_callable(self):
         def image_callable(images):
-            filtered = filter(lambda i: i.id == 'uuid1', images)
+            filtered = list(filter(lambda i: i.id == 'uuid1', images))
             return filtered[0].id
 
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,

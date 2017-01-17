@@ -32,8 +32,10 @@ from buildbot.worker import AbstractLatentWorker
 try:
     import novaclient.exceptions as nce
     from novaclient import client
+    from novaclient.exceptions import NotFound
     _hush_pyflakes = [nce, client]
 except ImportError:
+    NotFound = Exception
     nce = None
     client = None
 
@@ -205,7 +207,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                          instance.id))
             try:
                 inst = self.novaclient.servers.get(instance.id)
-            except nce.NotFound:
+            except NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
@@ -238,7 +240,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         # instance.update().
         try:
             inst = self.novaclient.servers.get(instance.id)
-        except nce.NotFound:
+        except NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %
                     (self.__class__.__name__, self.workername, instance.id,
