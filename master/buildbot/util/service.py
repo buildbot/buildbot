@@ -165,6 +165,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
     compare_attrs = ('name', '_config_args', '_config_kwargs')
     name = None
     configured = False
+    objectid = None
 
     def __init__(self, *args, **kwargs):
         name = kwargs.pop("name", None)
@@ -493,8 +494,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             except NotImplementedError:
                 # legacy support. Its too painful to transition old code to new Service lifecycle
                 # so we implement switch of child when the service raises NotImplementedError
-                parent = self.parent
                 # Note this means that self will stop, and sibling will take ownership
                 # means that we have a small time where the service is unavailable.
-                yield self.disownServiceParent()
-                yield config_sibling.setServiceParent(parent)
+                yield svc.disownServiceParent()
+                config_sibling.objectid = svc.objectid
+                yield config_sibling.setServiceParent(self)
