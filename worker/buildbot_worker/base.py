@@ -315,7 +315,10 @@ class BotBase(service.MultiService):
                 if os.path.isfile(filename):
                     files[f] = open(filename, "r").read()
         if not self.numcpus:
-            self.numcpus = multiprocessing.cpu_count()
+            try:
+                self.numcpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                self.numcpus = 1
         files['environ'] = os.environ.copy()
         files['system'] = os.name
         files['basedir'] = self.basedir
