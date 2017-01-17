@@ -28,6 +28,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util import unicode2bytes
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -84,7 +85,8 @@ class DockerBaseWorker(AbstractLatentWorker):
             masterFQDN = socket.getfqdn()
         self.masterFQDN = masterFQDN
         self.image = image
-        self.masterhash = hashlib.sha1(self.master.name).hexdigest()[:6]
+        masterName = unicode2bytes(self.master.name)
+        self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
         return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
     def getContainerName(self):
