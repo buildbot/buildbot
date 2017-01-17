@@ -318,6 +318,8 @@ class BotBase(service.MultiService):
             try:
                 self.numcpus = multiprocessing.cpu_count()
             except NotImplementedError:
+                log.msg("warning: could not detect the number of CPUs for "
+                        "this worker. Assuming 1 CPU.")
                 self.numcpus = 1
         files['environ'] = os.environ.copy()
         files['system'] = os.name
