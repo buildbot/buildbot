@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.builtins import range
 
 import urllib2
 
@@ -53,7 +54,7 @@ class Tests(unittest.TestCase):
                               workernames=["local1", "local2"],
                               factory=BuildFactory([steps.ShellCommand(command='echo hello')])),
             ],
-            'workers': [Worker('local' + str(i), 'pass') for i in xrange(3)],
+            'workers': [Worker('local' + str(i), 'pass') for i in range(3)],
             'schedulers': [
                 ForceScheduler(
                     name="force",
