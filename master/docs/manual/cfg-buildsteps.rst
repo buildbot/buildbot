@@ -2212,7 +2212,7 @@ The `uploadDone` method is called once for each uploaded file and can be used to
 
         def allUploadsDone(self, result, sources, masterdest):
             if self.url:
-                notLinked = filter(lambda src: not self.linkFile(src), sources)
+                notLinked = [src for src in sources if not self.linkFile(src)]
                 numFiles = len(notLinked)
                 if numFiles:
                     self.addURL(self.url, '... %d more' % numFiles)
