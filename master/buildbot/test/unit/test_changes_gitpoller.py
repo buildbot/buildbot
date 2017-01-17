@@ -152,7 +152,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             ['log', '--name-only', '--no-walk',
                 '--format=%n', self.dummyRevStr, '--'],
             filesStr,
-            filter(lambda x: x.strip(), filesStr.splitlines(), ),
+            [l for l in filesStr.splitlines() if l.strip()],
             emptyRaisesException=False,
         )
 
