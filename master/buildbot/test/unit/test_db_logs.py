@@ -479,7 +479,7 @@ class RealTests(Tests):
             fakedb.LogChunk(logid=201, first_line=i * linesperchunk,
                             last_line=i * linesperchunk + linesperchunk - 1, compressed=0,
                             content=chunk)
-            for i in xrange(NUM_CHUNKS)
+            for i in range(NUM_CHUNKS)
         ]
         yield self.insertTestData(
             self.backgroundData + [
@@ -487,7 +487,7 @@ class RealTests(Tests):
                            complete=0, num_lines=NUM_CHUNKS * 3, type=u's')] +
             test_data)
         wholeLog = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
-        for i in xrange(10):
+        for i in range(10):
             yield self.db.logs.compressLog(201)
             wholeLog2 = yield self.db.logs.getLogLines(201, 0, NUM_CHUNKS * 3)
             self.assertEqual(wholeLog, wholeLog2)

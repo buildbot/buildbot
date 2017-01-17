@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.builtins import range
 
 import json
 import os
@@ -260,17 +261,17 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_lots(self):
-        for i in xrange(self.NUM_PARALLEL):
+        for i in range(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'), content_json=dict(a=['b']))
         # use for benchmarking (txrequests: 3ms per request treq: 1ms per request)
-        for i in xrange(self.NUM_PARALLEL):
+        for i in range(self.NUM_PARALLEL):
             res = yield self._http.get('/', params=dict(a='b'))
             content = yield res.content()
             self.assertEqual(content, '{"a": ["b"]}')
 
     @defer.inlineCallbacks
     def test_lots_parallel(self):
-        for i in xrange(self.NUM_PARALLEL):
+        for i in range(self.NUM_PARALLEL):
             self.expect('get', '/', params=dict(a='b'), content_json=dict(a=['b']))
 
         # use for benchmarking (txrequests: 3ms per request treq: 11ms per request (!?))
@@ -282,7 +283,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                 return res.content()
 
             return d
-        dl = [oneReq() for i in xrange(self.NUM_PARALLEL)]
+        dl = [oneReq() for i in range(self.NUM_PARALLEL)]
         yield defer.gatherResults(dl)
 
 
