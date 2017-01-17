@@ -269,7 +269,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertInStdout('error while reading')
 
     def test_loadOptionsFile_toomany(self):
-        subdir = os.path.join(self.dir, *tuple(string.lowercase))
+        subdir = os.path.join(self.dir, *tuple(string.ascii_lowercase))
         os.makedirs(subdir)
         self.do_loadOptionsFile(_here=subdir, exp={})
         self.assertInStdout('infinite glories')
