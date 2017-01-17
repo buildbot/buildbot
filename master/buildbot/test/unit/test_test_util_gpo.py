@@ -119,6 +119,8 @@ class TestGPOMixin(unittest.TestCase):
             return d
         result = self.runTestMethod(method)
         self.assertTestFailure(result, "unexpected command run")
+        # assert we have a meaningful message
+        self.assertTestFailure(result, "command2")
 
     def test_gpo_wrongArgs(self):
         def method(testcase):

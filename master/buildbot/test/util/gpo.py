@@ -48,10 +48,9 @@ class Expect(object):
         return self
 
     def check(self, test, bin, path, args):
-        test.assertEqual(
+        test.assertDictEqual(
             dict(bin=bin, path=path, args=tuple(args)),
-            dict(bin=self._bin, path=self._path, args=self._args),
-            "unexpected command run")
+            dict(bin=self._bin, path=self._path, args=self._args), "unexpected command run")
         return (self._stdout, self._stderr, self._exit)
 
     def __repr__(self):
@@ -59,6 +58,7 @@ class Expect(object):
 
 
 class GetProcessOutputMixin:
+    longMessage = True
 
     def setUpGetProcessOutput(self):
         self._gpo_patched = False
