@@ -29,6 +29,7 @@ from types import MethodType
 
 from twisted.python import failure
 from twisted.python import log
+from twisted.python.compat import execfile
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -103,7 +104,8 @@ def loadConfigDict(basedir, configFileName):
         ])
 
     try:
-        f = open(filename, "r")
+        with open(filename, "r"):
+            pass
     except IOError as e:
         raise ConfigErrors([
             "unable to open configuration file %r: %s" % (filename, e),
@@ -121,7 +123,7 @@ def loadConfigDict(basedir, configFileName):
     sys.path.append(basedir)
     try:
         try:
-            exec(f, localDict)
+            execfile(filename, localDict)
         except ConfigErrors:
             raise
         except SyntaxError:
@@ -136,7 +138,6 @@ def loadConfigDict(basedir, configFileName):
                   always_raise=True,
                   )
     finally:
-        f.close()
         sys.path[:] = old_sys_path
 
     if 'BuildmasterConfig' not in localDict:
