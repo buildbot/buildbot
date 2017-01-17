@@ -168,9 +168,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if branches is True or callable(branches):
             branches = yield self._getBranches()
             if callable(self.branches):
-                branches = filter(self.branches, branches)
+                branches = [b for b in branches if self.branches(b)]
             else:
-                branches = filter(self._headsFilter, branches)
+                branches = [b for b in branches if self._headsFilter(b)]
 
         refspecs = [
             '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
