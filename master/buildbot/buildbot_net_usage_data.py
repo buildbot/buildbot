@@ -43,7 +43,7 @@ PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 def get_distro():
     for distro in ('linux_distribution', 'mac_ver', 'win32_ver', 'java_ver'):
         if hasattr(platform, distro):
-            return getattr(platform, distro)()
+            return "{}:{}".format(distro, getattr(platform, distro)())
 
 
 def getName(obj):
@@ -100,6 +100,8 @@ def basicData(master):
         'installid': installid,
         'versions': dict(IndexResource.getEnvironmentVersions()),
         'platform': {
+            'platform': platform.platform(),
+            'system': platform.system(),
             'machine': platform.machine(),
             'processor': platform.processor(),
             'python_implementation': platform.python_implementation(),
@@ -143,14 +145,45 @@ def computeUsageData(master):
     return data
 
 
-def _sendBuildbotNetUsageData(data):
-    log.msg("buildbotNetUsageData: sending {}".format(data))
+def _sendWithUrlib2(url, data):
     data = json.dumps(data)
     clen = len(data)
-    req = urllib2.Request(PHONE_HOME_URL, data, {'Content-Type': 'application/json', 'Content-Length': clen})
-    f = urllib2.urlopen(req)
+    req = urllib2.Request(url, data, {
+        'Content-Type': 'application/json',
+        'Content-Length': clen
+    })
+    try:
+        f = urllib2.urlopen(req)
+    except urllib2.URLError:
+        return None
     res = f.read()
     f.close()
+    return res
+
+
+def _sendWithRequests(url, data):
+    try:
+        import requests
+    except ImportError:
+        return None
+    r = requests.post(url, json=data)
+    return r.text
+
+
+def _sendBuildbotNetUsageData(data):
+    log.msg("buildbotNetUsageData: sending {}".format(data))
+    # first try with requests, as this is the most stable http library
+    res = _sendWithRequests(PHONE_HOME_URL, data)
+    # then we try with stdlib, which not always work with https
+    if res is None:
+        res = _sendWithUrlib2(PHONE_HOME_URL, data)
+    # at last stage
+    if res is None:
+        log.msg("buildbotNetUsageData: Could not send using https, "
+                "please `pip install 'requests[security]'` for proper SSL implementation`")
+        data['buggySSL'] = True
+        res = _sendWithUrlib2(PHONE_HOME_URL.replace("https://", "http://"), data)
+
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
 
 

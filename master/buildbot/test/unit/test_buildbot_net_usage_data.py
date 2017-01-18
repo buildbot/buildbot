@@ -17,12 +17,15 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
 
+import os
 import urllib2
+from unittest.case import SkipTest
 
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
+import buildbot.buildbot_net_usage_data
 from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
 from buildbot.buildbot_net_usage_data import computeUsageData
 from buildbot.config import BuilderConfig
@@ -95,7 +98,7 @@ class Tests(unittest.TestCase):
                          sorted(['db']))
 
     def test_urllib2(self):
-
+        self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
         class FakeRequest(object):
             def __init__(self, *args, **kwargs):
                 self.args = args
@@ -121,3 +124,10 @@ class Tests(unittest.TestCase):
         self.assertEqual(open_url[0].request.args,
                         ('https://events.buildbot.net/events/phone_home',
                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
+
+    def test_urllib2_real(self):
+        if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
+            raise SkipTest(
+                "hyper integration tests only run when environment variable TEST_HYPER is set")
+
+        _sendBuildbotNetUsageData({'foo': 'bar'})
