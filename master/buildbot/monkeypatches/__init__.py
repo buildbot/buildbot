@@ -45,8 +45,14 @@ def patch_python14653():
 @onlyOnce
 def patch_testcase_timeout():
     import unittest
+    import os
     # any test that should take more than 5 second should be annotated so.
     unittest.TestCase.timeout = 5
+
+    # but we know that the DB tests are very slow, so we increase a bit that value for
+    # realdb tests
+    if os.environ.get("BUILDBOT_TEST_DB_URL", None) is not None:
+        unittest.TestCase.timeout = 20
 
 
 @onlyOnce
