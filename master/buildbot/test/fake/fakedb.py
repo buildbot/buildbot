@@ -131,13 +131,14 @@ class Row(object):
     def hashColumns(self, *args):
         # copied from master/buildbot/db/base.py
         def encode(x):
-            try:
-                return x.encode('utf8')
-            except AttributeError:
-                if x is None:
-                    return '\xf5'
-                return str(x)
-        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+            if x is None:
+                return b'\xf5'
+            elif isinstance(x, text_type):
+                return x.encode('utf-8')
+            else:
+                return str(x).encode('utf-8')
+
+        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):

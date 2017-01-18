@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import text_type
 
 import hashlib
 import itertools
@@ -92,14 +93,14 @@ class DBConnectorComponent(object):
 
     def hashColumns(self, *args):
         def encode(x):
-            try:
-                return x.encode('utf8')
-            except AttributeError:
-                if x is None:
-                    return '\xf5'
-                return str(x)
+            if x is None:
+                return b'\xf5'
+            elif isinstance(x, text_type):
+                return x.encode('utf-8')
+            else:
+                return str(x).encode('utf-8')
 
-        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
     def doBatch(self, batch, batch_n=500):
         iterator = iter(batch)
