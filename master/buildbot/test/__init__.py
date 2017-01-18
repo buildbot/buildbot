@@ -117,3 +117,6 @@ warnings.filterwarnings('error')
 # We just suppress this warning instead of doing silly workaround.
 warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __init__.py",
                         category=exceptions.ImportWarning)
+
+# FIXME: needs to be sorted out (#3666)
+warnings.filterwarnings('ignore', "Invalid utf8 character string")
