@@ -99,6 +99,7 @@ class Tests(unittest.TestCase):
 
     def test_urllib2(self):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
+
         class FakeRequest(object):
             def __init__(self, *args, **kwargs):
                 self.args = args
@@ -122,7 +123,7 @@ class Tests(unittest.TestCase):
         _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
-                        ('https://events.buildbot.net/events/phone_home',
+                         ('https://events.buildbot.net/events/phone_home',
                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
 
     def test_urllib2_real(self):
