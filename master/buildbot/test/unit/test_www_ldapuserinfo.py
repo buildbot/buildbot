@@ -18,15 +18,15 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
 
-import new
 import sys
+import types
 
 import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
 
-fake_ldap = new.module('ldap3')
+fake_ldap = types.ModuleType('ldap3')
 fake_ldap.SEARCH_SCOPE_WHOLE_SUBTREE = 2
 with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
     from buildbot.www import ldapuserinfo

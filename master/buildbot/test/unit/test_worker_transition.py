@@ -16,9 +16,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import new
 import re
 import sys
+import types
 
 import mock
 
@@ -64,7 +64,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_produces_warning(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -86,7 +86,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
         self.assertIdentical(S, Worker)
 
     def test_not_catched_warning(self):
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.deprecated_attr = 1
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -111,7 +111,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_explicit_compat_name(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -135,7 +135,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_explicit_new_name(self):
         BuildSlave = type("BuildSlave", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.BuildSlave = BuildSlave
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -157,7 +157,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_explicit_new_name_empty(self):
         BuildSlave = type("BuildSlave", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.BuildSlave = BuildSlave
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -180,7 +180,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_module_reload(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
