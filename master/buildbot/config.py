@@ -94,6 +94,7 @@ def warnDeprecated(version, msg):
         category=ConfigWarning,
     )
 
+_in_unit_tests = False
 
 def loadConfigDict(basedir, configFileName):
     if not os.path.isdir(basedir):
@@ -392,15 +393,19 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                        check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
-            warnDeprecated(
-                '0.9.0',
-                '`buildbotNetUsageData` is not configured and defaults to basic\n'
-                'This parameter helps the buildbot development team to understand the installation base\n'
-                'No personal information is collected.\n'
-                'Only installation software version info and plugin usage is sent\n'
-                'You can `opt-out` by setting this variable to None\n'
-                'Or `opt-in` for more information by setting it to "full"\n'
-            )
+            if _in_unit_tests:
+                self.buildbotNetUsageData = None
+            else:
+                warnDeprecated(
+                    '0.9.0',
+                    '`buildbotNetUsageData` is not configured and defaults to basic.\n'
+                    'This parameter helps the buildbot development team to understand'
+                    ' the installation base.\n'
+                    'No personal information is collected.\n'
+                    'Only installation software version info and plugin usage is sent.\n'
+                    'You can `opt-out` by setting this variable to None.\n'
+                    'Or `opt-in` for more information by setting it to "full".\n'
+                )
         copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')

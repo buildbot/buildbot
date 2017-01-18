@@ -43,18 +43,16 @@ def patch_python14653():
 
 
 @onlyOnce
-def patch_servicechecks():
-    from buildbot.monkeypatches import servicechecks
-    servicechecks.patch()
+def patch_testcase_timeout():
+    import unittest
+    # any test that should take more than 5 second should be annotated so.
+    unittest.TestCase.timeout = 5
 
 
 @onlyOnce
-def patch_testcase_assert_raises_regexp():
-    # pythons before 2.7 does not have TestCase.assertRaisesRegexp() method
-    # add our local implementation if needed
-    if sys.version_info[:2] < (2, 7):
-        from buildbot.monkeypatches import testcase_assert
-        testcase_assert.patch()
+def patch_servicechecks():
+    from buildbot.monkeypatches import servicechecks
+    servicechecks.patch()
 
 
 @onlyOnce
@@ -83,11 +81,20 @@ def patch_decorators():
     decorators.patch()
 
 
+@onlyOnce
+def patch_config_for_unit_tests():
+    from buildbot import config
+    # by default, buildbot.config warns about unconfigured
+    # its important for users to not leak information, but unneeded and painful for tests
+    config._in_unit_tests = True
+
+
 def patch_all(for_tests=False):
     if for_tests:
         patch_servicechecks()
-        patch_testcase_assert_raises_regexp()
+        patch_testcase_timeout()
         patch_decorators()
         patch_mysqlclient_warnings()
-
+        patch_config_for_unit_tests()
+    
     patch_python14653()

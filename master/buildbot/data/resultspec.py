@@ -17,6 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 
+import sqlalchemy as sa
+
 from twisted.python import log
 
 from buildbot.data import base
@@ -251,8 +253,7 @@ class ResultSpec(object):
             self.filters = unmatched_filters
             self.order = unmatched_order
             return query, None
-
-        count_query = query.alias('q').count()
+        count_query = sa.select([sa.func.count()]).select_from(query)
         self.order = None
         self.filters = []
         # finally, slice out the limit/offset

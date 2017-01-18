@@ -76,7 +76,7 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
-    buildbotNetUsageData='basic',
+    buildbotNetUsageData=None,  # in unit tests we default to None, but normally defaults to 'basic'
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
@@ -154,6 +154,8 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
         self.filename = os.path.join(self.basedir, 'test.cfg')
+        self.patch(config, "_in_unit_tests", False)
+
         return self.setUpDirs('basedir')
 
     def tearDown(self):
@@ -237,6 +239,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
 
 
 class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
+    maxDiff = None
 
     def setUp(self):
         self.basedir = os.path.abspath('basedir')
@@ -275,7 +278,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         for file, contents in iteritems(other_files):
             with open(file, "w") as f:
                 f.write(contents)
-
     # tests
     def test_defaults(self):
         cfg = config.MasterConfig()
@@ -295,6 +297,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             revlink=revlinks.default_revlink_matcher
         )
         expected.update(global_defaults)
+        expected['buildbotNetUsageData'] = 'basic'
         got = dict([
             (attr, getattr(cfg, attr))
             for attr, exp in iteritems(expected)])
@@ -481,7 +484,15 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 config.ConfigWarning,
                 message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
             self.do_test_load_global(
-                dict(eventHorizon=10, buildbotNetUsageData=None))
+                dict(eventHorizon=10))
+
+    def test_load_global_buildbotNetUsageData(self):
+        self.patch(config, "_in_unit_tests", False)
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
+            self.do_test_load_global(
+                dict())
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)
@@ -630,19 +641,28 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_db_db_poll_interval(self):
         # value is ignored, but no error
-        self.cfg.load_db(self.filename, dict(db_poll_interval=2))
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
+            self.cfg.load_db(self.filename, dict(db_poll_interval=2))
         self.assertResults(
             db=dict(db_url='sqlite:///state.sqlite'))
 
     def test_load_db_dict(self):
         # db_poll_interval value is ignored, but no error
-        self.cfg.load_db(self.filename,
-                         dict(db=dict(db_url='abcd', db_poll_interval=10)))
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
+            self.cfg.load_db(self.filename,
+                             dict(db=dict(db_url='abcd', db_poll_interval=10)))
         self.assertResults(db=dict(db_url='abcd'))
 
     def test_load_db_unk_keys(self):
-        self.cfg.load_db(self.filename,
-                         dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"db_poll_interval is deprecated and will be ignored"):
+            self.cfg.load_db(self.filename,
+                             dict(db=dict(db_url='abcd', db_poll_interval=10, bar='bar')))
         self.assertConfigError(self.errors, "unrecognized keys in")
 
     def test_load_mq_defaults(self):
@@ -1327,10 +1347,13 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                 name='a', workername=1, factory=self.factory))
 
     def test_bogus_category(self):
-        self.assertRaisesConfigError(
-            "category must be a string",
-            lambda: config.BuilderConfig(category=13,
-                                         name='a', workernames=['a'], factory=self.factory))
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"builder categories are deprecated and should be replaced with"):
+            self.assertRaisesConfigError(
+                "category must be a string",
+                lambda: config.BuilderConfig(category=13,
+                                             name='a', workernames=['a'], factory=self.factory))
 
     def test_tags_must_be_list(self):
         self.assertRaisesConfigError(
@@ -1408,7 +1431,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='wbd', factory=self.factory, category='c',
+            workerbuilddir='wbd', factory=self.factory, tags=['c'],
             nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')

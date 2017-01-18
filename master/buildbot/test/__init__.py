@@ -15,6 +15,7 @@
 
 import sys
 import warnings
+import exceptions
 
 from distutils.version import LooseVersion
 
@@ -106,8 +107,13 @@ with assertProducesWarning(
         message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
     import buildbot.buildslave.openstack as _  # noqa
 
-# All deprecated modules should be loaded, consider future
-# DeprecatedWorkerModuleWarning in tests as errors.
-# All DeprecatedWorkerNameWarning warnings should be explicitly caught too,
-# so fail on any DeprecatedWorkerAPIWarning.
-warnings.filterwarnings('error', category=DeprecatedWorkerAPIWarning)
+# All deprecated modules should be loaded, consider future warnings in tests as errors.
+# In order to not pollute the test outputs,
+# warnings in tests shall be forcefully tested with assertProducesWarning,
+# or shutdown using the warning module
+warnings.filterwarnings('error')
+# if buildbot_worker is installed in pi install -e mode, then the docker directory will
+# match "import docker", and produce a warning.
+# We just suppress this warning instead of doing silly workaround.
+warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __init__.py",
+                        category=exceptions.ImportWarning)

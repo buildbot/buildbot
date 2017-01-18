@@ -105,6 +105,7 @@ def triggeredBuildIsNotCreated():
 
 
 class TriggeringMaster(RunMasterBase):
+    timeout = 120
     change = dict(branch="master",
                   files=["foo.c"],
                   author="me@foo.com",

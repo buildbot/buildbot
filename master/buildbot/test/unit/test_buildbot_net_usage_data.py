@@ -34,6 +34,7 @@ from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.test.util.integration import DictLoader
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker.base import Worker
 
 
@@ -68,7 +69,11 @@ class Tests(unittest.TestCase):
         }
 
     def test_basic(self):
-        master = self.getMaster(self.getBaseConfig())
+        self.patch(config, "_in_unit_tests", False)
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
+            master = self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
         self.assertEqual(sorted(data.keys()),
                          sorted(['versions', 'db', 'platform', 'installid', 'mq', 'plugins', 'www_plugins']))
