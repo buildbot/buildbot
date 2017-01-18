@@ -33,7 +33,7 @@ class Tests(unittest.TestCase):
             log.msg('expect %r to be good' % (g,))
             self.assertTrue(identifiers.isIdentifier(50, g))
         bad = [
-            None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+            None, u'', b'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
             u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
             u"123 no initial digits",
         ]
