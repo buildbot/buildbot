@@ -24,7 +24,7 @@ Bug fixes
   rebuilds for a known branch that was updated to an existing commit.
 - Fix issue with log viewer not staying at bottom of the log when loading log
   lines.
-- Fixed `addBuildURLs` in `:py:class: `~buildbot.steps.trigger.Trigger` to use
+- Fixed `addBuildURLs` in :py:class:`~buildbot.steps.trigger.Trigger` to use
   results from triggered builds to include in the URL name exposed by API.
 - Fix :ref:`mq-Wamp` :bb:cfg:`mq` support by removing ``debug``, ``debug_amp``
   and ``debug_app`` from the :bb:cfg:`mq` config, which is not available in
