@@ -420,7 +420,7 @@ class TestChangePerspective(unittest.TestCase):
 
     def test_addChange_non_utf8_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        bogus_utf8 = '\xff\xff\xff\xff'
+        bogus_utf8 = b'\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
         d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
 
