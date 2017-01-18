@@ -127,9 +127,9 @@ class Tests(unittest.TestCase):
                          ('https://events.buildbot.net/events/phone_home',
                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
 
-    def test_urllib2_real(self):
+    def test_real(self):
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
             raise SkipTest(
-                "hyper integration tests only run when environment variable TEST_HYPER is set")
+                "_sendBuildbotNetUsageData real test only run when environment variable TEST_BUILDBOTNET_USAGEDATA is set")
 
         _sendBuildbotNetUsageData({'foo': 'bar'})
