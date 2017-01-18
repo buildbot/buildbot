@@ -206,7 +206,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('ami-'))
-        self.assertTrue(start_time > 0)
+        self.assertTrue(start_time > "00:00:00")
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
