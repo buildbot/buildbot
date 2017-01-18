@@ -1,11 +1,7 @@
 # developer utilities
 pylint:
-	pylint --rcfile=../common/pylintrc \
-	    --spelling-private-dict-file ../common/code_spelling_ignore_words.txt \
-			buildbot
-	pylint --rcfile=../common/pylintrc \
-	    --spelling-private-dict-file ../common/code_spelling_ignore_words.txt \
-	    docs/conf.py
+	pylint --rcfile=../common/pylintrc buildbot
+	pylint --rcfile=../common/pylintrc docs/conf.py
 tutorial:
 	cd docs/tutorial; $(MAKE) html
 flake8:
