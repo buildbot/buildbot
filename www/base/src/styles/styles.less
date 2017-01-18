@@ -82,14 +82,25 @@
   -moz-user-select: none;
   -ms-user-select: none;
   user-select: none;
+  display: inline;
 }
-.select {
-  -webkit-touch-callout: initial;
-  -webkit-user-select: initial;
-  -khtml-user-select: initial;
-  -moz-user-select: initial;
-  -ms-user-select: initial;
-  user-select: initial;
+.select-content {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+/* https://danoc.me/blog/css-prevent-copy/
+Firefox will insert newlines if the selection go over a no-select span, so we need to implement them with ::before
+*/
+[data-linenumber-content]::before,
+[data-linenumber-content--before]::before,
+[data-linenumber-content--after]::after {
+  content: attr(data-linenumber-content);
+  color: #c7c7c7;
+  padding-right: 10px;
 }
 
 .avatar {
