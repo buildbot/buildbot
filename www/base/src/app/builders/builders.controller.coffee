@@ -10,10 +10,11 @@ class Builders extends Controller
                 return "worker_DISCONNECTED"
         $scope.hasActiveMaster = (builder) ->
             active = false
-            if not builder.masters?
+            if not builder.masterids?
                 return false
-            for m in builder.masters
-                if m.active
+            for mid in builder.masterids
+                m = $scope.masters.get(mid)
+                if m? and m.active
                     active = true
             return active
         $scope.settings = bbSettingsService.getSettingsGroup("Builders")
@@ -97,12 +98,10 @@ class Builders extends Controller
         data = dataService.open().closeOnDestroy($scope)
 
         $scope.builders = data.getBuilders()
-        $scope.builders.onNew = (builder) ->
-            builder.loadMasters()
+        $scope.masters = data.getMasters()
 
         # as there is usually lots of builders, its better to get the overall
-        # list of workers, and builds and then associate by builder
-        # @todo, we cannot do same optims for masters due to lack of data api
+        # list of workers, masters, and builds and then associate by builder
         workers = data.getWorkers()
         builds = data.getBuilds(limit: 200, order: '-started_at')
         dataGrouperService.groupBy($scope.builders, workers, 'builderid', 'workers', 'configured_on')

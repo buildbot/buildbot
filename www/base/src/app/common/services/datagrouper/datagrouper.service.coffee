@@ -17,8 +17,6 @@ class dataGrouperService extends Factory('common')
                     if temp_dict.hasOwnProperty(item[joinid])
                         item[attribute] = temp_dict[item[joinid]]
                     onNew(item)
-                doGroup = (item) ->
-                    console.log item
                 if joinlist?
                     collection2.onNew  = (item) ->
                         item[joinlist]?.forEach (item2) ->
