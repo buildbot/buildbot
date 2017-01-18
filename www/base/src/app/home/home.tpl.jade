@@ -1,5 +1,5 @@
 .container
-  .row(ng-if="config.buildbotURL != baseurl and config.buildbotURLAliases.indexof(baseurl) === -1")
+  .row(ng-if="config.buildbotURLAliases.indexof(baseurl) === -1")
       .alert.alert-danger Warning: 
           | c['BuildbotURL'] is misconfigured to
           pre {{config.buildbotURL}}
