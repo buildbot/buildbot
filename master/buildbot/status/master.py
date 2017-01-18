@@ -132,7 +132,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getBuildbotURLAliases(self):
         if self.master.config.buildbotURLAliases:
             return self.master.config.buildbotURLAliases.append(
-              self.master.config.buildbotURL)
+                self.master.config.buildbotURL)
         return [self.master.config.buildbotURL]
 
     def getStatus(self):
