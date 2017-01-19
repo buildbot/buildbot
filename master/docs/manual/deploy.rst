@@ -24,10 +24,10 @@ Depending on the selected database, further Python packages will be required.
 Consult the SQLAlchemy dialect list for a full description.
 The most common choice for MySQL is
 
-MySQL-Python: http://mysql-python.sourceforge.net/
+mysqlclient: https://github.com/PyMySQL/mysqlclient-python
 
-  To communicate with MySQL, SQLAlchemy requires MySQL-Python.
-  Any reasonably recent version of MySQL-Python should suffice.
+  To communicate with MySQL, SQLAlchemy requires mysqlclient.
+  Any reasonably recent version of mysqlclient should suffice.
 
 The most common choice for Postgres is
 

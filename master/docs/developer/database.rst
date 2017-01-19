@@ -1943,8 +1943,8 @@ To run tests with MySQL:
 
 .. code-block:: bash
 
-   # Install MySQL-python.
-   pip install MySQL-python
+   # Install mysqlclient
+   pip install mysqlclient
    # Start container with MySQL 5.5.
    # It will listen on port 13306 on localhost.
    sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \
