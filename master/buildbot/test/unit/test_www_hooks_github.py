@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import PY3
 
 import hmac
 from calendar import timegm
@@ -454,7 +455,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = _prepare_request('push', '')
 
         yield self.request.test_render(self.changeHook)
-        expected = "No JSON object could be decoded"
+        if PY3:
+            expected = "Expecting value: line 1 column 1 (char 0)"
+        else:
+            expected = "No JSON object could be decoded"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
