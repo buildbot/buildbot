@@ -26,6 +26,7 @@ from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.util import unicode2bytes
 from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.github import _HEADER_CT
 from buildbot.www.hooks.github import _HEADER_EVENT
@@ -293,7 +294,9 @@ def _prepare_request(event, payload, _secret=None, headers=None):
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:
-            signature = hmac.new(_secret, msg=payload, digestmod=sha1)
+            signature = hmac.new(unicode2bytes(_secret),
+                                 msg=unicode2bytes(payload),
+                                 digestmod=sha1)
             request.received_headers[_HEADER_SIGNATURE] = \
                 'sha1=%s' % (signature.hexdigest(),)
     else:
