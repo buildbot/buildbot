@@ -19,6 +19,7 @@ from __future__ import print_function
 from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
+from future.utils import PY3
 from future.utils import string_types
 from future.utils import text_type
 
@@ -222,8 +223,10 @@ def toJson(obj):
 
 class NotABranch:
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
+    if not PY3:
+        __nonzero__ = __bool__
 
 
 NotABranch = NotABranch()

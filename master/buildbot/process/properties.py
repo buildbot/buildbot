@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.utils import PY3
 from future.utils import iteritems
 
 import collections
@@ -92,8 +93,10 @@ class Properties(util.ComparableMixin):
         rv = self.properties[name][0]
         return rv
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self.properties)
+    if not PY3:
+        __nonzero__ = __bool__
 
     def getPropertySource(self, name):
         return self.properties[name][1]
