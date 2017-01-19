@@ -19,9 +19,9 @@ from __future__ import print_function
 import hmac
 from calendar import timegm
 from hashlib import sha1
-from StringIO import StringIO
 
 from twisted.internet import defer
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -289,7 +289,7 @@ def _prepare_request(event, payload, _secret=None, headers=None):
     }
 
     if isinstance(payload, str):
-        request.content = StringIO(payload)
+        request.content = NativeStringIO(payload)
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:
