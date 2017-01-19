@@ -316,7 +316,7 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
-        sa.Column('property_value', sa.String(1024), nullable=False),
+        sa.Column('property_value', sa.Text, nullable=False),
     )
 
     # users associated with this change; this allows multiple users for

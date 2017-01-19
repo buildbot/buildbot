@@ -141,8 +141,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 for i in inserts:
                     self.checkLength(tbl.c.property_name,
                                      i['property_name'])
-                    self.checkLength(tbl.c.property_value,
-                                     i['property_value'])
 
                 conn.execute(tbl.insert(), inserts)
             if uid:
