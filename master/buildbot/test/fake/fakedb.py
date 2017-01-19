@@ -1461,7 +1461,7 @@ class FakeWorkersComponent(FakeDBComponent):
             builder_masters = self.db.builders.builder_masters
             workers = []
             for worker in itervalues(self.workers):
-                configured = [cfg for cfg in self.configured.itervalues()
+                configured = [cfg for cfg in itervalues(self.configured)
                               if cfg['workerid'] == worker['id']]
                 pairs = [builder_masters[cfg['buildermasterid']]
                          for cfg in configured]
@@ -1976,7 +1976,7 @@ class FakeStepsComponent(FakeDBComponent):
     def getSteps(self, buildid):
         ret = []
 
-        for row in self.steps.itervalues():
+        for row in itervalues(self.steps):
             if row['buildid'] != buildid:
                 continue
             ret.append(self._row2dict(row))
@@ -2101,7 +2101,7 @@ class FakeLogsComponent(FakeDBComponent):
 
     def getLogBySlug(self, stepid, slug):
         row = None
-        for row in self.logs.itervalues():
+        for row in itervalues(self.logs):
             if row['slug'] == slug and row['stepid'] == stepid:
                 break
         else:
