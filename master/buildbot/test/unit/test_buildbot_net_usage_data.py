@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
 from future.moves.urllib import request as urllib_request
-from future.moves.urllib.request import urlopen as urllib_urlopen
 
 import os
 from unittest.case import SkipTest
@@ -130,6 +129,7 @@ class Tests(unittest.TestCase):
     def test_real(self):
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
             raise SkipTest(
-                "_sendBuildbotNetUsageData real test only run when environment variable TEST_BUILDBOTNET_USAGEDATA is set")
+                "_sendBuildbotNetUsageData real test only run when environment variable"
+                " TEST_BUILDBOTNET_USAGEDATA is set")
 
         _sendBuildbotNetUsageData({'foo': 'bar'})
