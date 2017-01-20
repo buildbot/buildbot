@@ -16,8 +16,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from StringIO import StringIO
 from unittest import TestResult
+
+from twisted.python.compat import NativeStringIO
 
 from buildbot.process import logobserver
 from buildbot.process.results import FAILURE
@@ -46,7 +47,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.PROGRESS_SET = PROGRESS_SET
         self.PROGRESS_PUSH = PROGRESS_PUSH
         self.PROGRESS_POP = PROGRESS_POP
-        self.warningio = StringIO()
+        self.warningio = NativeStringIO()
         self.protocol = TestProtocolServer(self, self.warningio)
         self.skips = []
         self.seen_tags = set()  # don't yet know what tags does in subunit

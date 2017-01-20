@@ -18,13 +18,13 @@ from __future__ import division
 from __future__ import print_function
 from future.utils import itervalues
 
-import StringIO
 import sys
 
 import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python.compat import NativeStringIO
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
@@ -140,7 +140,7 @@ class RunMasterBase(unittest.TestCase):
         @defer.inlineCallbacks
         def dump():
             if not self._passed:
-                dump = StringIO.StringIO()
+                dump = NativeStringIO()
                 print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
