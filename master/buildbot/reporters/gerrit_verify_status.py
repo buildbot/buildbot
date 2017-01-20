@@ -170,7 +170,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     def getGerritChanges(props):
         """ Get the gerrit changes
 
-            This method could be overriden if really needed to accomodate for other
+            This method could be overriden if really needed to accommodate for other
             custom steps method for fetching gerrit changes.
 
             :param props: an IProperty

@@ -133,7 +133,7 @@ class BuildRequestStatus:
         # Constant
         result['source'] = None  # not available sync, sorry
         result['builderName'] = self.buildername
-        result['submittedAt'] = None  # not availably sync, sorry
+        result['submittedAt'] = None  # not available sync, sorry
 
         # Transient
         result['builds'] = []  # not available async, sorry

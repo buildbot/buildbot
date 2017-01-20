@@ -369,7 +369,7 @@ class CaptureDataBase(Capture):
 class CaptureData(CaptureDataBase):
 
     """
-    Capture methods for arbitraty data that may not be stored in the Buildbot database.
+    Capture methods for arbitrary data that may not be stored in the Buildbot database.
     """
 
     def __init__(self, data_name, builder_name, callback=None):
@@ -384,7 +384,7 @@ class CaptureData(CaptureDataBase):
 class CaptureDataAllBuilders(CaptureDataBase):
 
     """
-    Capture methods for arbitraty data that may not be stored in the Buildbot database.
+    Capture methods for arbitrary data that may not be stored in the Buildbot database.
     """
 
     def _builder_name_matches(self, builder_info):
