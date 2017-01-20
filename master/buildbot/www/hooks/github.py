@@ -25,6 +25,8 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
+from buildbot.util import unicode2bytes
+
 try:
     import json
     assert json
@@ -78,7 +80,9 @@ class GitHubEventHandler(object):
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: %s' % (hash_type,))
 
-            mac = hmac.new(self._secret, msg=content, digestmod=sha1)
+            mac = hmac.new(unicode2bytes(self._secret),
+                           msg=unicode2bytes(content),
+                           digestmod=sha1)
             # NOTE: hmac.compare_digest should be used, but it's only available
             # starting Python 2.7.7
             if mac.hexdigest() != hexdigest:
