@@ -26,7 +26,7 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from StringIO import StringIO
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -48,6 +48,7 @@ from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatt
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
 from buildbot.util import ssl
+from buildbot.util import unicode2bytes
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 
@@ -518,14 +519,16 @@ class MailNotifier(service.BuildbotService):
 
         useAuth = self.smtpUser and self.smtpPassword
 
+        s = unicode2bytes(s)
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
-            self.fromaddr, recipients, StringIO(s),
+            self.fromaddr, recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
         if self.useSmtps:
-            reactor.connectSSL(self.relayhost, self.smtpPort, sender_factory, ssl.ClientContextFactory())
+            reactor.connectSSL(self.relayhost, self.smtpPort,
+                               sender_factory, ssl.ClientContextFactory())
         else:
             reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
 

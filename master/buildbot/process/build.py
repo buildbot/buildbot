@@ -41,6 +41,7 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
+from buildbot.util import bytes2NativeString
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -228,8 +229,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.getProperties().updateFromProperties(worker_properties)
         if workerforbuilder.worker.worker_basedir:
             builddir = self.path_module.join(
-                workerforbuilder.worker.worker_basedir,
-                self.builder.config.workerbuilddir)
+                bytes2NativeString(workerforbuilder.worker.worker_basedir),
+                bytes2NativeString(self.builder.config.workerbuilddir))
             self.setProperty("builddir", builddir, "worker")
 
         self.workername = workerforbuilder.worker.workername

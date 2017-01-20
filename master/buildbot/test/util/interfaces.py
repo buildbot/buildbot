@@ -64,6 +64,14 @@ class InterfaceTests(object):
             except AttributeError:
                 return func
 
+        def filter_argspec(func):
+            if PY3:
+                return filter(
+                    inspect.getfullargspec(remove_decorators(func)))
+            else:
+                return filter(
+                    inspect.getargspec(remove_decorators(func)))
+
         def assert_same_argspec(expected, actual):
             if expected != actual:
                 msg = "Expected: %s; got: %s" % (
@@ -71,29 +79,14 @@ class InterfaceTests(object):
                     inspect.formatargspec(*actual))
                 self.fail(msg)
 
-        if PY3:
-            actual_argspec = filter(
-                inspect.signature(remove_decorators(actualMethod)))
-        else:
-            actual_argspec = filter(
-                inspect.getargspec(remove_decorators(actualMethod)))
+        actual_argspec = filter_argspec(actualMethod)
 
         for fakeMethod in fakeMethods:
-            if PY3:
-                fake_argspec = filter(
-                    inspect.signature(remove_decorators(fakeMethod)))
-            else:
-                fake_argspec = filter(
-                    inspect.getargspec(remove_decorators(fakeMethod)))
+            fake_argspec = filter_argspec(fakeMethod)
             assert_same_argspec(actual_argspec, fake_argspec)
 
         def assert_same_argspec_decorator(decorated):
-            if PY3:
-                expected_argspec = filter(
-                    inspect.signature(remove_decorators(decorated)))
-            else:
-                expected_argspec = filter(
-                    inspect.getargspec(remove_decorators(decorated)))
+            expected_argspec = filter_argspec(decorated)
             assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
             return decorated

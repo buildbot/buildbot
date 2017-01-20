@@ -23,7 +23,7 @@ import shutil
 import stat
 import tarfile
 import tempfile
-from cStringIO import StringIO
+from io import BytesIO
 
 from mock import Mock
 
@@ -42,6 +42,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -71,10 +72,11 @@ def downloadString(memoizer, timestamp=None):
 
 def uploadTarFile(filename, **members):
     def behavior(command):
-        f = StringIO()
+        f = BytesIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
         for name, content in iteritems(members):
-            archive.addfile(tarfile.TarInfo(name), StringIO(content))
+            content = unicode2bytes(content)
+            archive.addfile(tarfile.TarInfo(name), BytesIO(content))
         writer = command.args['writer']
         writer.remote_write(f.getvalue())
         writer.remote_unpack()
@@ -172,8 +174,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             desttimestamp = (os.path.getatime(self.destfile),
                              os.path.getmtime(self.destfile))
 
-            srctimestamp = map(int, timestamp)
-            desttimestamp = map(int, desttimestamp)
+            srctimestamp = [int(t) for t in timestamp]
+            desttimestamp = [int(d) for d in desttimestamp]
 
             self.assertEqual(srctimestamp[0], desttimestamp[0])
             self.assertEqual(srctimestamp[1], desttimestamp[1])
@@ -816,7 +818,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
                 contents = f.read()
             # Only first 1000 bytes trasferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEqual(''.join(read), contents)
+            self.assertEqual(b''.join(read), contents)
 
         return d
 
@@ -850,7 +852,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
                 contents = f.read()
             # Only first 1000 bytes trasferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEqual(''.join(read), contents)
+            self.assertEqual(b''.join(read), contents)
 
         return d
 
@@ -896,7 +898,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEqual(''.join(read), "Hello World")
+            self.assertEqual(b''.join(read), b"Hello World")
         return d
 
     def testBasicWorker2_16(self):
@@ -924,7 +926,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEqual(''.join(read), "Hello World")
+            self.assertEqual(b''.join(read), b"Hello World")
         return d
 
     def testFailure(self):
@@ -1013,7 +1015,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEqual(''.join(read), '{"message": "Hello World"}')
+            self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
         return d
 
     def testFailure(self):
@@ -1096,8 +1098,9 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEqual(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")
@@ -1126,8 +1129,9 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEqual(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")

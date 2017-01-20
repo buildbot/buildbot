@@ -23,12 +23,12 @@ from future.utils import iteritems
 import json
 import os
 import pkg_resources
-from cStringIO import StringIO
 from uuid import uuid1
 
 import mock
 
 from twisted.internet import defer
+from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
@@ -177,7 +177,7 @@ class WwwTestMixin(RequiresWwwMixin):
         id = id or self.UUID
         request = self.make_request(path)
         request.method = "POST"
-        request.content = StringIO(requestJson or json.dumps(
+        request.content = NativeStringIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
         request.input_headers = {'content-type': content_type}
         rv = rsrc.render(request)
