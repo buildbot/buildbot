@@ -175,6 +175,26 @@ evaluation=10.0 - ((float(5 * error + warning + refactor + convention) / stateme
 comment=no
 
 
+[SPELLING]
+
+# Spelling dictionary name.
+# If this value will be non-empty (e.g. 'en_US') and pyenchant will not be
+# installed, pylint will fail.
+# If this will be left empty pylint will ignore all spelling errors.
+spelling-dict=en_US
+
+# List of comma separated words that should not be checked.
+spelling-ignore-words=
+
+# A path to a file that contains private dictionary; one word per line.
+# Path relative to current working directory.
+spelling-private-dict-file=../common/code_spelling_ignore_words.txt
+
+# Tells whether to store unknown words to indicated private dictionary in
+# --spelling-private-dict-file option instead of raising a message.
+spelling-store-unknown-words=no
+
+
 [MISCELLANEOUS]
 
 # List of note tags to take in consideration, separated by a comma.
