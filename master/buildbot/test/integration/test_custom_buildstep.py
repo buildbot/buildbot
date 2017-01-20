@@ -145,11 +145,10 @@ class OldPerlModuleTest(shell.Test):
 
     def evaluateCommand(self, cmd):
         # Get stdio, stripping pesky newlines etc.
-        lines = map(
-            lambda line: line.replace('\r\n', '').replace(
-                '\r', '').replace('\n', ''),
-            self.getLog('stdio').readlines()
-        )
+        lines = [
+            line.replace('\r\n', '').replace('\r', '').replace('\n', '')
+            for line in self.getLog('stdio').readlines()
+        ]
         # .. the rest of this method isn't htat interesting, as long as the
         # statement above worked
         assert lines == ['a', 'b', 'c']
