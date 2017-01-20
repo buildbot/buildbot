@@ -15,10 +15,14 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 from random import choice
 from string import ascii_lowercase
+
 import sqlalchemy as sa
+
 from twisted.trial import unittest
+
 from buildbot.test.util import migration
 from buildbot.util import sautils
 
@@ -52,11 +56,14 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             metadata = sa.MetaData()
             metadata.bind = conn
             random_length = 65535
-            random_string = ''.join(choice(ascii_lowercase) for byte in range(random_length))
+            random_string = ''.join(choice(ascii_lowercase)
+                                    for byte in range(random_length))
 
             # Verify column type is text
-            change_properties = sautils.Table('change_properties', metadata, autoload=True)
-            self.assertIsInstance(change_properties.c.property_value.type, sa.Text)
+            change_properties = sautils.Table(
+                'change_properties', metadata, autoload=True)
+            self.assertIsInstance(
+                change_properties.c.property_value.type, sa.Text)
 
             # Test write and read random string
             conn.execute(change_properties.insert(), [dict(
@@ -66,6 +73,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             )])
             q = conn.execute(sa.select(
                 [change_properties.c.property_value]).where(change_properties.c.changeid == 1))
-            [self.assertEqual(q_string[0].encode("ascii"), random_string) for q_string in q]
+            [self.assertEqual(q_string[0].encode("ascii"), random_string)
+             for q_string in q]
 
         return self.do_test_migration(47, 48, setup_thd, verify_thd)
