@@ -16,9 +16,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.moves.urllib import request as urllib_request
+from future.moves.urllib.request import urlopen as urllib_urlopen
 
 import os
-import urllib2
 from unittest.case import SkipTest
 
 from twisted.internet import reactor
@@ -97,7 +98,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(sorted(data.keys()),
                          sorted(['db']))
 
-    def test_urllib2(self):
+    def test_urllib(self):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest(object):
@@ -118,8 +119,8 @@ class Tests(unittest.TestCase):
             def close(self):
                 pass
 
-        self.patch(urllib2, "Request", FakeRequest)
-        self.patch(urllib2, "urlopen", urlopen)
+        self.patch(urllib_request, "Request", FakeRequest)
+        self.patch(urllib_request, "urlopen", urlopen)
         _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,

@@ -21,13 +21,15 @@ urllib2 supports http_proxy already urllib2 is blocking and thus everything is d
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.moves import urllib
+from future.moves.urllib import request as urllib_request
+from future.moves.urllib.request import urlopen as urllib_open
 
 import hashlib
 import inspect
 import json
 import platform
 import socket
-import urllib2
 
 from twisted.internet import threads
 from twisted.python import log
@@ -145,16 +147,16 @@ def computeUsageData(master):
     return data
 
 
-def _sendWithUrlib2(url, data):
+def _sendWithUrlib(url, data):
     data = json.dumps(data)
     clen = len(data)
-    req = urllib2.Request(url, data, {
+    req = urllib_request.Request(url, data, {
         'Content-Type': 'application/json',
         'Content-Length': clen
     })
     try:
-        f = urllib2.urlopen(req)
-    except urllib2.URLError:
+        f = urllib_request.urlopen(req)
+    except urllib.error.URLError:
         return None
     res = f.read()
     f.close()
@@ -176,7 +178,7 @@ def _sendBuildbotNetUsageData(data):
     res = _sendWithRequests(PHONE_HOME_URL, data)
     # then we try with stdlib, which not always work with https
     if res is None:
-        res = _sendWithUrlib2(PHONE_HOME_URL, data)
+        res = _sendWithUrlib(PHONE_HOME_URL, data)
     # at last stage
     if res is None:
         log.msg("buildbotNetUsageData: Could not send using https, "
