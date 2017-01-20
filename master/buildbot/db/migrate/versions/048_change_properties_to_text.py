@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+
 import sqlalchemy as sa
 from migrate import changeset
 
@@ -24,8 +25,10 @@ def upgrade(migrate_engine):
     metadata.bind = migrate_engine
 
     if migrate_engine.dialect.name == "postgresql":
-        # changeset.alter_column has no effect on postgres, so we do this with raw sql
-        migrate_engine.execute("alter table change_properties alter column property_value type text")
+        # changeset.alter_column has no effect on postgres, so we do this with
+        # raw sql
+        migrate_engine.execute(
+            "alter table change_properties alter column property_value type text")
 
     else:
         # Commit messages can get too big for the normal 1024 String limit.
