@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import string_types
@@ -62,8 +63,10 @@ class ConfigErrors(Exception):
     def merge(self, errors):
         self.errors.extend(errors.errors)
 
-    def __nonzero__(self):
-        return len(self.errors)
+    def __bool__(self):
+        return bool(len(self.errors))
+    if not PY3:
+        __nonzero__ = __bool__
 
 
 _errors = None

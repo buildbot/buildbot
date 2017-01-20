@@ -21,6 +21,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import PY3
 
 from twisted.internet.defer import Deferred
 
@@ -39,5 +40,7 @@ class Notifier(object):
         for waiter in waiters:
             waiter.callback(result)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return bool(self._waiters)
+    if not PY3:
+        __nonzero__ = __bool__
