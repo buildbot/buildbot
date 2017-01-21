@@ -332,7 +332,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ma
 ``marathon_auth``
     (optional)
     This is the optional ``('userid', 'password')`` ``BasicAuth`` credential.
-    If txrequests_ is installed, this can be be a `requests authentication plugin`_.
+    If txrequests_ is installed, this can be a `requests authentication plugin`_.
 
 ``image``
     (mandatory)
