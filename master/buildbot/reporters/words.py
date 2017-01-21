@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from future.builtins import range
+from future.utils import PY3
 from future.utils import text_type
 
 import random
@@ -297,7 +298,7 @@ class Contact(service.AsyncService):
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
-        if isinstance(args, text_type):
+        if not PY3 and isinstance(args, text_type):
             # shlex does not handle unicode.  See
             # http://bugs.python.org/issue1170
             args = args.encode('ascii')
