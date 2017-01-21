@@ -32,6 +32,7 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 
@@ -347,7 +348,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
-        builder_status.basedir = os.path.join(self.basedir, basedir)
+        builder_status.basedir = os.path.join(bytes2NativeString(self.basedir),
+                                              bytes2NativeString(basedir))
         builder_status.name = name  # it might have been updated
         builder_status.status = self
 
