@@ -130,10 +130,10 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.master.config.buildbotURL
 
     def getBuildbotURLAliases(self):
-        if self.master.config.buildbotURLAliases:
-            return self.master.config.buildbotURLAliases.append(
+        if not self.master.config.buildbotURLAliases:
+            self.master.config.buildbotURLAliases.append(
                 self.master.config.buildbotURL)
-        return [self.master.config.buildbotURL]
+        return self.master.config.buildbotURLAliases
 
     def getStatus(self):
         # some listeners expect their .parent to be a BuildMaster object, and

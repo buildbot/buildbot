@@ -58,6 +58,7 @@ global_defaults = dict(
     title='Buildbot',
     titleURL='http://buildbot.net',
     buildbotURL='http://localhost:8080/',
+    buildbotURLAliases=[],
     changeHorizon=None,
     logHorizon=None,
     buildHorizon=None,
