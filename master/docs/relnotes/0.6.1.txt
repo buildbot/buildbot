@@ -42,7 +42,7 @@ These test results are currently displayed in a tree-like display in a page
 accessible from each Build's page (follow the numbered link in the yellow
 box at the start of each build to get there).
 
-This interface is still in flux, as it really wants to be able to accomodate
+This interface is still in flux, as it really wants to be able to accommodate
 things like compiler warnings and tests that are skipped because of missing
 libraries or unsupported architectures.
 

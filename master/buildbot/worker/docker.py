@@ -64,7 +64,7 @@ class DockerBaseWorker(AbstractLatentWorker):
                     masterFQDN=None, **kwargs):
 
         # Set build_wait_timeout to 0 if not explicitely set: Starting a
-        # container is almost immediate, we can affort doing so for each build.
+        # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
         if image is not None and not isinstance(image, str):
