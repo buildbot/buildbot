@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import raise_with_traceback
@@ -705,7 +706,10 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def isNewStyle(self):
         # **temporary** method until new-style steps are the only supported style
-        return self.run.im_func is not BuildStep.run.im_func
+        if PY3:
+            return self.run.__func__ is not BuildStep.run
+        else:
+            return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         # New-style classes implement 'run'.
