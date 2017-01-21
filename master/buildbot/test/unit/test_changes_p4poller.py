@@ -350,7 +350,15 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             # replicate that here
             when = self.makeTime("2006/04/13 21:55:39")
 
-            self.assertEqual(self.master.data.updates.changesAdded, [{
+            def changeKey(change):
+                """ Let's sort the array of changes by branch,
+                    because in P4Source._poll(), changeAdded()
+                    is called by iterating over a dictionary of
+                    branches"""
+                return change['branch']
+
+            self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
+                sorted([{
                 'author': u'mpatel',
                 'branch': u'branch_c',
                 'category': None,
@@ -378,7 +386,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
-            }])
+            }], key=changeKey))
             self.assertEqual(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)
