@@ -259,13 +259,17 @@ class Tests(interfaces.InterfaceTests):
             self.scheduler24, self.master13, self.scheduler24master,
             self.scheduler25,
         ])
+
+        def schKey(sch):
+            return sch['id']
+
         schlist = yield self.db.schedulers.getSchedulers()
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
-        self.assertEqual(sorted(schlist), sorted([
+        self.assertEqual(sorted(schlist, key=schKey), sorted([
             dict(id=24, name='schname', masterid=13),
             dict(id=25, name='schname2', masterid=None),
-        ]))
+        ], key=schKey))
 
     @defer.inlineCallbacks
     def test_getSchedulers_masterid(self):
