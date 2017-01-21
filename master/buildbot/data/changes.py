@@ -116,6 +116,8 @@ class Change(base.ResourceType):
         revlink = types.NoneOk(types.String())
         properties = types.SourcedProperties()
         repository = types.String()
+        sub_repo_name = types.String()
+        sub_repo_revision = types.NoneOk(types.String())
         project = types.String()
         codebase = types.String()
         sourcestamp = sourcestamps.SourceStamp.entityType
@@ -126,7 +128,8 @@ class Change(base.ResourceType):
     def addChange(self, files=None, comments=None, author=None, revision=None,
                   when_timestamp=None, branch=None, category=None, revlink=u'',
                   properties=None, repository=u'', codebase=None, project=u'',
-                  src=None, _reactor=reactor):
+                  src=None, _reactor=reactor, sub_repo_name=None,
+                  sub_repo_revision=None):
         metrics.MetricCountEvent.log("added_changes", 1)
 
         if properties is None:
@@ -148,32 +151,40 @@ class Change(base.ResourceType):
             revlink = self.master.config.revlink(revision, repository) or u''
 
         if callable(category):
-            pre_change = self.master.config.preChangeGenerator(author=author,
-                                                               files=files,
-                                                               comments=comments,
-                                                               revision=revision,
-                                                               when_timestamp=when_timestamp,
-                                                               branch=branch,
-                                                               revlink=revlink,
-                                                               properties=properties,
-                                                               repository=repository,
-                                                               project=project)
+            pre_change = self.master.config.preChangeGenerator(
+                author=author,
+                files=files,
+                comments=comments,
+                revision=revision,
+                when_timestamp=when_timestamp,
+                branch=branch,
+                revlink=revlink,
+                properties=properties,
+                repository=repository,
+                project=project,
+                sub_repo_name=sub_repo_name,
+                sub_repo_revision=sub_repo_revision)
+
             category = category(pre_change)
 
         # set the codebase, either the default, supplied, or generated
         if codebase is None \
                 and self.master.config.codebaseGenerator is not None:
-            pre_change = self.master.config.preChangeGenerator(author=author,
-                                                               files=files,
-                                                               comments=comments,
-                                                               revision=revision,
-                                                               when_timestamp=when_timestamp,
-                                                               branch=branch,
-                                                               category=category,
-                                                               revlink=revlink,
-                                                               properties=properties,
-                                                               repository=repository,
-                                                               project=project)
+            pre_change = self.master.config.preChangeGenerator(
+                author=author,
+                files=files,
+                comments=comments,
+                revision=revision,
+                when_timestamp=when_timestamp,
+                branch=branch,
+                category=category,
+                revlink=revlink,
+                properties=properties,
+                repository=repository,
+                project=project,
+                sub_repo_name=sub_repo_name,
+                sub_repo_revision=sub_repo_revision)
+
             codebase = self.master.config.codebaseGenerator(pre_change)
             codebase = text_type(codebase)
         else:
@@ -194,6 +205,8 @@ class Change(base.ResourceType):
             codebase=codebase,
             project=project,
             uid=uid,
+            sub_repo_name=sub_repo_name,
+            sub_repo_revision=sub_repo_revision,
             _reactor=_reactor)
 
         # get the change and munge the result for the notification

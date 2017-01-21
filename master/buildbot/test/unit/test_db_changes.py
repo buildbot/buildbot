@@ -62,7 +62,8 @@ class Tests(interfaces.InterfaceTests):
                       branch="warnerdb", revision="0e92a098b",
                       when_timestamp=266738404, revlink='http://warner/0e92a098b',
                       category='devel', repository='git://warner', codebase='mainapp',
-                      project='Buildbot', sourcestampid=233),
+                      project='Buildbot', sourcestampid=233, sub_repo_name=None,
+                      sub_repo_revision=None),
 
         fakedb.ChangeFile(changeid=14, filename='master/buildbot/__init__.py'),
     ]
@@ -83,6 +84,8 @@ class Tests(interfaces.InterfaceTests):
         'revlink': u'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
         'sourcestampid': 233,
+        'sub_repo_name': None,
+        'sub_repo_revision': None
     }
 
     # tests
@@ -92,7 +95,7 @@ class Tests(interfaces.InterfaceTests):
         def addChange(self, author=None, files=None, comments=None, is_dir=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
                       revlink='', properties=None, repository='', codebase='',
-                      project='', uid=None):
+                      project='', uid=None, sub_repo_name=None, sub_repo_revision=None):
             pass
 
     def test_signature_getChange(self):
@@ -136,6 +139,8 @@ class Tests(interfaces.InterfaceTests):
             'properties': {},
             'repository': u'repo://',
             'revision': u'2d6caa52',
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
             'revlink': None,
             'sourcestampid': {
                 'branch': u'master',
@@ -193,6 +198,8 @@ class Tests(interfaces.InterfaceTests):
             'properties': {},
             'repository': u'git://warner',
             'revision': u'50adad56',
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
             'revlink': None,
             'sourcestampid': {
                 'branch': u'warnerdb',

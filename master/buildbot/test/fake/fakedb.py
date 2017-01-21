@@ -254,6 +254,8 @@ class Change(Row):
         project=u'proj',
         sourcestampid=92,
         parent_changeids=None,
+        sub_repo_name=u'',
+        sub_repo_revision=u'',
     )
 
     lists = ('files', 'uids')
@@ -819,9 +821,14 @@ class FakeChangesComponent(FakeDBComponent):
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
                   category=None, revlink='', properties=None, repository='',
-                  codebase='', project='', uid=None, _reactor=reactor):
+                  codebase='', project='', uid=None, sub_repo_name=None,
+                  sub_repo_revision=None, _reactor=reactor):
         if properties is None:
             properties = {}
+        if sub_repo_name is None:
+            sub_repo_name = ''
+        if sub_repo_revision is None:
+            sub_repo_revision = ''
 
         if self.changes:
             changeid = max(list(self.changes)) + 1
@@ -845,6 +852,8 @@ class FakeChangesComponent(FakeDBComponent):
             category=category,
             revlink=revlink,
             repository=repository,
+            sub_repo_name=sub_repo_name,
+            sub_repo_revision=sub_repo_revision,
             project=project,
             codebase=codebase,
             uids=[],

@@ -381,6 +381,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
         }])
 
     @defer.inlineCallbacks
@@ -406,6 +408,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
         }])
 
         # repoll
@@ -435,6 +439,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
         }])
         self.patch(client, "getPage", self.pr_list2.getPage)
         yield self.changesource.poll()
@@ -454,6 +460,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             },
             {
                 'author': u'contributor',
@@ -469,6 +477,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'revlink': u'https://bitbucket.org/contributor/slug/commits/222222222222',
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }
         ])
 
@@ -514,6 +524,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
         }])
 
     @defer.inlineCallbacks
@@ -543,4 +555,6 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1396825656,
+            'sub_repo_name': None,
+            'sub_repo_revision': None,
         }])

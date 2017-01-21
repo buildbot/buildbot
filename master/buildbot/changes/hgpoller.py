@@ -19,6 +19,7 @@ from future.utils import text_type
 
 import os
 import time
+import re
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -57,7 +58,8 @@ class HgPoller(base.PollingChangeSource):
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+            self, name=name, pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
@@ -123,7 +125,43 @@ class HgPoller(base.PollingChangeSource):
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)
                     raise
-            return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
+            return stamp, author.strip(), files.split(os.pathsep)[:-1], \
+                comments.strip()
+        return d
+
+    def _getSubRepoRevDetails(self, rev, sub_repo_revisions_file):
+        """Return a deferred for (date, author, files, comments) of a sub repo
+        for a given rev.
+
+        Deferred will be in error if rev is unknown.
+        """
+        args = ['log', '-r', rev, sub_repo_revisions_file, os.linesep.join((
+            '--template={date|hgdate}',
+            '{author}',
+            "{files % '{file}" + os.pathsep + "'}",
+            '{desc|strip}'))]
+        # Mercurial fails with status 255 if rev is unknown
+        d = utils.getProcessOutput(self.hgbin, args, path=self._absWorkdir(),
+                                   env=os.environ, errortoo=False)
+
+        @d.addCallback
+        def process(output):
+            # all file names are on one line
+            date, author, files, comments = output.decode(self.encoding,
+                                                          "replace").split(
+                                                              os.linesep, 3)
+
+            if not self.usetimestamps:
+                stamp = None
+            else:
+                try:
+                    stamp = float(date.split()[0])
+                except Exception:
+                    log.msg('hgpoller: caught exception converting output %r '
+                            'to timestamp' % date)
+                    raise
+            return stamp, author.strip(), files.split(os.pathsep)[:-1], \
+                comments.strip()
         return d
 
     def _isRepositoryReady(self):
@@ -248,6 +286,83 @@ class HgPoller(base.PollingChangeSource):
         return d
 
     @defer.inlineCallbacks
+    def _recordSubRepoChanges(self, changeset, results, revrange,
+                              sub_repo_revisions_file):
+        """Function that records changes in sub repos if there are any
+           changes. It uses the .hgsubstate file fetched from using the hg
+           log command.
+           Input: current changeset
+        """
+        # Create regular expression to look for changeset (hex version)
+        # from hg log output
+        re_prog = re.compile(r'[0-9]*?:[0-9A-Fa-f]{12}')
+        results_list = results.split()
+        # Get the current sub repo changeset
+        current_sub_repo_change_dict = {results_list[i+1]: results_list[i]
+                                        for i in range(0, len(results_list), 2)}
+        # Obtain the changeset hex number
+        revListArgs = ['log', '-b', self.branch, '-r', changeset,
+                       r'--template={rev}:{node}\n']
+        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
+                                               path=self._absWorkdir(),
+                                               env=os.environ, errortoo=False)
+        changeset_hex = results.split(":")[1].strip()
+
+        # Get the parent(s) changeset info
+        p_arg = "parents(%s)" % revrange
+        revListArgs = ['log', '-b', self.branch, '-r', p_arg,
+                       sub_repo_revisions_file]
+        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
+                                               path=self._absWorkdir(),
+                                               env=os.environ, errortoo=False)
+        results_list = [item for item in results.strip().split()]
+
+        # Just want the changeset(s) info for each parent
+        parent_results_list = [item for item in results_list
+                               if re_prog.match(item)]
+        # Obtain the changeset info for each sub repo
+        for parent_changeset in parent_results_list:
+            # For the parent changeset, only want the hex changeset
+            p_hex_changeset = parent_changeset[parent_changeset.find(":")+1:]
+            revListArgs = ['cat', '-r', p_hex_changeset,
+                           sub_repo_revisions_file]
+            results = yield utils.getProcessOutput(self.hgbin,
+                                                   revListArgs,
+                                                   path=self._absWorkdir(),
+                                                   env=os.environ,
+                                                   errortoo=False)
+            results_list = results.split()
+            parents_sub_repo_change_dict = {results_list[i+1]:
+                                            results_list[i] for i in
+                                            range(0, len(results_list), 2)}
+        # Compare the current sub repo info with the parent info and look
+        # for differences
+        for sub_repo, sub_repo_changeset in \
+                current_sub_repo_change_dict.items():
+            for p_sub_repo, p_sub_repo_changeset in \
+              parents_sub_repo_change_dict.items():
+                if sub_repo == p_sub_repo:
+                    if sub_repo_changeset != p_sub_repo_changeset:
+                        # Add the sub repo change to the database
+                        timestamp, author, files, comments = yield \
+                            self._getSubRepoRevDetails(
+                                changeset, sub_repo_revisions_file)
+                        yield self.master.data.updates.addChange(
+                            author=author,
+                            revision=text_type(changeset_hex),
+                            files=files,
+                            comments=comments,
+                            when_timestamp=int(timestamp) if timestamp
+                            else None,
+                            branch=ascii2unicode(self.branch),
+                            category=ascii2unicode(self.category),
+                            project=ascii2unicode(self.project),
+                            repository=ascii2unicode(self.repourl),
+                            sub_repo_name=sub_repo,
+                            sub_repo_revision=sub_repo_changeset,
+                            src=u'hg')
+
+    @defer.inlineCallbacks
     def _processChanges(self, unused_output):
         """Send info about pulled changes to the master and record current.
 
@@ -267,14 +382,19 @@ class HgPoller(base.PollingChangeSource):
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
             revrange = '%d:%d' % (head, head)
+            # Specify which changeset to use for looking up the sub repos
+            changeset = head
         else:
             revrange = '%d:%s' % (current + 1, head)
+            # Specify which changeset to use for looking up the sub repos
+            changeset = '%d' % (current + 1)
 
         # two passes for hg log makes parsing simpler (comments is multi-lines)
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                                               path=self._absWorkdir(), env=os.environ, errortoo=False)
+                                               path=self._absWorkdir(),
+                                               env=os.environ, errortoo=False)
 
         revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
 
@@ -293,10 +413,25 @@ class HgPoller(base.PollingChangeSource):
                 category=ascii2unicode(self.category),
                 project=ascii2unicode(self.project),
                 repository=ascii2unicode(self.repourl),
+                sub_repo_name=None,
+                sub_repo_revision=None,
                 src=u'hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(rev, oid=oid)
+        # Recording sub repo changes
+        sub_repo_revisions_file = ".hgsubstate"
+        # Getting changeset info on possible sub repos for the current
+        # changeset
+        revListArgs = ['cat', '-r', changeset, sub_repo_revisions_file]
+        results2 = yield utils.getProcessOutput(self.hgbin, revListArgs,
+                                                path=self._absWorkdir(),
+                                                env=os.environ,
+                                                errortoo=False)
+        if "no such file" not in results:
+            log.msg('hgpoller: Recording sub repo changeset info')
+            yield self._recordSubRepoChanges(changeset, results2, revrange,
+                                             sub_repo_revisions_file)
 
     def _processChangesFailure(self, f):
         log.msg('hgpoller: repo poll failed')

@@ -137,6 +137,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['src'], 'hg')
             self.assertEqual(change['branch'], 'default')
             self.assertEqual(change['comments'], 'This is rev 73591')
+            self.assertEqual(change['sub_repo_name'], None)
+            self.assertEqual(change['sub_repo_revision'], None)
 
         d.addCallback(check_changes)
         d.addCallback(self.check_current_rev(73591))
@@ -201,6 +203,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             change = self.master.data.updates.changesAdded[0]
             self.assertEqual(change['revision'], u'784bd')
             self.assertEqual(change['comments'], u'Comment for rev 5')
+            self.assertEqual(change['sub_repo_name'], None)
+            self.assertEqual(change['sub_repo_revision'], None)
         d.addCallback(check_changes)
 
 

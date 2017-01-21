@@ -241,6 +241,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -264,6 +266,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -288,6 +292,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -313,6 +319,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': u'',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -338,6 +346,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -363,6 +373,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -388,6 +400,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -414,6 +428,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -439,6 +455,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -463,6 +481,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': None,
                 'when_timestamp': 1234,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -486,6 +506,8 @@ class TestChangePerspective(unittest.TestCase):
                 'revlink': '',
                 'src': u'git',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check_change)
         return d

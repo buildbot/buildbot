@@ -133,13 +133,13 @@ def loadConfigDict(basedir, configFileName):
             error("encountered a SyntaxError while parsing config file:\n%s " %
                   (traceback.format_exc(),),
                   always_raise=True,
-                  )
+                 )
         except Exception:
             log.err(failure.Failure(), 'error while parsing config file:')
             error("error while parsing config file: %s (traceback in logfile)" %
                   (sys.exc_info()[1],),
                   always_raise=True,
-                  )
+                 )
     finally:
         sys.path[:] = old_sys_path
 
@@ -147,7 +147,7 @@ def loadConfigDict(basedir, configFileName):
         error("Configuration file %r does not define 'BuildmasterConfig'"
               % (filename,),
               always_raise=True,
-              )
+             )
 
     return filename, localDict['BuildmasterConfig']
 
@@ -304,7 +304,9 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             'properties': kwargs.get('properties', {}),
             'repository': kwargs.get('repository', u''),
             'project': kwargs.get('project', u''),
-            'codebase': kwargs.get('codebase', None)
+            'codebase': kwargs.get('codebase', None),
+            'sub_repo_name': kwargs.get('sub_repo_name', None),
+            'sub_repo_revision': kwargs.get('sub_repo_name', None)
         }
 
     @classmethod
@@ -950,7 +952,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                  # deprecated, use `workerbuilddir` instead
                  slavebuilddir=None,
                  nextSlave=None,  # deprecated, use `nextWorker` instead
-                 ):
+                ):
 
         # Deprecated API support.
         if slavename is not None:

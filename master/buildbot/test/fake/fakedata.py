@@ -80,7 +80,8 @@ class FakeUpdates(service.AsyncService):
     def addChange(self, files=None, comments=None, author=None,
                   revision=None, when_timestamp=None, branch=None, category=None,
                   revlink=u'', properties=None, repository=u'', codebase=None,
-                  project=u'', src=None):
+                  project=u'', src=None, sub_repo_name=None,
+                  sub_repo_revision=None):
         if properties is None:
             properties = {}
 
@@ -93,6 +94,8 @@ class FakeUpdates(service.AsyncService):
         self.testcase.assertIsInstance(revision, (type(None), text_type))
         self.testcase.assertIsInstance(when_timestamp, (type(None), int))
         self.testcase.assertIsInstance(branch, (type(None), text_type))
+        self.testcase.assertIsInstance(sub_repo_name, (type(None), text_type))
+        self.testcase.assertIsInstance(sub_repo_revision, (type(None), text_type))
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
@@ -104,6 +107,8 @@ class FakeUpdates(service.AsyncService):
                                                                revlink=revlink,
                                                                properties=properties,
                                                                repository=repository,
+                                                               sub_repo_name=sub_repo_name,
+                                                               sub_repo_revision=sub_repo_revision,
                                                                project=project)
             category = category(pre_change)
 

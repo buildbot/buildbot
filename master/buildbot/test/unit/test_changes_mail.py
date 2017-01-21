@@ -94,6 +94,8 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
                 'revlink': '',
                 'src': 'svn',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d
@@ -127,6 +129,8 @@ class TestMaildirSource(changesource.ChangeSourceMixin, dirs.DirsMixin,
                 'revlink': '',
                 'src': 'bzr',
                 'when_timestamp': None,
+                'sub_repo_name': None,
+                'sub_repo_revision': None,
             }])
         d.addCallback(check)
         return d

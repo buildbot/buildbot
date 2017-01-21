@@ -60,8 +60,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
     @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
                   revision=None, when_timestamp=None, branch=None,
-                  category=None, revlink='', properties=None, repository='', codebase='',
-                  project='', uid=None, _reactor=reactor):
+                  category=None, revlink='', properties=None, repository='',
+                  codebase='', project='', uid=None, sub_repo_name=None,
+                  sub_repo_revision=None, _reactor=reactor):
         assert project is not None, "project must be a string, not None"
         assert repository is not None, "repository must be a string, not None"
 
@@ -88,6 +89,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         self.checkLength(ch_tbl.c.category, category)
         self.checkLength(ch_tbl.c.repository, repository)
         self.checkLength(ch_tbl.c.project, project)
+        self.checkLength(ch_tbl.c.subreponame, sub_repo_name)
+        self.checkLength(ch_tbl.c.subreporevision, sub_repo_revision)
 
         # calculate the sourcestamp first, before adding it
         ssid = yield self.db.sourcestamps.findSourceStampId(
@@ -117,6 +120,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 when_timestamp=datetime2epoch(when_timestamp),
                 category=category,
                 repository=repository,
+                subreponame=sub_repo_name,
+                subreporevision=sub_repo_revision,
                 codebase=codebase,
                 project=project,
                 sourcestampid=ssid,

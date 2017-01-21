@@ -365,6 +365,13 @@ class Model(base.DBConnectorComponent):
         sa.Column('repository', sa.String(length=512), nullable=False,
                   server_default=''),
 
+        # If present sub_repo_name specifies, along with sub_repo_revision, if
+        # a sub repository has changed
+        sa.Column('subreponame', sa.String(length=255)),
+
+        # sub repository revision
+        sa.Column('subreporevision', sa.String(length=255)),
+
         # codebase is a logical name to specify what is in the repository
         sa.Column('codebase', sa.String(256), nullable=False,
                   server_default=sa.DefaultClause("")),
@@ -724,24 +731,24 @@ class Model(base.DBConnectorComponent):
 
     implied_indexes = [
         ('change_users',
-            dict(unique=False, column_names=['uid'], name='uid')),
+         dict(unique=False, column_names=['uid'], name='uid')),
         ('sourcestamps',
-            dict(unique=False, column_names=['patchid'], name='patchid')),
+         dict(unique=False, column_names=['patchid'], name='patchid')),
         ('scheduler_masters',
-            dict(unique=False, column_names=['masterid'], name='masterid')),
+         dict(unique=False, column_names=['masterid'], name='masterid')),
         ('changesource_masters',
-            dict(unique=False, column_names=['masterid'], name='masterid')),
+         dict(unique=False, column_names=['masterid'], name='masterid')),
         ('buildset_sourcestamps',
-            dict(unique=False, column_names=['sourcestampid'],
+         dict(unique=False, column_names=['sourcestampid'],
                  name='sourcestampid')),
         ('buildsets',
-            dict(unique=False, column_names=['parent_buildid'],
+         dict(unique=False, column_names=['parent_buildid'],
                  name='parent_buildid')),
         ('builders_tags',
-            dict(unique=False, column_names=['tagid'],
+         dict(unique=False, column_names=['tagid'],
                  name='tagid')),
         ('changes',
-            dict(unique=False, column_names=['parent_changeids'],
+         dict(unique=False, column_names=['parent_changeids'],
                  name='parent_changeids')),
     ]
 

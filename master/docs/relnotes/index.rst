@@ -98,6 +98,8 @@ Features
   control the JSON sent to Stash.
 - Buildbot can now be configured to deny read access to REST api resources
   based on authorization rules.
+- New :bb:chsrc:HgPoller poller - Now able to recognize changes in a meta 
+  repository's sub repositories
 
 
 Older Release Notes

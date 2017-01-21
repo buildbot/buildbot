@@ -94,6 +94,8 @@ class OldTriggeringMethods(unittest.TestCase):
             'revlink': '',
             'src': None,
             'when_timestamp': None,
+            'sub_repo_name': None,
+            'sub_repo_revision': None
         }
         default_data_kwargs.update(exp_data_kwargs)
         exp_data_kwargs = default_data_kwargs

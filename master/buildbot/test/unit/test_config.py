@@ -384,7 +384,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             'properties': {},
             'repository': u'',
             'project': u'',
-            'codebase': None},
+            'codebase': None,
+            'sub_repo_name': None,
+            'sub_repo_revision': None},
             cfg.preChangeGenerator())
 
 
