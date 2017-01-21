@@ -93,7 +93,6 @@ class FakeInfluxDBClient(object):
 
 class FakeStatusService(status_service):
 
-
     """
     Fake StatusService for use in fakemaster
     """
@@ -108,5 +107,3 @@ class FakeStatusService(status_service):
     @master.setter
     def master(self, value):
         self._master = value
-
-
