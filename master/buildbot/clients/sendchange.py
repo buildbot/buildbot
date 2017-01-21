@@ -46,11 +46,11 @@ class Sender:
             change['codebase'] = codebase
 
         for key in change:
-            if isinstance(change[key], str):
+            if isinstance(change[key], bytes):
                 change[key] = change[key].decode(self.encoding, 'replace')
         change['files'] = list(change['files'])
         for i, file in enumerate(change.get('files', [])):
-            if isinstance(file, str):
+            if isinstance(file, bytes):
                 change['files'][i] = file.decode(self.encoding, 'replace')
 
         f = pb.PBClientFactory()
