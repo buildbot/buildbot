@@ -377,7 +377,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_updateSummary_running_not_unicode(self):
         step = self.setup_summary_test()
-        step.getCurrentSummary = lambda: {'step': 'bytestring'}
+        step.getCurrentSummary = lambda: {'step': b'bytestring'}
         step._running = True
         step.updateSummary()
         self.clock.advance(1)
