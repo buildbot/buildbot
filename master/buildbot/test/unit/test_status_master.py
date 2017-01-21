@@ -38,4 +38,4 @@ class TestStatusMaster(unittest.TestCase):
 
     def test_getBuildURLAliases_usefn(self):
         b = self.status_service.getBuildbotURLAliases()
-        self.assertEqual(b, ['http://localhost:8010/'])
+        self.assertEqual(b, ['http://localhost:8080/'])
