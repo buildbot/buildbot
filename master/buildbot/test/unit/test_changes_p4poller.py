@@ -277,7 +277,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
         )
         # Add a character which cannot be decoded with utf-8
-        undecodableText = p4change[2] + b"\x81"
+        undecodableText = p4change[2].encode("utf-8") + b"\x81"
         self.add_p4_describe_result(2, undecodableText)
 
         # tell poll() that it's already been called once
