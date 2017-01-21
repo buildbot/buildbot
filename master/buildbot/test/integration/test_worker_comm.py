@@ -238,7 +238,7 @@ class TestWorkerComm(unittest.TestCase):
         is detached; via deferred
         """
         factory = pb.PBClientFactory()
-        creds = credentials.UsernamePassword("testworker", "pw")
+        creds = credentials.UsernamePassword(b"testworker", b"pw")
         setBuilderList_d = defer.Deferred()
         workerworker = FakeWorkerWorker(
             lambda: setBuilderList_d.callback(None))

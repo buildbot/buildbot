@@ -65,7 +65,9 @@ def getChanges(request, options=None):
     author = firstOrNothing(args.get('author'))
     if not author:
         author = firstOrNothing(args.get('who'))
-    comments = firstOrNothing(args.get('comments')).decode('utf-8')
+    comments = firstOrNothing(args.get('comments'))
+    if isinstance(comments, bytes):
+        comments = comments.decode('utf-8')
     branch = firstOrNothing(args.get('branch'))
     category = firstOrNothing(args.get('category'))
     revlink = firstOrNothing(args.get('revlink'))

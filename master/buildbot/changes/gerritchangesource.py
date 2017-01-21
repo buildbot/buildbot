@@ -29,6 +29,7 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
+from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
 
 
@@ -92,7 +93,7 @@ class GerritChangeSourceBase(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            event = json.loads(line.decode('utf-8'))
+            event = json.loads(bytes2NativeString(line))
         except ValueError:
             msg = "bad json line: %s"
             log.msg(msg % line)
