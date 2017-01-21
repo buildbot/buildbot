@@ -140,7 +140,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         # public attributes
         self.name = ("%s:%s" % (self.hostname,
                                 os.path.abspath(self.basedir or '.')))
-        self.name = self.name.decode('ascii', 'replace')
+        if isinstance(self.name, bytes):
+            self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
     def create_child_services(self):

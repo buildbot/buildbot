@@ -16,10 +16,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import StringIO
-
 import mock
 
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 from zope.interface import implementer
 
@@ -44,7 +43,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.errors = []
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
-        self.logobserver.warningio = StringIO.StringIO()
+        self.logobserver.warningio = NativeStringIO()
         self.patch(subunit, 'SubunitLogObserver',
                    lambda: self.logobserver)
         return self.setUpBuildStep()

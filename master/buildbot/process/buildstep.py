@@ -22,6 +22,7 @@ from future.utils import string_types
 from future.utils import text_type
 
 import re
+from io import StringIO
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -31,7 +32,6 @@ from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
 from twisted.python import versions
-from twisted.python.compat import NativeStringIO
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
@@ -193,14 +193,17 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
@@ -224,7 +227,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = NativeStringIO(alltext)
+        io = StringIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):
@@ -384,9 +387,11 @@ class BuildStep(results.ResultComputingConfigMixin,
                 except AttributeError as e:
                     # if the callable raises an AttributeError
                     # python thinks it is actually workdir that is not existing.
-                    # python will then swallow the attribute error and call __getattr__ from worker_transition
+                    # python will then swallow the attribute error and call
+                    # __getattr__ from worker_transition
                     raise raise_with_traceback(CallableAttributeError(e))
-                    # we re-raise the original exception by changing its type, but keeping its stacktrace
+                    # we re-raise the original exception by changing its type,
+                    # but keeping its stacktrace
             else:
                 return self.build.workdir
 

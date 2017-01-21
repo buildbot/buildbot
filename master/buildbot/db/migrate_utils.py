@@ -38,7 +38,7 @@ def test_unicode(migrate_engine):
 
     # insert a unicode value in there
     u = u"Frosty the \N{SNOWMAN}"
-    b = '\xff\xff\x00'
+    b = b'\xff\xff\x00'
     ins = test_unicode.insert().values(u=u, b=b)
     migrate_engine.execute(ins)
 
@@ -46,7 +46,7 @@ def test_unicode(migrate_engine):
     row = migrate_engine.execute(sa.select([test_unicode])).fetchall()[0]
     assert isinstance(row['u'], text_type)
     assert row['u'] == u
-    assert isinstance(row['b'], str)
+    assert isinstance(row['b'], bytes)
     assert row['b'] == b
 
     # drop the test table
