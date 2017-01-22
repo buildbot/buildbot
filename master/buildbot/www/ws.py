@@ -88,7 +88,7 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         def callback(key, message):
-            # protocol is deliberatly concise in size
+            # protocol is deliberately concise in size
             return self.sendJsonMessage(k="/".join(key), m=message)
 
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
