@@ -725,7 +725,6 @@ subclassers
 subclassing
 subcommand
 subcommands
-subcription
 subdir
 subdirectories
 subdirectory

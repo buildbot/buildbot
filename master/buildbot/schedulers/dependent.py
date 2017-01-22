@@ -41,7 +41,7 @@ class Dependent(base.BaseScheduler):
         self._cached_upstream_bsids = None
 
         # the subscription lock makes sure that we're done inserting a
-        # subcription into the DB before registering that the buildset is
+        # subscription into the DB before registering that the buildset is
         # complete.
         self._subscription_lock = defer.DeferredLock()
 
