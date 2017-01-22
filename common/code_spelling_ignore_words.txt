@@ -607,7 +607,6 @@ repourl
 repr
 req
 requeue
-resonable
 ressource
 resultdir
 resultspec

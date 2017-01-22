@@ -289,7 +289,7 @@ class SourceBaseCommand(Command):
         # Make sure to upcall!
 
     def getCommand(self, name):
-        """Wrapper around utils.getCommand that will output a resonable
+        """Wrapper around utils.getCommand that will output a reasonable
         error message and raise AbandonChain if the command cannot be
         found"""
         if name not in self._commandPaths:
