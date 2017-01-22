@@ -852,7 +852,6 @@ validator
 vc
 vcs
 vda
-veery
 versioning
 viewspec
 viff

@@ -226,7 +226,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         return d
 
     def test_interrupted(self):
-        self.fakemaster.delay_write = True  # write veery slowly
+        self.fakemaster.delay_write = True  # write very slowly
 
         self.make_command(transfer.WorkerFileUploadCommand, dict(
             workdir='workdir',
@@ -507,7 +507,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
 
     def test_interrupted(self):
         self.fakemaster.data = b'tenchars--' * 100  # 1k
-        self.fakemaster.delay_read = True  # read veery slowly
+        self.fakemaster.delay_read = True  # read very slowly
 
         self.make_command(transfer.WorkerFileDownloadCommand, dict(
             workdir='.',
