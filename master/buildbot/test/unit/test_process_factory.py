@@ -120,7 +120,7 @@ class TestGNUAutoconf(TestBuildFactory):
         self.factory = GNUAutoconf(source=BuildStep())
 
     def test_init(self):
-        # actual initialisation is already done by setUp
+        # actual initialization is already done by setUp
         configurePresent = False
         checkPresent = False
         distcheckPresent = False
