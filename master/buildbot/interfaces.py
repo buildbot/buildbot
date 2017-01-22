@@ -506,7 +506,7 @@ class IBuildRequestStatus(Interface):
 
     def getBuilds():
         """Return a list of IBuildStatus objects for each Build that has been
-        started in an attempt to satify this BuildRequest."""
+        started in an attempt to satisfy this BuildRequest."""
 
     def subscribe(observer):
         """Register a callable that will be invoked (with a single
