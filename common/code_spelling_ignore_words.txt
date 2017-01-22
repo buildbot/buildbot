@@ -168,7 +168,6 @@ comparaison
 completers
 comspec
 concat
-conccurently
 conchc
 concurent
 config

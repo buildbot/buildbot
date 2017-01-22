@@ -95,7 +95,7 @@ class Tests(SynchronousTestCase):
         """
         If there are two latent workers configured, and two build
         requests for them, both workers will start substantiating
-        conccurently.
+        concurrently.
         """
         controllers = [
             LatentController('local1'),
