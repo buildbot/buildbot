@@ -247,7 +247,6 @@ exe
 executables
 exe's
 expanduser
-expecation
 explicitely
 explictly
 expononential

@@ -267,7 +267,7 @@ class Expect(object):
 
     def shouldAssertCommandEqualExpectation(self):
         """
-        Whether or not we should validate that the current command matches the expecation.
+        Whether or not we should validate that the current command matches the expectation.
         Some expectations may not have a way to match a command.
         """
         return True
