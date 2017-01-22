@@ -374,7 +374,6 @@ jsonrpc
 keepalive
 keepalives
 keepstamp
-keya
 keyfile
 keypair
 keypairs
