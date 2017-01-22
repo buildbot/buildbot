@@ -388,7 +388,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         changes_made = False
         failed = False
         try:
-            # Run the master.cfg in thread, so that it cas use blocking code
+            # Run the master.cfg in thread, so that it can use blocking code
             new_config = yield threads.deferToThreadPool(
                 self.reactor, self.reactor.getThreadPool(),
                 self.config_loader.loadConfig)
