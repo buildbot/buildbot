@@ -82,7 +82,7 @@ class LatentController(object):
 class ControllableLatentWorker(AbstractLatentWorker):
 
     """
-    A latent worker that can be contolled by tests.
+    A latent worker that can be controlled by tests.
     """
 
     def __init__(self, name, controller, **kwargs):
