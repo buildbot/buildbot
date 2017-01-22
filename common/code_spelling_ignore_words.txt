@@ -245,7 +245,6 @@ errortoo
 et
 exe
 executables
-exercice
 exe's
 existant
 expanduser
