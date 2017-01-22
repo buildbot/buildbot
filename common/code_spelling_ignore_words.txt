@@ -310,7 +310,6 @@ gzip
 hardcoded
 hasattr
 hashable
-hasnt
 hg
 hmac
 hoc
