@@ -34,7 +34,7 @@ from buildbot.www.hooks.github import _HEADER_EVENT
 from buildbot.www.hooks.github import _HEADER_SIGNATURE
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
-# Added "modfied" and "removed", and change email
+# Added "modified" and "removed", and change email
 gitJsonPayload = """
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",

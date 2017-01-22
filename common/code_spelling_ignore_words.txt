@@ -444,7 +444,6 @@ mit
 mixin
 mkdir
 mkstemp
-modfied
 moduleauthor
 monkeypatch
 monkeypatches

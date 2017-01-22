@@ -29,7 +29,7 @@ from buildbot.test.fake.web import fakeMasterForHooks
 
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
-# Added "modfied" and "removed", and change email
+# Added "modified" and "removed", and change email
 gitJsonPayload = """
 {
   "before": "95790bf891e76fee5e1747ab589903a6a1f80f22",
