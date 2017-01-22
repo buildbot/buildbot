@@ -576,7 +576,6 @@ ramlfications
 rc
 reactorname
 readlines
-reaised
 recieve
 recompress
 reconf
