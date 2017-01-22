@@ -79,7 +79,7 @@ class SourceStampExtractor:
     def _didvc(self, res, cmd):
         (stdout, stderr, code) = res
         # 'bzr diff' sets rc=1 if there were any differences.
-        # cvs does something similar, so don't bother requring rc=0.
+        # cvs does something similar, so don't bother requiring rc=0.
         return stdout
 
     def get(self):
