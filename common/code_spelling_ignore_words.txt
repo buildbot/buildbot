@@ -159,7 +159,6 @@ cmp
 codebase
 codebases
 codec
-comand
 comitters
 commitish
 committer

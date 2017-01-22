@@ -438,7 +438,7 @@ def command_to_string(command):
     else:
         rv = "'%s ...'" % (' '.join(words[:2]))
 
-    # cmd was a comand and thus probably a bytestring.  Be gentle in
+    # cmd was a command and thus probably a bytestring.  Be gentle in
     # trying to covert it.
     if isinstance(rv, bytes):
         rv = rv.decode('ascii', 'replace')
