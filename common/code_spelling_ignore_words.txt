@@ -593,7 +593,6 @@ regexp
 regexps
 regexs
 releasers
-reliabily
 remote's
 remotetransfer
 renderable
