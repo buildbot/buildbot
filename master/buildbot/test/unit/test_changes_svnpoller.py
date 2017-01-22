@@ -420,13 +420,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         args.extend(['--limit=100', sample_base])
         return gpo.Expect(*args)
 
-    def test_create_changes_overriden_project(self):
+    def test_create_changes_overridden_project(self):
         def custom_split_file(path):
             f = split_file(path)
             if f:
-                f["project"] = "overriden-project"
-                f["repository"] = "overriden-repository"
-                f["codebase"] = "overriden-codebase"
+                f["project"] = "overridden-project"
+                f["repository"] = "overridden-repository"
+                f["codebase"] = "overridden-codebase"
             return f
 
         base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
@@ -442,16 +442,16 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         # note that parsing occurs in reverse
         self.assertEqual(changes[0]['branch'], "branch")
         self.assertEqual(changes[0]['revision'], '2')
-        self.assertEqual(changes[0]['project'], "overriden-project")
-        self.assertEqual(changes[0]['repository'], "overriden-repository")
-        self.assertEqual(changes[0]['codebase'], "overriden-codebase")
+        self.assertEqual(changes[0]['project'], "overridden-project")
+        self.assertEqual(changes[0]['repository'], "overridden-repository")
+        self.assertEqual(changes[0]['codebase'], "overridden-codebase")
 
         self.assertEqual(changes[1]['branch'], "branch")
         self.assertEqual(changes[1]['files'], ["main.c"])
         self.assertEqual(changes[1]['revision'], '3')
-        self.assertEqual(changes[1]['project'], "overriden-project")
-        self.assertEqual(changes[1]['repository'], "overriden-repository")
-        self.assertEqual(changes[1]['codebase'], "overriden-codebase")
+        self.assertEqual(changes[1]['project'], "overridden-project")
+        self.assertEqual(changes[1]['repository'], "overridden-repository")
+        self.assertEqual(changes[1]['codebase'], "overridden-codebase")
 
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,

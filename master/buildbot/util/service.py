@@ -253,7 +253,7 @@ class ClusteredBuildbotService(BuildbotService):
         return defer.succeed(None)
 
     def deactivate(self):
-        # to be overriden by subclasses
+        # to be overridden by subclasses
         # will run when this instance loses its chosen status
         return defer.succeed(None)
 

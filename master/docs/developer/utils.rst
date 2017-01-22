@@ -973,7 +973,7 @@ For example, a particular daily scheduler could be configured on multiple master
         Constructor of the service.
         The constructor initialize the service, and store the config arguments in private attributes.
 
-        This should *not* be overriden by subclasses, as they should rather override checkConfig.
+        This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
     .. py:method:: checkConfig(self, *args, **kwargs)
 
@@ -1086,7 +1086,7 @@ For example, a particular daily scheduler could be configured on multiple master
 
         The constructor initialize the service, and store the config arguments in private attributes.
 
-        This should *not* be overriden by subclasses, as they should rather override checkConfig.
+        This should *not* be overridden by subclasses, as they should rather override checkConfig.
 
 
     .. py:method:: get(endpoint, params=None)
