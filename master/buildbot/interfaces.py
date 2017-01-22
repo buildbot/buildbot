@@ -690,7 +690,7 @@ class IEventSource(Interface):
         return events caused by one of the listed committers. If the list is
         empty or None, events from every committers should be returned.
 
-        @param minTime: a timestamp. Do not generate events occuring prior to
+        @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
 
