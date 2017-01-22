@@ -838,7 +838,7 @@ class IStatusLogConsumer(Interface):
     sockets, such as an HTTP request. Note that the consumer can only pause
     the producer until it has caught up with all the old data. After that
     point, C{pauseProducing} is ignored and all new output from the log is
-    sent directoy to the consumer."""
+    sent directory to the consumer."""
 
     def registerProducer(producer, streaming):
         """A producer is being hooked up to this consumer. The consumer only

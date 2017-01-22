@@ -212,7 +212,6 @@ dicts
 diff
 diffs
 dir
-directoy
 dirname
 dirs
 dirwatcher
