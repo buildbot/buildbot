@@ -33,7 +33,7 @@ class WorkerBuildStep(buildstep.BuildStep):
 class SetPropertiesFromEnv(WorkerBuildStep):
 
     """
-    Sets properties from envirionment variables on the worker.
+    Sets properties from environment variables on the worker.
 
     Note this is transfered when the worker first connects
     """

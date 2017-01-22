@@ -233,7 +233,6 @@ eg
 enginestrategy
 enosuch
 env
-envirionment
 eof
 epxnaed
 epydoc
