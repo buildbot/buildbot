@@ -143,7 +143,7 @@ class Trigger(BuildStep):
                 "triggered scheduler is not ITriggerableScheduler: %r" % (name,))
         return sch
 
-    # This customization enpoint allows users to dynamically select which
+    # This customization endpoint allows users to dynamically select which
     # scheduler and properties to trigger
     def getSchedulersAndProperties(self):
         return [{
