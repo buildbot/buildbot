@@ -106,7 +106,7 @@ class BuilderStatus(styles.Versioned):
             if b.number == number:
                 return b
 
-        # Otherwise it is in the database and thus inaccesible.
+        # Otherwise it is in the database and thus inaccessible.
         return None
 
     def prune(self, events_only=False):
