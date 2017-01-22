@@ -135,7 +135,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                     dict(name=idx.name,
                          unique=idx.unique and 1 or 0,
                          column_names=sorted([c.name for c in idx.columns]))
-                    for idx in tbl.indexes])
+                    for idx in tbl.indexes], key=lambda x: x['name'])
 
                 # include implied indexes on postgres and mysql
                 if engine.dialect.name == 'mysql':
@@ -144,7 +144,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                                if tname == tbl.name]
                     exp = sorted(exp + implied)
 
-                got = sorted(insp.get_indexes(tbl.name))
+                got = sorted(insp.get_indexes(tbl.name),
+                             key=lambda x: x['name'])
                 if exp != got:
                     got_names = set([idx['name'] for idx in got])
                     exp_names = set([idx['name'] for idx in exp])
