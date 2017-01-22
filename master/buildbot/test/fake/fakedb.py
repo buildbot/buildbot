@@ -40,6 +40,7 @@ from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 
 # Fake DB Rows
@@ -107,7 +108,7 @@ class Row(object):
         # which stores either utf-8 encoded string, or gzip-compressed
         # utf-8 encoded string.
         for col in self.binary_columns:
-            self.values[col] = self.values[col].encode("utf-8")
+            self.values[col] = unicode2bytes(self.values[col])
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
             self.values[hash_col] = self.hashColumns(
