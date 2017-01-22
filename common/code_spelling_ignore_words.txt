@@ -710,7 +710,6 @@ stdin
 stdout
 stepid
 stickysidebar
-stil
 stop's
 str
 strerror
