@@ -17,12 +17,15 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
+from binascii import hexlify
 from hashlib import sha1
 
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import flatten
+from buildbot.util import unicode2bytes
 
 srcs = ['git', 'svn', 'hg', 'cvs', 'darcs', 'bzr']
 salt_len = 8
@@ -162,9 +165,9 @@ def encrypt(passwd):
     @returns: encrypted/salted string
     """
     m = sha1()
-    salt = os.urandom(salt_len).encode('hex_codec')
-    m.update(passwd + salt)
-    crypted = salt + m.hexdigest()
+    salt = hexlify(os.urandom(salt_len))
+    m.update(unicode2bytes(passwd) + salt)
+    crypted = bytes2NativeString(salt) + m.hexdigest()
     return crypted
 
 
@@ -180,7 +183,7 @@ def check_passwd(guess, passwd):
     """
     m = sha1()
     salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
-    m.update(guess + salt)
-    crypted_guess = salt + m.hexdigest()
+    m.update(unicode2bytes(guess) + unicode2bytes(salt))
+    crypted_guess = bytes2NativeString(salt) + m.hexdigest()
 
-    return (crypted_guess == passwd)
+    return (crypted_guess == bytes2NativeString(passwd))
