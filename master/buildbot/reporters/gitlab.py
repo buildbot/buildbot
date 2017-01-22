@@ -71,7 +71,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
-        :return: A defered with the result from GitLab.
+        :return: A deferred with the result from GitLab.
 
         """
         payload = {'state': state, 'ref': branch}

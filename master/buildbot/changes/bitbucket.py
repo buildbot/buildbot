@@ -160,7 +160,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _processChangesFailure(self, f):
         log.msg('BitbucketPullrequestPoller: json api poll failed')
         log.err(f)
-        # eat the failure to continue along the defered chain - we still want
+        # eat the failure to continue along the deferred chain - we still want
         # to catch up
         return None
 

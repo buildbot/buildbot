@@ -68,7 +68,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                       or 'failure'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
-        :return: A defered with the result from GitHub.
+        :return: A deferred with the result from GitHub.
 
         This code comes from txgithub by @tomprince.
         txgithub is based on twisted's webclient agent, which is much less reliable and featureful

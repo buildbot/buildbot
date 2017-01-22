@@ -202,7 +202,6 @@ debounce
 debounced
 debouncing
 deepcopy
-defered
 deferredlist
 deferreds
 deliberatly
