@@ -74,7 +74,7 @@ class Dependent(base.BaseScheduler):
 
     @util.deferredLocked('_subscription_lock')
     def _buildset_new_cb(self, key, msg):
-        # check if this was submitetted by our upstream
+        # check if this was submitted by our upstream
         if msg['scheduler'] != self.upstream_name:
             return
 
