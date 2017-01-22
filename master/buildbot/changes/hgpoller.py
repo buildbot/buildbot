@@ -215,7 +215,7 @@ class HgPoller(base.PollingChangeSource):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
-        proabably a good thing, since it's probably a mispelling
+        probably a good thing, since it's probably a mispelling
         (if really buildbotting a branch that does not have any changeset
         yet, one shouldn't be surprised to get errors)
         """
