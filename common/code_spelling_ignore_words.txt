@@ -353,7 +353,6 @@ irc
 isdir
 ish
 isinstance
-isnt
 iter
 iterable
 ivar

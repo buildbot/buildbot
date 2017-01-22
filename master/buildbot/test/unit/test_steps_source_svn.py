@@ -223,7 +223,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         return d
 
     def test_revision_missing(self):
-        """Fail if 'revision' tag isnt there"""
+        """Fail if 'revision' tag isn't there"""
         svn_info_stdout = self.svn_info_stdout_xml.replace('entry', 'Blah')
 
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
