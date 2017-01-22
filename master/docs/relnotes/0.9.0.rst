@@ -327,7 +327,7 @@ Fixes
 
 * Fix incompatibility with MySQL-5.7 (:bug:`3421`)
 
-* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be catched by travis)
+* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be caught by travis)
 
 * Made :class:`Interpolate` safe for deepcopy or serialization/deserialization
 

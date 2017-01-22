@@ -85,7 +85,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
 
-    def test_not_catched_warning(self):
+    def test_not_caught_warning(self):
         buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.deprecated_attr = 1
         with mock.patch.dict(sys.modules,
@@ -98,13 +98,13 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
             # Overwrite with Twisted's module wrapper.
             import buildbot_module
 
-        warnings = self.flushWarnings([self.test_not_catched_warning])
+        warnings = self.flushWarnings([self.test_not_caught_warning])
         self.assertEqual(len(warnings), 0)
 
         # Should produce warning
         buildbot_module.deprecated_attr
 
-        warnings = self.flushWarnings([self.test_not_catched_warning])
+        warnings = self.flushWarnings([self.test_not_caught_warning])
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
         self.assertIn("test message", warnings[0]['message'])

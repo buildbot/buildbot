@@ -48,7 +48,7 @@ if sys.version_info[:2] < (3, 2):
     #       ProgrammingError: SQLite objects created in a thread can only be used in that same thread.
     #       The object was created in thread id 123145306509312 and this is thread id 140735272824832
     # sqlalchemy is closing pool connections from the main thread, which sqlite does not like
-    # the warning has been there since forever, but would be catched by the next lastResort logger
+    # the warning has been there since forever, but would be caught by the next lastResort logger
     logging.getLogger("sqlalchemy.pool.SingletonThreadPool").addHandler(None)
     logging.getLogger().addHandler(_handler)
 # import mock so we bail out early if it's not installed
@@ -66,7 +66,7 @@ if LooseVersion(mock.__version__) < LooseVersion("0.8"):
 # Force loading of deprecated modules and check that appropriate warnings
 # were emitted.
 # Without explicit load of deprecated modules it's hard to predict when
-# they will be imported and when warning should be catched.
+# they will be imported and when warning should be caught.
 from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning  # noqa pylint: disable=wrong-import-position
 from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa pylint: disable=wrong-import-position
@@ -108,6 +108,6 @@ with assertProducesWarning(
 
 # All deprecated modules should be loaded, consider future
 # DeprecatedWorkerModuleWarning in tests as errors.
-# All DeprecatedWorkerNameWarning warnings should be explicitly catched too,
+# All DeprecatedWorkerNameWarning warnings should be explicitly caught too,
 # so fail on any DeprecatedWorkerAPIWarning.
 warnings.filterwarnings('error', category=DeprecatedWorkerAPIWarning)

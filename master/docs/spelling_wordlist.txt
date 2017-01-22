@@ -119,7 +119,6 @@ cancelling
 candidated
 canonicalize
 canStartBuild
-catched
 cd
 cfg
 changehook
