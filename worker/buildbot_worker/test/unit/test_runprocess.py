@@ -353,7 +353,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
-            # actually gets propogated back to the master in stderr.
+            # actually gets propagated back to the master in stderr.
             for u in b.updates:
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
