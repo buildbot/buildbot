@@ -443,7 +443,7 @@ class IStatus(Interface):
         which accompany the addedBuilder message."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -663,7 +663,7 @@ class IBuilderStatus(Interface):
         buildFinished messages."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -806,7 +806,7 @@ class IBuildStatus(Interface):
         every 'updateInterval' seconds."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
