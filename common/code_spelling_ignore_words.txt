@@ -738,8 +738,6 @@ subprocess
 subprocesses
 subquery
 substring
-succesful
-succesfully
 successfull
 summarises
 summarising

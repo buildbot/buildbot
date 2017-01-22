@@ -133,7 +133,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                        whereclause=(tbl.c.builderid == builderid)))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
-            # insert until we are succesful..
+            # insert until we are successful..
             while True:
                 if _race_hook:
                     _race_hook(conn)

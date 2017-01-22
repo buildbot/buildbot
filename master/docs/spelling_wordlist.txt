@@ -724,7 +724,6 @@ Subqueries
 subquery
 subshell
 substrings
-succesfull
 successCb
 sucessful
 summarization
