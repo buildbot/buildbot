@@ -214,7 +214,6 @@ deepcopy
 deferreds
 Deferreds
 demux
-dependant
 deserialization
 dev
 Dict

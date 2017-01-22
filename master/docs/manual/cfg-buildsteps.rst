@@ -1083,7 +1083,7 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
 
-    To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependant separator.
+    To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependent separator.
 
     Those variables support expansion so that if you just want to prepend :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
     Variables that don't exist on the worker will be replaced by ``""``.

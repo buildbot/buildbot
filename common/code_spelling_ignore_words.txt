@@ -205,7 +205,6 @@ deepcopy
 deferredlist
 deferreds
 denormalized
-dependant
 desynchronization
 dev
 diconnection
@@ -377,7 +376,6 @@ instanciation
 insubstantiate
 insubstantiation
 interace
-interdependant
 internet
 interruptable
 intialization
