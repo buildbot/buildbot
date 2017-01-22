@@ -831,7 +831,6 @@ unsubstantiated
 untarring
 upcall
 updatable
-updateable
 updateof
 uppercased
 uri

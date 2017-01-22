@@ -213,7 +213,7 @@ class Git(Source):
     @defer.inlineCallbacks
     def mode_incremental(self):
         action = yield self._sourcedirIsUpdatable()
-        # if not updateable, do a full checkout
+        # if not updatable, do a full checkout
         if action == "clobber":
             yield self.clobber()
             return
