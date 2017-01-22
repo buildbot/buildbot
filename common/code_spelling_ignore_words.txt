@@ -166,7 +166,6 @@ committers
 compability
 comparaison
 completers
-completetly
 comspec
 concat
 conccurently

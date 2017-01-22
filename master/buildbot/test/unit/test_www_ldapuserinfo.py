@@ -44,7 +44,7 @@ class CommonTestCase(unittest.TestCase):
 
     """Common fixture for all ldapuserinfo tests
 
-    we completetly fake the python3-ldap module, so no need to require
+    we completely fake the python3-ldap module, so no need to require
     it to run the unit tests
     """
 
