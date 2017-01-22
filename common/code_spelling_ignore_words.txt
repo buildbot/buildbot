@@ -557,7 +557,6 @@ programmatically
 proj
 projectname
 proto
-provie
 pserver
 pty
 ptys
