@@ -89,7 +89,7 @@ class MtrLogObserver(LogLineObserver):
     It counts number of tests run and uses it to provide more accurate
     completion estimates.
 
-    It parses out test failures from the output and summarises the results on
+    It parses out test failures from the output and summarizes the results on
     the Waterfall page. It also passes the information to methods that can be
     overridden in a subclass to do further processing on the information."""
 

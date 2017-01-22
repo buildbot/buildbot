@@ -738,7 +738,6 @@ subprocess
 subprocesses
 subquery
 substring
-summarises
 summarising
 suppressions
 supress
