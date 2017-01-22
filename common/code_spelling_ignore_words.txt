@@ -553,7 +553,6 @@ prepended
 prepends
 privmsgs
 proc
-proceeed
 programmatically
 proj
 projectname

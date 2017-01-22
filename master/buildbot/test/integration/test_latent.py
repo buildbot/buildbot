@@ -272,7 +272,7 @@ class Tests(SynchronousTestCase):
         """
         If multiple builders trigger try to substantiate a worker at
         the same time, if the substantiation succeeds then all of
-        the builds proceeed.
+        the builds proceed.
         """
         controller = LatentController('local')
         config_dict = {
