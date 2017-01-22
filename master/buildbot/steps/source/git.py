@@ -507,7 +507,7 @@ class Git(Source):
             res = yield self._dovccmd(['reset', '--hard',
                                        self.revision, '--'],
                                       shallowClone)
-        # init and update submodules, recurisively. If there's not recursion
+        # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:
             res = yield self._dovccmd(['submodule', 'update',

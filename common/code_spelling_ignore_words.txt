@@ -582,7 +582,6 @@ reconfig
 reconfig'd
 reconfigs
 reconfigurability
-recurisively
 recurse
 redhat
 refactor
