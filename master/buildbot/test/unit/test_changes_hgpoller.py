@@ -150,7 +150,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     @defer.inlineCallbacks
     def test_poll_several_heads(self):
-        # If there are several heads on the named branch, the poller musn't
+        # If there are several heads on the named branch, the poller mustn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
         self.expectCommands(

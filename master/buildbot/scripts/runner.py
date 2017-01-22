@@ -650,7 +650,7 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
 class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
 
     """This command is used with the front end's proxy task. It enables to run the front end
-    without the backend server runing in the background"""
+    without the backend server running in the background"""
 
     subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
     optParameters = [

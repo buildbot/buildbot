@@ -215,7 +215,7 @@ class HgPoller(base.PollingChangeSource):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
-        proabably a good thing, since it's probably a mispelling
+        probably a good thing, since it's probably a mispelling
         (if really buildbotting a branch that does not have any changeset
         yet, one shouldn't be surprised to get errors)
         """
@@ -260,7 +260,7 @@ class HgPoller(base.PollingChangeSource):
         oid, current = yield self._getCurrentRev()
         # hg log on a range of revisions is never empty
         # also, if a numeric revision does not exist, a node may match.
-        # Therefore, we have to check explicitely that branch head > current.
+        # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
         if head <= current:
             return

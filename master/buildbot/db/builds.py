@@ -77,7 +77,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                              ss['branch'],
                              ss['codebase']) for ss in ssBuild])
         while rv is None:
-            # Get some recent successfull builds on the same builder
+            # Get some recent successful builds on the same builder
             prevBuilds = yield self._getRecentBuilds(whereclause=((tbl.c.builderid == builderid) &
                                                                   (tbl.c.number < number) &
                                                                   (tbl.c.results == 0)),
@@ -133,7 +133,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                        whereclause=(tbl.c.builderid == builderid)))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
-            # insert until we are succesful..
+            # insert until we are successful..
             while True:
                 if _race_hook:
                     _race_hook(conn)

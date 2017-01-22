@@ -36,19 +36,19 @@ class OtherWarning(Warning):
 
 class TestWarningsFilter(unittest.TestCase):
 
-    def test_warnigs_catched(self):
+    def test_warnigs_caught(self):
         # Assertion is correct.
         with assertProducesWarning(SomeWarning):
             warnings.warn("test", SomeWarning)
 
-    def test_warnigs_catched_num_check(self):
+    def test_warnigs_caught_num_check(self):
         # Assertion is correct.
         with assertProducesWarnings(SomeWarning, num_warnings=3):
             warnings.warn("1", SomeWarning)
             warnings.warn("2", SomeWarning)
             warnings.warn("3", SomeWarning)
 
-    def test_warnigs_catched_num_check_fail(self):
+    def test_warnigs_caught_num_check_fail(self):
         def f1():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 pass
@@ -66,12 +66,12 @@ class TestWarningsFilter(unittest.TestCase):
                 warnings.warn("3", SomeWarning)
         self.assertRaises(AssertionError, f3)
 
-    def test_warnigs_catched_pattern_check(self):
+    def test_warnigs_caught_pattern_check(self):
         # Assertion is correct.
         with assertProducesWarning(SomeWarning, message_pattern=r"t.st"):
             warnings.warn("The test", SomeWarning)
 
-    def test_warnigs_catched_pattern_check_fail(self):
+    def test_warnigs_caught_pattern_check_fail(self):
         def f():
             # Assertion fails.
             with assertProducesWarning(SomeWarning, message_pattern=r"other"):
@@ -79,7 +79,7 @@ class TestWarningsFilter(unittest.TestCase):
 
         self.assertRaises(AssertionError, f)
 
-    def test_warnigs_catched_patterns_check(self):
+    def test_warnigs_caught_patterns_check(self):
         # Assertion is correct.
         with assertProducesWarnings(SomeWarning,
                                     messages_patterns=["1", "2", "3"]):
@@ -87,7 +87,7 @@ class TestWarningsFilter(unittest.TestCase):
             warnings.warn("log 2 message", SomeWarning)
             warnings.warn("log 3 message", SomeWarning)
 
-    def test_warnigs_catched_patterns_check_fails(self):
+    def test_warnigs_caught_patterns_check_fails(self):
         def f1():
             # Assertion fails.
             with assertProducesWarnings(SomeWarning,

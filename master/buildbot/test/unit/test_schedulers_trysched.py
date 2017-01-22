@@ -76,7 +76,7 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
         svc = trysched.JobdirService(scheduler=scheduler, basedir=self.jobdir)
 
-        # creat some new data to process
+        # create some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
         with open(jobdata, "w") as f:
             f.write('JOBDATA')
@@ -163,7 +163,7 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         # start it
         self.sched.startService()
 
-        # check that it has set the basedir correctly, even if it doesnt start
+        # check that it has set the basedir correctly, even if it doesn't start
         self.assertEqual(self.sched.watcher.basedir, self.jobdir)
 
         yield self.sched.stopService()

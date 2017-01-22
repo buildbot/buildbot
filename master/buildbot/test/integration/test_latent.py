@@ -95,7 +95,7 @@ class Tests(SynchronousTestCase):
         """
         If there are two latent workers configured, and two build
         requests for them, both workers will start substantiating
-        conccurently.
+        concurrently.
         """
         controllers = [
             LatentController('local1'),
@@ -272,7 +272,7 @@ class Tests(SynchronousTestCase):
         """
         If multiple builders trigger try to substantiate a worker at
         the same time, if the substantiation succeeds then all of
-        the builds proceeed.
+        the builds proceed.
         """
         controller = LatentController('local')
         config_dict = {
@@ -317,7 +317,7 @@ class Tests(SynchronousTestCase):
 
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
-        If a latent worker substantiate, but not connect, and then be unsubstanciated,
+        If a latent worker substantiate, but not connect, and then be unsubstantiated,
         the build request becomes unclaimed.
         """
         controller = LatentController('local')

@@ -443,7 +443,7 @@ class IStatus(Interface):
         which accompany the addedBuilder message."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -506,7 +506,7 @@ class IBuildRequestStatus(Interface):
 
     def getBuilds():
         """Return a list of IBuildStatus objects for each Build that has been
-        started in an attempt to satify this BuildRequest."""
+        started in an attempt to satisfy this BuildRequest."""
 
     def subscribe(observer):
         """Register a callable that will be invoked (with a single
@@ -663,7 +663,7 @@ class IBuilderStatus(Interface):
         buildFinished messages."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -690,7 +690,7 @@ class IEventSource(Interface):
         return events caused by one of the listed committers. If the list is
         empty or None, events from every committers should be returned.
 
-        @param minTime: a timestamp. Do not generate events occuring prior to
+        @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
 
@@ -704,7 +704,7 @@ class IBuildStatus(Interface):
         """
         Return the BuilderStatus that owns this build.
 
-        @rtype: implementor of L{IBuilderStatus}
+        @rtype: implementer of L{IBuilderStatus}
         """
 
     def isFinished():
@@ -806,7 +806,7 @@ class IBuildStatus(Interface):
         every 'updateInterval' seconds."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -838,7 +838,7 @@ class IStatusLogConsumer(Interface):
     sockets, such as an HTTP request. Note that the consumer can only pause
     the producer until it has caught up with all the old data. After that
     point, C{pauseProducing} is ignored and all new output from the log is
-    sent directoy to the consumer."""
+    sent directory to the consumer."""
 
     def registerProducer(producer, streaming):
         """A producer is being hooked up to this consumer. The consumer only
@@ -869,20 +869,20 @@ class IStatusReceiver(IPlugin):
     def buildsetSubmitted(buildset):
         """A new BuildSet has been submitted to the buildmaster.
 
-        @type buildset: implementor of L{IBuildSetStatus}
+        @type buildset: implementer of L{IBuildSetStatus}
         """
 
     def requestSubmitted(request):
         """A new BuildRequest has been submitted to the buildmaster.
 
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def requestCancelled(builder, request):
         """A BuildRequest has been cancelled on the given Builder.
 
         @type builder: L{buildbot.status.builder.BuilderStatus}
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def builderAdded(builderName, builder):
@@ -893,7 +893,7 @@ class IStatusReceiver(IPlugin):
 
         @type  builderName: string
         @type  builder:     L{buildbot.status.builder.BuilderStatus}
-        @rtype: implementor of L{IStatusReceiver}
+        @rtype: implementer of L{IStatusReceiver}
         """
 
     def builderChangedState(builderName, state):

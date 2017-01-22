@@ -158,7 +158,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         @d.addCallback
         def check(_):
-            # it doesnt do anything because it was already claimed
+            # it doesn't do anything because it was already claimed
             self.assertEqual(loops, [])
 
         reactor.callWhenRunning(d.callback, None)

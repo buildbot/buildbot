@@ -40,7 +40,7 @@ from buildbot.worker.marathon import MarathonLatentWorker
 # then set the environment variable to run the test:
 # export BBTEST_MARATHON_URL=http://localhost:8080
 
-# following environment variable can be used to stress concurent worker startup
+# following environment variable can be used to stress concurrent worker startup
 NUM_CONCURRENT = int(os.environ.get("MARATHON_TEST_NUM_CONCURRENT_BUILD", 1))
 
 # if you run the stress test against a real mesos deployment, you want to also use https and basic credentials

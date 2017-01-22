@@ -50,7 +50,7 @@ class BuildStepController(object):
 class ControllableBuildStep(BuildStep):
 
     """
-    A latent worker that can be contolled by tests.
+    A latent worker that can be controlled by tests.
     """
     name = "controllableStep"
 

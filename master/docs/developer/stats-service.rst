@@ -192,7 +192,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
    Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
-   It is intialized with the following arguments:
+   It is initialized with the following arguments:
 
    ``property_name``
      (str) The name of property needed to be recorded as a statistic.
@@ -470,7 +470,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
    Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
-   It is intialized with the following arguments:
+   It is initialized with the following arguments:
 
    ``data_name``
      (str) The name of data to be captured.

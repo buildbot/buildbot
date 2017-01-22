@@ -152,7 +152,7 @@ class TestLibVirtWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_notready(self):
         """
-        If a LibVirtWorker hasnt finished scanning for existing VMs then we shouldn't
+        If a LibVirtWorker hasn't finished scanning for existing VMs then we shouldn't
         start builds on it as it might create a 2nd VM when we want to reuse the existing
         one.
         """
@@ -163,7 +163,7 @@ class TestLibVirtWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_domain_and_not_connected(self):
         """
-        If we've found that the VM this worker would instance already exists but hasnt
+        If we've found that the VM this worker would instance already exists but hasn't
         connected then we shouldn't start builds or we'll end up with a dupe.
         """
         bs = yield self.setup_canStartBuild()
@@ -257,7 +257,7 @@ class TestWorkQueue(unittest.TestCase):
         flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
-        # flags[1] shouldnt already be set, either
+        # flags[1] shouldn't already be set, either
         d1 = self.queue.execute(self.delayed_success())
 
         @d1.addCallback

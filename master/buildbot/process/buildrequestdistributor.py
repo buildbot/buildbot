@@ -210,7 +210,7 @@ class BasicBuildChooser(BuildChooserBase):
                 recycledWorkers.append(worker)
                 worker = yield self._popNextWorker(breq)
 
-            # recycle the workers that we didnt use to the head of the queue
+            # recycle the workers that we didn't use to the head of the queue
             # this helps ensure we run 'nextWorker' only once per worker choice
             if recycledWorkers:
                 self._unpopWorkers(recycledWorkers)

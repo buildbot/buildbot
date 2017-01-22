@@ -151,7 +151,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     def formatDuration(self, duration):
         """Format the duration.
 
-        This method could be overriden if really needed, as the duration format in gerrit
+        This method could be overridden if really needed, as the duration format in gerrit
         is an arbitrary string.
         :param duration: duration in timedelta
         """
@@ -170,7 +170,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
     def getGerritChanges(props):
         """ Get the gerrit changes
 
-            This method could be overriden if really needed to accommodate for other
+            This method could be overridden if really needed to accommodate for other
             custom steps method for fetching gerrit changes.
 
             :param props: an IProperty

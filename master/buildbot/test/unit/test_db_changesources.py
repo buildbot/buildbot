@@ -136,7 +136,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeSource_missing(self):
-        """getChangeSource for a changesource that doesnt exist"""
+        """getChangeSource for a changesource that doesn't exist"""
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs, None)
 

@@ -49,7 +49,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             self, step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)
 
-        # builddir propety used to create absolute path required in perforce
+        # builddir property used to create absolute path required in perforce
         # client spec.
         workspace_dir = '/home/user/workspace'
         if _is_windows:

@@ -330,7 +330,7 @@ class MailNotifier(service.BuildbotService):
         return False
 
     def patch_to_attachment(self, patch, index):
-        # patches are specificaly converted to unicode before entering the db
+        # patches are specifically converted to unicode before entering the db
         a = MIMEText(patch['body'].encode(ENCODING), _charset=ENCODING)
         a.add_header('Content-Disposition', "attachment",
                      filename="source patch " + str(index))
@@ -453,7 +453,7 @@ class MailNotifier(service.BuildbotService):
             msgdict['body'] += build_msgdict['body']
             if 'subject' in build_msgdict:
                 msgdict['subject'] = build_msgdict['subject']
-            # ensure msgbody ends with double cariage return
+            # ensure msgbody ends with double carriage return
             if not msgdict['body'].endswith("\n\n"):
                 msgdict['body'] += '\n\n'
 

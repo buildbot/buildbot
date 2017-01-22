@@ -78,7 +78,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         d.addCallbacks(cb_empty, eb_empty)
         d.addCallback(lambda _: self.assertAllCommandsRan())
 
-        # and the method shouldn't supress any exceptions
+        # and the method shouldn't suppress any exceptions
         self.expectCommands(
             gpo.Expect('git', *args)
             .path('gitpoller-work')
@@ -976,7 +976,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             # The release branch id should remain unchanged,
-            # because it was ignorned.
+            # because it was ignored.
             self.assertEqual(self.poller.lastRev, {
                 'refs/heads/master':
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',

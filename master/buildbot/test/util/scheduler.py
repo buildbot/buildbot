@@ -59,8 +59,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         directory.
 
         If C{overrideBuildsetMethods} is true, then all of the
-        addBuildsetForXxx methods are overriden to simply append the method
-        name and arguments to self.addBuildsetCalls.  These overriden methods
+        addBuildsetForXxx methods are overridden to simply append the method
+        name and arguments to self.addBuildsetCalls.  These overridden methods
         return buildsets starting with 500 and buildrequest IDs starting with
         100.
 

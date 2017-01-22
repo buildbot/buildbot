@@ -612,7 +612,7 @@ class TestRealDB(unittest.TestCase,
         ]
         yield self.insertTestData(self.baseRows + manyWorkers)
 
-        # should succesfully remove all ConfiguredWorker rows
+        # should successfully remove all ConfiguredWorker rows
         with self.assertNoMaxVariables():
             yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
 
@@ -637,7 +637,7 @@ class TestRealDB(unittest.TestCase,
         ]
         yield self.insertTestData(self.baseRows + manyWorkers)
 
-        # should succesfully remove all ConfiguredWorker rows
+        # should successfully remove all ConfiguredWorker rows
         with self.assertNoMaxVariables():
             yield self.db.workers.deconfigureAllWorkersForMaster(masterid=10)
         w = yield self.db.workers.getWorker(30)

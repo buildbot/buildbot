@@ -96,7 +96,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                         build.stopBuild("Master Shutdown", results)
                         if not is_building:
                             # if it is not building, then it must be a latent worker
-                            # which is substanciating. Cancel it.
+                            # which is substantiating. Cancel it.
                             build.workerforbuilder.worker.insubstantiate()
             # then wait for all builds to finish
             l = []

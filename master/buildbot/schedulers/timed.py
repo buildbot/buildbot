@@ -406,7 +406,7 @@ class NightlyTriggerable(NightlyBase):
 
         # Trigger expects a callback with the success of the triggered
         # build, if waitForFinish is True.
-        # Just return SUCCESS, to indicate that the trigger was succesful,
+        # Just return SUCCESS, to indicate that the trigger was successful,
         # don't wait for the nightly to run.
         return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
 

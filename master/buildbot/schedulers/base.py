@@ -310,7 +310,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
         # but that would merely only optimize the single builder case, while
-        # probably the multiple builder case will be severaly impacted by the
+        # probably the multiple builder case will be severely impacted by the
         # several db requests needed.
         builderids = list()
         for bldr in (yield self.master.data.get(('builders', ))):

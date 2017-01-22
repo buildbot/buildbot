@@ -46,7 +46,7 @@ class HyperLatentManager(service.SharedService):
     There is one instance of this manager per host, accesskey, secretkey tuple.
     This manager manages its own thread pull, as Hyper_sh is blocking.
 
-    You can change the maximum number of concurent access to hyper using
+    You can change the maximum number of concurrent access to hyper using
 
     import buildbot.worker.hyper
     buildbot.worker.hyper.HyperLatentManager.MAX_THREADS = 1

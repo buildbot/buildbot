@@ -436,7 +436,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_pb_withInvalidMaster(self):
         """
-        When 'buildbot try' is asked to conncect via pb, but an invalid
+        When 'buildbot try' is asked to connect via pb, but an invalid
         master is specified, a usage error is raised.
         """
         self.assertRaises(usage.UsageError, self.parse,

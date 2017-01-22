@@ -35,7 +35,7 @@ def getCommand(name):
     # e.g. under MSysGit/Windows, there is both a git.cmd and a
     # git.exe on path, but we want the git.exe, since the git.cmd
     # does not seem to work properly with regard to errors raised
-    # and catched in buildbot worker command (vcs.py)
+    # and caught in buildbot worker command (vcs.py)
     #
     if runtime.platformType == 'win32' and len(possibles) > 1:
         possibles_exe = which(name + ".exe")

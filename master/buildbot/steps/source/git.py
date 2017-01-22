@@ -213,7 +213,7 @@ class Git(Source):
     @defer.inlineCallbacks
     def mode_incremental(self):
         action = yield self._sourcedirIsUpdatable()
-        # if not updateable, do a full checkout
+        # if not updatable, do a full checkout
         if action == "clobber":
             yield self.clobber()
             return
@@ -392,7 +392,7 @@ class Git(Source):
     def _fetch(self, _):
         fetch_required = True
 
-        # If the revision already exists in the repo, we dont need to fetch.
+        # If the revision already exists in the repo, we don't need to fetch.
         if self.revision:
             rc = yield self._dovccmd(['cat-file', '-e', self.revision],
                                      abandonOnFailure=False)
@@ -507,7 +507,7 @@ class Git(Source):
             res = yield self._dovccmd(['reset', '--hard',
                                        self.revision, '--'],
                                       shallowClone)
-        # init and update submodules, recurisively. If there's not recursion
+        # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:
             res = yield self._dovccmd(['submodule', 'update',

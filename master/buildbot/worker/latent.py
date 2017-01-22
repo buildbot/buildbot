@@ -248,7 +248,7 @@ class AbstractLatentWorker(AbstractWorker):
         try:
             yield d
         except Exception as e:
-            # The case of failure for insubstantiation is bad as we have a left-over costing ressource
+            # The case of failure for insubstantiation is bad as we have a left-over costing resource
             # There is not much thing to do here generically, so we must put the problem of stop_instance
             # reliability to the backend driver
             log.err(e, "while insubstantiating")

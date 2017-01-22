@@ -815,7 +815,7 @@ registerAdapter(_TupleRenderer, tuple, IRenderable)
 class _DictRenderer(object):
 
     """
-    Dict IRenderable adaptor. Maps Build.render over the keya and values in the dict.
+    Dict IRenderable adaptor. Maps Build.render over the keys and values in the dict.
     """
 
     def __init__(self, value):

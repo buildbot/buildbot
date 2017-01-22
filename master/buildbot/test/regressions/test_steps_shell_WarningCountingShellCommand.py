@@ -25,8 +25,8 @@ from buildbot.steps.shell import WarningCountingShellCommand
 
 class TestWarningCountingShellCommand(unittest.TestCase):
 
-    # Makes sure that it is possible to supress warnings even if the
-    # warning extractor does not provie line information
+    # Makes sure that it is possible to suppress warnings even if the
+    # warning extractor does not provide line information
 
     def testSuppressingLinelessWarningsPossible(self):
         # Use a warningExtractor that does not provide line

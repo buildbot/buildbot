@@ -267,6 +267,6 @@ class BasedirMixin(object):
             raise usage.UsageError("I wasn't expecting so many arguments")
 
     def postOptions(self):
-        # get an unambiguous, epxnaed basedir, including expanding '~', which
+        # get an unambiguous, expanded basedir, including expanding '~', which
         # may be useful in a .buildbot/config file
         self['basedir'] = os.path.abspath(os.path.expanduser(self['basedir']))

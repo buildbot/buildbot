@@ -44,7 +44,7 @@ class CommonTestCase(unittest.TestCase):
 
     """Common fixture for all ldapuserinfo tests
 
-    we completetly fake the python3-ldap module, so no need to require
+    we completely fake the python3-ldap module, so no need to require
     it to run the unit tests
     """
 
@@ -144,7 +144,7 @@ class LdapUserInfo(CommonTestCase):
                                'groups': ["group", "group2"], 'username': 'me'})
 
         # and if dn is decoded, it also works with an str groupMemberPattern,
-        # provided it's ASCII (can be decoded implicitely in any case)
+        # provided it's ASCII (can be decoded implicitly in any case)
         # promotion occurs because of the % operator
         self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
         self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",

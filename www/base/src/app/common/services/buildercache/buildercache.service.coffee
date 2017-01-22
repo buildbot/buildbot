@@ -1,7 +1,7 @@
 # builder data used everywhere in the UI, so we implement a simple cache
 
 # TODO this caching mechanism needs to be implemented eventually in data module
-# Its much more complicated to do this generically, and keep the event mecanism,
+# Its much more complicated to do this generically, and keep the event mechanism,
 # this is why we do this temporary workaround
 
 # Objects returned by this service cannot use onNew/onUpdate mechanism of data module (as they are shared)

@@ -816,7 +816,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
-            # Only first 1000 bytes trasferred in downloadString() helper
+            # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
             self.assertEqual(b''.join(read), contents)
 
@@ -850,7 +850,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
-            # Only first 1000 bytes trasferred in downloadString() helper
+            # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
             self.assertEqual(b''.join(read), contents)
 

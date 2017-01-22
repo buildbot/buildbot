@@ -172,7 +172,7 @@ class TestBRDBase(unittest.TestCase):
 class Test(TestBRDBase):
 
     def checkAllCleanedUp(self):
-        # check that the BRD didnt end with a stuck lock or in the 'active' state (which would mean
+        # check that the BRD didn't end with a stuck lock or in the 'active' state (which would mean
         # it ended without unwinding correctly)
         self.assertEqual(self.brd.pending_builders_lock.locked, False)
         self.assertEqual(self.brd.activity_lock.locked, False)

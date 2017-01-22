@@ -43,7 +43,7 @@ class IWorkerCommand(Interface):
 
     def setup(args):
         """This method is provided for subclasses to override, to extract
-        parameters from the 'args' dictionary. The default implemention does
+        parameters from the 'args' dictionary. The default implementation does
         nothing. It will be called from __init__"""
 
     def start():

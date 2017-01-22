@@ -41,7 +41,7 @@ class Dependent(base.BaseScheduler):
         self._cached_upstream_bsids = None
 
         # the subscription lock makes sure that we're done inserting a
-        # subcription into the DB before registering that the buildset is
+        # subscription into the DB before registering that the buildset is
         # complete.
         self._subscription_lock = defer.DeferredLock()
 
@@ -74,7 +74,7 @@ class Dependent(base.BaseScheduler):
 
     @util.deferredLocked('_subscription_lock')
     def _buildset_new_cb(self, key, msg):
-        # check if this was submitetted by our upstream
+        # check if this was submitted by our upstream
         if msg['scheduler'] != self.upstream_name:
             return
 
@@ -119,7 +119,7 @@ class Dependent(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def _getUpstreamBuildsets(self):
-        # get a list of (bsid, sssid, complete, results) for all
+        # get a list of (bsid, ssids, complete, results) for all
         # upstream buildsets
         yield self._updateCachedUpstreamBuilds()
 

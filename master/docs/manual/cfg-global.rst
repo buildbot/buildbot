@@ -913,7 +913,7 @@ BuildbotNetUsageData can be configured with 4 values:
 
 * ``c['buildbotNetUsageData'] = myCustomFunction``. You can also specify exactly what to send using a callback.
 
-    The custom function will take the generated data from full report in the form of a dictionary, and return a customized report as a jsonable dictionary. You can use this to filter any information you dont want to disclose. You can use a custom http_proxy environment variable in order to not send any data while developing your callback.
+    The custom function will take the generated data from full report in the form of a dictionary, and return a customized report as a jsonable dictionary. You can use this to filter any information you don't want to disclose. You can use a custom http_proxy environment variable in order to not send any data while developing your callback.
 
 
 .. bb:cfg:: user_managers

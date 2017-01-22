@@ -59,7 +59,7 @@ class MarathonLatentWorker(DockerBaseWorker):
                         masterFQDN=None,
                         **kwargs):
 
-        # Set build_wait_timeout to 0s if not explicitely set: Starting a
+        # Set build_wait_timeout to 0s if not explicitly set: Starting a
         # container is almost immediate, we can afford doing so for each build.
 
         if 'build_wait_timeout' not in kwargs:

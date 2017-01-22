@@ -58,7 +58,7 @@ documentation of the suppressionFile argument to the Compile build step.
 
 A new class buildbot.process.mtrlogobserver.MTR was added. This buildstep is
 used to run test suites using mysql-test-run. It parses the stdio output for
-test failures and summarises them on the waterfall page. It also makes server
+test failures and summarizes them on the waterfall page. It also makes server
 error logs available for debugging failures, and optionally inserts
 information about test runs and test failures into an external database.
 

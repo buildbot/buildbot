@@ -63,7 +63,7 @@ class Collection extends Factory
                 # put items one by one if not already in the array
                 # if they are that means they come from an update event
                 # the event is always considered the latest data
-                # so we dont overwrite it with REST data
+                # so we don't overwrite it with REST data
                 for i in data
                     if not @hasOwnProperty(i[@id])
                         @put(i)
@@ -80,7 +80,7 @@ class Collection extends Factory
                 return this[i]
 
             add: (element) ->
-                # dont create wrapper if element is filtered
+                # don't create wrapper if element is filtered
                 if @queryExecutor.filter([element]).length == 0
                     return
                 instance = new @WrapperClass(element, @endpoint)

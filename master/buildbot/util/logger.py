@@ -27,7 +27,7 @@ except ImportError:
             log.msg(format.format(args, **kwargs))
 
         # legacy logging system do not support log level.
-        # We dont bother inventing something. If needed, user can upgrade
+        # We don't bother inventing something. If needed, user can upgrade
         debug = _log
         info = _log
         warn = _log

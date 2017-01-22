@@ -43,7 +43,7 @@ from buildbot.worker.hyper import HyperLatentWorker
 # and then, according to ngrok choice of port something like:
 # export masterFQDN=0.tcp.ngrok.io:17994
 
-# following environment variable can be used to stress concurent worker startup
+# following environment variable can be used to stress concurrent worker startup
 NUM_CONCURRENT = int(os.environ.get("HYPER_TEST_NUM_CONCURRENT_BUILD", 1))
 
 

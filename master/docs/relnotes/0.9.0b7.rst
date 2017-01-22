@@ -17,7 +17,7 @@ Fixes
 ~~~~~
 
 * Fix incompatibility with MySQL-5.7 (:bug:`3421`)
-* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be catched by travis)
+* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be caught by travis)
 * Fix regressions in forcescheduler UI (:bug:`3416`, :bug:`3418`, :bug:`3422`)
 
 Deprecations, Removals, and Non-Compatible Changes

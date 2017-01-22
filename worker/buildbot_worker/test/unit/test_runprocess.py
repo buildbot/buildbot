@@ -353,7 +353,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
-            # actually gets propogated back to the master in stderr.
+            # actually gets propagated back to the master in stderr.
             for u in b.updates:
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
@@ -603,7 +603,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         self.receivedSIGTERM = False
 
         def check_alive(pid):
-            # Create a mock process that will check if we recieve SIGTERM
+            # Create a mock process that will check if we receive SIGTERM
             mock_process = Mock(wraps=s.process)
             mock_process.pgid = None  # Skips over group SIGTERM
             mock_process.pid = pid

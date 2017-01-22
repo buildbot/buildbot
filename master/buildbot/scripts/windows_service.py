@@ -216,7 +216,7 @@ class BBService(win32serviceutil.ServiceFramework):
         # Set the stop event - the main loop takes care of termination.
         win32event.SetEvent(self.hWaitStop)
 
-    # SvcStop only gets triggered when the user explictly stops (or restarts)
+    # SvcStop only gets triggered when the user explicitly stops (or restarts)
     # the service.  To shut the service down cleanly when Windows is shutting
     # down, we also need to hook SvcShutdown.
     SvcShutdown = SvcStop

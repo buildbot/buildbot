@@ -149,7 +149,7 @@ class OldPerlModuleTest(shell.Test):
             line.replace('\r\n', '').replace('\r', '').replace('\n', '')
             for line in self.getLog('stdio').readlines()
         ]
-        # .. the rest of this method isn't htat interesting, as long as the
+        # .. the rest of this method isn't that interesting, as long as the
         # statement above worked
         assert lines == ['a', 'b', 'c']
         return results.SUCCESS

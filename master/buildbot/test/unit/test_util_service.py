@@ -264,7 +264,7 @@ class ClusteredBuildbotService(unittest.TestCase):
 
         self.svc.startService()
 
-        # another epoch shouldnt do anything further...
+        # another epoch shouldn't do anything further...
         self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc.activate.call_count)
@@ -648,7 +648,7 @@ class BuildbotServiceManager(unittest.TestCase):
         serv = yield self.prepareService()
         serv.config = None  # 'de-configure' the service
 
-        # reconfigure with the differnt config
+        # reconfigure with the different config
         serv2 = MyService(1, a=4, name="basic")
         self.master.config.services = {"basic": serv2}
 

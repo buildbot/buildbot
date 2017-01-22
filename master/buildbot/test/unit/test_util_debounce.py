@@ -104,7 +104,7 @@ class DebounceTest(unittest.TestCase):
         ])
 
     def test_coalesce_calls(self):
-        """Multiple calls are ecoalesced during 4 seconds, but the function
+        """Multiple calls are coalesced during 4 seconds, but the function
         runs 4 seconds after the first call."""
         self.scenario([
             (1, 0.0, 'maybe'),

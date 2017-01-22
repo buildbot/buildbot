@@ -57,10 +57,10 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
             return
 
         # XXX We don't handle crossbar reboot, or any other disconnection well.
-        # this is a tricky problem, as we would have to reconnect with expononential backoff
+        # this is a tricky problem, as we would have to reconnect with exponential backoff
         # re-subscribe to subscriptions, queue messages until reconnection.
         # This is quite complicated, and I believe much better handled in autobahn
-        # It is possible that such failure is practically non-existant
+        # It is possible that such failure is practically non-existent
         # so for now, we just crash the master
         log.msg("Guru meditation! We have been disconnected from wamp server")
         log.msg(

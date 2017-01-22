@@ -854,7 +854,7 @@ class Model(base.DBConnectorComponent):
             elif table_exists(engine, 'version'):
                 raise EightUpgradeError()
 
-            # otherwise, this db is new, so we dont bother using the migration engine
+            # otherwise, this db is new, so we don't bother using the migration engine
             # and just create the tables, and put the version directly to
             # latest
             else:

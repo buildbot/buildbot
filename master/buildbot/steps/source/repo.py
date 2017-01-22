@@ -54,7 +54,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
          lets try to be nice in the format we want
          can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
          or several instances of "proj number/patch" (simpler version)
-         This feature allows integrator to build with several pending interdependant changes.
+         This feature allows integrator to build with several pending interdependent changes.
          returns list of repo downloads sent to the worker
          """
         if s is None:
@@ -421,12 +421,12 @@ class Repo(Source):
             tar = self.computeTarballOptions() + \
                 ['-cvf', self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
-            if res:  # error with tarball.. erase tarball, but dont fail
+            if res:  # error with tarball.. erase tarball, but don't fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
 
     # a simple shell script to gather all cleanup tweaks...
     # doing them one by one just complicate the stuff
-    # and messup the stdio log
+    # and mess up the stdio log
     def _getCleanupCommand(self):
         """also used by tests for expectations"""
         return textwrap.dedent("""\

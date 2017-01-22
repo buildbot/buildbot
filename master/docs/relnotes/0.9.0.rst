@@ -327,7 +327,7 @@ Fixes
 
 * Fix incompatibility with MySQL-5.7 (:bug:`3421`)
 
-* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be catched by travis)
+* Fix incompatibility with postgresql driver psycopg2 (:bug:`3419`, further regressions will be caught by travis)
 
 * Made :class:`Interpolate` safe for deepcopy or serialization/deserialization
 
@@ -483,7 +483,7 @@ Changes and Removals
 
     - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set
 
-* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overriden to support dynamic triggering.
+* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overridden to support dynamic triggering.
 
 * ```master.cfg`` is now parsed from a thread. Previously it was run in the main thread, and thus slowing down the master in case of big config, or network access done to generate the config.
 

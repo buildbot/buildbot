@@ -79,7 +79,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
         service.Service.startService(self)
         l = []
         # if a service attaches another service during the reconfiguration
-        # then the service will be started twice, so we dont use iter, but rather
+        # then the service will be started twice, so we don't use iter, but rather
         # copy in a list
         for svc in list(self):
             # handle any deferreds, passing up errors and success
@@ -253,7 +253,7 @@ class ClusteredBuildbotService(BuildbotService):
         return defer.succeed(None)
 
     def deactivate(self):
-        # to be overriden by subclasses
+        # to be overridden by subclasses
         # will run when this instance loses its chosen status
         return defer.succeed(None)
 
@@ -261,7 +261,7 @@ class ClusteredBuildbotService(BuildbotService):
 
     def _getServiceId(self):
         # retrieve the id for this service; we assume that, once we have a valid id,
-        # the id doesnt change. This may return a Deferred.
+        # the id doesn't change. This may return a Deferred.
         raise NotImplementedError
 
     def _claimService(self):

@@ -204,7 +204,7 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     # for compatibility between old-style and new-style steps, both
     # buildbot.status.logfile.LogFile and buildbot.process.log.StreamLog must
-    # meet this interace, at least until support for old-style steps is
+    # meet this interface, at least until support for old-style steps is
     # removed.
 
     # ILogFile

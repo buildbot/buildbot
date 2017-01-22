@@ -596,7 +596,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         It takes two arguments which describe the overall build status:
         text, results. 'results' is one of the possible results (see buildbot.process.results).
 
-        If 'results' is SUCCESS or WARNINGS, we will permit any dependant
+        If 'results' is SUCCESS or WARNINGS, we will permit any dependent
         builds to start. If it is 'FAILURE', those builds will be
         abandoned."""
         try:

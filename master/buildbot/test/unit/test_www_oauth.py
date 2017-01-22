@@ -244,9 +244,9 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.bitbucketAuth.getConfigDict(), {'fa_icon': 'fa-bitbucket', 'autologin': False,
                                                               'name': 'Bitbucket', 'oauth2': True})
 
-# unit tests are not very usefull to write new oauth support
+# unit tests are not very useful to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
-# negociation. The browser window close in the end of the test
+# negotiation. The browser window close in the end of the test
 
 # in order to use this tests, you need to create Github/Google ClientID (see doc on how to do it)
 # point OAUTHCONF environment variable to a file with following params:
@@ -293,7 +293,7 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
     def tearDown(self):
         from twisted.internet.tcp import Server
-        # browsers has the bad habbit on not closing the persistent
+        # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         f = failure.Failure(Exception("test end"))
         for reader in reactor.getReaders():

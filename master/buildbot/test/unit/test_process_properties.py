@@ -81,7 +81,7 @@ class DeferredRenderable:
 class TestPropertyMap(unittest.TestCase):
 
     """
-    Test the behavior of PropertyMap, using the external interace
+    Test the behavior of PropertyMap, using the external interface
     provided by WithProperties.
     """
 
