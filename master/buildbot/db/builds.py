@@ -77,7 +77,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                              ss['branch'],
                              ss['codebase']) for ss in ssBuild])
         while rv is None:
-            # Get some recent successfull builds on the same builder
+            # Get some recent successful builds on the same builder
             prevBuilds = yield self._getRecentBuilds(whereclause=((tbl.c.builderid == builderid) &
                                                                   (tbl.c.number < number) &
                                                                   (tbl.c.results == 0)),

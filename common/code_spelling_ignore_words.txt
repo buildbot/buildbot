@@ -738,7 +738,6 @@ subprocess
 subprocesses
 subquery
 substring
-successfull
 summarises
 summarising
 suppressions

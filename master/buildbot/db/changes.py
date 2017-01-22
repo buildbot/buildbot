@@ -182,7 +182,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for ss in ssBuild:
             fromChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
 
-        # Get the last successfull build on the same builder
+        # Get the last successful build on the same builder
         previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(currentBuild['builderid'],
                                                                            currentBuild[
                                                                                'number'],
@@ -191,7 +191,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             for ss in (yield gssfb(previousBuild['id'])):
                 toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
         else:
-            # If no successfull previous build, then we need to catch all
+            # If no successful previous build, then we need to catch all
             # changes
             for cb in fromChanges:
                 toChanges[cb] = {'changeid': None}
