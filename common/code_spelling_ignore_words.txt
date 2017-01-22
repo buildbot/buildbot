@@ -247,7 +247,6 @@ exe
 executables
 exe's
 expanduser
-explictly
 expononential
 extractall
 extrapackages
