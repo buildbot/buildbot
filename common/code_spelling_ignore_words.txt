@@ -342,7 +342,6 @@ installdir
 instanceuri
 insubstantiate
 insubstantiation
-interace
 internet
 interruptable
 intialization
