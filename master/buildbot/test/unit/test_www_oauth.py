@@ -244,7 +244,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.bitbucketAuth.getConfigDict(), {'fa_icon': 'fa-bitbucket', 'autologin': False,
                                                               'name': 'Bitbucket', 'oauth2': True})
 
-# unit tests are not very usefull to write new oauth support
+# unit tests are not very useful to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
 # negotiation. The browser window close in the end of the test
 

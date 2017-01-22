@@ -841,7 +841,6 @@ urlopen
 urlparse
 urls
 usa
-usefull
 username
 usr
 utc
