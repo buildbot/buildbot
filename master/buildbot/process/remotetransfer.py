@@ -71,7 +71,7 @@ class FileWriter(base.FileWriterImpl):
 
     def remote_close(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         self.fp.close()
         self.fp = None
@@ -114,7 +114,7 @@ class DirectoryWriter(FileWriter):
 
     def remote_unpack(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         # Make sure remote_close is called, otherwise atomic rename wont happen
         self.remote_close()
@@ -161,7 +161,7 @@ class FileReader(base.FileReaderImpl):
 
     def remote_close(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         if self.fp is not None:
             self.fp.close()

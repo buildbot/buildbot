@@ -788,7 +788,6 @@ toplevel
 tport
 trac
 traceback
-transfered
 trasferred
 treq
 tuple
