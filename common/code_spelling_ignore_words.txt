@@ -810,9 +810,9 @@ unconfigure
 ungrouped
 unhandled
 unicast
-uniciodified
 unicode
 unicoded
+unicodified
 unicodify
 unique'd
 unittest

@@ -441,7 +441,7 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         # and see that fbi was only called once
         fbi.assert_called_once_with(u'b1')
-        # check that the name was uniciodified
+        # check that the name was unicodified
         arg = fbi.mock_calls[0][1][0]
         self.assertIsInstance(arg, text_type)
 
