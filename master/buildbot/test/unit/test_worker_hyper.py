@@ -69,7 +69,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_constructor_normal(self):
         worker = HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy')
-        # class instancination configures nothing
+        # class instantiation configures nothing
         self.assertEqual(worker.client, None)
 
     def test_constructor_nohyper(self):

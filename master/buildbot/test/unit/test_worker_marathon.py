@@ -67,7 +67,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
     def test_constructor_normal(self):
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
                                       'bar', 'debian:wheezy')
-        # class instancination configures nothing
+        # class instantiation configures nothing
         self.assertEqual(worker._http, None)
 
     def makeWorker(self, **kwargs):
