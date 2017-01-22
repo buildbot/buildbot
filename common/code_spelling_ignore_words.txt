@@ -527,7 +527,6 @@ pbamanger
 pbmanager
 pbmanager's
 pbuilder
-performd
 pfactory
 pid
 pidfile
