@@ -121,7 +121,6 @@ bzr
 callbacked
 cancelled
 cancelling
-cariage
 cas
 catched
 cb
