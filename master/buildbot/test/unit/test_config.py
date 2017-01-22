@@ -1408,7 +1408,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, category='c',
+            workerbuilddir='wbd', factory=self.factory, category='c',
             nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1417,7 +1417,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               name='b',
                               workernames=['s2', 's1'],
                               builddir='bd',
-                              workerbuilddir='sbd',
+                              workerbuilddir='wbd',
                               tags=['c'],
                               locks=['l'],
                               env={'x': 10},
@@ -1430,7 +1430,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, tags=['c'],
+            workerbuilddir='wbd', factory=self.factory, tags=['c'],
             nextWorker=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1445,7 +1445,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'nextBuild': nb,
                                                'nextWorker': ns,
                                                'properties': {'y': 20},
-                                               'workerbuilddir': 'sbd',
+                                               'workerbuilddir': 'wbd',
                                                'workernames': ['s2', 's1'],
                                                })
 
