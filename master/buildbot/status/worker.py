@@ -111,7 +111,7 @@ class WorkerStatus:
             self.pause_callbacks.remove(watcher)
 
     def recordConnectTime(self):
-        # record this connnect, and keep data for the last hour
+        # record this connect, and keep data for the last hour
         now = time.time()
         self.connect_times = [
             t for t in self.connect_times if t > now - 3600] + [now]

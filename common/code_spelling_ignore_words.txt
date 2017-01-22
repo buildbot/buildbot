@@ -173,7 +173,6 @@ config
 configfile
 configs
 conn
-connnect
 contolled
 contrib
 correcly
