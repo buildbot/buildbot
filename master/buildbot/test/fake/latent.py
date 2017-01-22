@@ -71,7 +71,7 @@ class LatentController(object):
 
     def disconnect_worker(self, workdir):
         self.worker.conn, conn = None, self.worker.conn
-        # LocalWorker does actually disconnect, so we must force diconnection via detached
+        # LocalWorker does actually disconnect, so we must force disconnection via detached
         conn.notifyDisconnected()
         return self.remote_worker.disownServiceParent()
 

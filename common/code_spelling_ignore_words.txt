@@ -207,7 +207,6 @@ deferreds
 denormalized
 desynchronization
 dev
-diconnection
 dict
 dicts
 didnt
