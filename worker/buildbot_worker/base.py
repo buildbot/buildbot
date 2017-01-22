@@ -340,7 +340,7 @@ class BotBase(service.MultiService):
         log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
-        # resilinet to workers dropping their connections, so there is no harm
+        # resilient to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 
