@@ -110,7 +110,7 @@ def assert_stdin_closed():
     while True:
         r, w, x = select.select([0], [], [], 0.01)
         if r == [0]:
-            return  # succcess!
+            return  # success!
         if time.time() > bail_at:
             assert False  # failure :(
 
