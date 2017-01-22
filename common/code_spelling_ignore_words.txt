@@ -683,7 +683,6 @@ spamassassin
 specdir
 specfile
 specfiles
-specificaly
 spulec
 sql
 sqlalchemy
