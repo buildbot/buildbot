@@ -653,7 +653,6 @@ servicemanager
 setdefault
 setid
 setpgrp
-severaly
 sha
 shellcommand
 shlex
