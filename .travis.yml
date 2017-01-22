@@ -71,6 +71,8 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
+  # REVERTME: when this is fixed https://github.com/eliben/pycparser/issues/148
+  - pip install --no-binary pycparser
   # codecov is the interface to codecov.io; see after_success
   - pip install codecov
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"

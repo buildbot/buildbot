@@ -85,6 +85,8 @@ install:
   - |
       # pip installs
       set -e
+      # REVERTME: when this is fixed https://github.com/eliben/pycparser/issues/148
+      pip install --no-binary pycparser
       [ $TWISTED = latest ] || pip install Twisted==$TWISTED
       [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
