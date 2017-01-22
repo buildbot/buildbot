@@ -246,7 +246,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
 # unit tests are not very usefull to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
-# negociation. The browser window close in the end of the test
+# negotiation. The browser window close in the end of the test
 
 # in order to use this tests, you need to create Github/Google ClientID (see doc on how to do it)
 # point OAUTHCONF environment variable to a file with following params:
