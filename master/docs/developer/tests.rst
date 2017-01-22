@@ -70,9 +70,9 @@ project.  All new code must meet this requirement.
 
 Unit test modules are be named after the package or class they test, replacing
 ``.`` with ``_`` and omitting the ``buildbot_``. For example,
-:src:`test_schedulers_timed_Periodic.py <buildbot/test/unit/test_schedulers_timed_Periodic.py>`
+:src:`test_schedulers_timed_Periodic.py <master/buildbot/test/unit/test_schedulers_timed_Periodic.py>`
 tests the :class:`Periodic` class in
-:src:`buildbot/schedulers/timed.py`. Modules with only one class, or a few
+:src:`master/buildbot/schedulers/timed.py`. Modules with only one class, or a few
 trivial classes, can be tested in a single test module. For more complex
 situations, prefer to use multiple test modules.
 
