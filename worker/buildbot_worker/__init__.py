@@ -15,7 +15,7 @@
 #
 # Keep in sync with master/buildbot/__init__.py
 #
-# We can't put this method in utility modules, because they import dependancy packages
+# We can't put this method in utility modules, because they import dependency packages
 #
 
 from __future__ import division

@@ -205,7 +205,6 @@ deepcopy
 deferredlist
 deferreds
 denormalized
-dependancy
 dependant
 desynchronization
 dev
