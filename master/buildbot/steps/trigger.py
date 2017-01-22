@@ -197,7 +197,7 @@ class Trigger(BuildStep):
                 yield self.addLogWithFailure(results)
                 results = EXCEPTION
 
-            # brids_dict.values() rapresents the list of brids kicked by a certain scheduler.
+            # brids_dict.values() represents the list of brids kicked by a certain scheduler.
             # We want to ignore the result of ANY brid that was kicked off
             # by an UNimportant scheduler.
             if set(unimportant_brids).issuperset(set(brids_dict.values())):
