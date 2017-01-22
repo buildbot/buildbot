@@ -576,7 +576,6 @@ ramlfications
 rc
 reactorname
 readlines
-recieve
 recompress
 reconf
 reconfig
