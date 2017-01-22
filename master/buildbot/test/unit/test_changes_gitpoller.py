@@ -976,7 +976,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             # The release branch id should remain unchanged,
-            # because it was ignorned.
+            # because it was ignored.
             self.assertEqual(self.poller.lastRev, {
                 'refs/heads/master':
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',
