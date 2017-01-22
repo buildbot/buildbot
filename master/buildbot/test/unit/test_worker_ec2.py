@@ -60,7 +60,7 @@ class TestEC2LatentWorker(unittest.TestCase):
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self, name='latent_buildbot_worker'):
-        # the proxy system is also not properly mocked, so we need to delete envionment variables
+        # the proxy system is also not properly mocked, so we need to delete environment variables
         for env in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
             if env in os.environ:
                 del os.environ[env]
