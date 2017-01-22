@@ -262,7 +262,7 @@ class Tests(interfaces.InterfaceTests):
             self.db.steps.addURL(stepid=72, name=u'foo2', url=u'bar2')])
 
         stepdict = yield self.db.steps.getStep(stepid=72)
-        # order is not garanteed though
+        # order is not guaranteed though
         self.assertEqual(sorted(stepdict['urls']), [{'name': u'foo', 'url': u'bar'},
                                                     {'name': u'foo2', 'url': u'bar2'}])
 

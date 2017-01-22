@@ -284,7 +284,6 @@ fromdir
 fs
 func
 funcname
-garanteed
 gcc
 gc'd
 gerrit
