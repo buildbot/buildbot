@@ -82,7 +82,7 @@ def flattened_iterator(l, types=(list, tuple)):
 def flatten(l, types=(list, )):
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
-    flatten into a single dimenstion.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
+    flatten into a single dimension.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
     into [5, 6, 8, 3, 2, 2, 1, 3, 4]
 
     This is safe to call on something not a list/tuple - the original input is returned as a list

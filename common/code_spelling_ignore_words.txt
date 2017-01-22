@@ -211,7 +211,6 @@ dict
 dicts
 diff
 diffs
-dimenstion
 dir
 directoy
 dirname
