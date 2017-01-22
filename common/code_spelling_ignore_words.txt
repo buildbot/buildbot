@@ -316,7 +316,6 @@ hoc
 hostname
 hostnames
 howto
-htat
 html
 http
 httpclientservice
