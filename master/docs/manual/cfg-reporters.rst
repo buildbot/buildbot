@@ -913,7 +913,7 @@ It requires `txrequests`_ package to allow interaction with the Bitbucket REST a
 It uses OAuth 2.x to authenticate with Bitbucket.
 To enable this, you need to go to your Bitbucket Settings -> OAuth page.
 Click "Add consumer".
-Give the new consumer a name, eg 'buildbot', and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter, eg 'https://localhost:8010/callback').
+Give the new consumer a name, eg 'buildbot', and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter, eg 'http://localhost:8010/callback').
 Give the consumer Repositories:Write access.
 After creating the consumer, you will then be able to see the OAuth key and secret.
 
