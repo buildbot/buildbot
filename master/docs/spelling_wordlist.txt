@@ -334,7 +334,6 @@ identifer
 ie
 img
 implemenetation
-implementor
 implemetation
 implentation
 impls

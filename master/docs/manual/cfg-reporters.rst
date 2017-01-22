@@ -270,7 +270,7 @@ MailNotifier arguments
     The password that will be used when authenticating with the ``relayhost``.
 
 ``lookup``
-    (implementor of :class:`IEmailLookup`).
+    (implementer of :class:`IEmailLookup`).
     Object which provides :class:`IEmailLookup`, which is responsible for mapping User names (which come from the VC system) into valid email addresses.
 
     If the argument is not provided, the ``MailNotifier`` will attempt to build the ``sendToInterestedUsers`` from the authors of the Changes that led to the Build via :ref:`User-Objects`.

@@ -704,7 +704,7 @@ class IBuildStatus(Interface):
         """
         Return the BuilderStatus that owns this build.
 
-        @rtype: implementor of L{IBuilderStatus}
+        @rtype: implementer of L{IBuilderStatus}
         """
 
     def isFinished():
@@ -869,20 +869,20 @@ class IStatusReceiver(IPlugin):
     def buildsetSubmitted(buildset):
         """A new BuildSet has been submitted to the buildmaster.
 
-        @type buildset: implementor of L{IBuildSetStatus}
+        @type buildset: implementer of L{IBuildSetStatus}
         """
 
     def requestSubmitted(request):
         """A new BuildRequest has been submitted to the buildmaster.
 
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def requestCancelled(builder, request):
         """A BuildRequest has been cancelled on the given Builder.
 
         @type builder: L{buildbot.status.builder.BuilderStatus}
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def builderAdded(builderName, builder):
@@ -893,7 +893,7 @@ class IStatusReceiver(IPlugin):
 
         @type  builderName: string
         @type  builder:     L{buildbot.status.builder.BuilderStatus}
-        @rtype: implementor of L{IStatusReceiver}
+        @rtype: implementer of L{IStatusReceiver}
         """
 
     def builderChangedState(builderName, state):
