@@ -345,7 +345,6 @@ insubstantiation
 internet
 interruptable
 intialization
-intialize
 intranet
 io
 ip
