@@ -609,7 +609,7 @@ class TestRealDB(db.TestCase,
         props = dict(prop=(['list'], 'test'))
 
         # Now, call `addBuildset`, and verify that the above properties
-        # were seeed in the `getBuildsetProperties` cache.
+        # were seed in the `getBuildsetProperties` cache.
         bsid, _ = yield self.db.buildsets.addBuildset(
             sourcestamps=[234], reason='because',
             properties=props, builderids=[1, 2],

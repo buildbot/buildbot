@@ -646,7 +646,6 @@ scm
 secretkey
 sectionauthor
 seealso
-seeed
 sendchange
 sendmail
 seqdiag
