@@ -122,7 +122,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
                                   "fake_db", captures))
 
         # if instead influxdb is installed, then initialize it - no errors
-        # should be realised
+        # should be realized
         else:
             new_storage_backends = [
                 InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
