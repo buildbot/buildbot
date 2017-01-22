@@ -293,7 +293,7 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
     def tearDown(self):
         from twisted.internet.tcp import Server
-        # browsers has the bad habbit on not closing the persistent
+        # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         f = failure.Failure(Exception("test end"))
         for reader in reactor.getReaders():

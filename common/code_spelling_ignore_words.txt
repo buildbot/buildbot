@@ -307,7 +307,6 @@ gravatar
 gtk
 gz
 gzip
-habbit
 hardcoded
 hasattr
 hashable
