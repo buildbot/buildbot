@@ -631,7 +631,6 @@ rst
 rstrip
 rtype
 rtypes
-runing
 runprocess
 runtime
 rv
