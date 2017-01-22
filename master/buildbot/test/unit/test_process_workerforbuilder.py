@@ -55,7 +55,7 @@ class TestAbstractWorkerForBuilder(TestCase):
 
     def test_buildStarted_missing(self):
         """
-        If the worker associated to worker builder doesn not have a
+        If the worker associated to worker builder doesn't not have a
         ``buildStarted`` method, calling ``buildStarted`` on the worker builder
         doesn't raise an exception.
         """

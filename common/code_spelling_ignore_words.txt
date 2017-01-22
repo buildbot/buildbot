@@ -221,7 +221,6 @@ dnotify
 docstring
 doctests
 documentclass
-doesn
 dom
 dont
 dradez
