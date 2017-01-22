@@ -607,7 +607,6 @@ repourl
 repr
 req
 requeue
-ressource
 resultdir
 resultspec
 retryable
