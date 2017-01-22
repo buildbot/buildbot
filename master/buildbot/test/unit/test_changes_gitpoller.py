@@ -78,7 +78,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         d.addCallbacks(cb_empty, eb_empty)
         d.addCallback(lambda _: self.assertAllCommandsRan())
 
-        # and the method shouldn't supress any exceptions
+        # and the method shouldn't suppress any exceptions
         self.expectCommands(
             gpo.Expect('git', *args)
             .path('gitpoller-work')

@@ -739,7 +739,6 @@ subprocesses
 subquery
 substring
 suppressions
-supress
 svc
 svn
 svnpoller

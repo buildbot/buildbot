@@ -256,7 +256,7 @@ class Expect(object):
 
     def raiseExpectationFailure(self, exp, failure):
         """
-        Some expectations may wish to supress failure.
+        Some expectations may wish to suppress failure.
         The default expectation does not.
 
         This will get invoked if the expectations fails on a command.
