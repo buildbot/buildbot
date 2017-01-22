@@ -464,7 +464,6 @@ multiservice
 multithreading
 mumbo
 munge
-musn't
 mysql
 mysqld
 mysql's
