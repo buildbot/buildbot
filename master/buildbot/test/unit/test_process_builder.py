@@ -51,7 +51,7 @@ class BuilderMixin(object):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
         config_args = dict(name=name, workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory)
+                           workerbuilddir="wbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(
@@ -509,7 +509,7 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
         config_args = dict(name='bldr', workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory,
+                           workerbuilddir="wbdir", factory=self.factory,
                            description='Noe', tags=['NewTag'])
         new_builder_config = config.BuilderConfig(**config_args)
         new_builder_config.description = "New"
