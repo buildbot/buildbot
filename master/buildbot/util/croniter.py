@@ -168,7 +168,7 @@ class croniter(object):
         offset = len(expanded) == 6 and 1 or 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
-        # BUILDBOT: ununsed 'day' omitted due to pyflakes warning
+        # BUILDBOT: unused 'day' omitted due to pyflakes warning
         month, year = dst.month, dst.year
         current_year = now.year
         DAYS = self.DAYS
