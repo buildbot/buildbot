@@ -174,7 +174,6 @@ configfile
 configs
 conn
 contrib
-correcly
 cors
 cowbuilder
 cppcheck
