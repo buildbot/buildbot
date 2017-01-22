@@ -260,7 +260,7 @@ class HgPoller(base.PollingChangeSource):
         oid, current = yield self._getCurrentRev()
         # hg log on a range of revisions is never empty
         # also, if a numeric revision does not exist, a node may match.
-        # Therefore, we have to check explicitely that branch head > current.
+        # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
         if head <= current:
             return
