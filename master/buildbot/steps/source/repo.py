@@ -426,7 +426,7 @@ class Repo(Source):
 
     # a simple shell script to gather all cleanup tweaks...
     # doing them one by one just complicate the stuff
-    # and messup the stdio log
+    # and mess up the stdio log
     def _getCleanupCommand(self):
         """also used by tests for expectations"""
         return textwrap.dedent("""\
