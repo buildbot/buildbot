@@ -78,7 +78,7 @@ class DataConnector(service.AsyncService):
                 rtype = obj(self.master)
                 setattr(self.rtypes, rtype.name, rtype)
 
-                # put its update methonds into our 'updates' attribute
+                # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
                     if hasattr(o, 'isUpdateMethod'):
