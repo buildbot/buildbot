@@ -222,7 +222,6 @@ docstring
 doctests
 documentclass
 doesn
-doesnt
 dom
 dont
 dradez

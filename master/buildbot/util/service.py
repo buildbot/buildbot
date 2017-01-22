@@ -261,7 +261,7 @@ class ClusteredBuildbotService(BuildbotService):
 
     def _getServiceId(self):
         # retrieve the id for this service; we assume that, once we have a valid id,
-        # the id doesnt change. This may return a Deferred.
+        # the id doesn't change. This may return a Deferred.
         raise NotImplementedError
 
     def _claimService(self):
