@@ -178,7 +178,6 @@ cors
 cowbuilder
 cppcheck
 cpu
-creat
 cred
 credc
 creds

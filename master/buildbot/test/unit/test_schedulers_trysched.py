@@ -76,7 +76,7 @@ class JobdirService(dirs.DirsMixin, unittest.TestCase):
 
         svc = trysched.JobdirService(scheduler=scheduler, basedir=self.jobdir)
 
-        # creat some new data to process
+        # create some new data to process
         jobdata = os.path.join(self.newdir, 'jobdata')
         with open(jobdata, "w") as f:
             f.write('JOBDATA')
