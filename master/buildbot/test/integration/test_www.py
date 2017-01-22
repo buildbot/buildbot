@@ -133,7 +133,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         body = yield d
 
         # check this *after* reading the body, otherwise Trial will
-        # complain tha the response is half-read
+        # complain that the response is half-read
         if expect200 and pg.code != 200:
             self.fail("did not get 200 response for '%s'" % (url,))
 

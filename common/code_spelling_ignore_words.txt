@@ -764,7 +764,6 @@ texinfo
 textbox
 tf
 th
-tha
 that'll
 thingie
 thingy
