@@ -169,7 +169,6 @@ completers
 comspec
 concat
 conchc
-concurent
 config
 configfile
 configs
