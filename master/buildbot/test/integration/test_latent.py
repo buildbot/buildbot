@@ -317,7 +317,7 @@ class Tests(SynchronousTestCase):
 
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
-        If a latent worker substantiate, but not connect, and then be unsubstanciated,
+        If a latent worker substantiate, but not connect, and then be unsubstantiated,
         the build request becomes unclaimed.
         """
         controller = LatentController('local')
