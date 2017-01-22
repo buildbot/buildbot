@@ -556,7 +556,6 @@ proc
 programmatically
 proj
 projectname
-projets
 propety
 propogated
 proto
