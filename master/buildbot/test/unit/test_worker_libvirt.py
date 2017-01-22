@@ -257,7 +257,7 @@ class TestWorkQueue(unittest.TestCase):
         flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
-        # flags[1] shouldnt already be set, either
+        # flags[1] shouldn't already be set, either
         d1 = self.queue.execute(self.delayed_success())
 
         @d1.addCallback

@@ -264,7 +264,7 @@ class ClusteredBuildbotService(unittest.TestCase):
 
         self.svc.startService()
 
-        # another epoch shouldnt do anything further...
+        # another epoch shouldn't do anything further...
         self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc.activate.call_count)

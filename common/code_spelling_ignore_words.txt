@@ -656,7 +656,6 @@ setpgrp
 sha
 shellcommand
 shlex
-shouldnt
 shutil
 sig
 sighup
