@@ -181,7 +181,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         return d
 
     def _setCurrentRev(self, pr_id, rev):
-        # Set the datetime entry for a specifed pull request.
+        # Set the datetime entry for a specified pull request.
         d = self._getStateObjectId()
 
         @d.addCallback

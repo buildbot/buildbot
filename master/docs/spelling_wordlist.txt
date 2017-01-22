@@ -684,7 +684,6 @@ sourcestampid
 sourcestamps
 spambots
 spdy
-specifed
 sqlalchemy
 sqlite
 Sqlite
