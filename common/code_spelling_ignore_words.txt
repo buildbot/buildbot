@@ -800,7 +800,6 @@ txrequest
 txrequests
 txt
 tz
-uesd
 ui
 uid
 umask
