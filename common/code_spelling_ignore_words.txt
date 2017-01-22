@@ -696,8 +696,8 @@ ssdict
 sse
 sshd
 ssid
+ssids
 ssl
-sssid
 stacklevel
 stackoverflow
 stacktrace

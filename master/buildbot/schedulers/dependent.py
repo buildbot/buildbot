@@ -119,7 +119,7 @@ class Dependent(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def _getUpstreamBuildsets(self):
-        # get a list of (bsid, sssid, complete, results) for all
+        # get a list of (bsid, ssids, complete, results) for all
         # upstream buildsets
         yield self._updateCachedUpstreamBuilds()
 
