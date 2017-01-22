@@ -338,7 +338,6 @@ inline
 innodb
 inrepo
 inrepos
-inspirated
 installdir
 instanceuri
 instanciation
