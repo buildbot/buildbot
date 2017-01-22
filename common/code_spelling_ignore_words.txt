@@ -738,7 +738,6 @@ subprocess
 subprocesses
 subquery
 substring
-summarising
 suppressions
 supress
 svc

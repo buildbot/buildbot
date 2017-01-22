@@ -233,7 +233,7 @@ class MTR(Test):
 
     It uses class MtrLogObserver to parse test results out from the
     output of mysql-test-run.pl, providing better completion time
-    estimates and summarising test failures on the waterfall page.
+    estimates and summarizing test failures on the waterfall page.
 
     It also provides access to mysqld server error logs from the test
     run to help debugging any problems.
