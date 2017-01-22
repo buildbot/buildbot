@@ -200,7 +200,7 @@ else
     changes_made=false
     for filename in ${py_files[@]}; do
         LINEWIDTH=$(grep -E "max-line-length" common/flake8rc | sed 's/ //g' | cut -d'=' -f 2)
-        # even if we dont enforce errors, if they can be fixed automatically, thats better..
+        # even if we don't enforce errors, if they can be fixed automatically, thats better..
         IGNORES=E123,E501,W6
         # ignore is not None for SQLAlchemy code..
         if [[ "$filename" =~ "/db/" ]]; then

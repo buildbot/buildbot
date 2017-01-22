@@ -94,7 +94,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {dburl}
                 c['buildbotNetUsageData'] = None
-                c['multiMaster'] = True  # dont complain for no builders
+                c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
             """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
                        extraconfig=extraconfig)))
@@ -148,7 +148,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         lengths = {}
         for mode in self.db.logs.COMPRESSION_MODE:
             if mode == "lz4" and not hasLz4:
-                # ok.. lz4 is not installed, dont fail
+                # ok.. lz4 is not installed, don't fail
                 lengths["lz4"] = 40
                 continue
             # create a master.cfg with different compression method

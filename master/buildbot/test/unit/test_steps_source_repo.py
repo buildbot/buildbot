@@ -425,7 +425,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_mirror_sync(self):
         """repo downloads, with mirror synchronization issues"""
         self.mySetupStep()
-        # we dont really want the test to wait...
+        # we don't really want the test to wait...
         self.step.mirror_sync_sleep = 0.001
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")
@@ -450,7 +450,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_change_missing(self):
         """repo downloads, with no actual mirror synchronization issues (still retries 2 times)"""
         self.mySetupStep()
-        # we dont really want the test to wait...
+        # we don't really want the test to wait...
         self.step.mirror_sync_sleep = 0.001
         self.step.mirror_sync_retry = 1  # on retry once
         self.build.setProperty("repo_download",

@@ -307,7 +307,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "read"](row.content)
                 rows.close()
 
-                # Transaction is necessary so that readers dont see disappeared chunks
+                # Transaction is necessary so that readers don't see disappeared chunks
                 transaction = conn.begin()
 
                 # we remove the chunks that we are compressing

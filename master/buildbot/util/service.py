@@ -79,7 +79,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
         service.Service.startService(self)
         l = []
         # if a service attaches another service during the reconfiguration
-        # then the service will be started twice, so we dont use iter, but rather
+        # then the service will be started twice, so we don't use iter, but rather
         # copy in a list
         for svc in list(self):
             # handle any deferreds, passing up errors and success

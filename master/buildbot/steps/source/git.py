@@ -392,7 +392,7 @@ class Git(Source):
     def _fetch(self, _):
         fetch_required = True
 
-        # If the revision already exists in the repo, we dont need to fetch.
+        # If the revision already exists in the repo, we don't need to fetch.
         if self.revision:
             rc = yield self._dovccmd(['cat-file', '-e', self.revision],
                                      abandonOnFailure=False)

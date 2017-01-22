@@ -32,7 +32,7 @@ from buildbot.util import flatten
 def getPreviousBuild(master, build):
     # naive n-1 algorithm. Still need to define what we should skip
     # SKIP builds? forced builds? rebuilds?
-    # dont hesitate to contribute improvments to that algorithm
+    # don't hesitate to contribute improvments to that algorithm
     n = build['number'] - 1
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))

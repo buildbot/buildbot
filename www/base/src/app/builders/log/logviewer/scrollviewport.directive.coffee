@@ -132,7 +132,7 @@ class Scroll extends Directive
                             datasource.loading(value) if datasource.loading
 
                     insertItem = (beforePos, pos, item) ->
-                        # dont overwritte already loaded dom
+                        # don't overwritte already loaded dom
                         if buffer[pos]? and not buffer[pos]._height?
                             return
 

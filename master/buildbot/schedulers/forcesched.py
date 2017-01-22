@@ -353,7 +353,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     def updateFromKwargs(self, kwargs, **unused):
         workername = self.getFromKwargs(kwargs)
         if workername == self.anySentinel:
-            # no preference, so dont set a parameter at all
+            # no preference, so don't set a parameter at all
             return
         ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
 

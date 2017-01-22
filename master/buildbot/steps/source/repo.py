@@ -421,7 +421,7 @@ class Repo(Source):
             tar = self.computeTarballOptions() + \
                 ['-cvf', self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
-            if res:  # error with tarball.. erase tarball, but dont fail
+            if res:  # error with tarball.. erase tarball, but don't fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
 
     # a simple shell script to gather all cleanup tweaks...

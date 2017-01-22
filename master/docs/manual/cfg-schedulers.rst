@@ -853,7 +853,7 @@ What you need in your config file is something like::
                                     label="reason:",
                                     required=True, size=80),
 
-        # in case you dont require authentication this will display
+        # in case you don't require authentication this will display
         # input for user to type his name
         username=util.UserNameParameter(label="your name:",
                                         size=80),

@@ -147,7 +147,7 @@ class IndexResource(resource.Resource):
                 pass
             if isinstance(obj, dict):
                 return obj
-            # dont leak object memory address
+            # don't leak object memory address
             obj = obj.__class__.__module__ + "." + obj.__class__.__name__
             return repr(obj) + " not yet IConfigured"
 
