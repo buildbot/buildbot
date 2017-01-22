@@ -210,7 +210,6 @@ dev
 dict
 dicts
 diff
-differnt
 diffs
 dimenstion
 dir

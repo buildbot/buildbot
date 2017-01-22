@@ -648,7 +648,7 @@ class BuildbotServiceManager(unittest.TestCase):
         serv = yield self.prepareService()
         serv.config = None  # 'de-configure' the service
 
-        # reconfigure with the differnt config
+        # reconfigure with the different config
         serv2 = MyService(1, a=4, name="basic")
         self.master.config.services = {"basic": serv2}
 
