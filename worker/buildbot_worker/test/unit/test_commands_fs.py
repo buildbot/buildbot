@@ -195,7 +195,7 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    def test_non_existant(self):
+    def test_non_existent(self):
         self.make_command(fs.StatFile, dict(
             file='no-such-file',
         ), True)
@@ -271,7 +271,7 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    def test_non_existant(self):
+    def test_non_existent(self):
         self.make_command(fs.GlobPath, dict(
             path='no-*-file',
         ), True)
@@ -326,7 +326,7 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownCommand()
 
-    def test_non_existant(self):
+    def test_non_existent(self):
         self.make_command(fs.ListDir,
                           dict(dir='no-such-dir'),
                           True)

@@ -246,7 +246,6 @@ et
 exe
 executables
 exe's
-existant
 expanduser
 expecation
 explicitely
