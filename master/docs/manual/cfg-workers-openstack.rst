@@ -136,8 +136,10 @@ The invocation happens in a separate thread to prevent blocking the build master
 
     def find_image(images):
         # Sort oldest to newest.
-        cmp_fn = lambda x,y: cmp(x.created, y.created)
-        candidate_images = sorted(images, cmp=cmp_fn)
+        def key_fn(x):
+            return x.created
+
+        candidate_images = sorted(images, key=key_fn)
         # Return the oldest candiate image.
         return candidate_images[0]
 
