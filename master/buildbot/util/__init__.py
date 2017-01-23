@@ -252,7 +252,7 @@ def bytes2NativeString(x, encoding='utf-8'):
     @param encoding: an optional codec, default: 'utf-8'
     @return: a string of type C{str}
     """
-    if isinstance(x, bytes) and str != bytes:
+    if isinstance(x, bytes) and type("") != type(b""):
         return x.decode(encoding)
     return x
 
