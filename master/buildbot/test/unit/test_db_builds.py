@@ -49,7 +49,7 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuildRequest(id=42, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Master(id=89, name="bar"),
-        fakedb.Worker(id=13, name='sl'),
+        fakedb.Worker(id=13, name='wrk'),
         fakedb.Worker(id=12, name='sl2'),
     ]
 

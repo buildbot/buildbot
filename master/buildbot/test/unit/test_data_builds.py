@@ -48,7 +48,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
             fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
@@ -131,7 +131,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
             fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,

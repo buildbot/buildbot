@@ -44,7 +44,6 @@ class ConcreteWorker(base.AbstractWorker):
 
 
 class FakeBuilder:
-
     def getBuilderId(self):
         return defer.succeed(1)
 
@@ -116,7 +115,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
-        self.wrk = ConcreteWorker('sl', 'pa')
+        self.wrk = ConcreteWorker('wrk', 'pa')
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
