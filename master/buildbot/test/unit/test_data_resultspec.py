@@ -309,6 +309,11 @@ class ResultSpec(unittest.TestCase):
 
 class NoneCmp(unittest.TestCase):
 
+    try:
+        cmpFunc = cmp
+    except NameError:
+        skip = "cmp() builtin not available on Python 3"
+
     def test_nonecmp(self):
         nonecmp = resultspec.nonecmp
         self.assertEqual(nonecmp(None, datetime.datetime(1, 1, 1)),
