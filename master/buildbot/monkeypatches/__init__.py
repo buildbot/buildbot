@@ -63,10 +63,10 @@ def patch_mysqlclient_warnings():
         from _mysql_exceptions import Warning
         # MySQLdb.compat is only present in mysqlclient
         import MySQLdb.compat  # noqa pylint: disable=unused-import
-    except ImportError as e:
+    except ImportError:
         return
     # workaround for https://twistedmatrix.com/trac/ticket/9005
-    # libmysqlclient is easier to patch than twisted
+    # mysqlclient is easier to patch than twisted
     # we swap _mysql_exceptions.Warning arguments so that the code is in second place
 
     def patched_init(self, *args):
