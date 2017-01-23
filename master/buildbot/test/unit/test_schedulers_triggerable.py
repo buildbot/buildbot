@@ -169,7 +169,6 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         sched = self.makeScheduler(reason="Because I said so")
         self.assertEqual(sched.reason, "Because I said so")
 
-    @flaky(bugNumber=3339)
     def test_trigger(self):
         sched = self.makeScheduler(codebases={'cb': {'repository': 'r'}})
         # no subscription should be in place yet
