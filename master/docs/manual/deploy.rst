@@ -21,20 +21,17 @@ Additional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Depending on the selected database, further Python packages will be required.
-Consult the SQLAlchemy dialect list for a full description.
-The most common choice for MySQL is
+Consult the `SQLAlchemy`_ dialect list for a full description.
+The most common choice for MySQL is `mysqlclient`_.
+Any reasonably recent version should suffice.
 
-mysqlclient: https://github.com/PyMySQL/mysqlclient-python
+The most common choice for Postgres is `Psycopg`_
+Any reasonably recent version should suffice.
 
-  To communicate with MySQL, SQLAlchemy requires mysqlclient.
-  Any reasonably recent version of mysqlclient should suffice.
+.. _SQLAlchemy: http://www.sqlalchemy.org/
+.. _Psycopg: http://initd.org/psycopg/
+.. _mysqlclient: https://github.com/PyMySQL/mysqlclient-python
 
-The most common choice for Postgres is
-
-Psycopg: http://initd.org/psycopg/
-
-    SQLAlchemy uses Psycopg to communicate with Postgres.
-    Any reasonably recent version should suffice.
 
 .. _Maintenance:
 
