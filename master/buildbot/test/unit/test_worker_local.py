@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -68,17 +73,17 @@ class TestLocalWorker(unittest.TestCase):
         self.assertEqual(old.properties.getProperty('a'), 'c')
         self.assertEqual(old.registration.updates, ['bot'])
         self.assertTrue(old.updateWorker.called)
-        # make sure that we can provide an abosolute path
+        # make sure that we can provide an absolute path
         self.assertEqual(
             old.remote_worker.bot.basedir, os.path.abspath('custom'))
 
     @defer.inlineCallbacks
     def test_workerinfo(self):
-        sl = self.createWorker('bot',
-                               max_builds=2,
-                               notify_on_missing=['me@me.com'],
-                               missing_timeout=120,
-                               properties={'a': 'b'})
-        yield sl.startService()
-        info = yield sl.conn.remoteGetWorkerInfo()
+        wrk = self.createWorker('bot',
+                                max_builds=2,
+                                notify_on_missing=['me@me.com'],
+                                missing_timeout=120,
+                                properties={'a': 'b'})
+        yield wrk.startService()
+        info = yield wrk.conn.remoteGetWorkerInfo()
         self.assertIn("worker_commands", info)

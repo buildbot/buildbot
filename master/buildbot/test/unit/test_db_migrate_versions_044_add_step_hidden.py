@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
+
 from twisted.trial import unittest
 
 from buildbot.test.util import migration
@@ -40,14 +45,14 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('started_at', sa.Integer),
             sa.Column('complete_at', sa.Integer),
             sa.Column(
-                'state_string', sa.Text, nullable=False, server_default=''),
+                'state_string', sa.Text, nullable=False),
             sa.Column('results', sa.Integer),
             sa.Column('urls_json', sa.Text, nullable=False),
         )
         steps.create()
 
         conn.execute(steps.insert(), [
-            dict(number=3, name='echo', urls_json='[]')])
+            dict(number=3, name='echo', urls_json='[]', state_string='')])
 
     def test_update(self):
         def setup_thd(conn):

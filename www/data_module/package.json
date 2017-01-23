@@ -9,8 +9,8 @@
     "url": "git://github.com/buildbot/buildbot-data-js.git"
   },
   "dependencies": {
-    "guanlecoja": "~0.6.0",
-    "gulp": "^3.9.0",
+    "guanlecoja": "~0.8.0",
+    "gulp": "3.9.0",
     "shelljs": "~0.5.3"
   },
   "dependencies": {},

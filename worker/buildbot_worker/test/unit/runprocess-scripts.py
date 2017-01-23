@@ -18,6 +18,9 @@
 # have access to any of the Buildbot source.  Functions here should be kept
 # very simple!
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import select
 import signal
@@ -53,6 +56,7 @@ def wait_for_parent_death(orig_parent_pid):
             os.kill(ppid, 0)
         except OSError:  # Probably ENOSUCH
             return
+
 
 script_fns = {}
 
@@ -106,9 +110,10 @@ def assert_stdin_closed():
     while True:
         r, w, x = select.select([0], [], [], 0.01)
         if r == [0]:
-            return  # succcess!
+            return  # success!
         if time.time() > bail_at:
             assert False  # failure :(
+
 
 # make sure this process dies if necessary
 

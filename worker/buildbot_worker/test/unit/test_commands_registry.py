@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.trial import unittest
 
 from buildbot_worker.commands import registry
@@ -30,7 +33,7 @@ class Registry(unittest.TestCase):
             KeyError, lambda: registry.getFactory('nosuchcommand'))
 
     def test_getAllCommandNames(self):
-        self.failUnless('shell' in registry.getAllCommandNames())
+        self.assertTrue('shell' in registry.getAllCommandNames())
 
     def test_all_commands_exist(self):
         # if this doesn't raise a KeyError, then we're good

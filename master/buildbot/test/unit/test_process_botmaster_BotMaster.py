@@ -12,20 +12,28 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import RETRY
 from buildbot.test.fake import fakemaster
 
 
 class TestCleanShutdown(unittest.TestCase):
 
     def setUp(self):
-        master = fakemaster.make_master(testcase=self, wantData=True)
+        self.master = master = fakemaster.make_master(
+            testcase=self, wantData=True)
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(master)
         self.reactor = mock.Mock()
@@ -37,19 +45,30 @@ class TestCleanShutdown(unittest.TestCase):
     def assertReactorNotStopped(self, _=None):
         self.assertFalse(self.reactor.stop.called)
 
-    def makeFakeBuild(self):
+    def makeFakeBuild(self, waitedFor=False):
         self.fake_builder = builder = mock.Mock()
-        build = mock.Mock()
-        builder.builder_status.getCurrentBuilds.return_value = [build]
-
+        build_status = mock.Mock()
+        builder.builder_status.getCurrentBuilds.return_value = [build_status]
         self.build_deferred = defer.Deferred()
+
+        request = mock.Mock()
+        request.waitedFor = waitedFor
+        build = mock.Mock()
+        build.stopBuild = self.stopFakeBuild
         build.waitUntilFinished.return_value = self.build_deferred
+        build.requests = [request]
+        builder.building = [build]
 
         self.botmaster.builders = mock.Mock()
         self.botmaster.builders.values.return_value = [builder]
 
+    def stopFakeBuild(self, reason, results):
+        self.reason = reason
+        self.results = results
+        self.finishFakeBuild()
+
     def finishFakeBuild(self):
-        self.fake_builder.builder_status.getCurrentBuilds.return_value = []
+        self.fake_builder.building = []
         self.build_deferred.callback(None)
 
     # tests
@@ -76,6 +95,26 @@ class TestCleanShutdown(unittest.TestCase):
 
         # And now we should be stopped
         self.assertReactorStopped()
+
+    def test_shutdown_busy_quick(self):
+        """Test that the master shuts down after builds finish"""
+        self.makeFakeBuild()
+
+        self.botmaster.cleanShutdown(quickMode=True, _reactor=self.reactor)
+
+        # And now we should be stopped
+        self.assertReactorStopped()
+        self.assertEqual(self.results, RETRY)
+
+    def test_shutdown_busy_quick_cancelled(self):
+        """Test that the master shuts down after builds finish"""
+        self.makeFakeBuild(waitedFor=True)
+
+        self.botmaster.cleanShutdown(quickMode=True, _reactor=self.reactor)
+
+        # And now we should be stopped
+        self.assertReactorStopped()
+        self.assertEqual(self.results, CANCELLED)
 
     def test_shutdown_cancel_not_shutting_down(self):
         """Test that calling cancelCleanShutdown when none is in progress

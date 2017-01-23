@@ -13,13 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-import itertools
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.urllib.parse import quote as urlquote
+from future.utils import itervalues
+from future.utils import text_type
+
 import os
 import re
 
-from future.moves.urllib.parse import quote as urlquote
-from future.utils import iterkeys
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -166,9 +168,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if branches is True or callable(branches):
             branches = yield self._getBranches()
             if callable(self.branches):
-                branches = filter(self.branches, branches)
+                branches = [b for b in branches if self.branches(b)]
             else:
-                branches = filter(self._headsFilter, branches)
+                branches = [b for b in branches if self._headsFilter(b)]
 
         refspecs = [
             '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
@@ -238,8 +240,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         @d.addCallback
         def process(git_output):
-            fileList = [decode_file(file) for file in itertools.ifilter(
-                lambda s: len(s), git_output.splitlines())]
+            fileList = [decode_file(file)
+                        for file in
+                        [s for s in git_output.splitlines() if len(s)]]
             return fileList
         return d
 
@@ -270,12 +273,19 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return
         rebuild = False
         if newRev in itervalues(self.lastRev):
-            if self.buildPushesWithNoCommits and \
-               branch not in iterkeys(self.lastRev):
-                # we know the newRev but not for this branch
-                log.msg('gitpoller: rebuilding %s for new branch "%s"' %
-                        (newRev, branch))
-                rebuild = True
+            if self.buildPushesWithNoCommits:
+                existingRev = self.lastRev.get(branch)
+                if existingRev is None:
+                    # This branch was completely unknown, rebuild
+                    log.msg('gitpoller: rebuilding %s for new branch "%s"' %
+                            (newRev, branch))
+                    rebuild = True
+                elif existingRev != newRev:
+                    # This branch is known, but it now points to a different
+                    # commit than last time we saw it, rebuild.
+                    log.msg('gitpoller: rebuilding %s for updated branch "%s"' %
+                            (newRev, branch))
+                    rebuild = True
 
         # get the change list
         revListArgs = ([r'--format=%H', r'%s' % newRev] +
@@ -312,8 +322,11 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             # check for failures
             failures = [r[1] for r in results if not r[0]]
             if failures:
+                for failure in failures:
+                    log.err(
+                        failure, "while processing changes for {} {}".format(newRev, branch))
                 # just fail on the first error; they're probably all related!
-                raise failures[0]
+                failures[0].raiseException()
 
             timestamp, author, files, comments = [r[1] for r in results]
 
@@ -328,7 +341,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         def encodeArg(arg):
             if isinstance(arg, list):
                 return [encodeArg(a) for a in arg]
-            elif isinstance(arg, unicode):
+            elif isinstance(arg, text_type):
                 return arg.encode("ascii")
             return arg
         d = utils.getProcessOutputAndValue(encodeArg(self.gitbin),

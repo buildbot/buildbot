@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import copy
 
 from twisted.internet import defer
@@ -138,6 +143,10 @@ class Change(base.ResourceType):
         else:
             uid = None
 
+        if not revlink and revision and repository and callable(self.master.config.revlink):
+            # generate revlink from revision and repository using the configured callable
+            revlink = self.master.config.revlink(revision, repository) or u''
+
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
                                                                files=files,
@@ -166,7 +175,7 @@ class Change(base.ResourceType):
                                                                repository=repository,
                                                                project=project)
             codebase = self.master.config.codebaseGenerator(pre_change)
-            codebase = unicode(codebase)
+            codebase = text_type(codebase)
         else:
             codebase = codebase or u''
 

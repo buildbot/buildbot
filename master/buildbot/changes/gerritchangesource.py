@@ -12,16 +12,25 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
+
+import datetime
+import json
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
 from twisted.python import log
 
+from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
-from buildbot.util import json
+from buildbot.util import bytes2NativeString
+from buildbot.util import httpclientservice
 
 
 class GerritChangeFilter(ChangeFilter):
@@ -56,84 +65,35 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     return username
 
 
-class GerritChangeSource(base.ChangeSource):
+class GerritChangeSourceBase(base.ChangeSource):
 
     """This source will maintain a connection to gerrit ssh server
     that will provide us gerrit events in json format."""
 
     compare_attrs = ("gerritserver", "gerritport")
-
-    STREAM_GOOD_CONNECTION_TIME = 120
-    "(seconds) connections longer than this are considered good, and reset the backoff timer"
-
-    STREAM_BACKOFF_MIN = 0.5
-    "(seconds) minimum, but nonzero, time to wait before retrying a failed connection"
-
-    STREAM_BACKOFF_EXPONENT = 1.5
-    "multiplier used to increase the backoff from MIN to MAX on repeated failures"
-
-    STREAM_BACKOFF_MAX = 60
-    "(seconds) maximum time to wait before retrying a failed connection"
-
     name = None
+    # list of properties that are no of no use to be put in the event dict
+    EVENT_PROPERTY_BLACKLIST = ["event.eventCreatedOn"]
 
     def checkConfig(self,
-                    gerritserver,
-                    username,
-                    gerritport=29418,
-                    identity_file=None,
+                    gitBaseURL=None,
                     handled_events=("patchset-created", "ref-updated"),
                     debug=False):
-        if self.name is None:
-            self.name = u"GerritChangeSource:%s@%s:%d" % (
-                username, gerritserver, gerritport)
+
+        if gitBaseURL is None:
+            config.error("gitBaseURL must be specified")
 
     def reconfigService(self,
-                        gerritserver,
-                        username,
-                        gerritport=29418,
-                        identity_file=None,
-                        name=None,
+                        gitBaseURL=None,
                         handled_events=("patchset-created", "ref-updated"),
                         debug=False):
-        self.gerritserver = gerritserver
-        self.gerritport = gerritport
-        self.username = username
-        self.identity_file = identity_file
+        self.gitBaseURL = gitBaseURL
         self.handled_events = list(handled_events)
-        self.process = None
-        self.wantProcess = False
         self.debug = debug
-        self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
-
-    class LocalPP(ProcessProtocol):
-
-        def __init__(self, change_source):
-            self.change_source = change_source
-            self.data = ""
-
-        @defer.inlineCallbacks
-        def outReceived(self, data):
-            """Do line buffering."""
-            self.data += data
-            lines = self.data.split("\n")
-            # last line is either empty or incomplete
-            self.data = lines.pop(-1)
-            for line in lines:
-                if self.change_source.debug:
-                    log.msg("gerrit: %s" % line)
-                yield self.change_source.lineReceived(line)
-
-        def errReceived(self, data):
-            if self.change_source.debug:
-                log.msg("gerrit stderr: %s" % data)
-
-        def processEnded(self, status_object):
-            self.change_source.streamProcessStopped()
 
     def lineReceived(self, line):
         try:
-            event = json.loads(line.decode('utf-8'))
+            event = json.loads(bytes2NativeString(line))
         except ValueError:
             msg = "bad json line: %s"
             log.msg(msg % line)
@@ -144,6 +104,9 @@ class GerritChangeSource(base.ChangeSource):
             log.msg(msg % line)
             return defer.succeed(None)
 
+        return self.eventReceived(event)
+
+    def eventReceived(self, event):
         if not (event['type'] in self.handled_events):
             msg = "the event type '%s' is not setup to handle"
             log.msg(msg % event['type'])
@@ -153,6 +116,8 @@ class GerritChangeSource(base.ChangeSource):
         def flatten(properties, base, event):
             for k, v in iteritems(event):
                 name = "%s.%s" % (base, k)
+                if name in self.EVENT_PROPERTY_BLACKLIST:
+                    continue
                 if isinstance(v, dict):
                     flatten(properties, name, v)
                 else:  # already there
@@ -199,9 +164,8 @@ class GerritChangeSource(base.ChangeSource):
             return self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
                 'project': util.ascii2unicode(event_change["project"]),
-                'repository': u"ssh://%s@%s:%s/%s" % (
-                    self.username, self.gerritserver,
-                    self.gerritport, event_change["project"]),
+                'repository': u"%s/%s" % (
+                    self.gitBaseURL, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
@@ -220,15 +184,92 @@ class GerritChangeSource(base.ChangeSource):
         return self.addChange(dict(
             author=author,
             project=ref["project"],
-            repository="ssh://%s@%s:%s/%s" % (
-                self.username, self.gerritserver,
-                self.gerritport, ref["project"]),
+            repository="%s/%s" % (
+                self.gitBaseURL, ref["project"]),
             branch=ref["refName"],
             revision=ref["newRev"],
             comments="Gerrit: patchset(s) merged.",
             files=[u"unknown"],
             category=event["type"],
             properties=properties))
+
+
+class GerritChangeSource(GerritChangeSourceBase):
+
+    """This source will maintain a connection to gerrit ssh server
+    that will provide us gerrit events in json format."""
+
+    compare_attrs = ("gerritserver", "gerritport")
+
+    STREAM_GOOD_CONNECTION_TIME = 120
+    "(seconds) connections longer than this are considered good, and reset the backoff timer"
+
+    STREAM_BACKOFF_MIN = 0.5
+    "(seconds) minimum, but nonzero, time to wait before retrying a failed connection"
+
+    STREAM_BACKOFF_EXPONENT = 1.5
+    "multiplier used to increase the backoff from MIN to MAX on repeated failures"
+
+    STREAM_BACKOFF_MAX = 60
+    "(seconds) maximum time to wait before retrying a failed connection"
+
+    name = None
+
+    def checkConfig(self,
+                    gerritserver,
+                    username,
+                    gerritport=29418,
+                    identity_file=None,
+                    **kwargs):
+        if self.name is None:
+            self.name = u"GerritChangeSource:%s@%s:%d" % (
+                username, gerritserver, gerritport)
+        if 'gitBaseURL' not in kwargs:
+            kwargs['gitBaseURL'] = "automatic at reconfigure"
+        GerritChangeSourceBase.checkConfig(self, **kwargs)
+
+    def reconfigService(self,
+                        gerritserver,
+                        username,
+                        gerritport=29418,
+                        identity_file=None,
+                        name=None,
+                        **kwargs):
+        if 'gitBaseURL' not in kwargs:
+            kwargs['gitBaseURL'] = "ssh://%s@%s:%s" % (username, gerritserver, gerritport)
+        self.gerritserver = gerritserver
+        self.gerritport = gerritport
+        self.username = username
+        self.identity_file = identity_file
+        self.process = None
+        self.wantProcess = False
+        self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
+        return GerritChangeSourceBase.reconfigService(self, **kwargs)
+
+    class LocalPP(ProcessProtocol):
+
+        def __init__(self, change_source):
+            self.change_source = change_source
+            self.data = ""
+
+        @defer.inlineCallbacks
+        def outReceived(self, data):
+            """Do line buffering."""
+            self.data += data
+            lines = self.data.split("\n")
+            # last line is either empty or incomplete
+            self.data = lines.pop(-1)
+            for line in lines:
+                if self.change_source.debug:
+                    log.msg("gerrit: %s" % line)
+                yield self.change_source.lineReceived(line)
+
+        def errReceived(self, data):
+            if self.change_source.debug:
+                log.msg("gerrit stderr: %s" % data)
+
+        def processEnded(self, status_object):
+            self.change_source.streamProcessStopped()
 
     def streamProcessStopped(self):
         self.process = None
@@ -290,3 +331,84 @@ class GerritChangeSource(base.ChangeSource):
         msg = ("GerritChangeSource watching the remote "
                "Gerrit repository %s@%s %s")
         return msg % (self.username, self.gerritserver, status)
+
+
+class GerritEventLogPoller(GerritChangeSourceBase):
+
+    POLL_INTERVAL_SEC = 30
+
+    def checkConfig(self,
+                    baseURL,
+                    auth,
+                    pollInterval=POLL_INTERVAL_SEC,
+                    pollAtLaunch=True,
+                    **kwargs):
+        if self.name is None:
+            self.name = u"GerritEventLogPoller:{}".format(baseURL)
+        GerritChangeSourceBase.checkConfig(self, **kwargs)
+
+    @defer.inlineCallbacks
+    def reconfigService(self,
+                        baseURL,
+                        auth,
+                        pollInterval=POLL_INTERVAL_SEC,
+                        pollAtLaunch=True,
+                        **kwargs):
+
+        yield GerritChangeSourceBase.reconfigService(self, **kwargs)
+        if baseURL.endswith('/'):
+            baseURL = baseURL[:-1]
+
+        self._pollInterval = pollInterval
+        self._pollAtLaunch = pollAtLaunch
+        self._oid = yield self.master.db.state.getObjectId(self.name, self.__class__.__name__)
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, baseURL, auth=auth)
+
+    @staticmethod
+    def now():
+        """patchable now (datetime is not patchable as builtin)"""
+        return datetime.datetime.utcnow()
+
+    @defer.inlineCallbacks
+    def poll(self):
+        last_event_ts = yield self.master.db.state.getState(self._oid, 'last_event_ts', None)
+        if last_event_ts is None:
+            last_event = self.now()
+        else:
+            last_event = datetime.datetime.utcfromtimestamp(last_event_ts)
+        last_event_formatted = last_event.strftime("%Y-%d-%m %H:%M:%S")
+        res = yield self._http.get("/plugins/events-log/events/", params=dict(t1=last_event_formatted))
+        lines = yield res.content()
+        for line in lines.splitlines():
+            yield self.lineReceived(line)
+
+    @defer.inlineCallbacks
+    def eventReceived(self, event):
+        res = yield GerritChangeSourceBase.eventReceived(self, event)
+        if 'eventCreatedOn' in event:
+            yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
+        defer.returnValue(res)
+
+    # FIXME this copy the code from PollingChangeSource
+    # but as PollingChangeSource and its subclasses need to be ported to reconfigurability
+    # we can't use it right now
+    @base.poll_method
+    def doPoll(self):
+        d = defer.maybeDeferred(self.poll)
+        d.addErrback(log.err, 'while polling for changes')
+        return d
+
+    def force(self):
+        self.doPoll()
+
+    def activate(self):
+        self.doPoll.start(interval=self._pollInterval, now=self._pollAtLaunch)
+
+    def deactivate(self):
+        return self.doPoll.stop()
+
+    def describe(self):
+        msg = ("GerritEventLogPoller watching the remote "
+               "Gerrit repository {}")
+        return msg.format(self.name)

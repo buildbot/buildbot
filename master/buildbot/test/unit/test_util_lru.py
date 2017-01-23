@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 import gc
 import random
 import string
@@ -150,7 +155,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(res, short('a'), 29, 3)
 
     def test_all_misses(self):
-        for i, c in enumerate(string.lowercase + string.uppercase):
+        for i, c in enumerate(string.ascii_lowercase + string.ascii_uppercase):
             res = self.lru.get(c)
             self.check_result(res, short(c), 0, i + 1)
 
@@ -172,7 +177,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(res, short('a'), 0, 1)
 
         self.lru.miss_fn = long
-        for i in xrange(100):
+        for i in range(100):
             res = self.lru.get('a')
             self.check_result(res, short('a'), i + 1, 1)
 
@@ -187,7 +192,7 @@ class LRUCacheTest(unittest.TestCase):
 
         # blow out the cache and the queue
         self.lru.miss_fn = long
-        for c in (string.lowercase[2:] * 5):
+        for c in (string.ascii_lowercase[2:] * 5):
             self.lru.get(c)
 
         # and fetch a again, expecting the cached value
@@ -199,7 +204,7 @@ class LRUCacheTest(unittest.TestCase):
         self.check_result(res, long('b'), exp_refhits=1)
 
     def test_fuzz(self):
-        chars = list(string.lowercase * 40)
+        chars = list(string.ascii_lowercase * 40)
         random.shuffle(chars)
         for i, c in enumerate(chars):
             res = self.lru.get(c)
@@ -409,7 +414,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_all_misses(self):
-        for i, c in enumerate(string.lowercase + string.uppercase):
+        for i, c in enumerate(string.ascii_lowercase + string.ascii_uppercase):
             res = yield self.lru.get(c)
             self.check_result(res, short(c), 0, i + 1)
 
@@ -433,7 +438,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         self.check_result(res, short('a'), 0, 1)
 
         self.lru.miss_fn = self.long_miss_fn
-        for i in xrange(100):
+        for i in range(100):
             res = yield self.lru.get('a')
             self.check_result(res, short('a'), i + 1, 1)
 
@@ -449,7 +454,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
         # blow out the cache and the queue
         self.lru.miss_fn = self.long_miss_fn
-        for c in (string.lowercase[2:] * 5):
+        for c in (string.ascii_lowercase[2:] * 5):
             yield self.lru.get(c)
 
         # and fetch a again, expecting the cached value
@@ -462,14 +467,14 @@ class AsyncLRUCacheTest(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fuzz(self):
-        chars = list(string.lowercase * 40)
+        chars = list(string.ascii_lowercase * 40)
         random.shuffle(chars)
         for i, c in enumerate(chars):
             res = yield self.lru.get(c)
             self.check_result(res, short(c))
 
     def test_massively_parallel(self):
-        chars = list(string.lowercase * 5)
+        chars = list(string.ascii_lowercase * 5)
 
         misses = [0]
 

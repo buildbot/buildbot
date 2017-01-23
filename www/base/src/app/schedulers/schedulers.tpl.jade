@@ -1,18 +1,18 @@
 .container
-  tabset
-      tab(heading="All schedulers")
+  uib-tabset
+      uib-tab(heading="All schedulers")
         table.table.table-hover.table-striped.table-condensed
           tr
               td Scheduler Name
               td Master
-            tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
+          tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}
-      tab(heading="All schedulers by master")
+      uib-tab(heading="All schedulers by master")
         table.table.table-hover.table-striped.table-condensed
           tr
               td Scheduler Name
               td Master
-            tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
+          tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}

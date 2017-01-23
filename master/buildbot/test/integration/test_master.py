@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
@@ -48,6 +51,7 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
 
     def test_master2(self):
         return self.do_test_master()
+
 
 # master configuration
 

@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+from future.utils import text_type
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -44,7 +49,7 @@ class FakeLogFile(object):
             return self.lbfs[stream]
         except KeyError:
             def wholeLines(lines):
-                if not isinstance(lines, unicode):
+                if not isinstance(lines, text_type):
                     lines = lines.decode('utf-8')
                 if self.name in self.step.logobservers:
                     for obs in self.step.logobservers[self.name]:

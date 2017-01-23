@@ -12,6 +12,21 @@
 #
 # Options handling done right by djmitche
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
+import optparse
+import os
+import re
+import smtplib
+import socket
+import sys
+import textwrap
+import time
+from email.utils import formataddr
+from io import StringIO
 
 """
     -t
@@ -27,16 +42,6 @@ The rest of the command line arguments are:
 """
 __version__ = '$Revision: 1.3 $'
 
-import optparse
-import os
-import re
-import smtplib
-import socket
-import sys
-import textwrap
-import time
-from cStringIO import StringIO
-from email.Utils import formataddr
 
 try:
     import pwd
@@ -110,25 +115,32 @@ def send_mail(options):
             'version': __version__,
             'date': datestamp,
             }
-    print >> s, '''\
+    print('''\
 From: %(author)s
-To: %(email)s''' % vars
+To: %(email)s''' % vars, file=s)
     if options.replyto:
-        print >> s, 'Reply-To: %s' % options.replyto
-    print >>s, '''\
+        print('Reply-To: %s' % options.replyto, file=s)
+    print('''\
 Subject: %(subject)s
 Date: %(date)s
 X-Mailer: Python buildbot-cvs-mail %(version)s
-''' % vars
-    print >> s, 'Cvsmode: %s' % options.cvsmode
-    print >> s, 'Category: %s' % options.category
-    print >> s, 'CVSROOT: %s' % options.cvsroot
-    print >> s, 'Files: %s' % fileList
+''' % vars, file=s)
+    print('Cvsmode: %s' % options.cvsmode, file=s)
+    print('Category: %s' % options.category, file=s)
+    print('CVSROOT: %s' % options.cvsroot, file=s)
+    print('Files: %s' % fileList, file=s)
     if options.path:
-        print >> s, 'Path: %s' % options.path
-    print >> s, 'Project: %s' % options.project
-    s.write(sys.stdin.read())
-    print >> s
+        print('Path: %s' % options.path, file=s)
+    print('Project: %s' % options.project, file=s)
+    cvs_input = sys.stdin.read()
+
+    # On Python 2, sys.stdin.read() returns bytes, but
+    # on Python 3, it returns unicode str.
+    if isinstance(cvs_input, bytes):
+        cvs_input = cvs_input.decode("utf-8")
+
+    s.write(cvs_input)
+    print('', file=s)
     conn.sendmail(address, options.email, s.getvalue())
     conn.close()
 
@@ -161,7 +173,7 @@ parser.add_option("-C", "--category", dest='category', metavar="CAT",
             """))
 parser.add_option("-c", "--cvsroot", dest='cvsroot', metavar="PATH",
                   help=textwrap.dedent("""\
-            CVSROOT for use by buildbot slaves to checkout code.
+            CVSROOT for use by buildbot workers to checkout code.
             This becomes the Change.repository attribute.
             Exmaple: :ext:myhost:/cvsroot
             """))
@@ -239,15 +251,15 @@ def main():
     options = get_options()
 
     if options.verbose:
-        print 'Mailing %s...' % options.email
-        print 'Generating notification message...'
+        print('Mailing %s...' % options.email)
+        print('Generating notification message...')
     if options.amTesting:
         send_mail(options)
     else:
         fork_and_send_mail(options)
 
     if options.verbose:
-        print 'Generating notification message... done.'
+        print('Generating notification message... done.')
     return 0
 
 if __name__ == '__main__':

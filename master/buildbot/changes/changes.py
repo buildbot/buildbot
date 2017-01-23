@@ -12,13 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import text_type
+
 import time
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import html
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -26,13 +31,12 @@ from buildbot.process.properties import Properties
 from buildbot.util import datetime2epoch
 
 
+@implementer(interfaces.IStatusEvent)
 class Change:
 
     """I represent a single change to the source tree. This may involve several
     files, but they are all changed by the same person, and there is a change
     comment for the group as a whole."""
-
-    implements(interfaces.IStatusEvent)
 
     number = None
     branch = None
@@ -96,7 +100,7 @@ class Change:
         def none_or_unicode(x):
             if x is None:
                 return x
-            return unicode(x)
+            return text_type(x)
 
         self.revision = none_or_unicode(revision)
         now = util.now()
@@ -139,7 +143,15 @@ class Change:
             self.codebase)
 
     def __cmp__(self, other):
+        # NOTE: __cmp__() and cmp() are gone on Python 3,
+        #       in favor of __le__ and __eq__().
         return self.number - other.number
+
+    def __eq__(self, other):
+        return self.number == other.number
+
+    def __lt__(self, other):
+        return self.number < other.number
 
     def asText(self):
         data = ""
@@ -160,9 +172,9 @@ class Change:
         return data
 
     def asDict(self):
-        '''returns a dictonary with suitable info for html/mail rendering'''
+        '''returns a dictionary with suitable info for html/mail rendering'''
         files = [dict(name=f) for f in self.files]
-        files.sort(cmp=lambda a, b: a['name'] < b['name'])
+        files.sort(key=lambda a: a['name'])
 
         result = {
             # Constant

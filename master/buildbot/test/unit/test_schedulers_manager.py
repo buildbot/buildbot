@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -120,10 +125,9 @@ class SchedulerManager(unittest.TestCase):
 
         self.new_config.schedulers = {}
 
+        self.assertEqual(sch1.running, True)
         yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
-
-        self.assertIdentical(sch1.parent, None)
-        self.assertIdentical(sch1.master, None)
+        self.assertEqual(sch1.running, False)
 
     @defer.inlineCallbacks
     def test_reconfigService_class_name_change(self):

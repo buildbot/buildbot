@@ -1,7 +1,7 @@
 class Build extends Controller
     constructor: ($rootScope, $scope, $location, $stateParams, $state,
                   dataService, dataUtilsService, recentStorage, publicFieldsFilter,
-                  glBreadcrumbService, glTopbarContextualActionsService, resultsService) ->
+                  glBreadcrumbService, glTopbarContextualActionsService, resultsService, $window) ->
         _.mixin($scope, resultsService)
 
         builderid = _.parseInt($stateParams.builder)
@@ -72,6 +72,9 @@ class Build extends Controller
         data = dataService.open().closeOnDestroy($scope)
         data.getBuilders(builderid).onChange = (builders) ->
             $scope.builder = builder = builders[0]
+            $window.document.title = $state.current.data.pageTitle
+                builder: builder['name'], build: buildnumber
+
             # get the build plus the previous and next
             # note that this registers to the updates for all the builds for that builder
             # need to see how that scales

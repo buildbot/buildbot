@@ -12,9 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from UserList import UserList
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.collections import UserList
+from future.utils import lrange
+from future.utils import string_types
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.data import resultspec
 from buildbot.process.properties import renderer
@@ -26,11 +32,11 @@ from buildbot.util import flatten
 def getPreviousBuild(master, build):
     # naive n-1 algorithm. Still need to define what we should skip
     # SKIP builds? forced builds? rebuilds?
-    # dont hesitate to contribute improvments to that algorithm
+    # don't hesitate to contribute improvements to that algorithm
     n = build['number'] - 1
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
-        if prev['results'] != RETRY:
+        if prev and prev['results'] != RETRY:
             defer.returnValue(prev)
         n -= 1
     defer.returnValue(None)
@@ -91,13 +97,13 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
             [master.data.get(("builds", build['buildid'], 'properties'))
              for build in builds])
     else:  # we still need a list for the big zip
-        buildproperties = range(len(builds))
+        buildproperties = lrange(len(builds))
 
     if wantPreviousBuild:
         prev_builds = yield defer.gatherResults(
             [getPreviousBuild(master, build) for build in builds])
     else:  # we still need a list for the big zip
-        prev_builds = range(len(builds))
+        prev_builds = lrange(len(builds))
 
     if wantSteps:
         buildsteps = yield defer.gatherResults(
@@ -110,7 +116,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
     else:  # we still need a list for the big zip
-        buildsteps = range(len(builds))
+        buildsteps = lrange(len(builds))
 
     # a big zip to connect everything together
     for build, properties, steps, prev in zip(builds, buildproperties, buildsteps, prev_builds):
@@ -163,7 +169,19 @@ def getResponsibleUsersForBuild(master, buildid):
 
     # add owner from properties
     if 'owner' in properties:
-        blamelist.add(properties['owner'][0])
+        owner = properties['owner'][0]
+        if isinstance(owner, string_types):
+            blamelist.add(owner)
+        else:
+            blamelist.update(owner)
+            log.msg(
+                "Warning: owner property is a list for buildid {}. ".format(buildid))
+            log.msg("Please report a bug: changes: {}. properties: {}".format(
+                changes, properties))
+
+    # add owner from properties
+    if 'owners' in properties:
+        blamelist.update(properties['owners'][0])
 
     blamelist = list(blamelist)
     blamelist.sort()

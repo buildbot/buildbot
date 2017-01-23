@@ -1,15 +1,20 @@
 #! /usr/bin/python
 
-"""Based on the fakechanges.py contrib script"""
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os.path
 import time
 
 import MySQLdb  # @UnresolvedImport
+
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
+
+"""Based on the fakechanges.py contrib script"""
 
 
 class ViewCvsPoller:
@@ -79,13 +84,13 @@ def error(*args):
 
 
 def poll_changes(remote):
-    print "GET CHANGES SINCE", poller.last_checkin,
+    print("GET CHANGES SINCE", poller.last_checkin, end=' ')
     changes = poller.get_changes()
     for change in changes:
-        print change["who"], "\n *", "\n * ".join(change["files"])
+        print(change["who"], "\n *", "\n * ".join(change["files"]))
         change['src'] = 'cvs'
         remote.callRemote('addChange', change).addErrback(error)
-    print
+    print()
     reactor.callLater(60, poll_changes, remote)
 
 

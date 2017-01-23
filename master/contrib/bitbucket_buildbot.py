@@ -11,6 +11,10 @@ bitbucket repository for the user who initiated bitbucket_buildbot.py
 bitbucket_buildbot.py is based on github_buildbot.py
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import logging
 import sys
 import tempfile
@@ -129,7 +133,7 @@ class BitBucketBuildBot(resource.Resource):
             return None
 
         logging.info("New revision: %s", change['revision'][:8])
-        for key, value in change.iteritems():
+        for key, value in iteritems(change):
             logging.debug("  %s: %s", key, value)
 
         change['src'] = src

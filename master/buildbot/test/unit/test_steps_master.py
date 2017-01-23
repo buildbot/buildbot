@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import pprint
 import sys
@@ -24,6 +28,7 @@ from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import WithProperties
+from buildbot.process.properties import renderer
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -244,3 +249,34 @@ class TestLogRenderable(steps.BuildStepMixin, unittest.TestCase):
         self.expectLogfile(
             'Output', pprint.pformat('sch=force, worker=testWorker'))
         return self.runStep()
+
+
+class TestsSetProperties(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def doOneTest(self, **kwargs):
+        # all three tests should create a 'a' property with 'b' value, all with different
+        # more or less dynamic methods
+        self.setupStep(
+            master.SetProperties(name="my-step", **kwargs))
+        self.expectProperty('a', 'b', 'my-step')
+        self.expectOutcome(result=SUCCESS, state_string='Properties Set')
+        return self.runStep()
+
+    def test_basic(self):
+        return self.doOneTest(properties={'a': 'b'})
+
+    def test_renderable(self):
+        return self.doOneTest(properties={'a': Interpolate("b")})
+
+    def test_renderer(self):
+        @renderer
+        def manipulate(props):
+            # the renderer returns renderable!
+            return {'a': Interpolate('b')}
+        return self.doOneTest(properties=manipulate)

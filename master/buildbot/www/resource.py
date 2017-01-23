@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import resource
@@ -84,7 +88,7 @@ class Resource(resource.Resource):
         def failHttpError(f):
             f.trap(Error)
             e = f.value
-            writeError(e.message, errcode=e.status)
+            writeError(e.message, errcode=int(e.status))
 
         @d.addErrback
         def fail(f):

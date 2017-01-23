@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import stat
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -337,7 +342,7 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(Expect(*cmd_args) + 1)
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
-        self.failUnless(testFunc.ran)
+        self.assertTrue(testFunc.ran)
 
     def test_mkdir(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))

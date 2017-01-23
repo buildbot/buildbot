@@ -12,11 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import new
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 import sys
+import types
 
 import mock
+
 from twisted.python.deprecate import deprecatedModuleAttribute
 from twisted.python.versions import Version
 from twisted.trial import unittest
@@ -59,7 +64,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_produces_warning(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -80,8 +85,8 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
             S = buildbot_module.Slave
         self.assertIdentical(S, Worker)
 
-    def test_not_catched_warning(self):
-        buildbot_module = new.module('buildbot_module')
+    def test_not_caught_warning(self):
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.deprecated_attr = 1
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -93,20 +98,20 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
             # Overwrite with Twisted's module wrapper.
             import buildbot_module
 
-        warnings = self.flushWarnings([self.test_not_catched_warning])
+        warnings = self.flushWarnings([self.test_not_caught_warning])
         self.assertEqual(len(warnings), 0)
 
         # Should produce warning
         buildbot_module.deprecated_attr
 
-        warnings = self.flushWarnings([self.test_not_catched_warning])
+        warnings = self.flushWarnings([self.test_not_caught_warning])
         self.assertEqual(len(warnings), 1)
         self.assertEqual(warnings[0]['category'], DeprecationWarning)
         self.assertIn("test message", warnings[0]['message'])
 
     def test_explicit_compat_name(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -130,7 +135,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_explicit_new_name(self):
         BuildSlave = type("BuildSlave", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.BuildSlave = BuildSlave
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -152,7 +157,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_explicit_new_name_empty(self):
         BuildSlave = type("BuildSlave", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.BuildSlave = BuildSlave
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):
@@ -175,7 +180,7 @@ class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
 
     def test_module_reload(self):
         Worker = type("Worker", (object,), {})
-        buildbot_module = new.module('buildbot_module')
+        buildbot_module = types.ModuleType('buildbot_module')
         buildbot_module.Worker = Worker
         with mock.patch.dict(sys.modules,
                              {'buildbot_module': buildbot_module}):

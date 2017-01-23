@@ -200,6 +200,7 @@ The following selectors are supported.
 
 ``src``
     The key is a codebase and source stamp attribute, separated by a colon.
+    Note, it is ``%(src:<codebase>:<ssattr>)s`` syntax, which differs from other selectors.
 
 ``kw``
     The key refers to a keyword argument passed to ``Interpolate``.
@@ -231,12 +232,34 @@ The following ways of interpreting the value are available.
 
    Although these are similar to shell substitutions, no other substitutions are currently supported.
 
-Example::
+Example:
+
+.. code-block:: python
 
     from buildbot.plugins import steps, util
-    f.addStep(steps.ShellCommand(command=['make',
-                                          util.Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s'),
-                                          'dist']))
+    f.addStep(steps.ShellCommand(
+        command=[
+            'save-build-artifacts-script.sh',
+            util.Interpolate('-r %(prop:repository)s'),
+            util.Interpolate('-b %(src::branch)s'),
+            util.Interpolate('-d %(kw:data)s', data="some extra needed data")
+        ]))
+
+.. note::
+
+   We use ``%(src::branch)s`` in most of examples, because ``codebase`` is empty by default.
+
+Example:
+
+.. code-block:: python
+
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(
+        command=[
+            'make',
+            util.Interpolate('REVISION=%(prop:got_revision:-%(src::revision:-unknown)s)s'),
+            'dist'
+        ]))
 
 In addition, ``Interpolate`` supports using positional string interpolation.
 Here, ``%s`` is used as a placeholder, and the substitutions (which may be renderables), are given as subsequent arguments::
@@ -270,14 +293,20 @@ For example::
             command.extend(['-j', str(cpus+1)])
         else:
             command.extend(['-j', '2'])
-        command.extend(['all'])
+        command.extend([Interpolate('%(prop:MAKETARGET)s')])
         return command
 
     f.addStep(steps.ShellCommand(command=makeCommand))
 
 You can think of ``renderer`` as saying "call this function when the step starts".
 
-Note: Config errors with Renderables may not always be caught via checkconfig
+.. note::
+
+    Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or containers containing :class:`~buildbot.interfaces.IRenderable`.
+
+.. note::
+
+    Config errors with Renderables may not always be caught via checkconfig
 
 .. index:: single: Properties; Transform
 
@@ -390,8 +419,8 @@ The method should take one argument - an :class:`~buildbot.interfaces.IPropertie
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
+    @implementer(IRenderable)
     class DetermineFoo(object):
-        implements(IRenderable)
         def getRenderingFor(self, props):
             if props.hasProperty('bar'):
                 return props['bar']
@@ -404,8 +433,8 @@ or, more practically,
 
 ::
 
+    @implementer(IRenderable)
     class Now(object):
-        implements(IRenderable)
         def getRenderingFor(self, props):
             return time.clock()
     ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=Now())])

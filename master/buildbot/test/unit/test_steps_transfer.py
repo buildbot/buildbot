@@ -12,15 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
+import json
 import os
 import shutil
 import stat
 import tarfile
 import tempfile
-from cStringIO import StringIO
+from io import BytesIO
 
-from future.utils import iteritems
 from mock import Mock
+
 from twisted.trial import unittest
 
 from buildbot import config
@@ -36,7 +42,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.util import json
+from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -66,10 +72,11 @@ def downloadString(memoizer, timestamp=None):
 
 def uploadTarFile(filename, **members):
     def behavior(command):
-        f = StringIO()
+        f = BytesIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
         for name, content in iteritems(members):
-            archive.addfile(tarfile.TarInfo(name), StringIO(content))
+            content = unicode2bytes(content)
+            archive.addfile(tarfile.TarInfo(name), BytesIO(content))
         writer = command.args['writer']
         writer.remote_write(f.getvalue())
         writer.remote_unpack()
@@ -167,11 +174,11 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             desttimestamp = (os.path.getatime(self.destfile),
                              os.path.getmtime(self.destfile))
 
-            srctimestamp = map(int, timestamp)
-            desttimestamp = map(int, desttimestamp)
+            srctimestamp = [int(t) for t in timestamp]
+            desttimestamp = [int(d) for d in desttimestamp]
 
-            self.assertEquals(srctimestamp[0], desttimestamp[0])
-            self.assertEquals(srctimestamp[1], desttimestamp[1])
+            self.assertEqual(srctimestamp[0], desttimestamp[0])
+            self.assertEqual(srctimestamp[1], desttimestamp[1])
         return d
 
     def testURL(self):
@@ -316,7 +323,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
 
     def testWorker2_16(self):
         self.setupStep(
-            transfer.DirectoryUpload(workersrc="srcdir", masterdest=self.destdir),
+            transfer.DirectoryUpload(
+                workersrc="srcdir", masterdest=self.destdir),
             worker_version={'*': '2.16'})
 
         self.expectCommands(
@@ -675,14 +683,14 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(step.uploadDone.call_count, 2)
-            self.assertEquals(step.uploadDone.call_args_list[0],
-                              ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
-            self.assertEquals(step.uploadDone.call_args_list[1],
-                              ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
-            self.assertEquals(step.allUploadsDone.call_count, 1)
-            self.assertEquals(step.allUploadsDone.call_args_list[0],
-                              ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
+            self.assertEqual(step.uploadDone.call_count, 2)
+            self.assertEqual(step.uploadDone.call_args_list[0],
+                             ((SUCCESS, 'srcfile', os.path.join(self.destdir, 'srcfile')), {}))
+            self.assertEqual(step.uploadDone.call_args_list[1],
+                             ((SUCCESS, 'srcdir', os.path.join(self.destdir, 'srcdir')), {}))
+            self.assertEqual(step.allUploadsDone.call_count, 1)
+            self.assertEqual(step.allUploadsDone.call_args_list[0],
+                             ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
             return res
 
         return d
@@ -808,9 +816,9 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
-            # Only first 1000 bytes trasferred in downloadString() helper
+            # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEquals(''.join(read), contents)
+            self.assertEqual(b''.join(read), contents)
 
         return d
 
@@ -842,9 +850,9 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
-            # Only first 1000 bytes trasferred in downloadString() helper
+            # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
-            self.assertEquals(''.join(read), contents)
+            self.assertEqual(b''.join(read), contents)
 
         return d
 
@@ -890,7 +898,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), "Hello World")
+            self.assertEqual(b''.join(read), b"Hello World")
         return d
 
     def testBasicWorker2_16(self):
@@ -918,7 +926,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), "Hello World")
+            self.assertEqual(b''.join(read), b"Hello World")
         return d
 
     def testFailure(self):
@@ -1007,7 +1015,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         @d.addCallback
         def checkCalls(res):
-            self.assertEquals(''.join(read), '{"message": "Hello World"}')
+            self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
         return d
 
     def testFailure(self):
@@ -1087,11 +1095,12 @@ class TestJSONPropertiesDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['workerdest'], 'props.json')
+                self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")
@@ -1117,11 +1126,12 @@ class TestJSONPropertiesDownload(unittest.TestCase):
             commandName = command[3]
             kwargs = command[-1]
             if commandName == 'downloadFile':
-                self.assertEquals(kwargs['slavedest'], 'props.json')
+                self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                self.assertEquals(
-                    data, json.dumps(dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})))
+                actualJson = json.loads(data)
+                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                self.assertEqual(actualJson, expectedJson)
                 break
         else:
             raise ValueError("No downloadFile command found")

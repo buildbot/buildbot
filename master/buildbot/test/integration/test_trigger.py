@@ -12,7 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+from io import StringIO
 
 from twisted.internet import defer
 
@@ -58,7 +62,7 @@ class TriggeringMaster(RunMasterBase):
             build['steps'][1]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
-        dump = StringIO.StringIO()
+        dump = StringIO()
         for b in builds:
             yield self.printBuild(b, dump)
         # depending on the environment the number of lines is different between

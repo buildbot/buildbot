@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import os
 import time
 
@@ -23,6 +27,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 
 
@@ -107,7 +112,8 @@ class HgPoller(base.PollingChangeSource):
         @d.addCallback
         def process(output):
             # all file names are on one line
-            date, author, files, comments = output.decode(self.encoding, "replace").split(
+            output = bytes2unicode(output, self.encoding, "replace")
+            date, author, files, comments = output.split(
                 os.linesep, 3)
 
             if not self.usetimestamps:
@@ -211,7 +217,7 @@ class HgPoller(base.PollingChangeSource):
         """Return a deferred for branch head revision or None.
 
         We'll get an error if there is no head for this branch, which is
-        proabably a good thing, since it's probably a mispelling
+        probably a good thing, since it's probably a mispelling
         (if really buildbotting a branch that does not have any changeset
         yet, one shouldn't be surprised to get errors)
         """
@@ -256,7 +262,7 @@ class HgPoller(base.PollingChangeSource):
         oid, current = yield self._getCurrentRev()
         # hg log on a range of revisions is never empty
         # also, if a numeric revision does not exist, a node may match.
-        # Therefore, we have to check explicitely that branch head > current.
+        # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
         if head <= current:
             return
@@ -281,7 +287,7 @@ class HgPoller(base.PollingChangeSource):
                 node)
             yield self.master.data.updates.addChange(
                 author=author,
-                revision=unicode(node),
+                revision=text_type(node),
                 files=files,
                 comments=comments,
                 when_timestamp=int(timestamp) if timestamp else None,

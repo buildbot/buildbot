@@ -1,12 +1,13 @@
 describe 'page with sidebar', ->
     beforeEach (module("app"))
     elmBody = scope = rootScope = queries = timeout = null
+    elmContent = null
     padding = (pix) -> type: "padding", height: pix
     elements = (start, end) -> type: "elements", start: start, end: end
 
     assertDOM = (l) ->
         childs = []
-        $("div", elmBody).each (i, c) -> childs.push(c)
+        $("div", elmContent).each (i, c) -> childs.push(c)
         for item in l
             if item.type == "padding"
                 c = childs.shift()
@@ -18,7 +19,7 @@ describe 'page with sidebar', ->
                     expect($(c).hasClass("padding")).toBe(false, c.outerHTML)
                     expect(c.innerText).toEqual(i.toString() + "a" + i.toString(), c.outerHTML)
     printDOM = ->
-        $("div", elmBody).each ->
+        $("div", elmContent).each ->
             if $(this).hasClass("padding")
                 console.log "padding", $(this).height()
             else
@@ -63,6 +64,7 @@ describe 'page with sidebar', ->
 
         # we need to append to body, so that the element is styled properly, and gets a height
         elmBody.appendTo("body")
+        elmContent = $("div", elmBody)[0]
 
     # ViewPort height is 50, and item height is 10, so a screen should contain 5 item
     it 'should initially load 2 screens', inject ($timeout) ->

@@ -12,12 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import datetime
 import os
 import signal
 import socket
 
-from future.utils import iteritems
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.internet import task
@@ -25,13 +29,14 @@ from twisted.internet import threads
 from twisted.python import components
 from twisted.python import failure
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 import buildbot
 import buildbot.pbmanager
 from buildbot import config
 from buildbot import interfaces
 from buildbot import monkeypatches
+from buildbot.buildbot_net_usage_data import sendBuildbotNetUsageData
 from buildbot.changes import changes
 from buildbot.changes.manager import ChangeManager
 from buildbot.data import connector as dataconnector
@@ -135,7 +140,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         # public attributes
         self.name = ("%s:%s" % (self.hostname,
                                 os.path.abspath(self.basedir or '.')))
-        self.name = self.name.decode('ascii', 'replace')
+        if isinstance(self.name, bytes):
+            self.name = self.name.decode('ascii', 'replace')
         self.masterid = None
 
     def create_child_services(self):
@@ -271,7 +277,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
             if hasattr(signal, "SIGUSR1"):
                 def sigusr1(*args):
-                    self.reactor.callLater(0, self.botmaster.cleanShutdown)
+                    eventually(self.botmaster.cleanShutdown)
                 signal.signal(signal.SIGUSR1, sigusr1)
 
             # get the masterid so other services can use it in
@@ -289,7 +295,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             yield service.AsyncMultiService.startService(self)
 
             # We make sure the housekeeping is done before configuring in order to cleanup
-            # any remaining claimed schedulers or change sources from zombie masters
+            # any remaining claimed schedulers or change sources from zombie
+            # masters
             yield self.data.updates.expireMasters(forceHouseKeeping=True)
 
             # give all services a chance to load the new configuration, rather
@@ -303,6 +310,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
             # Start the heartbeat timer
             yield self.masterHeartbeatService.setServiceParent(self)
 
+            # send the statistics to buildbot.net, without waiting
+            self.sendBuildbotNetUsageData()
             startup_succeed = True
         except Exception:
             f = failure.Failure()
@@ -317,12 +326,19 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
             self._master_initialized = True
 
+    def sendBuildbotNetUsageData(self):
+        if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetUsageData is not None:
+            raise RuntimeError(
+                "Shoud not enable buildbotNetUsageData in trial tests!")
+        sendBuildbotNetUsageData(self)
+
     @defer.inlineCallbacks
     def stopService(self):
         if self.masterid is not None:
             yield self.data.updates.masterStopped(
                 name=self.name, masterid=self.masterid)
         if self.running:
+            yield self.botmaster.cleanShutdown(quickMode=True, stopReactor=False)
             yield service.AsyncMultiService.stopService(self)
 
         log.msg("BuildMaster is stopped")
@@ -372,7 +388,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         changes_made = False
         failed = False
         try:
-            # Run the master.cfg in thread, so that it cas use blocking code
+            # Run the master.cfg in thread, so that it can use blocking code
             new_config = yield threads.deferToThreadPool(
                 self.reactor, self.reactor.getThreadPool(),
                 self.config_loader.loadConfig)
@@ -530,8 +546,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         return d
 
 
+@implementer(interfaces.IControl)
 class Control:
-    implements(interfaces.IControl)
 
     def __init__(self, master):
         self.master = master
@@ -545,5 +561,6 @@ class Control:
     def getBuilder(self, name):
         b = self.master.botmaster.builders[name]
         return BuilderControl(b, self)
+
 
 components.registerAdapter(Control, BuildMaster, interfaces.IControl)

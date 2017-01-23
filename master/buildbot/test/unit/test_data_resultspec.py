@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import lrange
+
 import datetime
 import random
 
@@ -171,7 +176,7 @@ class ResultSpec(unittest.TestCase):
             base.ListResult(exp, total=2))
 
     def do_test_pagination(self, bareList):
-        data = mklist('x', *range(101, 131))
+        data = mklist('x', *lrange(101, 131))
         if not bareList:
             data = base.ListResult(data)
             data.offset = None
@@ -179,19 +184,19 @@ class ResultSpec(unittest.TestCase):
             data.limit = None
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=0).apply(data),
-            base.ListResult(mklist('x', *range(101, 131)),
+            base.ListResult(mklist('x', *lrange(101, 131)),
                             offset=0, total=30))
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=10).apply(data),
-            base.ListResult(mklist('x', *range(111, 131)),
+            base.ListResult(mklist('x', *lrange(111, 131)),
                             offset=10, total=30))
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=10, limit=10).apply(data),
-            base.ListResult(mklist('x', *range(111, 121)),
+            base.ListResult(mklist('x', *lrange(111, 121)),
                             offset=10, total=30, limit=10))
         self.assertListResultEqual(
             resultspec.ResultSpec(offset=20, limit=15).apply(data),
-            base.ListResult(mklist('x', *range(121, 131)),
+            base.ListResult(mklist('x', *lrange(121, 131)),
                             offset=20, total=30, limit=15))  # off the end
 
     def test_pagination_bare_list(self):
@@ -201,18 +206,18 @@ class ResultSpec(unittest.TestCase):
         return self.do_test_pagination(bareList=False)
 
     def test_pagination_prepaginated(self):
-        data = base.ListResult(mklist('x', *range(10, 20)))
+        data = base.ListResult(mklist('x', *lrange(10, 20)))
         data.offset = 10
         data.total = 30
         data.limit = 10
         self.assertListResultEqual(
             # ResultSpec has its offset/limit fields cleared
             resultspec.ResultSpec().apply(data),
-            base.ListResult(mklist('x', *range(10, 20)),
+            base.ListResult(mklist('x', *lrange(10, 20)),
                             offset=10, total=30, limit=10))
 
     def test_pagination_prepaginated_without_clearing_resultspec(self):
-        data = base.ListResult(mklist('x', *range(10, 20)))
+        data = base.ListResult(mklist('x', *lrange(10, 20)))
         data.offset = 10
         data.limit = 10
         # ResultSpec does not have its offset/limit fields cleared - this is
@@ -221,7 +226,7 @@ class ResultSpec(unittest.TestCase):
                           resultspec.ResultSpec(offset=10, limit=20).apply(data))
 
     def test_endpoint_returns_total_without_applying_filters(self):
-        data = base.ListResult(mklist('x', *range(10, 20)))
+        data = base.ListResult(mklist('x', *lrange(10, 20)))
         data.total = 99
         # apply doesn't want to get a total with filters still outstanding
         f = resultspec.Filter(field='x', op='gt', values=[23])

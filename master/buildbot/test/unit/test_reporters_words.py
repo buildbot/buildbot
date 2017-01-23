@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import re
 
 import mock
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -141,6 +146,51 @@ class TestContactChannel(unittest.TestCase):
     def test_command_mute(self):
         yield self.do_test_command('mute')
         self.assertTrue(self.contact.muted)
+
+    @defer.inlineCallbacks
+    def test_command_notify0(self):
+        yield self.do_test_command('notify', exp_UsageError=True)
+        yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
+        yield self.do_test_command('notify', args="on")
+        self.assertEqual(
+            self.sent, ["The following events are being notified: ['started', 'finished']"])
+        yield self.do_test_command('notify', args="off")
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
+        yield self.do_test_command('notify', args="on started")
+        self.assertEqual(
+            self.sent, ["The following events are being notified: ['started']"])
+        yield self.do_test_command('notify', args="off started")
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
+        yield self.assertFailure(
+            self.do_test_command('notify', args="off finished"),
+            KeyError)
+        yield self.do_test_command('notify', args="list")
+        self.assertEqual(
+            self.sent, ['The following events are being notified: []'])
+
+    @defer.inlineCallbacks
+    def notify_build_test(self, notify_args):
+        self.bot.tags = None
+        yield self.test_command_watch_builder0()
+        yield self.do_test_command('notify', args=notify_args)
+        buildStarted = self.contact.subscribed[0].callback
+        buildFinished = self.contact.subscribed[1].callback
+        for buildid in (13, 14, 16):
+            self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
+            build = yield self.master.db.builds.getBuild(buildid)
+            buildStarted("somekey", build)
+            buildFinished("somekey", build)
+
+    def test_command_notify_build_started(self):
+        self.notify_build_test("on started")
+
+    def test_command_notify_build_finished(self):
+        self.notify_build_test("on finished")
+
+    def test_command_notify_build_started_finished(self):
+        self.notify_build_test("on")
 
     @defer.inlineCallbacks
     def test_command_unmute(self):
@@ -471,7 +521,18 @@ class TestContactChannel(unittest.TestCase):
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
-            'Hey! build builder1 #6 is complete: Success []', self.sent)
+                "Build builder1 #6 is complete: Success [] - "
+                "http://localhost:8080/#builders/23/builds/6", self.sent)
+
+    @defer.inlineCallbacks
+    def test_command_watch_builder1(self):
+        self.setupSomeBuilds()
+        yield self.do_test_command('watch', args=self.BUILDER_NAMES[0])
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn(
+            'watching build builder1 #3 until it finishes..', self.sent)
+        self.assertIn(
+            'watching build builder1 #6 until it finishes..', self.sent)
 
     @defer.inlineCallbacks
     def sendBuildFinishedMessage(self, buildid, results=0):

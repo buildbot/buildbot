@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.constants import NamedConstant
@@ -129,14 +133,7 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         d = defer.Deferred()
         self.ping_watchers.append(d)
         if newping:
-            if status:
-                event = status.addEvent(["pinging"])
-                d2 = defer.Deferred()
-                d2.addCallback(self._pong_status, event)
-                self.ping_watchers.insert(0, d2)
-                # I think it will make the tests run smoother if the status
-                # is updated before the ping completes
-            Ping().ping(self.worker.conn).addCallback(self._pong)
+            Ping().ping(self.worker.conn).addBoth(self._pong)
 
         return d
 
@@ -144,13 +141,6 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         watchers, self.ping_watchers = self.ping_watchers, []
         for d in watchers:
             d.callback(res)
-
-    def _pong_status(self, res, event):
-        if res:
-            event.text = ["ping", "success"]
-        else:
-            event.text = ["ping", "failed"]
-        event.finish()
 
     def detached(self):
         log.msg("Worker %s detached from %s" % (self.worker.workername,
@@ -161,6 +151,10 @@ class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
         self.remoteCommands = None
 
 
+class PingException(Exception):
+    pass
+
+
 class Ping:
     running = False
 
@@ -168,7 +162,7 @@ class Ping:
         assert not self.running
         if not conn:
             # clearly the ping must fail
-            return defer.succeed(False)
+            return defer.fail(PingException("Worker not connected?"))
         self.running = True
         log.msg("sending ping")
         self.d = defer.Deferred()
@@ -189,7 +183,7 @@ class Ping:
         # don't, we'll requeue a build and ping them again right away,
         # creating a nasty loop.
         conn.loseConnection()
-        self.d.callback(False)
+        self.d.errback(res)
 
 
 class WorkerForBuilder(AbstractWorkerForBuilder):
@@ -233,37 +227,22 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
         if not self.worker or not self.worker.acquireLocks():
             return defer.succeed(False)
 
+        self.state = States.DETACHED
         log.msg("substantiating worker %s" % (self,))
         d = self.substantiate(build)
         return d
 
+    def attached(self, worker, commands):
+        # When a latent worker is attached, it is actually because it prepared for a build
+        # thus building and not available like for normal worker
+        if self.state == States.DETACHED:
+            self.state = States.BUILDING
+        return AbstractWorkerForBuilder.attached(self, worker, commands)
+
     def substantiate(self, build):
-        d = self.worker.substantiate(self, build)
-        if not self.worker.substantiated:
-            event = self.builder.builder_status.addEvent(
-                ["substantiating"])
-
-            def substantiated(res):
-                msg = ["substantiate", "success"]
-                if isinstance(res, basestring):
-                    msg.append(res)
-                elif isinstance(res, (tuple, list)):
-                    msg.extend(res)
-                event.text = msg
-                event.finish()
-                return res
-
-            def substantiation_failed(res):
-                event.text = ["substantiate", "failed"]
-                # TODO add log of traceback to event
-                event.finish()
-                return res
-            d.addCallbacks(substantiated, substantiation_failed)
-        return d
+        return self.worker.substantiate(self, build)
 
     def ping(self, status=None):
         if not self.worker.substantiated:
-            if status:
-                status.addEvent(["ping", "latent"]).finish()
-            return defer.succeed(True)
+            return defer.fail(PingException("worker is not substantiated"))
         return AbstractWorkerForBuilder.ping(self, status)

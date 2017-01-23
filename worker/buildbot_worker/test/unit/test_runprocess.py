@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import os
 import re
 import signal
@@ -20,6 +24,7 @@ import sys
 import time
 
 from mock import Mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -83,22 +88,22 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     def testCommandEncoding(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, u'abcd', self.basedir)
-        self.assertIsInstance(s.command, str)
-        self.assertIsInstance(s.fake_command, str)
+        self.assertIsInstance(s.command, bytes)
+        self.assertIsInstance(s.fake_command, bytes)
 
     def testCommandEncodingList(self):
         b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, [u'abcd', 'efg'], self.basedir)
-        self.assertIsInstance(s.command[0], str)
-        self.assertIsInstance(s.fake_command[0], str)
+        s = runprocess.RunProcess(b, [u'abcd', b'efg'], self.basedir)
+        self.assertIsInstance(s.command[0], bytes)
+        self.assertIsInstance(s.fake_command[0], bytes)
 
     def testCommandEncodingObfuscated(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b,
                                   [bsutil.Obfuscated(u'abcd', u'ABCD')],
                                   self.basedir)
-        self.assertIsInstance(s.command[0], str)
-        self.assertIsInstance(s.fake_command[0], str)
+        self.assertIsInstance(s.command[0], bytes)
+        self.assertIsInstance(s.fake_command[0], bytes)
 
     def testStart(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -107,8 +112,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -121,7 +126,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -133,9 +138,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
-            self.failUnlessEquals(s.stdout, nl('hello\n'))
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
+            self.assertEqual(s.stdout, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -147,7 +152,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stderr': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -160,7 +165,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
         def check(ign):
             self.failIf({'stderr': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -172,9 +177,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stderr': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
-            self.failUnlessEquals(s.stderr, nl('hello\n'))
+            self.assertTrue({'stderr': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
+            self.assertEqual(s.stderr, nl('hello\n'))
         d.addCallback(check)
         return d
 
@@ -186,8 +191,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -196,8 +201,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b,
                                   [('obfuscated', 'abcd', 'ABCD')],
                                   self.basedir)
-        self.assertEqual(s.command, ['abcd'])
-        self.assertEqual(s.fake_command, ['ABCD'])
+        self.assertEqual(s.command, [b'abcd'])
+        self.assertEqual(s.fake_command, [b'ABCD'])
 
     def testMultiWordStringCommand(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -210,8 +215,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': exp} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': exp} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -223,8 +228,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('hello')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('hello')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -243,8 +248,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': exp} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': exp} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -265,8 +270,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl(repr(args))} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl(repr(args))} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -281,8 +286,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'stdout': nl('a\nb\n')} in b.updates, b.show())
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'stdout': nl('a\nb\n')} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -294,9 +299,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless(
+            self.assertTrue(
                 {'stdout': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': FATAL_RC} in b.updates, b.show())
+            self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
         d.addCallback(check)
         clock.advance(6)
         return d
@@ -309,9 +314,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless(
+            self.assertTrue(
                 {'stdout': nl('hello\n')} not in b.updates, b.show())
-            self.failUnless({'rc': FATAL_RC} in b.updates, b.show())
+            self.assertTrue({'rc': FATAL_RC} in b.updates, b.show())
         d.addCallback(check)
         clock.advance(6)  # should knock out maxTime
         return d
@@ -328,7 +333,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.failUnless({'rc': 0} in b.updates, b.show())
+            self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
 
@@ -348,12 +353,12 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
             err.trap(AbandonChain)
             stderr = []
             # Here we're checking that the exception starting up the command
-            # actually gets propogated back to the master in stderr.
+            # actually gets propagated back to the master in stderr.
             for u in b.updates:
                 if 'stderr' in u:
                     stderr.append(u['stderr'])
             stderr = "".join(stderr)
-            self.failUnless("RuntimeError" in stderr, stderr)
+            self.assertTrue("RuntimeError" in stderr, stderr)
         d.addBoth(check)
         d.addBoth(lambda _: self.flushLoggedErrors())
         return d
@@ -368,7 +373,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("FOO=BAR" in headers, "got:\n" + headers)
+            self.assertTrue("FOO=BAR" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -382,7 +387,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("FOO=BAR" not in headers, "got:\n" + headers)
+            self.assertTrue("FOO=BAR" not in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -399,9 +404,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless("EXPND=-$" not in headers, "got:\n" + headers)
-            self.failUnless("DOESNT_FIND=--" in headers, "got:\n" + headers)
-            self.failUnless(
+            self.assertTrue("EXPND=-$" not in headers, "got:\n" + headers)
+            self.assertTrue("DOESNT_FIND=--" in headers, "got:\n" + headers)
+            self.assertTrue(
                 "DOESNT_EXPAND=-${---}-" in headers, "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -416,8 +421,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(
-                not re.match('\bPATH=', headers), "got:\n" + headers)
+            self.assertFalse(
+                re.match('\bPATH=', headers), "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -431,8 +436,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(not re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
-                            "got:\n" + headers)
+            self.assertFalse(re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
+                             "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -446,8 +451,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.failUnless(not re.match('\bFOO=a%sb\b' % (os.pathsep), headers),
-                            "got:\n" + headers)
+            self.assertFalse(re.match('\bFOO=a{0}b\b'.format(os.pathsep), headers),
+                             "got:\n" + headers)
         d.addCallback(check)
         return d
 
@@ -598,7 +603,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         self.receivedSIGTERM = False
 
         def check_alive(pid):
-            # Create a mock process that will check if we recieve SIGTERM
+            # Create a mock process that will check if we receive SIGTERM
             mock_process = Mock(wraps=s.process)
             mock_process.pgid = None  # Skips over group SIGTERM
             mock_process.pid = pid
@@ -619,7 +624,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfile_d.addCallback(check_alive)
 
         def check_dead(_):
-            self.failUnlessEqual(self.receivedSIGTERM, True)
+            self.assertEqual(self.receivedSIGTERM, True)
             self.assertDead(self.pid)
         runproc_d.addCallback(check_dead)
         return defer.gatherResults([pidfile_d, runproc_d])
@@ -747,7 +752,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         s.sendStatus({'stdout': nl('hello\n')})
-        self.failUnlessEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
+        self.assertEqual(b.updates, [{'stdout': nl('hello\n')}], b.show())
 
     def testSendBuffered(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -755,7 +760,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s._addToBuffers('stdout', 'hello ')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.failUnlessEqual(b.updates, [{'stdout': 'hello world'}], b.show())
+        self.assertEqual(b.updates, [{'stdout': 'hello world'}], b.show())
 
     def testSendBufferedInterleaved(self):
         b = FakeWorkerForBuilder(self.basedir)
@@ -764,7 +769,7 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         s._addToBuffers('stderr', 'DIEEEEEEE')
         s._addToBuffers('stdout', 'world')
         s._sendBuffers()
-        self.failUnlessEqual(b.updates, [
+        self.assertEqual(b.updates, [
             {'stdout': 'hello '},
             {'stderr': 'DIEEEEEEE'},
             {'stdout': 'world'},
@@ -773,17 +778,17 @@ class TestLogging(BasedirMixin, unittest.TestCase):
     def testSendChunked(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
-        data = "x" * (runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
+        data = "x" * int(runprocess.RunProcess.CHUNK_LIMIT * 3 / 2)
         s._addToBuffers('stdout', data)
         s._sendBuffers()
-        self.failUnlessEqual(len(b.updates), 2)
+        self.assertEqual(len(b.updates), 2)
 
     def testSendNotimeout(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
         data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
         s._addToBuffers('stdout', data)
-        self.failUnlessEqual(len(b.updates), 1)
+        self.assertEqual(len(b.updates), 1)
 
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):

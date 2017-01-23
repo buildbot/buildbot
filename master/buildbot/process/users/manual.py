@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -52,7 +57,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             # list, alternating ident, uid
             formatted_results += "user(s) added:\n"
             for user in results:
-                if isinstance(user, basestring):
+                if isinstance(user, string_types):
                     formatted_results += "identifier: %s\n" % user
                 else:
                     formatted_results += "uid: %d\n\n" % user
@@ -109,6 +114,8 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         """
         log.msg("perspective_commandline called")
         results = []
+
+        # pylint: disable=too-many-nested-blocks
 
         if ids:
             for user in ids:

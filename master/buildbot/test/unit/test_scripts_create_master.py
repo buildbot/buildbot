@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import itervalues
+
 import os
 
 import mock
-from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -116,6 +121,7 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.patch(connector, 'DBConnector', self.DBConnector)
 
         basedir = basedir or self.basedir
+        # pylint: disable=unsubscriptable-object
         self.assertEqual(
             dict(basedir=self.DBConnector.call_args[0][1],
                  db_url=self.DBConnector.call_args[0][0].mkconfig.db['db_url'],

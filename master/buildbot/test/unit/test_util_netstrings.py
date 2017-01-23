@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.protocols import basic
 from twisted.trial import unittest
 
@@ -23,13 +27,13 @@ class NetstringParser(unittest.TestCase):
     def test_valid_netstrings(self):
         p = netstrings.NetstringParser()
         p.feed("5:hello,5:world,")
-        self.assertEqual(p.strings, ['hello', 'world'])
+        self.assertEqual(p.strings, [b'hello', b'world'])
 
     def test_valid_netstrings_byte_by_byte(self):
         # (this is really testing twisted's support, but oh well)
         p = netstrings.NetstringParser()
         [p.feed(c) for c in "5:hello,5:world,"]
-        self.assertEqual(p.strings, ['hello', 'world'])
+        self.assertEqual(p.strings, [b'hello', b'world'])
 
     def test_invalid_netstring(self):
         p = netstrings.NetstringParser()
@@ -40,4 +44,4 @@ class NetstringParser(unittest.TestCase):
         p = netstrings.NetstringParser()
         p.feed("11:hello world,6:foob")
         # note that the incomplete 'foobar' does not appear here
-        self.assertEqual(p.strings, ['hello world'])
+        self.assertEqual(p.strings, [b'hello world'])

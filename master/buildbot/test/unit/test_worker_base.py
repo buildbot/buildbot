@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -28,6 +33,7 @@ from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -37,66 +43,71 @@ class ConcreteWorker(base.AbstractWorker):
     pass
 
 
+class FakeBuilder:
+    def getBuilderId(self):
+        return defer.succeed(1)
+
+
 class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_workername(self):
-        self.failUnless(hasattr(self.sl, 'workername'))
+        self.assertTrue(hasattr(self.wrk, 'workername'))
 
     def test_attr_properties(self):
-        self.failUnless(hasattr(self.sl, 'properties'))
+        self.assertTrue(hasattr(self.wrk, 'properties'))
 
     @defer.inlineCallbacks
     def test_attr_worker_basedir(self):
         yield self.callAttached()
-        self.assertIsInstance(self.sl.worker_basedir, str)
+        self.assertIsInstance(self.wrk.worker_basedir, str)
 
     @defer.inlineCallbacks
     def test_attr_path_module(self):
         yield self.callAttached()
-        self.failUnless(hasattr(self.sl, 'path_module'))
+        self.assertTrue(hasattr(self.wrk, 'path_module'))
 
     @defer.inlineCallbacks
     def test_attr_worker_system(self):
         yield self.callAttached()
-        self.failUnless(hasattr(self.sl, 'worker_system'))
+        self.assertTrue(hasattr(self.wrk, 'worker_system'))
 
     def test_signature_acquireLocks(self):
-        @self.assertArgSpecMatches(self.sl.acquireLocks)
+        @self.assertArgSpecMatches(self.wrk.acquireLocks)
         def acquireLocks(self):
             pass
 
     def test_signature_releaseLocks(self):
-        @self.assertArgSpecMatches(self.sl.releaseLocks)
+        @self.assertArgSpecMatches(self.wrk.releaseLocks)
         def releaseLocks(self):
             pass
 
     def test_signature_attached(self):
-        @self.assertArgSpecMatches(self.sl.attached)
+        @self.assertArgSpecMatches(self.wrk.attached)
         def attached(self, conn):
             pass
 
     def test_signature_detached(self):
-        @self.assertArgSpecMatches(self.sl.detached)
+        @self.assertArgSpecMatches(self.wrk.detached)
         def detached(self):
             pass
 
     def test_signature_addWorkerForBuilder(self):
-        @self.assertArgSpecMatches(self.sl.addWorkerForBuilder)
+        @self.assertArgSpecMatches(self.wrk.addWorkerForBuilder)
         def addWorkerForBuilder(self, wfb):
             pass
 
     def test_signature_removeWorkerForBuilder(self):
-        @self.assertArgSpecMatches(self.sl.removeWorkerForBuilder)
+        @self.assertArgSpecMatches(self.wrk.removeWorkerForBuilder)
         def removeWorkerForBuilder(self, wfb):
             pass
 
     def test_signature_buildFinished(self):
-        @self.assertArgSpecMatches(self.sl.buildFinished)
+        @self.assertArgSpecMatches(self.wrk.buildFinished)
         def buildFinished(self, wfb):
             pass
 
     def test_signature_canStartBuild(self):
-        @self.assertArgSpecMatches(self.sl.canStartBuild)
+        @self.assertArgSpecMatches(self.wrk.canStartBuild)
         def canStartBuild(self):
             pass
 
@@ -104,7 +115,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
-        self.sl = ConcreteWorker('sl', 'pa')
+        self.wrk = ConcreteWorker('wrk', 'pa')
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
@@ -112,20 +123,20 @@ class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
-        self.sl.setServiceParent(self.master.workers)
-        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
-        return self.sl.attached(self.conn)
+        self.wrk.setServiceParent(self.master.workers)
+        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        return self.wrk.attached(self.conn)
 
 
 class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)
-        self.sl = worker.FakeWorker(self.master)
+        self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
-        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
-        return self.sl.attached(self.conn)
+        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        return self.wrk.attached(self.conn)
 
 
 class TestAbstractWorker(unittest.TestCase):
@@ -246,6 +257,31 @@ class TestAbstractWorker(unittest.TestCase):
                                            existingRegistration=False)
         self.assertIn('bot', self.master.workers.registrations)
         self.assertEqual(old.registration.updates, ['bot'])
+
+    @defer.inlineCallbacks
+    def test_reconfigService_builder(self):
+        old = self.createWorker('bot', 'pass')
+        yield self.do_test_reconfigService(old, old)
+
+        # initial configuration, there is no builder configured
+        self.assertEqual(old._configured_builderid_list, [])
+        workers = yield self.master.data.get(('workers',))
+        self.assertEqual(len(workers[0]['configured_on']), 0)
+
+        new = self.createWorker('bot', 'pass', configured=False)
+
+        # we create a fake builder, and associate to the master
+        self.botmaster.builders['bot'] = [FakeBuilder()]
+        self.master.db.insertTestData([
+            fakedb.Builder(id=1, name='builder'),
+            fakedb.BuilderMaster(builderid=1, masterid=824)
+        ])
+        # on reconfig, the db should see the builder configured for this worker
+        yield old.reconfigServiceWithSibling(new)
+        self.assertEqual(old._configured_builderid_list, [1])
+        workers = yield self.master.data.get(('workers',))
+        self.assertEqual(len(workers[0]['configured_on']), 1)
+        self.assertEqual(workers[0]['configured_on'][0]['builderid'], 1)
 
     @defer.inlineCallbacks
     def test_stopService(self):
@@ -494,9 +530,9 @@ class TestAbstractLatentWorker(unittest.SynchronousTestCase):
         self.successResultOf(old.reconfigServiceWithSibling(new))
 
     def test_reconfigService(self):
-        old = base.AbstractLatentWorker(
+        old = AbstractLatentWorker(
             "name", "password", build_wait_timeout=10)
-        new = base.AbstractLatentWorker(
+        new = AbstractLatentWorker(
             "name", "password", build_wait_timeout=30)
 
         self.do_test_reconfigService(old, new)
@@ -527,7 +563,7 @@ class TestWorkerTransition(unittest.TestCase):
                 message_pattern="AbstractLatentBuildSlave was deprecated"):
             deprecated = bs.AbstractLatentBuildSlave
 
-        self.assertIdentical(deprecated, base.AbstractLatentWorker)
+        self.assertIdentical(deprecated, AbstractLatentWorker)
 
     def test_BuildSlave_deprecated_worker(self):
         from buildbot.worker import Worker

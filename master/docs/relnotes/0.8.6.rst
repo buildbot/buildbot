@@ -57,7 +57,7 @@ Deprecations, Removals, and Non-Compatible Changes
                             builderNames=["b1", "b2", ... ]))
 
   Where all of the builder names in the configuration are listed.  See the
-  documentation for the *much* more flexiblie configuration options now
+  documentation for the *much* more flexible configuration options now
   available.
 
 * This is the last release of Buildbot that will be compatible with Python 2.4.
@@ -77,7 +77,7 @@ Deprecations, Removals, and Non-Compatible Changes
   parameter and call its :py:meth:`~buildbot.config.ConfigErrors.addError`
   method to indicate errors.
 
-* The gerrit status callback now gets an additional parameter (the master
+* The Gerrit status callback now gets an additional parameter (the master
   status).  If you use this callback, you will need to adjust its
   implementation.
 
@@ -106,7 +106,7 @@ Deprecations, Removals, and Non-Compatible Changes
   be consistent with other master-side source steps.
 
 * Master Side :bb:step:`Mercurial` step parameter ``baseURL`` has been merged
-  with ``repourl`` parameter. The behavior of the step is already controled by
+  with ``repourl`` parameter. The behavior of the step is already controlled by
   ``branchType`` parameter, so just use a single argument to specify the repository.
 
 * Passing a :py:class:`buildbot.process.buildstep.BuildStep` subclass (rather than
@@ -184,7 +184,7 @@ Features
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bug:`2170`.
 
-* The :src:`master/contrib/fakemaster.py` script allows you to run arbitrary commands on a slave by emulating a master.
+* The ``master/contrib/fakemaster.py`` script allows you to run arbitrary commands on a slave by emulating a master.
   See the file itself for documentation.
 
 * MailNotifier allows multiple notification modes in the same instance.  See

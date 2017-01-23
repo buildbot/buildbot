@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -116,6 +120,6 @@ def track_poll_methods():
 
 def reset_poll_methods():
     global _poller_instances
-    for instance, attrname in _poller_instances:
+    for instance, attrname in _poller_instances:  # pylint: disable=not-an-iterable
         delattr(instance, attrname)
     _poller_instances = None

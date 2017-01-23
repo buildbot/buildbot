@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -87,7 +91,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Builder(id=77, name="mybuilder"),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildsetProperty(buildsetid=8822, property_name='owner',
                                     property_value='["user@nine.com", "force"]'),
@@ -107,8 +111,8 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
     def assertUserForbidden(self, ep, action, options, user):
         try:
             yield self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
-        except authz.Forbidden, e:
-            self.assertIn("need to have role", repr(e))
+        except authz.Forbidden as err:
+            self.assertIn('need to have role', repr(err))
 
     @defer.inlineCallbacks
     def test_anyEndpoint(self):

@@ -13,9 +13,14 @@
 #
 # Copyright Buildbot Team Members
 # Copyright 2013 (c) Mamba Team
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import json
 
 from dateutil.parser import parse as dateparse
+
 from twisted.python import log
 
 

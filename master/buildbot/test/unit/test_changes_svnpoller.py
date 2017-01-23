@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import xml.dom.minidom
 
@@ -285,7 +289,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
     def test_strip_repourl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
         s = self.attachSVNPoller(base + "/")
-        self.failUnlessEqual(s.repourl, base)
+        self.assertEqual(s.repourl, base)
 
     def do_test_get_prefix(self, base, output, expected):
         s = self.attachSVNPoller(base)
@@ -294,7 +298,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         d = s.get_prefix()
 
         def check(prefix):
-            self.failUnlessEqual(prefix, expected)
+            self.assertEqual(prefix, expected)
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d
@@ -370,36 +374,36 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s._prefix = "sample"
 
         logentries = dict(
-            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+            zip(range(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
-        self.failUnlessEqual(len(changes), 2)
+        self.assertEqual(len(changes), 2)
         # note that parsing occurs in reverse
-        self.failUnlessEqual(changes[0]['branch'], "branch")
-        self.failUnlessEqual(changes[0]['revision'], '2')
-        self.failUnlessEqual(changes[0]['project'], '')
-        self.failUnlessEqual(changes[0]['repository'], base)
-        self.failUnlessEqual(changes[1]['branch'], "branch")
-        self.failUnlessEqual(changes[1]['files'], ["main.c"])
-        self.failUnlessEqual(changes[1]['revision'], '3')
-        self.failUnlessEqual(changes[1]['project'], '')
-        self.failUnlessEqual(changes[1]['repository'], base)
+        self.assertEqual(changes[0]['branch'], "branch")
+        self.assertEqual(changes[0]['revision'], '2')
+        self.assertEqual(changes[0]['project'], '')
+        self.assertEqual(changes[0]['repository'], base)
+        self.assertEqual(changes[1]['branch'], "branch")
+        self.assertEqual(changes[1]['files'], ["main.c"])
+        self.assertEqual(changes[1]['revision'], '3')
+        self.assertEqual(changes[1]['project'], '')
+        self.assertEqual(changes[1]['repository'], base)
 
         changes = s.create_changes([logentries[4]])
-        self.failUnlessEqual(len(changes), 1)
-        self.failUnlessEqual(changes[0]['branch'], None)
-        self.failUnlessEqual(changes[0]['revision'], '4')
-        self.failUnlessEqual(changes[0]['files'], ["version.c"])
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(changes[0]['branch'], None)
+        self.assertEqual(changes[0]['revision'], '4')
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
         # r5 should *not* create a change as it's a branch deletion
         changes = s.create_changes([logentries[5]])
-        self.failUnlessEqual(len(changes), 0)
+        self.assertEqual(len(changes), 0)
 
         # r6 should create a change as it's not deleting an entire branch
         changes = s.create_changes([logentries[6]])
-        self.failUnlessEqual(len(changes), 1)
-        self.failUnlessEqual(changes[0]['branch'], 'branch')
-        self.failUnlessEqual(changes[0]['revision'], '6')
-        self.failUnlessEqual(changes[0]['files'], ["version.c"])
+        self.assertEqual(len(changes), 1)
+        self.assertEqual(changes[0]['branch'], 'branch')
+        self.assertEqual(changes[0]['revision'], '6')
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
     def makeInfoExpect(self, password='bbrocks'):
         args = ['svn', 'info', '--xml', '--non-interactive', sample_base,
@@ -416,13 +420,13 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         args.extend(['--limit=100', sample_base])
         return gpo.Expect(*args)
 
-    def test_create_changes_overriden_project(self):
+    def test_create_changes_overridden_project(self):
         def custom_split_file(path):
             f = split_file(path)
             if f:
-                f["project"] = "overriden-project"
-                f["repository"] = "overriden-repository"
-                f["codebase"] = "overriden-codebase"
+                f["project"] = "overridden-project"
+                f["repository"] = "overridden-repository"
+                f["codebase"] = "overridden-codebase"
             return f
 
         base = ("file:///home/warner/stuff/Projects/Buildbot/trees/" +
@@ -431,23 +435,23 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s._prefix = "sample"
 
         logentries = dict(
-            zip(xrange(1, 7), reversed(make_logentry_elements(6))))
+            zip(range(1, 7), reversed(make_logentry_elements(6))))
         changes = s.create_changes(reversed([logentries[3], logentries[2]]))
-        self.failUnlessEqual(len(changes), 2)
+        self.assertEqual(len(changes), 2)
 
         # note that parsing occurs in reverse
-        self.failUnlessEqual(changes[0]['branch'], "branch")
-        self.failUnlessEqual(changes[0]['revision'], '2')
-        self.failUnlessEqual(changes[0]['project'], "overriden-project")
-        self.failUnlessEqual(changes[0]['repository'], "overriden-repository")
-        self.failUnlessEqual(changes[0]['codebase'], "overriden-codebase")
+        self.assertEqual(changes[0]['branch'], "branch")
+        self.assertEqual(changes[0]['revision'], '2')
+        self.assertEqual(changes[0]['project'], "overridden-project")
+        self.assertEqual(changes[0]['repository'], "overridden-repository")
+        self.assertEqual(changes[0]['codebase'], "overridden-codebase")
 
-        self.failUnlessEqual(changes[1]['branch'], "branch")
-        self.failUnlessEqual(changes[1]['files'], ["main.c"])
-        self.failUnlessEqual(changes[1]['revision'], '3')
-        self.failUnlessEqual(changes[1]['project'], "overriden-project")
-        self.failUnlessEqual(changes[1]['repository'], "overriden-repository")
-        self.failUnlessEqual(changes[1]['codebase'], "overriden-codebase")
+        self.assertEqual(changes[1]['branch'], "branch")
+        self.assertEqual(changes[1]['files'], ["main.c"])
+        self.assertEqual(changes[1]['revision'], '3')
+        self.assertEqual(changes[1]['project'], "overridden-project")
+        self.assertEqual(changes[1]['repository'], "overridden-repository")
+        self.assertEqual(changes[1]['codebase'], "overridden-codebase")
 
     def test_poll(self):
         s = self.attachSVNPoller(sample_base, split_file=split_file,
@@ -468,7 +472,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         def check_first(_):
             # no changes generated on the first iteration
             self.assertEqual(self.master.data.updates.changesAdded, [])
-            self.failUnlessEqual(s.last_change, 1)
+            self.assertEqual(s.last_change, 1)
         d.addCallback(check_first)
 
         # now fire it again, nothing changing
@@ -476,7 +480,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
         def check_second(_):
             self.assertEqual(self.master.data.updates.changesAdded, [])
-            self.failUnlessEqual(s.last_change, 1)
+            self.assertEqual(s.last_change, 1)
         d.addCallback(check_second)
 
         # and again, with r2 this time
@@ -498,7 +502,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'src': 'svn',
                 'when_timestamp': None,
             }])
-            self.failUnlessEqual(s.last_change, 2)
+            self.assertEqual(s.last_change, 2)
         d.addCallback(check_third)
 
         # and again with both r3 and r4 appearing together
@@ -537,7 +541,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'src': 'svn',
                 'when_timestamp': None,
             }])
-            self.failUnlessEqual(s.last_change, 4)
+            self.assertEqual(s.last_change, 4)
             self.assertAllCommandsRan()
         d.addCallback(check_fourth)
 
@@ -637,7 +641,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
 
         s = self.attachSVNPoller(repourl=base, extra_args=extra_args)
-        self.failUnlessEqual(s.extra_args, extra_args)
+        self.assertEqual(s.extra_args, extra_args)
 
     def test_use_svnurl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"

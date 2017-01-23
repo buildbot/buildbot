@@ -12,8 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -47,9 +51,12 @@ class Trigger(BuildStep):
     def __init__(self, schedulerNames=None, sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
                  waitForFinish=False, set_properties=None,
-                 copy_properties=None, parent_relationship="Triggered from", **kwargs):
+                 copy_properties=None, parent_relationship="Triggered from",
+                 unimportantSchedulerNames=None, **kwargs):
         if schedulerNames is None:
             schedulerNames = []
+        if unimportantSchedulerNames is None:
+            unimportantSchedulerNames = []
         if not schedulerNames:
             config.error(
                 "You must specify a scheduler to trigger")
@@ -63,7 +70,13 @@ class Trigger(BuildStep):
             config.error(
                 "You can't specify both alwaysUseLatest and updateSourceStamp"
             )
+        if not set(schedulerNames).issuperset(set(unimportantSchedulerNames)):
+            config.error(
+                "unimportantSchedulerNames must be a subset of schedulerNames"
+            )
+
         self.schedulerNames = schedulerNames
+        self.unimportantSchedulerNames = unimportantSchedulerNames
         self.sourceStamps = sourceStamps or []
         if sourceStamp:
             self.sourceStamps.append(sourceStamp)
@@ -89,6 +102,7 @@ class Trigger(BuildStep):
         self.ended = False
         self.brids = []
         self.triggeredNames = None
+        self.waitForFinishDeferred = None
         BuildStep.__init__(self, **kwargs)
 
     def interrupt(self, reason):
@@ -105,6 +119,9 @@ class Trigger(BuildStep):
                                      ("buildrequests", brid))
         if self.running and not self.ended:
             self.ended = True
+            # if we are interrupted because of a connection lost, we interrupt synchronously
+            if self.build.conn is None and self.waitForFinishDeferred is not None:
+                self.waitForFinishDeferred.cancel()
 
     # Create the properties that are used for the trigger
     def createTriggerProperties(self, properties):
@@ -126,10 +143,14 @@ class Trigger(BuildStep):
                 "triggered scheduler is not ITriggerableScheduler: %r" % (name,))
         return sch
 
-    # This customization enpoint allows users to dynamically select which
+    # This customization endpoint allows users to dynamically select which
     # scheduler and properties to trigger
     def getSchedulersAndProperties(self):
-        return [(sched, self.set_properties) for sched in self.schedulerNames]
+        return [{
+            'sched_name': sched,
+            'props_to_set': self.set_properties,
+            'unimportant': sched in self.unimportantSchedulerNames}
+            for sched in self.schedulerNames]
 
     def prepareSourcestampListForTrigger(self):
         if self.sourceStamps:
@@ -167,14 +188,20 @@ class Trigger(BuildStep):
         return all_got_revisions
 
     @defer.inlineCallbacks
-    def worstStatus(self, overall_results, rclist):
+    def worstStatus(self, overall_results, rclist, unimportant_brids):
         for was_cb, results in rclist:
             if isinstance(results, tuple):
-                results, _ = results
+                results, brids_dict = results
 
             if not was_cb:
                 yield self.addLogWithFailure(results)
                 results = EXCEPTION
+
+            # brids_dict.values() represents the list of brids kicked by a certain scheduler.
+            # We want to ignore the result of ANY brid that was kicked off
+            # by an UNimportant scheduler.
+            if set(unimportant_brids).issuperset(set(brids_dict.values())):
+                continue
             overall_results = worst_status(overall_results, results)
         defer.returnValue(overall_results)
 
@@ -192,19 +219,39 @@ class Trigger(BuildStep):
                     for build in builds:
                         num = build['number']
                         url = self.master.status.getURLForBuild(builderid, num)
-                        yield self.addURL("%s: %s #%d" % (statusToString(results),
+                        yield self.addURL("%s: %s #%d" % (statusToString(build["results"]),
                                                           builderDict["name"], num), url)
 
     @defer.inlineCallbacks
     def run(self):
         schedulers_and_props = yield self.getSchedulersAndProperties()
 
+        schedulers_and_props_list = []
+
+        # To be back compatible we need to differ between old and new style
+        # schedulers_and_props can either consist of 2 elements tuple or
+        # dictionary
+        for element in schedulers_and_props:
+            if isinstance(element, dict):
+                schedulers_and_props_list = schedulers_and_props
+                break
+            else:
+                # Old-style back compatibility: Convert tuple to dict and make
+                # it important
+                d = {
+                    'sched_name': element[0],
+                    'props_to_set': element[1],
+                    'unimportant': False
+                }
+                schedulers_and_props_list.append(d)
+
         # post process the schedulernames, and raw properties
         # we do this out of the loop, as this can result in errors
         schedulers_and_props = [(
-            self.getSchedulerByName(sch),
-            self.createTriggerProperties(props_to_set))
-            for sch, props_to_set in schedulers_and_props]
+            self.getSchedulerByName(entry_dict['sched_name']),
+            self.createTriggerProperties(entry_dict['props_to_set']),
+            entry_dict['unimportant'])
+            for entry_dict in schedulers_and_props_list]
 
         ss_for_trigger = self.prepareSourcestampListForTrigger()
 
@@ -213,7 +260,9 @@ class Trigger(BuildStep):
         results = SUCCESS
         self.running = True
 
-        for sch, props_to_set in schedulers_and_props:
+        unimportant_brids = []
+
+        for sch, props_to_set, unimportant in schedulers_and_props:
             idsDeferred, resultsDeferred = sch.trigger(
                 waited_for=self.waitForFinish, sourcestamps=ss_for_trigger,
                 set_props=props_to_set,
@@ -228,7 +277,8 @@ class Trigger(BuildStep):
             except Exception as e:
                 yield self.addLogWithException(e)
                 results = EXCEPTION
-
+            if unimportant:
+                unimportant_brids.extend(itervalues(brids))
             self.brids.extend(itervalues(brids))
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
@@ -242,12 +292,16 @@ class Trigger(BuildStep):
         self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
-            rclist = yield defer.DeferredList(dl, consumeErrors=1)
+            self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=1)
+            try:
+                rclist = yield self.waitForFinishDeferred
+            except defer.CancelledError:
+                pass
             # we were interrupted, don't bother update status
             if self.ended:
                 defer.returnValue(CANCELLED)
             yield self.addBuildUrls(rclist)
-            results = yield self.worstStatus(results, rclist)
+            results = yield self.worstStatus(results, rclist, unimportant_brids)
         else:
             # do something to handle errors
             for d in dl:

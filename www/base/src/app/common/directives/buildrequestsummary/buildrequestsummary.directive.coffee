@@ -9,14 +9,18 @@ class Buildrequestsummary extends Directive('common')
             controller: '_buildrequestsummaryController'
         }
 
-
 class _buildrequestsummary extends Controller('common')
-    constructor: ($scope, dataService, findBuilds) ->
+    constructor: ($scope, dataService, buildersService, findBuilds, resultsService) ->
+        _.mixin($scope, resultsService)
         $scope.$watch "buildrequest.claimed", (n, o) ->
             if n  # if it is unclaimed, then claimed, we need to try again
                 findBuilds $scope,
                     $scope.buildrequest.buildrequestid
 
         data = dataService.open().closeOnDestroy($scope)
-        data.getBuildrequests($scope.buildrequestid).then (buildrequests) ->
-            $scope.buildrequest = buildrequests[0]
+        data.getBuildrequests($scope.buildrequestid).onNew = (buildrequest) ->
+            $scope.buildrequest = buildrequest
+            data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
+                $scope.buildset = buildset
+
+            $scope.builder = buildersService.getBuilder(buildrequest.builderid)

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -59,9 +62,9 @@ class LogChunkEndpoint(LogChunkEndpointBase):
         logid, dbdict = yield self.getLogIdAndDbDictFromKwargs(kwargs)
         if logid is None:
             return
-        firstline = resultSpec.offset or 0
+        firstline = int(resultSpec.offset or 0)
         lastline = None if resultSpec.limit is None else firstline + \
-            resultSpec.limit - 1
+            int(resultSpec.limit) - 1
         resultSpec.removePagination()
 
         # get the number of lines, if necessary
@@ -70,7 +73,7 @@ class LogChunkEndpoint(LogChunkEndpointBase):
                 dbdict = yield self.master.db.logs.getLog(logid)
             if not dbdict:
                 return
-            lastline = max(0, dbdict['num_lines'] - 1)
+            lastline = int(max(0, dbdict['num_lines'] - 1))
 
         # bounds checks
         if firstline < 0 or lastline < 0 or firstline > lastline:

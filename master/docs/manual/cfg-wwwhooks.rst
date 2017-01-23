@@ -21,16 +21,72 @@ An example www configuration line which enables change_hook and two DIALECTS:
 
 Within the www config dictionary arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
-The :file:`post_build_request.py` script in :file:`master/contrib` allows for the submission of an arbitrary change request.
+The :src:`master/contrib/post_build_request.py` script allows for the submission of an arbitrary change request.
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
+
+.. _Change-Hooks-Auth:
+
+Change Hooks Auth
++++++++++++++++++
+
+By default change hook URL is not protected.
+Some hooks implement their own authentication method.
+Other requires the generic method to be secured.
+
+To protect URL against unauthorized access you you may use ``change_hook_auth`` option.
+
+.. note::
+
+    This method uses ``HTTP BasicAuth``, it implies the use of SSL via :ref:`Reverse_Proxy_Config` in order to be fully secured.
+
+.. code-block:: python
+
+    from twisted.cred import strcred
+    c['www'] = dict(...,
+          change_hook_auth=[strcred.makeChecker("file:changehook.passwd")]))
+
+create a file ``changehook.passwd``:
+
+.. code-block:: none
+
+    user:password
+
+* ``change_hook_auth`` should be a list of :py:class:`ICredentialsChecker`
+
+See the details of available options in `Twisted documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_
+
+.. bb:chsrc:: Mercurial
+
+Mercurial hook
+++++++++++++++
+
+The Mercurial hook uses the base dialect:
+
+.. code-block:: python
+
+    c['www'] = dict(
+        ...,
+        change_hook_dialects={'base': True},
+    )
+
+Once this is configured on your buildmaster add the following hook on your server-side Mercurial repository's ``hgrc``:
+
+.. code-block:: ini
+
+    [hooks]
+    changegroup.buildbot = python:/path/to/hgbuildbot.py:hook
+
+You'll find ``hgbuildbot.py``, and its inline documentation, in the ``contrib`` directory of Buildbot's repository.
+
+.. bb:chsrc:: GitHub
 
 GitHub hook
 +++++++++++
 
 .. note::
 
-   There is a standalone HTTP server available for receiving GitHub notifications as well: :file:`contrib/github_buildbot.py`.
+   There is a standalone HTTP server available for receiving GitHub notifications as well: :src:`master/contrib/github_buildbot.py`.
    This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 The GitHub hook has the following parameters:
@@ -71,11 +127,11 @@ The parameters are:
 
 :guilabel:`Payload URL`
     This URL should point to ``/change_hook/github`` relative to the root of the web status.
-    For example, if the grid URL is ``http://builds.example.com/bbot/grid``, then point GitHub to ``http://builds.example.com/bbot/change_hook/github``.
+    For example, if the base URL is ``http://builds.example.com/buildbot``, then point GitHub to ``http://builds.example.com/buildbot/change_hook/github``.
     To specify a project associated to the repository, append ``?project=name`` to the URL.
 
 :guilabel:`Content Type`
-    Specify ``application/x-www-form-urlencoded``.  JSON is not currently not supported.
+    Specify ``application/x-www-form-urlencoded`` or ``application/json``.
 
 :guilabel:`Secret`
     Any value.
@@ -103,24 +159,8 @@ And then press the ``Add Webhook`` button.
     The incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web server can "fake" a request from GitHub, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you either specify a secret, or you should use ``change_hook_auth`` option:
-
-.. code-block:: python
-
-    c['www'] = dict(...,
-          change_hook_auth=["file:changehook.passwd"]))
-
-create a file ``changehook.passwd``:
-
-.. code-block:: none
-
-    user:password
-
-and change the the ``Payload URL`` of your GitHub webhook to ``http://user:password@builds.example.com/bbot/change_hook/github``.
-
-See the `documentation for twisted cred <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_ for more options to pass to ``change_hook_auth``.
-
-Note that not using ``change_hook_auth`` can expose you to security risks.
+To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
+Then change the the ``Payload URL`` of your GitHub webhook to ``https://user:password@builds.example.com/bbot/change_hook/github``.
 
 Patches are welcome to implement: https://developer.github.com/webhooks/securing/
 
@@ -128,6 +168,7 @@ Patches are welcome to implement: https://developer.github.com/webhooks/securing
 
    When using a :ref:`ChangeFilter<Change-Filters>` with a GitHub webhook ensure that your filter matches all desired requests as fields such as ``repository`` and ``project`` may differ in different events.
 
+.. bb:chsrc:: BitBucket
 
 BitBucket hook
 ++++++++++++++
@@ -143,7 +184,7 @@ When this is setup you should add a `POST` service pointing to ``/change_hook/bi
 For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
-Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :file:`contrib/bitbucket_buildbot.py`.
+Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :src:`master/contrib/bitbucket_buildbot.py`.
 This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::
@@ -151,37 +192,10 @@ This script may be useful in cases where you cannot expose the WebStatus for pub
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from BitBucket, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option.
-
-.. code-block:: python
-
-  c['www'] = dict(...,
-        change_hook_auth=["file:changehook.passwd"]))
-
-Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/bitbucket``.
+To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
+Then, create a BitBucket service hook (see https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/bitbucket``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
-
-Google Code hook
-++++++++++++++++
-
-The Google Code hook is quite similar to the GitHub Hook.
-It has one option for the "Post-Commit Authentication Key" used to check if the request is legitimate::
-
-    c['www'] = dict(...,
-        change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX'}}
-    )
-
-This will add a "Post-Commit URL" for the project in the Google Code administrative interface, pointing to ``/change_hook/googlecode`` relative to the root of the web status.
-
-Alternatively, you can use the :ref:`GoogleCodeAtomPoller` :class:`ChangeSource` that periodically poll the Google Code commit feed for changes.
-
-.. note::
-
-   Google Code doesn't send the branch on which the changes were made.
-   So, the hook always returns ``'default'`` as the branch, you can override it with the ``'branch'`` option::
-
-      change_hook_dialects={'googlecode': {'secret_key': 'FSP3p-Ghdn4T0oqX', 'branch': 'master'}}
 
 Poller hook
 +++++++++++
@@ -218,6 +232,8 @@ You can restrict which pollers the webhook has access to using the ``allowed`` o
         change_hook_dialects={'poller': {'allowed': ['https://amanda.svn.sourceforge.net/svnroot/amanda/amanda']}}
     )
 
+.. bb:chsrc:: GitLab
+
 GitLab hook
 +++++++++++
 
@@ -243,17 +259,12 @@ These parameters will be passed along to the scheduler.
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from your GitLab server, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option.
-
-.. code-block:: python
-
-    c['www'] = dict(...,
-        change_hook_auth=["file:changehook.passwd"]
-    )
-
-Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitlab``.
+To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
+Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
+
+.. bb:chsrc:: Gitorious
 
 Gitorious Hook
 ++++++++++++++
@@ -274,15 +285,8 @@ For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then po
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from your Gitorious server, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use ``change_hook_auth`` option.
-
-.. code-block:: python
-
-    c['www'] = dict(...,
-        change_hook_auth=["file:changehook.passwd"]
-    )
-
-Then, create a Gitorious web hook with a WebHook URL like ``http://user:password@builds.example.com/bbot/change_hook/gitorious``.
+To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
+Then, create a Gitorious web hook with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitorious``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 

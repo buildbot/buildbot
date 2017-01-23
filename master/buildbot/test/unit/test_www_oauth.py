@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
 import os
 import webbrowser
 
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import threads
@@ -25,7 +31,6 @@ from twisted.web.resource import Resource
 from twisted.web.server import Site
 
 from buildbot.test.util import www
-from buildbot.util import json
 
 try:
     import requests
@@ -34,7 +39,7 @@ except ImportError:
 
 
 if requests:
-    from buildbot.www import oauth2
+    from buildbot.www import oauth2  # pylint: disable=ungrouped-imports
 
 
 class FakeResponse(object):
@@ -61,8 +66,9 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
         self.gitlabAuth = oauth2.GitLabAuth(
             "https://gitlab.test/", "glclientID", "clientSECRET")
+        self.bitbucketAuth = oauth2.BitbucketAuth("bbclientID", "clientSECRET")
 
-        for auth in [self.googleAuth, self.githubAuth, self.gitlabAuth]:
+        for auth in [self.googleAuth, self.githubAuth, self.gitlabAuth, self.bitbucketAuth]:
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
 
@@ -84,11 +90,12 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
         res = yield self.githubAuth.getLoginURL('http://redir')
-        exp = ("https://github.com/login/oauth/authorize?state=redirect%3Dhttp%253A%252F%252Fredir&redirect_uri="
-               "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
+        exp = ("https://github.com/login/oauth/authorize?scope=user&state="
+               "redirect%3Dhttp%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb%2F"
+               "auth%2Flogin&response_type=code&client_id=ghclientID")
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
-        exp = ("https://github.com/login/oauth/authorize?redirect_uri="
+        exp = ("https://github.com/login/oauth/authorize?scope=user&redirect_uri="
                "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
         self.assertEqual(res, exp)
 
@@ -106,6 +113,18 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                "?redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin"
                "&response_type=code"
                "&client_id=glclientID")
+        self.assertEqual(res, exp)
+
+    @defer.inlineCallbacks
+    def test_getBitbucketLoginURL(self):
+        res = yield self.bitbucketAuth.getLoginURL('http://redir')
+        exp = ("https://bitbucket.org/site/oauth2/authorize?state=redirect%3D"
+               "http%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb%2Fauth%2F"
+               "login&response_type=code&client_id=bbclientID")
+        self.assertEqual(res, exp)
+        res = yield self.bitbucketAuth.getLoginURL(None)
+        exp = ("https://bitbucket.org/site/oauth2/authorize?redirect_uri=h%3A%2"
+               "Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=bbclientID")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
@@ -129,14 +148,18 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             dict(  # /user
                 login="bar",
                 name="foo bar",
-                email="bar@foo"),
-            [dict(  # /users/bar/orgs
-                login="group",)
-             ]])
+                email="buzz@bar"),
+            [  # /user/emails
+                {'email': 'buzz@bar', 'verified': True, 'primary': False},
+                {'email': 'bar@foo', 'verified': True, 'primary': True}],
+            [  # /user/orgs
+                dict(login="hello"),
+                dict(login="grp"),
+            ]])
         res = yield self.githubAuth.verifyCode("code!")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
-                          'groups': ['group'],
+                          'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
@@ -163,6 +186,30 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           "email": "foo@bar",
                           "avatar_url": "https://avatar/fbar.png",
                           "groups": ["hello", "grp"]}, res)
+
+    @defer.inlineCallbacks
+    def test_BitbucketVerifyCode(self):
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.bitbucketAuth.get = mock.Mock(side_effect=[
+            dict(  # /user
+                username="bar",
+                display_name="foo bar"),
+            dict(  # /user/emails
+                values=[
+                    {'email': 'buzz@bar', 'is_primary': False},
+                    {'email': 'bar@foo', 'is_primary': True}]),
+            dict(  # /teams?role=member
+                values=[
+                    {'username': 'hello'},
+                    {'username': 'grp'}])
+             ])
+        res = yield self.bitbucketAuth.verifyCode("code!")
+        self.assertEqual({'email': 'bar@foo',
+                          'username': 'bar',
+                          "groups": ["hello", "grp"],
+                          'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
     def test_loginResource(self):
@@ -194,10 +241,12 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                                                            'name': 'Google', 'oauth2': True})
         self.assertEqual(self.gitlabAuth.getConfigDict(), {'fa_icon': 'fa-git', 'autologin': False,
                                                            'name': 'GitLab', 'oauth2': True})
+        self.assertEqual(self.bitbucketAuth.getConfigDict(), {'fa_icon': 'fa-bitbucket', 'autologin': False,
+                                                              'name': 'Bitbucket', 'oauth2': True})
 
-# unit tests are not very usefull to write new oauth support
+# unit tests are not very useful to write new oauth support
 # so following is an e2e test, which opens a browser, and do the oauth
-# negociation. The browser window close in the end of the test
+# negotiation. The browser window close in the end of the test
 
 # in order to use this tests, you need to create Github/Google ClientID (see doc on how to do it)
 # point OAUTHCONF environment variable to a file with following params:
@@ -232,7 +281,6 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest(
                 "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        import json
         config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
         from buildbot.www import oauth2
         self.auth = self._instantiateAuth(
@@ -245,7 +293,7 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
     def tearDown(self):
         from twisted.internet.tcp import Server
-        # browsers has the bad habbit on not closing the persistent
+        # browsers has the bad habit on not closing the persistent
         # connections, so we need to hack them away to make trial happy
         f = failure.Failure(Exception("test end"))
         for reader in reactor.getReaders():

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from twisted.python import log
@@ -28,7 +32,14 @@ class LoggingMixin(object):
         r = re.compile(regexp)
         for event in self._logEvents:
             msg = log.textFromEventDict(event)
+            if msg is not None:
+                assert not msg.startswith("Unable to format event"), msg
             if msg is not None and r.search(msg):
                 return
         self.fail(
-            "%r not matched in log output.\n%s " % (regexp, self._logEvents))
+            "%r not matched in log output.\n%s " % (
+                regexp, [log.textFromEventDict(e) for e in self._logEvents]))
+
+    def assertWasQuiet(self):
+        self.assertEqual([
+            log.textFromEventDict(event) for event in self._logEvents], [])

@@ -13,13 +13,20 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 import buildbot.test.fake.openstack as novaclient
 from buildbot import config
 from buildbot import interfaces
+from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Properties
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -39,6 +46,7 @@ class TestOpenStackWorker(unittest.TestCase):
     def setUp(self):
         self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
+        self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
         self.patch(openstack, "nce", None)
@@ -69,6 +77,63 @@ class TestOpenStackWorker(unittest.TestCase):
                                              'destination_type': 'volume', 'device_name': 'vda',
                                              'source_type': 'image', 'volume_size': 10, 'uuid': 'uuid'}])
 
+    @defer.inlineCallbacks
+    def test_constructor_block_devices_get_sizes(self):
+        block_devices = [
+            {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image']},
+            {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image'], 'volume_size': 4},
+            {'source_type': 'volume', 'uuid': novaclient.TEST_UUIDS['volume']},
+            {'source_type': 'snapshot', 'uuid': novaclient.TEST_UUIDS['snapshot']},
+        ]
+
+        def check_volume_sizes(_images, block_devices):
+            self.assertEqual(len(block_devices), 4)
+            self.assertEqual(block_devices[0]['volume_size'], 1)
+            self.assertIsInstance(block_devices[0]['volume_size'], int,
+                                  "Volume size is an integer.")
+            self.assertEqual(block_devices[1]['volume_size'], 4)
+            self.assertEqual(block_devices[2]['volume_size'], 4)
+            self.assertEqual(block_devices[3]['volume_size'], 2)
+
+        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             block_devices=block_devices,
+                                             **self.os_auth)
+        self.assertEqual(lw.image, None)
+        self.assertEqual(lw.block_devices, [{'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'image', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['image']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'image', 'volume_size': 4,
+                                             'uuid': novaclient.TEST_UUIDS['image']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'volume', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['volume']},
+                                            {'boot_index': 0,
+                                             'delete_on_termination': True,
+                                             'destination_type': 'volume', 'device_name': 'vda',
+                                             'source_type': 'snapshot', 'volume_size': None,
+                                             'uuid': novaclient.TEST_UUIDS['snapshot']}])
+        self.patch(lw, "_start_instance", check_volume_sizes)
+        yield lw.start_instance(self.build)
+
+    @defer.inlineCallbacks
+    def test_constructor_block_devices_missing(self):
+        block_devices = [
+            {'source_type': 'image', 'uuid': '9fb2e6e8-110d-4388-8c23-0fcbd1e2fcc1'},
+        ]
+
+        lw = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             block_devices=block_devices,
+                                             **self.os_auth)
+        yield self.assertFailure(lw.start_instance(self.build),
+                                 novaclient.NotFound)
+
     def test_constructor_no_image(self):
         """
         Must have one of image or block_devices specified.
@@ -77,58 +142,79 @@ class TestOpenStackWorker(unittest.TestCase):
                           openstack.OpenStackLatentWorker, 'bot', 'pass',
                           flavor=1, **self.os_auth)
 
+    @defer.inlineCallbacks
     def test_getImage_string(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
-        self.assertEqual('image-uuid', bs._getImage(None, bs.image))
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual('image-uuid', image_uuid)
 
+    @defer.inlineCallbacks
     def test_getImage_callable(self):
         def image_callable(images):
-            return images[0]
+            filtered = [i for i in images if i.id == 'uuid1']
+            return filtered[0].id
 
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
                                              image=image_callable, **self.os_auth)
-        os_client = novaclient.Client('1.1', 'user', 'pass', 'tenant', 'auth')
-        os_client.images.images = ['uuid1', 'uuid2', 'uuid2']
-        self.assertEqual('uuid1', bs._getImage(os_client, image_callable))
+        os_client = bs.novaclient
+        os_client.images._add_items([
+            novaclient.Image('uuid1', 'name1', 1),
+            novaclient.Image('uuid2', 'name2', 1),
+            novaclient.Image('uuid3', 'name3', 1),
+            ])
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual('uuid1', image_uuid)
+
+    @defer.inlineCallbacks
+    def test_getImage_renderable(self):
+        bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                             image=Interpolate('%(prop:image)s'),
+                                             **self.os_auth)
+        image_uuid = yield bs._getImage(self.build)
+        self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        self.assertRaises(ValueError, bs.start_instance, None)
+        self.assertFailure(bs.start_instance(self.build), ValueError)
 
+    @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_get', True)
-        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
-                          bs._start_instance)
+        yield self.assertFailure(bs.start_instance(self.build),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_start_instance_fail_to_start(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
         self.patch(novaclient.Servers, 'fail_to_start', True)
-        self.assertRaises(interfaces.LatentWorkerFailedToSubstantiate,
-                          bs._start_instance)
+        yield self.assertFailure(bs.start_instance(self.build),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_start_instance_success(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = bs._start_instance()
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertTrue(uuid)
         self.assertEqual(image_uuid, 'image-uuid')
         self.assertTrue(time_waiting)
 
+    @defer.inlineCallbacks
     def test_start_instance_check_meta(self):
         meta_arg = {'some_key': 'some-value'}
         bs = openstack.OpenStackLatentWorker('bot', 'pass', meta=meta_arg,
                                              **self.bs_image_args)
         bs._poll_resolution = 0
-        uuid, image_uuid, time_waiting = bs._start_instance()
+        uuid, image_uuid, time_waiting = yield bs.start_instance(self.build)
         self.assertIn('meta', bs.instance.boot_kwargs)
         self.assertIdentical(bs.instance.boot_kwargs['meta'], meta_arg)
 

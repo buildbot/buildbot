@@ -12,7 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.internet import utils
 
@@ -44,10 +48,9 @@ class Expect(object):
         return self
 
     def check(self, test, bin, path, args):
-        test.assertEqual(
+        test.assertDictEqual(
             dict(bin=bin, path=path, args=tuple(args)),
-            dict(bin=self._bin, path=self._path, args=self._args),
-            "unexpected command run")
+            dict(bin=self._bin, path=self._path, args=self._args), "unexpected command run")
         return (self._stdout, self._stderr, self._exit)
 
     def __repr__(self):
@@ -55,6 +58,7 @@ class Expect(object):
 
 
 class GetProcessOutputMixin:
+    longMessage = True
 
     def setUpGetProcessOutput(self):
         self._gpo_patched = False

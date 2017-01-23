@@ -12,16 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
 import os
 import posixpath
 
 import jinja2
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
-from buildbot.util import json
 from buildbot.www import resource
 
 
@@ -135,9 +140,15 @@ class IndexResource(resource.Resource):
             del config['change_hook_dialects']
 
         def toJson(obj):
-            obj = IConfigured(obj).getConfigDict()
+            try:
+                obj = IConfigured(obj).getConfigDict()
+            except TypeError:
+                # this happens for old style classes (not deriving objects)
+                pass
             if isinstance(obj, dict):
                 return obj
+            # don't leak object memory address
+            obj = obj.__class__.__module__ + "." + obj.__class__.__name__
             return repr(obj) + " not yet IConfigured"
 
         tpl = self.jinja.get_template('index.html')

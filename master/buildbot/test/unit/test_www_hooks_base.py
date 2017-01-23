@@ -1,3 +1,6 @@
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -42,19 +45,19 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
     def _check_base_with_change(self, payload):
         self.request = _prepare_request(payload)
         yield self.request.test_render(self.changeHook)
-        self.assertEquals(len(self.changeHook.master.addedChanges), 1)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
         change = self.changeHook.master.addedChanges[0]
-        self.assertEquals(change['files'], payload.get('files', []))
-        self.assertEquals(change['properties'], payload.get('properties', {}))
-        self.assertEquals(change['revision'], payload.get('revision'))
-        self.assertEquals(change['author'],
-                          payload.get('author', payload.get('who')))
-        self.assertEquals(change['comments'], payload['comments'])
-        self.assertEquals(change['branch'], payload.get('branch'))
-        self.assertEquals(change['category'], payload.get('category'))
-        self.assertEquals(change['revlink'], payload.get('revlink'))
-        self.assertEquals(change['repository'], payload.get('repository'))
-        self.assertEquals(change['project'], payload.get('project'))
+        self.assertEqual(change['files'], payload.get('files', []))
+        self.assertEqual(change['properties'], payload.get('properties', {}))
+        self.assertEqual(change['revision'], payload.get('revision'))
+        self.assertEqual(change['author'],
+                         payload.get('author', payload.get('who')))
+        self.assertEqual(change['comments'], payload['comments'])
+        self.assertEqual(change['branch'], payload.get('branch'))
+        self.assertEqual(change['category'], payload.get('category'))
+        self.assertEqual(change['revlink'], payload.get('revlink'))
+        self.assertEqual(change['repository'], payload.get('repository'))
+        self.assertEqual(change['project'], payload.get('project'))
 
     def test_base_with_no_change(self):
         self._check_base_with_change({})

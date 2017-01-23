@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import inspect
@@ -19,10 +22,14 @@ import time
 import traceback
 
 import sqlalchemy as sa
+
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
 
+from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
+from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
 
 # set this to True for *very* verbose query debugging output; this can
@@ -193,6 +200,9 @@ class DBThreadPool(object):
                     # and re-try
                     log.err(e, 'retrying {} after sql error {}'.format(callable, e))
                     continue
+                # AlreadyClaimedError are normal especially in a multimaster configuration
+                except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError):
+                    raise
                 except Exception as e:
                     log.err(e, 'Got fatal Exception on DB')
                     raise

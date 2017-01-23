@@ -7,10 +7,23 @@ Upgrading a Buildbot instance from 0.8.x to 0.9.x may require a number of change
 Those changes are summarized here.
 If you are starting fresh with 0.9.0 or later, you can safely skip this section.
 
+First important note is that Buildbot does not support an upgrade of a 0.8.x instance to 0.9.x.
+Notably the build data and logs will not be accessible anymore if you upgraded, thus the database migration scripts have been dropped.
+
+You should not ``pip upgrade -U buildbot``, but rather start from a clean virtualenv aside from your old master.
+You can keep your old master instance to serve the old build status.
+
+Buildbot is now composed of several Python packages and Javascript UI, and the easiest way to install it is to run the following command within a virtualenv:
+
+.. code-block:: bash
+
+  pip install 'buildbot[bundle]'
+
+
 Config File Syntax
 ------------------
 
-In preparation for compatibility with Python 3, Buildbot coniguration files no longer allow the print statement:
+In preparation for compatibility with Python 3, Buildbot configuration files no longer allow the print statement:
 
 .. code-block:: python
 
@@ -70,13 +83,13 @@ Where in 0.8.x most of the data about a build was available synchronously, it mu
 All classes under the Python package ``buildbot.status`` should be considered deprecated.
 Many have already been removed, and the remainder have limited functionality.
 Any custom code which refers to these classes must be rewritten to use the Data API.
-Avoid the temptatation to reach into the Buildbot source code to find other useful-looking methods!
+Avoid the temptation to reach into the Buildbot source code to find other useful-looking methods!
 
 Common uses of the status API are:
 
  * ``getBuild`` in a custom renderable
  * ``MailNotifier`` message formatters (see below for upgrade hints)
- * ``doIf`` funtions on steps
+ * ``doIf`` functions on steps
 
 Import paths for several classes under the ``buildbot.status`` package but which remain useful have changed.
 Most of these are now available as plugins (see above), but for the remainder, consult the source code.
@@ -92,7 +105,7 @@ Status Reporters
 
 In fact, the whole ``c['status']`` configuration parameter is gone.
 
-Many of the status listeners used in the status hierarchy in 0.8.x have been replaced with "reporters" that are availabale as buildbot plugins.
+Many of the status listeners used in the status hierarchy in 0.8.x have been replaced with "reporters" that are available as buildbot plugins.
 However, note that not all status listeners have yet been ported.
 See the release notes for details.
 

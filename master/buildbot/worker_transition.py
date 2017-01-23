@@ -20,6 +20,10 @@ Use of old API generates Python warning which may be logged, ignored or treated
 as an error using Python builtin warnings API.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import functools
 import sys
 import warnings
@@ -73,7 +77,7 @@ def _compat_name(new_name, compat_name=None):
     compat_name = new_name
     assert "slave" not in compat_name.lower()
     assert "worker" in compat_name.lower()
-    for new_word, old_word in compat_replacements.iteritems():
+    for new_word, old_word in iteritems(compat_replacements):
         compat_name = compat_name.replace(new_word, old_word)
 
     assert compat_name != new_name
@@ -198,7 +202,9 @@ def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
         "scope must be module, i.e. locals()"
 
     if new_name is None:
-        attribute_name = scope.keys()[scope.values().index(attribute)]
+        scope_keys = list(scope.keys())
+        scope_values = list(scope.values())
+        attribute_name = scope_keys[scope_values.index(attribute)]
     else:
         attribute_name = new_name
 
@@ -234,7 +240,9 @@ def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
     """
 
     if new_name is None:
-        attribute_name = scope.keys()[scope.values().index(prop)]
+        scope_keys = list(scope.keys())
+        scope_values = list(scope.values())
+        attribute_name = scope_keys[scope_values.index(prop)]
     else:
         attribute_name = new_name
 

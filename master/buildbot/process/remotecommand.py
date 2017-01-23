@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
+from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import log
@@ -176,9 +181,9 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         return None
 
     def remote_update(self, updates):
-        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
-        I am called by the worker's L{buildbot.slave.bot.SlaveBuilder} so
+        I am called by the worker's
+        L{buildbot_worker.base.WorkerForBuilderBase.sendUpdate} so
         I can receive updates from the running remote command.
 
         @type  updates: list of [object, int]
@@ -201,9 +206,9 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         return max_updatenum
 
     def remote_complete(self, failure=None):
-        # TODO: this class is incorrect: buildbot.slave.bot.SlaveBuilder
         """
-        Called by the worker's L{buildbot.slave.bot.SlaveBuilder} to
+        Called by the worker's
+        L{buildbot_worker.base.WorkerForBuilderBase.commandComplete} to
         notify me the remote command has finished.
 
         @type  failure: L{twisted.python.failure.Failure} or None
@@ -330,6 +335,8 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
 
     def didFail(self):
         return self.results() == FAILURE
+
+
 LoggedRemoteCommand = RemoteCommand
 
 
@@ -348,7 +355,7 @@ class RemoteShellCommand(RemoteCommand):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
-        if isinstance(self.command, basestring):
+        if isinstance(self.command, string_types):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:

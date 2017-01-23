@@ -13,10 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 import warnings
 
 from mock import Mock
 from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -67,7 +72,7 @@ def sampleSummaryCB(buildInfoList, results, status, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -89,7 +94,7 @@ def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -116,7 +121,7 @@ def legacyTestSummaryCB(buildInfoList, results, status, arg):
     failure = False
 
     for buildInfo in buildInfoList:
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -170,7 +175,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
-        for i in xrange(len(buildResults)):
+        for i in range(len(buildResults)):
             info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
                          'resultText': resultText[i], 'text': u'buildText',
                          'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),
@@ -461,4 +466,24 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
+             "--message 'bla'", '--verified 1', 'revision'])
+
+        # now test the notify argument, even though _gerrit_notify
+        # is private, work around that
+        gsp._gerrit_notify = 'OWNER'
+        gsp.processVersion('2.6', lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
+             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'])
+
+        # gerrit versions <= 2.5 uses other syntax
+        gsp.processVersion('2.4', lambda: None)
+        spawnSkipFirstArg = Mock()
+        yield gsp.sendCodeReview('project', 'revision', {'message': 'bla', 'labels': {'Verified': 1}})
+        spawnSkipFirstArg.assert_called_once_with(
+            'ssh',
+            ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
              "--message 'bla'", '--verified 1', 'revision'])

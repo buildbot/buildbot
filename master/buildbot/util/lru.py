@@ -12,9 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.itertools import filterfalse
+
 from collections import defaultdict
 from collections import deque
-from itertools import ifilterfalse
 from weakref import WeakValueDictionary
 
 from twisted.internet import defer
@@ -120,8 +124,8 @@ class LRUCache(object):
             refcount.clear()
             queue_appendleft = queue.appendleft
             queue_appendleft(self.sentinel)
-            for k in ifilterfalse(refcount.__contains__,
-                                  iter(queue.pop, self.sentinel)):
+            for k in filterfalse(refcount.__contains__,
+                                 iter(queue.pop, self.sentinel)):
                 queue_appendleft(k)
                 refcount[k] = 1
 

@@ -13,19 +13,34 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
+# Method to add build step taken from here
+# https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
+import distutils.cmd
 import os
 import subprocess
-# XXX(sa2ajj): this is an interesting mix of distutils and setuptools.  Needs
-# to be reviewed.
-from distutils.command.build import build
 from distutils.version import LooseVersion
 
+import setuptools.command.build_py
+import setuptools.command.egg_info
 from setuptools import setup
-from setuptools.command.build_py import build_py
-from setuptools.command.egg_info import egg_info
+
+old_listdir = os.listdir
+
+
+def listdir(path):
+    # patch listdir to avoid looking into node_modules
+    l = old_listdir(path)
+    if "node_modules" in l:
+        l.remove("node_modules")
+    return l
+os.listdir = listdir
 
 
 def check_output(cmd):
+    """Version of check_output which does not throw error"""
     popen = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
     return popen.communicate()[0].strip()
 
@@ -57,7 +72,7 @@ def getVersion(init_file):
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            v = VERSION_MATCH.search(out)
+            v = VERSION_MATCH.search(out.decode('utf-8'))
             if v is not None:
                 return v.group(1)
     except OSError:
@@ -92,70 +107,82 @@ def getVersion(init_file):
 # This is why we override both egg_info and build, and the first run build
 # the js.
 
-js_built = False
+class BuildJsCommand(distutils.cmd.Command):
+    """A custom command to run JS build."""
 
+    description = 'run JS build'
+    already_run = False
+    def initialize_options(self):
+        """Set default values for options."""
 
-def build_js(cmd):
-    global js_built
-    if js_built:
-        return
-    package = cmd.distribution.packages[0]
-    if os.path.exists("gulpfile.js"):
-        npm_version = check_output("npm -v")
-        npm_bin = check_output("npm bin").strip()
-        assert npm_version != "", "need nodejs and npm installed in current PATH"
-        assert LooseVersion(npm_version) >= LooseVersion(
-            "1.4"), "npm < 1.4 (%s)" % (npm_version)
-        npm_cmd = ['npm', 'install']
-        gulp_cmd = [os.path.join(npm_bin, "gulp"), 'prod', '--notests']
-        if os.name == 'nt':
-            subprocess.call(npm_cmd, shell=True)
-            subprocess.call(gulp_cmd, shell=True)
-        else:
-            cmd.spawn(npm_cmd)
-            cmd.spawn(gulp_cmd)
-
-    cmd.copy_tree(os.path.join(package, 'static'), os.path.join(
-        "build", "lib", package, "static"))
-
-    with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
-        f.write(cmd.distribution.metadata.version)
-
-    with open(os.path.join(package, "VERSION"), "w") as f:
-        f.write(cmd.distribution.metadata.version)
-
-    js_built = True
-
-
-class my_build(build):
+    def finalize_options(self):
+        """Post-process options."""
 
     def run(self):
-        build_js(self)
-        return build.run(self)
+        """Run command."""
+        if self.already_run:
+            return
+        package = self.distribution.packages[0]
+        if os.path.exists("gulpfile.js"):
+            yarn_version = check_output("yarn --version")
+            npm_version = check_output("npm -v")
+            print("yarn:", yarn_version, "npm: ", npm_version)
+            npm_bin = check_output("npm bin").strip()
+            assert npm_version != "", "need nodejs and npm installed in current PATH"
+            assert LooseVersion(npm_version) >= LooseVersion(
+                "1.4"), "npm < 1.4 (%s)" % (npm_version)
+            # if we find yarn, then we use it as it is much faster
+            if yarn_version != "":
+                npm_cmd = ['yarn', 'install']
+            else:
+                npm_cmd = ['npm', 'install']
+            gulp_cmd = [os.path.join(npm_bin, "gulp"), 'prod', '--notests']
+
+            if os.name == 'nt':
+                shell = True
+            else:
+                shell = False
+
+            for command in [npm_cmd, gulp_cmd]:
+                self.announce(
+                    'Running command: %s' % str(" ".join(command)),
+                    level=distutils.log.INFO)
+                subprocess.call(command, shell=shell)
+
+        self.copy_tree(os.path.join(package, 'static'), os.path.join(
+            "build", "lib", package, "static"))
+
+        with open(os.path.join("build", "lib", package, "VERSION"), "w") as f:
+            f.write(self.distribution.metadata.version)
+
+        with open(os.path.join(package, "VERSION"), "w") as f:
+            f.write(self.distribution.metadata.version)
+
+        self.already_run = True
 
 
-class my_egg_info(egg_info):
+class BuildPyCommand(setuptools.command.build_py.build_py):
+    """Custom build command."""
 
     def run(self):
-        build_js(self)
-        return egg_info.run(self)
+        self.run_command('build_js')
+        setuptools.command.build_py.build_py.run(self)
 
 
-# XXX(sa2ajj): this class exists only to address https://github.com/pypa/setuptools/issues/261
-# Once that's fixed, this class should go.
-class my_build_py(build_py):
+class EggInfoCommand(setuptools.command.egg_info.egg_info):
+    """Custom egginfo command."""
 
-    def find_data_files(self, package, src_dir):
-        tempo = build_py.find_data_files(self, package, src_dir)
-
-        return [x for x in tempo if os.path.isfile(x)]
-
+    def run(self):
+        self.run_command('build_js')
+        setuptools.command.egg_info.egg_info.run(self)
 
 def setup_www_plugin(**kw):
     package = kw['packages'][0]
     if 'version' not in kw:
         kw['version'] = getVersion(os.path.join(package, "__init__.py"))
-    setup(cmdclass=dict(build=my_build,
-                        egg_info=my_egg_info,
-                        build_py=my_build_py),
-          **kw)
+
+    setup(cmdclass=dict(
+        egg_info=EggInfoCommand,
+        build_py=BuildPyCommand,
+        build_js=BuildJsCommand),
+        **kw)

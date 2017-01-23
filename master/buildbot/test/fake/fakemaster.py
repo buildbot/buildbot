@@ -12,13 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import weakref
 
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -102,9 +107,8 @@ class FakeStatus(service.BuildbotService):
         return "h://bb.me"
 
 
+@implementer(interfaces.IBuilderStatus)
 class FakeBuilderStatus(object):
-
-    implements(interfaces.IBuilderStatus)
 
     def __init__(self, master=None, buildername="Builder"):
         if master:
@@ -147,9 +151,6 @@ class FakeBuilderStatus(object):
     def buildStarted(self, builderStatus):
         pass
 
-    def addPointEvent(self, text):
-        pass
-
 
 class FakeLogRotation(object):
     rotateLength = 42
@@ -169,7 +170,7 @@ class FakeMaster(service.MasterService):
         service.MasterService.__init__(self)
         self._master_id = master_id
         self.reactor = reactor
-        self.objectids = []
+        self.objectids = {}
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()

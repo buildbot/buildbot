@@ -12,10 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+from future.utils import text_type
+
 import os
 import re
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -71,7 +78,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         d.addCallbacks(cb_empty, eb_empty)
         d.addCallback(lambda _: self.assertAllCommandsRan())
 
-        # and the method shouldn't supress any exceptions
+        # and the method shouldn't suppress any exceptions
         self.expectCommands(
             gpo.Expect('git', *args)
             .path('gitpoller-work')
@@ -103,12 +110,12 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
         @d.addCallback
         def cb_desired(r):
-            self.assertEquals(r, desiredGoodResult)
+            self.assertEqual(r, desiredGoodResult)
             # check types
-            if isinstance(r, basestring):
-                self.assertIsInstance(r, unicode)
+            if isinstance(r, string_types):
+                self.assertIsInstance(r, text_type)
             elif isinstance(r, list):
-                [self.assertIsInstance(e, unicode) for e in r]
+                [self.assertIsInstance(e, text_type) for e in r]
         d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 
@@ -145,7 +152,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
             ['log', '--name-only', '--no-walk',
                 '--format=%n', self.dummyRevStr, '--'],
             filesStr,
-            filter(lambda x: x.strip(), filesStr.splitlines(), ),
+            [l for l in filesStr.splitlines() if l.strip()],
             emptyRaisesException=False,
         )
 
@@ -618,6 +625,78 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
              'when_timestamp': 1273258009}]
         )
 
+    @defer.inlineCallbacks
+    def test_poll_multipleBranches_buildPushesWithNoCommits_true_fast_forward(self):
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'fetch', self.REPOURL,
+                       '+release:refs/buildbot/%s/release' % self.REPOURL_QUOTED)
+            .path('gitpoller-work'),
+
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/%s/release' % self.REPOURL_QUOTED)
+            .path('gitpoller-work')
+            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            gpo.Expect('git', 'log',
+                       '--format=%H',
+                       '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '^0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c',
+                       '^4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                       '--')
+            .path('gitpoller-work')
+            .stdout(''),
+        )
+
+        # and patch out the _get_commit_foo methods which were already tested
+        # above
+        def timestamp(rev):
+            return defer.succeed(1273258009)
+        self.patch(self.poller, '_get_commit_timestamp', timestamp)
+
+        def author(rev):
+            return defer.succeed(u'by:' + rev[:8])
+        self.patch(self.poller, '_get_commit_author', author)
+
+        def files(rev):
+            return defer.succeed([u'/etc/' + rev[:3]])
+        self.patch(self.poller, '_get_commit_files', files)
+
+        def comments(rev):
+            return defer.succeed(u'hello!')
+        self.patch(self.poller, '_get_commit_comments', comments)
+
+        # do the poll
+        self.poller.branches = ['release']
+        self.poller.lastRev = {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '0ba9d553b7217ab4bbad89ad56dc0332c7d57a8c'
+
+        }
+
+        self.poller.buildPushesWithNoCommits = True
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
+        self.assertEqual(self.master.data.updates.changesAdded, [
+            {'author': u'by:4423cdbc',
+             'branch': u'release',
+             'category': None,
+             'codebase': None,
+             'comments': u'hello!',
+             'files': [u'/etc/442'],
+             'project': u'',
+             'properties': {},
+             'repository': u'git@example.com:foo/baz.git',
+             'revision': u'4423cdbcbb89c14e50dd5f4152415afd686c5241',
+             'revlink': u'',
+             'src': u'git',
+             'when_timestamp': 1273258009}]
+        )
+
     def test_poll_allBranches_single(self):
         self.expectCommands(
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
@@ -897,7 +976,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             # The release branch id should remain unchanged,
-            # because it was ignorned.
+            # because it was ignored.
             self.assertEqual(self.poller.lastRev, {
                 'refs/heads/master':
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241',

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -132,7 +136,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_getChangeSource_missing(self):
-        """getChangeSource for a changesource that doesnt exist"""
+        """getChangeSource for a changesource that doesn't exist"""
         cs = yield self.db.changesources.getChangeSource(87)
         self.assertEqual(cs, None)
 

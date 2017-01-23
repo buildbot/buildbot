@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import calendar
 
 from twisted.trial import unittest
@@ -77,26 +81,26 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEquals(len(self.changeHook.master.addedChanges), 1)
+            self.assertEqual(len(self.changeHook.master.addedChanges), 1)
             change = self.changeHook.master.addedChanges[0]
 
             # Gitorious doesn't send changed files
-            self.assertEquals(change['files'], [])
-            self.assertEquals(change["repository"],
-                              "http://gitorious.org/q/mainline")
-            self.assertEquals(
+            self.assertEqual(change['files'], [])
+            self.assertEqual(change["repository"],
+                             "http://gitorious.org/q/mainline")
+            self.assertEqual(
                 calendar.timegm(change["when_timestamp"].utctimetuple()),
                 1326218547
             )
-            self.assertEquals(change["author"], "jason <jason@nospam.org>")
-            self.assertEquals(change["revision"],
-                              'df5744f7bc8663b39717f87742dc94f52ccbf4dd')
-            self.assertEquals(change["comments"],
-                              "added a place to put the docstring for Book")
-            self.assertEquals(change["branch"], "new_look")
+            self.assertEqual(change["author"], "jason <jason@nospam.org>")
+            self.assertEqual(change["revision"],
+                             'df5744f7bc8663b39717f87742dc94f52ccbf4dd')
+            self.assertEqual(change["comments"],
+                             "added a place to put the docstring for Book")
+            self.assertEqual(change["branch"], "new_look")
             revlink = ("http://gitorious.org/q/mainline/commit/"
                        "df5744f7bc8663b39717f87742dc94f52ccbf4dd")
-            self.assertEquals(change["revlink"], revlink)
+            self.assertEqual(change["revlink"], revlink)
 
         d.addCallback(check_changes)
         return d
@@ -109,7 +113,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             expected = "Error processing changes."
-            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
+            self.assertEqual(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
             self.request.setResponseCode.assert_called_with(500, expected)
             self.assertEqual(len(self.flushLoggedErrors()), 1)

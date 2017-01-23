@@ -31,13 +31,19 @@ Basic architecture:
           \/
     MetricWatcher
 """
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import lrange
+
 import gc
 import os
 import sys
 from collections import defaultdict
 from collections import deque
 
-from future.utils import iteritems
 from twisted.application import service
 from twisted.internet import reactor
 from twisted.internet.task import LoopingCall
@@ -75,7 +81,8 @@ class MetricTimeEvent(MetricEvent):
         self.timer = timer
         self.elapsed = elapsed
 
-ALARM_OK, ALARM_WARN, ALARM_CRIT = range(3)
+
+ALARM_OK, ALARM_WARN, ALARM_CRIT = lrange(3)
 ALARM_TEXT = ["OK", "WARN", "CRIT"]
 
 

@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -77,7 +80,7 @@ class Builder(base.ResourceType):
 
     class EntityType(types.Entity):
         builderid = types.Integer()
-        name = types.Identifier(20)
+        name = types.Identifier(50)
         masterids = types.List(of=types.Integer())
         description = types.NoneOk(types.String())
         tags = types.List(of=types.String())

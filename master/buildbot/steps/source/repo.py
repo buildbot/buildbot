@@ -12,12 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 import textwrap
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import util
 from buildbot.interfaces import IRenderable
@@ -25,8 +29,8 @@ from buildbot.process import buildstep
 from buildbot.steps.source.base import Source
 
 
+@implementer(IRenderable)
 class RepoDownloadsFromProperties(util.ComparableMixin, object):
-    implements(IRenderable)
     parse_download_re = (re.compile(r"repo download ([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+) ([0-9]+/[0-9]+)"),
                          re.compile(r"([^ ]+)/([0-9]+/[0-9]+)"),
@@ -50,7 +54,7 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
          lets try to be nice in the format we want
          can support several instances of "repo download proj number/patch" (direct copy paste from gerrit web site)
          or several instances of "proj number/patch" (simpler version)
-         This feature allows integrator to build with several pending interdependant changes.
+         This feature allows integrator to build with several pending interdependent changes.
          returns list of repo downloads sent to the worker
          """
         if s is None:
@@ -65,8 +69,8 @@ class RepoDownloadsFromProperties(util.ComparableMixin, object):
         return ret
 
 
+@implementer(IRenderable)
 class RepoDownloadsFromChangeSource(util.ComparableMixin, object):
-    implements(IRenderable)
     compare_attrs = ('codebase',)
 
     def __init__(self, codebase=None):
@@ -417,12 +421,12 @@ class Repo(Source):
             tar = self.computeTarballOptions() + \
                 ['-cvf', self.tarball, ".repo"]
             res = yield self._Cmd(tar, abandonOnFailure=False)
-            if res:  # error with tarball.. erase tarball, but dont fail
+            if res:  # error with tarball.. erase tarball, but don't fail
                 yield self._Cmd(["rm", "-f", self.tarball], abandonOnFailure=False)
 
     # a simple shell script to gather all cleanup tweaks...
     # doing them one by one just complicate the stuff
-    # and messup the stdio log
+    # and mess up the stdio log
     def _getCleanupCommand(self):
         """also used by tests for expectations"""
         return textwrap.dedent("""\

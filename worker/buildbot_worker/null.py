@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot_worker.base import WorkerBase
@@ -34,3 +37,8 @@ class LocalWorker(WorkerBase):
         res = yield master.workers.newConnection(conn, self.name)
         if res:
             yield self.parent.attached(conn)
+
+    @defer.inlineCallbacks
+    def stopService(self):
+        yield self.parent.detached()
+        yield WorkerBase.stopService(self)

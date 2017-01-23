@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Portions Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 from twisted.internet import defer
@@ -46,7 +50,7 @@ class LocalWorker(Worker):
 
         if self.remote_worker is None:
             # create the actual worker as a child service
-            # we only create at reconfig, to avoid poluting memory in case of
+            # we only create at reconfig, to avoid polluting memory in case of
             # reconfig
             self.remote_worker = self.LocalWorkerFactory(name, workdir, usePty)
             yield self.remote_worker.setServiceParent(self)

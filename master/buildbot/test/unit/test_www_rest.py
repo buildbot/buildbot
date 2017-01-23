@@ -12,17 +12,25 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import iteritems
+from future.utils import itervalues
+from future.utils import string_types
+from future.utils import text_type
+
+import json
 import re
 
 import mock
-from future.utils import iteritems
-from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import endpoint
 from buildbot.test.util import www
-from buildbot.util import json
 from buildbot.www import authz
 from buildbot.www import rest
 from buildbot.www.rest import JSONRPC_CODES
@@ -170,6 +178,12 @@ class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
         self.assertNotOk('invalid origin')
 
     @defer.inlineCallbacks
+    def test_cors_origin_mismatch_post(self):
+        yield self.render_resource(self.rsrc, '/', method='POST', origin='h://bad')
+        self.assertRequest(content=json.dumps({'error': {'message': 'invalid origin'}}),
+                           responseCode=400)
+
+    @defer.inlineCallbacks
     def test_cors_origin_preflight_match_GET(self):
         yield self.render_resource(self.rsrc, '/',
                                    method='OPTIONS', origin='h://good',
@@ -207,6 +221,10 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.rsrc = rest.V2RootResource(self.master)
         self.rsrc.reconfigResource(self.master.config)
 
+        def allow(*args, **kw):
+            return
+        self.master.www.assertUserAllowed = allow
+
         endpoint.TestEndpoint.rtype = mock.MagicMock()
         endpoint.TestsEndpoint.rtype = mock.MagicMock()
         endpoint.Test.isCollection = True
@@ -214,7 +232,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def assertRestCollection(self, typeName, items,
                              total=None, contentType=None, orderSignificant=False):
-        self.failIf(isinstance(self.request.written, unicode))
+        self.assertFalse(isinstance(self.request.written, text_type))
         got = {}
         got['content'] = json.loads(self.request.written)
         got['contentType'] = self.request.headers['content-type']
@@ -576,6 +594,43 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         spec = self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
         self.assertEqual(spec.properties[0].values, expected_props)
 
+    @defer.inlineCallbacks
+    def test_authz_forbidden(self):
+
+        def deny(request, ep, action, options):
+            if "test" in ep:
+                raise authz.Forbidden("no no")
+            return None
+        self.master.www.assertUserAllowed = deny
+
+        yield self.render_resource(self.rsrc, '/test')
+        self.assertRestAuthError(message=re.compile('no no'), responseCode=403)
+
+    def assertRestAuthError(self, message, responseCode=400):
+        got = {}
+        got['contentType'] = self.request.headers['content-type']
+        got['responseCode'] = self.request.responseCode
+        content = json.loads(self.request.written)
+
+        if 'error' not in content:
+            self.fail("response does not have proper error form: %r"
+                      % (content,))
+        got['error'] = content['error']
+
+        exp = {}
+        exp['contentType'] = ['text/plain; charset=utf-8']
+        exp['responseCode'] = responseCode
+        exp['error'] = message
+
+        # process a regular expression for message, if given
+        if not isinstance(message, string_types):
+            if message.match(got['error']):
+                exp['error'] = got['error']
+            else:
+                exp['error'] = "MATCHING: %s" % (message.pattern,)
+
+        self.assertEqual(got, exp)
+
 
 class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
 
@@ -607,7 +662,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
         exp['error'] = {'code': jsonrpccode, 'message': message}
 
         # process a regular expression for message, if given
-        if not isinstance(message, basestring):
+        if not isinstance(message, string_types):
             if message.match(got['error']['message']):
                 exp['error']['message'] = got['error']['message']
             else:

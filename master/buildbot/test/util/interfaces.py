@@ -12,9 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import inspect
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import PY3
+
+import inspect
 import pkg_resources
+
 from twisted.trial import unittest
 
 
@@ -41,7 +47,7 @@ class InterfaceTests(object):
             args = spec[0]
             defaults = list(spec[3] if spec[3] is not None else [])
             di = -1
-            for ai in xrange(len(args) - 1, -1, -1):
+            for ai in range(len(args) - 1, -1, -1):
                 arg = args[ai]
                 if arg.startswith('_') or (arg == 'self' and ai == 0):
                     del args[ai]
@@ -58,6 +64,14 @@ class InterfaceTests(object):
             except AttributeError:
                 return func
 
+        def filter_argspec(func):
+            if PY3:
+                return filter(
+                    inspect.getfullargspec(remove_decorators(func)))
+            else:
+                return filter(
+                    inspect.getargspec(remove_decorators(func)))
+
         def assert_same_argspec(expected, actual):
             if expected != actual:
                 msg = "Expected: %s; got: %s" % (
@@ -65,17 +79,14 @@ class InterfaceTests(object):
                     inspect.formatargspec(*actual))
                 self.fail(msg)
 
-        actual_argspec = filter(
-            inspect.getargspec(remove_decorators(actualMethod)))
+        actual_argspec = filter_argspec(actualMethod)
 
         for fakeMethod in fakeMethods:
-            fake_argspec = filter(
-                inspect.getargspec(remove_decorators(fakeMethod)))
+            fake_argspec = filter_argspec(fakeMethod)
             assert_same_argspec(actual_argspec, fake_argspec)
 
         def assert_same_argspec_decorator(decorated):
-            expected_argspec = filter(
-                inspect.getargspec(remove_decorators(decorated)))
+            expected_argspec = filter_argspec(decorated)
             assert_same_argspec(expected_argspec, actual_argspec)
             # The decorated function works as usual.
             return decorated

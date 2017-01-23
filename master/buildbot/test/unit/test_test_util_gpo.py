@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sys
 
 import twisted
@@ -46,7 +50,7 @@ class TestGPOMixin(unittest.TestCase):
     def assertTestFailure(self, result, expectedFailure):
         self.assertEqual(result.errors, [])
         self.assertEqual(len(result.failures), 1)
-        self.failUnless(result.failures[0][1].check(unittest.FailTest))
+        self.assertTrue(result.failures[0][1].check(unittest.FailTest))
         if expectedFailure:
             self.assertSubstring(
                 expectedFailure, result.failures[0][1].getErrorMessage())
@@ -62,7 +66,7 @@ class TestGPOMixin(unittest.TestCase):
                            map(lambda x: x[1].value, result.errors))
             raise self.failureException(output)
 
-        self.failUnless(result.wasSuccessful())
+        self.assertTrue(result.wasSuccessful())
 
     def test_patch(self):
         original_getProcessOutput = utils.getProcessOutput
@@ -115,6 +119,8 @@ class TestGPOMixin(unittest.TestCase):
             return d
         result = self.runTestMethod(method)
         self.assertTestFailure(result, "unexpected command run")
+        # assert we have a meaningful message
+        self.assertTestFailure(result, "command2")
 
     def test_gpo_wrongArgs(self):
         def method(testcase):

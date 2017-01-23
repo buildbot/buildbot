@@ -17,6 +17,9 @@
 Steps and objects related to rpmlint.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from buildbot.steps.package import util as pkgutil
 from buildbot.steps.shell import Test
 
@@ -73,6 +76,6 @@ class RpmLint(Test):
         warnings = self.obs.warnings
         errors = []
         if warnings:
-            self.addCompleteLog('%d Warnings' % len(warnings), "".join(warnings))
+            self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
         if errors:
-            self.addCompleteLog('%d Errors' % len(errors), "".join(errors))
+            self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))

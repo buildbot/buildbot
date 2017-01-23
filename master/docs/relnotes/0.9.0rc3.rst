@@ -1,0 +1,38 @@
+Release Notes for Buildbot ``0.9.0rc3``
+========================================
+
+
+The following are the release notes for Buildbot ``0.9.0rc3``.
+This version was released on September 14, 2016.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+
+Master
+------
+
+Features
+~~~~~~~~
+
+* add tool to send usage data to buildbot.net :bb:cfg:`buildbotNetUsageData`
+
+Fixes
+~~~~~
+
+* Publish python module buildbot.buildslave in the dist files
+
+* Upgrade to guanlecoja 0.7 (for compatibility with node6)
+
+* Fix invocation of trial on windows, with twisted 16+
+
+* Fix rare issue which makes buildbot throw a exception when there is a sourcestamp with no change for a particular codebase.
+
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0rc2..v0.9.0rc3

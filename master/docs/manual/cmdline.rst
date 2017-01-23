@@ -33,7 +33,7 @@ You can get help on any command by specifying ``--help`` as a command option:
 
 .. code-block:: none
 
-   buildbot @var{command} --help
+   buildbot command --help
 
 You can also use manual pages for :command:`buildbot` and :command:`buildbot-worker` for quick reference on command-line options.
 

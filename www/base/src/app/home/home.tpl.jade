@@ -20,5 +20,5 @@
                     .panel-heading
                         h4.panel-title {{ builder.name }}
                     .panel-body
-                        span(ng-repeat="build in builder.builds")
+                        span(ng-repeat="build in builder.builds | orderBy:'-number'")
                             buildsticker(build="build", builder="builder")

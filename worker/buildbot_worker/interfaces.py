@@ -16,6 +16,10 @@
 # disable pylint warnings triggered by interface definitions
 # pylint: disable=no-self-argument
 # pylint: disable=no-method-argument
+# pylint: disable=inherit-non-class
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 from zope.interface import Interface
 
@@ -28,17 +32,18 @@ class IWorkerCommand(Interface):
 
     def __init__(builder, stepId, args):
         """Create the Command. 'builder' is a reference to the parent
-        buildbot.bot.SlaveBuilder instance, which will be used to send status
-        updates (by calling builder.sendStatus). 'stepId' is a random string
-        which helps correlate worker logs with the master. 'args' is a dict of
-        arguments that comes from the master-side BuildStep, with contents
-        that are specific to the individual Command subclass.
+        buildbot_worker.base.WorkerForBuilderBase instance, which will be
+        used to send status updates (by calling builder.sendStatus).
+        'stepId' is a random string which helps correlate worker logs with
+        the master. 'args' is a dict of arguments that comes from the
+        master-side BuildStep, with contents that are specific to the
+        individual Command subclass.
 
         This method is not intended to be subclassed."""
 
     def setup(args):
         """This method is provided for subclasses to override, to extract
-        parameters from the 'args' dictionary. The default implemention does
+        parameters from the 'args' dictionary. The default implementation does
         nothing. It will be called from __init__"""
 
     def start():

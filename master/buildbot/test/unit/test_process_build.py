@@ -12,14 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import operator
 
 from mock import Mock
 from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 from zope.interface import implementer
-from zope.interface import implements
 
 from buildbot import interfaces
 from buildbot.locks import WorkerLock
@@ -100,7 +104,7 @@ class FakeBuilder:
 
     def __init__(self, master):
         self.config = Mock()
-        self.config.workerbuilddir = 'sbd'
+        self.config.workerbuilddir = 'wbd'
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
@@ -115,10 +119,10 @@ class FakeBuilder:
         pass
 
 
+@implementer(interfaces.IBuildStepFactory)
 class FakeStepFactory(object):
 
     """Fake step factory that just returns a fixed step object."""
-    implements(interfaces.IBuildStepFactory)
 
     def __init__(self, step):
         self.step = step
@@ -184,6 +188,8 @@ class TestBuild(unittest.TestCase):
 
         self.workerforbuilder = Mock(name='workerforbuilder')
         self.workerforbuilder.worker = self.worker
+        self.workerforbuilder.prepare = lambda _: True
+        self.workerforbuilder.ping = lambda: True
 
         self.build.setBuilder(self.builder)
 
@@ -206,6 +212,7 @@ class TestBuild(unittest.TestCase):
 
         step = Mock()
         step.return_value = step
+        step.results = None
         b.setStepFactories([FakeStepFactory(step)])
 
         def startStep(*args, **kw):
@@ -231,9 +238,11 @@ class TestBuild(unittest.TestCase):
         step1 = Mock()
         step1.return_value = step1
         step1.alwaysRun = False
+        step1.results = None
         step2 = Mock()
         step2.return_value = step2
         step2.alwaysRun = True
+        step2.results = None
         b.setStepFactories([
             FakeStepFactory(step1),
             FakeStepFactory(step2),
@@ -359,7 +368,7 @@ class TestBuild(unittest.TestCase):
         self.assertEqual(b.results, SUCCESS)
         self.assertIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                       step.method_calls)
-        self.assertEquals(claimCount[0], 1)
+        self.assertEqual(claimCount[0], 1)
 
     def testBuildLocksOrder(self):
         """Test that locks are acquired in FIFO order; specifically that
@@ -375,6 +384,8 @@ class TestBuild(unittest.TestCase):
 
         eWorker.worker = self.worker
         cWorker.worker = self.worker
+        eWorker.prepare = cWorker.prepare = lambda _: True
+        eWorker.ping = cWorker.ping = lambda: True
 
         l = WorkerLock('lock', 2)
         claimLog = []
@@ -408,7 +419,7 @@ class TestBuild(unittest.TestCase):
         def check(ign):
             self.assertEqual(eBuild.results, SUCCESS)
             self.assertEqual(cBuild.results, SUCCESS)
-            self.assertEquals(claimLog, [fakeBuild, eBuild, cBuild])
+            self.assertEqual(claimLog, [fakeBuild, eBuild, cBuild])
 
         d.addCallback(check)
         return d
@@ -441,7 +452,7 @@ class TestBuild(unittest.TestCase):
 
         self.assertNotIn(('startStep', (self.workerforbuilder.worker.conn,), {}),
                          step.method_calls)
-        self.assertEquals(claimCount[0], 1)
+        self.assertEqual(claimCount[0], 1)
         self.assertTrue(b.currentStep is None)
         self.assertTrue(b._acquiringLock is not None)
 
@@ -698,7 +709,7 @@ class TestBuild(unittest.TestCase):
         b.buildid = 43
         result = 'SUCCESS'
         res = yield b._flushProperties(result)
-        self.assertEquals(res, result)
+        self.assertEqual(res, result)
         self.assertEqual(self.master.data.updates.properties,
                          [(43, u'foo', 'bar', u'test')])
 
@@ -1056,8 +1067,9 @@ class TestBuildProperties(unittest.TestCase):
     """
 
     def setUp(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         class FakeBuildStatus(Mock):
             pass
@@ -1110,8 +1122,9 @@ class TestBuildProperties(unittest.TestCase):
         self.properties.render.assert_called_with("xyz")
 
     def test_getWorkerName_old_api(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         import posixpath
 
@@ -1144,8 +1157,9 @@ class TestBuildProperties(unittest.TestCase):
         self.assertIdentical(new, old)
 
     def test_workername_old_api(self):
+        @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
-            implements(interfaces.IProperties)
+            pass
 
         import posixpath
 

@@ -2,24 +2,42 @@
     .row
         table.table.table-hover.table-striped.table-condensed
             tr
+                th Masters
                 th WorkerName
-                th Status
+                th Recent Builds
                 th Builders
-                th Infos
-            tr(ng-repeat='worker in workers',
-               ng-show="settings.show_old_workers.value || worker.configured_on.length > 0")
-                td {{worker.name}}
-                td {{worker.connected_to.length}} connection
+                th(ng-repeat="info in worker_infos") {{ capitalize(info) }}
+                    
+            tr(ng-repeat='worker in workers | orderBy: ["-num_connections", "name"]',
+               ng-hide="maybeHideWorker(worker)")
+                td 
+                    div(ng-hide="worker.num_connections")
+                        i.fa.fa-times.text-danger(title="disconnected")
+                    div(ng-repeat="masterid in worker.connected_to")
+                        a(ui-sref="master({master:masterid.masterid})")
+                            span.badge-status.results_SUCCESS(title="{{ masters.get(masterid.masterid).name }}")
+                                | {{ masterid.masterid }}
+                td 
+                    a(ui-sref='worker({worker: worker.workerid})')
+                        | {{worker.name}}
                 td
-                    span(ng-repeat="buildermaster in worker.configured_on")
-                        a(ui-sref="builder({builder: buildermaster.builderid})")
-                            | {{ builders.get(buildermaster.builderid).name +
-                            |    maybeGetMasterNameFromBuilderMaster(buildermaster)}}
-                        | &nbsp;
+                    span(ng-repeat="build in worker.builds | orderBy : '-number' |limitTo: '7' ")
+                        a(ui-sref='build({builder: build.builderid, build: build.number})')
+                            span.badge-status(ng-class="results2class(build, 'pulse')")
+                              | {{ builders.get(build.builderid).name }}/{{ build.number }}
                 td
-                    rawdata(data='worker.workerinfo')
-    .row
+                    ul.list-inline
+                        li(ng-repeat='builder in getUniqueBuilders(worker) | orderBy: ["name"]')
+                            a(ui-sref="builder({builder: builder.builderid})")
+                                | {{ builder.name }}
+                td(ng-repeat="info in worker_infos")
+                    | {{ worker.workerinfo[info] }}
+    .row(ng-hide="builds")
         .form-group
             label.checkbox-inline
                 input(type="checkbox" name="{{settings.show_old_workers.name}}" ng-model="settings.show_old_workers.value")
                 | {{settings.show_old_workers.caption}}
+    div(ng-if="builds")
+        builds-table(builds="builds", builders="builders", ng-if="builds")
+        a.btn.btn-default(ui-sref='worker({worker: worker.workerid, numbuilds: numbuilds + 100})', ng-if="builds.length==numbuilds")
+            | more

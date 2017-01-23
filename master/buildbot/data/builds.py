@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -38,7 +42,7 @@ class Db2DataMixin(object):
         if props and filters:  # pragma: no cover
             return (props
                     if '*' in filters
-                    else dict(((k, v) for k, v in props.iteritems() if k in filters)))
+                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
 
     def db2data(self, dbdict):
         data = {
@@ -56,6 +60,18 @@ class Db2DataMixin(object):
             'properties': {}
         }
         return defer.succeed(data)
+    fieldMapping = {
+        'buildid': 'builds.id',
+        'number': 'builds.number',
+        'builderid': 'builds.builderid',
+        'buildrequestid': 'builds.buildrequestid',
+        'workerid': 'builds.workerid',
+        'masterid': 'builds.masterid',
+        'started_at': 'builds.started_at',
+        'complete_at': 'builds.complete_at',
+        'state_string': 'builds.state_string',
+        'results': 'builds.results',
+    }
 
 
 class BuildEndpoint(Db2DataMixin, base.Endpoint):
@@ -138,11 +154,13 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
         # true or false, if there is a complete filter
         complete = resultSpec.popBooleanFilter("complete")
         buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
+        resultSpec.fieldMapping = self.fieldMapping
         builds = yield self.master.db.builds.getBuilds(
             builderid=kwargs.get('builderid'),
             buildrequestid=kwargs.get('buildrequestid', buildrequestid),
             workerid=kwargs.get('workerid'),
-            complete=complete)
+            complete=complete,
+            resultSpec=resultSpec)
         # returns properties' list
         filters = resultSpec.popProperties()
         buildscol = []

@@ -116,7 +116,7 @@ To illustrate use of locks, a few examples.
 
     c['builders'] = [b1, b2, b3, b4]
 
-Here we have four workers :data:`b1`, :data:`b2`, :data:`b3`, and :data:`b4`.
+Here we have four workers :data:`fast`, :data:`new`, :data:`old`, and :data:`other`.
 Each worker performs the same checkout, make, and test build step sequence.
 We want to enforce that at most one test step is executed between all workers due to restrictions with the data base server.
 This is done by adding the ``locks=`` parameter with the third step.

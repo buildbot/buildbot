@@ -1,11 +1,12 @@
+import fnmatch
 import os
 import sys
-import fnmatch
 
 from twisted.application import service
-from twisted.python.log import ILogObserver, FileLogObserver
-from buildbot_worker.bot import Worker
+from twisted.python.log import FileLogObserver
+from twisted.python.log import ILogObserver
 
+from buildbot_worker.bot import Worker
 
 # setup worker
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -15,7 +16,7 @@ application = service.Application('buildbot-worker')
 application.setComponent(ILogObserver, FileLogObserver(sys.stdout).emit)
 # and worker on the same process!
 buildmaster_host = os.environ.get("BUILDMASTER", 'localhost')
-port = int(os.environ.get("BUILDMASTER_PORT", 19989))
+port = int(os.environ.get("BUILDMASTER_PORT", 9989))
 workername = os.environ.get("WORKERNAME", 'docker')
 passwd = os.environ.get("WORKERPASS")
 

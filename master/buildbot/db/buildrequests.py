@@ -13,14 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import itertools
 
 import sqlalchemy as sa
+
 from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.db import NULL
 from buildbot.db import base
+from buildbot.process.results import RETRY
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
@@ -77,7 +82,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
         return self.db.pool.do(thd)
 
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None):
+                         bsid=None, branch=None, repository=None, resultSpec=None):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -110,6 +115,11 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             if repository is not None:
                 q = q.where(sstamps_tbl.c.repository == repository)
 
+            if resultSpec is not None:
+                return resultSpec.thd_execute(
+                    conn, q,
+                    lambda r: self._brdictFromRow(r, self.db.master.masterid))
+
             res = conn.execute(q)
 
             return [self._brdictFromRow(row, self.db.master.masterid)
@@ -134,7 +144,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     for id in brids])
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 transaction.rollback()
-                raise AlreadyClaimedError
+                raise AlreadyClaimedError()
 
             transaction.commit()
 
@@ -163,7 +173,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 # went wrong
                 if res.rowcount != len(batch):
                     transaction.rollback()
-                    raise AlreadyClaimedError
+                    raise AlreadyClaimedError()
 
             transaction.commit()
         return self.db.pool.do(thd)
@@ -196,6 +206,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def completeBuildRequests(self, brids, results, complete_at=None,
                               _reactor=reactor):
+        assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if complete_at is not None:
             complete_at = datetime2epoch(complete_at)
         else:
@@ -225,7 +236,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
                 # if an incorrect number of rows were updated, then we failed.
                 if res.rowcount != len(batch):
-                    log.msg("tried to complete %d buildreqests, "
+                    log.msg("tried to complete %d buildrequests, "
                             "but only completed %d" % (len(batch), res.rowcount))
                     transaction.rollback()
                     raise NotClaimedError

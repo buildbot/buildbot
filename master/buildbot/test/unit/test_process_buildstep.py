@@ -12,8 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import mock
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from future.utils import itervalues
+from future.utils import text_type
+
+import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -224,7 +231,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, SUCCESS)
+            self.assertEqual(result, SUCCESS)
             return False
 
         self._setupWaterfallTest(shouldHide, False)
@@ -239,7 +246,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, SUCCESS)
+            self.assertEqual(result, SUCCESS)
             return True
 
         self._setupWaterfallTest(shouldHide, True)
@@ -264,7 +271,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         def shouldHide(result, step):
             called[0] = True
             self.assertTrue(step is self.step)
-            self.assertEquals(result, EXCEPTION)
+            self.assertEqual(result, EXCEPTION)
             return True
 
         def createException(*args, **kwargs):
@@ -370,7 +377,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def test_updateSummary_running_not_unicode(self):
         step = self.setup_summary_test()
-        step.getCurrentSummary = lambda: {'step': 'bytestring'}
+        step.getCurrentSummary = lambda: {'step': b'bytestring'}
         step._running = True
         step.updateSummary()
         self.clock.advance(1)
@@ -417,8 +424,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(len(self.flushLoggedErrors(AssertionError)), 1)
 
     def checkSummary(self, got, step, build=None):
-        self.failUnless(all(isinstance(k, unicode) for k in got))
-        self.failUnless(all(isinstance(k, unicode) for k in itervalues(got)))
+        self.assertTrue(all(isinstance(k, text_type) for k in got))
+        self.assertTrue(all(isinstance(k, text_type) for k in itervalues(got)))
         exp = {u'step': step}
         if build:
             exp[u'build'] = build
@@ -539,15 +546,16 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.locks = []
         step.renderables = []
         step.build.render = lambda x: defer.succeed(x)
-        step.master.data.updates.addStep = lambda **kwargs: defer.succeed((0, 0, 0))
+        step.master.data.updates.addStep = lambda **kwargs: defer.succeed(
+            (0, 0, 0))
         step.addLogWithFailure = lambda x: defer.succeed(None)
         step.run = lambda: defer.fail(RuntimeError('got exception'))
         res = yield step.startStep(mock.Mock())
         self.assertFalse(step._running)
         errors = self.flushLoggedErrors()
-        self.assertEquals(len(errors), 1)
-        self.assertEquals(errors[0].getErrorMessage(), 'got exception')
-        self.assertEquals(res, EXCEPTION)
+        self.assertEqual(len(errors), 1)
+        self.assertEqual(errors[0].getErrorMessage(), 'got exception')
+        self.assertEqual(res, EXCEPTION)
 
 
 class TestLoggingBuildStep(unittest.TestCase):
@@ -603,7 +611,7 @@ class InterfaceTests(interfaces.InterfaceTests):
             'progress',
             'stopped',
         ]:
-            self.failUnless(hasattr(self.step, attr))
+            self.assertTrue(hasattr(self.step, attr))
 
     def test_signature_setBuild(self):
         @self.assertArgSpecMatches(self.step.setBuild)
@@ -975,6 +983,36 @@ class TestShellMixin(steps.BuildStepMixin,
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_example_build_workdir_callable(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = lambda x: '/alternate'
+        self.expectCommands(
+            ExpectShell(workdir='/alternate', command=['./cleanup.sh'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_example_build_workdir_rendereable(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = properties.Property("myproperty")
+        self.properties.setProperty("myproperty", "/myproperty", "test")
+        self.expectCommands(
+            ExpectShell(workdir='/myproperty', command=['./cleanup.sh'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+
+    @defer.inlineCallbacks
+    def test_example_build_workdir_callable_attribute_error(self):
+        self.setupStep(ShellMixinExample(), wantDefaultWorkdir=False)
+        self.build.workdir = lambda x: x.p  # will raise AttributeError
+        self.expectException(buildstep.CallableAttributeError)
         yield self.runStep()
 
     @defer.inlineCallbacks

@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
+
 from twisted.internet import defer
 
 from buildbot.db import NULL

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.application import internet
 from twisted.internet import task
 from twisted.python import log
@@ -21,13 +25,7 @@ from buildbot import config
 from buildbot.reporters.words import StatusBot
 from buildbot.reporters.words import ThrottledClientFactory
 from buildbot.util import service
-
-# twisted.internet.ssl requires PyOpenSSL, so be resilient if it's missing
-try:
-    from twisted.internet import ssl
-    have_ssl = True
-except ImportError:
-    have_ssl = False
+from buildbot.util import ssl
 
 
 class UsageError(ValueError):
@@ -118,7 +116,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     def joined(self, channel):
         self.log("I have joined %s" % (channel,))
-        # trigger contact contructor, which in turn subscribes to notify events
+        # trigger contact constructor, which in turn subscribes to notify events
         self.getContact(channel=channel)
 
     def left(self, channel):
@@ -219,6 +217,9 @@ class IRC(service.BuildbotService):
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" %
                          (allowShutdown,))
+        if useSSL:
+            # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
+            ssl.ensureHasSSL(self.__class__.__name__)
 
     def reconfigService(self, host, nick, channels, pm_to_nicks=None, port=6667,
                         allowForce=False, tags=None, password=None, notify_events=None,
@@ -261,9 +262,6 @@ class IRC(service.BuildbotService):
                                   allowShutdown=allowShutdown)
 
         if useSSL:
-            # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
-            if not have_ssl:
-                raise RuntimeError("useSSL requires PyOpenSSL")
             cf = ssl.ClientContextFactory()
             c = internet.SSLClient(self.host, self.port, self.f, cf)
         else:

@@ -12,12 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import itertools
 import os
 
 from twisted.persisted import styles
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -40,6 +44,7 @@ _hush_pyflakes = [SUCCESS, WARNINGS, FAILURE, SKIPPED,
                   EXCEPTION, RETRY, CANCELLED, Results, worst_status]
 
 
+@implementer(interfaces.IBuilderStatus, interfaces.IEventSource)
 class BuilderStatus(styles.Versioned):
 
     """I handle status information for a single process.build.Builder object.
@@ -59,8 +64,6 @@ class BuilderStatus(styles.Versioned):
     @ivar  tags: user-defined "tag" this builder has; can be
                      used to filter on in status clients
     """
-
-    implements(interfaces.IBuilderStatus, interfaces.IEventSource)
 
     persistenceVersion = 2
     persistenceForgets = ('wasUpgraded', )
@@ -103,13 +106,11 @@ class BuilderStatus(styles.Versioned):
             if b.number == number:
                 return b
 
-        # Otherwise it is in the database and thus inaccesible.
+        # Otherwise it is in the database and thus inaccessible.
         return None
 
     def prune(self, events_only=False):
-        # begin by pruning our own events
-        eventHorizon = self.master.config.eventHorizon
-        self.events = self.events[-eventHorizon:]
+        pass
 
     # IBuilderStatus methods
     def getName(self):
@@ -191,10 +192,7 @@ class BuilderStatus(styles.Versioned):
             return None
 
     def getEvent(self, number):
-        try:
-            return self.events[number]
-        except IndexError:
-            return None
+        return None
 
     def _getBuildBranches(self, build):
         return set([ss.branch
@@ -246,70 +244,8 @@ class BuilderStatus(styles.Versioned):
                     return
 
     def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
-        """This function creates a generator which will provide all of this
-        Builder's status events, starting with the most recent and
-        progressing backwards in time. """
-
-        # remember the oldest-to-earliest flow here. "next" means earlier.
-
-        # TODO: interleave build steps and self.events by timestamp.
-        # TODO: um, I think we're already doing that.
-
-        # TODO: there's probably something clever we could do here to
-        # interleave two event streams (one from self.getBuild and the other
-        # from self.getEvent), which would be simpler than this control flow
-
-        if branches is None:
-            branches = set()
-        else:
-            branches = set(branches)
-        if categories is None:
-            categories = []
-        if committers is None:
-            committers = []
-        if projects is None:
-            projects = []
-
-        eventIndex = -1
-        e = self.getEvent(eventIndex)
-
-        for Nb in range(1, self.nextBuildNumber + 1):
-            b = self.getBuild(-Nb)
-            if not b:
-                # HACK: If this is the first build we are looking at, it is
-                # possible it's in progress but locked before it has written a
-                # pickle; in this case keep looking.
-                if Nb == 1:
-                    continue
-                break
-            if b.getTimes()[0] < minTime:
-                break
-            # if we were asked to filter on branches, and none of the
-            # sourcestamps match, skip this build
-            if branches and not branches & self._getBuildBranches(b):
-                continue
-            if categories and not b.getBuilder().matchesAnyTag(tags=categories):
-                continue
-            if committers and not [True for c in b.getChanges() if c.who in committers]:
-                continue
-            if projects and not b.getProperty('project') in projects:
-                continue
-            steps = b.getSteps()
-            for Ns in range(1, len(steps) + 1):
-                if steps[-Ns].started:
-                    step_start = steps[-Ns].getTimes()[0]
-                    while e is not None and e.getTimes()[0] > step_start:
-                        yield e
-                        eventIndex -= 1
-                        e = self.getEvent(eventIndex)
-                    yield steps[-Ns]
-            yield b
-        while e is not None:
-            yield e
-            eventIndex -= 1
-            e = self.getEvent(eventIndex)
-            if e and e.getTimes()[0] < minTime:
-                break
+        if False:  # pylint: disable=using-constant-test
+            yield
 
     def subscribe(self, receiver):
         # will get builderChangedState, buildStarted, buildFinished,
@@ -338,8 +274,6 @@ class BuilderStatus(styles.Versioned):
         if text is None:
             text = []
         e.text = text
-        self.events.append(e)
-        self.prune(events_only=True)
         return e  # they are free to mangle it further
 
     def addPointEvent(self, text=None):
@@ -351,8 +285,6 @@ class BuilderStatus(styles.Versioned):
         if text is None:
             text = []
         e.text = text
-        self.events.append(e)
-        self.prune(events_only=True)
         return e  # for consistency, but they really shouldn't touch it
 
     def setBigState(self, state):
@@ -401,6 +333,9 @@ class BuilderStatus(styles.Versioned):
                     else:
                         s.subscribe(receiver)
                     d = s.waitUntilFinished()
+                    # TODO: This actually looks like a bug, but this code
+                    # will be removed anyway.
+                    # pylint: disable=cell-var-from-loop
                     d.addCallback(lambda s: s.unsubscribe(receiver))
             except Exception:
                 log.msg(

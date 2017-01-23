@@ -15,7 +15,12 @@
 """
 Test clean shutdown functionality of the master
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.spread import pb
@@ -73,7 +78,7 @@ class TestPBManager(unittest.TestCase):
 
         def check_avatar(xxx_todo_changeme):
             (iface, persp, detach_fn) = xxx_todo_changeme
-            self.failUnless(persp.is_my_persp)
+            self.assertTrue(persp.is_my_persp)
             self.assertIn('boris', self.connections)
         d.addCallback(check_avatar)
 

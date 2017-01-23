@@ -12,8 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import mock
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -408,10 +413,10 @@ class TestBuildRequest(unittest.TestCase):
             288     17     C          1800     request 1 has repo not in request 2
             289     18     D          2100     request 2 has repo not in request 1
             --------------------------------
-            Merge cannot be performd and raises error:
+            Merge cannot be performed and raises error:
               Merging requests requires both requests to have the same codebases
         """
-        brDicts = []  # list of buildrequests dictionnary
+        brDicts = []  # list of buildrequests dictionary
         master = fakemaster.make_master(testcase=self,
                                         wantData=True, wantDb=True)
         master.db.insertTestData([

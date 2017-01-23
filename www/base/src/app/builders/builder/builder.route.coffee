@@ -7,13 +7,14 @@ class State extends Config
         # Configuration
         cfg =
             tabid: 'builders'
+            pageTitle: _.template("Buildbot: builder <%= builder %>")
 
         # Register new state
         state =
             controller: "#{name}Controller"
             templateUrl: "views/#{name}.html"
             name: name
-            url: '/builders/:builder'
+            url: '/builders/:builder?numbuilds'
             data: cfg
 
         $stateProvider.state(state)

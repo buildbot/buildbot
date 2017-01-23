@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.moves.collections import UserList
+
 import copy
 import re
-import UserList
 
 from twisted.internet import defer
 
@@ -49,7 +53,7 @@ class ResourceType(object):
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
-        for i in xrange(len(endpoints)):
+        for i in range(len(endpoints)):
             ep = endpoints[i]
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")
@@ -129,25 +133,22 @@ class BuildNestingMixin(object):
             defer.returnValue(dbdict['id'])
 
 
-class ListResult(UserList.UserList):
+class ListResult(UserList):
 
     __slots__ = ['offset', 'total', 'limit']
 
-    # if set, this is the index in the overall results of the first element of
-    # this list
-    offset = None
-
-    # if set, this is the total number of results
-    total = None
-
-    # if set, this is the limit, either from the user or the implementation
-    limit = None
-
     def __init__(self, values,
                  offset=None, total=None, limit=None):
-        UserList.UserList.__init__(self, values)
+        UserList.__init__(self, values)
+
+        # if set, this is the index in the overall results of the first element of
+        # this list
         self.offset = offset
+
+        # if set, this is the total number of results
         self.total = total
+
+        # if set, this is the limit, either from the user or the implementation
         self.limit = limit
 
     def __repr__(self):

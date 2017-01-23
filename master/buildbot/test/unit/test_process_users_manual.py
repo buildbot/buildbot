@@ -16,7 +16,11 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -314,7 +318,7 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         self.manual_component.startService()
 
         persp = self.got_factory(mock.Mock(), 'user')
-        self.failUnless(
+        self.assertTrue(
             isinstance(persp, manual.CommandlineUserManagerPerspective))
 
         return self.manual_component.stopService()

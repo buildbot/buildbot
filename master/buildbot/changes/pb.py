@@ -14,6 +14,9 @@
 # Copyright Buildbot Team Members
 
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -64,11 +67,11 @@ class ChangePerspective(NewCredPerspective):
         # in the first place, but older clients do not, so this fallback is
         # useful.
         for key in changedict:
-            if isinstance(changedict[key], str):
+            if isinstance(changedict[key], bytes):
                 changedict[key] = changedict[key].decode('utf8', 'replace')
         changedict['files'] = list(changedict['files'])
         for i, file in enumerate(changedict.get('files', [])):
-            if isinstance(file, str):
+            if isinstance(file, bytes):
                 changedict['files'][i] = file.decode('utf8', 'replace')
 
         files = []

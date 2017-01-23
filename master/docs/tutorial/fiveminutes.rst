@@ -276,7 +276,7 @@ One thing I've found useful is the ability to pass a domain name as the lookup a
                                    lookup="example.org")
     c['status'].append(notifier)
 
-The mail notifier can be customized at will by means of the ``messageFormatter`` argument, which is a function that Buildbot calls to format the body of the email, and to which it makes available lots of information about the build.
+The mail notifier can be customized at will by means of the ``messageFormatter`` argument, which is a class that Buildbot calls to format the body of the email, and to which it makes available lots of information about the build.
 Here all the details.
 
 Conclusion

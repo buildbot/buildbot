@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 
 class RolesFromBase(object):
 
@@ -47,7 +51,7 @@ class RolesFromEmails(RolesFromBase):
     def __init__(self, **kwargs):
         RolesFromBase.__init__(self)
         self.roles = {}
-        for role, emails in kwargs.iteritems():
+        for role, emails in iteritems(kwargs):
             for email in emails:
                 self.roles.setdefault(email, []).append(role)
 
@@ -67,4 +71,18 @@ class RolesFromOwner(RolesFromBase):
         if 'email' in userDetails:
             if userDetails['email'] == owner and owner is not None:
                 return [self.role]
+        return []
+
+
+class RolesFromUsername(RolesFromBase):
+    def __init__(self, roles, usernames):
+        self.roles = roles
+        if None in usernames:
+            from buildbot import config
+            config.error('Usernames cannot be None')
+        self.usernames = usernames
+
+    def getRolesFromUser(self, userDetails):
+        if userDetails.get('username') in self.usernames:
+            return self.roles
         return []

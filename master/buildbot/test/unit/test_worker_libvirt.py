@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import utils
@@ -59,7 +64,6 @@ class TestLibVirtWorker(unittest.TestCase):
         yield bs._find_existing_deferred
 
         self.assertEqual(bs.domain.domain, d)
-        self.assertEqual(bs.substantiated, True)
 
     @defer.inlineCallbacks
     def test_prepare_base_image_none(self):
@@ -148,7 +152,7 @@ class TestLibVirtWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_notready(self):
         """
-        If a LibVirtWorker hasnt finished scanning for existing VMs then we shouldn't
+        If a LibVirtWorker hasn't finished scanning for existing VMs then we shouldn't
         start builds on it as it might create a 2nd VM when we want to reuse the existing
         one.
         """
@@ -159,7 +163,7 @@ class TestLibVirtWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_canStartBuild_domain_and_not_connected(self):
         """
-        If we've found that the VM this worker would instance already exists but hasnt
+        If we've found that the VM this worker would instance already exists but hasn't
         connected then we shouldn't start builds or we'll end up with a dupe.
         """
         bs = yield self.setup_canStartBuild()
@@ -202,7 +206,7 @@ class TestWorkQueue(unittest.TestCase):
     def expect_errback(self, d):
         @d.addCallback
         def shouldnt_get_called(f):
-            self.failUnlessEqual(True, False)
+            self.assertEqual(True, False)
 
         @d.addErrback
         def errback(f):
@@ -253,15 +257,15 @@ class TestWorkQueue(unittest.TestCase):
         flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
-        # flags[1] shouldnt already be set, either
+        # flags[1] shouldn't already be set, either
         d1 = self.queue.execute(self.delayed_success())
 
         @d1.addCallback
         def cb1(res):
-            self.failUnlessEqual(flags[1], False)
+            self.assertEqual(flags[1], False)
             flags[1] = True
-            self.failUnlessEqual(flags[2], False)
-            self.failUnlessEqual(flags[3], False)
+            self.assertEqual(flags[2], False)
+            self.assertEqual(flags[3], False)
 
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False
@@ -269,17 +273,17 @@ class TestWorkQueue(unittest.TestCase):
 
         @d2.addCallback
         def cb2(res):
-            assert flags[2] == False
+            assert not flags[2]
             flags[2] = True
             assert flags[1]
-            assert flags[3] == False
+            assert not flags[3]
 
         # When third deferred fires, only flags[3] should be unset
         d3 = self.queue.execute(self.delayed_success())
 
         @d3.addCallback
         def cb3(res):
-            assert flags[3] == False
+            assert not flags[3]
             flags[3] = True
             assert flags[1]
             assert flags[2]

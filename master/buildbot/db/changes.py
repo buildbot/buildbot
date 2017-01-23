@@ -16,9 +16,16 @@
 """
 Support for changes in the database
 """
-import sqlalchemy as sa
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+
+import json
+
+import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -26,7 +33,6 @@ from twisted.python import log
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class ChDict(dict):
@@ -135,8 +141,6 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 for i in inserts:
                     self.checkLength(tbl.c.property_name,
                                      i['property_name'])
-                    self.checkLength(tbl.c.property_value,
-                                     i['property_value'])
 
                 conn.execute(tbl.insert(), inserts)
             if uid:
@@ -178,7 +182,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         for ss in ssBuild:
             fromChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
 
-        # Get the last successfull build on the same builder
+        # Get the last successful build on the same builder
         previousBuild = yield self.master.db.builds.getPrevSuccessfulBuild(currentBuild['builderid'],
                                                                            currentBuild[
                                                                                'number'],
@@ -187,7 +191,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             for ss in (yield gssfb(previousBuild['id'])):
                 toChanges[ss['codebase']] = yield self.getChangeFromSSid(ss['ssid'])
         else:
-            # If no successfull previous build, then we need to catch all
+            # If no successful previous build, then we need to catch all
             # changes
             for cb in fromChanges:
                 toChanges[cb] = {'changeid': None}
@@ -198,7 +202,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             toCbChange = toChanges.get(cb) or {}
             if change and change['changeid'] != toCbChange.get('changeid'):
                 changes.append(change)
-                while ((toChanges.get(cb, {}).get('changeid') not in change['parent_changeids']) and
+                while ((toCbChange.get('changeid') not in change['parent_changeids']) and
                        change['parent_changeids']):
                     # For the moment, a Change only have 1 parent.
                     change = yield self.master.db.changes.getChange(change['parent_changeids'][0])

@@ -1,0 +1,29 @@
+Release Notes for Buildbot ``0.9.0rc4``
+========================================
+
+
+The following are the release notes for Buildbot ``0.9.0rc4``.
+This version was released on September 28, 2016.
+
+See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+
+
+Master
+------
+
+Fixes
+~~~~~
+
+* Fix the UI to better adapt to different screen width (:bug:`3614`)
+
+* Add more REST api documentation (document ``/raw`` endpoints, and ``POST`` actions)
+
+
+Details
+-------
+
+For a more detailed description of the changes made in this version, see the git log itself:
+
+.. code-block:: bash
+
+   git log v0.9.0rc3..v0.9.0rc4

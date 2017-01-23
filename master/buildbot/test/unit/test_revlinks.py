@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.trial import unittest
 
 from buildbot.revlinks import GithubRevlink
@@ -79,23 +83,23 @@ class TestRevlinkMatch(unittest.TestCase):
         revision = 'f717d2ece1836c863f9cc02abd1ff2539307cd1d'
         matcher = RevlinkMatch(['git://notmuchmail.org/git/(.*)'],
                                r'http://git.notmuchmail.org/git/\1/commit/%s')
-        self.assertEquals(matcher(revision, 'git://notmuchmail.org/git/notmuch'),
-                          'http://git.notmuchmail.org/git/notmuch/commit/f717d2ece1836c863f9cc02abd1ff2539307cd1d')
+        self.assertEqual(matcher(revision, 'git://notmuchmail.org/git/notmuch'),
+                         'http://git.notmuchmail.org/git/notmuch/commit/f717d2ece1836c863f9cc02abd1ff2539307cd1d')
 
     def testSingleString(self):
         revision = 'rev'
         matcher = RevlinkMatch('test', 'out%s')
-        self.assertEquals(matcher(revision, 'test'), 'outrev')
+        self.assertEqual(matcher(revision, 'test'), 'outrev')
 
     def testSingleUnicode(self):
         revision = 'rev'
         matcher = RevlinkMatch(u'test', 'out%s')
-        self.assertEquals(matcher(revision, 'test'), 'outrev')
+        self.assertEqual(matcher(revision, 'test'), 'outrev')
 
     def testTwoCaptureGroups(self):
         revision = 'rev'
         matcher = RevlinkMatch('([A-Z]*)Z([0-9]*)', r'\2-\1-%s')
-        self.assertEquals(matcher(revision, 'ABCZ43'), '43-ABC-rev')
+        self.assertEqual(matcher(revision, 'ABCZ43'), '43-ABC-rev')
 
 
 class TestGitwebMatch(unittest.TestCase):
@@ -104,8 +108,8 @@ class TestGitwebMatch(unittest.TestCase):
         revision = '490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8'
         matcher = GitwebMatch(
             'git://orgmode.org/(?P<repo>.*)', 'http://orgmode.org/w/')
-        self.assertEquals(matcher(revision, 'git://orgmode.org/org-mode.git'),
-                          'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
+        self.assertEqual(matcher(revision, 'git://orgmode.org/org-mode.git'),
+                         'http://orgmode.org/w/?p=org-mode.git;a=commit;h=490d6ace10e0cfe74bab21c59e4b7bd6aa3c59b8')
 
 
 class TestDefaultRevlinkMultiPlexer(unittest.TestCase):

@@ -12,11 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
+from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -26,9 +31,8 @@ from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
 
 
+@implementer(interfaces.IScheduler)
 class BaseScheduler(ClusteredBuildbotService, StateMixin):
-
-    implements(interfaces.IScheduler)
 
     DEFAULT_CODEBASES = {'': {}}
 
@@ -44,7 +48,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             ok = False
         else:
             for b in builderNames:
-                if not isinstance(b, basestring):
+                if not isinstance(b, string_types):
                     ok = False
         if not ok:
             config.error(
@@ -306,7 +310,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)
         # but that would merely only optimize the single builder case, while
-        # probably the multiple builder case will be severaly impacted by the
+        # probably the multiple builder case will be severely impacted by the
         # several db requests needed.
         builderids = list()
         for bldr in (yield self.master.data.get(('builders', ))):

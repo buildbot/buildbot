@@ -15,7 +15,16 @@
 """
 Support for buildsets in the database
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import integer_types
+from future.utils import iteritems
+
+import json
+
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -23,7 +32,6 @@ from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class BsDict(dict):
@@ -49,7 +57,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
 
         # convert to sourcestamp IDs first, as necessary
         def toSsid(sourcestamp):
-            if isinstance(sourcestamp, (int, long)):
+            if isinstance(sourcestamp, integer_types):
                 return defer.succeed(sourcestamp)
             else:
                 ssConnector = self.master.db.sourcestamps
@@ -83,7 +91,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,
                          property_value=json.dumps([v, s]))
-                    for k, (v, s) in properties.iteritems()]
+                    for k, (v, s) in iteritems(properties)]
                 for i in inserts:
                     self.checkLength(bs_props_tbl.c.property_name,
                                      i['property_name'])

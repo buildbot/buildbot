@@ -63,7 +63,6 @@ Setting this parameter ensures that connections are closed and re-opened after t
 If you see errors such as ``_mysql_exceptions.OperationalError: (2006, 'MySQL server has gone away')``, this means your ``max_idle`` setting is probably too high.
 ``show global variables like 'wait_timeout';`` will show what the currently configured ``wait_timeout`` is on your MySQL server.
 
-When using MySQL 5.x, if you see errors such as  ``BLOB, TEXT, GEOMETRY or JSON column state_string can not have a default value`` make sure to add  ``sql_mode='MYSQL40'`` in your configuration cnf file.
 
 Buildbot requires ``use_unique=True`` and ``charset=utf8``, and will add them automatically, so they do not need to be specified in ``db_url``.
 
@@ -115,39 +114,56 @@ For example, if a change is received, but the master shuts down before the sched
 
 The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
 
+.. _mq-Wamp:
+
 Wamp
 ++++
+
+.. note::
+
+    At the moment, wamp is the only message queue implementation for multimaster.
+    It has been privileged as this is the only message queue that have very solid support for Twisted.
+    Other more common message queue systems like ``RabbitMQ`` (using the ``AMQP`` protocol) do not have convincing driver for twisted, and this would require to run on threads, which will add an important performance overhead.
 
 .. code-block:: python
 
     c['mq'] = {
         'type' : 'wamp',
-        'router_url': 'ws://url/to/crossbar'
-        'realm': 'buildbot'
-        'debug' : False,
-        'debug_websockets' : False,
-        'debug_lowlevel' : False,
+        'router_url': 'ws://localhost:8080',
+        'realm': 'realm1',
+        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
 
 This is a MQ implementation using `wamp <http://wamp.ws/>`_ protocol.
-This implementation uses `Python Autobahn <http://autobahn.ws>`_ wamp client library, and is fully asynchronous (no use of threads)
+This implementation uses `Python Autobahn <http://autobahn.ws>`_ wamp client library, and is fully asynchronous (no use of threads).
 To use this implementation, you need a wamp router like `Crossbar <http://crossbar.io>`_.
-The implementation does not yet support wamp authentication yet.
+
+Please refer to Crossbar documentation for more details, but the default Crossbar setup will just work with Buildbot, provided you use the example ``mq`` configuration above, and start Crossbar with:
+
+.. code-block:: bash
+
+    # of course, you should work in a virtualenv...
+    pip install crossbar
+    crossbar init
+    crossbar start
+
+The implementation does not yet support wamp authentication.
 This MQ allows buildbot to run in multi-master mode.
 
 Note that this implementation also does not support message persistence across a restart of the master.
 For example, if a change is received, but the master shuts down before the schedulers can create build requests for it, then those schedulers will not be notified of the change when the master starts again.
 
-`router_url` key is mandatory, and should point to your router websocket url.
-Buildbot is only supporting wamp over websocket, which is a sub-protocol of http.
-SSL is supported using ``wss://`` instead of ``ws://``.
+``router_url`` (mandatory): points to your router websocket url.
+    Buildbot is only supporting wamp over websocket, which is a sub-protocol of http.
+    SSL is supported using ``wss://`` instead of ``ws://``.
+
+``realm`` (optional, defaults to ``buildbot``): defines the wamp realm to use for your buildbot messages.
+
+``wamp_debug_level`` (optional, defaults to ``error``): defines the log level of autobahn.
+
 You must use a router with very reliable connection to the master.
 If for some reason, the wamp connection is lost, then the master will stop, and should be restarted via a process manager.
 
-`realm` key is optional and defaults to ``buildbot``, and configures the wamp realm to use for your buildbot messages.
-
-The ``debug`` key, which defaults to False, can be used to enable logging of every message produced on this master.
-``debug_websocket`` and ``debug_lowlevel``, enable more debug logs in autobahn.
 
 .. bb:cfg:: multiMaster
 
@@ -156,31 +172,13 @@ The ``debug`` key, which defaults to False, can be used to enable logging of eve
 Multi-master mode
 ~~~~~~~~~~~~~~~~~
 
-Normally buildbot operates using a single master process that uses the configured database to save state.
+See :ref:`Multimaster` for details on the Multi-master mode in Buildbot Nine.
 
-It is possible to configure buildbot to have multiple master processes that share state in the same database.
-This has been well tested using a MySQL database.
-There are several benefits of Multi-master mode:
+By default, Buildbot makes coherency checks that prevents typo in your ``master.cfg``
+It make sure schedulers are not referencing unknown builders, and enforces there is at least one builder.
 
-* You can have large numbers of workers handling the same queue of build requests.
-  A single master can only handle so many workers (the number is based on a number of factors including type of builds, number of builds, and master and worker IO and CPU capacity--there is no fixed formula).
-  By adding another master which shares the queue of build requests, you can attach more workers to this additional master, and increase your build throughput.
-* You can shut one master down to do maintenance, and other masters will continue to do builds.
-
-State that is shared in the database includes:
-
-  * List of changes
-  * Scheduler names and internal state
-  * Build requests, including the builder name
-
-Because of this shared state, you are strongly encouraged to:
-
-* Ensure that each named scheduler runs on only one master.
-  If the same scheduler runs on multiple masters, it will trigger duplicate builds and may produce other undesirable behaviors.
-* Ensure builder names are unique for a given build factory implementation.
-  You can have the same builder name configured on many masters, but if the build factories differ, you will get different results depending on which master claims the build.
-
-One suggested configuration is to have one buildbot master configured with just the scheduler and change sources; and then other masters configured with just the builders.
+In the case of a asymmetric multimaster, those coherency checks can be harmful and prevent you to implement what you want.
+For example you might want to have one master dedicated to the UI, so that a big load generated by builds will not impact page load times.
 
 To enable multi-master mode in this configuration, you will need to set the :bb:cfg:`multiMaster` option so that buildbot doesn't warn about missing schedulers or builders.
 
@@ -189,9 +187,14 @@ To enable multi-master mode in this configuration, you will need to set the :bb:
     # Enable multiMaster mode; disables warnings about unknown builders and
     # schedulers
     c['multiMaster'] = True
-    # Check for new build requests every 60 seconds
     c['db'] = {
         'db_url' : 'mysql://...',
+    }
+    c['mq'] = {  # Need to enable multimaster aware mq. Wamp is the only option for now.
+        'type' : 'wamp',
+        'router_url': 'ws://localhost:8080',
+        'realm': 'realm1',
+        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
 
 .. bb:cfg:: buildbotURL
@@ -230,7 +233,6 @@ Log Handling
 
 ::
 
-    c['logCompressionLimit'] = 16384
     c['logCompressionMethod'] = 'gz'
     c['logMaxSize'] = 1024*1024 # 1M
     c['logMaxTailSize'] = 32768
@@ -273,7 +275,6 @@ Data Lifetime
 
 .. bb:cfg:: changeHorizon
 .. bb:cfg:: buildHorizon
-.. bb:cfg:: eventHorizon
 .. bb:cfg:: logHorizon
 
 Horizons
@@ -283,19 +284,17 @@ Horizons
 
     c['changeHorizon'] = 200
     c['buildHorizon'] = 100
-    c['eventHorizon'] = 50
     c['logHorizon'] = 40
     c['buildCacheSize'] = 15
 
-Buildbot stores historical information on disk in the form of "Pickle" files and compressed logfiles.
+Buildbot stores historical information in its database.
 In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
 
 The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
 One place these changes are displayed is on the waterfall page.
 This parameter defaults to 0, which means keep all changes indefinitely.
 
-The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept on disk.
-The :bb:cfg:`eventHorizon` specifies the minimum number of events to keep--events mostly describe connections and disconnections of workers, and are seldom helpful to developers.
+The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept.
 The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
 Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
@@ -321,7 +320,7 @@ Caches
     }
 
 The :bb:cfg:`caches` configuration key contains the configuration for Buildbot's in-memory caches.
-These caches keep frequently-used objects in memory to avoid unnecessary trips to the database or to pickle files.
+These caches keep frequently-used objects in memory to avoid unnecessary trips to the database.
 Caches are divided by object type, and each has a configurable maximum size.
 
 The default size for each cache is 1, except where noted below.
@@ -822,6 +821,100 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
      This tells which statistics are to be stored in this storage backend.
    ``name=None``
      (Optional) The name of this storage backend.
+
+.. bb:cfg:: buildbotNetUsageData
+
+BuildbotNetUsageData
+~~~~~~~~~~~~~~~~~~~~~
+
+Since buildbot 0.9.0, buildbot has a simple feature which sends usage analysis info to buildbot.net.
+This is very important for buildbot developers to understand how the community is using the tools.
+This allows to better prioritize issues, and understand what plugins are actually being used.
+This will also be a tool to decide whether to keep support for very old tools.
+For example buildbot contains support for the venerable CVS, but we have no information whether it actually works beyond the unit tests.
+We rely on the community to test and report issues with the old features.
+
+With BuildbotNetUsageData, we can know exactly what combination of plugins are working together, how much people are customizing plugins, what versions of the main dependencies people run.
+
+We take your privacy very seriously.
+
+BuildbotNetUsageData will never send information specific to your Code or Intellectual Property.
+No repository url, shell command values, host names, ip address or custom class names.
+If it does, then this is a bug, please report.
+
+We still need to track unique number for installation.
+This is done via doing a sha1 hash of master's hostname, installation path and fqdn.
+Using a secure hash means there is no way of knowing hostname, path and fqdn given the hash, but still there is a different hash for each master.
+
+You can see exactly what is sent in the master's twisted.log.
+Usage data is sent every time the master is started.
+
+BuildbotNetUsageData can be configured with 4 values:
+
+* ``c['buildbotNetUsageData'] = None`` disables the feature
+
+* ``c['buildbotNetUsageData'] = 'basic'`` sends the basic information to buildbot including:
+
+    * versions of buildbot, python and twisted
+    * platform information (CPU, OS, distribution, python flavor (i.e CPython vs PyPy))
+    * mq and database type (mysql or sqlite?)
+    * www plugins usage
+    * Plugins usages:
+      This counts the number of time each class of buildbot is used in your configuration.
+      This counts workers, builders, steps, schedulers, change sources.
+      If the plugin is subclassed, then it will be prefixed with a `>`
+
+    example of basic report (for the metabuildbot):
+
+    .. code-block:: javascript
+
+        {
+        'versions': {
+            'Python': '2.7.6',
+            'Twisted': '15.5.0',
+            'Buildbot': '0.9.0rc2-176-g5fa9dbf'
+        },
+        'platform': {
+            'machine': 'x86_64',
+            'python_implementation': 'CPython',
+            'version': '#140-Ubuntu SMP Mon Jul',
+            'processor':
+            'x86_64',
+            'distro:': ('Ubuntu', '14.04', 'trusty')
+            },
+        'db': 'sqlite',
+        'mq': 'simple',
+        'plugins': {
+            'buildbot.schedulers.forcesched.ForceScheduler': 2,
+            'buildbot.schedulers.triggerable.Triggerable': 1,
+            'buildbot.config.BuilderConfig': 4,
+            'buildbot.schedulers.basic.AnyBranchScheduler': 2,
+            'buildbot.steps.source.git.Git': 4,
+            '>>buildbot.steps.trigger.Trigger': 2,
+            '>>>buildbot.worker.base.Worker': 4,
+            'buildbot.reporters.irc.IRC': 1,
+            '>>>buildbot.process.buildstep.LoggingBuildStep': 2},
+        'www_plugins': ['buildbot_travis', 'waterfall_view']
+        }
+
+* ``c['buildbotNetUsageData'] = 'full'`` sends the basic information plus additional information:
+
+    * configuration of each builders: how the steps are arranged together. for ex:
+
+    .. code-block:: javascript
+
+        {
+            'builders': [
+                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger'],
+                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger']]
+        }
+
+* ``c['buildbotNetUsageData'] = myCustomFunction``. You can also specify exactly what to send using a callback.
+
+    The custom function will take the generated data from full report in the form of a dictionary, and return a customized report as a jsonable dictionary. You can use this to filter any information you don't want to disclose. You can use a custom http_proxy environment variable in order to not send any data while developing your callback.
+
 
 .. bb:cfg:: user_managers
 

@@ -12,6 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import PY3
+from future.utils import iteritems
+from future.utils import itervalues
+from future.utils import string_types
+from future.utils import text_type
+
 import os
 import re
 import sys
@@ -19,10 +28,9 @@ import traceback
 import warnings
 from types import MethodType
 
-from future.utils import iteritems
-from future.utils import itervalues
 from twisted.python import failure
 from twisted.python import log
+from twisted.python.compat import execfile
 from zope.interface import implementer
 
 from buildbot import interfaces
@@ -55,10 +63,14 @@ class ConfigErrors(Exception):
     def merge(self, errors):
         self.errors.extend(errors.errors)
 
-    def __nonzero__(self):
-        return len(self.errors)
+    def __bool__(self):
+        return bool(len(self.errors))
+    if not PY3:
+        __nonzero__ = __bool__
+
 
 _errors = None
+
 
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 
@@ -70,9 +82,17 @@ def error(error, always_raise=False):
         raise ConfigErrors([error])
 
 
+class ConfigWarning(Warning):
+    """
+    Warning for deprecated configuration options.
+    """
+
+
 def warnDeprecated(version, msg):
-    # for now just log the deprecation
-    log.msg("NOTE: [%s and later] %s" % (version, msg))
+    warnings.warn(
+        "[%s and later] %s" % (version, msg),
+        category=ConfigWarning,
+    )
 
 
 def loadConfigDict(basedir, configFileName):
@@ -87,7 +107,8 @@ def loadConfigDict(basedir, configFileName):
         ])
 
     try:
-        f = open(filename, "r")
+        with open(filename, "r"):
+            pass
     except IOError as e:
         raise ConfigErrors([
             "unable to open configuration file %r: %s" % (filename, e),
@@ -105,7 +126,7 @@ def loadConfigDict(basedir, configFileName):
     sys.path.append(basedir)
     try:
         try:
-            exec(f, localDict)
+            execfile(filename, localDict)
         except ConfigErrors:
             raise
         except SyntaxError:
@@ -120,7 +141,6 @@ def loadConfigDict(basedir, configFileName):
                   always_raise=True,
                   )
     finally:
-        f.close()
         sys.path[:] = old_sys_path
 
     if 'BuildmasterConfig' not in localDict:
@@ -173,7 +193,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.titleURL = 'http://buildbot.net'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
-        self.eventHorizon = 50
         self.logHorizon = None
         self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
@@ -188,6 +207,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.multiMaster = False
         self.manhole = None
         self.protocols = {}
+        self.buildbotNetUsageData = "basic"
 
         self.validation = dict(
             branch=re.compile(r'^[\w.+/~-]*$'),
@@ -225,15 +245,45 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.services = {}
 
     _known_config_keys = set([
-        "buildbotURL", "buildCacheSize", "builders", "buildHorizon", "caches",
-        "change_source", "codebaseGenerator", "changeCacheSize", "changeHorizon",
-        'db', "db_poll_interval", "db_url", "eventHorizon",
-        "logCompressionLimit", "logCompressionMethod", "logEncoding",
-        "logHorizon", "logMaxSize", "logMaxTailSize", "manhole",
-        "collapseRequests", "metrics", "mq", "multiMaster", "prioritizeBuilders",
-        "projectName", "projectURL", "properties", "protocols", "revlink",
-        "schedulers", "services", "status", "title", "titleURL",
-        "user_managers", "validation", "www", "workers",
+        "buildbotNetUsageData",
+        "buildbotURL",
+        "buildCacheSize",
+        "builders",
+        "buildHorizon",
+        "caches",
+        "change_source",
+        "codebaseGenerator",
+        "changeCacheSize",
+        "changeHorizon",
+        'db',
+        "db_poll_interval",
+        "db_url",
+        "logCompressionLimit",
+        "logCompressionMethod",
+        "logEncoding",
+        "logHorizon",
+        "logMaxSize",
+        "logMaxTailSize",
+        "manhole",
+        "collapseRequests",
+        "metrics",
+        "mq",
+        "multiMaster",
+        "prioritizeBuilders",
+        "projectName",
+        "projectURL",
+        "properties",
+        "protocols",
+        "revlink",
+        "schedulers",
+        "services",
+        "status",
+        "title",
+        "titleURL",
+        "user_managers",
+        "validation",
+        "www",
+        "workers",
 
         # deprecated, c['protocols']['pb']['port'] should be used
         "slavePortnum",
@@ -311,14 +361,15 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     def load_global(self, filename, config_dict):
         def copy_param(name, alt_key=None,
-                       check_type=None, check_type_name=None):
+                       check_type=None, check_type_name=None, can_be_callable=False):
             if name in config_dict:
                 v = config_dict[name]
             elif alt_key and alt_key in config_dict:
                 v = config_dict[alt_key]
             else:
                 return
-            if v is not None and check_type and not isinstance(v, check_type):
+            if v is not None and check_type and not (
+                    isinstance(v, check_type) or (can_be_callable and callable(v))):
                 error("c['%s'] must be %s" %
                       (name, check_type_name))
             else:
@@ -330,16 +381,37 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         def copy_str_param(name, alt_key=None):
             copy_param(name, alt_key=alt_key,
-                       check_type=basestring, check_type_name='a string')
+                       check_type=string_types, check_type_name='a string')
 
         copy_str_param('title', alt_key='projectName')
         copy_str_param('titleURL', alt_key='projectURL')
         copy_str_param('buildbotURL')
 
+        def copy_str_or_callable_param(name, alt_key=None):
+            copy_param(name, alt_key=alt_key,
+                       check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
+
+        if "buildbotNetUsageData" not in config_dict:
+            warnDeprecated(
+                '0.9.0',
+                '`buildbotNetUsageData` is not configured and defaults to basic\n'
+                'This parameter helps the buildbot development team to understand the installation base\n'
+                'No personal information is collected.\n'
+                'Only installation software version info and plugin usage is sent\n'
+                'You can `opt-out` by setting this variable to None\n'
+                'Or `opt-in` for more information by setting it to "full"\n'
+            )
+        copy_str_or_callable_param('buildbotNetUsageData')
+
         copy_int_param('changeHorizon')
-        copy_int_param('eventHorizon')
         copy_int_param('logHorizon')
         copy_int_param('buildHorizon')
+
+        if 'eventHorizon' in config_dict:
+            warnDeprecated(
+                '0.9.0',
+                '`eventHorizon` is deprecated and will be removed in a future version.',
+            )
 
         copy_int_param('logCompressionLimit')
 
@@ -409,7 +481,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             return
         self.protocols = protocols
 
-        # saved for backward compatability
+        # saved for backward compatibility
         if 'slavePortnum' in config_dict:
             reportDeprecatedWorkerNameUsage(
                 "c['slavePortnum'] key is deprecated, use "
@@ -579,9 +651,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         for builder in builders:
             if builder and os.path.isabs(builder.builddir):
-                warnings.warn("Absolute path '%s' for builder may cause "
-                              "mayhem.  Perhaps you meant to specify workerbuilddir "
-                              "instead.")
+                warnings.warn(
+                    "Absolute path '%s' for builder may cause "
+                    "mayhem.  Perhaps you meant to specify workerbuilddir "
+                    "instead.",
+                    category=ConfigWarning,
+                )
 
         self.builders = builders
 
@@ -852,6 +927,14 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         if self.workers:
             error("workers are configured, but c['protocols'] not")
 
+    @property
+    def eventHorizon(self):
+        warnings.warn(
+            "`eventHorizon` is deprecated and will be removed in a future version.",
+            category=DeprecationWarning,
+        )
+        return 0
+
 
 class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
@@ -896,7 +979,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             nextWorker = nextSlave
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, unicode):
+        if not name or type(name) not in (str, text_type):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
@@ -968,6 +1051,11 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             if bad_tags:
                 error(
                     "builder '%s': tags list contains something that is not a string" % (name,))
+
+            if len(tags) != len(set(tags)):
+                dupes = " ".join(set([x for x in tags if tags.count(x) > 1]))
+                error(
+                    "builder '%s': tags list contains duplicate tags: %s" % (name, dupes))
         else:
             tags = []
 

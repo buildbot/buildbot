@@ -13,13 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
-from zope.interface import implements
+from __future__ import absolute_import
+from __future__ import print_function
+
+from zope.interface import implementer
 
 from buildbot import interfaces
 
 
+@implementer(interfaces.ILogObserver)
 class LogObserver(object):
-    implements(interfaces.ILogObserver)
 
     def setStep(self, step):
         self.step = step

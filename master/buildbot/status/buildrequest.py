@@ -12,16 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IBuildRequestStatus)
 class BuildRequestStatus:
-    implements(interfaces.IBuildRequestStatus)
 
     def __init__(self, buildername, brid, status, brdict=None):
         self.buildername = buildername
@@ -129,7 +133,7 @@ class BuildRequestStatus:
         # Constant
         result['source'] = None  # not available sync, sorry
         result['builderName'] = self.buildername
-        result['submittedAt'] = None  # not availably sync, sorry
+        result['submittedAt'] = None  # not available sync, sorry
 
         # Transient
         result['builds'] = []  # not available async, sorry

@@ -32,7 +32,7 @@ Schema
 ------
 
 The database schema is maintained with `SQLAlchemy-Migrate
-<http://code.google.com/p/sqlalchemy-migrate/>`_.  This package handles the
+<https://github.com/openstack/sqlalchemy-migrate>`_.  This package handles the
 details of upgrading users between different schema versions.
 
 The schema itself is considered an implementation detail, and may change
@@ -272,7 +272,7 @@ builds
         :param integer builderid: builder to get builds for
         :param integer number: the current build number. Previous build will be taken from this number
         :param list ssBuild: the list of sourcestamps for the current build number
-        :returns: None or a build dictionnary
+        :returns: None or a build dictionary
 
         Returns the last successful build from the current build number with the same repository/repository/codebase
 
@@ -920,7 +920,7 @@ changes
         :param sourcestampid: ID of the sourcestampid
         :returns: chdict via Deferred
 
-        returns the change dictionnary related to the sourcestamp ID.
+        returns the change dictionary related to the sourcestamp ID.
 
 changesources
 ~~~~~~~~~~~~~
@@ -1261,7 +1261,7 @@ state
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
 
-    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environnement)
+    Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environment)
 
 users
 ~~~~~
@@ -1764,7 +1764,7 @@ Modifying the Database Schema
 -----------------------------
 
 Changes to the schema are accomplished through migration scripts, supported by
-`SQLAlchemy-Migrate <http://code.google.com/p/sqlalchemy-migrate/>`_.  In fact,
+`SQLAlchemy-Migrate <https://github.com/openstack/sqlalchemy-migrate>`_.  In fact,
 even new databases are created with the migration scripts -- a new database is
 a migrated version of an empty database.
 
@@ -1791,7 +1791,7 @@ Also, adjust the fake database table definitions in :src:`master/buildbot/test/f
 Your upgrade script should have unit tests.  The classes in :src:`master/buildbot/test/util/migration.py` make this straightforward.
 Unit test scripts should be named e.g., :file:`test_db_migrate_versions_015_remove_bad_master_objectid.py`.
 
-The :file:`master/buildbot/test/integration/test_upgrade.py` also tests
+The :src:`master/buildbot/test/integration/test_upgrade.py <master/buildbot/test/integration/test_upgrade.py>` also tests
 upgrades, and will confirm that the resulting database matches the model.  If
 you encounter implicit indexes on MySQL, that do not appear on SQLite or
 Postgres, add them to ``implied_indexes`` in
@@ -1799,10 +1799,10 @@ Postgres, add them to ``implied_indexes`` in
 
 Foreign key checking
 --------------------
-PostgreSQL and SQlite db backends are checking the foreign keys consistancy.
+PostgreSQL and SQlite db backends are checking the foreign keys consistency.
 :bug:`2248` needs to be fixed so that we can support foreign key checking for MySQL.
 
-To maintain consistency with real db, fakedb can check the foreign key consistancy of your test data. for this, just enable it with::
+To maintain consistency with real db, fakedb can check the foreign key consistency of your test data. For this, just enable it with::
 
     self.db = fakedb.FakeDBConnector(self.master, self)
     self.db.checkForeignKeys = True
@@ -1943,8 +1943,8 @@ To run tests with MySQL:
 
 .. code-block:: bash
 
-   # Install MySQL-python.
-   pip install MySQL-python
+   # Install mysqlclient
+   pip install mysqlclient
    # Start container with MySQL 5.5.
    # It will listen on port 13306 on localhost.
    sudo docker run --name bb-test-mysql -e MYSQL_ROOT_PASSWORD=password \

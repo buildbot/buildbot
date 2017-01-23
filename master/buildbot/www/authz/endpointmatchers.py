@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+
 import inspect
 
 from twisted.internet import defer
@@ -51,7 +56,7 @@ class EndpointMatcherBase(object):
         # a repr for debugging. displays the class, and string attributes
         args = []
         for k, v in self.__dict__.items():
-            if isinstance(v, basestring):
+            if isinstance(v, string_types):
                 args.append("%s='%s'" % (k, v))
         return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 

@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -23,6 +26,7 @@ from buildbot.process import metrics
 from buildbot.util import service
 
 
+@implementer(interfaces.IEventSource)
 class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     """
@@ -33,8 +37,6 @@ class ChangeManager(service.ReconfigurableServiceMixin, service.AsyncMultiServic
     L{buildbot.interfaces.IChangeSource} as child services. These are added by
     the master with C{addSource}.
     """
-
-    implements(interfaces.IEventSource)
 
     name = "change_manager"
 

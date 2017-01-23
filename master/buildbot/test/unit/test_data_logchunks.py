@@ -12,6 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.builtins import range
+from future.utils import text_type
+
 import textwrap
 
 from twisted.internet import defer
@@ -36,7 +43,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.Builder(id=77),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
@@ -91,7 +98,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                              {'logid': logid, 'firstline': i, 'content': expLines[i] + '\n'})
 
         # half and half
-        mid = len(expLines) / 2
+        mid = int(len(expLines) / 2)
         for f, l in (0, mid), (mid, len(expLines) - 1):
             logchunk = yield self.callGet(path,
                                           resultSpec=resultspec.ResultSpec(offset=f, limit=l - f + 1))
@@ -177,9 +184,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
     endpointname = "raw"
 
     def validateData(self, data):
-        self.assertIsInstance(data['raw'], unicode)
-        self.assertIsInstance(data['mime-type'], unicode)
-        self.assertIsInstance(data['filename'], unicode)
+        self.assertIsInstance(data['raw'], text_type)
+        self.assertIsInstance(data['mime-type'], text_type)
+        self.assertIsInstance(data['filename'], text_type)
 
     @defer.inlineCallbacks
     def do_test_chunks(self, path, logid, expLines):

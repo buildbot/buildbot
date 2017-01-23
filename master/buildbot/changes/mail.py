@@ -16,6 +16,11 @@
 """
 Parse various kinds of 'CVS notify' email.
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import calendar
 import datetime
 import re
@@ -28,17 +33,17 @@ from email.utils import parsedate_tz
 
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import util
 from buildbot.interfaces import IChangeSource
 from buildbot.util.maildir import MaildirService
 
 
+@implementer(IChangeSource)
 class MaildirSource(MaildirService, util.ComparableMixin):
 
     """Generic base class for Maildir-based change sources"""
-    implements(IChangeSource)
 
     compare_attrs = ("basedir", "pollinterval", "prefix")
 
@@ -68,7 +73,7 @@ class MaildirSource(MaildirService, util.ComparableMixin):
             if chtuple:
                 src, chdict = chtuple
             if chdict:
-                return self.master.data.updates.addChange(src=unicode(src),
+                return self.master.data.updates.addChange(src=text_type(src),
                                                           **chdict)
             else:
                 log.msg("no change found in maildir file '%s'" % filename)
@@ -311,7 +316,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # better to work with, unless you count pulling the v1-vs-v2
         # timestamp out of the diffs, which would be ugly. TODO: Pulling the
         # 'Date:' header from the mail is a possibility, and
-        # email.Utils.parsedate_tz may be useful. It should be configurable,
+        # email.utils.parsedate_tz may be useful. It should be configurable,
         # however, because there are a lot of broken clocks out there.
         when = util.now()
 
@@ -467,7 +472,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
         lines = list(body_line_iterator(m, True))
         rev = None
         while lines:
-            line = unicode(lines.pop(0), "utf-8", errors="ignore")
+            line = text_type(lines.pop(0), "utf-8", errors="ignore")
 
             # revno: 101
             match = re.search(r"^revno: ([0-9.]+)", line)

@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from __future__ import print_function
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from future.utils import iteritems
+
+import json
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -35,7 +40,6 @@ from buildbot.schedulers.forcesched import oneCodebase
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.util import json
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
@@ -59,7 +63,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             createBuilderDB=True)
         sched.master.config = config.MasterConfig()
 
-        self.assertEquals(sched.name, name)
+        self.assertEqual(sched.name, name)
 
         return sched
 
@@ -263,7 +267,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                                 'bar'],
                                                             codebases=[]))
 
-        # codebases cannot be a dictionnary
+        # codebases cannot be a dictionary
         self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' should be a list of strings or CodebaseParameter, not <type 'dict'>",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=[
@@ -441,26 +445,25 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
                               '"fullName": "username", "type": "username", "size": 30}')
 
-    def test_UserNameParameterErrorTestIsInvalidMail(self):
-        self.do_ParameterTest(value="test",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
+    def test_UserNameParameterIsValidMail(self):
+        email = "test@buildbot.net"
+        self.do_ParameterTest(value=email, expect=email,
+                              klass=UserNameParameter(),
+                              name="username", label="Your name:",
+                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
+                              '"name": "username", "default": "", "required": false, '
+                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
+                              '"fullName": "username", "type": "username", "size": 30}')
 
-    def test_UserNameParameterErrorTestAtBuildbotInvalidMail(self):
-        self.do_ParameterTest(value="test@buildbot.net",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
-
-    def test_UserNameParameterErrorTestAtBuildbotBisInvalidMail(self):
-        self.do_ParameterTest(value="<test@buildbot.net>",
-                              expect=CollectedValidationError,
-                              expectKind=Exception,
-                              klass=UserNameParameter(debug=False),
-                              name="username", label="Your name:")
+    def test_UserNameParameterIsValidMailBis(self):
+        email = "<test@buildbot.net>"
+        self.do_ParameterTest(value=email, expect=email,
+                              klass=UserNameParameter(),
+                              name="username", label="Your name:",
+                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
+                              '"name": "username", "default": "", "required": false, '
+                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
+                              '"fullName": "username", "type": "username", "size": 30}')
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',

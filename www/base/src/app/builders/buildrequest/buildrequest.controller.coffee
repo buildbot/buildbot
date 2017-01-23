@@ -17,8 +17,7 @@ class Buildrequest extends Controller
             refreshContextMenu()
 
             success = (res) ->
-                $state.go 'builder',
-                    builder: $scope.buildrequest.builderid
+                # refresh is done via complete event
 
             failure = (why) ->
                 $scope.is_cancelling = false
@@ -48,7 +47,8 @@ class Buildrequest extends Controller
 
         data = dataService.open().closeOnDestroy($scope)
         data.getBuildrequests($stateParams.buildrequest).onNew = (buildrequest) ->
-            $scope.buildrequest = publicFieldsFilter(buildrequest)
+            $scope.buildrequest = buildrequest
+            $scope.raw_buildrequest = publicFieldsFilter(buildrequest)
             data.getBuilders(buildrequest.builderid).onNew = (builder) ->
                 $scope.builder = builder
                 breadcrumb = [

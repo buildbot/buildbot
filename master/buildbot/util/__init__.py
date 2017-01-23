@@ -12,22 +12,33 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import division
+from __future__ import print_function
+
+from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
+from future.utils import PY3
+from future.utils import string_types
+from future.utils import text_type
 
 import calendar
 import datetime
-import dateutil.tz
 import itertools
 import locale
 import re
-import string
 import textwrap
 import time
+import json
+
+import dateutil.tz
 
 from twisted.python import reflect
+from twisted.python.versions import Version
+from twisted.python.deprecate import deprecatedModuleAttribute
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util.misc import deferredLocked
@@ -71,12 +82,12 @@ def flattened_iterator(l, types=(list, tuple)):
 def flatten(l, types=(list, )):
     """
     Given a list/tuple that potentially contains nested lists/tuples of arbitrary nesting,
-    flatten into a single dimenstion.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
+    flatten into a single dimension.  In other words, turn [(5, 6, [8, 3]), 2, [2, 1, (3, 4)]]
     into [5, 6, 8, 3, 2, 2, 1, 3, 4]
 
     This is safe to call on something not a list/tuple - the original input is returned as a list
     """
-    # For backwards compatability, this returned a list, not an iterable.
+    # For backwards compatibility, this returned a list, not an iterable.
     # Changing to return an iterable could break things.
     if not isinstance(l, types):
         return l
@@ -102,8 +113,8 @@ def formatInterval(eta):
     return ", ".join(eta_parts)
 
 
+@implementer(IConfigured)
 class ComparableMixin(object):
-    implements(IConfigured)
     compare_attrs = ()
 
     class _None:
@@ -119,6 +130,8 @@ class ComparableMixin(object):
         return hash(tuple(map(str, alist)))
 
     def __cmp__(self, them):
+        # NOTE: __cmp__() and cmp() are gone on Python 3,
+        #       in favor of __le__ and __eq__().
         result = cmp(type(self), type(them))
         if result:
             return result
@@ -137,6 +150,35 @@ class ComparableMixin(object):
                      for name in compare_attrs]
         return cmp(self_list, them_list)
 
+    def _cmp_common(self, them):
+        if type(self) != type(them):
+            return (False, None, None)
+
+        if self.__class__ != them.__class__:
+            return (False, None, None)
+
+        compare_attrs = []
+        reflect.accumulateClassList(
+            self.__class__, 'compare_attrs', compare_attrs)
+
+        self_list = [getattr(self, name, self._None)
+                     for name in compare_attrs]
+        them_list = [getattr(them, name, self._None)
+                     for name in compare_attrs]
+        return (True, self_list, them_list)
+
+    def __eq__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list == them_list
+
+    def __lt__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list < them_list
+
     def getConfigDict(self):
         compare_attrs = []
         reflect.accumulateClassList(
@@ -152,16 +194,24 @@ def diffSets(old, new):
         new = set(new)
     return old - new, new - old
 
+
 # Remove potentially harmful characters from builder name if it is to be
 # used as the build dir.
-badchars_map = string.maketrans("\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
-                                "______________________________")
+badchars_map = bytes.maketrans(b"\t !#$%&'()*+,./:;<=>?@[\\]^{|}~",
+                               b"______________________________")
 
 
-def safeTranslate(str):
-    if isinstance(str, unicode):
-        str = str.encode('utf8')
-    return str.translate(badchars_map)
+def safeTranslate(s):
+    if isinstance(s, text_type):
+        s = s.encode('utf8')
+    return s.translate(badchars_map)
+
+
+def encodeString(s, encoding='utf-8'):
+    if isinstance(s, text_type):
+        return s.encode(encoding)
+    else:
+        return s
 
 
 def none_or_str(x):
@@ -170,30 +220,51 @@ def none_or_str(x):
     return x
 
 
-def ascii2unicode(x):
-    if isinstance(x, (unicode, type(None))):
-        return x
-    return unicode(x, 'ascii')
+def unicode2bytes(x, encoding='utf-8', errors='strict'):
+    if isinstance(x, text_type):
+        x = x.encode(encoding, errors)
+    return x
 
-# place a working json module at 'buildbot.util.json'.  Code is adapted from
-# Paul Wise <pabs@debian.org>:
-#   http://lists.debian.org/debian-python/2010/02/msg00016.html
-# json doesn't exist as a standard module until python2.6
-# However python2.6's json module is much slower than simplejson, so we prefer
-# to use simplejson if available.
-try:
-    import simplejson as json
-    assert json
-except ImportError:
-    import json  # python 2.6 or 2.7
-try:
-    _tmp = json.loads
-except AttributeError:
-    import warnings
-    import sys
-    warnings.warn("Use simplejson, not the old json module.")
-    sys.modules.pop('json')  # get rid of the bad json module
-    import simplejson as json
+
+def bytes2unicode(x, encoding='utf-8', errors='strict'):
+    if isinstance(x, (text_type, type(None))):
+        return x
+    return text_type(x, encoding, errors)
+
+
+def ascii2unicode(x, errors='strict'):
+    return bytes2unicode(x, encoding='ascii', errors=errors)
+
+
+def bytes2NativeString(x, encoding='utf-8'):
+    """
+    Convert C{bytes} to a native C{str}.
+
+    On Python 3 and higher, str and bytes
+    are not equivalent.  In this case, decode
+    the bytes, and return a native string.
+
+    On Python 2 and lower, str and bytes
+    are equivalent.  In this case, just
+    just return the native string.
+
+    @param x: a string of type C{bytes}
+    @param encoding: an optional codec, default: 'utf-8'
+    @return: a string of type C{str}
+    """
+    if isinstance(x, bytes) and str != bytes:
+        return x.decode(encoding)
+    return x
+
+
+_hush_pyflakes = [json]
+
+deprecatedModuleAttribute(
+    Version("buildbot", 0, 9, 4),
+    message="Use json from the standard library instead.",
+    moduleName="buildbot.util",
+    name="json",
+)
 
 
 def toJson(obj):
@@ -208,8 +279,12 @@ def toJson(obj):
 
 class NotABranch:
 
-    def __nonzero__(self):
+    def __bool__(self):
         return False
+    if not PY3:
+        __nonzero__ = __bool__
+
+
 NotABranch = NotABranch()
 
 # time-handling methods
@@ -243,10 +318,10 @@ def human_readable_delta(start, end):
     if delta.days > 0:
         result.append('%d days' % (delta.days,))
     if delta.seconds > 0:
-        hours = delta.seconds / 3600
+        hours = int(delta.seconds / 3600)
         if hours > 0:
             result.append('%d hours' % (hours,))
-        minutes = (delta.seconds - hours * 3600) / 60
+        minutes = int((delta.seconds - hours * 3600) / 60)
         if minutes:
             result.append('%d minutes' % (minutes,))
         seconds = delta.seconds % 60
@@ -260,7 +335,7 @@ def human_readable_delta(start, end):
 
 
 def makeList(input):
-    if isinstance(input, basestring):
+    if isinstance(input, string_types):
         return [input]
     elif input is None:
         return []
@@ -342,7 +417,7 @@ def join_list(maybeList):
 
 def command_to_string(command):
     words = command
-    if isinstance(words, (str, unicode)):
+    if isinstance(words, string_types):
         words = words.split()
 
     try:
@@ -358,7 +433,7 @@ def command_to_string(command):
 
     # strip instances and other detritus (which can happen if a
     # description is requested before rendering)
-    words = [w for w in words if isinstance(w, (str, unicode))]
+    words = [w for w in words if isinstance(w, (string_types))]
 
     if len(words) < 1:
         return None
@@ -367,9 +442,10 @@ def command_to_string(command):
     else:
         rv = "'%s ...'" % (' '.join(words[:2]))
 
-    # cmd was a comand and thus probably a bytestring.  Be gentle in
+    # cmd was a command and thus probably a bytestring.  Be gentle in
     # trying to covert it.
-    rv = rv.decode('ascii', 'replace')
+    if isinstance(rv, bytes):
+        rv = rv.decode('ascii', 'replace')
 
     return rv
 
@@ -410,8 +486,20 @@ def rewrap(text, width=None):
     return wrapped_text
 
 
+def dictionary_merge(a, b):
+    """merges dictionary b into a
+       Like dict.update, but recursive
+    """
+    for key, value in b.items():
+        if key in a and isinstance(a[key], dict) and isinstance(value, dict):
+            dictionary_merge(a[key], b[key])
+            continue
+        a[key] = b[key]
+    return a
+
+
 __all__ = [
-    'naturalSort', 'now', 'formatInterval', 'ComparableMixin', 'json',
+    'naturalSort', 'now', 'formatInterval', 'ComparableMixin',
     'safeTranslate', 'none_or_str',
     'NotABranch', 'deferredLocked', 'UTC',
     'diffSets', 'makeList', 'in_reactor', 'string2boolean',

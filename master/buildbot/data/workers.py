@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -75,10 +78,10 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        sldicts = yield self.master.db.workers.getWorkers(
+        workers_dicts = yield self.master.db.workers.getWorkers(
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'))
-        defer.returnValue([self.db2data(sl) for sl in sldicts])
+        defer.returnValue([self.db2data(w) for w in workers_dicts])
 
 
 class Worker(base.ResourceType):
@@ -135,6 +138,14 @@ class Worker(base.ResourceType):
             masterid=masterid)
         bs = yield self.master.data.get(('workers', workerid))
         self.produceEvent(bs, 'disconnected')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def workerMissing(self, workerid, masterid, last_connection, notify):
+        bs = yield self.master.data.get(('workers', workerid))
+        bs['last_connection'] = last_connection
+        bs['notify'] = notify
+        self.produceEvent(bs, 'missing')
 
     @base.updateMethod
     def deconfigureAllWorkersForMaster(self, masterid):

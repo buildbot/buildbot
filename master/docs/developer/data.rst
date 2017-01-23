@@ -388,7 +388,7 @@ Update methods are for use by the Buildbot process code, and as such are general
 They generally encapsulate logic common to multiple users (e.g., creating buildsets), and finish by performing modifications in the database and sending a corresponding message.
 In general, Buildbot does not depend on timing of either the database or message broker, so the order in which these operations are initiated is not important.
 
-Update methods are considered part of Buildbot's user-visible interface, and as such incompatible changes should be avoied wherever possible.
+Update methods are considered part of Buildbot's user-visible interface, and as such incompatible changes should be avoided wherever possible.
 Instead, either add a new method (and potentially re-implement existing methods in terms of the new method) or add new, optional parameters to an existing method.
 If an incompatible change is unavoidable, it should be described clearly in the release notes.
 

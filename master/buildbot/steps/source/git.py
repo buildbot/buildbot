@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import string_types
+
 from distutils.version import LooseVersion
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -42,6 +47,7 @@ def isTrueOrIsExactlyZero(v):
 
     # all other false-ish values are false
     return False
+
 
 git_describe_flags = [
     # on or off
@@ -138,14 +144,13 @@ class Git(Source):
         self.srcdir = 'source'
         self.origin = origin
         Source.__init__(self, **kwargs)
-
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
-        if isinstance(self.mode, basestring):
+        if isinstance(self.mode, string_types):
             if not self._hasAttrGroupMember('mode', self.mode):
                 bbconfig.error("Git: mode must be %s" %
                                (' or '.join(self._listAttrGroupMembers('mode'))))
-            if isinstance(self.method, basestring):
+            if isinstance(self.method, string_types):
                 if (self.mode == 'full' and self.method not in ['clean', 'fresh', 'clobber', 'copy', None]):
                     bbconfig.error("Git: invalid method for mode 'full'.")
                 if self.shallow and (self.mode != 'full' or self.method != 'clobber'):
@@ -158,6 +163,7 @@ class Git(Source):
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
+
         self.method = self._getMethod()
         self.stdio_log = self.addLogForRemoteCommands("stdio")
 
@@ -207,7 +213,7 @@ class Git(Source):
     @defer.inlineCallbacks
     def mode_incremental(self):
         action = yield self._sourcedirIsUpdatable()
-        # if not updateable, do a full checkout
+        # if not updatable, do a full checkout
         if action == "clobber":
             yield self.clobber()
             return
@@ -305,7 +311,8 @@ class Git(Source):
 
     @defer.inlineCallbacks
     def parseCommitDescription(self, _=None):
-        if self.getDescription == False:  # dict() should not return here
+        # dict() should not return here
+        if isinstance(self.getDescription, bool) and not self.getDescription:
             defer.returnValue(RC_SUCCESS)
             return
 
@@ -385,7 +392,7 @@ class Git(Source):
     def _fetch(self, _):
         fetch_required = True
 
-        # If the revision already exists in the repo, we dont need to fetch.
+        # If the revision already exists in the repo, we don't need to fetch.
         if self.revision:
             rc = yield self._dovccmd(['cat-file', '-e', self.revision],
                                      abandonOnFailure=False)
@@ -500,7 +507,7 @@ class Git(Source):
             res = yield self._dovccmd(['reset', '--hard',
                                        self.revision, '--'],
                                       shallowClone)
-        # init and update submodules, recurisively. If there's not recursion
+        # init and update submodules, recursively. If there's not recursion
         # it will not do it.
         if self.submodules:
             res = yield self._dovccmd(['submodule', 'update',

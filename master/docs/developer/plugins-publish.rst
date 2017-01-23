@@ -59,7 +59,7 @@ Once you have your component packaged, it's quite straightforward: you just need
 (You might have seen different ways to specify the value for ``entry_points``, however they all do the same thing.
 Full description of possible ways is available in `setuptools documentation <https://setuptools.readthedocs.io/en/latest/setuptools.html#dynamic-discovery-of-services-and-plugins>`_.)
 
-After the :file:`setup.py` file is updated, you can build and install it:
+After the :src:`setup.py <master/setup.py>` file is updated, you can build and install it:
 
 .. code-block:: none
 

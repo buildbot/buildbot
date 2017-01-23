@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 import re
 import sys
 
@@ -84,7 +89,7 @@ class MtrLogObserver(LogLineObserver):
     It counts number of tests run and uses it to provide more accurate
     completion estimates.
 
-    It parses out test failures from the output and summarises the results on
+    It parses out test failures from the output and summarizes the results on
     the Waterfall page. It also passes the information to methods that can be
     overridden in a subclass to do further processing on the information."""
 
@@ -131,6 +136,8 @@ class MtrLogObserver(LogLineObserver):
 
         else:
             m = self._line_re3.search(stripLine)
+
+            # pylint: disable=too-many-boolean-expressions
 
             if m:
                 stuff = m.group(1)
@@ -226,7 +233,7 @@ class MTR(Test):
 
     It uses class MtrLogObserver to parse test results out from the
     output of mysql-test-run.pl, providing better completion time
-    estimates and summarising test failures on the waterfall page.
+    estimates and summarizing test failures on the waterfall page.
 
     It also provides access to mysqld server error logs from the test
     run to help debugging any problems.

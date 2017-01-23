@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -127,7 +132,7 @@ class BaseBasicScheduler(CommonStuffMixin,
             def fileIsImportant(self, change):
                 return False
         sched = self.makeScheduler(Subclass, onlyImportant=True)
-        self.failUnlessEqual(
+        self.assertEqual(
             Subclass.fileIsImportant.__get__(sched), sched.fileIsImportant)
 
     def test_activate_treeStableTimer(self):

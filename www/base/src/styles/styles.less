@@ -3,7 +3,7 @@
 @import "../../libs/font-awesome/less/font-awesome.less";
 @import (inline) "../../libs/guanlecoja-ui/styles.css";
 @fa-font-path: "./fonts";
-/* base css for angular, dont display anything until angular is running */
+/* base css for angular, don't display anything until angular is running */
 [ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
   display: none !important;
 }
@@ -83,6 +83,24 @@
   -ms-user-select: none;
   user-select: none;
 }
+.select-content {
+  -webkit-touch-callout: text;
+  -webkit-user-select: text;
+  -khtml-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  user-select: text;
+}
+/* https://danoc.me/blog/css-prevent-copy/
+Firefox will insert newlines if the selection go over a no-select span, so we need to implement them with ::before
+*/
+[data-linenumber-content]::before,
+[data-linenumber-content--before]::before,
+[data-linenumber-content--after]::after {
+  content: attr(data-linenumber-content);
+  color: #c7c7c7;
+  padding-right: 10px;
+}
 
 .avatar {
   background-size: 32px 32px;
@@ -117,4 +135,41 @@
 
 li.unstyled{
   list-style: none;
+}
+.no-margin{
+  margin: 0px !important;
+}
+.mouse-over-only  {display: none;}
+span:hover>.mouse-over-only  {display: inline;}
+
+/* flex row will make the row grow automatically given the size of the content
+   This will make sure all the inside div will fill all content.
+   This is useful when you want to create a row with one left and one right
+   the level of grow give the importance of the div. The more it has grow the more it will win
+   space when fighting against the other divs
+   You can use it with following jade code:
+   .flex-row
+      .flex-grow-1  left content
+      .flex-grow-1
+          .pull-right right content
+
+*/
+.flex-row {
+  display: flex;
+  flex-flow: row;
+
+  /* Then we define how is distributed the remaining space */
+  justify-content: space-around;
+    .flex-grow-1 {
+        flex-grow: 1
+    }
+    .flex-grow-2 {
+        flex-grow: 2
+    }
+    .flex-grow-3 {
+        flex-grow: 3
+    }
+    .flex-grow-4 {
+        flex-grow: 4
+    }
 }

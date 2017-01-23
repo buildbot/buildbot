@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sys
 import textwrap
 
@@ -28,7 +32,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them. the triggered build never ends
-# so that we can reliabily stop it recursively
+# so that we can reliably stop it recursively
 
 
 # master configurations
@@ -110,7 +114,7 @@ class TriggeringMaster(RunMasterBase):
 
     def assertBuildIsCancelled(self, b):
         self.assertTrue(b['complete'])
-        self.assertEquals(b['results'], CANCELLED, repr(b))
+        self.assertEqual(b['results'], CANCELLED, repr(b))
 
     @defer.inlineCallbacks
     def runTest(self, newBuildCallback, flushErrors=False):

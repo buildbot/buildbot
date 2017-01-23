@@ -5,7 +5,10 @@
 # Pyflakes warnings corrected
 
 # -*- coding: utf-8 -*-
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import re
 from datetime import datetime
@@ -94,7 +97,7 @@ class croniter(object):
                         raise ValueError(
                             "[%s] is not acceptable" % expr_format)
 
-                    for j in xrange(int(low), int(high) + 1):
+                    for j in range(int(low), int(high) + 1):
                         if j % int(step) == 0:
                             e_list.append(j)
                 else:
@@ -165,7 +168,7 @@ class croniter(object):
         offset = len(expanded) == 6 and 1 or 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
-        # BUILDBOT: ununsed 'day' omitted due to pyflakes warning
+        # BUILDBOT: unused 'day' omitted due to pyflakes warning
         month, year = dst.month, dst.year
         current_year = now.year
         DAYS = self.DAYS
@@ -308,10 +311,8 @@ class croniter(object):
         return (candidates[0]) - x - range_val
 
     def is_leap(self, year):
-        if year % 400 == 0 or (year % 4 == 0 and year % 100 != 0):
-            return True
-        else:
-            return False
+        return year % 400 == 0 or (year % 4 == 0 and year % 100 != 0)
+
 
 if __name__ == '__main__':
 

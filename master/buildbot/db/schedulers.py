@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import sqlalchemy as sa
 import sqlalchemy.exc
-from future.utils import iteritems
+
 from twisted.internet import defer
 
 from buildbot.db import NULL
@@ -143,7 +148,8 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 # ok, that was us, so we just do nothing
                 if row['masterid'] == masterid:
                     return
-                raise SchedulerAlreadyClaimedError("already claimed by {}".format(row['name']))
+                raise SchedulerAlreadyClaimedError(
+                    "already claimed by {}".format(row['name']))
 
         return self.db.pool.do(thd)
 

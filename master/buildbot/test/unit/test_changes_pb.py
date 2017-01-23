@@ -12,7 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -198,7 +204,7 @@ class TestPBChangeSource(
 
         self.assertNotRegistered()
 
-        config.slavePortnum = '1234'
+        config.protocols = {'pb': {'port': '1234'}}
 
         yield self.changesource.reconfigServiceWithBuildbotConfig(config)
 
@@ -414,7 +420,7 @@ class TestChangePerspective(unittest.TestCase):
 
     def test_addChange_non_utf8_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        bogus_utf8 = '\xff\xff\xff\xff'
+        bogus_utf8 = b'\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
         d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
 

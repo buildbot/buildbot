@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.python.reflect import namedObject
 
 from buildbot.util import service
@@ -56,6 +60,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         # copy the methods onto this object for ease of access
         self.produce = self.impl.produce
         self.startConsuming = self.impl.startConsuming
+        self.waitUntilEvent = self.impl.waitUntilEvent
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         # double-check -- the master ensures this in config checks

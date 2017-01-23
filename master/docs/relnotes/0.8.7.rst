@@ -50,7 +50,7 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 
 * Buildbot now doesn't fail on invalid UTF-8 in a number of places.
 
-* Many documenation updates and fixes.
+* Many documentation updates and fixes.
 
 Master
 ------
@@ -139,7 +139,7 @@ Deprecations, Removals, and Non-Compatible Changes
       * ``get_from_post`` is renamed to ``getFromKwargs``
 
       * ``update_from_post`` is renamed to ``updateFromKwargs``. This function's parameters
-        are now called via named parameters to allow subclasses to ignore values it doesnt use.
+        are now called via named parameters to allow subclasses to ignore values it doesn't use.
         Subclasses should add ``**unused`` for future compatibility. A new parameter
         ``sourcestampset`` is provided to allow subclasses to modify the sourcestamp set, and
         will probably require you to add the ``**unused`` field.

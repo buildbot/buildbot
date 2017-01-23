@@ -12,11 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import datetime
 import locale
 import os
 
 import mock
+
 from twisted.internet import reactor
 from twisted.internet import task
 from twisted.trial import unittest
@@ -112,7 +118,7 @@ class safeTranslate(unittest.TestCase):
         self.assertEqual(util.safeTranslate(u"full"), str("full"))
 
     def test_unicode_bad(self):
-        self.assertEqual(util.safeTranslate(unicode("speed=slow;quality=high")),
+        self.assertEqual(util.safeTranslate(text_type("speed=slow;quality=high")),
                          str("speed_slow_quality_high"))
 
     def test_unicode_pathological(self):
@@ -254,11 +260,11 @@ class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
         rv = util.ascii2unicode(u'\N{SNOWMAN}')
-        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', unicode))
+        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', text_type))
 
     def test_ascii(self):
         rv = util.ascii2unicode('abcd')
-        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
@@ -292,7 +298,7 @@ class StringToBoolean(unittest.TestCase):
 
     def test_ascii(self):
         rv = util.ascii2unicode('abcd')
-        self.assertEqual((rv, type(rv)), (u'abcd', unicode))
+        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
@@ -461,3 +467,45 @@ class TestRewrap(unittest.TestCase):
 
         for text, expected, width in tests:
             self.assertEqual(util.rewrap(text, width=width), expected)
+
+
+class TestMerge(unittest.TestCase):
+
+    def test_merge(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1}
+                },
+                {
+                    'a': {'c': 2}
+                }),
+            {
+                'a': {'b': 1, 'c': 2}
+            })
+
+    def test_overwrite(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1}
+                },
+                {
+                    'a': 1
+                }),
+            {
+                'a': 1
+            })
+
+    def test_overwrite2(self):
+        self.assertEqual(
+            util.dictionary_merge(
+                {
+                    'a': {'b': 1, 'c': 2}
+                },
+                {
+                    'a': {'b': [1, 2, 3]}
+                }),
+            {
+                'a': {'b': [1, 2, 3], 'c': 2}
+            })

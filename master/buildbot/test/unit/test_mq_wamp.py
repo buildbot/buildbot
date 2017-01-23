@@ -12,10 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
+import json
 import os
 import textwrap
 
 import mock
+
 from autobahn.wamp.types import EventDetails
 from autobahn.wamp.types import SubscribeOptions
 from twisted.internet import defer
@@ -23,7 +30,6 @@ from twisted.trial import unittest
 
 from buildbot.mq import wamp
 from buildbot.test.fake import fakemaster
-from buildbot.util import json
 from buildbot.wamp import connector
 
 
@@ -45,7 +51,7 @@ class FakeWampConnector(object):
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i in xrange(len(topic)):
+        for i in range(len(topic)):
             if owntopic[i] != "" and topic[i] != owntopic[i]:
                 return False
         return True
@@ -145,10 +151,7 @@ class WampMQ(unittest.TestCase):
 
 
 class FakeConfig(object):
-    mq = dict(type='wamp', router_url="wss://foo", realm="buildbot",
-              debug_websockets=False,  # set if connection looks bad
-              debug_lowlevel=False,  # set if protocol looks bad
-              )
+    mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
 
 
 class WampMQReal(unittest.TestCase):
@@ -159,7 +162,10 @@ class WampMQReal(unittest.TestCase):
     """
     HOW_TO_RUN = textwrap.dedent("""\
         define WAMP_ROUTER_URL to a wamp router to run this test
-        e.g: WAMP_ROUTER_URL=ws://localhost:8000/ws""")
+        > crossbar init
+        > crossbar start &
+        > export WAMP_ROUTER_URL=ws://localhost:8080/ws
+        > trial buildbot.unit.test_mq_wamp""")
     # if connection is bad, this test can timeout easily
     # we reduce the timeout to help maintain the sanity of the developer
     timeout = 2

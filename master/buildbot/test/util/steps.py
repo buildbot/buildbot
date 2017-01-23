@@ -12,11 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from __future__ import print_function
 
-import mock
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+
+import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
@@ -24,11 +28,13 @@ from twisted.python import log
 from buildbot import interfaces
 from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process import buildstep
+from buildbot.process.results import EXCEPTION
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
+from buildbot.util import bytes2NativeString
 
 
 def _dict_diff(d1, d2):
@@ -131,7 +137,7 @@ class BuildStepMixin(object):
                   wantDb=False, wantMq=False):
         """
         Set up C{step} for testing.  This begins by using C{step} as a factory
-        to create a I{new} step instance, thereby testing that the the factory
+        to create a I{new} step instance, thereby testing that the factory
         arguments are handled correctly.  It then creates a comfortable
         environment for the worker to run in, replete with a fake build and a
         fake worker.
@@ -216,6 +222,7 @@ class BuildStepMixin(object):
 
         def addHTMLLog(name, html):
             l = logfile.FakeLogFile(name, step)
+            html = bytes2NativeString(html)
             l.addStdout(html)
             return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
@@ -247,6 +254,7 @@ class BuildStepMixin(object):
         self.exp_missing_properties = []
         self.exp_logfiles = {}
         self.exp_hidden = False
+        self.exp_exception = None
 
         # check that the step's name is not None
         self.assertNotEqual(step.name, None)
@@ -292,6 +300,13 @@ class BuildStepMixin(object):
         Set whether the step is expected to be hidden.
         """
         self.exp_hidden = hidden
+
+    def expectException(self, exception_class):
+        """
+        Set whether the step is expected to raise an exception.
+        """
+        self.exp_exception = exception_class
+        self.expectOutcome(EXCEPTION)
 
     def runStep(self):
         """
@@ -354,6 +369,9 @@ class BuildStepMixin(object):
                 if got != exp:
                     log.msg("Unexpected log output:\n" + got)
                     raise AssertionError("Unexpected log output; see logs")
+            if self.exp_exception:
+                self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)
+
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
         return d
@@ -379,7 +397,7 @@ class BuildStepMixin(object):
         if exp.shouldAssertCommandEqualExpectation():
             # handle any incomparable args
             for arg in exp.incomparable_args:
-                self.failUnless(arg in got[1],
+                self.assertTrue(arg in got[1],
                                 "incomparable arg '%s' not received" % (arg,))
                 del got[1][arg]
 

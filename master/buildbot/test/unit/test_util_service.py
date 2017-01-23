@@ -12,7 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import text_type
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -141,13 +148,13 @@ class ClusteredBuildbotService(unittest.TestCase):
     def test_name_PreservesUnicodePromotion(self):
         svc = self.makeService(name=u'n')
 
-        self.assertIsInstance(svc.name, unicode)
+        self.assertIsInstance(svc.name, text_type)
         self.assertEqual(svc.name, u'n')
 
     def test_name_GetsUnicodePromotion(self):
         svc = self.makeService(name='n')
 
-        self.assertIsInstance(svc.name, unicode)
+        self.assertIsInstance(svc.name, text_type)
         self.assertEqual(svc.name, u'n')
 
     def test_compare(self):
@@ -257,7 +264,7 @@ class ClusteredBuildbotService(unittest.TestCase):
 
         self.svc.startService()
 
-        # another epoch shouldnt do anything further...
+        # another epoch shouldn't do anything further...
         self.svc.clock.advance(self.svc.POLL_INTERVAL_SEC * 2)
 
         self.assertEqual(1, self.svc.activate.call_count)
@@ -641,7 +648,7 @@ class BuildbotServiceManager(unittest.TestCase):
         serv = yield self.prepareService()
         serv.config = None  # 'de-configure' the service
 
-        # reconfigure with the differnt config
+        # reconfigure with the different config
         serv2 = MyService(1, a=4, name="basic")
         self.master.config.services = {"basic": serv2}
 
@@ -709,3 +716,61 @@ class BuildbotServiceManager(unittest.TestCase):
                 'kwargs': {'a': 2},
                 'name': 'basic'}],
             'name': 'services'})
+
+
+class UnderTestSharedService(service.SharedService):
+    def __init__(self, arg1=None):
+        service.SharedService.__init__(self)
+
+
+class UnderTestDependentService(service.AsyncService):
+    @defer.inlineCallbacks
+    def startService(self):
+        self.dependent = yield UnderTestSharedService.getService(self.parent)
+
+    def stopService(self):
+        assert self.dependent.running
+
+
+class SharedService(unittest.SynchronousTestCase):
+    def test_bad_constructor(self):
+        parent = service.AsyncMultiService()
+        self.failureResultOf(UnderTestSharedService.getService(parent, arg2="foo"))
+
+    def test_creation(self):
+        parent = service.AsyncMultiService()
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        r2 = self.successResultOf(UnderTestSharedService.getService(parent))
+        r3 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
+        r4 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
+        self.assertIdentical(r, r2)
+        self.assertNotIdentical(r, r3)
+        self.assertIdentical(r3, r4)
+        self.assertEqual(len(list(iter(parent))), 2)
+
+    def test_startup(self):
+        """the service starts when parent starts and stop"""
+        parent = service.AsyncMultiService()
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        self.assertEqual(r.running, 0)
+        self.successResultOf(parent.startService())
+        self.assertEqual(r.running, 1)
+        self.successResultOf(parent.stopService())
+        self.assertEqual(r.running, 0)
+
+    def test_already_started(self):
+        """the service starts during the getService if parent already started"""
+        parent = service.AsyncMultiService()
+        self.successResultOf(parent.startService())
+        r = self.successResultOf(UnderTestSharedService.getService(parent))
+        self.assertEqual(r.running, 1)
+        # then we stop the parent, and the shared service stops
+        self.successResultOf(parent.stopService())
+        self.assertEqual(r.running, 0)
+
+    def test_already_stopped_last(self):
+        parent = service.AsyncMultiService()
+        o = UnderTestDependentService()
+        o.setServiceParent(parent)
+        self.successResultOf(parent.startService())
+        self.successResultOf(parent.stopService())

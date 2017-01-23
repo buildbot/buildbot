@@ -12,6 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import string_types
+
 import re
 # this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
 # although it has no effect before python-2.7.
@@ -20,13 +26,12 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
-from StringIO import StringIO
+from io import BytesIO
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log as twlog
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -40,7 +45,10 @@ from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
 from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
+from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
+from buildbot.util import ssl
+from buildbot.util import unicode2bytes
 
 charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
 
@@ -49,7 +57,6 @@ try:
     ESMTPSenderFactory = ESMTPSenderFactory  # for pyflakes
 except ImportError:
     ESMTPSenderFactory = None
-
 
 # Email parsing can be complex. We try to take a very liberal
 # approach. The local part of an email address matches ANY non
@@ -69,8 +76,8 @@ VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 ENCODING = 'utf8'
 
 
+@implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
-    implements(interfaces.IEmailLookup)
     compare_attrs = ("domain")
 
     def __init__(self, domain):
@@ -84,15 +91,14 @@ class Domain(util.ComparableMixin):
         return name + "@" + self.domain
 
 
+@implementer(interfaces.IEmailSender)
 class MailNotifier(service.BuildbotService):
-
-    implements(interfaces.IEmailSender)
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings",
                       "exception", "cancelled")
 
     def computeShortcutModes(self, mode):
-        if isinstance(mode, basestring):
+        if isinstance(mode, string_types):
             if mode == "all":
                 mode = ("failing", "passing", "warnings",
                         "exception", "cancelled")
@@ -109,10 +115,9 @@ class MailNotifier(service.BuildbotService):
                     lookup=None, extraRecipients=None,
                     sendToInterestedUsers=True,
                     messageFormatter=None, extraHeaders=None,
-                    addPatch=True, useTls=False,
+                    addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None
-                    ):
+                    name=None, schedulers=None, branches=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
@@ -143,18 +148,25 @@ class MailNotifier(service.BuildbotService):
                 self.name += "_tags_" + "+".join(tags)
             if builders is not None:
                 self.name += "_builders_" + "+".join(builders)
+            if schedulers is not None:
+                self.name += "_schedulers_" + "+".join(schedulers)
+            if branches is not None:
+                self.name += "_branches_" + "+".join(branches)
 
         if '\n' in subject:
             config.error(
                 'Newlines are not allowed in email subjects')
 
         if lookup is not None:
-            if not isinstance(lookup, basestring):
+            if not isinstance(lookup, string_types):
                 assert interfaces.IEmailLookup.providedBy(lookup)
 
         if extraHeaders:
             if not isinstance(extraHeaders, dict):
                 config.error("extraHeaders must be a dictionary")
+
+        if useSmtps:
+            ssl.ensureHasSSL(self.__class__.__name__)
 
         # you should either limit on builders or tags, not both
         if builders is not None and tags is not None:
@@ -169,10 +181,10 @@ class MailNotifier(service.BuildbotService):
                         lookup=None, extraRecipients=None,
                         sendToInterestedUsers=True,
                         messageFormatter=None, extraHeaders=None,
-                        addPatch=True, useTls=False,
+                        addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None
-                        ):
+                        name=None, schedulers=None, branches=None,
+                        messageFormatterMissingWorker=None):
 
         if extraRecipients is None:
             extraRecipients = []
@@ -183,20 +195,26 @@ class MailNotifier(service.BuildbotService):
         self.mode = self.computeShortcutModes(mode)
         self.tags = tags
         self.builders = builders
+        self.schedulers = schedulers
+        self.branches = branches
         self.addLogs = addLogs
         self.relayhost = relayhost
         self.subject = subject
         if lookup is not None:
-            if isinstance(lookup, basestring):
+            if isinstance(lookup, string_types):
                 lookup = Domain(str(lookup))
 
         self.lookup = lookup
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter()
         self.messageFormatter = messageFormatter
+        if messageFormatterMissingWorker is None:
+            messageFormatterMissingWorker = MessageFormatterMissingWorker()
+        self.messageFormatterMissingWorker = messageFormatterMissingWorker
         self.extraHeaders = extraHeaders
         self.addPatch = addPatch
         self.useTls = useTls
+        self.useSmtps = useSmtps
         self.smtpUser = smtpUser
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
@@ -214,6 +232,9 @@ class MailNotifier(service.BuildbotService):
         self._buildCompleteConsumer = yield startConsuming(
             self.buildComplete,
             ('builds', None, 'finished'))
+        self._workerMissingConsumer = yield startConsuming(
+            self.workerMissing,
+            ('worker', None, 'missing'))
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -224,6 +245,9 @@ class MailNotifier(service.BuildbotService):
         if self._buildCompleteConsumer is not None:
             yield self._buildCompleteConsumer.stopConsuming()
             self._buildCompleteConsumer = None
+        if self._workerMissingConsumer is not None:
+            yield self._workerMissingConsumer.stopConsuming()
+            self._workerMissingConsumer = None
 
     def wantPreviousBuild(self):
         return "change" in self.mode or "problem" in self.mode
@@ -237,7 +261,8 @@ class MailNotifier(service.BuildbotService):
             self.master, bsid,
             wantProperties=self.messageFormatter.wantProperties,
             wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild())
+            wantPreviousBuild=self.wantPreviousBuild(),
+            wantLogs=self.messageFormatter.wantLogs)
 
         builds = res['builds']
         buildset = res['buildset']
@@ -257,7 +282,8 @@ class MailNotifier(service.BuildbotService):
             self.master, buildset, [build],
             wantProperties=self.messageFormatter.wantProperties,
             wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild())
+            wantPreviousBuild=self.wantPreviousBuild(),
+            wantLogs=self.messageFormatter.wantLogs)
         # only include builds for which isMailNeeded returns true
         if self.isMailNeeded(build):
             self.buildMessage(
@@ -269,8 +295,14 @@ class MailNotifier(service.BuildbotService):
     def isMailNeeded(self, build):
         # here is where we actually do something.
         builder = build['builder']
+        scheduler = build['properties'].get('scheduler', [None])[0]
+        branch = build['properties'].get('branch', [None])[0]
         results = build['results']
         if self.builders is not None and builder['name'] not in self.builders:
+            return False  # ignore this build
+        if self.schedulers is not None and scheduler not in self.schedulers:
+            return False  # ignore this build
+        if self.branches is not None and branch not in self.branches:
             return False  # ignore this build
         if self.tags is not None and \
                 not self.matchesAnyTag(builder['tags']):
@@ -298,7 +330,7 @@ class MailNotifier(service.BuildbotService):
         return False
 
     def patch_to_attachment(self, patch, index):
-        # patches are specificaly converted to unicode before entering the db
+        # patches are specifically converted to unicode before entering the db
         a = MIMEText(patch['body'].encode(ENCODING), _charset=ENCODING)
         a.add_header('Content-Disposition', "attachment",
                      filename="source patch " + str(index))
@@ -315,8 +347,7 @@ class MailNotifier(service.BuildbotService):
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
                                       'title': title,
-                                      'builder': builderName,
-                                      }
+                                      'builder': builderName}
 
         assert '\n' not in subject, \
             "Subject cannot contain newlines"
@@ -414,14 +445,15 @@ class MailNotifier(service.BuildbotService):
             else:
                 previous_results = None
             blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
-            build_msgdict = self.messageFormatter(self.mode, name, build['buildset'], build, self.master,
-                                                  previous_results, blamelist)
+            build_msgdict = yield self.messageFormatter.formatMessageForBuildResults(
+                self.mode, name, build['buildset'], build, self.master,
+                previous_results, blamelist)
             users.update(set(blamelist))
             msgdict['type'] = build_msgdict['type']
             msgdict['body'] += build_msgdict['body']
             if 'subject' in build_msgdict:
                 msgdict['subject'] = build_msgdict['subject']
-            # ensure msgbody ends with double cariage return
+            # ensure msgbody ends with double carriage return
             if not msgdict['body'].endswith("\n\n"):
                 msgdict['body'] += '\n\n'
 
@@ -485,18 +517,20 @@ class MailNotifier(service.BuildbotService):
     def sendmail(self, s, recipients):
         result = defer.Deferred()
 
-        if self.smtpUser and self.smtpPassword:
-            useAuth = True
-        else:
-            useAuth = False
+        useAuth = self.smtpUser and self.smtpPassword
 
+        s = unicode2bytes(s)
         sender_factory = ESMTPSenderFactory(
             self.smtpUser, self.smtpPassword,
-            self.fromaddr, recipients, StringIO(s),
+            self.fromaddr, recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
-        reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
+        if self.useSmtps:
+            reactor.connectSSL(self.relayhost, self.smtpPort,
+                               sender_factory, ssl.ClientContextFactory())
+        else:
+            reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
 
         return result
 
@@ -504,3 +538,21 @@ class MailNotifier(service.BuildbotService):
         s = m.as_string()
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
         return self.sendmail(s, recipients)
+
+    @defer.inlineCallbacks
+    def workerMissing(self, key, worker):
+        if not worker['notify']:
+            return
+        msgdict = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
+        text = msgdict['body'].encode(ENCODING)
+        m = Message()
+        m.set_payload(text, ENCODING)
+        m.set_type("text/%s" % msgdict['type'])
+        m['Date'] = formatdate(localtime=True)
+        if 'subject' in msgdict:
+            m['Subject'] = msgdict['subject']
+        else:
+            m['Subject'] = "Buildbot worker {name} missing".format(**worker)
+        m['From'] = self.fromaddr
+        recipients = self.processRecipients(worker['notify'], m)
+        yield self.sendMessage(m, recipients)

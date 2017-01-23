@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -272,7 +277,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
             # set up a running build with some steps
             fakedb.Builder(id=77, name='b1'),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
             fakedb.BuildRequestClaim(brid=82, masterid=14,

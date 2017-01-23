@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os.path
 import signal
 
@@ -28,7 +31,9 @@ from twisted.spread import pb
 from buildbot_worker.base import BotBase
 from buildbot_worker.base import WorkerBase
 from buildbot_worker.base import WorkerForBuilderBase
+from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.pbutil import ReconnectingPBClientFactory
+from buildbot_worker.util import HangCheckFactory
 
 
 class UnknownCommand(pb.Error):
@@ -164,6 +169,9 @@ class Worker(WorkerBase, service.MultiService):
         if keepalive == 0:
             keepalive = None
 
+        name = unicode2bytes(name, self.bot.unicode_encoding)
+        passwd = unicode2bytes(passwd, self.bot.unicode_encoding)
+
         self.numcpus = numcpus
         self.shutdown_loop = None
 
@@ -178,8 +186,13 @@ class Worker(WorkerBase, service.MultiService):
         bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
-        self.connection = c = internet.TCPClient(buildmaster_host, port, bf)
+        self.connection = c = internet.TCPClient(
+            buildmaster_host, port,
+            HangCheckFactory(bf, hung_callback=self._hung_connection))
         c.setServiceParent(self)
+
+    def _hung_connection(self):
+        log.msg("connection attempt timed out (is the port number correct?)")
 
     def startService(self):
         WorkerBase.startService(self)

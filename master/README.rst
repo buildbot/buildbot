@@ -1,7 +1,7 @@
 Buildbot: The Continuous Integration Framework
 ==============================================
 
-:Site: http://buildbot.net
+:Site: https://buildbot.net
 :Original author: Brian Warner <warner-buildbot @ lothar . com>
 :Current maintainer: Dustin J. Mitchell <dustin@buildbot.net>
 
@@ -22,12 +22,28 @@ Buildbot is an open-source continuous integration framework for automating softw
 Documentation
 -------------
 
-See http://docs.buildbot.net/current/ for documentation of the current version of Buildbot.
+See https://docs.buildbot.net/current/ for documentation of the current version of Buildbot.
+
+Docker container
+----------------
+Buildbot comes with a ready to use docker container available at buildbot/buildbot-master
+Following environment variables are supported for configuration:
+
+* ``BUILDBOT_CONFIG_URL``: http url to a config tarball.
+    The tarball must be in the .tar.gz format.
+    The tarball must contain a directory, which will contain a master.cfg file in it.
+    The tarball may contain a twisted.tac file in it, which can be used to configure the twisted logging system (e.g to log in logstash instead of the default stdout).
+    The tarball will be extracted in a directory named ``$BUILDBOT_CONFIG_DIR`` in the master directory, and can contain additional python module that the master.cfg can load.
+    If ``BUILDBOT_CONFIG_URL`` does not end with .tar.gz, it is considered to be an URL to the direct ``master.cfg``
+
+* ``BUILDBOT_CONFIG_DIR`` directory where to extract the config tarball within the master directory.
+  It is important so that you can do relative imports in your master.cfg like it is done in the metabbotcfg (https://github.com/buildbot/metabbotcfg)
+
 
 Requirements
 ------------
 
-See http://docs.buildbot.net/current/manual/installation.html
+See https://docs.buildbot.net/current/manual/installation/index.html
 
 Briefly: python, Twisted, Jinja2, simplejson, and SQLite.
 Simplejson and SQLite are included with recent versions of Python.
@@ -40,7 +56,7 @@ Please send your patches to https://github.com/buildbot/buildbot/
 Support
 -------
 
-Please send questions, bugs, patches, etc, to the buildbot-devel mailing list reachable through http://buildbot.net/, so that everyone can see them.
+Please send questions, bugs, patches, etc, to the buildbot-devel mailing list reachable through https://buildbot.net/, so that everyone can see them.
 
 Copying
 -------

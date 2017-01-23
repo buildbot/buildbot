@@ -12,22 +12,28 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet.interfaces import IAddress
 from twisted.internet.interfaces import ITransport
 from twisted.protocols import basic
-from zope.interface import implements
+from zope.interface import implementer
+
+from buildbot.util import unicode2bytes
 
 
+@implementer(IAddress)
 class NullAddress(object):
 
     "an address for NullTransport"
-    implements(IAddress)
 
 
+@implementer(ITransport)
 class NullTransport(object):
 
     "a do-nothing transport to make NetstringReceiver happy"
-    implements(ITransport)
 
     def write(self, data):
         raise NotImplementedError
@@ -62,6 +68,7 @@ class NetstringParser(basic.NetstringReceiver):
         self.strings = []
 
     def feed(self, data):
+        data = unicode2bytes(data)
         self.dataReceived(data)
         # dataReceived handles errors unusually quietly!
         if self.brokenPeer:

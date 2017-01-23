@@ -12,17 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import email.utils as email_utils
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import itervalues
+from future.utils import string_types
+
 import re
 import traceback
 
-from future.utils import iteritems
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import config
 from buildbot.process.properties import Properties
+from buildbot.reporters.mail import VALID_EMAIL_ADDR
 from buildbot.schedulers import base
 from buildbot.util import identifiers
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
@@ -264,8 +269,8 @@ class UserNameParameter(StringParameter):
         if not s and not self.required:
             return s
         if self.need_email:
-            e = email_utils.parseaddr(s)
-            if e[0] == '' or e[1] == '':
+            res = VALID_EMAIL_ADDR.search(s)
+            if res is None:
                 raise ValidationError("%s: please fill in email address in the "
                                       "form 'User <email@email.com>'" % (self.name,))
         return s
@@ -348,7 +353,7 @@ class WorkerChoiceParameter(ChoiceStringParameter):
     def updateFromKwargs(self, kwargs, **unused):
         workername = self.getFromKwargs(kwargs)
         if workername == self.anySentinel:
-            # no preference, so dont set a parameter at all
+            # no preference, so don't set a parameter at all
             return
         ChoiceStringParameter.updateFromKwargs(self, kwargs=kwargs, **unused)
 
@@ -363,6 +368,8 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
+
+
 deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
                                 compat_name="BuildslaveChoiceParameter")
 
@@ -410,7 +417,7 @@ class NestedParameter(BaseParameter):
 
     def setParent(self, parent):
         BaseParameter.setParent(self, parent)
-        for field in self.fields:
+        for field in self.fields:  # pylint: disable=not-an-iterable
             field.setParent(self)
 
     @defer.inlineCallbacks
@@ -419,7 +426,7 @@ class NestedParameter(BaseParameter):
            called by child classes to fix up the fullName->name conversions."""
 
         childProperties = {}
-        for field in self.fields:
+        for field in self.fields:  # pylint: disable=not-an-iterable
             yield collector.collectValidationErrors(field.fullName,
                                                     field.updateFromKwargs,
                                                     kwargs=kwargs,
@@ -446,8 +453,10 @@ class NestedParameter(BaseParameter):
 
     def getSpec(self):
         ret = BaseParameter.getSpec(self)
+        # pylint: disable=not-an-iterable
         ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
+
 
 ParameterGroup = NestedParameter
 
@@ -536,7 +545,7 @@ class CodebaseParameter(NestedParameter):
         for k, v in iteritems(fields_dict):
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
-            elif isinstance(v, basestring):
+            elif isinstance(v, string_types):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
@@ -671,7 +680,7 @@ class ForceScheduler(base.BaseScheduler):
 
         codebase_dict = {}
         for codebase in codebases:
-            if isinstance(codebase, basestring):
+            if isinstance(codebase, string_types):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
                 config.error("ForceScheduler '%s': 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (
@@ -768,9 +777,9 @@ class ForceScheduler(base.BaseScheduler):
         collector = ValidationErrorCollector()
         reason = yield collector.collectValidationErrors(self.reason.fullName,
                                                          self.reason.getFromKwargs, kwargs)
-        if owner is None:
-            owner = yield collector.collectValidationErrors(self.owner.fullName,
-                                                            self.owner.getFromKwargs, kwargs)
+        if owner is None or owner == "anonymous":
+            owner = yield collector.collectValidationErrors(self.username.fullName,
+                                                            self.username.getFromKwargs, kwargs)
 
         properties, changeids, sourcestamps = yield self.gatherPropertiesAndChanges(
             collector, **kwargs)

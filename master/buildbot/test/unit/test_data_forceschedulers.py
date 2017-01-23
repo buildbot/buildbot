@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -136,12 +140,12 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_existing(self):
         res = yield self.callGet(('forceschedulers', "defaultforce"))
         self.validateData(res)
-        self.assertEquals(res, expected_default)
+        self.assertEqual(res, expected_default)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
         res = yield self.callGet(('forceschedulers', 'foo'))
-        self.assertEquals(res, None)
+        self.assertEqual(res, None)
 
 
 class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -162,4 +166,4 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_existing(self):
         res = yield self.callGet(('forceschedulers', ))
-        self.assertEquals(res, [expected_default])
+        self.assertEqual(res, [expected_default])

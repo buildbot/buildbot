@@ -12,13 +12,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import string
 import textwrap
 
 from twisted.python import runtime
 from twisted.python import usage
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot import config as config_module
@@ -32,7 +36,7 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def setUp(self):
         self.setUpDirs('test')
-        self.stdout = cStringIO.StringIO()
+        self.stdout = NativeStringIO()
         self.setUpStdoutAssertions()
 
     def test_isBuildmasterDir_no_dir(self):
@@ -46,6 +50,7 @@ class TestIBD(dirs.DirsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
         self.assertInStdout('invalid buildmaster directory')
 
     def test_isBuildmasterDir_no_Application(self):
+        # Loading of pre-0.9.0 buildbot.tac file should fail.
         with open(os.path.join('test', 'buildbot.tac'), 'w') as f:
             f.write("foo\nx = Application('buildslave')\nbar")
         self.assertFalse(base.isBuildmasterDir(os.path.abspath('test')))
@@ -264,7 +269,7 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         self.assertInStdout('error while reading')
 
     def test_loadOptionsFile_toomany(self):
-        subdir = os.path.join(self.dir, *tuple(string.lowercase))
+        subdir = os.path.join(self.dir, *tuple(string.ascii_lowercase))
         os.makedirs(subdir)
         self.do_loadOptionsFile(_here=subdir, exp={})
         self.assertInStdout('infinite glories')

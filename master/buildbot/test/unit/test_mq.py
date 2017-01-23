@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -47,6 +52,11 @@ class Tests(interfaces.InterfaceTests):
 
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
+            pass
+
+    def test_signature_waitUntilEvent(self):
+        @self.assertArgSpecMatches(self.mq.waitUntilEvent)
+        def waitUntilEvent(self, filter, check_callback):
             pass
 
 
@@ -113,6 +123,16 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
         qref.stopConsuming()
 
         self.assertTrue(cb.called)
+
+    @defer.inlineCallbacks
+    def test_waitUntilEvent_check_false(self):
+        d = self.mq.waitUntilEvent(('abc',), lambda: False)
+        self.assertEqual(d.called, False)
+        self.mq.produce(('abc',), dict(x=1))
+        self.assertEqual(d.called, True)
+        res = yield d
+        self.assertEqual(res, (('abc',), dict(x=1)))
+    timeout = 3  # those tests should not run long
 
 
 class TestFakeMQ(unittest.TestCase, Tests):

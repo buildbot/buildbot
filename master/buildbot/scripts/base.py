@@ -12,7 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import copy
 import os
@@ -111,20 +115,25 @@ def isBuildmasterDir(dir):
     return True
 
 
-def getConfigFromTac(basedir):
+def getConfigFromTac(basedir, quiet=False):
     tacFile = os.path.join(basedir, 'buildbot.tac')
     if os.path.exists(tacFile):
         # don't mess with the global namespace, but set __file__ for
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
-        execfile(tacFile, tacGlobals)
+        try:
+            exec(open(tacFile).read(), tacGlobals)
+        except Exception:
+            if not quiet:
+                traceback.print_exc()
+            raise
         return tacGlobals
     return None
 
 
-def getConfigFileFromTac(basedir):
+def getConfigFileFromTac(basedir, quiet=False):
     # execute the .tac file to see if its configfile location exists
-    config = getConfigFromTac(basedir)
+    config = getConfigFromTac(basedir, quiet=quiet)
     if config:
         return config.get("configfile", "master.cfg")
     else:
@@ -154,6 +163,7 @@ class SubcommandOptions(usage.Options):
             cls.optParameters = op = copy.deepcopy(cls.optParameters)
             if self.buildbotOptions:
                 optfile = self.optionsFile = self.loadOptionsFile()
+                # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i in range(len(op)):
                         if (op[i][0] == option_name
@@ -220,7 +230,7 @@ class SubcommandOptions(usage.Options):
                         raise
                     break
 
-        for k in localDict.keys():
+        for k in list(localDict.keys()):  # pylint: disable=consider-iterating-dictionary
             if k.startswith("__"):
                 del localDict[k]
         return localDict
@@ -257,6 +267,6 @@ class BasedirMixin(object):
             raise usage.UsageError("I wasn't expecting so many arguments")
 
     def postOptions(self):
-        # get an unambiguous, epxnaed basedir, including expanding '~', which
+        # get an unambiguous, expanded basedir, including expanding '~', which
         # may be useful in a .buildbot/config file
         self['basedir'] = os.path.abspath(os.path.expanduser(self['basedir']))

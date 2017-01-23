@@ -13,18 +13,22 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import shutil
 import socket
 
 from mock import Mock
+
 from twisted.cred import checkers
 from twisted.cred import portal
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.spread import pb
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot_worker import bot
 from buildbot_worker.test.util import misc
@@ -47,13 +51,12 @@ class MasterPerspective(pb.Avatar):
             on_keepalive()
 
 
+@implementer(portal.IRealm)
 class MasterRealm(object):
 
     def __init__(self, perspective, on_attachment):
         self.perspective = perspective
         self.on_attachment = on_attachment
-
-    implements(portal.IRealm)
 
     def requestAvatar(self, avatarId, mind, *interfaces):
         assert pb.IPerspective in interfaces
@@ -100,7 +103,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.realm = MasterRealm(perspective, on_attachment)
         p = portal.Portal(self.realm)
         p.registerChecker(
-            checkers.InMemoryUsernamePasswordDatabaseDontUse(testy="westy"))
+            checkers.InMemoryUsernamePasswordDatabaseDontUse(testy=b"westy"))
         self.listeningport = reactor.listenTCP(
             0, pb.PBServerFactory(p), interface='127.0.0.1')
         # return the dynamically allocated port number
@@ -195,7 +198,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         self.worker.startService()
 
         def check(ign):
-            self.assertEquals(called, [('shutdown',)])
+            self.assertEqual(called, [('shutdown',)])
         d.addCallback(check)
 
         return d
@@ -226,7 +229,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         worker._checkShutdownFile()
 
         # We shouldn't have called gracefulShutdown
-        self.assertEquals(worker.gracefulShutdown.call_count, 0)
+        self.assertEqual(worker.gracefulShutdown.call_count, 0)
 
         # Pretend that the file exists now, with an mtime of 2
         exists.return_value = True
@@ -234,13 +237,13 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         worker._checkShutdownFile()
 
         # Now we should have changed gracefulShutdown
-        self.assertEquals(worker.gracefulShutdown.call_count, 1)
+        self.assertEqual(worker.gracefulShutdown.call_count, 1)
 
         # Bump the mtime again, and make sure we call shutdown again
         mtime.return_value = 3
         worker._checkShutdownFile()
-        self.assertEquals(worker.gracefulShutdown.call_count, 2)
+        self.assertEqual(worker.gracefulShutdown.call_count, 2)
 
         # Try again, we shouldn't call shutdown another time
         worker._checkShutdownFile()
-        self.assertEquals(worker.gracefulShutdown.call_count, 2)
+        self.assertEqual(worker.gracefulShutdown.call_count, 2)

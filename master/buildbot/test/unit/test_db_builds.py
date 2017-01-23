@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import lrange
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 
+from buildbot.data import resultspec
 from buildbot.db import builds
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -43,7 +49,7 @@ class Tests(interfaces.InterfaceTests):
         fakedb.BuildRequest(id=42, buildsetid=20, builderid=88),
         fakedb.Master(id=88),
         fakedb.Master(id=89, name="bar"),
-        fakedb.Worker(id=13, name='sl'),
+        fakedb.Worker(id=13, name='wrk'),
         fakedb.Worker(id=12, name='sl2'),
     ]
 
@@ -92,7 +98,8 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuilds(self):
         @self.assertArgSpecMatches(self.db.builds.getBuilds)
-        def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
+        def getBuilds(self, builderid=None, buildrequestid=None, workerid=None,
+                      complete=None, resultSpec=None):
             pass
 
     def test_signature_addBuild(self):
@@ -259,7 +266,7 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData + self.threeBuilds)
         for buildid in (50, 51, 52):
             props = yield self.db.builds.getBuildProperties(buildid)
-            self.assertEquals(0, len(props))
+            self.assertEqual(0, len(props))
 
     @defer.inlineCallbacks
     def testsetandgetProperties(self):
@@ -299,7 +306,7 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData)
 
         # add new builds at *just* the wrong time, repeatedly
-        numbers = range(1, 8)
+        numbers = lrange(1, 8)
 
         def raceHook(conn):
             if not numbers:
@@ -321,6 +328,58 @@ class RealTests(Tests):
                                  'started_at': epoch2datetime(TIME1),
                                  'complete_at': None, 'state_string': u'test test2',
                                  'results': None})
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecFilter(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('complete_at', 'ne', [None])])
+        rs.fieldMapping = {'complete_at': 'builds.complete_at'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[52]])
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecOrder(self):
+        rs = resultspec.ResultSpec(order=['-started_at'])
+        rs.fieldMapping = {'started_at': 'builds.started_at'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+
+        # applying the spec in the db layer should have emptied the order in
+        # resultSpec
+        self.assertEqual(rs.order, None)
+        # assert applying the same order at the data layer will give the same
+        # results
+        rs = resultspec.ResultSpec(order=['-started_at'])
+        ordered_bdicts = rs.apply(bdicts)
+        self.assertEqual(ordered_bdicts, bdicts)
+
+        # assert applying a oposite order at the data layer will give different
+        # results
+        rs = resultspec.ResultSpec(order=['started_at'])
+        ordered_bdicts = rs.apply(bdicts)
+        self.assertNotEqual(ordered_bdicts, bdicts)
+
+    @defer.inlineCallbacks
+    def test_getBuilds_limit(self):
+        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
+        rs.fieldMapping = {'started_at': 'builds.started_at'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        # applying the spec in the db layer should have emptied the limit and
+        # offset in resultSpec
+        self.assertEqual(rs.limit, None)
+        self.assertEqual(rs.offset, None)
+
+        # assert applying the same filter at the data layer will give the same
+        # results
+        rs = resultspec.ResultSpec(order=['-started_at'], limit=1, offset=2)
+        bdicts2 = yield self.db.builds.getBuilds()
+        ordered_bdicts = rs.apply(bdicts2)
+        self.assertEqual(ordered_bdicts, bdicts)
 
 
 class TestFakeDB(unittest.TestCase, Tests):

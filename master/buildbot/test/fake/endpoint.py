@@ -13,9 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-# This is a static resource type and set of endpoints uesd as common data by
+from __future__ import absolute_import
+from __future__ import print_function
+# This is a static resource type and set of endpoints used as common data by
 # tests.
 from future.utils import itervalues
+
 from twisted.internet import defer
 
 from buildbot.data import base

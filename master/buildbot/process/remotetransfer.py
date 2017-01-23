@@ -13,17 +13,16 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import tarfile
 import tempfile
+from io import BytesIO
 
+from buildbot.util import unicode2bytes
 from buildbot.worker.protocols import base
-
-try:
-    from cStringIO import StringIO
-    assert StringIO
-except ImportError:
-    from StringIO import StringIO
 
 
 """
@@ -58,6 +57,7 @@ class FileWriter(base.FileWriterImpl):
         @type  data: C{string}
         @param data: String of data to write
         """
+        data = unicode2bytes(data)
         if self.remaining is not None:
             if len(data) > self.remaining:
                 data = data[:self.remaining]
@@ -71,7 +71,7 @@ class FileWriter(base.FileWriterImpl):
 
     def remote_close(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         self.fp.close()
         self.fp = None
@@ -114,7 +114,7 @@ class DirectoryWriter(FileWriter):
 
     def remote_unpack(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         # Make sure remote_close is called, otherwise atomic rename wont happen
         self.remote_close()
@@ -161,7 +161,7 @@ class FileReader(base.FileReaderImpl):
 
     def remote_close(self):
         """
-        Called by remote worker to state that no more data will be transfered
+        Called by remote worker to state that no more data will be transferred
         """
         if self.fp is not None:
             self.fp.close()
@@ -197,4 +197,5 @@ class StringFileReader(FileReader):
     """
 
     def __init__(self, s):
-        FileReader.__init__(self, StringIO(s))
+        s = unicode2bytes(s)
+        FileReader.__init__(self, BytesIO(s))

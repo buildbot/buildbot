@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import os
 
 from twisted.python import log
@@ -31,7 +35,7 @@ def getCommand(name):
     # e.g. under MSysGit/Windows, there is both a git.cmd and a
     # git.exe on path, but we want the git.exe, since the git.cmd
     # does not seem to work properly with regard to errors raised
-    # and catched in buildbot worker command (vcs.py)
+    # and caught in buildbot worker command (vcs.py)
     #
     if runtime.platformType == 'win32' and len(possibles) > 1:
         possibles_exe = which(name + ".exe")
@@ -39,9 +43,11 @@ def getCommand(name):
             return possibles_exe[0]
     return possibles[0]
 
+
 # this just keeps pyflakes happy on non-Windows systems
 if runtime.platformType != 'win32':
     WindowsError = RuntimeError
+
 
 if runtime.platformType == 'win32':  # pragma: no cover
     def rmdirRecursive(dir):
@@ -60,9 +66,9 @@ if runtime.platformType == 'win32':  # pragma: no cover
         # os.listdir below only returns a list of unicode filenames if the parameter is unicode
         # Thus, if a non-unicode-named dir contains a unicode filename, that filename will get garbled.
         # So force dir to be unicode.
-        if not isinstance(dir, unicode):
+        if not isinstance(dir, text_type):
             try:
-                dir = unicode(dir, "utf-8")
+                dir = text_type(dir, "utf-8")
             except UnicodeDecodeError:
                 log.err("rmdirRecursive: decoding from UTF-8 failed (ignoring)")
 

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.trial import unittest
@@ -68,7 +72,7 @@ class Eventually(unittest.TestCase):
 
     def test_eventually_butNotNow(self):
         eventual.eventually(self.cb, 1)
-        self.failIf(self.results != [])
+        self.assertFalse(self.results != [])
         return self.assertResults([(1,)])
 
     def test_eventually_order(self):

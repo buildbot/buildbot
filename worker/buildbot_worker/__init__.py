@@ -15,8 +15,11 @@
 #
 # Keep in sync with master/buildbot/__init__.py
 #
-# We can't put this method in utility modules, because they import dependancy packages
+# We can't put this method in utility modules, because they import dependency packages
 #
+
+from __future__ import division
+from __future__ import print_function
 from __future__ import with_statement
 
 import os
@@ -48,7 +51,7 @@ def getVersion(init_file):
 
     # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
     # no matter the number of digits for X, Y and Z
-    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?(\w|-)*)')
+    VERSION_MATCH = re.compile(br'(\d+\.\d+(\.\d+)?(\w|-)*)')
 
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
@@ -57,7 +60,14 @@ def getVersion(init_file):
         if (not p.returncode) and out:
             v = VERSION_MATCH.search(out)
             if v:
-                return v.group(1)
+                version = v.group(1)
+                # Always return version of type str on Python 2 and 3.
+                if isinstance(version, str):
+                    # Python 2
+                    return version
+                else:
+                    # Python 3
+                    return version.decode("utf-8")
     except OSError:
         pass
 

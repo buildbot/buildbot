@@ -1,0 +1,17 @@
+div.logpreview.panel(ng-class="logpreview.log.name=='err.html' && 'panel-danger' || 'panel-default'")
+  div.panel-heading
+    .panel-title
+      .flex-row
+        div.flex-grow-3 {{logpreview.log.name}}
+        div.flex-grow-1
+            div.pull-right
+                a(ui-sref="log({builder:logpreview.builderid, build:logpreview.buildnumber, step: logpreview.step.number, log:logpreview.log.slug})")
+                  | #{' '}view all {{logpreview.log.num_lines}} line{{logpreview.log.num_lines > 1?'s':''}}
+                | #{' '}
+                a.btn.btn-default.btn-xs(ng-href="api/v2/logs/{{logpreview.log.logid}}/raw", description="download log")
+                  i.fa.fa-download
+                  | #{' '} download
+  pre.select-content.log(ng-show="logpreview.log.type!='h'")
+    div(ng-repeat="line in logpreview.log.lines", style="height:18px")
+        span.no-wrap(data-linenumber-content="{{line.number}}", class="{{line.class}}", ng-bind-html="line.content")
+  div.panel-body(ng-if="logpreview.log.type=='h'", ng-bind-html="logpreview.log.content")

@@ -65,7 +65,7 @@ The following feature will be implemented for Buildbot 0.9.1 Milestone.
 * Multimaster is not supported as of Buildbot 0.9.0. http://trac.buildbot.net/ticket/2644
 
 * Not all status plugin are converted to the new reporter API.
-  Only email and gerrit reporters are fully supported.
+  Only email and Gerrit reporters are fully supported.
   Irc support is limited, and not converted to reporter api
   http://trac.buildbot.net/ticket/2648
 
@@ -198,8 +198,8 @@ Fixes
 
 * :bb:chsrc:`P4Source`'s ``server_tz`` parameter now works correctly.
 
-* The ``revlink`` in changes broduced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
-* :bb:chsrc:`PBChangeSource`'s git hook :file:`contrib/git_buildbot.py` now supports git tags
+* The ``revlink`` in changes produced by the Bitbucket hook now correctly includes the ``changes/`` portion of the URL.
+* :bb:chsrc:`PBChangeSource`'s git hook :src:`master/contrib/git_buildbot.py` now supports git tags
 
   A pushed git tag generates a change event with the ``branch`` property equal to the tag name.
   To schedule builds based on buildbot tags, one could use something like this:
@@ -247,7 +247,7 @@ Deprecations, Removals, and Non-Compatible Changes
 ..
     TODO: 0.9.0 release notes should include a warning similar to that in 0.8.9 about new-style steps
 
-* `buildbot.util.flatten` falttens lists and tuples by default (previously only lists).
+* `buildbot.util.flatten` flattens lists and tuples by default (previously only lists).
   Additionally, flattening something that isn't the type to flatten has different behaviour.
   Previously, it would return the original value.
   Instead, it now returns an array with the original value as the sole element.
@@ -355,7 +355,7 @@ Changes and Removals
 
     - setDefaultWorkdir() has been deprecated, but is now behaving the same for all the steps: Setting self.workdir if not already set
 
-* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overriden to support dynamic triggering.
+* :bb:step:`Trigger` now has a ``getSchedulersAndProperties`` method that can ve overridden to support dynamic triggering.
 
 * ```master.cfg`` is now parsed from a thread. Previously it was run in the main thread, and thus slowing down the master in case of big config, or network access done to generate the config.
 

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 from twisted.internet import defer
@@ -146,7 +150,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
     @defer.inlineCallbacks
     def test_poll_several_heads(self):
-        # If there are several heads on the named branch, the poller musn't
+        # If there are several heads on the named branch, the poller mustn't
         # climb (good enough for now, ideally it should even go to the common
         # ancestor)
         self.expectCommands(
@@ -193,7 +197,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d.addCallback(self.check_current_rev(5))
 
         def check_changes(_):
-            self.assertEquals(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             change = self.master.data.updates.changesAdded[0]
             self.assertEqual(change['revision'], u'784bd')
             self.assertEqual(change['comments'], u'Comment for rev 5')

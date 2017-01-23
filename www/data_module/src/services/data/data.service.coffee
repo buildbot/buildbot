@@ -22,7 +22,7 @@ class Data extends Provider
                 [args, query] = dataUtilsService.splitOptions(args)
                 subscribe = accessor = undefined
 
-                # subscribe for changes if 'subscribe' is true or undefined
+                # subscribe for changes if 'subscribe' is true
                 subscribe = query.subscribe == true
                 accessor = query.accessor
                 if subscribe and not accessor

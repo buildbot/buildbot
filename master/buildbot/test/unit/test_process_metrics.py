@@ -12,6 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import lrange
+
 import gc
 import sys
 
@@ -43,25 +49,25 @@ class TestMetricCountEvent(TestMetricBase):
     def testIncrement(self):
         metrics.MetricCountEvent.log('num_widgets', 1)
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['num_widgets'], 1)
+        self.assertEqual(report['counters']['num_widgets'], 1)
 
         metrics.MetricCountEvent.log('num_widgets', 1)
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['num_widgets'], 2)
+        self.assertEqual(report['counters']['num_widgets'], 2)
 
     def testDecrement(self):
         metrics.MetricCountEvent.log('num_widgets', 1)
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['num_widgets'], 1)
+        self.assertEqual(report['counters']['num_widgets'], 1)
 
         metrics.MetricCountEvent.log('num_widgets', -1)
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['num_widgets'], 0)
+        self.assertEqual(report['counters']['num_widgets'], 0)
 
     def testAbsolute(self):
         metrics.MetricCountEvent.log('num_widgets', 10, absolute=True)
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['num_widgets'], 10)
+        self.assertEqual(report['counters']['num_widgets'], 10)
 
     def testCountMethod(self):
         @metrics.countMethod('foo_called')
@@ -71,7 +77,7 @@ class TestMetricCountEvent(TestMetricBase):
         for i in range(10):
             foo()
         report = self.observer.asDict()
-        self.assertEquals(report['counters']['foo_called'], 10)
+        self.assertEqual(report['counters']['foo_called'], 10)
 
 
 class TestMetricTimeEvent(TestMetricBase):
@@ -79,7 +85,7 @@ class TestMetricTimeEvent(TestMetricBase):
     def testManualEvent(self):
         metrics.MetricTimeEvent.log('foo_time', 0.001)
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['foo_time'], 0.001)
+        self.assertEqual(report['timers']['foo_time'], 0.001)
 
     def testTimer(self):
         clock = task.Clock()
@@ -91,7 +97,7 @@ class TestMetricTimeEvent(TestMetricBase):
         t.stop()
 
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['foo_time'], 5)
+        self.assertEqual(report['timers']['foo_time'], 5)
 
     def testStartStopDecorators(self):
         clock = task.Clock()
@@ -111,7 +117,7 @@ class TestMetricTimeEvent(TestMetricBase):
         foo()
         bar()
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['foo_time'], 10)
+        self.assertEqual(report['timers']['foo_time'], 10)
 
     def testTimeMethod(self):
         clock = task.Clock()
@@ -122,14 +128,14 @@ class TestMetricTimeEvent(TestMetricBase):
             return "foo!"
         foo()
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['foo_time'], 5)
+        self.assertEqual(report['timers']['foo_time'], 5)
 
     def testAverages(self):
-        data = range(10)
+        data = lrange(10)
         for i in data:
             metrics.MetricTimeEvent.log('foo_time', i)
         report = self.observer.asDict()
-        self.assertEquals(
+        self.assertEqual(
             report['timers']['foo_time'], sum(data) / float(len(data)))
 
 
@@ -146,9 +152,9 @@ class TestPeriodicChecks(TestMetricBase):
 
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], 0)
-        self.assertEquals(report['alarms']['gc.garbage'][0], 'OK')
+        self.assertEqual(report['timers']['reactorDelay'], 0)
+        self.assertEqual(report['counters']['gc.garbage'], 0)
+        self.assertEqual(report['alarms']['gc.garbage'][0], 'OK')
 
     def testUncollectable(self):
         # make some fake garbage
@@ -160,9 +166,9 @@ class TestPeriodicChecks(TestMetricBase):
 
         # We should have 0 reactor delay since we're using a fake clock
         report = self.observer.asDict()
-        self.assertEquals(report['timers']['reactorDelay'], 0)
-        self.assertEquals(report['counters']['gc.garbage'], 2)
-        self.assertEquals(report['alarms']['gc.garbage'][0], 'WARN')
+        self.assertEqual(report['timers']['reactorDelay'], 0)
+        self.assertEqual(report['counters']['gc.garbage'], 2)
+        self.assertEqual(report['alarms']['gc.garbage'][0], 'WARN')
 
     def testGetRSS(self):
         self.assertTrue(metrics._get_rss() > 0)
@@ -177,20 +183,20 @@ class TestReconfig(TestMetricBase):
         new_config = self.master.config
 
         # starts up without running tasks
-        self.assertEquals(observer.log_task, None)
-        self.assertEquals(observer.periodic_task, None)
+        self.assertEqual(observer.log_task, None)
+        self.assertEqual(observer.periodic_task, None)
 
         # enable log_interval
         new_config.metrics = dict(log_interval=10, periodic_interval=0)
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertTrue(observer.log_task)
-        self.assertEquals(observer.periodic_task, None)
+        self.assertEqual(observer.periodic_task, None)
 
         # disable that and enable periodic_interval
         new_config.metrics = dict(periodic_interval=10, log_interval=0)
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertTrue(observer.periodic_task)
-        self.assertEquals(observer.log_task, None)
+        self.assertEqual(observer.log_task, None)
 
         # Make the periodic check run
         self.clock.pump([0.1])
@@ -199,14 +205,14 @@ class TestReconfig(TestMetricBase):
         new_config.metrics = None
         observer.reconfigServiceWithBuildbotConfig(new_config)
         self.assertFalse(observer.enabled)
-        self.assertEquals(observer.log_task, None)
-        self.assertEquals(observer.periodic_task, None)
+        self.assertEqual(observer.log_task, None)
+        self.assertEqual(observer.periodic_task, None)
 
         # disable both
         new_config.metrics = dict(periodic_interval=0, log_interval=0)
         observer.reconfigServiceWithBuildbotConfig(new_config)
-        self.assertEquals(observer.log_task, None)
-        self.assertEquals(observer.periodic_task, None)
+        self.assertEqual(observer.log_task, None)
+        self.assertEqual(observer.periodic_task, None)
 
         # enable both
         new_config.metrics = dict(periodic_interval=10, log_interval=10)
@@ -232,21 +238,21 @@ class TestReports(unittest.TestCase):
         handler = metrics.MetricCountHandler(None)
         handler.handle({}, metrics.MetricCountEvent('num_foo', 1))
 
-        self.assertEquals("Counter num_foo: 1", handler.report())
-        self.assertEquals({"counters": {"num_foo": 1}}, handler.asDict())
+        self.assertEqual("Counter num_foo: 1", handler.report())
+        self.assertEqual({"counters": {"num_foo": 1}}, handler.asDict())
 
     def testMetricTimeReport(self):
         handler = metrics.MetricTimeHandler(None)
         handler.handle({}, metrics.MetricTimeEvent('time_foo', 1))
 
-        self.assertEquals("Timer time_foo: 1", handler.report())
-        self.assertEquals({"timers": {"time_foo": 1}}, handler.asDict())
+        self.assertEqual("Timer time_foo: 1", handler.report())
+        self.assertEqual({"timers": {"time_foo": 1}}, handler.asDict())
 
     def testMetricAlarmReport(self):
         handler = metrics.MetricAlarmHandler(None)
         handler.handle({}, metrics.MetricAlarmEvent(
             'alarm_foo', msg='Uh oh', level=metrics.ALARM_WARN))
 
-        self.assertEquals("WARN alarm_foo: Uh oh", handler.report())
-        self.assertEquals(
+        self.assertEqual("WARN alarm_foo: Uh oh", handler.report())
+        self.assertEqual(
             {"alarms": {"alarm_foo": ("WARN", "Uh oh")}}, handler.asDict())

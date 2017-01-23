@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import time
 
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -58,7 +63,7 @@ class Basic(unittest.TestCase):
             exception = e
         errors = self.flushLoggedErrors(expected_exception)
         if expect_logged_error:
-            self.assertEquals(len(errors), 1)
+            self.assertEqual(len(errors), 1)
         self.assertTrue(isinstance(exception, expected_exception))
 
     def test_do_error(self):

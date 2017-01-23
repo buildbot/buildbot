@@ -13,21 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import abc
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import log
 
 from buildbot import config
 from buildbot.reporters import utils
+from buildbot.util import httpclientservice
 from buildbot.util import service
-
-# use the 'requests' lib: http://python-requests.org
-try:
-    import txrequests
-except ImportError:
-    txrequests = None
 
 
 class HttpStatusPushBase(service.BuildbotService):
@@ -35,27 +33,21 @@ class HttpStatusPushBase(service.BuildbotService):
 
     def checkConfig(self, *args, **kwargs):
         service.BuildbotService.checkConfig(self)
-        if txrequests is None:
-            config.error("Please install txrequests and requests to use %s (pip install txrequest)" %
-                         (self.__class__,))
+        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
         if not isinstance(kwargs.get('builders'), (type(None), list)):
             config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
     def reconfigService(self, builders=None, **kwargs):
         yield service.BuildbotService.reconfigService(self)
+
         self.builders = builders
         for k, v in iteritems(kwargs):
             if k.startswith("want"):
                 self.neededDetails[k] = v
 
-    def sessionFactory(self):
-        """txrequests mocking endpoint"""
-        return txrequests.Session()
-
     @defer.inlineCallbacks
     def startService(self):
-        self.session = self.sessionFactory()
         yield service.BuildbotService.startService(self)
 
         startConsuming = self.master.mq.startConsuming
@@ -70,7 +62,6 @@ class HttpStatusPushBase(service.BuildbotService):
     def stopService(self):
         self._buildCompleteConsumer.stopConsuming()
         self._buildStartedConsumer.stopConsuming()
-        self.session.close()
 
     def buildStarted(self, key, build):
         return self.getMoreInfoAndSend(build)
@@ -97,17 +88,30 @@ class HttpStatusPushBase(service.BuildbotService):
 class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
 
-    def checkConfig(self, serverUrl, user, password, **kwargs):
+    def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
+        if user is not None and auth is not None:
+            config.error("Only one of user/password or auth must be given")
+        if user is not None:
+            config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
+        if (format_fn is not None) and not callable(format_fn):
+            config.error("format_fn must be a function")
         HttpStatusPushBase.checkConfig(self, **kwargs)
 
-    def reconfigService(self, serverUrl, user, password, **kwargs):
-        HttpStatusPushBase.reconfigService(self, **kwargs)
-        self.serverUrl = serverUrl
-        self.auth = (user, password)
+    @defer.inlineCallbacks
+    def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
+        yield HttpStatusPushBase.reconfigService(self, **kwargs)
+        if user is not None:
+            auth = (user, password)
+        if format_fn is None:
+            self.format_fn = lambda x: x
+        else:
+            self.format_fn = format_fn
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, serverUrl, auth=auth)
 
     @defer.inlineCallbacks
     def send(self, build):
-        response = yield self.session.post(self.serverUrl, build, auth=self.auth)
-        if response.status_code != 200:
+        response = yield self._http.post("", json=self.format_fn(build))
+        if response.code != 200:
             log.msg("%s: unable to upload status: %s" %
-                    (response.status_code, response.content))
+                    (response.code, response.content))

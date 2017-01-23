@@ -15,8 +15,10 @@
 #
 # Keep in sync with slave/buildslave/__init__.py
 #
-# We can't put this method in utility modules, because they import dependancy packages
-#
+# We can't put this method in utility modules, because they import dependency packages
+
+from __future__ import division
+from __future__ import print_function
 from __future__ import with_statement
 
 import os
@@ -65,3 +67,5 @@ def getVersion(init_file):
 
 
 version = getVersion(__file__)
+
+__version__ = version

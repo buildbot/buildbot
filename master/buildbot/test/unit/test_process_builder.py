@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import text_type
+
 import random
 
 import mock
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -44,8 +50,8 @@ class BuilderMixin(object):
                     **config_kwargs):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory)
+        config_args = dict(name=name, workername="wrk", builddir="bdir",
+                           workerbuilddir="wbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(
@@ -104,8 +110,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (worker, [brids])
         builds_started = [
-            (sl.name, [br.id for br in buildreqs])
-            for (sl, buildreqs) in self.builds_started]
+            (wrk.name, [br.id for br in buildreqs])
+            for (wrk, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     def setWorkerForBuilders(self, workerforbuilders):
@@ -129,7 +135,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         # so we just hope this does not fail
         yield self.bldr.stopService()
         started = yield self.bldr.maybeStartBuild(None, [])
-        self.assertEquals(started, False)
+        self.assertEqual(started, False)
 
     # maybeStartBuild
     def _makeMocks(self):
@@ -435,9 +441,9 @@ class TestGetBuilderId(BuilderMixin, unittest.TestCase):
         self.assertEqual((yield self.bldr.getBuilderId()), 13)
         # and see that fbi was only called once
         fbi.assert_called_once_with(u'b1')
-        # check that the name was uniciodified
+        # check that the name was unicodified
         arg = fbi.mock_calls[0][1][0]
-        self.assertIsInstance(arg, unicode)
+        self.assertIsInstance(arg, text_type)
 
 
 class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
@@ -502,8 +508,8 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        config_args = dict(name='bldr', workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory,
+        config_args = dict(name='bldr', workername="wrk", builddir="bdir",
+                           workerbuilddir="wbdir", factory=self.factory,
                            description='Noe', tags=['NewTag'])
         new_builder_config = config.BuilderConfig(**config_args)
         new_builder_config.description = "New"

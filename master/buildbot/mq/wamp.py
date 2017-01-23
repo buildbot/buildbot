@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 from __future__ import unicode_literals
 
 import json
@@ -40,7 +44,8 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     @classmethod
     def messageTopic(cls, routingKey):
-        ifNone = lambda v, default: default if v is None else v
+        def ifNone(v, default):
+            return default if v is None else v
         # replace None values by "" in routing key
         routingKey = [ifNone(key, "") for key in routingKey]
         # then join them with "dot", and add the prefix
@@ -58,7 +63,8 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
 
     def startConsuming(self, callback, _filter, persistent_name=None):
         if persistent_name is not None:
-            print "wampmq: persistant queues are not persisted!", persistent_name, _filter
+            log.err('wampmq: persistant queues are not persisted: %s %s' %
+                    (persistent_name, _filter))
 
         qr = QueueRef(callback)
 

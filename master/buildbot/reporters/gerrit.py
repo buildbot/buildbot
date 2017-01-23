@@ -15,11 +15,16 @@
 """
 Push events to Gerrit
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import iteritems
+
 import time
 import warnings
 from distutils.version import LooseVersion
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.protocol import ProcessProtocol
@@ -105,7 +110,7 @@ def defaultSummaryCB(buildInfoList, results, master, arg):
             msg += "."
         msgs.append(msg)
 
-        if buildInfo['result'] == SUCCESS:
+        if buildInfo['result'] == SUCCESS:  # pylint: disable=simplifiable-if-statement
             success = True
         else:
             failure = True
@@ -143,11 +148,12 @@ class GerritStatusPush(service.BuildbotService):
     startArg = None
     summaryCB = None
     summaryArg = None
+    _gerrit_notify = None
 
     def reconfigService(self, server, username, reviewCB=DEFAULT_REVIEW,
                         startCB=None, port=29418, reviewArg=None,
                         startArg=None, summaryCB=DEFAULT_SUMMARY, summaryArg=None,
-                        identity_file=None, builders=None):
+                        identity_file=None, builders=None, notify=None):
 
         # If neither reviewCB nor summaryCB were specified, default to sending
         # out "summary" reviews. But if we were given a reviewCB and only a
@@ -174,6 +180,7 @@ class GerritStatusPush(service.BuildbotService):
         self.summaryCB = summaryCB
         self.summaryArg = summaryArg
         self.builders = builders
+        self._gerrit_notify = notify
 
     def _gerritCmd(self, *args):
         '''Construct a command as a list of strings suitable for
@@ -265,7 +272,7 @@ class GerritStatusPush(service.BuildbotService):
 
         self._buildStartedConsumer = yield startConsuming(
             self.buildStarted,
-            ('builds', None, 'started'))
+            ('builds', None, 'new'))
 
     def stopService(self):
         self._buildsetCompleteConsumer.stopConsuming()
@@ -396,6 +403,10 @@ class GerritStatusPush(service.BuildbotService):
             return
 
         command = self._gerritCmd("review", "--project %s" % (project,))
+
+        if self._gerrit_notify is not None:
+            command.append('--notify %s' % str(self._gerrit_notify))
+
         message = result.get('message', None)
         if message:
             command.append("--message '%s'" % message.replace("'", "\""))

@@ -15,10 +15,15 @@
 # Based on the work of Dave Peticolas for the P4poll
 # Changed to svn (using xml.dom.minidom) by Niklaus Giger
 # Hacked beyond recognition by Brian Warner
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.urllib.parse import quote_plus as urlquote_plus
+from future.utils import text_type
+
 import os
 import xml.dom.minidom
 
-from future.moves.urllib.parse import quote_plus as urlquote_plus
 from twisted.internet import defer
 from twisted.internet import utils
 from twisted.python import log
@@ -324,13 +329,13 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         changes = []
 
         for el in new_logentries:
-            revision = unicode(el.getAttribute("revision"))
+            revision = text_type(el.getAttribute("revision"))
 
             revlink = u''
 
             if self.revlinktmpl and revision:
                 revlink = self.revlinktmpl % urlquote_plus(revision)
-                revlink = unicode(revlink)
+                revlink = text_type(revlink)
 
             log.msg("Adding change revision %s" % (revision,))
             author = self._get_text(el, "author")

@@ -1,5 +1,5 @@
 #! /bin/bash
-TEST='buildbot.test buildslave.test buildbot_worker.test'
+TEST='buildbot.test buildbot_worker.test'
 
 # if stdout is a terminal define some colors
 # validate.sh can be run as hook from GUI git clients, such as git-gui
@@ -162,7 +162,7 @@ if ! $quick; then
 elif [ -z `command -v cctrial` ]; then
     warning "Skipping Python Tests ('pip install cctrial' for quick tests)"
 else
-    cctrial -H buildbot buildslave buildbot_worker || not_ok "Python tests failed"
+    cctrial -H buildbot buildbot_worker || not_ok "Python tests failed"
 fi
 
 status "checking formatting"
@@ -200,7 +200,7 @@ else
     changes_made=false
     for filename in ${py_files[@]}; do
         LINEWIDTH=$(grep -E "max-line-length" common/flake8rc | sed 's/ //g' | cut -d'=' -f 2)
-        # even if we dont enforce errors, if they can be fixed automatically, thats better..
+        # even if we don't enforce errors, if they can be fixed automatically, thats better..
         IGNORES=E123,E501,W6
         # ignore is not None for SQLAlchemy code..
         if [[ "$filename" =~ "/db/" ]]; then
@@ -238,7 +238,10 @@ elif [[ ! -f common/pylintrc ]]; then
 else
     pylint_ok=true
     for filename in ${py_files[@]}; do
-        if ! pylint --rcfile=common/pylintrc --disable=R,line-too-long --enable=W0611 --output-format=text --report=no "$filename"; then
+        if ! pylint --rcfile=common/pylintrc --disable=R,line-too-long \
+                --enable=W0611 --output-format=text --reports=no \
+                --spelling-private-dict-file=common/code_spelling_ignore_words.txt \
+                "$filename"; then
             pylint_ok=false
         fi
     done

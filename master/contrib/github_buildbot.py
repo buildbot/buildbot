@@ -5,13 +5,17 @@ github_buildbot.py is based on git_buildbot.py. Last revised on 2014-02-20.
 github_buildbot.py will determine the repository information from the JSON
 HTTP POST it receives from github.com and build the appropriate repository.
 If your github repository is private, you must add a ssh key to the github
-repository for the user who initiated the build on the buildslave.
+repository for the user who initiated the build on the worker.
 
 This version of github_buildbot.py parses v3 of the github webhook api, with the
 "application.vnd.github.v3+json" payload. Configure *only* "push" and/or
 "pull_request" events to trigger this webhook.
 
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
 
 import hmac
 import logging
@@ -130,10 +134,10 @@ class GitHubBuildBot(resource.Resource):
             self.send_changes(changes, request)
             return server.NOT_DONE_YET
 
-        except Exception, e:
+        except Exception as e:
             logging.exception(e)
             request.setResponseCode(INTERNAL_SERVER_ERROR)
-            return json.dumps({"error": e.message})
+            return json.dumps({"error": str(e)})
 
     def process_change(self, change, branch, repo, repo_url):
         files = change['added'] + change['removed'] + change['modified']
@@ -282,7 +286,7 @@ class GitHubBuildBot(resource.Resource):
             return None
 
         logging.info("New revision: %s", change['revision'][:8])
-        for key, value in change.iteritems():
+        for key, value in iteritems(change):
             logging.debug("  %s: %s", key, value)
 
         change['src'] = src

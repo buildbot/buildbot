@@ -12,8 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
 from sqlalchemy.engine.reflection import Inspector
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -78,7 +83,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             sa.Column('started_at', sa.Integer, nullable=False),
             sa.Column('complete_at', sa.Integer),
             sa.Column(
-                'state_string', sa.Text, nullable=False, server_default=''),
+                'state_string', sa.Text, nullable=False),
             sa.Column('results', sa.Integer),
         )
 

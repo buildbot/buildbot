@@ -1,0 +1,205 @@
+# BBTravis CI configuration file
+
+language: python
+
+# Available Python versions:
+# http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
+python:
+  - "2.7"
+
+env:
+  global:
+  - BUILDBOT_TEST_DB_URL=sqlite://
+  matrix:
+  # lint, docs and coverage first as they're more likely to find issues
+  - TWISTED=latest SQLALCHEMY=latest TESTS=lint
+  - TWISTED=latest SQLALCHEMY=latest TESTS=docs
+  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
+
+  # add js tests in separate job. Start it early because it is quite long
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js
+  - TWISTED=latest SQLALCHEMY=latest TESTS=tarballs
+
+  - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+  # Configuration when SQLite database is persistent between running tests
+  # (by default in other tests in-memory SQLite database is used which is
+  # recreated for each test).
+  # Helps to detect issues with incorrect database setup/cleanup in tests.
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
+  # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+  # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
+  # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
+  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
+  #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
+
+  # Test different versions of SQLAlchemy
+  - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
+  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
+
+  # Configuration to run `python setup.py test` to check this test runner.
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
+
+  # Tests for the worker on old versions of twisted.
+  - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker
+
+cache:
+  directories:
+    - $HOME/.cache/pip
+    - www/base/node_modules
+    - www/codeparameter/node_modules
+    - www/console_view/node_modules
+    - www/waterfall_view/node_modules
+    - www/nestedexample/node_modules
+    - www/base/libs
+    - www/codeparameter/libs
+    - www/console_view/libs
+    - www/waterfall_view/libs
+    - www/nestedexample/libs
+
+matrix:
+  fast_finish: true
+  include:
+    # Tests of buildbot-worker on python 2.6
+    # Specify SQLALCHEMY=latest to avoid errors installing.
+    #- python: "2.6"
+    #  env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
+    #- python: "2.6"
+    #  env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
+    # python 3 tests
+#    - python: "3.4"
+#      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
+
+# Dependencies installation commands
+install:
+  - pip install -U pip
+  # codecov is the interface to codecov.io; see after_success
+  # Install mysqlclient for tests that uses real MySQL
+  # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
+  - |
+      # pip installs
+      set -e
+      [ $TWISTED = latest ] || pip install Twisted==$TWISTED
+      [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
+      pip install -e pkg \
+                  -e 'master[tls,test]' \
+                  -e 'worker[test]' \
+                  mysqlclient \
+                  psycopg2 \
+                  pg8000 \
+                  codecov
+
+      [ $TESTS != trial_worker ] || pip install -e 'worker[test]'
+
+      [ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www
+      [ $TESTS != py3 ] || pip install -e worker future
+
+      [ $TESTS != lint ] || pip install -e './master[docs,test]'
+      # until towncrier toml is released, we need to fetch from git :-/
+      [ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'
+
+      [ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)
+      [ $TESTS != setuppy_test ] || pip install autobahn Twisted
+
+before_script:
+  # create real database for tests
+  - condition: '"mysql" in BUILDBOT_TEST_DB_URL'
+    cmd: sudo /etc/init.d/mysql start
+  - condition: '"postgresql" in BUILDBOT_TEST_DB_URL'
+    cmd: |
+        sudo /etc/init.d/postgresql start
+        # for pg8000 driver we can't use peer authentication or empty password, so set a dummy password
+        # This also serves as a way to wait that the database is ready
+        while ! psql -d bbtest -c 'ALTER USER "buildbot" WITH PASSWORD '"'x'"';' ; do sleep 1 ; done
+
+# Tests running commands
+script:
+  # make frontend_install_tests takes 17 min, so we only do it post submit
+  - title: frontend tests
+    condition: TESTS == "js" and TRAVIS_PULL_REQUEST
+    cmd: make frontend
+
+  - title: full frontend tests
+    condition: TESTS == "js" and not TRAVIS_PULL_REQUEST
+    cmd: make frontend_install_tests
+
+  - title: master and worker tests
+    condition: TESTS == "trial"
+    cmd: trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
+
+  - title: worker tests
+    condition: TESTS == "trial_worker"
+    cmd: trial  --reporter=text --rterrors buildbot_worker.test
+
+  # run tests under coverage for latest only (it's slower..)
+  - title: coverage tests
+    condition: TESTS == "coverage"
+    cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
+
+  - title: py3 tests
+    condition: TESTS == "py3"
+    cmd: trial  --reporter=text --rterrors buildbot_worker.test"
+
+  # Run additional tests in their separate job
+  - title: pylint
+    condition: TESTS == "lint"
+    cmd: make pylint
+
+  - title: flake8
+    condition: TESTS == "lint"
+    cmd: make flake8
+
+  - title: isort
+    condition: TESTS == "lint"
+    cmd: isort --check -df `git ls-files |grep '.py$'`
+
+  # Build documentation
+  - title: docs
+    condition: TESTS == "docs"
+    cmd: make docs
+
+  # Run spell checker on documentation
+  - title: spelling
+    condition: TESTS == "docs"
+    cmd: make -C master/docs SPHINXOPTS=-W spelling
+
+  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
+  - title: linkcheck
+    condition: TESTS == "docs" and not TRAVIS_PULL_REQUEST
+    cmd: make -C master/docs SPHINXOPTS=-q linkcheck
+
+  - title: maketarballs
+    condition: TESTS == "tarballs"
+    cmd: ./common/maketarballs.sh
+
+  - title: maketarballs
+    condition: TESTS == "smokes"
+    cmd: ./common/smokedist.sh
+
+notifications:
+  email: false
+
+after_success:
+  - |
+      # codecov
+      [ $TESTS != coverage ] || codecov
+
+after_script:
+  # List installed packages along with their versions.
+  - "pip list"
+
+sudo: false
+branches:
+  # Only build main-line branches.
+  only:
+    - master
+    - eight
+git:
+  depth: 300

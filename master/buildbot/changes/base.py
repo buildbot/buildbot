@@ -13,17 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IChangeSource
 from buildbot.util import service
 from buildbot.util.poll import method as poll_method
 
 
+@implementer(IChangeSource)
 class ChangeSource(service.ClusteredBuildbotService):
-    implements(IChangeSource)
 
     def describe(self):
         pass

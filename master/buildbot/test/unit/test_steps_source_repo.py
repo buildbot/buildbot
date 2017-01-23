@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 from twisted.trial import unittest
 
 from buildbot.changes.changes import Change
@@ -127,7 +132,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
-        for i in xrange(len(commands)):
+        for i in range(len(commands)):
             self.expectCommands(commands[i] + (which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
                 break
@@ -420,7 +425,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_mirror_sync(self):
         """repo downloads, with mirror synchronization issues"""
         self.mySetupStep()
-        # we dont really want the test to wait...
+        # we don't really want the test to wait...
         self.step.mirror_sync_sleep = 0.001
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")
@@ -445,7 +450,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_repo_downloads_change_missing(self):
         """repo downloads, with no actual mirror synchronization issues (still retries 2 times)"""
         self.mySetupStep()
-        # we dont really want the test to wait...
+        # we don't really want the test to wait...
         self.step.mirror_sync_sleep = 0.001
         self.step.mirror_sync_retry = 1  # on retry once
         self.build.setProperty("repo_download",

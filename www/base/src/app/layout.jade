@@ -1,15 +1,15 @@
 doctype html
-html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
+html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored', ng-app="app")
     head
         meta(charset='utf-8')
         meta(http-equiv='X-UA-Compatible', content='IE=edge,chrome=1')
-    title Buildbot
+    title(window-title) Buildbot
     meta(name='description', content='Buildbot web UI')
     meta(name='viewport', content='initial-scale=1, minimum-scale=1, user-scalable=no, maximum-scale=1, width=device-width')
     link(rel='stylesheet', href='styles.css')
     link(rel='icon', href='img/favicon.ico')
 
-    body(ng-cloak, ng-app="app")
+    body(ng-cloak)
         block content
         block footer
 
@@ -22,3 +22,11 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored')
     | {% endfor %}
     script
       | angular.module("app").constant("config", {{configjson|safe}})
+    | {% if custom_templates %}
+    script
+      | angular.module("app").run(function ($templateCache) {
+      | {% for name, html in custom_templates.items() %}
+      |  $templateCache.put("{{ name }}", {{ html|safe }});
+      | {% endfor %}
+      | })
+    | {% endif %}

@@ -12,11 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import base64
 import copy
 import sys
 
 from mock import Mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -28,11 +33,13 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import mail
 from buildbot.reporters import utils
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import ssl
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
@@ -53,7 +60,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=results, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
@@ -76,9 +83,13 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         for _id in (20,):
             self.db.insertTestData([
                 fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="sl"),
+                    buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(
                     buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="scheduler", value="checkin"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="branch", value="master"),
             ])
         res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
                                                 wantPreviousBuild=wantPreviousBuild)
@@ -258,6 +269,46 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.assertTrue(mn.isMailNeeded(build))
 
     @defer.inlineCallbacks
+    def test_isMailNeeded_schedulers_sends_mail(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          schedulers=['checkin'])
+        self.assertTrue(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
+    def test_isMailNeeded_schedulers_doesnt_send_mail(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          schedulers=['some-random-scheduler'])
+        self.assertFalse(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
+    def test_isMailNeeded_branches_sends_mail(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          branches=['master'])
+        self.assertTrue(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
+    def test_isMailNeeded_branches_doesnt_send_mail(self):
+        _, builds = yield self.setupBuildResults(SUCCESS)
+
+        build = builds[0]
+        # force tags
+        mn = yield self.setupMailNotifier('from@example.org',
+                                          branches=['some-random-branch'])
+        self.assertFalse(mn.isMailNeeded(build))
+
+    @defer.inlineCallbacks
     def run_simple_test_sends_email_for_mode(self, mode, result, shouldSend=True):
         _, builds = yield self.setupBuildResults(result)
 
@@ -380,7 +431,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
-        mn.messageFormatter.return_value = {"body": "body", "type": "text",
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
                                             "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
@@ -401,8 +452,9 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn, builds = yield self.setupBuildMessage(mode=("change",))
 
         build = builds[0]
-        mn.messageFormatter.assert_called_with(('change',), 'mybldr', build['buildset'], build, self.master,
-                                               None, [u'me@foo'])
+        mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
+            ('change',), 'mybldr', build['buildset'], build, self.master,
+            None, [u'me@foo'])
 
         mn.findInterrestedUsersEmails.assert_called_with([u'me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
@@ -514,6 +566,70 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             self.assertRaises(
                 ConfigErrors, MailNotifier,
                 'foo@example.com', extraRecipients=[invalid])
+
+    @defer.inlineCallbacks
+    def test_workerMissingSendEmail(self):
+
+        mn = yield self.setupMailNotifier('from@example.org')
+
+        mn.sendMessage = Mock()
+        yield mn.workerMissing('worker.98.complete',
+                               dict(name='myworker',
+                                    notify=["workeradmin@example.org"],
+                                    workerinfo=dict(admin="myadmin"),
+                                    last_connection="yesterday"))
+
+        mail = mn.sendMessage.call_args[0][0]
+        recipients = mn.sendMessage.call_args[0][1]
+        self.assertEqual(recipients, ['workeradmin@example.org'])
+        text = mail.get_payload()
+        self.assertIn("has noticed that the worker named myworker went away", text)
+
+    @defer.inlineCallbacks
+    def do_test_sendMessage(self, **mnKwargs):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+
+        _, builds = yield self.setupBuildResults(SUCCESS)
+        mn = yield self.setupMailNotifier('from@example.org', **mnKwargs)
+
+        mn.messageFormatter = Mock(spec=mn.messageFormatter)
+        mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
+                                                                         "subject": "subject"}
+
+        mn.findInterrestedUsersEmails = Mock(spec=mn.findInterrestedUsersEmails)
+        mn.findInterrestedUsersEmails.return_value = "<recipients>"
+
+        mn.processRecipients = Mock(spec=mn.processRecipients)
+        mn.processRecipients.return_value = "<processedrecipients>"
+
+        mn.createEmail = Mock(spec=mn.createEmail)
+        mn.createEmail.return_value.as_string = Mock(return_value="<email>")
+
+        yield mn.buildMessage("mybldr", builds, SUCCESS)
+        defer.returnValue((mn, builds))
+
+    @defer.inlineCallbacks
+    def test_sendMessageOverTcp(self):
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+
+        mn, builds = yield self.do_test_sendMessage()
+
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
+
+    @ssl.skipUnless
+    @defer.inlineCallbacks
+    def test_sendMessageOverSsl(self):
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+
+        mn, builds = yield self.do_test_sendMessage(useSmtps=True)
+
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[0][3]), {}), fakereactor.method_calls)
 
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):

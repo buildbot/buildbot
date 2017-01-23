@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -22,7 +26,7 @@ from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
-if False:  # for debugging
+if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
 else:
     debuglog = lambda m: None
@@ -338,4 +342,6 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         # list of tuples
         self._maxCountForWorkerList = tuple(
             sorted(self.maxCountForWorker.items()))
+
+
 deprecatedWorkerModuleAttribute(locals(), WorkerLock)

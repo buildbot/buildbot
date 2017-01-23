@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.spread import pb as twisted_pb
 from twisted.trial import unittest
@@ -157,9 +162,12 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(info, r)
         calls = [
             mock.call('getWorkerInfo'),
+            mock.call('print',
+                      message='buildbot-slave detected, failing back to deprecated buildslave API. '
+                              '(Ignoring missing getWorkerInfo method.)'),
             mock.call('getSlaveInfo'),
             mock.call('getCommands'),
-            mock.call('getVersion')
+            mock.call('getVersion'),
         ]
         self.mind.callRemote.assert_has_calls(calls)
 
@@ -191,6 +199,9 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(info, r)
         calls = [
             mock.call('getWorkerInfo'),
+            mock.call('print',
+                      message='buildbot-slave detected, failing back to deprecated buildslave API. '
+                              '(Ignoring missing getWorkerInfo method.)'),
             mock.call('getSlaveInfo'),
         ]
         self.mind.callRemote.assert_has_calls(calls)
@@ -253,6 +264,8 @@ class TestConnection(unittest.TestCase):
         # All remote commands tried in remoteGetWorkerInfo are unavailable.
         # This should be real old worker...
         def side_effect(*args, **kwargs):
+            if args[0] == 'print':
+                return
             return defer.fail(twisted_pb.RemoteError(
                 'twisted.spread.flavors.NoSuchMethod', None, None))
 
@@ -264,6 +277,9 @@ class TestConnection(unittest.TestCase):
         self.assertEqual(info, r)
         calls = [
             mock.call('getWorkerInfo'),
+            mock.call('print',
+                      message='buildbot-slave detected, failing back to deprecated buildslave API. '
+                              '(Ignoring missing getWorkerInfo method.)'),
             mock.call('getSlaveInfo'),
             mock.call('getCommands'),
             mock.call('getVersion'),

@@ -13,13 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
+from twisted.cred import strcred
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 
-from buildbot.test.fake import fakemaster
+from buildbot.test.unit import test_www_hooks_base
 from buildbot.test.util import www
 from buildbot.www import auth
 from buildbot.www import change_hook
@@ -40,7 +45,7 @@ class NeedsReconfigResource(resource.Resource):
 class Test(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.master = fakemaster.make_master()
+        self.master = self.make_master(url='h:/a/b/')
         self.svc = self.master.www = service.WWWService()
         self.svc.setServiceParent(self.master)
 
@@ -168,3 +173,33 @@ class Test(www.WwwTestMixin, unittest.TestCase):
 
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
+
+        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        path = '/change_hook/base'
+        request = test_www_hooks_base._prepare_request({})
+        self.master.addChange = mock.Mock()
+        yield self.render_resource(rsrc, path, request=request)
+        self.master.addChange.assert_called()
+
+    @defer.inlineCallbacks
+    def test_setupSiteWithHookAndAuth(self):
+        fn = self.mktemp()
+        with open(fn, 'w') as f:
+            f.write("user:pass")
+        new_config = self.makeConfig(
+            port=8080,
+            plugins={},
+            change_hook_dialects={'base': True},
+            change_hook_auth=[strcred.makeChecker("file:" + fn)])
+        self.svc.setupSite(new_config)
+
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
+
+        res = yield self.render_resource(rsrc, '')
+        self.assertIn('{"type": "file"}', res)
+
+        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        res = yield self.render_resource(rsrc, '/change_hook/base')
+        # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
+        self.assertIn('UnauthorizedResource', repr(res))

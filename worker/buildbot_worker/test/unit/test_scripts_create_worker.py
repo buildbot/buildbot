@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 import mock
+
 from twisted.trial import unittest
 
 from buildbot_worker.scripts import create_worker
@@ -541,8 +545,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions(create_worker.CreateWorkerError("err-msg"))
 
         # call createWorker() and check that we get error exit code
-        self.assertEquals(create_worker.createWorker(self.options), 1,
-                          "unexpected exit code")
+        self.assertEqual(create_worker.createWorker(self.options), 1,
+                         "unexpected exit code")
 
         # check that correct error message was printed on stdout
         self.assertStdoutEqual("err-msg\n"
@@ -556,8 +560,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(self.options), 0,
-                          "unexpected exit code")
+        self.assertEqual(create_worker.createWorker(self.options), 0,
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \
@@ -645,7 +649,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         won't break generated TAC file.
         """
 
-        p = mock.patch.dict(self.options, {"basedir": r"C:\buildbot-worker dir\\"})
+        p = mock.patch.dict(
+            self.options, {"basedir": r"C:\buildbot-worker dir\\"})
         p.start()
         try:
             self.assertTACFileContents(self.options)
@@ -709,8 +714,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = (create_worker.workerTACTemplate[0] +
@@ -735,8 +740,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         options["allow-shutdown"] = "'signal'"
@@ -760,8 +765,8 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         self.setUpMakeFunctions()
 
         # call createWorker() and check that we get success exit code
-        self.assertEquals(create_worker.createWorker(options), 0,
-                          "unexpected exit code")
+        self.assertEqual(create_worker.createWorker(options), 0,
+                         "unexpected exit code")
 
         # check _make*() functions were called with correct arguments
         expected_tac_contents = \

@@ -23,6 +23,9 @@ special cases that Buildbot needs.  Those include:
 
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import re
 
@@ -31,6 +34,7 @@ import sqlalchemy as sa
 from sqlalchemy.engine import strategies
 from sqlalchemy.engine import url
 from sqlalchemy.pool import NullPool
+
 from twisted.python import log
 
 from buildbot.util import sautils
@@ -283,6 +287,7 @@ class BuildbotEngineStrategy(strategies.ThreadLocalEngineStrategy):
         # keep the basedir
         engine.buildbot_basedir = basedir
         return engine
+
 
 BuildbotEngineStrategy()
 

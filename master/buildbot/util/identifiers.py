@@ -13,6 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+from future.utils import text_type
+
 import re
 
 from buildbot import util
@@ -24,7 +29,7 @@ trailing_digits_re = re.compile('_([0-9]+)$')
 
 
 def isIdentifier(maxLength, object):
-    if not isinstance(object, unicode):
+    if not isinstance(object, text_type):
         return False
     elif not ident_re.match(object):
         return False
@@ -34,7 +39,7 @@ def isIdentifier(maxLength, object):
 
 
 def forceIdentifier(maxLength, str):
-    if not isinstance(str, basestring):
+    if not isinstance(str, string_types):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
     # usually ascii2unicode can handle it

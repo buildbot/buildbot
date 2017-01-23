@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import buildsets
@@ -246,8 +250,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                  sourcestamps=[ssmap[ssid] for ssid in sourcestampids]))
 
     def test_addBuildset_two_builderNames(self):
+        @implementer(interfaces.IScheduler)
         class FakeSched(object):
-            implements(interfaces.IScheduler)
             name = 'fakesched'
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',
@@ -270,8 +274,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                                         expectedReturn, expectedMessages, expectedBuildset)
 
     def test_addBuildset_no_builderNames(self):
+        @implementer(interfaces.IScheduler)
         class FakeSched(object):
-            implements(interfaces.IScheduler)
             name = 'fakesched'
 
         kwargs = dict(scheduler=u'fakesched', reason=u'because',

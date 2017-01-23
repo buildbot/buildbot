@@ -12,8 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import mock
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
 from future.utils import iteritems
+
+import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
@@ -34,7 +40,7 @@ def nth_worker(n):
         if workers is None:
             workers = builder
         workers = workers[:]
-        workers.sort(cmp=lambda a, b: cmp(a.name, b.name))
+        workers.sort(key=lambda a: a.name)
         return workers[n]
     return pick_nth_by_name
 
@@ -107,11 +113,11 @@ class TestBRDBase(unittest.TestCase):
     def addWorkers(self, workerforbuilders):
         """C{workerforbuilders} maps name : available"""
         for name, avail in iteritems(workerforbuilders):
-            sb = mock.Mock(spec=['isAvailable'], name=name)
-            sb.name = name
-            sb.isAvailable.return_value = avail
+            wfb = mock.Mock(spec=['isAvailable'], name=name)
+            wfb.name = name
+            wfb.isAvailable.return_value = avail
             for bldr in self.builders.values():
-                bldr.workers.append(sb)
+                bldr.workers.append(wfb)
 
     @defer.inlineCallbacks
     def createBuilder(self, name, builderid=None, builder_config=None):
@@ -136,7 +142,7 @@ class TestBRDBase(unittest.TestCase):
 
         bldr.workers = []
         bldr.getAvailableWorkers = lambda: [
-            s for s in bldr.workers if s.isAvailable()]
+            w for w in bldr.workers if w.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
         if builder_config is None:
             bldr.config.nextWorker = None
@@ -166,7 +172,7 @@ class TestBRDBase(unittest.TestCase):
 class Test(TestBRDBase):
 
     def checkAllCleanedUp(self):
-        # check that the BRD didnt end with a stuck lock or in the 'active' state (which would mean
+        # check that the BRD didn't end with a stuck lock or in the 'active' state (which would mean
         # it ended without unwinding correctly)
         self.assertEqual(self.brd.pending_builders_lock.locked, False)
         self.assertEqual(self.brd.activity_lock.locked, False)
@@ -206,10 +212,10 @@ class Test(TestBRDBase):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
         # 1979.
-        builders = ['bldr%02d' % i for i in xrange(15)]
+        builders = ['bldr%02d' % i for i in range(15)]
 
         def slow_sorter(master, bldrs):
-            bldrs.sort(lambda b1, b2: cmp(b1.name, b2.name))
+            bldrs.sort(key=lambda b1: b1.name)
             d = defer.Deferred()
             reactor.callLater(0, d.callback, bldrs)
 

@@ -17,6 +17,10 @@
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from twisted.internet import defer

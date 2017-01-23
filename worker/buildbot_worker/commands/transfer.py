@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import tarfile
 import tempfile
@@ -206,7 +209,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp()
-        fileobj = os.fdopen(fd, 'w')
+        fileobj = os.fdopen(fd, 'wb')
         if self.compress == 'bz2':
             mode = 'w|bz2'
         elif self.compress == 'gz':

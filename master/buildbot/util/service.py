@@ -1,4 +1,4 @@
-# This file is part of Buildbot.  Buildbot is free software: you can
+# This file is part of Buildbot. Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
 #
@@ -12,16 +12,24 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+
+import hashlib
+
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
+from twisted.python import failure
 from twisted.python import log
 from twisted.python import reflect
 
 from buildbot import util
 from buildbot.util import ascii2unicode
 from buildbot.util import config
+from buildbot.util import unicode2bytes
 
 
 class ReconfigurableServiceMixin(object):
@@ -70,7 +78,10 @@ class AsyncMultiService(AsyncService, service.MultiService):
     def startService(self):
         service.Service.startService(self)
         l = []
-        for svc in self:
+        # if a service attaches another service during the reconfiguration
+        # then the service will be started twice, so we don't use iter, but rather
+        # copy in a list
+        for svc in list(self):
             # handle any deferreds, passing up errors and success
             l.append(defer.maybeDeferred(svc.startService))
         return defer.gatherResults(l, consumeErrors=True)
@@ -109,6 +120,50 @@ class MasterService(AsyncMultiService):
         return self
 
 
+class SharedService(AsyncMultiService):
+    """a service that is created only once per parameter set in a parent service"""
+
+    @classmethod
+    def getService(cls, parent, *args, **kwargs):
+        name = cls.getName(*args, **kwargs)
+        if name in parent.namedServices:
+            return defer.succeed(parent.namedServices[name])
+        try:
+            instance = cls(*args, **kwargs)
+        except Exception:
+            # we transform all exceptions into failure
+            return defer.fail(failure.Failure())
+        # The class is not required to initialized its name
+        # but we use the name to identify the instance in the parent service
+        # so we force it with the name we used
+        instance.name = name
+        d = instance.setServiceParent(parent)
+
+        @d.addCallback
+        def returnInstance(res):
+            # we put the service on top of the list, so that it is stopped the last
+            # This make sense as the shared service is used as a dependency
+            # for other service
+            parent.services.remove(instance)
+            parent.services.insert(0, instance)
+            # hook the return value to the instance object
+            return instance
+        return d
+
+    @classmethod
+    def getName(cls, *args, **kwargs):
+        _hash = hashlib.sha1()
+        for arg in args:
+            arg = unicode2bytes(str(arg))
+            _hash.update(arg)
+        for k, v in kwargs.items():
+            k = unicode2bytes(str(k))
+            v = unicode2bytes(str(v))
+            _hash.update(k)
+            _hash.update(v)
+        return cls.__name__ + "_" + _hash.hexdigest()
+
+
 class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.ComparableMixin,
                       ReconfigurableServiceMixin):
     compare_attrs = ('name', '_config_args', '_config_kwargs')
@@ -139,7 +194,6 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         # sibling == self is using ComparableMixin's implementation
         # only compare compare_attrs
         if self.configured and sibling == self:
-
             return defer.succeed(None)
         self.configured = True
         return self.reconfigService(*sibling._config_args,
@@ -199,7 +253,7 @@ class ClusteredBuildbotService(BuildbotService):
         return defer.succeed(None)
 
     def deactivate(self):
-        # to be overriden by subclasses
+        # to be overridden by subclasses
         # will run when this instance loses its chosen status
         return defer.succeed(None)
 
@@ -207,7 +261,7 @@ class ClusteredBuildbotService(BuildbotService):
 
     def _getServiceId(self):
         # retrieve the id for this service; we assume that, once we have a valid id,
-        # the id doesnt change. This may return a Deferred.
+        # the id doesn't change. This may return a Deferred.
         raise NotImplementedError
 
     def _claimService(self):
@@ -395,7 +449,18 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
 
             for n in removed_names:
                 child = old_by_name[n]
+                # disownServiceParent calls stopService after removing the relationship
+                # as child might use self.master.data to stop itself, its better to stop it first
+                # (this is related to the fact that self.master is found by recursively looking at self.parent
+                # for a master)
+                yield child.stopService()
+                # it has already called, so do not call it again
+                child.stopService = lambda: None
                 yield child.disownServiceParent()
+                # HACK: we still keep a reference to the master for some cleanup tasks which are not waited by
+                # to stopService (like the complex worker disconnection mechanism)
+                # http://trac.buildbot.net/ticket/3583
+                child.parent = self.master
 
             for n in added_names:
                 child = new_by_name[n]

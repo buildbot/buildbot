@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+# See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import integer_types
+from future.utils import iteritems
+from future.utils import text_type
+
 import datetime
+import json
 import re
 
-# See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import iteritems
-
 from buildbot.util import UTC
-from buildbot.util import json
 
 # Base class
 
@@ -57,7 +61,7 @@ class InstanceValidator(Validator):
 
 
 class IntValidator(InstanceValidator):
-    types = (int, long)
+    types = integer_types
     name = 'integer'
 
 
@@ -68,7 +72,7 @@ class BooleanValidator(InstanceValidator):
 
 class StringValidator(InstanceValidator):
     # strings must be unicode
-    types = (unicode,)
+    types = (text_type,)
     name = 'string'
 
 
@@ -89,7 +93,7 @@ class DateTimeValidator(Validator):
 
 
 class IdentifierValidator(Validator):
-    types = (unicode,)
+    types = (text_type,)
     name = 'identifier'
     hasArgs = True
 
@@ -99,7 +103,7 @@ class IdentifierValidator(Validator):
         self.len = len
 
     def validate(self, name, object):
-        if not isinstance(object, unicode):
+        if not isinstance(object, text_type):
             yield "%s - %r - is not a unicode string" % (name, object)
         elif not self.ident_re.match(object):
             yield "%s - %r - is not an identifier" % (name, object)
@@ -209,13 +213,13 @@ class SourcedPropertiesValidator(Validator):
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in iteritems(object):
-            if not isinstance(k, unicode):
+            if not isinstance(k, text_type):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "%s property value for '%s' is not a 2-tuple" % (name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, unicode):
+            if not isinstance(propsrc, text_type):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
                 json.dumps(propval)
@@ -298,6 +302,7 @@ class Selector(Validator):
                     yield msg
                 return
         yield "no match for selector argument %r" % (arg,)
+
 
 # Type definitions
 

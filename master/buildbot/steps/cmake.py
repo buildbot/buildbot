@@ -12,15 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
+
 from twisted.internet import defer
 
 from buildbot import config
-from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import ShellMixin
 
 
-class CMake(ShellMixin, LoggingBuildStep):
+class CMake(ShellMixin, BuildStep):
     DEFAULT_CMAKE = 'cmake'
 
     name = 'cmake'
@@ -52,7 +56,7 @@ class CMake(ShellMixin, LoggingBuildStep):
         self.options = options
 
         self.cmake = cmake
-
+        kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
         super(CMake, self).__init__(**kwargs)
 
     @defer.inlineCallbacks

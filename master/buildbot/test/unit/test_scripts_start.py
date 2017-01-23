@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import os
@@ -39,6 +42,7 @@ def mkconfig(**kwargs):
     }
     config.update(kwargs)
     return config
+
 
 fake_master_tac = """\
 from twisted.application import service
@@ -89,7 +93,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         @d.addCallback
         def cb(res):
-            self.assertEquals(res, ('', '', 0))
+            self.assertEqual(res, ('', '', 0))
             print(res)
         return d
 
@@ -99,7 +103,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         @d.addCallback
         def cb(res):
-            self.assertEquals(res, ('', '', 0))
+            self.assertEqual(res, ('', '', 0))
             print(res)
         return d
 

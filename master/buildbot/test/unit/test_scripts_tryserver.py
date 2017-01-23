@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import sys
-from cStringIO import StringIO
 
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import tryserver
@@ -31,7 +35,7 @@ class TestStatusLog(dirs.DirsMixin, unittest.TestCase):
 
     def test_trycmd(self):
         config = dict(jobdir='jobdir')
-        inputfile = StringIO('this is my try job')
+        inputfile = NativeStringIO('this is my try job')
         self.patch(sys, 'stdin', inputfile)
 
         rc = tryserver.tryserver(config)

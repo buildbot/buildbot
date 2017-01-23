@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.trial import unittest
 
 from buildbot_worker import util
@@ -60,26 +63,26 @@ class TestObfuscated(unittest.TestCase):
 
     def testSimple(self):
         c = util.Obfuscated('real', '****')
-        self.failUnlessEqual(str(c), '****')
-        self.failUnlessEqual(repr(c), "'****'")
+        self.assertEqual(str(c), '****')
+        self.assertEqual(repr(c), "'****'")
 
     def testObfuscatedCommand(self):
         cmd = ['echo', util.Obfuscated('password', '*******')]
 
-        self.failUnlessEqual(
+        self.assertEqual(
             ['echo', 'password'], util.Obfuscated.get_real(cmd))
-        self.failUnlessEqual(
+        self.assertEqual(
             ['echo', '*******'], util.Obfuscated.get_fake(cmd))
 
     def testObfuscatedNonString(self):
         cmd = ['echo', 1]
-        self.failUnlessEqual(['echo', '1'], util.Obfuscated.get_real(cmd))
-        self.failUnlessEqual(['echo', '1'], util.Obfuscated.get_fake(cmd))
+        self.assertEqual(['echo', '1'], util.Obfuscated.get_real(cmd))
+        self.assertEqual(['echo', '1'], util.Obfuscated.get_fake(cmd))
 
     def testObfuscatedNonList(self):
         cmd = 1
-        self.failUnlessEqual(1, util.Obfuscated.get_real(cmd))
-        self.failUnlessEqual(1, util.Obfuscated.get_fake(cmd))
+        self.assertEqual(1, util.Obfuscated.get_real(cmd))
+        self.assertEqual(1, util.Obfuscated.get_fake(cmd))
 
 
 class TestRewrap(unittest.TestCase):

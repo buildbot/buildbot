@@ -1,12 +1,14 @@
 
+from __future__ import absolute_import
+from __future__ import print_function
 
 import sys
 import textwrap
+from pkg_resources import parse_version
 
 # Monkey-patch Sphinx to treat unhiglighted code as error.
 import sphinx
 import sphinx.highlighting
-from pkg_resources import parse_version
 from sphinx.errors import SphinxWarning
 
 # Versions of Sphinx below changeset 1860:19b394207746 (before v0.6.6 release)
@@ -70,7 +72,7 @@ def patched_unhighlighted(self, source):
 def patched_highlight_block(self, *args, **kwargs):
     try:
         return orig_highlight_block(self, *args, **kwargs)
-    except UnhighlightedError, ex:
+    except UnhighlightedError as ex:
         msg = ex.args[0]
         if 'warn' in kwargs:
             kwargs['warn'](msg)

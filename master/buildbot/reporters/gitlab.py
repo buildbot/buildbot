@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from twisted.internet import defer
@@ -28,6 +31,7 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
+from buildbot.util import httpclientservice
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -50,28 +54,27 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
-        self.session.headers.update({'PRIVATE-TOKEN': token})
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, baseURL, headers={'PRIVATE-TOKEN': token})
         self.verbose = verbose
+        self.project_ids = {}
 
     def createStatus(self,
-                     project_id, sha, state, target_url=None,
+                     project_id, branch, sha, state, target_url=None,
                      description=None, context=None):
         """
         :param project_id: Project ID from GitLab
+        :param branch: Branch name to create the status for.
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'error'
                       or 'failure'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
-        :return: A defered with the result from GitLab.
+        :return: A deferred with the result from GitLab.
 
-        This code comes from txgithub by @tomprince.
-        txgithub is based on twisted's webclient agent, which is much less
-        reliable and featureful as txrequest (support for proxy, connection
-        pool, keep alive, retry, etc)
         """
-        payload = {'state': state, 'ref': sha}
+        payload = {'state': state, 'ref': branch}
 
         if description is not None:
             payload['description'] = description
@@ -82,8 +85,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['name'] = context
 
-        return self.session.post('%s/api/v3/projects/%d/statuses/%s' % (
-            self.baseURL, project_id, sha),
+        return self._http.post('/api/v3/projects/%d/statuses/%s' % (
+            project_id, sha),
             json=payload)
 
     @defer.inlineCallbacks
@@ -110,6 +113,9 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         sourcestamps = build['buildset']['sourcestamps']
         project = sourcestamps[0]['project']
 
+        # default to master if not found
+        branch = sourcestamps[0].get('branch', 'master')
+
         if project:
             repoOwner, repoName = project.split('/')
         else:
@@ -121,26 +127,33 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if m is not None:
             repoOwner = m.group(1)
 
-        # retrieve project id
-        proj = yield self.session.get('%s/api/v3/projects/%s%%2F%s' % (
-            self.baseURL,
+        # retrieve project id via cache
+        self.project_ids
+        project_full_name = "%s%%2F%s" % (
             repoOwner.encode('utf-8'),
-            repoName.encode('utf-8')))
-        proj = proj.json()
+            repoName.encode('utf-8'))
 
+        if project_full_name not in self.project_ids:
+            proj = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
+            proj = yield proj.json()
+            self.project_ids[project_full_name] = proj['id']
+
+        proj_id = self.project_ids[project_full_name]
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
             try:
                 res = yield self.createStatus(
-                    project_id=proj['id'],
+                    project_id=proj_id,
+                    branch=branch.encode('utf-8'),
                     sha=sha.encode('utf-8'),
                     state=state.encode('utf-8'),
                     target_url=build['url'].encode('utf-8'),
                     context=context.encode('utf-8'),
                     description=description.encode('utf-8')
                 )
-                if res.status_code not in (200, 201, 204):
-                    message = res.json().get('message', 'unspecified error')
+                if res.code not in (200, 201, 204):
+                    message = yield res.json()
+                    message = message.get('message', 'unspecified error')
                     log.msg(
                         'Could not send status "{state}" for '
                         '{repoOwner}/{repoName} at {sha}: {message}'.format(

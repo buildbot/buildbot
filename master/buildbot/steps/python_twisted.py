@@ -15,6 +15,11 @@
 """
 BuildSteps that are specific to the Twisted source tree
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 import re
 
 from twisted.python import log
@@ -160,6 +165,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
             out = re.search(r'successes=(\d+)', line)
             if out:
                 self.counts['successes'] = int(out.group(1))
+
 
 UNSPECIFIED = ()  # since None is a valid choice
 
@@ -378,7 +384,7 @@ class Trial(ShellCommand):
                 cmd.args['env'] = {'PYTHONPATH': self.testpath}
             else:
                 # this bit produces a list, which can be used
-                # by buildslave.runprocess.RunProcess
+                # by buildbot_worker.runprocess.RunProcess
                 ppath = e.get('PYTHONPATH', self.testpath)
                 if isinstance(ppath, str):
                     ppath = [ppath]
@@ -397,7 +403,7 @@ class Trial(ShellCommand):
 
             # using -j/--jobs flag produces more than one test log.
             self.logfiles = {}
-            for i in xrange(self.jobs):
+            for i in range(self.jobs):
                 self.logfiles['test.%d.log' %
                               i] = '_trial_temp/%d/test.log' % i
                 self.logfiles['err.%d.log' % i] = '_trial_temp/%d/err.log' % i
@@ -473,12 +479,12 @@ class Trial(ShellCommand):
                         (counts['expectedFailures'],
                          counts['expectedFailures'] == 1 and "todo"
                          or "todos"))
-            if 0:  # TODO
+            if 0:  # TODO  pylint: disable=using-constant-test
                 results = WARNINGS
                 if not text2:
                     text2 = "todo"
 
-        if 0:
+        if 0:  # pylint: disable=using-constant-test
             # ignore unexpectedSuccesses for now, but it should really mark
             # the build WARNING
             if counts['unexpectedSuccesses']:

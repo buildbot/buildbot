@@ -12,20 +12,25 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from __future__ import print_function
 
-import StringIO
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.utils import itervalues
+
 import sys
 
 import mock
-from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python.compat import NativeStringIO
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot.config import MasterConfig
+from buildbot.data import resultspec
 from buildbot.interfaces import IConfigLoader
 from buildbot.master import BuildMaster
 from buildbot.plugins import worker
@@ -55,6 +60,7 @@ def getMaster(case, reactor, config_dict):
     """
     basedir = FilePath(case.mktemp())
     basedir.createDirectory()
+    config_dict['buildbotNetUsageData'] = None
     master = BuildMaster(
         basedir.path, reactor=reactor, config_loader=DictLoader(config_dict))
 
@@ -107,8 +113,8 @@ class RunMasterBase(unittest.TestCase):
 
         m = yield getMaster(self, reactor, config_dict)
         self.master = m
-        self.failIf(stop.called,
-                    "startService tried to stop the reactor; check logs")
+        self.assertFalse(stop.called,
+                         "startService tried to stop the reactor; check logs")
 
         if not startWorker:
             return
@@ -134,7 +140,7 @@ class RunMasterBase(unittest.TestCase):
         @defer.inlineCallbacks
         def dump():
             if not self._passed:
-                dump = StringIO.StringIO()
+                dump = NativeStringIO()
                 print("FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
@@ -152,24 +158,24 @@ class RunMasterBase(unittest.TestCase):
 
         # in order to allow trigger based integration tests
         # we wait until the first started build is finished
-        self.firstBuildId = None
+        self.firstBuildRequestId = None
 
         def newCallback(_, data):
-            if self.firstBuildId is None:
-                self.firstBuildId = data['buildid']
+            if self.firstBuildRequestId is None:
+                self.firstBuildRequestId = data['buildrequestid']
                 newConsumer.stopConsuming()
 
         def finishedCallback(_, data):
-            if self.firstBuildId == data['buildid']:
+            if self.firstBuildRequestId == data['buildrequestid']:
                 d.callback(data)
 
         newConsumer = yield self.master.mq.startConsuming(
             newCallback,
-            ('builds', None, 'new'))
+            ('buildrequests', None, 'new'))
 
         finishedConsumer = yield self.master.mq.startConsuming(
             finishedCallback,
-            ('builds', None, 'finished'))
+            ('buildrequests', None, 'complete'))
 
         if useChange is False:
             # use data api to force a build
@@ -179,7 +185,12 @@ class RunMasterBase(unittest.TestCase):
             yield self.master.data.updates.addChange(**useChange)
 
         # wait until we receive the build finished event
-        build = yield d
+        buildrequest = yield d
+        builds = yield self.master.data.get(
+            ('builds',),
+            filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
+        # if the build has been retried, there will be several matching builds. We return the last build
+        build = builds[-1]
         finishedConsumer.stopConsuming()
         yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
         defer.returnValue(build)

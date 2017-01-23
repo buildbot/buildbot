@@ -17,6 +17,9 @@
 """Base classes handy for use with PB clients.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.cred import error
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -51,11 +54,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
     TCPClient).
     """
 
-    # hung connections wait for a relatively long time, since a busy master may
-    # take a while to get back to us.
-    hungConnectionTimer = None
-    HUNG_CONNECTION_TIMEOUT = 120
-
     def clientConnectionFailed(self, connector, reason):
         PBClientFactory.clientConnectionFailed(self, connector, reason)
         if self.continueTrying:
@@ -68,14 +66,14 @@ class ReconnectingPBClientFactory(PBClientFactory,
         RCF = protocol.ReconnectingClientFactory
         RCF.clientConnectionLost(self, connector, reason)
 
-    def startedConnecting(self, connector):
-        self.startHungConnectionTimer(connector)
-
     def clientConnectionMade(self, broker):
         self.resetDelay()
         PBClientFactory.clientConnectionMade(self, broker)
         self.doLogin(self._root, broker)
         self.gotRootObject(self._root)
+
+    def buildProtocol(self, addr):
+        return PBClientFactory.buildProtocol(self, addr)
 
     # newcred methods
 
@@ -93,37 +91,16 @@ class ReconnectingPBClientFactory(PBClientFactory,
         d.addCallbacks(self.gotPerspective, self.failedToGetPerspective,
                        errbackArgs=(broker,))
 
-    # timer for hung connections
-
-    def startHungConnectionTimer(self, connector):
-        self.stopHungConnectionTimer()
-
-        def hungConnection():
-            log.msg(
-                "connection attempt timed out (is the port number correct?)")
-            self.hungConnectionTimer = None
-            connector.disconnect()
-            # (this will trigger the retry)
-        self.hungConnectionTimer = reactor.callLater(
-            self.HUNG_CONNECTION_TIMEOUT, hungConnection)
-
-    def stopHungConnectionTimer(self):
-        if self.hungConnectionTimer:
-            self.hungConnectionTimer.cancel()
-        self.hungConnectionTimer = None
-
     # methods to override
 
     def gotPerspective(self, perspective):
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
-        self.stopHungConnectionTimer()
 
     def gotRootObject(self, root):
         """The remote root object (obtained each time this factory connects)
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
-        self.stopHungConnectionTimer()
 
     def failedToGetPerspective(self, why, broker):
         """The login process failed, most likely because of an authorization
@@ -131,7 +108,6 @@ class ReconnectingPBClientFactory(PBClientFactory,
         connection before we managed to send our credentials.
         """
         log.msg("ReconnectingPBClientFactory.failedToGetPerspective")
-        self.stopHungConnectionTimer()
         # put something useful in the logs
         if why.check(pb.PBConnectionLost):
             log.msg("we lost the brand-new connection")

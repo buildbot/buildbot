@@ -12,11 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import StringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 import mock
+
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process.results import FAILURE
@@ -26,8 +30,9 @@ from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 
 
+@implementer(interfaces.ILogObserver)
 class StubLogObserver(mock.Mock):
-    implements(interfaces.ILogObserver)
+    pass
 
 
 class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
@@ -38,7 +43,7 @@ class TestSetPropertiesFromEnv(steps.BuildStepMixin, unittest.TestCase):
         self.logobserver.errors = []
         self.logobserver.skips = []
         self.logobserver.testsRun = 0
-        self.logobserver.warningio = StringIO.StringIO()
+        self.logobserver.warningio = NativeStringIO()
         self.patch(subunit, 'SubunitLogObserver',
                    lambda: self.logobserver)
         return self.setUpBuildStep()

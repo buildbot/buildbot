@@ -12,7 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -32,7 +38,7 @@ class Tests(unittest.TestCase):
     @defer.inlineCallbacks
     def makeLog(self, type, logEncoding='utf-8'):
         logid = yield self.master.data.updates.addLog(
-            stepid=27, name=u'testlog', type=unicode(type))
+            stepid=27, name=u'testlog', type=text_type(type))
         defer.returnValue(log.Log.new(self.master, u'testlog', type,
                                       logid, logEncoding))
 
@@ -55,7 +61,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(f(otilde_utf8), otilde)
         self.assertEqual(f(invalid_utf8), replacement)
 
-        f = log.Log._decoderFromString(lambda s: unicode(s[::-1]))
+        f = log.Log._decoderFromString(lambda s: text_type(s[::-1]))
         self.assertEqual(f('abc'), u'cba')
 
     @defer.inlineCallbacks
@@ -198,7 +204,7 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     # for compatibility between old-style and new-style steps, both
     # buildbot.status.logfile.LogFile and buildbot.process.log.StreamLog must
-    # meet this interace, at least until support for old-style steps is
+    # meet this interface, at least until support for old-style steps is
     # removed.
 
     # ILogFile
@@ -250,35 +256,35 @@ class InterfaceTests(interfaces.InterfaceTests):
 
     def test_signature_unsubscribe(self):
         # method has been removed
-        self.failIf(hasattr(self.log, 'unsubscribe'))
+        self.assertFalse(hasattr(self.log, 'unsubscribe'))
 
     def test_signature_getStep_removed(self):
-        self.failIf(hasattr(self.log, 'getStep'))
+        self.assertFalse(hasattr(self.log, 'getStep'))
 
     def test_signature_subscribeConsumer_removed(self):
-        self.failIf(hasattr(self.log, 'subscribeConsumer'))
+        self.assertFalse(hasattr(self.log, 'subscribeConsumer'))
 
     def test_signature_hasContents_removed(self):
-        self.failIf(hasattr(self.log, 'hasContents'))
+        self.assertFalse(hasattr(self.log, 'hasContents'))
 
     def test_signature_getText_removed(self):
-        self.failIf(hasattr(self.log, 'getText'))
+        self.assertFalse(hasattr(self.log, 'getText'))
 
     def test_signature_readlines_removed(self):
-        self.failIf(hasattr(self.log, 'readlines'))
+        self.assertFalse(hasattr(self.log, 'readlines'))
 
     def test_signature_getTextWithHeaders_removed(self):
-        self.failIf(hasattr(self.log, 'getTextWithHeaders'))
+        self.assertFalse(hasattr(self.log, 'getTextWithHeaders'))
 
     def test_signature_getChunks_removed(self):
-        self.failIf(hasattr(self.log, 'getChunks'))
+        self.assertFalse(hasattr(self.log, 'getChunks'))
 
 
 class TestProcessItfc(unittest.TestCase, InterfaceTests):
 
     def setUp(self):
         self.log = log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                                 101, unicode)
+                                 101, text_type)
 
 
 class TestFakeLogFile(unittest.TestCase, InterfaceTests):
@@ -307,7 +313,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnStreamLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.StreamLog(mock.Mock(name='master'), 'stdio', 's',
-                          101, unicode))
+                          101, text_type))
 
         correct_error_raised = False
         try:
@@ -320,7 +326,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnPlainLog(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, unicode))
+                         101, text_type))
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg\n')
@@ -332,7 +338,7 @@ class TestErrorRaised(unittest.TestCase):
     def testErrorOnPlainLogFlush(self):
         tested_log = self.instrumentTestedLoggerForError(
             log.PlainLog(mock.Mock(name='master'), 'stdio', 's',
-                         101, unicode))
+                         101, text_type))
         correct_error_raised = False
         try:
             yield tested_log.addContent('msg')

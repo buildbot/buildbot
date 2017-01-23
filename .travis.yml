@@ -23,20 +23,13 @@ python:
 env:
   # lint, docs and coverage first as they're more likely to find issues
   - TWISTED=latest SQLALCHEMY=latest TESTS=lint
-  - TWISTED=latest SQLALCHEMY=latest TESTS=docs
-  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
-
-  - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
   # Helps to detect issues with incorrect database setup/cleanup in tests.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
   # Configuration that runs tests with real MySQL database
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest&storage_engine=InnoDB
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
@@ -45,14 +38,8 @@ env:
   - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
   - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
 
-  # add extra tests in separate jobs
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js
-
   # Configuration to run `python setup.py test` to check this test runner.
   # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
-
-  # Configuration to run tests without installed buildbot-slave.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker_only
 
 cache:
   directories:
@@ -71,15 +58,15 @@ cache:
 matrix:
   fast_finish: true
   include:
-    # Tests of buildbot-worker and buildbot-slave on python 2.6
+    # Tests of buildbot-worker on python 2.6
     # Specify SQLALCHEMY=latest to avoid errors installing.
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
     - python: "2.6"
       env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
-#    - python: "3.4"
-#      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
+    - python: "3.5"
+      env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
 
 # Dependencies installation commands
 install:
@@ -89,48 +76,34 @@ install:
   - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
-  # Install MySQL-python for tests that uses real MySQL
+  # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
       pip install -e pkg \
-                  -e master[tls,test] \
-                  -e slave \
-                  -e worker \
-                  MySQL-python \
+                  -e 'master[tls,test]' \
+                  -e 'worker[test]' \
+                  mysqlclient \
                   psycopg2 \
                   pg8000 \
 
   - |
       [ $TESTS != trial_worker ] || \
-      pip install -e slave \
-                  -e worker \
-
-  - "[ $TESTS != trial_worker_only ] || pip install -e pkg -e master[tls,test] -e worker"
+      pip install -e 'worker[test]'
 
   # install buildbot_www from pip in order to run the www tests
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker -a $TESTS != trial_worker_only ] || \
       pip install --pre buildbot_www
 
-  # for python 3 we dont install everything yet..
-  - |
-      [ $TESTS != py3 ] || \
-      pip install -e slave \
-                  -e worker \
-                  future
+  - "pip install -e worker future"
 
-  # Run additional tests only in latest configuration
-  # Astroid 1.3.0 dropped Python-2.6 spuport
-  - "[ $TRAVIS_PYTHON_VERSION != 2.7 ] || pip install 'astroid<1.3.0'"
-
-  # Note pylint version is pinned because newer versions can't import zope.interface - http://www.logilab.org/92792
-  # astroid > 1.4 is incompatible with pylint 1.1.0
-  - "[ $TESTS != lint ] || pip install pylint==1.1.0 'flake8~=2.6.0'  astroid==1.3.8"
+  - "[ $TESTS != lint ] || pip install 'flake8~=2.6.0'"
   # Install sphinx so that pylint will be able to import it
   - "[ $TESTS != lint ] || pip install sphinx"
   # Install docs dependencies for running the tests
-  - "[ $TESTS != docs ] || pip install -e ./master[docs]"
+  # until towncrier toml is released, we need to fetch from git :-/
+  - "[ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'"
 
   # Check that Twisted is not installed during previous steps on setuppy_test configuration.
   # In setuppy_test all dependencies should be installed by setuptools during tests.
@@ -147,14 +120,16 @@ before_script:
 
 # Tests running commands
 script:
-  - "[ $TESTS != js ] || make frontend_install_tests"
-  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
-  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
-  # run tests under coverage for latest only (it's slower..)
-  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  # make frontend_install_tests takes 17 min, so we only do it post submit
+  - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} = false ] || make frontend"
+  - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} != false ] || make frontend_install_tests"
 
-  # run tests that are know to work on py3
-  - "[ $TESTS != py3 ] || trial  --reporter=text --rterrors buildslave.test buildbot_worker.test"
+  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
+  # run tests under coverage for latest only (it's slower..)
+  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test"
+
+  - "trial  --reporter=text --rterrors buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
@@ -164,14 +139,12 @@ script:
   - "[ $TESTS != docs ] || make docs"
   # Run spell checker on documentation
   - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-W spelling"
-  # Runs Sphinx' external link checker
-  - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-q linkcheck"
+  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
+  - "[ $TESTS != docs -o ${TRAVIS_PULL_REQUEST} != false ] || make -C master/docs SPHINXOPTS=-q linkcheck"
 
   - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
-  - "[ $TESTS != setuppy_test ] || (cd slave;  python setup.py test)"
   - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
 
-  - "[ $TESTS != trial_worker_only ] || trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 notifications:
   email: false
@@ -189,5 +162,6 @@ branches:
   only:
     - master
     - eight
+    - buildbot-0.9.0
 git:
   depth: 300

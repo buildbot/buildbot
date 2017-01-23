@@ -19,6 +19,9 @@
 Standard setup script.
 """
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import sys
 from distutils.command.install_data import install_data
@@ -26,13 +29,6 @@ from distutils.command.sdist import sdist
 from distutils.core import setup
 
 from buildbot_worker import version
-
-scripts = ["bin/buildbot-worker"]
-# sdist is usually run on a non-Windows platform, but the buildbot-worker.bat
-# file still needs to get packaged.
-if 'sdist' in sys.argv or sys.platform == 'win32':
-    scripts.append("contrib/windows/buildbot-worker.bat")
-    scripts.append("contrib/windows/buildbot_service.py")
 
 
 class our_install_data(install_data):
@@ -89,22 +85,29 @@ setup_args = {
 
     'packages': [
         "buildbot_worker",
+        "buildbot_worker.util",
+        "buildbot_worker.backports",
         "buildbot_worker.commands",
         "buildbot_worker.scripts",
         "buildbot_worker.monkeypatches",
         "buildbot_worker.test",
         "buildbot_worker.test.fake",
-        "buildbot_worker.test.util",
         "buildbot_worker.test.unit",
+        "buildbot_worker.test.util",
     ],
-    'scripts': scripts,
     # mention data_files, even if empty, so install_data is called and
     # VERSION gets copied
     'data_files': [("buildbot_worker", [])],
     'cmdclass': {
         'install_data': our_install_data,
         'sdist': our_sdist
-    }
+    },
+    'entry_points': {
+        'console_scripts': [
+            'buildbot-worker=buildbot_worker.scripts.runner:run',
+            # this will also be shipped on non windows :-(
+            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
+        ]}
 }
 
 # set zip_safe to false to force Windows installs to always unpack eggs
@@ -121,7 +124,7 @@ except ImportError:
     pass
 else:
     setup_args['install_requires'] = [
-        'twisted >= 8.0.0',
+        'twisted >= 10.2.0',
         'future',
     ]
 
@@ -135,8 +138,10 @@ else:
     setup_args['extras_require'] = {
         'test': [
             'pep8',
-            'pylint==1.1.0',
-            'pyflakes',
+            # spellcheck introduced in version 1.4.0
+            'pylint>=1.4.0',
+            'pyenchant',
+            'flake8~=2.6.0',
         ] + test_deps,
     }
 

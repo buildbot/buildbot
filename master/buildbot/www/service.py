@@ -12,9 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import os
 
-from future.utils import iteritems
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
@@ -23,7 +27,7 @@ from twisted.python import log
 from twisted.web import guard
 from twisted.web import resource
 from twisted.web import server
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
@@ -133,7 +137,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def setupSite(self, new_config):
         self.reconfigurableResources = []
 
-        # we're going to need at least the the base plugin (buildbot-www)
+        # we're going to need at least the base plugin (buildbot-www)
         if 'base' not in self.apps:
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
@@ -232,13 +236,13 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             rsrc.reconfigResource(new_config)
 
     def setupProtectedResource(self, resource_obj, checkers):
+        @implementer(IRealm)
         class SimpleRealm(object):
 
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated
             users.
             """
-            implements(IRealm)
 
             def requestAvatar(self, avatarId, mind, *interfaces):
                 if resource.IResource in interfaces:

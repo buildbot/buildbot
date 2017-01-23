@@ -15,11 +15,16 @@
 """
 Unit tests for the plugin framework
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 import mock
+
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 import buildbot.plugins.db
 from buildbot.errors import PluginDBError
@@ -81,12 +86,12 @@ class ITestInterface(IPlugin):
         "Greets by :param:`name`"
 
 
+@implementer(ITestInterface)
 class ClassWithInterface(object):
 
     """
     a class to implement a simple interface
     """
-    implements(ITestInterface)
 
     def __init__(self, name=None):
         self._name = name
@@ -102,35 +107,36 @@ class ClassWithNoInterface(object):
     just a class
     """
 
+
 # NOTE: buildbot.plugins.db prepends the group with common namespace --
 # 'buildbot.'
 _FAKE_ENTRIES = {
     'buildbot.interface': [
-        FakeEntry('good', 'non-existant', 'irrelevant', False,
+        FakeEntry('good', 'non-existent', 'irrelevant', False,
                   ClassWithInterface),
-        FakeEntry('deep.path', 'non-existant', 'irrelevant', False,
+        FakeEntry('deep.path', 'non-existent', 'irrelevant', False,
                   ClassWithInterface)
     ],
     'buildbot.interface_failed': [
-        FakeEntry('good', 'non-existant', 'irrelevant', True,
+        FakeEntry('good', 'non-existent', 'irrelevant', True,
                   ClassWithInterface)
     ],
     'buildbot.no_interface': [
-        FakeEntry('good', 'non-existant', 'irrelevant', False,
+        FakeEntry('good', 'non-existent', 'irrelevant', False,
                   ClassWithNoInterface)
     ],
     'buildbot.no_interface_again': [
-        FakeEntry('good', 'non-existant', 'irrelevant', False,
+        FakeEntry('good', 'non-existent', 'irrelevant', False,
                   ClassWithNoInterface)
     ],
     'buildbot.no_interface_failed': [
-        FakeEntry('good', 'non-existant', 'irrelevant', True,
+        FakeEntry('good', 'non-existent', 'irrelevant', True,
                   ClassWithNoInterface)
     ],
     'buildbot.duplicates': [
-        FakeEntry('good', 'non-existant', 'first', False,
+        FakeEntry('good', 'non-existent', 'first', False,
                   ClassWithNoInterface),
-        FakeEntry('good', 'non-existant', 'second', False,
+        FakeEntry('good', 'non-existent', 'second', False,
                   ClassWithNoInterface)
     ]
 }
@@ -232,7 +238,7 @@ class TestBuildbotPlugins(unittest.TestCase):
 
     def test_get_info_on_a_known_plugin(self):
         plugins = db.get_plugins('interface')
-        self.assertEqual(('non-existant', 'irrelevant'), plugins.info('good'))
+        self.assertEqual(('non-existent', 'irrelevant'), plugins.info('good'))
 
     def test_failure_on_unknown_plugin_info(self):
         plugins = db.get_plugins('interface')
@@ -246,7 +252,7 @@ class TestBuildbotPlugins(unittest.TestCase):
 class SimpleFakeEntry(FakeEntry):
 
     def __init__(self, name, value):
-        FakeEntry.__init__(self, name, 'non-existant', 'irrelevant', False,
+        FakeEntry.__init__(self, name, 'non-existent', 'irrelevant', False,
                            value)
 
 

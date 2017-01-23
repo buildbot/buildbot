@@ -10,8 +10,9 @@ class Buildsummary extends Directive('common')
             controller: '_buildsummaryController'
             controllerAs: 'buildsummary'
         }
+
 class _buildsummary extends Controller('common')
-    constructor: ($scope, dataService, resultsService, $urlMatcherFactory, $location, $interval, RESULTS) ->
+    constructor: ($scope, dataService, resultsService, buildersService, $urlMatcherFactory, $location, $interval, RESULTS) ->
         self = this
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
@@ -21,7 +22,6 @@ class _buildsummary extends Controller('common')
             "#{baseurl}#buildrequests/{buildrequestid:[0-9]+}")
         buildURLMatcher = $urlMatcherFactory.compile(
             "#{baseurl}#builders/{builderid:[0-9]+}/builds/{buildid:[0-9]+}")
-
         # to get an update of the current builds every seconds, we need to update self.now
         # but we want to stop counting when the scope destroys!
         stop = $interval =>
@@ -84,26 +84,26 @@ class _buildsummary extends Controller('common')
         $scope.$watch (=> @build), (build) ->
             if not build? then return
             if @builder then return
-
-            data.getBuilders(build.builderid).onNew = (builder) ->
-                self.builder = builder
+            self.builder = buildersService.getBuilder(build.builderid)
 
             build.getProperties().onNew = (properties) ->
                 self.properties = properties
                 self.reason = self.getBuildProperty('reason')
 
-            self.steps = build.getSteps()
+            $scope.$watch (-> details), (details) ->
+                if details != NONE and not self.steps?
+                    self.steps = build.getSteps()
 
-            self.steps.onNew = (step) ->
-                step.loadLogs()
-                # onUpdate is only called onUpdate, not onNew, but we need to update our additional needed attributes
-                self.steps.onUpdate(step)
+                    self.steps.onNew = (step) ->
+                        step.logs = step.getLogs()
+                        # onUpdate is only called onUpdate, not onNew
+                        # but we need to update our additional needed attributes
+                        self.steps.onUpdate(step)
 
-            self.steps.onUpdate = (step) ->
-                step.fulldisplay = step.complete == 0 || step.results > 0
-                if step.complete
-                    step.duration = step.complete_at - step.started_at
+                    self.steps.onUpdate = (step) ->
+                        step.fulldisplay = step.complete == false || step.results > 0
+                        if step.complete
+                            step.duration = step.complete_at - step.started_at
         $scope.$watch (=> @parentbuild), (build,o) ->
             if not build? then return
-            data.getBuilders(build.builderid).onNew = (builder) ->
-                self.parentbuilder = builder
+            self.parentbuilder = buildersService.getBuilder(build.builderid)

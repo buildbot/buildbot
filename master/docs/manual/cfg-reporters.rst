@@ -93,7 +93,7 @@ If your SMTP host requires authentication before it allows you to send emails, t
 
 .. note::
 
-   If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :file:`contrib/check-smtp.py` to see if it works at all.
+   If for some reasons you are not able to send a notification with TLS enabled and specified user name and password, you might want to use :src:`master/contrib/check_smtp.py` to see if it works at all.
 
 If you want to require Transport Layer Security (TLS), then you can also set ``useTls``::
 
@@ -109,136 +109,37 @@ If you want to require Transport Layer Security (TLS), then you can also set ``u
    If you see ``twisted.mail.smtp.TLSRequiredError`` exceptions in the log while using TLS, this can be due *either* to the server not supporting TLS or to a missing `PyOpenSSL`_ package on the BuildMaster system.
 
 In some cases it is desirable to have different information then what is provided in a standard MailNotifier message.
-For this purpose MailNotifier provides the argument ``messageFormatter`` (a function) which allows for the creation of messages with unique content.
+For this purpose MailNotifier provides the argument ``messageFormatter`` (an instance of ``MessageFormatter``) which allows for the creation of messages with unique content.
 
 For example, if only short emails are desired (e.g., for delivery to phones)::
 
-    from buildbot.plugins import reporters, util
-    def messageFormatter(mode, name, build, results, master_status):
-        result = util.Results[results]
-
-        text = list()
-        text.append("STATUS: %s" % result.title())
-        return {
-            'body' : "\n".join(text),
-            'type' : 'plain'
-        }
-
+    from buildbot.plugins import reporters
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
                                 mode=('problem',),
                                 extraRecipients=['listaddr@example.org'],
-                                messageFormatter=messageFormatter)
+                                messageFormatter=reporters.MessageFormatter(template="STATUS: {{ summary }}"))
 
-Another example of a function delivering a customized html email containing the last 80 log lines of logs of the last build step is given below::
+Another example of a function delivering a customized html email is given below::
 
-    from buildbot.plugins import util, reporters
+    from buildbot.plugins import reporters
 
-    import cgi, datetime
-
-    # FIXME: this code is barely readable, we should provide a better example with use of jinja templates
-    #
-    def html_message_formatter(mode, name, build, results, master_status):
-        """Provide a customized message to Buildbot's MailNotifier.
-
-        The last 80 lines of the log are provided as well as the changes
-        relevant to the build.  Message content is formatted as html.
-        """
-        result = util.Results[results]
-
-        limit_lines = 80
-        text = list()
-        text.append(u'<h4>Build status: %s</h4>' % result.upper())
-        text.append(u'<table cellspacing="10"><tr>')
-        text.append(u"<td>Worker for this Build:</td><td><b>%s</b></td></tr>" % build.getWorkername())
-        if master_status.getURLForThing(build):
-            text.append(u'<tr><td>Complete logs for all build steps:</td><td><a href="%s">%s</a></td></tr>'
-                        % (master_status.getURLForThing(build),
-                           master_status.getURLForThing(build))
-                        )
-            text.append(u'<tr><td>Build Reason:</td><td>%s</td></tr>' % build.getReason())
-            source = u""
-            for ss in build.getSourceStamps():
-                if ss.codebase:
-                    source += u'%s: ' % ss.codebase
-                if ss.branch:
-                    source += u"[branch %s] " % ss.branch
-                if ss.revision:
-                    source +=  ss.revision
-                else:
-                    source += u"HEAD"
-                if ss.patch:
-                    source += u" (plus patch)"
-                if ss.patch_info: # add patch comment
-                    source += u" (%s)" % ss.patch_info[1]
-            text.append(u"<tr><td>Build Source Stamp:</td><td><b>%s</b></td></tr>" % source)
-            text.append(u"<tr><td>Blamelist:</td><td>%s</td></tr>" % ",".join(build.getResponsibleUsers()))
-            text.append(u'</table>')
-            if ss.changes:
-                text.append(u'<h4>Recent Changes:</h4>')
-                for c in ss.changes:
-                    cd = c.asDict()
-                    when = datetime.datetime.fromtimestamp(cd['when'] ).ctime()
-                    text.append(u'<table cellspacing="10">')
-                    text.append(u'<tr><td>Repository:</td><td>%s</td></tr>' % cd['repository'] )
-                    text.append(u'<tr><td>Project:</td><td>%s</td></tr>' % cd['project'] )
-                    text.append(u'<tr><td>Time:</td><td>%s</td></tr>' % when)
-                    text.append(u'<tr><td>Changed by:</td><td>%s</td></tr>' % cd['who'] )
-                    text.append(u'<tr><td>Comments:</td><td>%s</td></tr>' % cd['comments'] )
-                    text.append(u'</table>')
-                    files = cd['files']
-                    if files:
-                        text.append(u'<table cellspacing="10"><tr><th align="left">Files</th></tr>')
-                        for file in files:
-                            text.append(u'<tr><td>%s:</td></tr>' % file['name'] )
-                        text.append(u'</table>')
-            text.append(u'<br>')
-            # get all the steps in build in reversed order
-            rev_steps = reversed(build.getSteps())
-            # find the last step that finished
-            for step in rev_steps:
-                if step.isFinished():
-                    break
-            # get logs for the last finished step
-            if step.isFinished():
-                logs = step.getLogs()
-            # No step finished, loop just exhausted itself; so as a special case we fetch all logs
-            else:
-                logs = build.getLogs()
-            # logs within a step are in reverse order. Search back until we find stdio
-            for log in reversed(logs):
-                if log.getName() == 'stdio':
-                    break
-            name = "%s.%s" % (log.getStep().getName(), log.getName())
-            status, dummy = log.getStep().getResults()
-            # XXX logs no longer have getText methods!!
-            content = log.getText().splitlines() # Note: can be VERY LARGE
-            url = u'%s/steps/%s/logs/%s' % (master_status.getURLForThing(build),
-                                           log.getStep().getName(),
-                                           log.getName())
-
-            text.append(u'<i>Detailed log of last build step:</i> <a href="%s">%s</a>'
-                        % (url, url))
-            text.append(u'<br>')
-            text.append(u'<h4>Last %d lines of "%s"</h4>' % (limit_lines, name))
-            unilist = list()
-            for line in content[len(content)-limit_lines:]:
-                unilist.append(cgi.escape(unicode(line,'utf-8')))
-            text.append(u'<pre>')
-            text.extend(unilist)
-            text.append(u'</pre>')
-            text.append(u'<br><br>')
-            text.append(u'<b>-The Buildbot</b>')
-            return {
-                'body': u"\n".join(text),
-                'type': 'html'
-            }
+    template=u'''\
+    <h4>Build status: {{ summary }}</h4>
+    <p> Worker used: {{ workername }}</p>
+    {% for step in build['steps'] %}
+    <p> {{ step['name'] }}: {{ step['result'] }}</p>
+    {% endfor %}
+    <p><b> -- The Buildbot</b></p>
+    '''
 
     mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
                                 sendToInterestedUsers=False,
                                 mode=('failing',),
                                 extraRecipients=['listaddr@example.org'],
-                                messageFormatter=html_message_formatter)
+                                messageFormatter=reporters.MessageFormatter(
+                                    template=template, template_type='html',
+                                    wantProperties=True, wantSteps=True))
 
 .. _PyOpenSSL: http://pyopenssl.sourceforge.net/
 
@@ -277,6 +178,9 @@ MailNotifier arguments
     (list of strings).
     A combination of:
 
+    ``cancelled``
+        Send mail about builds which were cancelled.
+
     ``change``
         Send mail about builds which change status.
 
@@ -309,6 +213,16 @@ MailNotifier arguments
     Defaults to ``None`` (all tags).
     Use either builders or tags, but not both.
 
+``schedulers``
+    (list of strings).
+    A list of scheduler names to serve status information for.
+    Defaults to ``None`` (all schedulers).
+
+``branches``
+    (list of strings).
+    A list of branch names to serve status information for.
+    Defaults to ``None`` (all branches).
+
 ``addLogs``
     (boolean).
     If ``True``, include all build logs as attachments to the messages.
@@ -339,8 +253,13 @@ MailNotifier arguments
 
 ``useTls``
     (boolean).
-    When this argument is ``True`` (default is ``False``) ``MailNotifier`` sends emails using TLS and authenticates with the ``relayhost``.
-    When using TLS the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
+    When this argument is ``True`` (default is ``False``) ``MailNotifier`` requires that STARTTLS encryption is used for the connection with the ``relayhost``.
+    Authentication is required for STARTTLS so the arguments ``smtpUser`` and ``smtpPassword`` must also be specified.
+
+``useSmtps``
+    (boolean).
+    When this argument is ``True`` (default is ``False``) ``MailNotifier`` connects to ``relayhost`` over an encrypted SSL/TLS connection.
+    This configuration is typically used over port 465.
 
 ``smtpUser``
     (string).
@@ -351,7 +270,7 @@ MailNotifier arguments
     The password that will be used when authenticating with the ``relayhost``.
 
 ``lookup``
-    (implementor of :class:`IEmailLookup`).
+    (implementer of :class:`IEmailLookup`).
     Object which provides :class:`IEmailLookup`, which is responsible for mapping User names (which come from the VC system) into valid email addresses.
 
     If the argument is not provided, the ``MailNotifier`` will attempt to build the ``sendToInterestedUsers`` from the authors of the Changes that led to the Build via :ref:`User-Objects`.
@@ -362,65 +281,142 @@ MailNotifier arguments
     Most of the time you can use a simple Domain instance.
     As a shortcut, you can pass as string: this will be treated as if you had provided ``Domain(str)``.
     For example, ``lookup='example.com'`` will allow mail to be sent to all developers whose SVN usernames match their ``example.com`` account names.
-    See :file:`buildbot/reporters/mail.py` for more details.
+    See :src:`master/buildbot/reporters/mail.py` for more details.
 
     Regardless of the setting of ``lookup``, ``MailNotifier`` will also send mail to addresses in the ``extraRecipients`` list.
 
 ``messageFormatter``
-    This is a optional function that can be used to generate a custom mail message.
-    A :func:`messageFormatter` function takes the mail mode (``mode``), builder name (``name``), the build Data API results (``build``), the result code (``results``), and a reference to the BuildMaster object (``master``), which can then be used to create additional Data API calls.
-    It returns a dictionary.
-    The ``body`` key gives a string that is the complete text of the message.
-    The ``type`` key is the message type ('plain' or 'html').
-    The 'html' type should be used when generating an HTML message.
-    The ``subject`` key is optional, but gives the subject for the email.
+    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
 
 ``extraHeaders``
     (dictionary).
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
+``messageFormatterMissingWorker``
+    This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
 
-As a help to those writing :func:`messageFormatter` functions, the following table describes how to get some useful pieces of information from the various data objects:
+
+MessageFormatter arguments
+++++++++++++++++++++++++++
+
+The easiest way to use the ``messageFormatter`` parameter is to create a new instance of the ``reporters.MessageFormatter`` class.
+The constructor to that class takes the following arguments:
+
+``template_dir``
+    This is the directory that is used to look for the various templates.
+
+``template_filename``
+    This is the name of the file in the ``template_dir`` directory that will be used to generate the body of the mail.
+    It defaults to ``default_mail.txt``.
+
+``template``
+    If this parameter is set, this parameter indicates the content of the template used to generate the body of the mail as string.
+
+``template_type``
+    This indicates the type of the generated template.
+    Use either 'plain' (the default) or 'html'.
+
+``subject_filename``
+    This is the name of the file in the ``template_dir`` directory that contains the content of the subject of the mail.
+
+``subject``
+    Alternatively, this is the content of the subject of the mail as string.
+
+
+``ctx``
+    This is an extension of the standard context that will be given to the templates.
+    Use this to add content to the templates that is otherwise not available.
+
+    Alternatively, you can subclass MessageFormatter and override the :py:meth:`buildAdditionalContext` in order to grab more context from the data API.
+
+    .. py:method:: buildAdditionalContext(master, ctx)
+
+        :param master: the master object
+        :param ctx: the context dictionary to enhance
+        :returns: optionally deferred
+
+        default implementation will add ``self.ctx`` into the current template context
+
+``wantProperties``
+    This parameter (defaults to True) will extend the content of the given ``build`` object with the Properties from the build.
+
+``wantSteps``
+    This parameter (defaults to False) will extend the content of the given ``build`` object with information about the steps of the build.
+    Use it only when necessary as this increases the overhead in term of CPU and memory on the master.
+
+``wantLogs``
+    This parameter (defaults to False) will extend the content of the steps of the given ``build`` object with the full Logs of each steps from the build.
+    This requires ``wantSteps`` to be True.
+    Use it only when mandatory as this increases the overhead in term of CPU and memory on the master greatly.
+
+
+As a help to those writing Jinja2 templates the following table describes how to get some useful pieces of information from the various data objects:
 
 Name of the builder that generated this event
-    ``name``
+    ``{{ buildername }}``
 
 Title of the BuildMaster
-    ``master.config.title``
+    ``{{ projects }}``
 
 MailNotifier mode
-    ``mode`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``, ``all``)
-
-Builder result as a string
-
-    ::
-
-        from buildbot.plugins import util
-        result_str = util.Results[results]
-        # one of 'success', 'warnings', 'failure', 'skipped', or 'exception'
+    ``{{ mode }}`` (a combination of ``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``, ``all``)
 
 URL to build page
-    ``reporters.utils.getURLForBuild(master, build['buildid'])``
+    ``{{ build_url }}``
 
 URL to buildbot main page
-    ``master.config.buildbotURL``
+    ``{{ buildbot_url }}``
+
+Status of the build as string.
+    This require extending the context of the Formatter via the ``ctx`` parameter with: ``ctx=dict(statuses=util.Results)``.
+
+    ``{{ statuses[results] }}``
 
 Build text
-    ``build['state_string']``
+    ``{{ build['state_string'] }}``
 
 Mapping of property names to (values, source)
-    ``build['properties']``
+    ``{{ build['properties'] }}``
+
+For instance the build reason (from a forced build)
+    ``{{ build['properties']['reason'][0] }}``
 
 Worker name
-    ``build['properties']['workername']``
-
-Build reason (from a forced build)
-    ``build['properties']['reason']``
+    ``{{ workername }}``
 
 List of responsible users
-    ``reporters.utils.getResponsibleUsersForBuild(master, build['buildid'])``
+    ``{{ blamelist | join(', ') }}``
 
+
+MessageFormatterMissingWorkers arguments
+++++++++++++++++++++++++++++++++++++++++
+The easiest way to use the ``messageFormatterMissingWorkers`` parameter is to create a new instance of the ``reporters.MessageFormatterMissingWorkers`` class.
+
+The constructor to that class takes the same arguments as MessageFormatter, minus ``wantLogs``, ``wantProperties``, ``wantSteps``.
+
+The default ``ctx`` for the missing worker email is made of:
+
+``buildbot_title``
+    The buildbot title as per ``c['title']`` from the ``master.cfg``
+
+``buildbot_url``
+    The buildbot title as per ``c['title']`` from the ``master.cfg``
+
+``worker``
+    The worker object as defined in the REST api plus two attributes:
+
+    ``notify``
+        List of emails to be notified for this worker.
+
+    ``last_connection``
+        String describing the approximate the time of last connection for this worker.
+
+.. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
 
 .. bb:reporter:: IRC
 
@@ -438,7 +434,7 @@ Patches are very welcome for restoring the full functionality.
 
 .. note:: Security Note
 
-Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
+    Please note that any user having access to your irc channel or can PM the bot will be able to create or stop builds :bug:`3377`.
 
 
 
@@ -654,7 +650,7 @@ GerritStatusPush
 :class:`GerritStatusPush` sends review of the :class:`Change` back to the Gerrit server, optionally also sending a message when a build is started.
 GerritStatusPush can send a separate review for each build that completes, or a single review summarizing the results for all of the builds.
 
-.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, identity_file, ...)
+.. py:class:: GerritStatusPush(server, username, reviewCB, startCB, port, reviewArg, startArg, summaryCB, summaryArg, identity_file, builders, notify...)
 
    :param string server: Gerrit SSH server's address to use for push event notifications.
    :param string username: Gerrit SSH server's username.
@@ -727,6 +723,9 @@ GerritStatusPush can send a separate review for each build that completes, or a 
    :param builders: (optional) list of builders to send results for.
                     This method allows to filter results for a specific set of builder.
                     By default, or if builders is None, then no filtering is performed.
+   :param notify: (optional) control who gets notified by Gerrit once the status is posted.
+                  The possible values for `notify` can be found in your version of the
+                  Gerrit documentation for the `gerrit review` command.
 
 .. note::
 
@@ -738,7 +737,7 @@ GerritStatusPush can send a separate review for each build that completes, or a 
 
 .. seealso::
 
-   :file:`master/docs/examples/git_gerrit.cfg` and :file:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
+   :src:`master/docs/examples/git_gerrit.cfg` and :src:`master/docs/examples/repo_gerrit.cfg` in the Buildbot distribution provide a full example setup of Git+Gerrit or Repo+Gerrit of :bb:reporter:`GerritStatusPush`.
 
 
 .. bb:reporter:: HttpStatusPush
@@ -758,30 +757,33 @@ HttpStatusPush
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
 It is useful to create a status front end outside of Buildbot for better scalability.
 
-It requires `txrequests`_ package to allow interaction with http server.
+It requires either `txrequests`_ or `treq`_ to be installed to allow interaction with http server.
 
 .. note::
 
-   The json data object sent is completly different from the one that was generated by 0.8.x buildbot.
+   The json data object sent is completely different from the one that was generated by 0.8.x buildbot.
    It is indeed generated using data api.
 
-.. py:class:: HttpStatusPush(serverUrl, user, password, builders = None, wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False)
+.. py:class:: HttpStatusPush(serverUrl, user=None, password=None, auth=None, format_fn=None, builders=None, wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False)
 
     :param string serverUrl: the url where to do the http post
     :param string user: the BasicAuth user to post as
     :param string password: the BasicAuth user's password
+    :param auth: the authentication method to use.
+        Refer to the documentation of the requests library for more information.
+    :param function format_fn: a function that takes the build as parameter and returns a dictionary to be pushed to the server (as json).
     :param list builders: only send update for specified builders
     :param boolean wantProperties: include 'properties' in the build dictionary
     :param boolean wantSteps: include 'steps' in the build dictionary
     :param boolean wantLogs: include 'logs' in the steps dictionaries.
         This needs wantSteps=True.
-        This dumps the *full* content of logs.
+        This dumps the *full* content of logs and may consume lots of memory and CPU depending on the log size.
     :param boolean wantPreviousBuild: include 'prev_build' in the build dictionary
 
 Json object spec
 ++++++++++++++++
 
-The default json object sent is a build object agremented wih some more data as follow.
+The default json object sent is a build object augmented with some more data as follow.
 
 .. code-block:: json
 
@@ -794,9 +796,11 @@ The default json object sent is a build object agremented wih some more data as 
     }
 
 
-If you want another format, don't hesitate to subclass, and modify the :py:meth:`send` method.
+If you want another format, don't hesitate to use the ``format_fn`` parameter to customize the payload.
+The ``build`` parameter given to that function is of type :bb:rtype:`build`, optionally enhanced with properties, steps, and logs information.
 
 .. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _treq: https://pypi.python.org/pypi/treq
 
 .. bb:reporter:: GitHubStatusPush
 
@@ -844,6 +848,8 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verbose: if True, logs a message for each successful status push
     :param list builders: only send update for specified builders
 
+.. bb:reporter:: StashStatusPush
+
 StashStatusPush
 ~~~~~~~~~~~~~~~
 
@@ -855,8 +861,8 @@ StashStatusPush
     from buildbot.plugins import reporters
 
     ss = reporters.StashStatusPush('https://stash.example.com:8080/',
-                                'stash_username',
-                                'secret_password')
+                                   'stash_username',
+                                   'secret_password')
     c['services'].append(ss)
 
 :class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
@@ -865,20 +871,59 @@ It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txgithub <https://pypi.python.org/pypi/txrequests>`_ package to allow interaction with GitHub API.
-
 It requires `txrequests`_ package to allow interaction with Stash REST API.
 
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
 
-.. py:class:: StashStatusPush(base_url, user, password, builders = None)
+.. py:class:: StashStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
 
-    :param string base_url: the base url of the stash host, up to and optionally including the first `/` of the path.
-    :param string user: the stash user to post as
-    :param string password: the stash user's password
+    :param string base_url: The base url of the Stash host, up to and optionally including the first `/` of the path.
+    :param string user: The Stash user to post as.
+    :param string password: The Stash user's password.
+    :param renderable string key: Passed to Stash to differentiate between statuses.
+        A static string can be passed or :class:`Interpolate` for dynamic substitution.
+        The default key is `%(prop:buildername)s`.
+    :param renderable string statusName: The name that is displayed for this status.
+        The default name is nothing, so Stash will use the ``key`` parameter.
+    :param renderable string startDescription: Custom start message (default: 'Build started.')
+    :param renderable string endDescription: Custom end message (default: 'Build done.')
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param list builders: Only send update for specified builders.
+
+.. bb:reporter:: BitbucketStatusPush
+
+BitbucketStatusPush
+~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.bitbucket.BitbucketStatusPush
+
+::
+
+    from buildbot.plugins import reporters
+    bs = reporters.BitbucketStatusPush('oauth_key', 'oauth_secret')
+    c['services'].append(bs)
+
+:class:`BitbucketStatusPush` publishes build status using `Bitbucket Build Status API <https://confluence.atlassian.com/bitbucket/buildstatus-resource-779295267.html>`_.
+The build status is published to a specific commit SHA in Bitbucket.
+It tracks the last build for each builderName for each commit built.
+
+It requires `txrequests`_ package to allow interaction with the Bitbucket REST and OAuth APIs.
+
+It uses OAuth 2.x to authenticate with Bitbucket.
+To enable this, you need to go to your Bitbucket Settings -> OAuth page.
+Click "Add consumer".
+Give the new consumer a name, eg 'buildbot', and put in any URL as the callback (this is needed for Oauth 2.x but is not used by this reporter, eg 'http://localhost:8010/callback').
+Give the consumer Repositories:Write access.
+After creating the consumer, you will then be able to see the OAuth key and secret.
+
+.. py:class:: BitbucketStatusPush(oauth_key, oauth_secret, base_url='https://api.bitbucket.org/2.0/repositories', oauth_url='https://bitbucket.org/site/oauth2/access_token', builders=None)
+
+    :param string oauth_key: The OAuth consumer key
+    :param string oauth_secret: The OAuth consumer secret
+    :param string base_url: Bitbucket's Build Status API URL
+    :param string oauth_url: Bitbucket's OAuth API URL
     :param list builders: only send update for specified builders
-
 
 .. bb:reporter:: GitLabStatusPush
 
@@ -900,15 +945,15 @@ The build status is published to a specific commit SHA in GitLab.
 
 It requires `txrequests`_ package to allow interaction with GitLab Commit Status API.
 
-It uses private token auth, and the token owner is required to have at least reporter access to each repository. As a result, we recommend you use https in your base_url rather than http.
+It uses private token auth, and the token owner is required to have at least developer access to each repository. As a result, we recommend you use https in your base_url rather than http.
 
 
 .. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
 
-    :param string token: Private token of user permitted to update status for commits 
-    :param string startDescription: Description used when build starts 
-    :param string endDescription: Description used when build ends 
-    :param string context: Name of your build system, eg. continuous-integration/buildbot 
+    :param string token: Private token of user permitted to update status for commits
+    :param string startDescription: Description used when build starts
+    :param string endDescription: Description used when build ends
+    :param string context: Name of your build system, eg. continuous-integration/buildbot
     :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
 
@@ -1034,3 +1079,45 @@ Here's a complete example:
                 result['notify'] = (build['results'] != 0)
             return result
 
+.. bb:reporter:: GerritVerifyStatusPush
+
+GerritVerifyStatusPush
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.status.status_gerrit_verify_status.GerritVerifyStatusPush
+
+:class:`GerritVerifyStatusPush` sends a verify status to Gerrit using the verify-status_ Gerrit plugin.
+
+It is an alternate method to :bb:reporter:`GerritStatusPush`, which uses the SSH API to send reviews.
+
+The verify-status_ plugin allows several CI statuses to be sent for the same change, and display them separately in the Gerrit UI.
+
+Most parameters are :index:`renderables <renderable>`
+
+.. py:class:: GerritVerifyStatusPush(
+    baseURL, auth,
+    startDescription="Build started.", endDescription="Build done.",
+    verification_name=Interpolate("%(prop:buildername)s"), abstain=False, category=None, reporter=None,
+    verbose=False, **kwargs)
+
+    :param string baseURL: Gerrit HTTP base URL
+    :param string auth: a requests authentication configuration.
+       if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
+       if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
+    :param renderable string startDescription: the comment sent when the build is starting.
+    :param renderable string endDescription: the comment sent when the build is finishing.
+    :param renderable string verification_name: the name of the job displayed in the Gerrit UI.
+    :param renderable boolean abstain: whether this results should be counted as voting.
+    :param renderable boolean category: Category of the build.
+    :param renderable boolean reporter: The user that verified this build
+    :param boolean verbose: Whether to log every requests.
+    :param list builders: only send update for specified builders
+
+This reporter is integrated with :class:`GerritChangeSource`, and will update changes detected by this change source.
+
+This reporter can also send reports for changes triggered manually provided that there is a property in the build named ``gerrit_changes``, containing the list of changes that were tested.
+This property must be a list of dictionaries, containing ``change_id`` and ``revision_id`` keys, as defined in the revision endpoints of the `Gerrit documentation`_
+
+.. _txrequests: https://pypi.python.org/pypi/txrequests
+.. _verify-status: https://gerrit.googlesource.com/plugins/verify-status
+.. _Gerrit documentation: https://gerrit-review.googlesource.com/Documentation/rest-api-changes.html#revision-endpoints

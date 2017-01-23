@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.process import botmaster
@@ -24,9 +29,8 @@ from buildbot.util import service
 from buildbot.worker import manager as workermanager
 
 
+@implementer(interfaces.IWorker)
 class FakeWorker(service.BuildbotService):
-
-    implements(interfaces.IWorker)
 
     reconfig_count = 0
 
@@ -75,10 +79,10 @@ class TestWorkerManager(unittest.TestCase):
 
         self.new_config.workers = []
 
+        self.assertEqual(worker.running, True)
         yield self.workers.reconfigServiceWithBuildbotConfig(self.new_config)
 
-        self.assertIdentical(worker.parent, None)
-        self.assertIdentical(worker.master, None)
+        self.assertEqual(worker.running, False)
 
     @defer.inlineCallbacks
     def test_reconfigServiceWorkers_reconfig(self):

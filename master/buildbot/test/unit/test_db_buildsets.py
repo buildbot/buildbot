@@ -12,9 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import datetime
+import json
 
 import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -29,7 +35,6 @@ from buildbot.test.util import validation
 from buildbot.util import UTC
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class Tests(interfaces.InterfaceTests):
@@ -604,7 +609,7 @@ class TestRealDB(db.TestCase,
         props = dict(prop=(['list'], 'test'))
 
         # Now, call `addBuildset`, and verify that the above properties
-        # were seeed in the `getBuildsetProperties` cache.
+        # were seed in the `getBuildsetProperties` cache.
         bsid, _ = yield self.db.buildsets.addBuildset(
             sourcestamps=[234], reason='because',
             properties=props, builderids=[1, 2],

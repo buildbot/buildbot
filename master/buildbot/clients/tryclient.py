@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
 import os
 import random
 import re
@@ -32,7 +37,6 @@ from twisted.python.procutils import which
 from twisted.spread import pb
 
 from buildbot.status import builder
-from buildbot.util import json
 from buildbot.util import now
 from buildbot.util.eventual import fireEventually
 
@@ -75,7 +79,7 @@ class SourceStampExtractor:
     def _didvc(self, res, cmd):
         (stdout, stderr, code) = res
         # 'bzr diff' sets rc=1 if there were any differences.
-        # cvs does something similar, so don't bother requring rc=0.
+        # cvs does something similar, so don't bother requiring rc=0.
         return stdout
 
     def get(self):

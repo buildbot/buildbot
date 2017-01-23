@@ -12,17 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import re
 
-from future.utils import iteritems
+from twisted.cred.checkers import FilePasswordDB
 from twisted.python.components import registerAdapter
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 
 
+@implementer(IConfigured)
 class _DefaultConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -30,11 +35,12 @@ class _DefaultConfigured(object):
     def getConfigDict(self):
         return self.value
 
+
 registerAdapter(_DefaultConfigured, object, IConfigured)
 
 
+@implementer(IConfigured)
 class _ListConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -42,11 +48,12 @@ class _ListConfigured(object):
     def getConfigDict(self):
         return [IConfigured(e).getConfigDict() for e in self.value]
 
+
 registerAdapter(_ListConfigured, list, IConfigured)
 
 
+@implementer(IConfigured)
 class _DictConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -54,11 +61,12 @@ class _DictConfigured(object):
     def getConfigDict(self):
         return dict([(k, IConfigured(v).getConfigDict()) for k, v in iteritems(self.value)])
 
+
 registerAdapter(_DictConfigured, dict, IConfigured)
 
 
+@implementer(IConfigured)
 class _SREPatternConfigured(object):
-    implements(IConfigured)
 
     def __init__(self, value):
         self.value = value
@@ -66,11 +74,25 @@ class _SREPatternConfigured(object):
     def getConfigDict(self):
         return dict(name="re", pattern=self.value.pattern)
 
+
 registerAdapter(_SREPatternConfigured, type(re.compile("")), IConfigured)
 
 
+@implementer(IConfigured)
 class ConfiguredMixin(object):
-    implements(IConfigured)
 
     def getConfigDict(self):
         return {'name': self.name}
+
+
+@implementer(IConfigured)
+class _FilePasswordDBConfigured(object):
+
+    def __init__(self, value):
+        pass
+
+    def getConfigDict(self):
+        return {'type': 'file'}
+
+
+registerAdapter(_FilePasswordDBConfigured, FilePasswordDB, IConfigured)

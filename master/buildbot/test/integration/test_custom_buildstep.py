@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from StringIO import StringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
+from io import StringIO
 
 import mock
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
@@ -82,10 +87,10 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
                 self.failed(failure.Failure(RuntimeError('oh noes')))
             else:
                 self.finished(results.SUCCESS)
-        except Exception as e:
+        except Exception:
             import traceback
             traceback.print_exc()
-            self.failed(failure.Failure(e))
+            self.failed(failure.Failure())
 
 
 class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
@@ -140,12 +145,11 @@ class OldPerlModuleTest(shell.Test):
 
     def evaluateCommand(self, cmd):
         # Get stdio, stripping pesky newlines etc.
-        lines = map(
-            lambda line: line.replace('\r\n', '').replace(
-                '\r', '').replace('\n', ''),
-            self.getLog('stdio').readlines()
-        )
-        # .. the rest of this method isn't htat interesting, as long as the
+        lines = [
+            line.replace('\r\n', '').replace('\r', '').replace('\n', '')
+            for line in self.getLog('stdio').readlines()
+        ]
+        # .. the rest of this method isn't that interesting, as long as the
         # statement above worked
         assert lines == ['a', 'b', 'c']
         return results.SUCCESS
@@ -183,9 +187,9 @@ class RunSteps(unittest.TestCase):
         self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
         yield self.worker.attached(self.conn)
 
-        sb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
-        sb.setBuilder(self.builder)
-        yield sb.attached(self.worker, {})
+        wfb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
+        wfb.setBuilder(self.builder)
+        yield wfb.attached(self.worker, {})
 
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
@@ -213,7 +217,7 @@ class RunSteps(unittest.TestCase):
         self.builder.buildFinished = buildFinished
 
         # start the builder
-        self.failUnless((yield self.builder.maybeStartBuild(
+        self.assertTrue((yield self.builder.maybeStartBuild(
             self.workerforbuilder, [self.buildrequest])))
 
         # and wait for completion
@@ -225,7 +229,7 @@ class RunSteps(unittest.TestCase):
     def assertLogs(self, exp_logs):
         got_logs = {}
         for id, l in iteritems(self.master.data.updates.logs):
-            self.failUnless(l['finished'])
+            self.assertTrue(l['finished'])
             got_logs[l['name']] = ''.join(l['content'])
         self.assertEqual(got_logs, exp_logs)
 

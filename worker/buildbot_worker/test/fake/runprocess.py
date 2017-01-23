@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -114,6 +117,7 @@ class FakeRunProcess(object):
         exp = self._exp = self._expectations.pop()
         if exp.kwargs != kwargs:
             msg = []
+            # pylint: disable=consider-iterating-dictionary
             for key in sorted(list(set(exp.kwargs.keys()) | set(kwargs.keys()))):
                 if key not in exp.kwargs:
                     if key in default_values:

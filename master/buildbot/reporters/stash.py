@@ -13,11 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.internet import defer
-from twisted.python import log
+from __future__ import absolute_import
+from __future__ import print_function
 
+from twisted.internet import defer
+
+from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
+from buildbot.util import httpclientservice
+from buildbot.util.logger import Logger
+
+log = Logger()
 
 # Magic words understood by Stash REST API
 STASH_INPROGRESS = 'INPROGRESS'
@@ -29,26 +37,48 @@ class StashStatusPush(http.HttpStatusPushBase):
     name = "StashStatusPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, **kwargs):
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
-        if not base_url.endswith('/'):
-            base_url += '/'
-        self.base_url = '%srest/build-status/1.0/commits/' % (base_url,)
-        self.auth = (user, password)
+    def reconfigService(self, base_url, user, password, key=None, statusName=None,
+                        startDescription=None, endDescription=None,
+                        verbose=False, **kwargs):
+        yield http.HttpStatusPushBase.reconfigService(self, wantProperties=True,
+                                                      **kwargs)
+        self.key = key or Interpolate('%(prop:buildername)s')
+        self.statusName = statusName
+        self.endDescription = endDescription or 'Build done.'
+        self.startDescription = startDescription or 'Build started.'
+        self.verbose = verbose
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, base_url, auth=(user, password))
 
     @defer.inlineCallbacks
     def send(self, build):
+        props = Properties.fromDict(build['properties'])
         results = build['results']
         if build['complete']:
             status = STASH_SUCCESSFUL if results == SUCCESS else STASH_FAILED
+            description = self.endDescription
         else:
             status = STASH_INPROGRESS
+            description = self.startDescription
         for sourcestamp in build['buildset']['sourcestamps']:
             sha = sourcestamp['revision']
-            body = {'state': status, 'key': build[
-                'builder']['name'], 'url': build['url']}
-            stash_uri = self.base_url + sha
-            response = yield self.session.post(stash_uri, body, auth=self.auth)
-            if response.status_code != 200:
-                log.msg("%s: unable to upload stash status: %s" %
-                        (response.status, response.content))
+            key = yield props.render(self.key)
+            payload = {
+                'state': status,
+                'url': build['url'],
+                'key': key,
+            }
+            if description:
+                payload['description'] = yield props.render(description)
+            if self.statusName:
+                payload['name'] = yield props.render(self.statusName)
+            response = yield self._http.post('/rest/build-status/1.0/commits/' + sha,
+                                             json=payload)
+            if response.code == 204:
+                if self.verbose:
+                    log.info('Status "{status}" sent for {sha}.',
+                             status=status, sha=sha)
+            else:
+                content = yield response.content()
+                log.error("{code}: Unable to send Stash status: {content}",
+                          code=response.code, content=content)

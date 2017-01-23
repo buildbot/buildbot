@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -26,8 +30,8 @@ class StatsService(service.BuildbotService):
     """
 
     def checkConfig(self, storage_backends):
-        for sb in storage_backends:
-            if not isinstance(sb, StatsStorageBase):
+        for wfb in storage_backends:
+            if not isinstance(wfb, StatsStorageBase):
                 raise TypeError("Invalid type of stats storage service {0!r}. "
                                 "Should be of type StatsStorageBase, "
                                 "is: {0!r}".format(type(StatsStorageBase)))

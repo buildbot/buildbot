@@ -13,6 +13,12 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import math
 import time
 
 from twisted.internet import defer
@@ -21,13 +27,15 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker import AbstractLatentWorker
 
 try:
     import novaclient.exceptions as nce
     from novaclient import client
+    from novaclient.exceptions import NotFound
     _hush_pyflakes = [nce, client]
 except ImportError:
+    NotFound = Exception
     nce = None
     client = None
 
@@ -108,30 +116,79 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         client_block_device['uuid'] = block_device['uuid']
         client_block_device['boot_index'] = int(
             block_device.get('boot_index', 0))
-        client_block_device['volume_size'] = block_device['volume_size']
+        # Allow None here. It will be rendered later.
+        client_block_device['volume_size'] = block_device.get('volume_size')
         return client_block_device
 
-    @staticmethod
-    def _getImage(os_client, image):
+    @defer.inlineCallbacks
+    def _renderBlockDevice(self, block_device, build):
+        """Render all of the block device's values."""
+        rendered_block_device = yield build.render(block_device)
+        if rendered_block_device['volume_size'] is None:
+            source_type = rendered_block_device['source_type']
+            source_uuid = rendered_block_device['uuid']
+            volume_size = self._determineVolumeSize(source_type, source_uuid)
+            rendered_block_device['volume_size'] = volume_size
+        defer.returnValue(rendered_block_device)
+
+    def _determineVolumeSize(self, source_type, source_uuid):
+        """
+        Determine the minimum size the volume needs to be for the source.
+        Returns the size in GiB.
+        """
+        nova = self.novaclient
+        if source_type == 'image':
+            # The size returned for an image is in bytes. Round up to the next
+            # integer GiB.
+            image = nova.images.get(source_uuid)
+            if hasattr(image, 'OS-EXT-IMG-SIZE:size'):
+                size = getattr(image, 'OS-EXT-IMG-SIZE:size')
+                size_gb = int(math.ceil(size / 1024.0**3))
+                return size_gb
+        elif source_type == 'volume':
+            # Volumes are easy because they are already in GiB.
+            volume = nova.volumes.get(source_uuid)
+            return volume.size
+        elif source_type == 'snapshot':
+            snap = nova.volume_snapshots.get(source_uuid)
+            return snap.size
+        else:
+            unknown_source = ("The source type '%s' for UUID '%s' is"
+                              " unknown" % (source_type, source_uuid))
+            raise ValueError(unknown_source)
+
+    @defer.inlineCallbacks
+    def _getImage(self, build):
         # If image is a callable, then pass it the list of images. The
         # function should return the image's UUID to use.
+        image = self.image
         if callable(image):
-            image_uuid = image(os_client.images.list())
+            image_uuid = image(self.novaclient.images.list())
         else:
-            image_uuid = image
-        return image_uuid
+            image_uuid = yield build.render(image)
+        defer.returnValue(image_uuid)
 
+    @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        return threads.deferToThread(self._start_instance)
+        image = yield self._getImage(build)
+        if self.block_devices is not None:
+            block_devices = []
+            for bd in self.block_devices:
+                rendered_block_device = yield self._renderBlockDevice(bd, build)
+                block_devices.append(rendered_block_device)
+        else:
+            block_devices = None
+        res = yield threads.deferToThread(self._start_instance, image,
+                                          block_devices)
+        defer.returnValue(res)
 
-    def _start_instance(self):
-        image_uuid = self._getImage(self.novaclient, self.image)
+    def _start_instance(self, image_uuid, block_devices):
         boot_args = [self.workername, image_uuid, self.flavor]
         boot_kwargs = dict(
             meta=self.meta,
-            block_device_mapping_v2=self.block_devices,
+            block_device_mapping_v2=block_devices,
             **self.nova_args)
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
         self.instance = instance
@@ -150,7 +207,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                          instance.id))
             try:
                 inst = self.novaclient.servers.get(instance.id)
-            except nce.NotFound:
+            except NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
@@ -183,7 +240,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         # instance.update().
         try:
             inst = self.novaclient.servers.get(instance.id)
-        except nce.NotFound:
+        except NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %
                     (self.__class__.__name__, self.workername, instance.id,

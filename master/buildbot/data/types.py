@@ -13,14 +13,18 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+# See "Type Validation" in master/docs/developer/tests.rst
+from future.utils import integer_types
+from future.utils import iteritems
+from future.utils import text_type
+
 import datetime
+import json
 import re
 
-# See "Type Validation" in master/docs/developer/tests.rst
-from future.utils import iteritems
-
 from buildbot import util
-from buildbot.util import json
 
 
 class Type(object):
@@ -105,7 +109,7 @@ class Instance(Type):
 class Integer(Instance):
 
     name = "integer"
-    types = (int, long)
+    types = integer_types
     ramlType = "integer"
 
     def valueFromString(self, arg):
@@ -121,17 +125,18 @@ class DateTime(Instance):
 class String(Instance):
 
     name = "string"
-    types = (unicode,)
+    types = (text_type,)
     ramlType = "string"
 
     def valueFromString(self, arg):
-        return arg.decode('utf-8')
+        val = util.bytes2unicode(arg)
+        return val
 
 
 class Binary(Instance):
 
     name = "binary"
-    types = (str,)
+    types = (bytes,)
     ramlType = "string"
 
     def valueFromString(self, arg):
@@ -159,13 +164,13 @@ class Identifier(Type):
         self.len = len
 
     def valueFromString(self, arg):
-        val = arg.decode('utf-8')
+        val = util.bytes2unicode(arg)
         if not self.identRe.match(val) or not 0 < len(val) <= self.len:
             raise TypeError
         return val
 
     def validate(self, name, object):
-        if not isinstance(object, unicode):
+        if not isinstance(object, text_type):
             yield "%s - %r - is not a unicode string" % (name, object)
         elif not self.identRe.match(object):
             yield "%s - %r - is not an identifier" % (name, object)
@@ -232,13 +237,13 @@ class SourcedProperties(Type):
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
         for k, v in iteritems(object):
-            if not isinstance(k, unicode):
+            if not isinstance(k, text_type):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
                 yield "%s property value for '%s' is not a 2-tuple" % (name, k)
                 return
             propval, propsrc = v
-            if not isinstance(propsrc, unicode):
+            if not isinstance(propsrc, text_type):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
                 json.loads(propval)

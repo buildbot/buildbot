@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 from datetime import datetime
 
@@ -26,13 +30,14 @@ from buildbot.test.util import changesource
 
 
 class SourceRest():
+    """https://bitbucket.org/!api/2.0/repositories/{owner}/{slug}"""
     template = """\
 {
 
     "hash": "%(hash)s",
     "links": {
         "html": {
-            "href": "https://bitbucket.org/%(owner)s/%(slug)s/commits/%(hash)s"
+            "href": "https://bitbucket.org/%(owner)s/%(slug)s/commits/%(short_hash)s"
         }
     },
     "repository": {
@@ -67,6 +72,7 @@ class SourceRest():
             "owner": self.owner,
             "slug": self.slug,
             "hash": self.hash,
+            "short_hash": self.hash[0:12],
             "date": self.date,
         }
 
@@ -78,6 +84,7 @@ class SourceRest():
 
 
 class PullRequestRest():
+    """https://bitbucket.org/!api/2.0/repositories/{owner}/{slug}/pullrequests/{pull_request_id}"""
     template = """\
 {
 
@@ -124,6 +131,7 @@ class PullRequestRest():
             "description": self.description,
             "title": self.title,
             "hash": self.source.hash,
+            "short_hash": self.source.hash[0:12],
             "owner": self.source.owner,
             "slug": self.source.slug,
             "display_name": self.display_name,
@@ -134,6 +142,7 @@ class PullRequestRest():
 
 
 class PullRequestListRest():
+    """https://bitbucket.org/api/2.0/repositories/{owner}/{slug}/pullrequests"""
     template = """\
         {
             "description": "%(description)s",
@@ -151,10 +160,10 @@ class PullRequestListRest():
             "title": "%(title)s",
             "source": {
                 "commit": {
-                    "hash": "%(hash)s",
+                    "hash": "%(short_hash)s",
                     "links": {
                         "self": {
-                            "href": "https://bitbucket.org/!api/2.0/repositories/%(src_owner)s/%(src_slug)s/commit/%(hash)s"
+                            "href": "https://bitbucket.org/!api/2.0/repositories/%(src_owner)s/%(src_slug)s/commit/%(short_hash)s"
                         }
                     }
                 },
@@ -200,6 +209,7 @@ class PullRequestListRest():
                 "display_name": pr.display_name,
                 "title": pr.title,
                 "hash": pr.source.hash,
+                "short_hash": pr.source.hash[0:12],
                 "src_owner": pr.source.owner,
                 "src_slug": pr.source.slug,
                 "created_on": pr.created_on,
@@ -260,7 +270,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         src = SourceRest(
             owner="contributor",
             slug="slug",
-            hash="000000000000000000000000000001",
+            hash="1111111111111111111111111111111111111111",
             date=self.date,
         )
         pr = PullRequestRest(
@@ -280,7 +290,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         src = SourceRest(
             owner="contributor",
             slug="slug",
-            hash="000000000000000000000000000002",
+            hash="2222222222222222222222222222222222222222",
             date=self.date,
         )
         pr = PullRequestRest(
@@ -367,8 +377,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'project': u'',
             'properties': {},
             'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'000000000000000000000000000001',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+            'revision': u'1111111111111111111111111111111111111111',
+            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
         }])
@@ -392,8 +402,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'project': u'',
             'properties': {},
             'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'000000000000000000000000000001',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+            'revision': u'1111111111111111111111111111111111111111',
+            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
         }])
@@ -420,8 +430,9 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'project': u'',
             'properties': {},
             'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'000000000000000000000000000001',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+
+            'revision': u'1111111111111111111111111111111111111111',
+            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
         }])
@@ -439,8 +450,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'project': u'',
                 'properties': {},
                 'repository': u'https://bitbucket.org/contributor/slug',
-                'revision': u'000000000000000000000000000001',
-                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+                'revision': u'1111111111111111111111111111111111111111',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
             },
@@ -454,8 +465,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
                 'project': u'',
                 'properties': {},
                 'repository': u'https://bitbucket.org/contributor/slug',
-                'revision': u'000000000000000000000000000002',
-                'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000002',
+                'revision': u'2222222222222222222222222222222222222222',
+                'revlink': u'https://bitbucket.org/contributor/slug/commits/222222222222',
                 'src': u'bitbucket',
                 'when_timestamp': 1381869500,
             }
@@ -499,8 +510,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'project': u'',
             'properties': {},
             'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'000000000000000000000000000001',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+            'revision': u'1111111111111111111111111111111111111111',
+            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1381869500,
         }])
@@ -528,8 +539,8 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             'project': u'',
             'properties': {},
             'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'000000000000000000000000000001',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/000000000000000000000000000001',
+            'revision': u'1111111111111111111111111111111111111111',
+            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
             'src': u'bitbucket',
             'when_timestamp': 1396825656,
         }])

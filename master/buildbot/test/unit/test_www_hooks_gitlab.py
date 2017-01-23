@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import calendar
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -24,7 +29,7 @@ from buildbot.test.fake.web import fakeMasterForHooks
 
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
-# Added "modfied" and "removed", and change email
+# Added "modified" and "removed", and change email
 gitJsonPayload = """
 {
   "before": "95790bf891e76fee5e1747ab589903a6a1f80f22",
@@ -72,42 +77,42 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             dialects={'gitlab': True}, master=fakeMasterForHooks())
 
     def check_changes(self, r, project='', codebase=None):
-        self.assertEquals(len(self.changeHook.master.addedChanges), 2)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
         change = self.changeHook.master.addedChanges[0]
 
-        self.assertEquals(change["repository"], "git@localhost:diaspora.git")
-        self.assertEquals(
+        self.assertEqual(change["repository"], "git@localhost:diaspora.git")
+        self.assertEqual(
             calendar.timegm(change["when_timestamp"].utctimetuple()),
             1323692851
         )
-        self.assertEquals(
+        self.assertEqual(
             change["author"], "Jordi Mallach <jordi@softcatala.org>")
-        self.assertEquals(
+        self.assertEqual(
             change["revision"], 'b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327')
-        self.assertEquals(
+        self.assertEqual(
             change["comments"], "Update Catalan translation to e38cb41.")
-        self.assertEquals(change["branch"], "master")
-        self.assertEquals(change[
-                          "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
+        self.assertEqual(change["branch"], "master")
+        self.assertEqual(change[
+            "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
         change = self.changeHook.master.addedChanges[1]
-        self.assertEquals(change["repository"], "git@localhost:diaspora.git")
-        self.assertEquals(
+        self.assertEqual(change["repository"], "git@localhost:diaspora.git")
+        self.assertEqual(
             calendar.timegm(change["when_timestamp"].utctimetuple()),
             1325626589
         )
-        self.assertEquals(
+        self.assertEqual(
             change["author"], "GitLab dev user <gitlabdev@dv6700.(none)>")
-        self.assertEquals(change["src"], "git")
-        self.assertEquals(
+        self.assertEqual(change["src"], "git")
+        self.assertEqual(
             change["revision"], 'da1560886d4f094c3e6c9ef40349f7d38b5d27d7')
-        self.assertEquals(change["comments"], "fixed readme")
-        self.assertEquals(change["branch"], "master")
-        self.assertEquals(change[
-                          "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
+        self.assertEqual(change["comments"], "fixed readme")
+        self.assertEqual(change["branch"], "master")
+        self.assertEqual(change[
+            "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
-        self.assertEquals(change.get("project"), project)
-        self.assertEquals(change.get("codebase"), codebase)
+        self.assertEqual(change.get("project"), project)
+        self.assertEqual(change.get("codebase"), codebase)
 
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
@@ -144,7 +149,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            self.assertEquals(len(self.changeHook.master.addedChanges), 0)
+            self.assertEqual(len(self.changeHook.master.addedChanges), 0)
             self.assertIn("Error loading JSON:", self.request.written)
             self.request.setResponseCode.assert_called_with(400, mock.ANY)
 

@@ -16,6 +16,11 @@
 Miscellaneous utilities; these should be imported from C{buildbot.util}, not
 directly from this module.
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+
 from twisted.internet import reactor
 
 
@@ -23,7 +28,7 @@ def deferredLocked(lock_or_attr):
     def decorator(fn):
         def wrapper(*args, **kwargs):
             lock = lock_or_attr
-            if isinstance(lock, basestring):
+            if isinstance(lock, string_types):
                 lock = getattr(args[0], lock)
             return lock.run(fn, *args, **kwargs)
         return wrapper

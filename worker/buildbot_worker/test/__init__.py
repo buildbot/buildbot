@@ -52,6 +52,7 @@ def add_debugging_monkeypatches():
             raise unittest.SkipTest('unittest.TestCase.patch is not available')
         unittest.TestCase.patch = nopatch
 
+
 add_debugging_monkeypatches()
 
 __all__ = []

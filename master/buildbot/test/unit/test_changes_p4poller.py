@@ -12,9 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import datetime
 
 import dateutil.tz
+
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
@@ -152,8 +157,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource.poll()
 
         def check_first_check(_):
-            self.assertEquals(self.master.data.updates.changesAdded, [])
-            self.assertEquals(self.changesource.last_change, 1)
+            self.assertEqual(self.master.data.updates.changesAdded, [])
+            self.assertEqual(self.changesource.last_change, 1)
         d.addCallback(check_first_check)
 
         # Subsequent times, it returns Change objects for new changes.
@@ -258,9 +263,29 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         @d.addCallback
         def check(_):
             # check that 2 was processed OK
-            self.assertEquals(self.changesource.last_change, 2)
+            self.assertEqual(self.changesource.last_change, 2)
             self.assertAllCommandsRan()
         return d
+
+    def test_poll_unicode_error(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1)))
+        self.expectCommands(
+            gpo.Expect(
+                'p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
+        )
+        # Add a character which cannot be decoded with utf-8
+        undecodableText = p4change[2].encode("utf-8") + b"\x81"
+        self.add_p4_describe_result(2, undecodableText)
+
+        # tell poll() that it's already been called once
+        self.changesource.last_change = 2
+
+        # call _poll, so we can catch the failure
+        d = self.changesource._poll()
+        return self.assertFailure(d, UnicodeError)
 
     def test_acquire_ticket_auth(self):
         self.attachChangeSource(
@@ -300,7 +325,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource.poll()
 
         def check_ticket_passwd(_):
-            self.assertEquals(
+            self.assertEqual(
                 self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
         d.addCallback(check_ticket_passwd)
         return d
@@ -325,7 +350,15 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             # replicate that here
             when = self.makeTime("2006/04/13 21:55:39")
 
-            self.assertEqual(self.master.data.updates.changesAdded, [{
+            def changeKey(change):
+                """ Let's sort the array of changes by branch,
+                    because in P4Source._poll(), changeAdded()
+                    is called by iterating over a dictionary of
+                    branches"""
+                return change['branch']
+
+            self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
+                sorted([{
                 'author': u'mpatel',
                 'branch': u'branch_c',
                 'category': None,
@@ -353,8 +386,8 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'revlink': '',
                 'src': None,
                 'when_timestamp': datetime2epoch(when),
-            }])
-            self.assertEquals(self.changesource.last_change, 5)
+            }], key=changeKey))
+            self.assertEqual(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d

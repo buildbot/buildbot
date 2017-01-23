@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.trial import unittest
@@ -43,7 +48,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822, builderid=77),
             fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
@@ -126,7 +131,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77),
             fakedb.Master(id=88),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
             fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
@@ -185,6 +190,14 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_complete(self):
         resultSpec = MockedResultSpec(
             filters=[resultspec.Filter('complete', 'eq', [False])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
+    def test_get_complete_at(self):
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('complete_at', 'eq', [None])])
         builds = yield self.callGet(('builds',), resultSpec=resultSpec)
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])

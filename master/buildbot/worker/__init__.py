@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from buildbot.worker.base import AbstractLatentWorker
+from buildbot.worker.latent import AbstractLatentWorker
 from buildbot.worker.base import AbstractWorker
 from buildbot.worker.base import Worker
 

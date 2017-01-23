@@ -12,11 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
+
 import sqlalchemy as sa
 import sqlalchemy.exc
 
 from buildbot.db import base
-from buildbot.util import json
 
 
 class _IdNotFoundError(Exception):

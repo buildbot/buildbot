@@ -1,0 +1,1 @@
+:bb:cfg:`buildbotNetUsageData` now uses ``requests`` if available and will default to HTTP if a bogus SSL implementation is found. It will also correctly send information about the platform type.

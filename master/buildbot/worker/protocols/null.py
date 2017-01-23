@@ -12,7 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.python import log
@@ -29,6 +32,7 @@ class ProxyMixin():
     def __init__(self, impl):
         assert isinstance(impl, self.ImplClass)
         self.impl = impl
+        self._disconnect_listeners = []
 
     def callRemote(self, message, *args, **kw):
         method = getattr(self.impl, "remote_%s" % message, None)
@@ -65,6 +69,9 @@ class FileWriterProxy(ProxyMixin):
 class Connection(base.Connection):
     proxies = {base.FileWriterImpl: FileWriterProxy,
                base.FileReaderImpl: FileReaderProxy}
+
+    def loseConnection(self):
+        pass
 
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)

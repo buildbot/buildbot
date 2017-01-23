@@ -12,8 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
+
+import json
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import failure
@@ -21,7 +28,6 @@ from twisted.python import failure
 from buildbot.data import connector
 from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.test.util import validation
-from buildbot.util import json
 from buildbot.util import service
 
 
@@ -56,12 +62,12 @@ class FakeUpdates(service.AsyncService):
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
         for k, v in iteritems(properties):
-            self.testcase.assertIsInstance(k, unicode)
+            self.testcase.assertIsInstance(k, text_type)
             if sourced:
                 self.testcase.assertIsInstance(v, tuple)
                 self.testcase.assertEqual(len(v), 2)
                 propval, propsrc = v
-                self.testcase.assertIsInstance(propsrc, unicode)
+                self.testcase.assertIsInstance(propsrc, text_type)
             else:
                 propval = v
             try:
@@ -81,12 +87,12 @@ class FakeUpdates(service.AsyncService):
         # double-check args, types, etc.
         if files is not None:
             self.testcase.assertIsInstance(files, list)
-            map(lambda f: self.testcase.assertIsInstance(f, unicode), files)
-        self.testcase.assertIsInstance(comments, (type(None), unicode))
-        self.testcase.assertIsInstance(author, (type(None), unicode))
-        self.testcase.assertIsInstance(revision, (type(None), unicode))
+            map(lambda f: self.testcase.assertIsInstance(f, text_type), files)
+        self.testcase.assertIsInstance(comments, (type(None), text_type))
+        self.testcase.assertIsInstance(author, (type(None), text_type))
+        self.testcase.assertIsInstance(revision, (type(None), text_type))
         self.testcase.assertIsInstance(when_timestamp, (type(None), int))
-        self.testcase.assertIsInstance(branch, (type(None), unicode))
+        self.testcase.assertIsInstance(branch, (type(None), text_type))
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
@@ -101,13 +107,13 @@ class FakeUpdates(service.AsyncService):
                                                                project=project)
             category = category(pre_change)
 
-        self.testcase.assertIsInstance(category, (type(None), unicode))
-        self.testcase.assertIsInstance(revlink, (type(None), unicode))
+        self.testcase.assertIsInstance(category, (type(None), text_type))
+        self.testcase.assertIsInstance(revlink, (type(None), text_type))
         self.assertProperties(sourced=False, properties=properties)
-        self.testcase.assertIsInstance(repository, unicode)
-        self.testcase.assertIsInstance(codebase, (type(None), unicode))
-        self.testcase.assertIsInstance(project, unicode)
-        self.testcase.assertIsInstance(src, (type(None), unicode))
+        self.testcase.assertIsInstance(repository, text_type)
+        self.testcase.assertIsInstance(codebase, (type(None), text_type))
+        self.testcase.assertIsInstance(project, text_type)
+        self.testcase.assertIsInstance(src, (type(None), text_type))
 
         # use locals() to ensure we get all of the args and don't forget if
         # more are added
@@ -116,7 +122,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(len(self.changesAdded))
 
     def masterActive(self, name, masterid):
-        self.testcase.assertIsInstance(name, unicode)
+        self.testcase.assertIsInstance(name, text_type)
         self.testcase.assertIsInstance(masterid, int)
         if masterid:
             self.testcase.assertEqual(masterid, 1)
@@ -124,7 +130,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     def masterStopped(self, name, masterid):
-        self.testcase.assertIsInstance(name, unicode)
+        self.testcase.assertIsInstance(name, text_type)
         self.testcase.assertEqual(masterid, 1)
         self.thisMasterActive = False
         return defer.succeed(None)
@@ -143,18 +149,18 @@ class FakeUpdates(service.AsyncService):
         if builderids is None:
             builderids = []
         # assert types
-        self.testcase.assertIsInstance(scheduler, unicode)
+        self.testcase.assertIsInstance(scheduler, text_type)
         self.testcase.assertIsInstance(sourcestamps, list)
         for ss in sourcestamps:
             if not isinstance(ss, int) and not isinstance(ss, dict):
                 self.testcase.fail("%s (%s) is not an integer or a dictionary"
                                    % (ss, type(ss)))
             del ss  # since we use locals(), below
-        self.testcase.assertIsInstance(reason, unicode)
+        self.testcase.assertIsInstance(reason, text_type)
         self.assertProperties(sourced=True, properties=properties)
         self.testcase.assertIsInstance(builderids, list)
         self.testcase.assertIsInstance(external_idstring,
-                                       (type(None), unicode))
+                                       (type(None), text_type))
 
         self.buildsetsAdded.append(locals())
         self.buildsetsAdded[-1].pop('self')
@@ -232,7 +238,7 @@ class FakeUpdates(service.AsyncService):
     def updateBuilderList(self, masterid, builderNames):
         self.testcase.assertEqual(masterid, self.master.masterid)
         for n in builderNames:
-            self.testcase.assertIsInstance(n, unicode)
+            self.testcase.assertIsInstance(n, text_type)
         self.builderNames = builderNames
         return defer.succeed(None)
 

@@ -12,7 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import random
+from datetime import datetime
+
+from dateutil.tz import tzutc
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -203,7 +210,7 @@ class BasicBuildChooser(BuildChooserBase):
                 recycledWorkers.append(worker)
                 worker = yield self._popNextWorker(breq)
 
-            # recycle the workers that we didnt use to the head of the queue
+            # recycle the workers that we didn't use to the head of the queue
             # this helps ensure we run 'nextWorker' only once per worker choice
             if recycledWorkers:
                 self._unpopWorkers(recycledWorkers)
@@ -352,7 +359,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         def remove(x):
             self._pendingMSBOCalls.remove(d)
             return x
-        d.addErrback(log.err, "while strting builds on %s" % (new_builders,))
+        d.addErrback(log.err, "while starting builds on %s" % (new_builders,))
 
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
@@ -404,13 +411,20 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
-        def nonecmp(a, b):
+        def nonekey(a):
             if a[0] is None:
-                return 1
-            if b[0] is None:
-                return -1
-            return cmp(a, b)
-        xformed.sort(cmp=nonecmp)
+                b = list(a)
+                # Choose a really big date, so that any
+                # date set to 'None' will appear at the
+                # end of the list during comparisons.
+                b[0] = datetime.max
+                # Need to set the timezone on the date, in order
+                # to perform comparisons with other dates which
+                # have the time zone set.
+                b[0] = b[0].replace(tzinfo=tzutc())
+                return tuple(b)
+            return a
+        xformed.sort(key=nonekey)
 
         # and reverse the transform
         rv = [xf[1] for xf in xformed]

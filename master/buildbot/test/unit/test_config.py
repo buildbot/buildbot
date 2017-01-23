@@ -12,16 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import __builtin__
+
+# We cannot use the builtins module here from Python-Future.
+# We need to use the native __builtin__ module on Python 2,
+# and builtins module on Python 3, because we need to override
+# the actual native open method.
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+from future.utils import iteritems
+
 import os
 import re
 import textwrap
 
 import mock
-from future.utils import iteritems
+
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -41,12 +51,18 @@ from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
+try:
+    # Python 2
+    import __builtin__ as builtins
+except ImportError:
+    # Python 3
+    import builtins
+
 global_defaults = dict(
     title='Buildbot',
     titleURL='http://buildbot.net',
     buildbotURL='http://localhost:8080/',
     changeHorizon=None,
-    eventHorizon=50,
     logHorizon=None,
     buildHorizon=None,
     logCompressionLimit=4096,
@@ -60,6 +76,7 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
+    buildbotNetUsageData='basic',
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
@@ -77,8 +94,8 @@ class FakeStatusReceiver(status_base.StatusReceiver):
     pass
 
 
+@implementer(interfaces.IScheduler)
 class FakeScheduler(object):
-    implements(interfaces.IScheduler)
 
     def __init__(self, name):
         self.name = name
@@ -104,8 +121,8 @@ class ConfigErrors(unittest.TestCase):
     def test_nonempty(self):
         empty = config.ConfigErrors()
         full = config.ConfigErrors(['a'])
-        self.failUnless(not empty)
-        self.failIf(not full)
+        self.assertTrue(not empty)
+        self.assertFalse(not full)
 
     def test_error_raises(self):
         e = self.assertRaises(config.ConfigErrors, config.error, "message")
@@ -172,7 +189,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         self.install_config_file('#dummy')
 
         # override build-in open() function to always rise IOError
-        self.patch(__builtin__, "open", raise_IOError)
+        self.patch(builtins, "open", raise_IOError)
 
         # check that we got the expected ConfigError exception
         self.assertRaisesConfigError(
@@ -333,25 +350,25 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertIsInstance(rv, config.MasterConfig)
 
         # make sure all of the loaders and checkers are called
-        self.failUnless(rv.load_global.called)
-        self.failUnless(rv.load_validation.called)
-        self.failUnless(rv.load_db.called)
-        self.failUnless(rv.load_metrics.called)
-        self.failUnless(rv.load_caches.called)
-        self.failUnless(rv.load_schedulers.called)
-        self.failUnless(rv.load_builders.called)
-        self.failUnless(rv.load_workers.called)
-        self.failUnless(rv.load_change_sources.called)
-        self.failUnless(rv.load_status.called)
-        self.failUnless(rv.load_user_managers.called)
+        self.assertTrue(rv.load_global.called)
+        self.assertTrue(rv.load_validation.called)
+        self.assertTrue(rv.load_db.called)
+        self.assertTrue(rv.load_metrics.called)
+        self.assertTrue(rv.load_caches.called)
+        self.assertTrue(rv.load_schedulers.called)
+        self.assertTrue(rv.load_builders.called)
+        self.assertTrue(rv.load_workers.called)
+        self.assertTrue(rv.load_change_sources.called)
+        self.assertTrue(rv.load_status.called)
+        self.assertTrue(rv.load_user_managers.called)
 
-        self.failUnless(rv.check_single_master.called)
-        self.failUnless(rv.check_schedulers.called)
-        self.failUnless(rv.check_locks.called)
-        self.failUnless(rv.check_builders.called)
-        self.failUnless(rv.check_status.called)
-        self.failUnless(rv.check_horizons.called)
-        self.failUnless(rv.check_ports.called)
+        self.assertTrue(rv.check_single_master.called)
+        self.assertTrue(rv.check_schedulers.called)
+        self.assertTrue(rv.check_locks.called)
+        self.assertTrue(rv.check_builders.called)
+        self.assertTrue(rv.check_status.called)
+        self.assertTrue(rv.check_horizons.called)
+        self.assertTrue(rv.check_ports.called)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
@@ -383,7 +400,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     # utils
 
     def assertResults(self, **expected):
-        self.failIf(self.errors, self.errors.errors)
+        self.assertFalse(self.errors, self.errors.errors)
         got = dict([
             (attr, getattr(self.cfg, attr))
             for attr, exp in iteritems(expected)])
@@ -460,7 +477,11 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(changeHorizon=None), changeHorizon=None)
 
     def test_load_global_eventHorizon(self):
-        self.do_test_load_global(dict(eventHorizon=10), eventHorizon=10)
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
+            self.do_test_load_global(
+                dict(eventHorizon=10, buildbotNetUsageData=None))
 
     def test_load_global_logHorizon(self):
         self.do_test_load_global(dict(logHorizon=10), logHorizon=10)
@@ -817,10 +838,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers(self):
-        sl = worker.Worker('foo', 'x')
+        wrk = worker.Worker('foo', 'x')
         self.cfg.load_workers(self.filename,
-                              dict(workers=[sl]))
-        self.assertResults(workers=[sl])
+                              dict(workers=[wrk]))
+        self.assertResults(workers=[wrk])
 
     def test_load_workers_old_api(self):
         w = worker.Worker("name", 'x')
@@ -1139,9 +1160,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
     def test_check_builders_unknown_worker(self):
-        sl = mock.Mock()
-        sl.workername = 'xyz'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'xyz'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1')
         self.cfg.builders = [b1]
@@ -1169,9 +1190,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                "duplicate builder builddir 'dir'")
 
     def test_check_builders(self):
-        sl = mock.Mock()
-        sl.workername = 'a'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'a'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1')
         b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2')
@@ -1323,6 +1344,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
             lambda: config.BuilderConfig(tags=['abc', 13],
                                          name='a', workernames=['a'], factory=self.factory))
 
+    def test_tags_no_tag_dupes(self):
+        self.assertRaisesConfigError(
+            "builder 'a': tags list contains duplicate tags: abc",
+            lambda: config.BuilderConfig(tags=['abc', 'bca', 'abc'],
+                                         name='a', workernames=['a'], factory=self.factory))
+
     def test_tags_no_categories_too(self):
         self.assertRaisesConfigError(
             "categories are deprecated and replaced by tags; you should only specify tags",
@@ -1381,7 +1408,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, category='c',
+            workerbuilddir='wbd', factory=self.factory, category='c',
             nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1390,7 +1417,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               name='b',
                               workernames=['s2', 's1'],
                               builddir='bd',
-                              workerbuilddir='sbd',
+                              workerbuilddir='wbd',
                               tags=['c'],
                               locks=['l'],
                               env={'x': 10},
@@ -1403,7 +1430,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, tags=['c'],
+            workerbuilddir='wbd', factory=self.factory, tags=['c'],
             nextWorker=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1418,7 +1445,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'nextBuild': nb,
                                                'nextWorker': ns,
                                                'properties': {'y': 20},
-                                               'workerbuilddir': 'sbd',
+                                               'workerbuilddir': 'wbd',
                                                'workernames': ['s2', 's1'],
                                                })
 

@@ -1,21 +1,30 @@
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot import config
 from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 from buildbot.reporters.http import HttpStatusPushBase
+from buildbot.util import httpclientservice
+from buildbot.util.logger import Logger
+
+log = Logger()
+
+HOSTED_BASE_URL = "https://api.hipchat.com"
 
 
 class HipChatStatusPush(HttpStatusPushBase):
     name = "HipChatStatusPush"
 
-    def checkConfig(self, auth_token, endpoint="https://api.hipchat.com",
+    def checkConfig(self, auth_token, endpoint=HOSTED_BASE_URL,
                     builder_room_map=None, builder_user_map=None,
                     event_messages=None, **kwargs):
-        if not isinstance(auth_token, basestring):
+        if not isinstance(auth_token, string_types):
             config.error('auth_token must be a string')
-        if not isinstance(endpoint, basestring):
+        if not isinstance(endpoint, string_types):
             config.error('endpoint must be a string')
         if builder_room_map and not isinstance(builder_room_map, dict):
             config.error('builder_room_map must be a dict')
@@ -27,12 +36,12 @@ class HipChatStatusPush(HttpStatusPushBase):
                         builder_room_map=None, builder_user_map=None,
                         event_messages=None, **kwargs):
         yield HttpStatusPushBase.reconfigService(self, **kwargs)
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, endpoint)
+
         self.auth_token = auth_token
-        self.endpoint = endpoint
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
-        self.user_notify = '%sv2/user/%s/message?auth_token=%s'
-        self.room_notify = '%sv2/room/%s/notification?auth_token=%s'
 
     @defer.inlineCallbacks
     def buildStarted(self, key, build):
@@ -68,7 +77,8 @@ class HipChatStatusPush(HttpStatusPushBase):
         }
         return event_messages.get(event_name, '')
 
-    # use this as an extension point to inject extra parameters into your postData
+    # use this as an extension point to inject extra parameters into your
+    # postData
     def getExtraParams(self, build, event_name):
         return {}
 
@@ -78,18 +88,15 @@ class HipChatStatusPush(HttpStatusPushBase):
         if not postData or 'message' not in postData or not postData['message']:
             return
 
-        if not self.endpoint.endswith('/'):
-            self.endpoint += '/'
-
         urls = []
         if 'id_or_email' in postData:
-            urls.append(self.user_notify % (self.endpoint, postData.pop('id_or_email'), self.auth_token))
+            urls.append('/v2/user/{}/message'.format(postData.pop('id_or_email')))
         if 'room_id_or_name' in postData:
-            urls.append(self.room_notify % (self.endpoint, postData.pop('room_id_or_name'), self.auth_token))
+            urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
 
-        if urls:
-            for url in urls:
-                response = yield self.session.post(url, postData)
-                if response.status_code != 200:
-                    log.msg("%s: unable to upload status: %s" %
-                            (response.status_code, response.content))
+        for url in urls:
+            response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)
+            if response.code != 200:
+                content = yield response.content()
+                log.error("{code}: unable to upload status: {content}",
+                          code=response.code, content=content)

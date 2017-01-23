@@ -14,6 +14,10 @@
 # Copyright Buildbot Team Members
 #
 # copied from foolscap
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log

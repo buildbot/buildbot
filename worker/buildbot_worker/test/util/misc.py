@@ -13,25 +13,43 @@
 #
 # Copyright Buildbot Team Members
 
-import __builtin__
-import cStringIO
+# We cannot use the builtins module here from Python-Future.
+# We need to use the native __builtin__ module on Python 2,
+# and builtins module on Python 3, because we need to override
+# the actual native open method.
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import PY3
+from future.utils import string_types
+
 import errno
 import os
 import re
 import shutil
 import sys
+from io import BytesIO
+from io import StringIO
 
 import mock
+
 from twisted.python import log
 
 from buildbot_worker.scripts import base
+
+try:
+    # Python 2
+    import __builtin__ as builtins
+except ImportError:
+    # Python 3
+    import builtins
 
 
 def nl(s):
     """Convert the given string to the native newline format, assuming it is
     already in normal UNIX newline format (\n).  Use this to create the
-    appropriate expectation in a failUnlessEqual"""
-    if not isinstance(s, basestring):
+    appropriate expectation in an assertEqual"""
+    if not isinstance(s, string_types):
         return s
     return s.replace('\n', os.linesep)
 
@@ -102,7 +120,7 @@ class FileIOMixin(object):
 
         # patch open() to return mocked object
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpOpenError(self, errno=errno.ENOENT, strerror="dummy-msg",
                        filename="dummy-file"):
@@ -114,7 +132,7 @@ class FileIOMixin(object):
         @param filename: exception's filename value
         """
         self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
                        filename="dummy-file"):
@@ -130,7 +148,7 @@ class FileIOMixin(object):
         self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
                                                           filename))
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
     def setUpWriteError(self, errno=errno.ENOSPC, strerror="dummy-msg",
                         filename="dummy-file"):
@@ -145,7 +163,7 @@ class FileIOMixin(object):
         self.fileobj.write = mock.Mock(side_effect=IOError(errno, strerror,
                                                            filename))
         self.open = mock.Mock(return_value=self.fileobj)
-        self.patch(__builtin__, "open", self.open)
+        self.patch(builtins, "open", self.open)
 
 
 class LoggingMixin(object):
@@ -176,7 +194,16 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        self.stdout = cStringIO.StringIO()
+        #
+        # sys.stdout is implemented differently
+        # in Python 2 and Python 3, so we need to
+        # override it differently.
+        # In Python 2, sys.stdout is a byte stream.
+        # In Python 3, sys.stdout is a text stream.
+        if PY3:
+            self.stdout = StringIO()
+        else:
+            self.stdout = BytesIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):

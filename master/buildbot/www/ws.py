@@ -12,14 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import itervalues
+from future.utils import string_types
+
+import json
+
 from autobahn.twisted.resource import WebSocketResource
 from autobahn.twisted.websocket import WebSocketServerFactory
 from autobahn.twisted.websocket import WebSocketServerProtocol
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import json
 from buildbot.util import toJson
 
 
@@ -66,7 +72,7 @@ class WsProtocol(WebSocketServerProtocol):
         return tuple([str(p) if p != "*" else None for p in path])
 
     def isPath(self, path):
-        if not isinstance(path, basestring):
+        if not isinstance(path, string_types):
             return False
         return True
 
@@ -77,22 +83,24 @@ class WsProtocol(WebSocketServerProtocol):
             return
 
         # if it's already subscribed, don't leak a subscription
-        if path in self.qrefs:
+        if self.qrefs is not None and path in self.qrefs:
             yield self.ack(_id=_id)
             return
 
         def callback(key, message):
-            # protocol is deliberatly concise in size
+            # protocol is deliberately concise in size
             return self.sendJsonMessage(k="/".join(key), m=message)
 
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
 
         # race conditions handling
-        if path in self.qrefs or self.qrefs is None:
+        if self.qrefs is None or path in self.qrefs:
             qref.stopConsuming()
 
-        self.qrefs[path] = qref
-        self.ack(_id=_id)
+        # only store and ack if we were not disconnected in between
+        if self.qrefs is not None:
+            self.qrefs[path] = qref
+            self.ack(_id=_id)
 
     @defer.inlineCallbacks
     def cmd_stopConsuming(self, path, _id):

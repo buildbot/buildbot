@@ -1,5 +1,9 @@
 #!/usr/bin/env jython
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import glob
 import sys
 
@@ -22,26 +26,26 @@ files = [filter(None, [fn.strip() for fn in fs]) for fs in files]
 # prefix with testdir
 files = [[testdir + '/' + fn.strip() for fn in fs] for fs in files]
 
-print "Will run these tests:", files
+print("Will run these tests:", files)
 
 i = 0
 
 for testlist in files:
 
-    print "==========================="
-    print "running tests from testlist", orderfiles[i]
-    print "---------------------------"
+    print("===========================")
+    print("running tests from testlist", orderfiles[i])
+    print("---------------------------")
     i = i + 1
 
     for test in testlist:
-        print "running test", test
+        print("running test", test)
 
         try:
-            execfile(test, globals().copy())
+            exec(open(test).read(), globals().copy())
 
         except Exception:
             ei = sys.exc_info()
-            print "TEST FAILURE:", ei[1]
+            print("TEST FAILURE:", ei[1])
 
         else:
-            print "SUCCESS"
+            print("SUCCESS")

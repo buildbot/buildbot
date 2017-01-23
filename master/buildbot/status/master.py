@@ -12,14 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import os
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import iteritems
 from future.utils import itervalues
+
+import os
+
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
@@ -28,12 +32,13 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IStatus)
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
-    implements(interfaces.IStatus)
 
     def __init__(self):
         service.AsyncMultiService.__init__(self)
@@ -144,7 +149,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             build_number)
 
     def _getURLForBuildWithBuildername(self, builder_name, build_number):
-        # dont use this API. this URL is not supported
+        # don't use this API. this URL is not supported
         # its here waiting for getURLForThing removal or switch to deferred
         prefix = self.getBuildbotURL()
         return prefix + "#builders/%s/builds/%d" % (
@@ -189,7 +194,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # IWorkerStatus
         if interfaces.IWorkerStatus.providedBy(thing):
             worker = thing
-            return prefix + "#buildslaves/%s" % (
+            return prefix + "#workers/%s" % (
                 urlquote(worker.getName(), safe=''),
             )
 
@@ -307,7 +312,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             candidates = [(i, b, b.getTimes()[1])
                           for i, b in enumerate(next_build)
                           if b is not None]
-            candidates.sort(lambda x, y: cmp(x[2], y[2]))
+            candidates.sort(key=lambda x: x[2])
             if not candidates:
                 return
 
@@ -343,7 +348,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
-        builder_status.basedir = os.path.join(self.basedir, basedir)
+        builder_status.basedir = os.path.join(bytes2NativeString(self.basedir),
+                                              bytes2NativeString(basedir))
         builder_status.name = name  # it might have been updated
         builder_status.status = self
 

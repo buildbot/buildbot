@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import textwrap
 
 from twisted.trial import unittest
@@ -76,3 +80,13 @@ class TestRaml(unittest.TestCase):
         self.assertIn(
             "/masters/{masterid}/builders/{builderid}/workers/{workerid}",
             self.api.endpoints_by_type['worker'].keys())
+
+    def test_iter_actions(self):
+        build = self.api.endpoints_by_type['build']
+        actions = dict(self.api.iter_actions(build['/builds/{buildid}']))
+        self.assertEqual(sorted(actions.keys()), sorted(['rebuild', 'stop']))
+
+    def test_rawendpoints(self):
+        self.assertIn(
+            "/steps/{stepid}/logs/{log_slug}/raw",
+            self.api.rawendpoints.keys())

@@ -12,16 +12,22 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from posixpath import join
 
-import requests
+from __future__ import absolute_import
+from __future__ import print_function
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
+from future.utils import string_types
+
+import json
+from posixpath import join
+
+import requests
+
 from twisted.internet import defer
 from twisted.internet import threads
 
-from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import resource
 
@@ -51,7 +57,6 @@ class OAuth2LoginResource(auth.LoginResource):
                 details.update(infos)
             request.getSession().user_info = details
             state = request.args.get("state", [""])[0]
-            print repr(state)
             if state:
                 for redirect in parse_qs(state).get('redirect', []):
                     raise resource.Redirect(self.auth.homeUri + "#" + redirect)
@@ -106,6 +111,7 @@ class OAuth2Auth(auth.AuthBase):
     def createSessionFromToken(self, token):
         s = requests.Session()
         s.params = {'access_token': token['access_token']}
+        s.verify = self.sslVerify
         return s
 
     def get(self, session, path):
@@ -131,7 +137,7 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
-            if isinstance(response.content, basestring):
+            if isinstance(response.content, string_types):
                 try:
                     content = json.loads(response.content)
                 except ValueError:
@@ -172,12 +178,19 @@ class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
     authUri = 'https://github.com/login/oauth/authorize'
+    authUriAdditionalParams = {'scope': 'user'}
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, '/user')
-        orgs = self.get(c, join('/users', user['login'], "orgs"))
+        emails = self.get(c, '/user/emails')
+        for email in emails:
+            if email.get('primary', False):
+                user['email'] = email['email']
+                break
+        orgs = self.get(c, '/user/orgs')
+
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
@@ -203,3 +216,24 @@ class GitLabAuth(OAuth2Auth):
                     email=user["email"],
                     avatar_url=user["avatar_url"],
                     groups=[g["path"] for g in groups])
+
+
+class BitbucketAuth(OAuth2Auth):
+    name = "Bitbucket"
+    faIcon = "fa-bitbucket"
+    authUri = 'https://bitbucket.org/site/oauth2/authorize'
+    tokenUri = 'https://bitbucket.org/site/oauth2/access_token'
+    resourceEndpoint = 'https://api.bitbucket.org/2.0'
+
+    def getUserInfoFromOAuthClient(self, c):
+        user = self.get(c, '/user')
+        emails = self.get(c, '/user/emails')
+        for email in emails["values"]:
+            if email.get('is_primary', False):
+                user['email'] = email['email']
+                break
+        orgs = self.get(c, '/teams?role=member')
+        return dict(full_name=user['display_name'],
+                    email=user['email'],
+                    username=user['username'],
+                    groups=[org['username'] for org in orgs["values"]])

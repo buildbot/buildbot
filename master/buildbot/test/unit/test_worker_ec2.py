@@ -14,6 +14,11 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2014 Longaccess private company
 
+from __future__ import absolute_import
+from __future__ import print_function
+
+import os
+
 from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings
@@ -32,7 +37,7 @@ except ImportError:
 
 
 if boto3 is not None:
-    from buildbot.worker import ec2
+    from buildbot.worker import ec2  # pylint: disable=ungrouped-imports
 
 
 # redefine the mock_ec2 decorator to skip the test if boto3 or moto
@@ -40,6 +45,8 @@ if boto3 is not None:
 def skip_ec2(f):
     f.skip = "boto3 or moto is not installed"
     return f
+
+
 if boto3 is None:
     mock_ec2 = skip_ec2
 
@@ -53,8 +60,17 @@ class TestEC2LatentWorker(unittest.TestCase):
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self, name='latent_buildbot_worker'):
-        c = boto3.client('ec2', region_name='us-east-1')
-        r = boto3.resource('ec2', region_name='us-east-1')
+        # the proxy system is also not properly mocked, so we need to delete environment variables
+        for env in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
+            if env in os.environ:
+                del os.environ[env]
+        # create key pair is not correctly mocked and need to have fake aws creds configured
+        kw = dict(region_name='us-east-1',
+                  aws_access_key_id='ACCESS_KEY',
+                  aws_secret_access_key='SECRET_KEY',
+                  aws_session_token='SESSION_TOKEN')
+        c = boto3.client('ec2', **kw)
+        r = boto3.resource('ec2', **kw)
         try:
             r.create_key_pair(KeyName=name)
         except NotImplementedError:
@@ -190,7 +206,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('ami-'))
-        self.assertTrue(start_time > 0)
+        self.assertTrue(start_time > "00:00:00")
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)

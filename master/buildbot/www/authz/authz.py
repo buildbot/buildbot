@@ -12,12 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import fnmatch
 import re
 
 from twisted.internet import defer
 from twisted.web.error import Error
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.www.authz.roles import RolesFromOwner
@@ -38,8 +42,8 @@ def reStrMatcher(value, match):
     return re.match(match, value)
 
 
+@implementer(IConfigured)
 class Authz(object):
-    implements(IConfigured)
 
     def getConfigDict(self):
         return {}

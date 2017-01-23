@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import base64
@@ -28,7 +31,7 @@ from twisted.cred import checkers
 from twisted.cred import portal
 from twisted.internet import protocol
 from twisted.python import log
-from zope.interface import implements  # requires Twisted-2.0 or later
+from zope.interface import implementer  # requires Twisted-2.0 or later
 
 from buildbot import config
 from buildbot.util import ComparableMixin
@@ -58,8 +61,8 @@ class makeTelnetProtocol:
         return telnet.TelnetTransport(auth, self.portal)
 
 
+@implementer(portal.IRealm)
 class _TelnetRealm:
-    implements(portal.IRealm)
 
     def __init__(self, namespace_maker):
         self.namespace_maker = namespace_maker
@@ -83,6 +86,7 @@ class chainedProtocolFactory:
 
     def __call__(self):
         return insults.ServerProtocol(manhole.ColoredManhole, self.namespace)
+
 
 if conchc:
     class AuthorizedKeysChecker(conchc.SSHPublicKeyDatabase):

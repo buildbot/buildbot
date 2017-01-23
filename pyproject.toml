@@ -1,0 +1,33 @@
+[tool.towncrier]
+    package = "buildbot"
+    package_dir = "master"
+    filename = "master/docs/relnotes/index.rst"
+    template = "master/docs/relnotes.rst.jinja"
+    title_format = "{name} ``{version}`` ( ``{project_date}`` )\n===================================================\n"
+    [[tool.towncrier.section]]
+        path = ""
+
+    [[tool.towncrier.type]]
+        directory = "feature"
+        name = "Features"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "bugfix"
+        name = "Bug fixes"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "doc"
+        name = "Improved Documentation"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "removal"
+        name = "Deprecations and Removals"
+        showcontent = true
+
+    [[tool.towncrier.type]]
+        directory = "misc"
+        name = "Misc"
+        showcontent = false

@@ -17,7 +17,11 @@
 #  and inspired from code from the Chromium project
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
-from buildbot.util import json
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
 
 
 def getChanges(request, options=None):
@@ -61,16 +65,19 @@ def getChanges(request, options=None):
     author = firstOrNothing(args.get('author'))
     if not author:
         author = firstOrNothing(args.get('who'))
-    comments = firstOrNothing(args.get('comments')).decode('utf-8')
+    comments = firstOrNothing(args.get('comments'))
+    if isinstance(comments, bytes):
+        comments = comments.decode('utf-8')
     branch = firstOrNothing(args.get('branch'))
     category = firstOrNothing(args.get('category'))
     revlink = firstOrNothing(args.get('revlink'))
     repository = firstOrNothing(args.get('repository'))
     project = firstOrNothing(args.get('project'))
+    codebase = firstOrNothing(args.get('codebase'))
 
     chdict = dict(author=author, files=files, comments=comments,
                   revision=revision, when=when,
                   branch=branch, category=category, revlink=revlink,
                   properties=properties, repository=repository,
-                  project=project)
+                  project=project, codebase=codebase)
     return ([chdict], None)

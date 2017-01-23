@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
 
 import re
 import unittest
@@ -36,7 +39,7 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
     if exception is None:
         self.fail("%s not raised" % str(expected_exception.__name__))
 
-    if isinstance(expected_regexp, basestring):
+    if isinstance(expected_regexp, string_types):
         expected_regexp = re.compile(expected_regexp)
 
     if not expected_regexp.search(str(exception)):

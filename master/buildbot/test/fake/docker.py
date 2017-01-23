@@ -13,11 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 
 class Client(object):
+    latest = None
 
     def __init__(self, base_url):
+        Client.latest = self
+        self.call_args_create_container = []
+        self.call_args_create_host_config = []
         self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
+        self._containers = {}
 
     def images(self):
         return self._images
@@ -33,18 +41,44 @@ class Client(object):
 
     def build(self, fileobj, tag):
         if fileobj.read() == 'BUG':
-            logs = []
-            for line in logs:
-                yield line
+            pass
         else:
             logs = []
             for line in logs:
                 yield line
             self._images.append({'RepoTags': [tag + ':latest']})
 
+    def containers(self, filters=None, *args, **kwargs):
+        if filters is not None:
+            return [
+                c for c in self._containers.values()
+                if c['name'] == filters['name']
+            ]
+        return self._containers.values()
+
     def create_host_config(self, *args, **kwargs):
-        pass
+        self.call_args_create_host_config.append(kwargs)
 
     def create_container(self, image, *args, **kwargs):
-        return {'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
-                'Warnings': None}
+        self.call_args_create_container.append(kwargs)
+        name = kwargs.get('name', None)
+        if 'buggy' in image:
+            raise Exception('we could not create this container')
+        for c in self._containers.values():
+            if c['name'] == name:
+                raise Exception('cannot create with same name')
+        ret = {
+            'Id':
+            '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
+            'Warnings': None
+        }
+        self._containers[ret['Id']] = {
+            'started': False,
+            'image': image,
+            'Id': ret['Id'],
+            'name': name
+        }
+        return ret
+
+    def remove_container(self, id, **kwargs):
+        del self._containers[id]

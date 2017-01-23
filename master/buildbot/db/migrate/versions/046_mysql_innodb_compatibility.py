@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
 from migrate import changeset
 from sqlalchemy.sql import func

@@ -23,7 +23,6 @@ install:
   
   - "%PYTHON%\\python.exe -m pip install -e pkg"
   - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
-  - "%PYTHON%\\python.exe -m pip install -e slave"
   - "%PYTHON%\\python.exe -m pip install -e worker"
 
   # Install prebuilt WWW packages, it's not easy to build them.
@@ -39,7 +38,7 @@ before_test:
   - cmd: SET "PATH=%PATH%;%PYTHON%\Scripts"
 
 test_script:
-  - "%PYTHON%\\python.exe -u %PYTHON%\\Scripts\\trial.py --reporter=text --rterrors buildbot.test buildslave.test buildbot_worker.test"
+  - "%PYTHON%\\python.exe -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.

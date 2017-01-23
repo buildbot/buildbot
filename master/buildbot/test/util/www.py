@@ -12,20 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cgi
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.urllib.parse import unquote as urlunquote
+from future.moves.urllib.parse import parse_qs
+from future.utils import integer_types
+from future.utils import iteritems
+
+import json
 import os
-from cStringIO import StringIO
+import pkg_resources
 from uuid import uuid1
 
 import mock
-import pkg_resources
-from future.moves.urllib.parse import unquote as urlunquote
-from future.utils import iteritems
+
 from twisted.internet import defer
+from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
-from buildbot.util import json
 from buildbot.www import auth
 from buildbot.www import authz
 
@@ -55,7 +61,8 @@ class FakeRequest(object):
         else:
             path, argstring = x
             self.path = path
-            self.args = cgi.parse_qs(argstring, 1)
+            self.args = parse_qs(argstring, 1)
+        self.uri = self.path
         self.postpath = list(map(urlunquote, path[1:].split('/')))
 
         self.deferred = defer.Deferred()
@@ -77,8 +84,11 @@ class FakeRequest(object):
         else:
             self.deferred.callback(self.written)
 
-    def setResponseCode(self, code):
+    def setResponseCode(self, code, text=None):
+        # twisted > 16 started to assert this
+        assert isinstance(code, integer_types)
         self.responseCode = code
+        self.responseText = text
 
     def setHeader(self, hdr, value):
         self.headers.setdefault(hdr, []).append(value)
@@ -167,7 +177,7 @@ class WwwTestMixin(RequiresWwwMixin):
         id = id or self.UUID
         request = self.make_request(path)
         request.method = "POST"
-        request.content = StringIO(requestJson or json.dumps(
+        request.content = NativeStringIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
         request.input_headers = {'content-type': content_type}
         rv = rsrc.render(request)

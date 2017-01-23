@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 from twisted.python import log
 from twisted.trial import unittest
 
@@ -28,7 +33,7 @@ class Tests(unittest.TestCase):
             log.msg('expect %r to be good' % (g,))
             self.assertTrue(identifiers.isIdentifier(50, g))
         bad = [
-            None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+            None, u'', b'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
             u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
             u"123 no initial digits",
         ]
@@ -37,7 +42,7 @@ class Tests(unittest.TestCase):
             self.assertFalse(identifiers.isIdentifier(50, b))
 
     def assertEqualUnicode(self, got, exp):
-        self.failUnless(isinstance(exp, unicode))
+        self.assertTrue(isinstance(exp, text_type))
         self.assertEqual(got, exp)
 
     def test_forceIdentifier_already_is(self):

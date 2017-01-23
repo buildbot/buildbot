@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import PY3
+from future.utils import iteritems
+from future.utils import string_types
+
 import inspect
 import re
 
-from future.utils import iteritems
 from twisted.python import failure
 from twisted.python import log
 from twisted.python.deprecate import deprecatedModuleAttribute
@@ -127,8 +133,12 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        valid_rsc_args = inspect.getargspec(
-            remotecommand.RemoteShellCommand.__init__)[0]
+        if PY3:
+            valid_rsc_args = inspect.signature(
+                remotecommand.RemoteShellCommand.__init__)
+        else:
+            valid_rsc_args = inspect.getargspec(
+                remotecommand.RemoteShellCommand.__init__)[0]
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
@@ -454,9 +464,9 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         is no upper bound."""
 
         for fileRe, warnRe, start, end in suppressionList:
-            if fileRe is not None and isinstance(fileRe, basestring):
+            if fileRe is not None and isinstance(fileRe, string_types):
                 fileRe = re.compile(fileRe)
-            if warnRe is not None and isinstance(warnRe, basestring):
+            if warnRe is not None and isinstance(warnRe, string_types):
                 warnRe = re.compile(warnRe)
             self.suppressions.append((fileRe, warnRe, start, end))
 
@@ -486,12 +496,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
 
         directoryEnterRe = self.directoryEnterPattern
         if (directoryEnterRe is not None
-                and isinstance(directoryEnterRe, basestring)):
+                and isinstance(directoryEnterRe, string_types)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
         if (directoryLeaveRe is not None
-                and isinstance(directoryLeaveRe, basestring)):
+                and isinstance(directoryLeaveRe, string_types)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our

@@ -12,20 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import textwrap
 
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import test_db_logs
 from buildbot.db.connector import DBConnector
 from buildbot.scripts import cleanupdb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+
+from . import test_db_logs
 
 try:
     import lz4
@@ -36,7 +42,7 @@ except ImportError:
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'))
+    config = dict(quiet=False, basedir=os.path.abspath('basedir'), force=True)
     config.update(kwargs)
     return config
 
@@ -66,10 +72,19 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 application = service.Application('buildmaster')
             """))
         self.setUpStdoutAssertions()
+        self.ensureNoSqliteMemory()
 
     def tearDown(self):
         os.chdir(self.origcwd)
         self.tearDownDirs()
+
+    def ensureNoSqliteMemory(self):
+        # test may use mysql or pg if configured in env
+        envkey = "BUILDBOT_TEST_DB_URL"
+        if envkey not in os.environ or os.environ[envkey] == 'sqlite://':
+
+            patch_environ(self, envkey, "sqlite:///" + os.path.join(
+                self.origcwd, "basedir", "state.sqlite"))
 
     def createMasterCfg(self, extraconfig=""):
         os.chdir(self.origcwd)
@@ -78,7 +93,8 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
                 from buildbot.plugins import *
                 c = BuildmasterConfig = dict()
                 c['db_url'] = {dburl}
-                c['multiMaster'] = True  # dont complain for no builders
+                c['buildbotNetUsageData'] = None
+                c['multiMaster'] = True  # don't complain for no builders
                 {extraconfig}
             """.format(dburl=repr(os.environ["BUILDBOT_TEST_DB_URL"]),
                        extraconfig=extraconfig)))
@@ -97,11 +113,6 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     @defer.inlineCallbacks
     def test_cleanup_bad_config2(self):
-        # test may use mysql or pg if configured in env
-        if "BUILDBOT_TEST_DB_URL" not in os.environ:
-
-            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                                    "basedir", "state.sqlite"))
 
         self.createMasterCfg(extraconfig="++++ # syntaxerror")
         res = yield cleanupdb._cleanupDatabase(mkconfig(basedir='basedir'))
@@ -115,11 +126,6 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
     @defer.inlineCallbacks
     def test_cleanup(self):
 
-        # test may use mysql or pg if configured in env
-        if "BUILDBOT_TEST_DB_URL" not in os.environ:
-
-            patch_environ(self, "BUILDBOT_TEST_DB_URL", "sqlite:///" + os.path.join(self.origcwd,
-                                                                                    "basedir", "state.sqlite"))
         # we reuse RealDatabaseMixin to setup the db
         yield self.setUpRealDatabase(table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                                                   'masters', 'buildrequests', 'buildsets',
@@ -140,9 +146,9 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
         # test all methods
         lengths = {}
-        for mode in self.db.logs.COMPRESSION_MODE.keys():
+        for mode in self.db.logs.COMPRESSION_MODE:
             if mode == "lz4" and not hasLz4:
-                # ok.. lz4 is not installed, dont fail
+                # ok.. lz4 is not installed, don't fail
                 lengths["lz4"] = 40
                 continue
             # create a master.cfg with different compression method
@@ -158,9 +164,9 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
             # retrieve the actual data size in db using raw sqlalchemy
             def thd(conn):
                 tbl = self.db.model.logchunks
-                q = sa.select([tbl.c.content])
+                q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
                 q = q.where(tbl.c.logid == logid)
-                return sum([len(row.content) for row in conn.execute(q)])
+                return conn.execute(q).fetchone()[0]
             lengths[mode] = yield self.db.pool.do(thd)
 
         self.assertDictAlmostEqual(

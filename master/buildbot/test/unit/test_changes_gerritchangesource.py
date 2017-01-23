@@ -12,15 +12,23 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
+import datetime
+import json
 import types
 
-from future.utils import iteritems
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.fake import fakedb
 from buildbot.test.fake.change import Change
 from buildbot.test.util import changesource
-from buildbot.util import json
 
 
 class TestGerritHelpers(unittest.TestCase):
@@ -150,7 +158,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
             for k, v in iteritems(c):
                 self.assertEqual(self.expected_change[k], v)
@@ -175,9 +183,9 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
-            self.failUnlessEqual(c["category"], "change-merged")
+            self.assertEqual(c["category"], "change-merged")
             self.assertEqual(c["branch"], "br")
         return d
 
@@ -188,7 +196,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 0)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 0)
         return d
 
     def test_custom_handler(self):
@@ -205,10 +213,109 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         @d.addCallback
         def check(_):
-            self.failUnlessEqual(len(self.master.data.updates.changesAdded), 1)
+            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
             c = self.master.data.updates.changesAdded[0]
-            self.failUnlessEqual(c['project'], "world")
+            self.assertEqual(c['project'], "world")
         return d
+
+
+class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
+                               unittest.TestCase):
+    NOW_TIMESTAMP = 1479302598
+    EVENT_TIMESTAMP = 1479302599
+    NOW_FORMATTED = '2016-16-11 13:23:18'
+    EVENT_FORMATTED = '2016-16-11 13:23:19'
+    OBJECTID = 1234
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        yield self.setUpChangeSource()
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+        yield self.tearDownChangeSource()
+
+    @defer.inlineCallbacks
+    def newChangeSource(self, **kwargs):
+        auth = kwargs.pop('auth', ('log', 'pass'))
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'gerrit', auth=auth)
+        self.changesource = gerritchangesource.GerritEventLogPoller(
+            'gerrit', auth=auth, gitBaseURL="ssh://someuser@somehost:29418", pollAtLaunch=False, **kwargs)
+
+    @defer.inlineCallbacks
+    def startChangeSource(self):
+        yield self.changesource.setServiceParent(self.master)
+        yield self.attachChangeSource(self.changesource)
+
+    # tests
+    @defer.inlineCallbacks
+    def test_now(self):
+        yield self.newChangeSource()
+        self.changesource.now()
+
+    @defer.inlineCallbacks
+    def test_describe(self):
+        # describe is not used yet in buildbot nine, but it can still be useful in the future, so lets
+        # implement and test it
+        yield self.newChangeSource()
+        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
+
+    @defer.inlineCallbacks
+    def test_name(self):
+        yield self.newChangeSource()
+        self.assertEqual('GerritEventLogPoller:gerrit', self.changesource.name)
+
+    @defer.inlineCallbacks
+    def test_lineReceived_patchset_created(self):
+        self.master.db.insertTestData([
+            fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
+                          class_name='GerritEventLogPoller')])
+        yield self.newChangeSource()
+        self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(self.NOW_TIMESTAMP)
+        self._http.expect(method='get', ep='/plugins/events-log/events/',
+                          params={'t1': self.NOW_FORMATTED},
+                          content_json=dict(
+                              type="patchset-created",
+                              change=dict(
+                                  branch="br",
+                                  project="pr",
+                                  number="4321",
+                                  owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                                  url="http://buildbot.net",
+                                  subject="fix 1234"
+                              ),
+                              eventCreatedOn=self.EVENT_TIMESTAMP,
+                              patchSet=dict(revision="abcdef", number="12")))
+
+        yield self.startChangeSource()
+        yield self.changesource.poll()
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        for k, v in iteritems(c):
+            self.assertEqual(TestGerritChangeSource.expected_change[k], v)
+        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
+
+        # do a second poll, it should ask for the next events
+        self._http.expect(method='get', ep='/plugins/events-log/events/',
+                          params={'t1': self.EVENT_FORMATTED},
+                          content_json=dict(
+                              type="patchset-created",
+                              change=dict(
+                                  branch="br",
+                                  project="pr",
+                                  number="4321",
+                                  owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                                  url="http://buildbot.net",
+                                  subject="fix 1234"
+                              ),
+                              eventCreatedOn=self.EVENT_TIMESTAMP + 1,
+                              patchSet=dict(revision="abcdef", number="12")))
+
+        yield self.changesource.poll()
+        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
 
 class TestGerritChangeFilter(unittest.TestCase):

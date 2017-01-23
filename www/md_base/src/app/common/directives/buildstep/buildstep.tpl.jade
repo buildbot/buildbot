@@ -15,7 +15,7 @@ div.logs(ng-if="buildstep.isExpanded")
       ng-class="{selected: (buildstep.selectedLog == log)}",
     ) {{ log.name }}
     span(flex)
-    a.md-button.download-button(ng-href="/api/v2/logs/{{ buildstep.selectedLog.logid }}/raw")
+    a.md-button.download-button(ng-href="api/v2/logs/{{ buildstep.selectedLog.logid }}/raw")
       md-icon(md-svg-icon="download")
   div.log-view
     build-log(log="buildstep.selectedLog")

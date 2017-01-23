@@ -21,20 +21,17 @@ Additional Requirements
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Depending on the selected database, further Python packages will be required.
-Consult the SQLAlchemy dialect list for a full description.
-The most common choice for MySQL is
+Consult the `SQLAlchemy`_ dialect list for a full description.
+The most common choice for MySQL is `mysqlclient`_.
+Any reasonably recent version should suffice.
 
-MySQL-Python: http://mysql-python.sourceforge.net/
+The most common choice for Postgres is `Psycopg`_
+Any reasonably recent version should suffice.
 
-  To communicate with MySQL, SQLAlchemy requires MySQL-Python.
-  Any reasonably recent version of MySQL-Python should suffice.
+.. _SQLAlchemy: http://www.sqlalchemy.org/
+.. _Psycopg: http://initd.org/psycopg/
+.. _mysqlclient: https://github.com/PyMySQL/mysqlclient-python
 
-The most common choice for Postgres is
-
-Psycopg: http://initd.org/psycopg/
-
-    SQLAlchemy uses Psycopg to communicate with Postgres.
-    Any reasonably recent version should suffice.
 
 .. _Maintenance:
 
@@ -107,5 +104,5 @@ Again, :samp:`buildbot-worker restart {BASEDIR}` will speed up the process.
 Contrib Scripts
 ~~~~~~~~~~~~~~~
 
-While some features of Buildbot are included in the distribution, others are only available in :file:`contrib/` in the source directory.
+While some features of Buildbot are included in the distribution, others are only available in :src:`master/contrib/` in the source directory.
 The latest versions of such scripts are available at :src:`master/contrib`.

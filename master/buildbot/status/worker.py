@@ -13,17 +13,20 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import time
 
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.util import ascii2unicode
 from buildbot.util.eventual import eventually
 
 
+@implementer(interfaces.IWorkerStatus)
 class WorkerStatus:
-    implements(interfaces.IWorkerStatus)
 
     admin = None
     host = None
@@ -108,7 +111,7 @@ class WorkerStatus:
             self.pause_callbacks.remove(watcher)
 
     def recordConnectTime(self):
-        # record this connnect, and keep data for the last hour
+        # record this connect, and keep data for the last hour
         now = time.time()
         self.connect_times = [
             t for t in self.connect_times if t > now - 3600] + [now]

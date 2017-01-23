@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import inspect
 
 from twisted.internet import defer
@@ -74,7 +78,7 @@ class DataConnector(service.AsyncService):
                 rtype = obj(self.master)
                 setattr(self.rtypes, rtype.name, rtype)
 
-                # put its update methonds into our 'updates' attribute
+                # put its update methods into our 'updates' attribute
                 for name in dir(rtype):
                     o = getattr(rtype, name)
                     if hasattr(o, 'isUpdateMethod'):
@@ -141,7 +145,7 @@ class DataConnector(service.AsyncService):
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
             paths.append(dict(path=u"/".join(k),
-                              plural=unicode(v.rtype.plural),
-                              type=unicode(v.rtype.entityType.name),
+                              plural=text_type(v.rtype.plural),
+                              type=text_type(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))
         return paths

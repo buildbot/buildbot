@@ -21,6 +21,10 @@ Define the interfaces that are implemented by various buildbot classes.
 # disable pylint warnings triggered by interface definitions
 # pylint: disable=no-self-argument
 # pylint: disable=no-method-argument
+# pylint: disable=inherit-non-class
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 from zope.interface import Attribute
 from zope.interface import Interface
@@ -34,6 +38,8 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 # This class is deprecated and should no longer be used.
 class NoSlaveError(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
                                 compat_name="NoSlaveError",
                                 new_name="")
@@ -45,15 +51,23 @@ class BuilderInUseError(Exception):
 
 class WorkerTooOldError(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(
     locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
 
 
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
+
+
 deprecatedWorkerModuleAttribute(
     locals(), LatentWorkerFailedToSubstantiate,
     compat_name="LatentBuildSlaveFailedToSubstantiate")
+
+
+class LatentWorkerSubstantiatiationCancelled(Exception):
+    pass
 
 
 class IPlugin(Interface):
@@ -162,6 +176,8 @@ class ILogObserver(Interface):
 class IWorker(IPlugin):
     # callback methods from the manager
     pass
+
+
 deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
 
 
@@ -181,10 +197,10 @@ class ILatentWorker(IWorker):
 
     # there is an insubstantiate too, but that is not used externally ATM.
 
-    def buildStarted(sb):
+    def buildStarted(wfb):
         """Inform the latent worker that a build has started.
 
-        @param sb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
+        @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
 
@@ -194,6 +210,8 @@ class ILatentWorker(IWorker):
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
+
+
 deprecatedWorkerModuleAttribute(
     locals(), ILatentWorker, compat_name="ILatentBuildSlave")
 
@@ -334,11 +352,14 @@ class IStatus(Interface):
     def getTitle():
         """Return the name of the project that this Buildbot is working
         for."""
+
     def getTitleURL():
         """Return the URL of this Buildbot's project."""
+
     def getBuildbotURL():
         """Return the URL of the top-most Buildbot status page, or None if
         this Buildbot does not provide a web status page."""
+
     def getURLForThing(thing):
         """Return the URL of a page which provides information on 'thing',
         which should be an object that implements one of the status
@@ -357,6 +378,7 @@ class IStatus(Interface):
 
     def getBuilderNames(tags=None):
         """Return a list of the names of all current Builders."""
+
     def getBuilder(name):
         """Return the IBuilderStatus object for a given named Builder. Raises
         KeyError if there is no Builder by that name."""
@@ -364,6 +386,7 @@ class IStatus(Interface):
     def getWorkerNames():
         """Return a list of worker names, suitable for passing to
         getWorker()."""
+
     def getWorker(name):
         """Return the IWorkerStatus object for a given named worker."""
 
@@ -420,7 +443,7 @@ class IStatus(Interface):
         which accompany the addedBuilder message."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -436,6 +459,7 @@ class IBuildSetStatus(Interface):
         """Return the BuildSet's ID string, if any. The 'try' feature uses a
         random string as a BuildSetID to relate submitted jobs with the
         resulting BuildSet."""
+
     def getResponsibleUsers():
         pass  # not implemented
 
@@ -447,12 +471,14 @@ class IBuildSetStatus(Interface):
         do builds.
 
         @returns: list of names via Deferred"""
+
     def isFinished():
         pass
 
     def waitUntilFinished():
         """Return a Deferred that fires (with this IBuildSetStatus object)
         when all builds have finished."""
+
     def getResults():
         """Return SUCCESS/FAILURE, or None if the buildset is not finished
         yet"""
@@ -480,7 +506,7 @@ class IBuildRequestStatus(Interface):
 
     def getBuilds():
         """Return a list of IBuildStatus objects for each Build that has been
-        started in an attempt to satify this BuildRequest."""
+        started in an attempt to satisfy this BuildRequest."""
 
     def subscribe(observer):
         """Register a callable that will be invoked (with a single
@@ -490,8 +516,10 @@ class IBuildRequestStatus(Interface):
         a lost worker. The last Build (the one which actually gets to run to
         completion) is said to 'satisfy' the BuildRequest. The observer will
         be called once for each of these Builds, both old and new."""
+
     def unsubscribe(observer):
         """Unregister the callable that was registered with subscribe()."""
+
     def getSubmitTime():
         """Return the time when this request was submitted.  Returns a
         Deferred."""
@@ -514,6 +542,8 @@ class IWorkerStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the worker."""
+
+
 deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
 
 
@@ -633,7 +663,7 @@ class IBuilderStatus(Interface):
         buildFinished messages."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -660,7 +690,7 @@ class IEventSource(Interface):
         return events caused by one of the listed committers. If the list is
         empty or None, events from every committers should be returned.
 
-        @param minTime: a timestamp. Do not generate events occuring prior to
+        @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
 
@@ -674,7 +704,7 @@ class IBuildStatus(Interface):
         """
         Return the BuilderStatus that owns this build.
 
-        @rtype: implementor of L{IBuilderStatus}
+        @rtype: implementer of L{IBuilderStatus}
         """
 
     def isFinished():
@@ -776,7 +806,7 @@ class IBuildStatus(Interface):
         every 'updateInterval' seconds."""
 
     def unsubscribe(receiver):
-        """Unregister an IStatusReceiver. No further status messgaes will be
+        """Unregister an IStatusReceiver. No further status messages will be
         delivered."""
 
 
@@ -808,7 +838,7 @@ class IStatusLogConsumer(Interface):
     sockets, such as an HTTP request. Note that the consumer can only pause
     the producer until it has caught up with all the old data. After that
     point, C{pauseProducing} is ignored and all new output from the log is
-    sent directoy to the consumer."""
+    sent directory to the consumer."""
 
     def registerProducer(producer, streaming):
         """A producer is being hooked up to this consumer. The consumer only
@@ -839,20 +869,20 @@ class IStatusReceiver(IPlugin):
     def buildsetSubmitted(buildset):
         """A new BuildSet has been submitted to the buildmaster.
 
-        @type buildset: implementor of L{IBuildSetStatus}
+        @type buildset: implementer of L{IBuildSetStatus}
         """
 
     def requestSubmitted(request):
         """A new BuildRequest has been submitted to the buildmaster.
 
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def requestCancelled(builder, request):
         """A BuildRequest has been cancelled on the given Builder.
 
         @type builder: L{buildbot.status.builder.BuilderStatus}
-        @type request: implementor of L{IBuildRequestStatus}
+        @type request: implementer of L{IBuildRequestStatus}
         """
 
     def builderAdded(builderName, builder):
@@ -863,7 +893,7 @@ class IStatusReceiver(IPlugin):
 
         @type  builderName: string
         @type  builder:     L{buildbot.status.builder.BuilderStatus}
-        @rtype: implementor of L{IStatusReceiver}
+        @rtype: implementer of L{IStatusReceiver}
         """
 
     def builderChangedState(builderName, state):
@@ -1051,3 +1081,17 @@ class IConfigLoader(Interface):
 
         :return MasterConfig:
         """
+
+
+class IHttpResponse(Interface):
+
+    def content():
+        """
+        :returns: raw (``bytes``) content of the response via deferred
+        """
+    def json():
+        """
+        :returns: json decoded content of the response via deferred
+        """
+    master = Attribute('code',
+                       "http status code of the request's response (e.g 200)")

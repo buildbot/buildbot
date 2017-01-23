@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from collections import defaultdict
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+
+from collections import defaultdict
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -275,6 +279,7 @@ class AnyBranchScheduler(BaseBasicScheduler):
         return self.master.db.schedulers.getChangeClassifications(
             sched_id, branch=branch, repository=repository,
             codebase=codebase, project=project)
+
 
 # now at buildbot.schedulers.dependent, but keep the old name alive
 Dependent = dependent.Dependent

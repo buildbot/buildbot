@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -219,7 +223,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         return d
 
     def test_revision_missing(self):
-        """Fail if 'revision' tag isnt there"""
+        """Fail if 'revision' tag isn't there"""
         svn_info_stdout = self.svn_info_stdout_xml.replace('entry', 'Blah')
 
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
@@ -1931,7 +1935,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(
+        self.assertEqual(
             ["svn_external_path/unversioned_file"], unversioned_files)
 
     def test_getUnversionedFiles_does_not_list_missing(self):
@@ -1945,7 +1949,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals([], unversioned_files)
+        self.assertEqual([], unversioned_files)
 
     def test_getUnversionedFiles_corrupted_xml(self):
         svn_st_xml_corrupt = """<?xml version="1.0"?>
@@ -1980,7 +1984,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals([], unversioned_files)
+        self.assertEqual([], unversioned_files)
 
     def test_getUnversionedFiles_no_item(self):
         svn_st_xml = """<?xml version="1.0"?>
@@ -1998,7 +2002,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
-        self.assertEquals(
+        self.assertEqual(
             ["svn_external_path/unversioned_file"], unversioned_files)
 
 

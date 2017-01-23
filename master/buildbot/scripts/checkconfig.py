@@ -12,6 +12,9 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 
 import os
@@ -45,11 +48,11 @@ def checkconfig(config):
     if os.path.isdir(configFile):
         basedir = configFile
         try:
-            configFile = getConfigFileFromTac(basedir)
-        except (SyntaxError, ImportError) as e:
+            configFile = getConfigFileFromTac(basedir, quiet=quiet)
+        except Exception:
             if not quiet:
+                # the exception is already printed in base.py
                 print("Unable to load 'buildbot.tac' from '%s':" % basedir)
-                print(e)
             return 1
     else:
         basedir = os.getcwd()

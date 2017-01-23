@@ -1,3 +1,4 @@
+from future.utils import iteritems
 from twisted.internet import defer
 
 from buildbot.www.plugin import Application
@@ -58,7 +59,7 @@ class NestedExample(NestedParameter):
         # - input, and
         # - ingredients
         # in properties
-        for prop, val in properties.pop(self.type).iteritems():
+        for prop, val in iteritems(properties.pop(self.type)):
             properties[prop] = val
         yield self.validateProperties(collector, properties)
 

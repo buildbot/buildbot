@@ -82,7 +82,10 @@ In all cases, please prefer maintainability and readability over performance.
 Nested Callbacks
 ................
 
-First, an admonition: do not create extra class methods that represent the continuations of the first::
+First, an admonition: do not create extra class methods that represent the continuations of the first:
+
+
+.. code-block:: python
 
     def myMethod(self):
         d = ...
@@ -93,9 +96,12 @@ First, an admonition: do not create extra class methods that represent the conti
 Invariably, this extra method gets separated from its parent as the code
 evolves, and the result is completely unreadable. Instead, include all of the
 code for a particular function or method within the same indented block, using
-nested functions::
+nested functions:
+
+.. code-block:: python
 
     def getRevInfo(revname):
+        # for example only! See above a better implementation with inlineCallbacks
         results = {}
         d = defer.succeed(None)
         def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
@@ -115,12 +121,23 @@ nested functions::
 
 it is usually best to make the first operation occur within a callback, as the
 deferred machinery will then handle any exceptions as a failure in the outer
-Deferred.  As a shortcut, ``d.addCallback`` works as a decorator::
+Deferred.  As a shortcut, ``d.addCallback`` works as a decorator:
+
+.. code-block:: python
 
     d = defer.succeed(None)
     @d.addCallback
     def rev_parse(_): # note use of '_' to quietly indicate an ignored parameter
         return utils.getProcessOutput(git, [ 'rev-parse', revname ])
+
+.. note::
+
+    ``d.addCallback`` is not really a decorator as it does not return a modified function.
+    As a result in previous code, ``rev_parse`` value is actually the Deferred.
+    In general the :class:`inlineCallbacks` method is preferred inside new code as it keeps the code easier to read.
+    As a general rule of thumb, when you need more than 2 callbacks in the same method, it's time to switch it to  :class:`inlineCallbacks`.
+    This would be for example the case for previous :py:func:`getRevInfo`.
+    See this `discussion <https://github.com/buildbot/buildbot/pull/2523>`_ with Twisted experts for more information.
 
 Be careful with local variables. For example, if ``parse_rev_parse``, above,
 merely assigned ``rev = res.strip()``, then that variable would be local to
@@ -139,7 +156,9 @@ inlineCallbacks
 :class:`twisted.internet.defer.inlineCallbacks` is a great help to writing code
 that makes a lot of asynchronous calls, particularly if those calls are made in
 loop or conditionals.  Refer to the Twisted documentation for the details, but
-the style within Buildbot is as follows::
+the style within Buildbot is as follows:
+
+.. code-block:: python
 
     from twisted.internet import defer
 
@@ -176,6 +195,19 @@ losing any readability.
 
 Note that code using ``deferredGenerator`` is no longer acceptable in Buildbot.
 
+The previous :py:func:`getRevInfo` example implementation should rather be written as:
+
+.. code-block:: python
+
+    @defer.inlineCallbacks
+    def getRevInfo(revname):
+        results = {}
+        res = yield utils.getProcessOutput(git, [ 'rev-parse', revname ])
+        results['rev'] = res.strip()
+        res = yield utils.getProcessOutput(git, [ 'log', '-1', '--format=%s%n%b', results['rev'] ])
+        results['comments'] = res.strip()
+        defer.returnValue(results)
+
 Locking
 .......
 
@@ -196,7 +228,9 @@ Joining Sequences
 It's often the case that you'll want to perform multiple operations in
 parallel, and re-join the results at the end. For this purpose, you'll want to
 use a `DeferredList <http://twistedmatrix.com/documents/current/api/twisted.internet.defer.DeferredList.html>`_
-::
+:
+
+.. code-block:: python
 
     def getRevInfo(revname):
         results = {}

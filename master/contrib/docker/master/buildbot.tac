@@ -1,7 +1,9 @@
 import sys
 
 from twisted.application import service
-from twisted.python.log import ILogObserver, FileLogObserver
+from twisted.python.log import FileLogObserver
+from twisted.python.log import ILogObserver
+
 from buildbot.master import BuildMaster
 
 basedir = '/var/lib/buildbot'

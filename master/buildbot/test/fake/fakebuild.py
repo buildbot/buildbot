@@ -13,9 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import posixpath
 
 import mock
+
 from twisted.python import components
 
 from buildbot import config
@@ -58,6 +62,7 @@ class FakeBuildStatus(properties.PropertiesMixin, object):
         pass
 
     getBuilder = mock.Mock()
+
 
 components.registerAdapter(
     lambda build_status: build_status.properties,

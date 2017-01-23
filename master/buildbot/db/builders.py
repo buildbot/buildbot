@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
+
 from twisted.internet import defer
 
 from buildbot.db import base
@@ -124,6 +128,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             rv = []
             last = None
             for row in conn.execute(q).fetchall():
+                # pylint: disable=unsubscriptable-object
                 if not last or row['id'] != last['id']:
                     last = self._thd_row2dict(conn, row)
                     rv.append(last)

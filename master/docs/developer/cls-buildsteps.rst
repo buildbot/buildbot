@@ -96,7 +96,7 @@ BuildStep
 
     .. py:attribute:: rendered
 
-        At the begining of the step, the renderable attributes are rendered against the properties.
+        At the beginning of the step, the renderable attributes are rendered against the properties.
         There is a slight delay however when those are not yet rendered, which lead to weird and difficult to reproduce bugs.
         To address this problem, a ``rendered`` attribute is available for methods that could be called early in the buildstep creation.
 

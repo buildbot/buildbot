@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
 import time
 from datetime import datetime
 
@@ -25,7 +30,6 @@ from buildbot.util import ascii2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):
@@ -102,7 +106,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
             if not self.branch or branch in self.branch:
                 current = yield self._getCurrentRev(nr)
 
-                if not current or current != revision:
+                # compare _short_ hashes to check if the PR has been updated
+                if not current or current[0:12] != revision[0:12]:
                     # parse pull request api page (required for the filter)
                     page = yield client.getPage(str(pr['links']['self']['href']))
                     pr_json = json.loads(page, encoding=self.encoding)
@@ -155,7 +160,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _processChangesFailure(self, f):
         log.msg('BitbucketPullrequestPoller: json api poll failed')
         log.err(f)
-        # eat the failure to continue along the defered chain - we still want
+        # eat the failure to continue along the deferred chain - we still want
         # to catch up
         return None
 
@@ -176,7 +181,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         return d
 
     def _setCurrentRev(self, pr_id, rev):
-        # Set the datetime entry for a specifed pull request.
+        # Set the datetime entry for a specified pull request.
         d = self._getStateObjectId()
 
         @d.addCallback

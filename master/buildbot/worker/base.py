@@ -13,31 +13,30 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
-import time
-from email.message import Message
-from email.utils import formatdate
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+
+import time
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.python.reflect import namedModule
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
-from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import IWorker
-from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
-from buildbot.reporters.mail import MailNotifier
 from buildbot.status.worker import WorkerStatus
-from buildbot.util import Notifier
 from buildbot.util import ascii2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
+@implementer(IWorker)
 class AbstractWorker(service.BuildbotService, object):
 
     """This is the master-side representative for a remote buildbot worker.
@@ -50,10 +49,12 @@ class AbstractWorker(service.BuildbotService, object):
     running builds.  I am instantiated by the configuration file, and can be
     subclassed to add extra functionality."""
 
-    implements(IWorker)
-
     # reconfig workers after builders
     reconfig_priority = 64
+
+    quarantine_timer = None
+    quarantine_timeout = quarantine_initial_timeout = 10
+    quarantine_max_timeout = 60 * 60
 
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
@@ -120,6 +121,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.conn = None
 
         self._old_builder_list = None
+        self._configured_builderid_list = None
 
     def __repr__(self):
         return "<%s %r>" % (self.__class__.__name__, self.name)
@@ -264,14 +266,22 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.updateLocks()
 
-        bids = [
-            b._builderid for b in self.botmaster.getBuildersForWorker(self.name)]
-        yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+    @defer.inlineCallbacks
+    def reconfigServiceWithSibling(self, sibling):
+        # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
+        # However, the worker configuration depends on which builder it is configured
+        yield service.BuildbotService.reconfigServiceWithSibling(self, sibling)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
         # which is why the reconfig_priority is set low in this class.
-        yield self.updateWorker()
+        bids = [
+            b.getBuilderId() for b in self.botmaster.getBuildersForWorker(self.name)]
+        bids = yield defer.gatherResults(bids, consumeErrors=True)
+        if self._configured_builderid_list != bids:
+            yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, bids)
+            yield self.updateWorker()
+            self._configured_builderid_list = bids
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -279,6 +289,7 @@ class AbstractWorker(service.BuildbotService, object):
             yield self.registration.unregister()
             self.registration = None
         self.stopMissingTimer()
+        self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
@@ -302,26 +313,13 @@ class AbstractWorker(service.BuildbotService, object):
         # notify people, but only if we're still in the config
         if not self.parent:
             return
-
-        buildmaster = self.botmaster.master
-        status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the worker named %s went away\n" %
-                 self.name)
-        text += "\n"
-        text += ("It last disconnected at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout))  # approx
-        text += "\n"
-        text += "The admin on record (as reported by WORKER:info/admin)\n"
-        text += "was '%s'.\n" % self.worker_status.getAdmin()
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getTitleURL()
-        text += "\n"
-        text += "%s\n" % status.getURLForThing(self.worker_status)
-        subject = "Buildbot: worker %s was lost" % (self.name,)
-        return self._mail_missing_message(subject, text)
+        last_connection = time.ctime(time.time() - self.missing_timeout)
+        yield self.master.data.updates.workerMissing(
+            workerid=self.workerid,
+            masterid=self.master.masterid,
+            last_connection=last_connection,
+            notify=self.notify_on_missing
+        )
 
     def updateWorker(self):
         """Called to add or remove builders after the worker has connected.
@@ -349,7 +347,6 @@ class AbstractWorker(service.BuildbotService, object):
         self.worker_status.addGracefulWatcher(self._gracefulChanged)
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
-        self.worker_status.addPauseWatcher(self._pauseChanged)
 
         self.worker_status.setConnected(True)
 
@@ -383,7 +380,6 @@ class AbstractWorker(service.BuildbotService, object):
         log.msg("bot attached")
         self.messageReceivedFromWorker()
         self.stopMissingTimer()
-        self.master.status.workerConnected(self.name)
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
 
@@ -398,10 +394,8 @@ class AbstractWorker(service.BuildbotService, object):
         self.conn = None
         self._old_builder_list = []
         self.worker_status.removeGracefulWatcher(self._gracefulChanged)
-        self.worker_status.removePauseWatcher(self._pauseChanged)
         self.worker_status.setConnected(False)
         log.msg("Worker.detached(%s)" % (self.name,))
-        self.master.status.workerDisconnected(self.name)
         self.releaseLocks()
         yield self.master.data.updates.workerDisconnected(
             workerid=self.workerid,
@@ -423,7 +417,6 @@ class AbstractWorker(service.BuildbotService, object):
         when we wind up with two connections for the same worker, in which
         case we disconnect the older connection.
         """
-
         if self.conn is None:
             return defer.succeed(None)
         log.msg("disconnecting old worker %s now" % (self.name,))
@@ -448,19 +441,34 @@ class AbstractWorker(service.BuildbotService, object):
 
         return d
 
+    @defer.inlineCallbacks
     def sendBuilderList(self):
         our_builders = self.botmaster.getBuildersForWorker(self.name)
+
         blist = [(b.name, b.config.workerbuilddir) for b in our_builders]
+
         if blist == self._old_builder_list:
-            return defer.succeed(None)
+            return
 
-        d = self.conn.remoteSetBuilderList(builders=blist)
+        slist = yield self.conn.remoteSetBuilderList(builders=blist)
 
-        @d.addCallback
-        def sentBuilderList(ign):
-            self._old_builder_list = blist
-            return ign
-        return d
+        self._old_builder_list = blist
+
+        # Nothing has changed, so don't need to re-attach to everything
+        if not slist:
+            return
+
+        dl = []
+        for name in slist:
+            # use get() since we might have changed our mind since then
+            b = self.botmaster.builders.get(name)
+            if b:
+                d1 = self.attachBuilder(b)
+                dl.append(d1)
+        yield defer.DeferredList(dl)
+
+    def attachBuilder(self, builder):
+        return builder.attached(self, self.worker_commands)
 
     def shutdownRequested(self):
         log.msg("worker %s wants to shut down" % (self.name,))
@@ -495,14 +503,17 @@ class AbstractWorker(service.BuildbotService, object):
         if self.worker_status.isPaused():
             return False
 
+        if self.quarantine_timer:
+            return False
+
         # If we're waiting to shutdown gracefully, then we shouldn't
         # accept any new jobs.
         if self.worker_status.getGraceful():
             return False
 
         if self.max_builds:
-            active_builders = [sb for sb in itervalues(self.workerforbuilders)
-                               if sb.isBusy()]
+            active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+                               if wfb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
 
@@ -510,35 +521,6 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         return True
-
-    def _mail_missing_message(self, subject, text):
-        # FIXME: This should be handled properly via the event api
-        # we should send a missing message on the mq, and let any reporter
-        # handle that
-
-        # first, see if we have a MailNotifier we can use. This gives us a
-        # fromaddr and a relayhost.
-        buildmaster = self.botmaster.master
-        for st in buildmaster.services:
-            if isinstance(st, MailNotifier):
-                break
-        else:
-            # if not, they get a default MailNotifier, which always uses SMTP
-            # to localhost and uses a dummy fromaddr of "buildbot".
-            log.msg("worker-missing msg using default MailNotifier")
-            st = MailNotifier("buildbot")
-        # now construct the mail
-
-        m = Message()
-        m.set_payload(text)
-        m['Date'] = formatdate(localtime=True)
-        m['Subject'] = subject
-        m['From'] = st.fromaddr
-        recipients = self.notify_on_missing
-        m['To'] = ", ".join(recipients)
-        d = st.sendMessage(m, recipients)
-        # return the Deferred for testing purposes
-        return d
 
     def _gracefulChanged(self, graceful):
         """This is called when our graceful shutdown setting changes"""
@@ -558,18 +540,12 @@ class AbstractWorker(service.BuildbotService, object):
         and has no active builders."""
         if not self.worker_status.getGraceful():
             return
-        active_builders = [sb for sb in itervalues(self.workerforbuilders)
-                           if sb.isBusy()]
+        active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+                           if wfb.isBusy()]
         if active_builders:
             return
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
-
-    def _pauseChanged(self, paused):
-        if paused is True:
-            self.botmaster.master.status.workerPaused(self.name)
-        else:
-            self.botmaster.master.status.workerUnpaused(self.name)
 
     def pause(self):
         """Stop running new builds on the worker."""
@@ -583,337 +559,51 @@ class AbstractWorker(service.BuildbotService, object):
     def isPaused(self):
         return self.worker_status.isPaused()
 
+    def resetQuarantine(self):
+        self.quarantine_timeout = self.quarantine_initial_timeout
+
+    def putInQuarantine(self):
+        if self.quarantine_timer:  # already in quarantine
+            return
+        self.quarantine_timer = self.master.reactor.callLater(
+            self.quarantine_timeout, self.exitQuarantine)
+        log.msg("{} has been put in quarantine for {}s".format(
+            self.name, self.quarantine_timeout))
+        # next we will wait twice as long
+        self.quarantine_timeout *= 2
+        if self.quarantine_timeout > self.quarantine_max_timeout:
+            # unless we hit the max timeout
+            self.quarantine_timeout = self.quarantine_max_timeout
+
+    def exitQuarantine(self):
+        self.quarantine_timer = None
+        self.botmaster.maybeStartBuildsForWorker(self.name)
+
+    def stopQuarantineTimer(self):
+        if self.quarantine_timer is not None:
+            self.quarantine_timer.cancel()
+            self.quarantine_timer = None
+
 
 class Worker(AbstractWorker):
-
-    def sendBuilderList(self):
-        d = AbstractWorker.sendBuilderList(self)
-
-        def _sent(slist):
-            # Nothing has changed, so don't need to re-attach to everything
-            if not slist:
-                return
-            dl = []
-            for name in slist:
-                # use get() since we might have changed our mind since then
-                b = self.botmaster.builders.get(name)
-                if b:
-                    d1 = b.attached(self, self.worker_commands)
-                    dl.append(d1)
-            return defer.DeferredList(dl)
-
-        def _set_failed(why):
-            log.msg("Worker.sendBuilderList (%s) failed" % self)
-            log.err(why)
-            # TODO: hang up on them?, without setBuilderList we can't use
-            # them
-        d.addCallbacks(_sent, _set_failed)
-        return d
 
     def detached(self):
         AbstractWorker.detached(self)
         self.botmaster.workerLost(self)
         self.startMissingTimer()
 
-    def buildFinished(self, sb):
+    @defer.inlineCallbacks
+    def attached(self, bot):
+        try:
+            yield AbstractWorker.attached(self, bot)
+        except Exception as e:
+            log.err(e, "worker %s cannot attach" % (self.name,))
+            return
+
+    def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
-        AbstractWorker.buildFinished(self, sb)
+        AbstractWorker.buildFinished(self, wfb)
 
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect
         self.maybeShutdown()
-
-
-class AbstractLatentWorker(AbstractWorker):
-
-    """A worker that will start up a worker instance when needed.
-
-    To use, subclass and implement start_instance and stop_instance.
-
-    See ec2buildslave.py for a concrete example.  Also see the stub example in
-    test/test_slaves.py.
-    """
-
-    implements(ILatentWorker)
-
-    substantiated = False
-    substantiation_build = None
-    insubstantiating = False
-    build_wait_timer = None
-    _shutdown_callback_handle = None
-
-    def checkConfig(self, name, password,
-                    build_wait_timeout=60 * 10,
-                    **kwargs):
-        AbstractWorker.checkConfig(self, name, password, **kwargs)
-        self.build_wait_timeout = build_wait_timeout
-        self._substantiation_notifier = Notifier()
-
-    def reconfigService(self, name, password,
-                        build_wait_timeout=60 * 10,
-                        **kwargs):
-        self.build_wait_timeout = build_wait_timeout
-        return AbstractWorker.reconfigService(self, name, password, **kwargs)
-
-    @property
-    def building(self):
-        # A LatentWorkerForBuilder will only be busy if it is building.
-        return {wfb for wfb in itervalues(self.workerforbuilders)
-                if wfb.isBusy()}
-
-    def failed_to_start(self, instance_id, instance_state):
-        log.msg('%s %s failed to start instance %s (%s)' %
-                (self.__class__.__name__, self.workername,
-                    instance_id, instance_state))
-        raise LatentWorkerFailedToSubstantiate(instance_id, instance_state)
-
-    def start_instance(self, build):
-        # responsible for starting instance that will try to connect with this
-        # master.  Should return deferred with either True (instance started)
-        # or False (instance not started, so don't run a build here).  Problems
-        # should use an errback.
-        raise NotImplementedError
-
-    def stop_instance(self, fast=False):
-        # responsible for shutting down instance.
-        raise NotImplementedError
-
-    def substantiate(self, sb, build):
-        if self.substantiated:
-            self._clearBuildWaitTimer()
-            self._setBuildWaitTimer()
-            return defer.succeed(True)
-        if not self._substantiation_notifier:
-            if self.parent and not self.missing_timer:
-                # start timer.  if timer times out, fail deferred
-                self.missing_timer = self.master.reactor.callLater(
-                    self.missing_timeout,
-                    self._substantiation_failed, defer.TimeoutError())
-            self.substantiation_build = build
-            if self.conn is None:
-                d = self._substantiate(build)  # start up instance
-                d.addErrback(log.err, "while substantiating")
-            # else: we're waiting for an old one to detach.  the _substantiate
-            # will be done in ``detached`` below.
-        return self._substantiation_notifier.wait()
-
-    def _substantiate(self, build):
-        # register event trigger
-        d = self.start_instance(build)
-        self._shutdown_callback_handle = self.master.reactor.addSystemEventTrigger(
-            'before', 'shutdown', self._soft_disconnect, fast=True)
-
-        def start_instance_result(result):
-            # If we don't report success, then preparation failed.
-            if not result:
-                log.msg(
-                    "Worker '%s' does not want to substantiate at this time" % (self.name,))
-                self._substantiation_notifier.notify(False)
-            return result
-
-        def clean_up(failure):
-            if self.missing_timer is not None:
-                self.missing_timer.cancel()
-                self._substantiation_failed(failure)
-            if self._shutdown_callback_handle is not None:
-                handle = self._shutdown_callback_handle
-                del self._shutdown_callback_handle
-                self.master.reactor.removeSystemEventTrigger(handle)
-            return failure
-        d.addCallbacks(start_instance_result, clean_up)
-        return d
-
-    def attached(self, bot):
-        if not self._substantiation_notifier and self.build_wait_timeout >= 0:
-            msg = 'Worker %s received connection while not trying to ' \
-                'substantiate.  Disconnecting.' % (self.name,)
-            log.msg(msg)
-            self._disconnect(bot)
-            return defer.fail(RuntimeError(msg))
-        return AbstractWorker.attached(self, bot)
-
-    def detached(self):
-        AbstractWorker.detached(self)
-        if self._substantiation_notifier:
-            d = self._substantiate(self.substantiation_build)
-            d.addErrback(log.err, 'while re-substantiating')
-
-    def _substantiation_failed(self, failure):
-        self.missing_timer = None
-        if self._substantiation_notifier:
-            self.substantiation_build = None
-            self._substantiation_notifier.notify(failure)
-        d = self.insubstantiate()
-        d.addErrback(log.err, 'while insubstantiating')
-        # notify people, but only if we're still in the config
-        if not self.parent or not self.notify_on_missing:
-            return
-
-        buildmaster = self.botmaster.master
-        status = buildmaster.getStatus()
-        text = "The Buildbot working for '%s'\n" % status.getTitle()
-        text += ("has noticed that the latent worker named %s \n" %
-                 self.name)
-        text += "never substantiated after a request\n"
-        text += "\n"
-        text += ("The request was made at %s (buildmaster-local time)\n" %
-                 time.ctime(time.time() - self.missing_timeout))  # approx
-        text += "\n"
-        text += "Sincerely,\n"
-        text += " The Buildbot\n"
-        text += " %s\n" % status.getTitleURL()
-        subject = "Buildbot: worker %s never substantiated" % (self.name,)
-        return self._mail_missing_message(subject, text)
-
-    def canStartBuild(self):
-        if self.insubstantiating:
-            return False
-        return AbstractWorker.canStartBuild(self)
-
-    def buildStarted(self, sb):
-        self._clearBuildWaitTimer()
-
-    def buildFinished(self, sb):
-        AbstractWorker.buildFinished(self, sb)
-
-        if not self.building:
-            if self.build_wait_timeout == 0:
-                d = self.insubstantiate()
-                # try starting builds for this worker after insubstantiating;
-                # this will cause the worker to re-substantiate immediately if
-                # there are pending build requests.
-                d.addCallback(lambda _:
-                              self.botmaster.maybeStartBuildsForWorker(self.workername))
-            else:
-                self._setBuildWaitTimer()
-
-    def _clearBuildWaitTimer(self):
-        if self.build_wait_timer is not None:
-            if self.build_wait_timer.active():
-                self.build_wait_timer.cancel()
-            self.build_wait_timer = None
-
-    def _setBuildWaitTimer(self):
-        self._clearBuildWaitTimer()
-        if self.build_wait_timeout <= 0:
-            return
-        self.build_wait_timer = self.master.reactor.callLater(
-            self.build_wait_timeout, self._soft_disconnect)
-
-    @defer.inlineCallbacks
-    def insubstantiate(self, fast=False):
-        self.insubstantiating = True
-        self._clearBuildWaitTimer()
-        d = self.stop_instance(fast)
-        if self._shutdown_callback_handle is not None:
-            handle = self._shutdown_callback_handle
-            del self._shutdown_callback_handle
-            self.master.reactor.removeSystemEventTrigger(handle)
-        self.substantiated = False
-        yield d
-        self.insubstantiating = False
-        self.botmaster.maybeStartBuildsForWorker(self.name)
-
-    @defer.inlineCallbacks
-    def _soft_disconnect(self, fast=False):
-        # a negative build_wait_timeout means the worker should never be shut
-        # down, so just disconnect.
-        if self.build_wait_timeout < 0:
-            yield AbstractWorker.disconnect(self)
-            return
-
-        if self.missing_timer:
-            self.missing_timer.cancel()
-            self.missing_timer = None
-
-        if self._substantiation_notifier:
-            log.msg("Weird: Got request to stop before started. Allowing "
-                    "worker to start cleanly to avoid inconsistent state")
-            yield self._substantiation_notifier.wait()
-            self.substantiation_build = None
-            log.msg("Substantiation complete, immediately terminating.")
-
-        if self.conn is not None:
-            yield defer.DeferredList([
-                AbstractWorker.disconnect(self),
-                self.insubstantiate(fast)
-            ], consumeErrors=True, fireOnOneErrback=True)
-        else:
-            yield AbstractWorker.disconnect(self)
-            yield self.stop_instance(fast)
-
-    def disconnect(self):
-        # This returns a Deferred but we don't use it
-        self._soft_disconnect()
-        # this removes the worker from all builders.  It won't come back
-        # without a restart (or maybe a sighup)
-        self.botmaster.workerLost(self)
-
-    def stopService(self):
-        res = defer.maybeDeferred(AbstractWorker.stopService, self)
-        if self.conn is not None:
-            d = self._soft_disconnect()
-            res = defer.DeferredList([res, d])
-        return res
-
-    def updateWorker(self):
-        """Called to add or remove builders after the worker has connected.
-
-        Also called after botmaster's builders are initially set.
-
-        @return: a Deferred that indicates when an attached worker has
-        accepted the new builders and/or released the old ones."""
-        for b in self.botmaster.getBuildersForWorker(self.name):
-            if b.name not in self.workerforbuilders:
-                b.addLatentWorker(self)
-        return AbstractWorker.updateWorker(self)
-
-    def sendBuilderList(self):
-        d = AbstractWorker.sendBuilderList(self)
-
-        def _sent(slist):
-            if not slist:
-                return
-            dl = []
-            for name in slist:
-                # use get() since we might have changed our mind since then.
-                # we're checking on the builder in addition to the
-                # workers out of a bit of paranoia.
-                b = self.botmaster.builders.get(name)
-                sb = self.workerforbuilders.get(name)
-                if b and sb:
-                    d1 = sb.attached(self, self.worker_commands)
-                    dl.append(d1)
-            return defer.DeferredList(dl)
-
-        def _set_failed(why):
-            log.msg("Worker.sendBuilderList (%s) failed" % self)
-            log.err(why)
-            # TODO: hang up on them?, without setBuilderList we can't use
-            # them
-            if self._substantiation_notifier:
-                self.substantiation_build = None
-                self._substantiation_notifier.notify(why)
-            if self.missing_timer:
-                self.missing_timer.cancel()
-                self.missing_timer = None
-            # TODO: maybe log?  send an email?
-            return why
-        d.addCallbacks(_sent, _set_failed)
-
-        @d.addCallback
-        def _substantiated(res):
-            log.msg(r"Worker %s substantiated \o/" % (self.name,))
-            self.substantiated = True
-            if not self._substantiation_notifier:
-                log.msg("No substantiation deferred for %s" % (self.name,))
-            else:
-                log.msg(
-                    "Firing %s substantiation deferred with success" % (self.name,))
-                self.substantiation_build = None
-                self._substantiation_notifier.notify(True)
-            # note that the missing_timer is already handled within
-            # ``attached``
-            if not self.building:
-                self._setBuildWaitTimer()
-        return d

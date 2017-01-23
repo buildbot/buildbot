@@ -1,3 +1,5 @@
+.. _0.9.0b8:
+
 Release Notes for Buildbot 0.9.0b8
 ==================================
 
@@ -34,13 +36,13 @@ Fixes
 * Fix deprecation warnings seen with docker-py >= 1.4 when passing arguments to ``docker_client.start()``.
 * :class:`GitHubEventHandler` now uses the ``['repository']['html_url']`` key in the webhook payload to populate ``repository``, as the previously used ``['url']`` and ``['clone_url']`` keys had a different format between push and pull requests and GitHub and GitHub Enterprise instances.
 * Fix race condition where log compression could lead to empty log results in reporter api
-* Error while appyling db upgrade is now properly reported in the buildbot upgrade-master command line.
+* Error while applying db upgrade is now properly reported in the buildbot upgrade-master command line.
 * Made :class:`Interpolate` safe for deepcopy or serialization/deserialization
 * Optimized UI REST requests for child builds and change page.
 * Fix :class:`DockerLatentWorker` use of `volume` parameter, they now propely manage `src:dest` syntax.
 * Fix :class:`DockerLatentWorker` to properly create properties so that docker parameters can be renderable.
 * Lock down autobahn version for python 2.6 (note that autobahn and twisted are no longer supporting 2.6, and thus do not receive security fixes anymore).
-* fix docs and example to always use port 8020 for the web ui.
+* Fix docs and example to always use port 8020 for the web ui.
 
 Deprecations, Removals, and Non-Compatible Changes
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -61,7 +63,7 @@ Worker
 ------
 
 Package `buildbot-slave` is being renamed `buildbot-worker`.
-As the work is not completly finished, neither `buildbot-slave==0.9.0b8` or `buildbot-worker==0.9.0b8` have been released.
+As the work is not completely finished, neither `buildbot-slave==0.9.0b8` or `buildbot-worker==0.9.0b8` have been released.
 
 You can safely use any version of `buildbot-slave` with `buildbot==0.9.0b8`, either `buildbot-slave==0.8.12` or `buildbot-slave==0.9.0b7`.
 

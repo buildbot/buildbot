@@ -5,8 +5,8 @@
     "npm": ">=1.4.10"
   },
   "dependencies": {
-    "guanlecoja": "~0.6.0",
-    "gulp": "3.9.0",
+    "guanlecoja": "~0.8.0",
+    "gulp": "3.9.1",
     "gulp-shell": "^0.4.1",
     "http-proxy": "^1.11.1",
     "minimist": "^1.1.1"

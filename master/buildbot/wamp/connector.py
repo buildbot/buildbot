@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright  Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import txaio
 from autobahn.twisted.wamp import ApplicationSession
 from autobahn.twisted.wamp import Service
 from autobahn.wamp.exception import TransportLost
@@ -19,6 +24,7 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 
+from buildbot.util import ascii2unicode
 from buildbot.util import service
 
 
@@ -51,10 +57,10 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
             return
 
         # XXX We don't handle crossbar reboot, or any other disconnection well.
-        # this is a tricky problem, as we would have to reconnect with expononential backoff
+        # this is a tricky problem, as we would have to reconnect with exponential backoff
         # re-subscribe to subscriptions, queue messages until reconnection.
         # This is quite complicated, and I believe much better handled in autobahn
-        # It is possible that such failure is practically non-existant
+        # It is possible that such failure is practically non-existent
         # so for now, we just crash the master
         log.msg("Guru meditation! We have been disconnected from wamp server")
         log.msg(
@@ -138,13 +144,11 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         self.app = self.serviceClass(
             url=self.router_url,
             extra=dict(master=self.master, parent=self),
-            realm=wamp.get('realm', 'buildbot'),
-            make=make,
-            debug=wamp.get('debug_websockets', False),
-            debug_wamp=wamp.get('debug_lowlevel', False),
-            debug_app=wamp.get('debug', False)
+            realm=ascii2unicode(wamp.get('realm', 'buildbot')),
+            make=make
         )
-
+        wamp_debug_level = wamp.get('wamp_debug_level', 'error')
+        txaio.set_global_log_level(wamp_debug_level)
         yield self.app.setServiceParent(self)
         yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
                                                                                    new_config)

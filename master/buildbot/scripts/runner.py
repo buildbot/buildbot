@@ -18,12 +18,17 @@
 #
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and texinfo documentation.
+
+from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
+from future.builtins import range
 
 import sys
 import textwrap
 
 import sqlalchemy as sa
+
 from twisted.python import reflect
 from twisted.python import usage
 
@@ -241,8 +246,7 @@ class SendChangeOptions(base.SubcommandOptions):
          "Read the log messages from this file (- for stdin)"),
         ("when", "w", None, "timestamp to use as the change time"),
         ("revlink", "l", '', "Revision link (revlink)"),
-        ("encoding", "e", 'utf8',
-            "Encoding of other parameters (default utf8)"),
+        ("encoding", "e", 'utf8', "Encoding of other parameters"),
     ]
 
     buildbotOptions = [
@@ -646,7 +650,7 @@ class DataSpecOption(base.BasedirMixin, base.SubcommandOptions):
 class ProcessWWWIndexOption(base.BasedirMixin, base.SubcommandOptions):
 
     """This command is used with the front end's proxy task. It enables to run the front end
-    without the backend server runing in the background"""
+    without the backend server running in the background"""
 
     subcommandFunction = "buildbot.scripts.processwwwindex.processwwwindex"
     optParameters = [
@@ -659,6 +663,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.cleanupdb.cleanupDatabase"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
+        ["force", "f", "Force log recompression (useful when changing compression algorithm)"],
         # when this command has several maintainance jobs, we should make
         # them optional here. For now there is only one.
     ]

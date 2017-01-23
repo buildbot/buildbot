@@ -160,6 +160,16 @@ or apply a regular expression, using the attribute name with a "``_re``" suffix:
     import re
     my_filter = util.ChangeFilter(category_re=re.compile('.*deve.*', re.I))
 
+:class:`buildbot.status.web.hooks.github.GitHubEventHandler` has a special
+``github_distinct`` property that can be used to filter whether or not
+non-distinct changes should be considered. For example, if a commit is pushed to
+a branch that is not being watched and then later pushed to a watched branch, by
+default, this will be recorded as two separate Changes. In order to record a
+change only the first time the commit appears, you can install a custom
+:class:`ChangeFilter` like this::
+
+    ChangeFilter(filter_fn = lambda c: c.properties.getProperty('github_distinct')
+
 For anything more complicated, define a Python function to recognize the strings you want::
 
     def my_branch_fn(branch):
@@ -843,7 +853,7 @@ What you need in your config file is something like::
                                     label="reason:",
                                     required=True, size=80),
 
-        # in case you dont require authentication this will display
+        # in case you don't require authentication this will display
         # input for user to type his name
         username=util.UserNameParameter(label="your name:",
                                         size=80),
@@ -1012,7 +1022,7 @@ It adds the StringParameter arguments, this type allows:
 This class could be subclassed in order to have more customization e.g.
 
 * developer could send a list of Git branches to pull from
-* developer could send a list of gerrit changes to cherry-pick,
+* developer could send a list of Gerrit changes to cherry-pick,
 * developer could send a shell script to amend the build.
 
 Beware of security issues anyway.
@@ -1163,7 +1173,7 @@ Example::
         builds = []
         for builder in ["builder1","builder2"]:
             builder_status = status.getBuilder(builder)
-            for num in xrange(1,40): # 40 last builds
+            for num in range(1,40): # 40 last builds
                 b = builder_status.getBuild(-num)
                 if not b:
                     continue

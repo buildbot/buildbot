@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot.worker.protocols import base
@@ -19,8 +23,8 @@ from buildbot.worker.protocols import base
 
 class FakeConnection(base.Connection):
 
-    def __init__(self, master, buildslave):
-        base.Connection.__init__(self, master, buildslave)
+    def __init__(self, master, worker):
+        base.Connection.__init__(self, master, worker)
         self._connected = True
         self.remoteCalls = []
         self.builders = {}  # { name : isBusy }
@@ -28,8 +32,8 @@ class FakeConnection(base.Connection):
         # users of the fake can add to this as desired
         self.info = {
             'worker_commands': [],
-            'version': '0.8.2',
-            'basedir': '/sl',
+            'version': '0.9.0',
+            'basedir': '/w',
             'system': 'nt',
         }
 
@@ -39,7 +43,7 @@ class FakeConnection(base.Connection):
 
     def remoteGetWorkerInfo(self):
         self.remoteCalls.append(('remoteGetWorkerInfo',))
-        return defer.succeed(self.slaveInfo)
+        return defer.succeed(self.info)
 
     def remoteSetBuilderList(self, builders):
         self.remoteCalls.append(('remoteSetBuilderList', builders[:]))

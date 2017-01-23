@@ -12,14 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
+import json
+
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.db import NULL
 from buildbot.db import base
 from buildbot.util import epoch2datetime
-from buildbot.util import json
 
 
 class BuildsConnectorComponent(base.DBConnectorComponent):
@@ -43,8 +49,8 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
     def getBuildByNumber(self, builderid, number):
         return self._getBuild(
-            (self.db.model.builds.c.builderid == builderid)
-            & (self.db.model.builds.c.number == number))
+            (self.db.model.builds.c.builderid == builderid) &
+            (self.db.model.builds.c.number == number))
 
     def _getRecentBuilds(self, whereclause, offset=0, limit=1):
         def thd(conn):
@@ -71,7 +77,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                              ss['branch'],
                              ss['codebase']) for ss in ssBuild])
         while rv is None:
-            # Get some recent successfull builds on the same builder
+            # Get some recent successful builds on the same builder
             prevBuilds = yield self._getRecentBuilds(whereclause=((tbl.c.builderid == builderid) &
                                                                   (tbl.c.number < number) &
                                                                   (tbl.c.results == 0)),
@@ -92,7 +98,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         defer.returnValue(rv)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         def thd(conn):
             tbl = self.db.model.builds
             q = tbl.select()
@@ -107,8 +113,13 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     q = q.where(tbl.c.complete_at != NULL)
                 else:
                     q = q.where(tbl.c.complete_at == NULL)
+
+            if resultSpec is not None:
+                return resultSpec.thd_execute(conn, q, self._builddictFromRow)
+
             res = conn.execute(q)
             return [self._builddictFromRow(row) for row in res.fetchall()]
+
         return self.db.pool.do(thd)
 
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
@@ -122,8 +133,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                        whereclause=(tbl.c.builderid == builderid)))
             number = r.scalar()
             new_number = 1 if number is None else number + 1
-
-            # insert until we are succesful..
+            # insert until we are successful..
             while True:
                 if _race_hook:
                     _race_hook(conn)
@@ -135,8 +145,11 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                                           workerid=workerid, masterid=masterid,
                                           started_at=started_at, complete_at=None,
                                           state_string=state_string))
-                except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
-                    new_number += 1
+                except (sa.exc.IntegrityError, sa.exc.ProgrammingError) as e:
+                    # pg 9.5 gives this error which makes it pass some build
+                    # numbers
+                    if 'duplicate key value violates unique constraint "builds_pkey"' not in str(e):
+                        new_number += 1
                     continue
                 return r.inserted_primary_key[0], new_number
         return self.db.pool.do(thd)

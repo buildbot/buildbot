@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -26,6 +29,7 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
+from buildbot.util import httpclientservice
 
 HOSTED_BASE_URL = 'https://api.github.com'
 
@@ -47,8 +51,12 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             baseURL = HOSTED_BASE_URL
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
-        self.baseURL = baseURL
-        self.session.headers.update({'Authorization': 'token ' + token})
+
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, baseURL, headers={
+                'Authorization': 'token ' + token,
+                'User-Agent': 'Buildbot'
+            })
         self.verbose = verbose
 
     def createStatus(self,
@@ -60,7 +68,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                       or 'failure'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
-        :return: A defered with the result from GitHub.
+        :return: A deferred with the result from GitHub.
 
         This code comes from txgithub by @tomprince.
         txgithub is based on twisted's webclient agent, which is much less reliable and featureful
@@ -77,8 +85,9 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['context'] = context
 
-        return self.session.post('/'.join(
-            [self.baseURL, 'repos', repo_user, repo_name, 'statuses', sha]), json=payload)
+        return self._http.post(
+            '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
+            json=payload)
 
     @defer.inlineCallbacks
     def send(self, build):

@@ -12,11 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+from future.utils import string_types
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import util
@@ -286,7 +291,7 @@ class NightlyBase(Timed):
                 time = (time + 1) % 7
             return time
 
-        if isinstance(time, basestring):
+        if isinstance(time, string_types):
             if isDayOfWeek:
                 # time could be a comma separated list of values, e.g. "5,sun"
                 time_array = str(time).split(',')
@@ -333,8 +338,8 @@ class Nightly(NightlyBase):
                              **kwargs)
 
 
+@implementer(ITriggerableScheduler)
 class NightlyTriggerable(NightlyBase):
-    implements(ITriggerableScheduler)
 
     def __init__(self, name, builderNames, minute=0, hour='*',
                  dayOfMonth='*', month='*', dayOfWeek='*',
@@ -401,7 +406,7 @@ class NightlyTriggerable(NightlyBase):
 
         # Trigger expects a callback with the success of the triggered
         # build, if waitForFinish is True.
-        # Just return SUCCESS, to indicate that the trigger was succesful,
+        # Just return SUCCESS, to indicate that the trigger was successful,
         # don't wait for the nightly to run.
         return (defer.succeed((None, {})), d.addCallback(lambda _: buildstep.SUCCESS))
 

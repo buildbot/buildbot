@@ -18,22 +18,29 @@ A complete re-implementation of the database connector components, but without
 using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import itervalues
+from future.utils import text_type
+
 import base64
 import copy
 import hashlib
+import json
 
-from future.utils import iteritems
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
 
+from buildbot.data import resultspec
 from buildbot.db import buildrequests
 from buildbot.db import changesources
 from buildbot.db import schedulers
 from buildbot.test.util import validation
 from buildbot.util import datetime2epoch
-from buildbot.util import json
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 
 # Fake DB Rows
@@ -93,7 +100,7 @@ class Row(object):
         # cast to unicode
         for k, v in iteritems(self.values):
             if isinstance(v, str):
-                self.values[k] = unicode(v)
+                self.values[k] = text_type(v)
         # Binary columns stores either (compressed) binary data or encoded
         # with utf-8 unicode string. We assume that Row constructor receives
         # only unicode strings and encode them to utf-8 here.
@@ -101,7 +108,7 @@ class Row(object):
         # which stores either utf-8 encoded string, or gzip-compressed
         # utf-8 encoded string.
         for col in self.binary_columns:
-            self.values[col] = self.values[col].encode("utf-8")
+            self.values[col] = unicode2bytes(self.values[col])
         # calculate any necessary hashes
         for hash_col, src_cols in self.hashedColumns:
             self.values[hash_col] = self.hashColumns(
@@ -111,8 +118,20 @@ class Row(object):
         self.__dict__.update(self.values)
 
     def __cmp__(self, other):
+        # NOTE: __cmp__() and cmp() are gone on Python 3,
+        #       in favor of __le__ and __eq__().
         return cmp(self.__class__, other.__class__) \
             or cmp(self.values, other.values)
+
+    def __eq__(self, other):
+        return (self.__class__ == other.__class__ and
+                self.values == other.values)
+
+    def __lt__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                              self.__class__, other.__class__))
+        return self.values < other.values
 
     def __repr__(self):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
@@ -125,13 +144,14 @@ class Row(object):
     def hashColumns(self, *args):
         # copied from master/buildbot/db/base.py
         def encode(x):
-            try:
-                return x.encode('utf8')
-            except AttributeError:
-                if x is None:
-                    return '\xf5'
-                return str(x)
-        return hashlib.sha1('\0'.join(map(encode, args))).hexdigest()
+            if x is None:
+                return b'\xf5'
+            elif isinstance(x, text_type):
+                return x.encode('utf-8')
+            else:
+                return str(x).encode('utf-8')
+
+        return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
     @defer.inlineCallbacks
     def checkForeignKeys(self, db, t):
@@ -648,6 +668,36 @@ class FakeDBComponent(object):
         self.db = db
         self.t = testcase
         self.setUp()
+
+    def mapFilter(self, f, fieldMapping):
+        field = fieldMapping[f.field].split(".")[-1]
+        return resultspec.Filter(field, f.op, f.values)
+
+    def mapOrder(self, o, fieldMapping):
+        if o.startswith('-'):
+            reverse, o = o[0], o[1:]
+        else:
+            reverse = ""
+        o = fieldMapping[o].split(".")[-1]
+        return reverse + o
+
+    def applyResultSpec(self, data, rs):
+        def applicable(field):
+            if field.startswith('-'):
+                field = field[1:]
+            return field in rs.fieldMapping
+        filters = [self.mapFilter(f, rs.fieldMapping)
+                   for f in rs.filters if applicable(f.field)]
+        order = []
+        offset = limit = None
+        if rs.order:
+            order = [self.mapOrder(o, rs.fieldMapping)
+                     for o in rs.order if applicable(o)]
+        if len(filters) == len(rs.filters) and rs.order is not None and len(order) == len(rs.order):
+            offset, limit = rs.offset, rs.limit
+        rs = resultspec.ResultSpec(
+            filters=filters, order=order, limit=limit, offset=offset)
+        return rs.apply(data)
 
 
 class FakeChangeSourcesComponent(FakeDBComponent):
@@ -1333,7 +1383,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def assertBuildsetCompletion(self, bsid, complete):
         """Assert that the completion state of buildset BSID is COMPLETE"""
         actual = self.buildsets[bsid]['complete']
-        self.t.failUnless(
+        self.t.assertTrue(
             (actual and complete) or (not actual and not complete))
 
     def assertBuildset(self, bsid=None, expected_buildset=None):
@@ -1424,7 +1474,7 @@ class FakeWorkersComponent(FakeDBComponent):
             builder_masters = self.db.builders.builder_masters
             workers = []
             for worker in itervalues(self.workers):
-                configured = [cfg for cfg in self.configured.itervalues()
+                configured = [cfg for cfg in itervalues(self.configured)
                               if cfg['workerid'] == worker['id']]
                 pairs = [builder_masters[cfg['buildermasterid']]
                          for cfg in configured]
@@ -1460,7 +1510,7 @@ class FakeWorkersComponent(FakeDBComponent):
     def deconfigureAllWorkersForMaster(self, masterid):
         buildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                             if mid == masterid]
-        for k, v in self.configured.items():
+        for k, v in list(iteritems(self.configured)):
             if v['buildermasterid'] in buildermasterids:
                 del self.configured[k]
 
@@ -1475,7 +1525,7 @@ class FakeWorkersComponent(FakeDBComponent):
 
         allbuildermasterids = [_id for _id, (builderid, mid) in iteritems(self.db.builders.builder_masters)
                                if mid == masterid]
-        for k, v in self.configured.items():
+        for k, v in list(iteritems(self.configured)):
             if v['buildermasterid'] in allbuildermasterids and v['workerid'] == workerid:
                 del self.configured[k]
         self.insertTestData([ConfiguredWorker(workerid=workerid,
@@ -1643,7 +1693,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
     @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
-                         bsid=None, branch=None, repository=None):
+                         bsid=None, branch=None, repository=None, resultSpec=None):
         rv = []
         for br in itervalues(self.reqs):
             if builderid and br.builderid != builderid:
@@ -1690,6 +1740,8 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             builder = yield self.db.builders.getBuilder(br.builderid)
             br.buildername = builder["name"]
             rv.append(self._brdictFromRow(br))
+        if resultSpec is not None:
+            rv = self.applyResultSpec(rv, resultSpec)
         defer.returnValue(rv)
 
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
@@ -1825,7 +1877,7 @@ class FakeBuildsComponent(FakeDBComponent):
                 return defer.succeed(self._row2dict(row))
         return defer.succeed(None)
 
-    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None):
+    def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         ret = []
         for (id, row) in iteritems(self.builds):
             if builderid is not None and row['builderid'] != builderid:
@@ -1837,7 +1889,8 @@ class FakeBuildsComponent(FakeDBComponent):
             if complete is not None and complete != (row['complete_at'] is not None):
                 continue
             ret.append(self._row2dict(row))
-
+        if resultSpec is not None:
+            ret = self.applyResultSpec(ret, resultSpec)
         return defer.succeed(ret)
 
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
@@ -1936,7 +1989,7 @@ class FakeStepsComponent(FakeDBComponent):
     def getSteps(self, buildid):
         ret = []
 
-        for row in self.steps.itervalues():
+        for row in itervalues(self.steps):
             if row['buildid'] != buildid:
                 continue
             ret.append(self._row2dict(row))
@@ -2061,7 +2114,7 @@ class FakeLogsComponent(FakeDBComponent):
 
     def getLogBySlug(self, stepid, slug):
         row = None
-        for row in self.logs.itervalues():
+        for row in itervalues(self.logs):
             if row['slug'] == slug and row['stepid'] == stepid:
                 break
         else:
@@ -2106,7 +2159,7 @@ class FakeLogsComponent(FakeDBComponent):
             self.logs['id'].complete = 1
         return defer.succeed(None)
 
-    def compressLog(self, logid):
+    def compressLog(self, logid, force=False):
         return defer.succeed(None)
 
 
@@ -2339,7 +2392,7 @@ class FakeBuildersComponent(FakeDBComponent):
 
     def getBuilders(self, masterid=None):
         rv = []
-        for builderid, bldr in self.builders.iteritems():
+        for builderid, bldr in iteritems(self.builders):
             masterids = [bm[1] for bm in itervalues(self.builder_masters)
                          if bm[0] == builderid]
             bldr = bldr.copy()

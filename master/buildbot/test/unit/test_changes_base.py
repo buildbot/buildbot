@@ -12,7 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet import task
@@ -152,7 +158,7 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
 
         @d.addCallback
         def check(_):
-            # it doesnt do anything because it was already claimed
+            # it doesn't do anything because it was already claimed
             self.assertEqual(loops, [])
 
         reactor.callWhenRunning(d.callback, None)

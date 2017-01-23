@@ -12,6 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+from future.utils import text_type
+
 import os
 import re
 import sys
@@ -22,6 +29,8 @@ from twisted.internet import reactor
 from twisted.internet import utils
 from twisted.python import log
 from twisted.trial import unittest
+
+from buildbot.test.util.misc import encodeExecutableAndArgs
 
 test = '''
 Update of /cvsroot/test
@@ -86,9 +95,11 @@ golden_1_12_regex = [
 class _SubprocessProtocol(protocol.ProcessProtocol):
 
     def __init__(self, input, deferred):
+        if isinstance(input, text_type):
+            input = input.encode('utf-8')
         self.input = input
         self.deferred = deferred
-        self.output = ''
+        self.output = b''
 
     def outReceived(self, s):
         self.output += s
@@ -107,6 +118,8 @@ def getProcessOutputAndValueWithInput(executable, args, input):
     "similar to getProcessOutputAndValue, but also allows injection of input on stdin"
     d = defer.Deferred()
     p = _SubprocessProtocol(input, d)
+
+    (executable, args) = encodeExecutableAndArgs(executable, args)
     reactor.spawnProcess(p, executable, (executable,) + tuple(args))
     return d
 
@@ -118,14 +131,16 @@ class TestBuildbotCvsMail(unittest.TestCase):
         skip = ("'%s' does not exist (normal unless run from git)"
                 % buildbot_cvs_mail_path)
 
-    def assertOutputOk(self, xxx_todo_changeme4, regexList):
+    def assertOutputOk(self, result, regexList):
         "assert that the output from getProcessOutputAndValueWithInput matches expectations"
-        (output, code) = xxx_todo_changeme4
+        (output, code) = result
+        if isinstance(output, bytes):
+            output = output.decode("utf-8")
         try:
-            self.failUnlessEqual(code, 0, "subprocess exited uncleanly")
+            self.assertEqual(code, 0, "subprocess exited uncleanly")
             lines = output.splitlines()
-            self.failUnlessEqual(len(lines), len(regexList),
-                                 "got wrong number of lines of output")
+            self.assertEqual(len(lines), len(regexList),
+                             "got wrong number of lines of output")
 
             misses = []
             for line, regex in zip(lines, regexList):
@@ -139,70 +154,86 @@ class TestBuildbotCvsMail(unittest.TestCase):
 
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11
-        d = getProcessOutputAndValueWithInput(sys.executable,
-                                              [self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
-                                               '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
-                                               'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3'],
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example:/cvsroot\"',
+                '--email=buildbot@example.com', '-P', 'test', '-R', 'noreply@example.com', '-t',
+                'test', 'README', '1.1,1.2', 'hello.c', '2.2,2.3']
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = getProcessOutputAndValueWithInput(executable,
+                                              args,
                                               input=test)
         d.addCallback(self.assertOutputOk, golden_1_11_regex)
         return d
 
     def test_buildbot_cvs_mail_from_cvs1_12(self):
         # Simulate CVS 1.12, with --path option
-        d = getProcessOutputAndValueWithInput(sys.executable,
-                                              [self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
-                                               '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
-                                               '-R', 'noreply@example.com', '-t',
-                                               'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'],
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path, '--cvsroot=\"ext:example.com:/cvsroot\"',
+                '--email=buildbot@example.com', '-P', 'test', '--path', 'test',
+                '-R', 'noreply@example.com', '-t',
+                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3']
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = getProcessOutputAndValueWithInput(executable,
+                                              args,
                                               input=test)
         d.addCallback(self.assertOutputOk, golden_1_12_regex)
         return d
 
     def test_buildbot_cvs_mail_no_args_exits_with_error(self):
-        d = utils.getProcessOutputAndValue(
-            sys.executable, [self.buildbot_cvs_mail_path])
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path]
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable, args)
 
-        def check(xxx_todo_changeme):
-            (stdout, stderr, code) = xxx_todo_changeme
+        def check(result):
+            (stdout, stderr, code) = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
 
     def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self):
-        d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
-                                                            '--cvsroot=\"ext:example.com:/cvsroot\"',
-                                                            '-P', 'test', '--path', 'test',
-                                                            '-R', 'noreply@example.com', '-t',
-                                                            'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path,
+                '--cvsroot=\"ext:example.com:/cvsroot\"',
+                '-P', 'test', '--path', 'test',
+                '-R', 'noreply@example.com', '-t',
+                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3']
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable, args)
 
-        def check(xxx_todo_changeme1):
-            (stdout, stderr, code) = xxx_todo_changeme1
+        def check(result):
+            (stdout, stderr, code) = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
 
     def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self):
-        d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
-                                                            '--complete-garbage-opt=gomi',
-                                                            '--cvsroot=\"ext:example.com:/cvsroot\"',
-                                                            '--email=buildbot@example.com', '-P', 'test', '--path',
-                                                            'test', '-R', 'noreply@example.com', '-t',
-                                                            'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path, '--complete-garbage-opt=gomi',
+                '--cvsroot=\"ext:example.com:/cvsroot\"',
+                '--email=buildbot@example.com', '-P', 'test', '--path',
+                'test', '-R', 'noreply@example.com', '-t',
+                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3']
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable, args)
 
-        def check(xxx_todo_changeme2):
-            (stdout, stderr, code) = xxx_todo_changeme2
+        def check(result):
+            (stdout, stderr, code) = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d
 
     def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
-        d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
-                                                            '--email=buildbot@example.com', '-P', 'test', '--path',
-                                                            'test', '-R', 'noreply@example.com', '-t',
-                                                            'README', '1.1', '1.2', 'hello.c', '2.2', '2.3'])
+        executable = sys.executable
+        args = [self.buildbot_cvs_mail_path,
+                '--email=buildbot@example.com', '-P', 'test', '--path',
+                'test', '-R', 'noreply@example.com', '-t',
+                'README', '1.1', '1.2', 'hello.c', '2.2', '2.3']
+        (executable, args) = encodeExecutableAndArgs(executable, args)
+        d = utils.getProcessOutputAndValue(executable, args)
 
-        def check(xxx_todo_changeme3):
-            (stdout, stderr, code) = xxx_todo_changeme3
+        def check(result):
+            (stdout, stderr, code) = result
             self.assertEqual(code, 2)
         d.addCallback(check)
         return d

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 import shutil
 
@@ -24,7 +28,7 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
-# When new protocols are added, make sure you update this test to exercice
+# When new protocols are added, make sure you update this test to exercise
 # your proto implementation
 
 

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import textwrap
 
 from twisted.internet import defer
@@ -32,6 +36,7 @@ class TestMessage(unittest.TestCase):
                                              wantData=True, wantDb=True, wantMq=True)
 
         self.message = message.MessageFormatter()
+        self.messageMissing = message.MessageFormatterMissingWorker()
 
     def setupDb(self, results1, results2):
 
@@ -63,8 +68,9 @@ class TestMessage(unittest.TestCase):
         res = yield utils.getDetailsForBuildset(self.master, 99, wantProperties=True)
         build = res['builds'][0]
         buildset = res['buildset']
-        res = self.message(mode, "Builder1", buildset, build, self.master,
-                           lastresults, ["him@bar", "me@foo"])
+        res = yield self.message.formatMessageForBuildResults(
+            mode, "Builder1", buildset, build, self.master,
+            lastresults, ["him@bar", "me@foo"])
         defer.returnValue(res)
 
     @defer.inlineCallbacks
@@ -87,6 +93,20 @@ class TestMessage(unittest.TestCase):
 
             Sincerely,
              -The Buildbot'''))
+        self.assertTrue('subject' not in res)
+
+    @defer.inlineCallbacks
+    def test_inline_template(self):
+        self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        self.assertEqual(res['type'], "plain")
+        self.assertEqual(res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+
+    @defer.inlineCallbacks
+    def test_inline_subject(self):
+        self.message = message.MessageFormatter(subject="subject")
+        res = yield self.doOneTest(SUCCESS, SUCCESS)
+        self.assertEqual(res['subject'], "subject")
 
     @defer.inlineCallbacks
     def test_message_failure(self):
@@ -117,3 +137,14 @@ class TestMessage(unittest.TestCase):
         res = yield self.doOneTest(FAILURE, FAILURE, "change")
         self.assertIn(
             "The Buildbot has detected a failed build on builder", res['body'])
+
+    @defer.inlineCallbacks
+    def test_missing_worker(self):
+        self.setupDb(SUCCESS, SUCCESS)
+        workers = yield self.master.data.get(('workers',))
+        worker = workers[0]
+        worker['notify'] = ['e@mail']
+        worker['last_connection'] = ['yesterday']
+        res = yield self.messageMissing.formatMessageForMissingWorker(self.master, worker)
+        text = res['body']
+        self.assertIn("has noticed that the worker named wrkr went away", text)

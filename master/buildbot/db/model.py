@@ -13,10 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import migrate
 import migrate.versioning.repository
 import sqlalchemy as sa
-from migrate import exceptions
+from migrate import exceptions  # pylint: disable=ungrouped-imports
+
 from twisted.python import log
 from twisted.python import util
 
@@ -26,10 +30,19 @@ from buildbot.db.types.json import JsonObject
 from buildbot.util import sautils
 
 try:
-    from migrate.versioning.schema import ControlledSchema
-    assert ControlledSchema  # hush pyflakes
+    from migrate.versioning.schema import ControlledSchema  # pylint: disable=ungrouped-imports
 except ImportError:
     ControlledSchema = None
+
+
+class EightUpgradeError(Exception):
+
+    def __init__(self):
+        message = """You are trying to upgrade a buildbot 0.8.x master to buildbot 0.9.x
+        This is not supported. Please start from a clean database
+        http://docs.buildbot.net/latest/manual/installation/nine-upgrade.html"""
+        # Call the base class constructor with the parameters it needs
+        super(EightUpgradeError, self).__init__(message)
 
 
 class Model(base.DBConnectorComponent):
@@ -118,7 +131,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('number', sa.Integer, nullable=False),
         sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
         # note that there is 1:N relationship here.
-        # In case of slave loss, build has results RETRY
+        # In case of worker loss, build has results RETRY
         # and buildrequest is unclaimed.
         # We use use_alter to prevent circular reference
         # (buildrequests -> buildsets -> builds).
@@ -135,7 +148,7 @@ class Model(base.DBConnectorComponent):
         # start/complete times
         sa.Column('started_at', sa.Integer, nullable=False),
         sa.Column('complete_at', sa.Integer),
-        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+        sa.Column('state_string', sa.Text, nullable=False),
         sa.Column('results', sa.Integer),
     )
 
@@ -149,7 +162,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
         sa.Column('started_at', sa.Integer),
         sa.Column('complete_at', sa.Integer),
-        sa.Column('state_string', sa.Text, nullable=False, server_default=''),
+        sa.Column('state_string', sa.Text, nullable=False),
         sa.Column('results', sa.Integer),
         sa.Column('urls_json', sa.Text, nullable=False),
         sa.Column(
@@ -178,7 +191,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('first_line', sa.Integer, nullable=False),
         sa.Column('last_line', sa.Integer, nullable=False),
         # log contents, including a terminating newline, encoded in utf-8 or,
-        # if 'compressed' is true, compressed with gzip
+        # if 'compressed' is not 0, compressed with gzip, bzip2 or lz4
         sa.Column('content', sa.LargeBinary(65536)),
         sa.Column('compressed', sa.SmallInteger, nullable=False),
     )
@@ -303,7 +316,7 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
-        sa.Column('property_value', sa.String(1024), nullable=False),
+        sa.Column('property_value', sa.Text, nullable=False),
     )
 
     # users associated with this change; this allows multiple users for
@@ -828,32 +841,20 @@ class Model(base.DBConnectorComponent):
             # if the migrate_version table exists, we can just let migrate
             # take care of this process.
             if table_exists(engine, 'migrate_version'):
+                r = engine.execute(
+                    "select version from migrate_version limit 1")
+                old_version = r.scalar()
+                if old_version < 40:
+                    raise EightUpgradeError()
                 upgrade(engine)
 
             # if the version table exists, then we can version_control things
             # at that version, drop the version table, and let migrate take
             # care of the rest.
             elif table_exists(engine, 'version'):
-                # get the existing version
-                r = engine.execute("select version from version limit 1")
-                old_version = r.scalar()
+                raise EightUpgradeError()
 
-                # set up migrate at the same version
-                version_control(engine, old_version)
-
-                # drop the no-longer-required version table, using a dummy
-                # metadata entry
-                table = sautils.Table('version', self.metadata,
-                                      sa.Column('x', sa.Integer))
-                table.drop(bind=engine)
-
-                # clear the dummy metadata entry
-                self.metadata.remove(table)
-
-                # and, finally, upgrade using migrate
-                upgrade(engine)
-
-            # otherwise, this db is new, so we dont bother using the migration engine
+            # otherwise, this db is new, so we don't bother using the migration engine
             # and just create the tables, and put the version directly to
             # latest
             else:

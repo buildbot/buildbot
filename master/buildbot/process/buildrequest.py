@@ -12,10 +12,15 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import calendar
 
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import text_type
+
+import calendar
+
 from twisted.internet import defer
 
 from buildbot.data import resultspec
@@ -113,7 +118,7 @@ class TempSourceStamp(object):
             'patch_comment'] = result.pop('patch_info')
 
         assert all(
-            isinstance(val, (unicode, type(None), int))
+            isinstance(val, (text_type, type(None), int))
             for attr, val in iteritems(result)
         ), result
         return result

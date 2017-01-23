@@ -12,15 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import cStringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import getpass
 import os
 import sys
 
 import mock
+
 from twisted.python import log
 from twisted.python import runtime
 from twisted.python import usage
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.scripts import base
@@ -431,7 +436,7 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
 
     def test_pb_withInvalidMaster(self):
         """
-        When 'buildbot try' is asked to conncect via pb, but an invalid
+        When 'buildbot try' is asked to connect via pb, but an invalid
         master is specified, a usage error is raised.
         """
         self.assertRaises(usage.UsageError, self.parse,
@@ -476,7 +481,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def test_properties_with_colon(self):
         opts = self.parse('--property', 'x:http://foo', *self.master_and_who)
-        self.assertEquals(opts['properties'], dict(x='http://foo'))
+        self.assertEqual(opts['properties'], dict(x='http://foo'))
 
     def test_config_file(self):
         self.options_file['master'] = 'MMM:123'
@@ -836,7 +841,7 @@ class TestRun(unittest.TestCase):
 
     def test_run_bad(self):
         self.patch(sys, 'argv', ['buildbot', 'my', '-l'])
-        stdout = cStringIO.StringIO()
+        stdout = NativeStringIO()
         self.patch(sys, 'stdout', stdout)
         try:
             runner.run()

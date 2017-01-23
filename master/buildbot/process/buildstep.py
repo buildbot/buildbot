@@ -12,10 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import re
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
+from future.utils import raise_with_traceback
+from future.utils import string_types
+from future.utils import text_type
+
+import re
+from io import StringIO
+
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.python import util as twutil
@@ -27,7 +36,7 @@ from twisted.python import versions
 from twisted.python.failure import Failure
 from twisted.python.reflect import accumulateClassList
 from twisted.web.util import formatFailure
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import config
 from buildbot import interfaces
@@ -49,16 +58,11 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
+from buildbot.util import bytes2NativeString
 from buildbot.util import debounce
 from buildbot.util import flatten
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-
-try:
-    import cStringIO as StringIO
-    assert StringIO
-except ImportError:
-    import StringIO
 
 
 class BuildStepFailed(Exception):
@@ -68,6 +72,12 @@ class BuildStepFailed(Exception):
 class BuildStepCancelled(Exception):
     # used internally for signalling
     pass
+
+
+class CallableAttributeError(Exception):
+    # attribute error raised from a callable run inside a property
+    pass
+
 
 # old import paths for these classes
 RemoteCommand = remotecommand.RemoteCommand
@@ -81,6 +91,7 @@ _hush_pyflakes = [
     LogObserver, LogLineObserver, OutputProgressObserver]
 
 
+@implementer(interfaces.IBuildStepFactory)
 class _BuildStepFactory(util.ComparableMixin):
 
     """
@@ -89,7 +100,6 @@ class _BuildStepFactory(util.ComparableMixin):
     easier to test that the right factories are getting created.
     """
     compare_attrs = ('factory', 'args', 'kwargs')
-    implements(interfaces.IBuildStepFactory)
 
     def __init__(self, factory, *args, **kwargs):
         self.factory = factory
@@ -184,14 +194,17 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
+        data = bytes2NativeString(data)
         self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
@@ -215,7 +228,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def readlines(self):
         alltext = "".join(self.getChunks([self.STDOUT], onlyText=True))
-        io = StringIO.StringIO(alltext)
+        io = StringIO(alltext)
         return io.readlines()
 
     def getChunks(self, channels=None, onlyText=False):
@@ -232,7 +245,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
 
     def waitUntilFinished(self):
         d = defer.Deferred()
-        self.finishDefereds.append(d)
+        self.finishDeferreds.append(d)
         self._maybeFinished()
 
 
@@ -241,11 +254,10 @@ class BuildStepStatus(object):
     pass
 
 
+@implementer(interfaces.IBuildStep)
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin,
                 WorkerAPICompatMixin):
-
-    implements(interfaces.IBuildStep)
 
     alwaysRun = False
     doStepIf = True
@@ -306,7 +318,9 @@ class BuildStep(results.ResultComputingConfigMixin,
     rendered = False  # true if attributes are rendered
     _workdir = None
     _waitingForLocks = False
-    _run_finished_hook = lambda self: None  # for tests
+
+    def _run_finished_hook(self):
+        return None  # override in tests
 
     def __init__(self, **kwargs):
         self.worker = None
@@ -338,6 +352,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         self.logs = {}
         self._running = False
         self.stepid = None
+        self.results = None
         self._start_unhandled_deferreds = None
 
     def __new__(klass, *args, **kwargs):
@@ -368,7 +383,16 @@ class BuildStep(results.ResultComputingConfigMixin,
             # see :ref:`Factory-Workdir-Functions` for details on how to
             # customize this
             if callable(self.build.workdir):
-                return self.build.workdir(self.build.sources)
+                try:
+                    return self.build.workdir(self.build.sources)
+                except AttributeError as e:
+                    # if the callable raises an AttributeError
+                    # python thinks it is actually workdir that is not existing.
+                    # python will then swallow the attribute error and call
+                    # __getattr__ from worker_transition
+                    raise raise_with_traceback(CallableAttributeError(e))
+                    # we re-raise the original exception by changing its type,
+                    # but keeping its stacktrace
             else:
                 return self.build.workdir
 
@@ -424,16 +448,16 @@ class BuildStep(results.ResultComputingConfigMixin,
         if not self._running:
             summary = yield self.getResultSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getResultSummary must return a dictionary: '
-                                + methodInfo(self.getCurrentSummary))
+                raise TypeError('getResultSummary must return a dictionary: ' +
+                                methodInfo(self.getResultSummary))
         else:
             summary = yield self.getCurrentSummary()
             if not isinstance(summary, dict):
-                raise TypeError('getCurrentSummary must return a dictionary: '
-                                + methodInfo(self.getCurrentSummary))
+                raise TypeError('getCurrentSummary must return a dictionary: ' +
+                                methodInfo(self.getCurrentSummary))
 
         stepResult = summary.get('step', u'finished')
-        if not isinstance(stepResult, unicode):
+        if not isinstance(stepResult, text_type):
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
         if self.stepid is not None:
@@ -442,16 +466,14 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         if not self._running:
             buildResult = summary.get('build', None)
-            if buildResult and not isinstance(buildResult, unicode):
+            if buildResult and not isinstance(buildResult, text_type):
                 raise TypeError("build result string must be unicode")
     # updateSummary gets patched out for old-style steps, so keep a copy we can
     # call internally for such steps
     realUpdateSummary = updateSummary
 
     @defer.inlineCallbacks
-    def startStep(self, remote):
-        self.remote = remote
-
+    def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
@@ -459,6 +481,11 @@ class BuildStep(results.ResultComputingConfigMixin,
             name=util.ascii2unicode(self.name))
         yield self.master.data.updates.startStep(self.stepid)
 
+    @defer.inlineCallbacks
+    def startStep(self, remote):
+        self.remote = remote
+
+        yield self.addStep()
         self.locks = yield self.build.render(self.locks)
 
         # convert all locks into their real form
@@ -679,7 +706,10 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def isNewStyle(self):
         # **temporary** method until new-style steps are the only supported style
-        return self.run.im_func is not BuildStep.run.im_func
+        if PY3:
+            return self.run.__func__ is not BuildStep.run
+        else:
+            return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         # New-style classes implement 'run'.
@@ -726,7 +756,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         sv = self.build.getWorkerCommandVersion(command, None)
         if sv is None:
             return True
-        if map(int, sv.split(".")) < map(int, minversion.split(".")):
+        if [int(s) for s in sv.split(".")] < [int(m) for m in minversion.split(".")]:
             return True
         return False
     deprecatedWorkerClassMethod(locals(), workerVersionIsOlderThan)
@@ -744,7 +774,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,
                                             util.ascii2unicode(name),
-                                            unicode(type))
+                                            text_type(type))
 
         @d.addCallback
         def newLog(logid):
@@ -772,7 +802,6 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
-        log.msg("addCompleteLog(%s)" % name)
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
         l = self._newLog(name, u't', logid)
@@ -782,10 +811,10 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
-        log.msg("addHTMLLog(%s)" % name)
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
         l = self._newLog(name, u'h', logid)
+        html = bytes2NativeString(html)
         yield l.addContent(html)
         yield l.finish()
 
@@ -826,7 +855,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addURL(self, name, url):
-        yield self.master.data.updates.addStepURL(self.stepid, unicode(name), unicode(url))
+        yield self.master.data.updates.addStepURL(self.stepid, text_type(name), text_type(url))
         defer.returnValue(None)
 
     @defer.inlineCallbacks
@@ -965,8 +994,8 @@ class LoggingBuildStep(BuildStep):
                 # The dummy default argument local_logname is a work-around for
                 # Python name binding; default values are bound by value, but
                 # captured variables in the body are bound by name.
-                callback = lambda cmd_arg, local_logname=logname: self.addLog(
-                    local_logname)
+                def callback(cmd_arg, local_logname=logname):
+                    return self.addLog(local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
@@ -1021,8 +1050,8 @@ class LoggingBuildStep(BuildStep):
                 # we're affecting the overall build, so tell them why
                 return self.getText2(cmd, results)
         else:
-            if (self.haltOnFailure or self.flunkOnFailure
-                    or self.warnOnFailure):
+            if (self.haltOnFailure or self.flunkOnFailure or
+                    self.warnOnFailure):
                 # we're affecting the overall build, so tell them why
                 return self.getText2(cmd, results)
         return []
@@ -1123,7 +1152,7 @@ class ShellMixin(object):
             else:
                 setattr(self, arg, constructorArgs[arg])
             del constructorArgs[arg]
-        for arg in constructorArgs:
+        for arg in list(constructorArgs):
             if arg not in BuildStep.parms:
                 bad(arg)
                 del constructorArgs[arg]
@@ -1193,8 +1222,8 @@ class ShellMixin(object):
         for logname, remotefilename in iteritems(self.logfiles):
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
-                callback = lambda cmd_arg, logname=logname: self.addLog(
-                    logname)
+                def callback(cmd_arg, local_logname=logname):
+                    return self.addLog(local_logname)
                 cmd.useLogDelayed(logname, callback, True)
             else:
                 # add a LogFile
@@ -1228,12 +1257,13 @@ def regex_log_evaluator(cmd, _, regexes):
         # we won't be changing "worst" unless possible_status is worse than it,
         # so we don't even need to check the log if that's the case
         if worst_status(worst, possible_status) == possible_status:
-            if isinstance(err, (basestring)):
+            if isinstance(err, string_types):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
             for l in itervalues(cmd.logs):
                 if err.search(l.getText()):
                     worst = possible_status
     return worst
+
 
 _hush_pyflakes = [WithProperties]
 del _hush_pyflakes

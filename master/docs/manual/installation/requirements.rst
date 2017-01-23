@@ -21,7 +21,7 @@ Python: https://www.python.org
 
 Twisted: http://twistedmatrix.com
 
-  Buildbot requires Twisted-11.0.0 or later on the master, and Twisted-8.1.0 on the worker.
+  Buildbot requires Twisted-14.0.1 or later on the master, and Twisted-10.2.0 on the worker.
   In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
   Note that Twisted requires ZopeInterface to be installed as well.
@@ -88,4 +88,4 @@ Python-Dateutil: http://labix.org/python-dateutil
 
 Autobahn:
 
-  The master requires Autobahn version 0.10.2 or higher
+  The master requires Autobahn version 0.16.0 or higher with Python 2.7 and 0.10.2 through 0.13.0 with Python 2.6.

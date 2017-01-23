@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from buildbot.process import logobserver
@@ -23,7 +26,7 @@ from buildbot.steps.shell import ShellCommand
 
 
 class Cppcheck(ShellCommand):
-    # Highly inspirated from the Pylint step.
+    # Highly inspired from the Pylint step.
     name = "cppcheck"
     description = ["running", "cppcheck"]
     descriptionDone = ["cppcheck"]

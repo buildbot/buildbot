@@ -12,14 +12,19 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from mock import Mock
-from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.http import HttpStatusPush
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -28,7 +33,7 @@ class BuildLookAlike(object):
 
     """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
 
-    def __init__(self, keys=None):
+    def __init__(self, keys=None, **assertions):
         self.keys = [
             'builder', 'builderid', 'buildid', 'buildrequest', 'buildrequestid',
             'buildset', 'complete', 'complete_at', 'masterid', 'number',
@@ -36,9 +41,18 @@ class BuildLookAlike(object):
         if keys:
             self.keys.extend(keys)
             self.keys.sort()
+        self.assertions = assertions
 
     def __eq__(self, b):
-        return sorted(b.keys()) == self.keys
+        if sorted(b.keys()) != self.keys:
+            return False
+        for k, v in self.assertions.items():
+            if b[k] != v:
+                return False
+        return True
+
+    def __ne__(self, b):
+        return not (self == b)
 
     def __repr__(self):
         return "{ any build }"
@@ -46,23 +60,25 @@ class BuildLookAlike(object):
 
 class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         # ignore config error if txrequests is not installed
         config._errors = Mock()
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
+        yield self.master.startService()
 
     @defer.inlineCallbacks
     def createReporter(self, **kwargs):
-        self.sp = sp = HttpStatusPush("serv", "username", "passwd", **kwargs)
-        sp.sessionFactory = Mock(return_value=Mock())
+        self._http = yield fakehttpclientservice.HTTPClientService.getService(
+            self.master,
+            "serv", auth=("username", "passwd"))
+        self.sp = sp = HttpStatusPush("serv", auth=("username", "passwd"), **kwargs)
         yield sp.setServiceParent(self.master)
-        yield sp.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
-        yield self.sp.stopService()
-        self.assertEqual(self.sp.session.close.call_count, 1)
+        yield self.master.stopService()
         config._errors = None
 
     @defer.inlineCallbacks
@@ -74,37 +90,26 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
+        self._http.expect("post", "", json=BuildLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildLookAlike(complete=True))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "new"), build)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
-        # we make sure proper calls to txrequests have been made
-        #
-        self.assertEqual(
-            self.sp.session.post.mock_calls,
-            [call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd')),
-             call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd'))])
 
     @defer.inlineCallbacks
     def test_filtering(self):
         yield self.createReporter(builders=['foo'])
         build = yield self.setupBuildResults(SUCCESS)
         self.sp.buildFinished(("build", 20, "finished"), build)
-        self.assertEqual(
-            self.sp.session.post.mock_calls, [])
 
     @defer.inlineCallbacks
     def test_filteringPass(self):
         yield self.createReporter(builders=['Builder0'])
+        self._http.expect("post", "", json=BuildLookAlike())
         build = yield self.setupBuildResults(SUCCESS)
         self.sp.buildFinished(("build", 20, "finished"), build)
-        self.assertEqual(
-            self.sp.session.post.mock_calls,
-            [call(u'serv',
-                  BuildLookAlike(), auth=('username', 'passwd'))])
 
     @defer.inlineCallbacks
     def test_builderTypeCheck(self):
@@ -116,10 +121,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_wantKwargsCheck(self):
         yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
                                   wantPreviousBuild=True, wantLogs=True)
+        self._http.expect("post", "", json=BuildLookAlike(keys=['steps', 'prev_build']))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
-        self.assertEqual(
-            self.sp.session.post.mock_calls,
-            [call(u'serv',
-                  BuildLookAlike(['prev_build', 'steps']), auth=('username', 'passwd'))])

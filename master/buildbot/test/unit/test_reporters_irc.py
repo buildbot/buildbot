@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.application import internet
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -61,7 +66,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         evts = []
         b.chat('nick', 'hi')
-        self.assertEquals(evts, [('m', 'nick', 'hi')])
+        self.assertEqual(evts, [('m', 'nick', 'hi')])
 
     def test_getContact(self):
         b = self.makeBot()

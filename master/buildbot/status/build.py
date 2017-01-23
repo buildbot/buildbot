@@ -13,16 +13,19 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 from twisted.internet import reactor
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot import util
 
 
+@implementer(interfaces.IBuildStatus, interfaces.IStatusEvent)
 class BuildStatus():
-    implements(interfaces.IBuildStatus, interfaces.IStatusEvent)
 
     sources = None
     reason = None
@@ -249,6 +252,9 @@ class BuildStatus():
                 else:
                     step.subscribe(receiver)
                 d = step.waitUntilFinished()
+                # TODO: This actually looks like a bug, but this code
+                # will be removed anyway.
+                # pylint: disable=cell-var-from-loop
                 d.addCallback(lambda step: step.unsubscribe(receiver))
 
         step.waitUntilFinished().addCallback(self._stepFinished)

@@ -1,7 +1,7 @@
 #%RAML 1.0 DataType
 description: |
     A logchunk represents a contiguous sequence of lines in a logfile.
-    Logs are not individually addressible in the data API; instead, they must be requested by line number range.
+    Logs are not individually addressable in the data API; instead, they must be requested by line number range.
     In a strict REST sense, many logchunk resources will contain the same line.
 
     The chunk contents is represented as a single unicode string.
@@ -22,6 +22,18 @@ description: |
     The ``offset`` and ``limit`` parameters can be used to select the desired lines.
     These are specified as query parameters via the REST interface, or as arguments to the :py:meth:`~buildbot.data.connector.DataConnector.get` method in Python.
     The result will begin with line ``offset`` (so the resulting ``firstline`` will be equal to the given ``offset``), and will contain up to ``limit`` lines.
+
+    Following example will get the first 100 lines of a log::
+
+        from buildbot.data import resultspec
+        first_100_lines = yield self.master.data.get(("logs", log['logid'], "contents"),
+            resultSpec=resultspec.ResultSpec(limit=100))
+
+    Following example will get the last 100 lines of a log::
+
+        from buildbot.data import resultspec
+        last_100_lines = yield self.master.data.get(("logs", log['logid'], "contents"),
+            resultSpec=resultspec.ResultSpec(offset=log['num_lines']-100))
 
     .. note::
 

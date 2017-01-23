@@ -12,7 +12,13 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+
+import functools
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -200,7 +206,8 @@ class Expect(object):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary
                     # stuff to make the make sync/async log hack work.
-                    d.addCallback(lambda _: log.unwrap())
+                    d.addCallback(
+                        functools.partial(lambda log, _: log.unwrap(), log))
                     d.addCallback(lambda l: l.flushFakeLogfile())
             return d
         elif behavior == 'err':
@@ -249,7 +256,7 @@ class Expect(object):
 
     def raiseExpectationFailure(self, exp, failure):
         """
-        Some expectations may wish to supress failure.
+        Some expectations may wish to suppress failure.
         The default expectation does not.
 
         This will get invoked if the expectations fails on a command.
@@ -260,7 +267,7 @@ class Expect(object):
 
     def shouldAssertCommandEqualExpectation(self):
         """
-        Whether or not we should validate that the current command matches the expecation.
+        Whether or not we should validate that the current command matches the expectation.
         Some expectations may not have a way to match a command.
         """
         return True

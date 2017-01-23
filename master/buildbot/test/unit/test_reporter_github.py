@@ -12,15 +12,21 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from mock import Mock
-from mock import call
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.reporters.github import HOSTED_BASE_URL
 from buildbot.reporters.github import GitHubStatusPush
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -32,21 +38,23 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def setUp(self):
         # ignore config error if txrequests is not installed
-        config._errors = Mock()
+        self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-        self.sp = sp = GitHubStatusPush('token')
+        yield self.master.startService()
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self,
+            HOSTED_BASE_URL, headers={
+                'Authorization': 'token XXYYZZ',
+                'User-Agent': 'Buildbot'
+            })
+        self.sp = sp = GitHubStatusPush('XXYYZZ')
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
-        yield sp.startService()
-        sp.session.headers = {}
 
-    @defer.inlineCallbacks
     def tearDown(self):
-        yield self.sp.stopService()
-        self.assertEqual(self.sp.session.close.call_count, 1)
-        config._errors = None
+        return self.master.stopService()
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults):
@@ -57,28 +65,29 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_basic(self):
         build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+            json={'state': 'pending',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build started.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+            json={'state': 'success',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
+            json={'state': 'failure',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'description': 'Build done.', 'context': 'buildbot/Builder0'})
+
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
-        # we make sure proper calls to txrequests have been made
-        self.assertEqual(
-            self.sp.session.post.mock_calls, [
-                call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-                    json={'state': 'pending',
-                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                          'description': 'Build started.', 'context': 'buildbot/'}),
-                call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-                    json={'state': 'success',
-                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                          'description': 'Build done.', 'context': 'buildbot/'}),
-                call(
-                    'https://api.github.com/repos/buildbot/buildbot/statuses/d34db33fd43db33f',
-                    json={'state': 'failure',
-                          'target_url': 'http://localhost:8080/#builders/79/builds/0',
-                          'description': 'Build done.', 'context': 'buildbot/'}),
-            ])

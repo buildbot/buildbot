@@ -13,7 +13,11 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import sqlalchemy as sa
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -98,7 +102,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
                 for column in columns:
                     self.assertIsInstance(
                         getattr(tbl.c, column).type, sa.String)
-                    self.assertEquals(getattr(tbl.c, column).type.length, 255)
+                    self.assertEqual(getattr(tbl.c, column).type.length, 255)
 
         return self.do_test_migration(45, 46, setup_thd, verify_thd)
 
@@ -110,7 +114,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
         except Exception as e:
             exception = e
         self.flushLoggedErrors()
-        self.assertEquals(str(exception), expected_msg)
+        self.assertEqual(str(exception), expected_msg)
 
     def do_invalid_test(self, table, value, expected_msg):
 

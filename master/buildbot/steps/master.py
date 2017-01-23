@@ -12,13 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+from future.utils import string_types
+
 import os
 import pprint
 import re
 from builtins import bytes
 from builtins import str
 
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
@@ -49,6 +54,7 @@ class MasterShellCommand(BuildStep):
         self.env = kwargs.pop('env', None)
         self.usePTY = kwargs.pop('usePTY', 0)
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
+        self.logEnviron = kwargs.pop('logEnviron', True)
 
         BuildStep.__init__(self, **kwargs)
 
@@ -133,12 +139,14 @@ class MasterShellCommand(BuildStep):
             newenv = {}
             for key, v in iteritems(env):
                 if v is not None:
-                    if not isinstance(v, basestring):
+                    if not isinstance(v, string_types):
                         raise RuntimeError("'env' values must be strings or "
                                            "lists; key '%s' is incorrect" % (key,))
                     newenv[key] = p.sub(subst, env[key])
             env = newenv
-        stdio_log.addHeader(" env: %r\n" % (env,))
+
+        if self.logEnviron:
+            stdio_log.addHeader(" env: %r\n" % (env,))
 
         # TODO add a timeout?
         self.process = reactor.spawnProcess(self.LocalPP(self), argv[0], argv,
@@ -184,6 +192,24 @@ class SetProperty(BuildStep):
         properties = self.build.getProperties()
         properties.setProperty(
             self.property, self.value, self.name, runtime=True)
+        return defer.succeed(SUCCESS)
+
+
+class SetProperties(BuildStep):
+    name = 'SetProperties'
+    description = ['Setting Properties..']
+    descriptionDone = ['Properties Set']
+    renderables = ['properties']
+
+    def __init__(self, properties=None, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.properties = properties
+
+    def run(self):
+        if self.properties is None:
+            return defer.succeed(SUCCESS)
+        for k, v in iteritems(self.properties):
+            self.setProperty(k, v, self.name, runtime=True)
         return defer.succeed(SUCCESS)
 
 

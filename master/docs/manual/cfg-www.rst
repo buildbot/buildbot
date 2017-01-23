@@ -119,7 +119,7 @@ This server is configured with the ``www`` configuration key, which specifies a 
     The :bb:cfg:`buildbotURL` configuration value gives the base URL that all masters will use to generate links.
     The :bb:cfg:`www` configuration gives the settings for the webserver.
     In simple cases, the ``buildbotURL`` contains the hostname and port of the master, e.g., ``http://master.example.com:8010/``.
-    In more complex cases, with multiple masters, web proxies, or load balancers, the correspondance may be less obvious.
+    In more complex cases, with multiple masters, web proxies, or load balancers, the correspondence may be less obvious.
 
 .. _Web-Authentication:
 
@@ -202,6 +202,10 @@ The available classes are described here:
 
     Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
 
+    The user's email-address (for e.g. authorization) is set to the "primary" address set by the user in GitHub.
+    When using group-based authorization, the user's groups are equal to the names of the GitHub organizations the user
+    is a member of.
+
     Example::
 
         from buildbot.plugins import util
@@ -228,10 +232,30 @@ The available classes are described here:
         from buildbot.plugins import util
         c['www'] = {
             # ...
-            'auth': util.GitLabAuth("https://gitlab.com", "clientid", clientsecret"),
+            'auth': util.GitLabAuth("https://gitlab.com", "clientid", "clientsecret"),
         }
 
 .. _GitLab: http://doc.gitlab.com/ce/integration/oauth_provider.html
+
+.. py:class:: buildbot.www.oauth2.BitbucketAuth(clientId, clientSecret)
+
+    :param clientId: The client ID of your buildbot application
+    :param clientSecret: The client secret of your buildbot application
+
+    This class implements an authentication with Bitbucket_ single sign-on.
+    It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
+
+    Register your Buildbot instance with the ``BUILDBOT_URL/auth/login`` url as the allowed redirect URI.
+
+    Example::
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.BitbucketAuth("clientid", "clientsecret"),
+        }
+
+.. _Bitbucket: https://confluence.atlassian.com/bitbucket/oauth-on-bitbucket-cloud-238027431.html
 
 .. py:class:: buildbot.www.auth.RemoteUserAuth
 
@@ -324,7 +348,7 @@ Currently only one provider is available:
 
         If one of the three optional groups parameters is supplied, then all of them become mandatory. If none is supplied, the retrieved user info has an empty list of groups.
 
-     Example::
+Example::
 
             from buildbot.plugins import util
 
@@ -350,7 +374,7 @@ Currently only one provider is available:
                             avatar_methods=[userInfoProvider,
                                             util.AvatarGravatar()])
 
-        .. note::
+.. note::
 
             In order to use this module, you need to install the ``python3-ldap`` module:
 
@@ -358,7 +382,7 @@ Currently only one provider is available:
 
                 pip install python3-ldap
 
-        In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
+In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
 
                 from buildbot.plugins import util
                 userInfoProvider = util.LdapUserInfo(...)
@@ -387,8 +411,8 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
 
 
     server {
-            # Enable SSL and SPDY
-            listen 443 ssl spdy default_server;
+            # Enable SSL and http2
+            listen 443 ssl http2 default_server;
 
             server_name yourdomain.com;
 
@@ -402,7 +426,6 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             # put a one day session timeout for websockets to stay longer
             ssl_session_cache      shared:SSL:1440m;
             ssl_session_timeout  1440m;
-            add_header        Alternate-Protocol  443:npn-spdy/3;
 
             # please consult latest nginx documentation for current secure encryption settings
             ssl_protocols ..
@@ -416,19 +439,19 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
 
             # you could use / if you use domain based proxy instead of path based proxy
             location /buildbot/ {
-                proxy_pass http://localhost:5000/;
+                proxy_pass http://127.0.0.1:5000/;
             }
             location /buildbot/sse/ {
                 # proxy buffering will prevent sse to work
                 proxy_buffering off;
-                proxy_pass http://localhost:5000/sse/;
+                proxy_pass http://127.0.0.1:5000/sse/;
             }
             # required for websocket
             location /buildbot/ws {
                   proxy_http_version 1.1;
                   proxy_set_header Upgrade $http_upgrade;
                   proxy_set_header Connection "upgrade";
-                  proxy_pass http://localhost:5000/ws;
+                  proxy_pass http://127.0.0.1:5000/ws;
                   # raise the proxy timeout for the websocket
                   proxy_read_timeout 6000s;
             }
@@ -446,13 +469,13 @@ Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), direct
         ServerAdmin webmaster@buildbot.example
 
         <Location /ws>
-          ProxyPass ws://localhost:8020/ws
-          ProxyPassReverse ws://localhost:8020/ws
+          ProxyPass ws://127.0.0.1:8020/ws
+          ProxyPassReverse ws://127.0.0.1:8020/ws
         </Location>
 
         ProxyPass /ws !
-        ProxyPass / http://localhost:8020/
-        ProxyPassReverse / http://localhost:8020/
+        ProxyPass / http://127.0.0.1:8020/
+        ProxyPassReverse / http://127.0.0.1:8020/
 
         SetEnvIf X-Url-Scheme https HTTPS=1
         ProxyPreserveHost On
@@ -473,17 +496,86 @@ Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), direct
 Authorization rules
 ~~~~~~~~~~~~~~~~~~~
 
+The authorization framework in Buildbot is very generic and flexible.
+Drawback is that it is not very obvious for newcomers.
+The 'simple' example will however allow you to easily start by implementing an admins-have-all-rights setup.
+
+Please carefully read the following documentation to understand how to setup authorization in Buildbot.
+
+Authorization framework is tightly coupled to the REST API.
+Authorization framework only works for HTTP, not for other means of interaction like IRC or try scheduler.
+It allows or denies access to the REST APIs according to rules.
+
+.. blockdiag::
+
+    blockdiag {
+      User -> AuthenticatedUser [label = Auth];
+      AuthenticatedUser -> "RoleMatcher" -> Role <- "EndpointMatcher" <- "REST API Endpoint"
+
+      User  [shape = actor];
+      AuthenticatedUser  [shape = actor];
+      RoleMatcher [shape = diamond];
+      EndpointMatcher [shape = diamond];
+    }
+
+- Roles is a label that you give to a user.
+
+  It is similar but different to the usual notion of group:
+
+  - A user can have several roles, and a role can be given to several users.
+  - Role is an application specific notion, while group is more organization specific notion.
+  - Groups are given by the auth plugin, e.g ``ldap``, ``github``, and are not always in the precise control of the buildbot admins.
+  - Roles can be dynamically assigned, according to the context.
+    For example, there is the ``owner`` role, which can be given to a user for a build that he is at the origin, so that he can stop or rebuild only builds of his own.
+
+- Endpoint matchers associate role requirements to REST API endpoints.
+  The default policy is allow in case no matcher matches (see below why)
+
+- Role matchers associate authenticated users to roles.
+
+Authz Configuration
++++++++++++++++++++
+
+.. py:class:: buildbot.www.authz.Authz(allowRules=[], roleMatcher=[], stringsMatcher=util.fnmatchStrMatcher)
+
+    :param allowRules: List of :py:class:`EndpointMatcherBase` processed in order for each endpoint grant request.
+    :param roleMatcher: List of RoleMatchers
+    :param stringsMatcher: Selects algorithm used to make strings comparison (used to compare roles and builder names).
+       can be :py:class:`util.fnmatchStrMatcher` or :py:class:`util.reStrMatcher` from ``from buildbot.plugins import util``
+
+    :py:class:`Authz` needs to be configured in ``c['www']['authz']``
+
 Endpoint matchers
 +++++++++++++++++
 
 Endpoint matchers are responsible for creating rules to match REST endpoints, and requiring roles for them.
-The following sequence is implemented by each EndpointMatcher class
+Endpoint matchers are processed in the order they are configured.
+The first rule matching an endpoint will prevent further rules from being checked.
+To continue checking other rules when the result is `deny`, set `defaultDeny=False`.
+If no endpoint matcher matches, then the access is granted.
+
+One can implement the default deny policy by putting an :py:class:`AnyEndpointMatcher` with nonexistent role in the end of the list.
+Please note that this will deny all REST apis, and most of the UI do not implement proper access denied message in case of such error.
+
+The following sequence is implemented by each EndpointMatcher class.
 
 - Check whether the requested endpoint is supported by this matcher
 - Get necessary info from data api, and decides whether it matches.
-- Looks if the users has the required role.
+- Look if the users has the required role.
 
-Several endpoints  matchers are currently implemented
+Several endpoints matchers are currently implemented.
+If you need a very complex setup, you may need to implement your own endpoint matchers.
+In this case, you can look at the source code for detailed examples on how to write endpoint matchers.
+
+.. py:class:: buildbot.www.authz.endpointmatchers.EndpointMatcherBase(role, defaultDeny=True)
+
+    :param role: The role which grants access to this endpoint.
+        List of roles is not supported, but a ``fnmatch`` expression can be provided to match several roles.
+
+    :param defaultDeny: The role matcher algorithm will stop if this value is true, and if the endpoint matched.
+
+    This is the base endpoint matcher.
+    Its arguments are inherited by all the other endpoint matchers.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.AnyEndpointMatcher(role)
 
@@ -555,6 +647,20 @@ You can grant roles from groups information provided by the Auth plugins, or if 
             RolesFromOwner(role="owner")
         ]
 
+.. py:class:: buildbot.www.authz.roles.RolesFromUsername(roles, usernames)
+
+    :param roles: roles to assign when the username matches.
+    :param usernames: list of usernames that have the roles.
+
+    RolesFromUsername grants the given roles when the ``username`` property is within the list of usernames.
+
+    ex::
+
+        roleMatchers=[
+            RolesFromUsername(roles=["admins"], usernames=["root"]),
+            RolesFromUsername(roles=["developers", "integrators"], usernames=["Alice", "Bob"])
+        ]
+
 
 Example Configs
 +++++++++++++++
@@ -609,4 +715,21 @@ More complex config with separation per branch:
             RolesFromOwner(role="owner")
         ]
     )
+    c['www']['authz'] = authz
+
+Using GitHub authentication and allowing access to all endpoints for users in the "BuildBot" organization:
+
+.. code-block:: python
+
+    from buildbot.plugins import *
+    authz = util.Authz(
+      allowRules=[
+        util.AnyEndpointMatcher(role="BuildBot", defaultDeny=True)
+      ],
+      roleMatchers=[
+        util.RolesFromGroups()
+      ]
+    )
+    auth=util.GitHubAuth('CLIENT_ID', 'CLIENT_SECRET')
+    c['www']['auth'] = auth
     c['www']['authz'] = authz

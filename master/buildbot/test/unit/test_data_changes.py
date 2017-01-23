@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -326,6 +331,64 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             category='devel',
             repository='git://warner',
             codebase='cb-devel',
+            project='Buildbot',
+            sourcestampid=100,
+        )
+        return self.do_test_addChange(kwargs,
+                                      expectedRoutingKey, expectedMessage, expectedRow)
+
+    def test_addChange_repository_revision(self):
+        self.master.config = mock.Mock(name='master.config')
+        self.master.config.revlink = lambda rev, repo: 'foo%sbar%sbaz' % (repo, rev)
+        # revlink is default here
+        kwargs = dict(author=u'warner', branch=u'warnerdb',
+                      category=u'devel', comments=u'fix whitespace',
+                      files=[u'master/buildbot/__init__.py'],
+                      project=u'Buildbot', repository=u'git://warner',
+                      codebase=u'', revision=u'0e92a098b', when_timestamp=256738404,
+                      properties={u'foo': 20})
+        expectedRoutingKey = ('changes', '500', 'new')
+        # When no revlink is passed to addChange, but a repository and revision is
+        # passed, the revlink should be constructed by calling the revlink callable
+        # in the config. We thus expect a revlink of 'foogit://warnerbar0e92a098bbaz'
+        expectedMessage = {
+            'author': u'warner',
+            'branch': u'warnerdb',
+            'category': u'devel',
+            'codebase': u'',
+            'comments': u'fix whitespace',
+            'changeid': 500,
+            'files': [u'master/buildbot/__init__.py'],
+            'parent_changeids': [],
+            'project': u'Buildbot',
+            'properties': {u'foo': (20, u'Change')},
+            'repository': u'git://warner',
+            'revision': u'0e92a098b',
+            'revlink': u'foogit://warnerbar0e92a098bbaz',
+            'when_timestamp': 256738404,
+            'sourcestamp': {
+                'branch': u'warnerdb',
+                'codebase': u'',
+                'patch': None,
+                'project': u'Buildbot',
+                'repository': u'git://warner',
+                'revision': u'0e92a098b',
+                'created_at': epoch2datetime(10000000),
+                'ssid': 100,
+            },
+            # uid
+        }
+        expectedRow = fakedb.Change(
+            changeid=500,
+            author='warner',
+            comments='fix whitespace',
+            branch='warnerdb',
+            revision='0e92a098b',
+            revlink='foogit://warnerbar0e92a098bbaz',
+            when_timestamp=256738404,
+            category='devel',
+            repository='git://warner',
+            codebase='',
             project='Buildbot',
             sourcestampid=100,
         )

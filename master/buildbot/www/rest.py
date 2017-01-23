@@ -12,21 +12,26 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.moves.urllib.parse import urlparse
+from future.utils import iteritems
+from future.utils import text_type
+
+import cgi
 import datetime
 import fnmatch
-import mimetools
+import json
 import re
 from contextlib import contextmanager
 
-from future.moves.urllib.parse import urlparse
-from future.utils import iteritems
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.util import json
 from buildbot.util import toJson
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
@@ -43,13 +48,15 @@ class BadJsonRpc2(Exception):
         self.jsonrpccode = jsonrpccode
 
 
-class ContentTypeParser(mimetools.Message):
+class ContentTypeParser(object):
 
     def __init__(self, contenttype):
         self.typeheader = contenttype
-        self.encodingheader = None
-        self.parsetype()
-        self.parseplist()
+
+    def gettype(self):
+        mimetype, options = cgi.parse_header(self.typeheader)
+        return mimetype
+
 
 URL_ENCODED = "application/x-www-form-urlencoded"
 JSON_ENCODED = "application/json"
@@ -121,7 +128,7 @@ class V2RootResource(resource.Resource):
         try:
             yield
         except exceptions.InvalidPathError as e:
-            writeError(str(e) or "invalid path", errcode=404,
+            writeError(e.args[0] or "invalid path", errcode=404,
                        jsonrpccode=JSONRPC_CODES['invalid_request'])
             return
         except exceptions.InvalidControlException as e:
@@ -129,7 +136,7 @@ class V2RootResource(resource.Resource):
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadRequest as e:
-            writeError(str(e) or "invalid request", errcode=400,
+            writeError(e.args[0] or "invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadJsonRpc2 as e:
@@ -177,9 +184,9 @@ class V2RootResource(resource.Resource):
             if not isinstance(data[name], types):
                 raise BadJsonRpc2("'%s' must be %s" % (name, typename),
                                   JSONRPC_CODES["invalid_request"])
-        check("jsonrpc", (str, unicode), "a string")
-        check("method", (str, unicode), "a string")
-        check("id", (str, unicode, int, type(None)),
+        check("jsonrpc", (str, text_type), "a string")
+        check("method", (str, text_type), "a string")
+        check("id", (str, text_type, int, type(None)),
               "a string, number, or null")
         check("params", (dict,), "an object")
         if data['jsonrpc'] != '2.0':
@@ -333,6 +340,8 @@ class V2RootResource(resource.Resource):
             request.write(json.dumps(dict(error=msg)))
 
         with self.handleErrors(writeError):
+            yield self.master.www.assertUserAllowed(request, tuple(request.postpath), request.method, {})
+
             ep, kwargs = self.getEndpoint(request)
 
             rspec = self.decodeResultSpec(request, ep)
@@ -426,7 +435,11 @@ class V2RootResource(resource.Resource):
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader('content-type', 'text/plain; charset=utf-8')
-            request.write(json.dumps(dict(error=msg)))
+            if request.method == 'POST':
+                # jsonRPC callers want the error message in error.message
+                request.write(json.dumps(dict(error=dict(message=msg))))
+            else:
+                request.write(json.dumps(dict(error=msg)))
             request.finish()
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 

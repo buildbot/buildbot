@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -191,7 +196,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
 
         res = yield self.render_resource(self.rsrc, '/auth/login')
         self.assertEqual(res, "")
-        self.failIf(self.auth.maybeAutoLogin.called)
+        self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
         self.assertEqual(self.master.session.user_info,
                          {'email': 'him@org', 'username': 'him'})

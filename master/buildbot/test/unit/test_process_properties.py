@@ -12,13 +12,18 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from copy import deepcopy
 
 import mock
+
 from twisted.internet import defer
 from twisted.python import components
 from twisted.trial import unittest
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
@@ -60,8 +65,8 @@ class FakeSource:
         return ds
 
 
+@implementer(IRenderable)
 class DeferredRenderable:
-    implements(IRenderable)
 
     def __init__(self):
         self.d = defer.Deferred()
@@ -76,7 +81,7 @@ class DeferredRenderable:
 class TestPropertyMap(unittest.TestCase):
 
     """
-    Test the behavior of PropertyMap, using the external interace
+    Test the behavior of PropertyMap, using the external interface
     provided by WithProperties.
     """
 
@@ -95,7 +100,7 @@ class TestPropertyMap(unittest.TestCase):
 
     def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
         d = self.build.render(WithProperties(fmtstring, **kwargs))
-        d.addCallback(self.failUnlessEqual, "%s" % expect)
+        d.addCallback(self.assertEqual, "%s" % expect)
         return d
 
     def testSimpleStr(self):
@@ -359,7 +364,7 @@ class TestInterpolatePositional(unittest.TestCase):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%s'", renderable)
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "echo 'red fish'")
         renderable.callback("red fish")
         return d
@@ -520,7 +525,7 @@ class TestInterpolateSrc(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
         sa = FakeSource()
-        sb = FakeSource()
+        wfb = FakeSource()
         sc = FakeSource()
 
         sa.repository = 'cvs://A..'
@@ -528,10 +533,10 @@ class TestInterpolateSrc(unittest.TestCase):
         sa.project = "Project"
         self.build.sources['cbA'] = sa
 
-        sb.repository = 'cvs://B..'
-        sb.codebase = 'cbB'
-        sb.project = "Project"
-        self.build.sources['cbB'] = sb
+        wfb.repository = 'cvs://B..'
+        wfb.codebase = 'cbB'
+        wfb.project = "Project"
+        self.build.sources['cbB'] = wfb
 
         sc.repository = 'cvs://C..'
         sc.codebase = 'cbC'
@@ -732,7 +737,7 @@ class TestInterpolateKwargs(unittest.TestCase):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%(kw:test)s'", test=renderable)
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "echo 'testing'")
         renderable.callback('testing')
 
@@ -740,7 +745,7 @@ class TestInterpolateKwargs(unittest.TestCase):
         renderable = DeferredRenderable()
         command = Interpolate("echo '%(kw:project)s'", project=renderable)
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "echo 'testing'")
         renderable.callback('testing')
 
@@ -749,7 +754,7 @@ class TestInterpolateKwargs(unittest.TestCase):
         command = Interpolate(
             "echo '%(kw:missing:~%(kw:fishy)s)s'", missing=renderable, fishy="so long!")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "echo 'so long!'")
         renderable.callback(False)
         return d
@@ -770,7 +775,7 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("revision", "47", "test")
         command = WithProperties("build-%s.tar.gz", "revision")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "build-47.tar.gz")
         return d
 
@@ -779,7 +784,7 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("other", "foo", "test")
         command = WithProperties("build-%(other)s.tar.gz")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "build-foo.tar.gz")
         return d
 
@@ -789,7 +794,7 @@ class TestWithProperties(unittest.TestCase):
         command = WithProperties(
             "build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "build-foo-empty.tar.gz")
         return d
 
@@ -799,7 +804,7 @@ class TestWithProperties(unittest.TestCase):
         command = WithProperties(
             "build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "build-exists-.tar.gz")
         return d
 
@@ -808,7 +813,7 @@ class TestWithProperties(unittest.TestCase):
         self.props.setProperty("empty", None, "test")
         command = WithProperties("build-%(empty)s.tar.gz")
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "build-.tar.gz")
         return d
 
@@ -818,7 +823,7 @@ class TestWithProperties(unittest.TestCase):
         command = [WithProperties("%(x)s %(y)s"), "and",
                    WithProperties("%(y)s %(x)s")]
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["10 20", "and", "20 10"])
         return d
 
@@ -828,7 +833,7 @@ class TestWithProperties(unittest.TestCase):
         command = (WithProperties("%(x)s %(y)s"), "and",
                    WithProperties("%(y)s %(x)s"))
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ("10 20", "and", "20 10"))
         return d
 
@@ -838,28 +843,28 @@ class TestWithProperties(unittest.TestCase):
         command = {WithProperties("%(x)s %(y)s"):
                    WithProperties("%(y)s %(x)s")}
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       {"10 20": "20 10"})
         return d
 
     def testLambdaSubst(self):
         command = WithProperties('%(foo)s', foo=lambda _: 'bar')
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, 'bar')
+        d.addCallback(self.assertEqual, 'bar')
         return d
 
     def testLambdaHasattr(self):
         command = WithProperties('%(foo)s',
                                  foo=lambda b: b.hasProperty('x') and 'x' or 'y')
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, 'y')
+        d.addCallback(self.assertEqual, 'y')
         return d
 
     def testLambdaOverride(self):
         self.props.setProperty('x', 10, 'test')
         command = WithProperties('%(x)s', x=lambda _: 20)
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, '20')
+        d.addCallback(self.assertEqual, '20')
         return d
 
     def testLambdaCallable(self):
@@ -872,26 +877,26 @@ class TestWithProperties(unittest.TestCase):
         command = WithProperties(
             '%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, '30')
+        d.addCallback(self.assertEqual, '30')
         return d
 
     def testColon(self):
         self.props.setProperty('some:property', 10, 'test')
         command = WithProperties('%(some:property:-with-default)s')
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, '10')
+        d.addCallback(self.assertEqual, '10')
         return d
 
     def testColon_default(self):
         command = WithProperties('%(some:property:-with-default)s')
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, 'with-default')
+        d.addCallback(self.assertEqual, 'with-default')
         return d
 
     def testColon_colon(self):
         command = WithProperties('%(some:property:-with:default)s')
         d = self.build.render(command)
-        d.addCallback(self.failUnlessEqual, 'with:default')
+        d.addCallback(self.assertEqual, 'with:default')
         return d
 
 
@@ -907,10 +912,10 @@ class TestProperties(unittest.TestCase):
         self.props.setProperty("do-install", 2, "scheduler")
 
         self.assertTrue('do-tests' in self.props)
-        self.failUnlessEqual(self.props['do-tests'], 1)
-        self.failUnlessEqual(self.props['do-install'], 2)
+        self.assertEqual(self.props['do-tests'], 1)
+        self.assertEqual(self.props['do-install'], 2)
         self.assertRaises(KeyError, lambda: self.props['do-nothing'])
-        self.failUnlessEqual(self.props.getProperty('do-install'), 2)
+        self.assertEqual(self.props.getProperty('do-install'), 2)
         self.assertIn('do-tests', self.props)
         self.assertNotIn('missing-do-tests', self.props)
 
@@ -933,20 +938,20 @@ class TestProperties(unittest.TestCase):
         newprops = {'a': 1, 'b': 2}
         self.props.update(newprops, "new")
 
-        self.failUnlessEqual(self.props.getProperty('x'), 24)
-        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
-        self.failUnlessEqual(self.props.getProperty('a'), 1)
-        self.failUnlessEqual(self.props.getPropertySource('a'), 'new')
+        self.assertEqual(self.props.getProperty('x'), 24)
+        self.assertEqual(self.props.getPropertySource('x'), 'old')
+        self.assertEqual(self.props.getProperty('a'), 1)
+        self.assertEqual(self.props.getPropertySource('a'), 'new')
 
     def testUpdateRuntime(self):
         self.props.setProperty("x", 24, "old")
         newprops = {'a': 1, 'b': 2}
         self.props.update(newprops, "new", runtime=True)
 
-        self.failUnlessEqual(self.props.getProperty('x'), 24)
-        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
-        self.failUnlessEqual(self.props.getProperty('a'), 1)
-        self.failUnlessEqual(self.props.getPropertySource('a'), 'new')
+        self.assertEqual(self.props.getProperty('x'), 24)
+        self.assertEqual(self.props.getPropertySource('x'), 'old')
+        self.assertEqual(self.props.getProperty('a'), 1)
+        self.assertEqual(self.props.getPropertySource('a'), 'new')
         self.assertEqual(self.props.runtime, set(['a', 'b']))
 
     def testUpdateFromProperties(self):
@@ -957,10 +962,10 @@ class TestProperties(unittest.TestCase):
         newprops.setProperty('b', 2, "new")
         self.props.updateFromProperties(newprops)
 
-        self.failUnlessEqual(self.props.getProperty('x'), 24)
-        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
-        self.failUnlessEqual(self.props.getProperty('a'), 1)
-        self.failUnlessEqual(self.props.getPropertySource('a'), 'new')
+        self.assertEqual(self.props.getProperty('x'), 24)
+        self.assertEqual(self.props.getPropertySource('x'), 'old')
+        self.assertEqual(self.props.getProperty('a'), 1)
+        self.assertEqual(self.props.getPropertySource('a'), 'new')
 
     def testUpdateFromPropertiesNoRuntime(self):
         self.props.setProperty("a", 94, "old")
@@ -973,15 +978,15 @@ class TestProperties(unittest.TestCase):
         newprops.setProperty('d', 3, "new", runtime=False)
         self.props.updateFromPropertiesNoRuntime(newprops)
 
-        self.failUnlessEqual(self.props.getProperty('a'), 94)
-        self.failUnlessEqual(self.props.getPropertySource('a'), 'old')
-        self.failUnlessEqual(self.props.getProperty('b'), 2)
-        self.failUnlessEqual(self.props.getPropertySource('b'), 'new')
-        self.failUnlessEqual(self.props.getProperty('c'), None)  # not updated
-        self.failUnlessEqual(self.props.getProperty('d'), 3)
-        self.failUnlessEqual(self.props.getPropertySource('d'), 'new')
-        self.failUnlessEqual(self.props.getProperty('x'), 24)
-        self.failUnlessEqual(self.props.getPropertySource('x'), 'old')
+        self.assertEqual(self.props.getProperty('a'), 94)
+        self.assertEqual(self.props.getPropertySource('a'), 'old')
+        self.assertEqual(self.props.getProperty('b'), 2)
+        self.assertEqual(self.props.getPropertySource('b'), 'new')
+        self.assertEqual(self.props.getProperty('c'), None)  # not updated
+        self.assertEqual(self.props.getProperty('d'), 3)
+        self.assertEqual(self.props.getPropertySource('d'), 'new')
+        self.assertEqual(self.props.getProperty('x'), 24)
+        self.assertEqual(self.props.getPropertySource('x'), 'old')
 
     def test_setProperty_notJsonable(self):
         self.assertRaises(TypeError, self.props.setProperty,
@@ -1033,8 +1038,8 @@ class TestProperties(unittest.TestCase):
         self.assertIdentical(self.props.getBuild(), self.props.build)
 
     def test_render(self):
+        @implementer(IRenderable)
         class Renderable(object):
-            implements(IRenderable)
 
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'
@@ -1050,6 +1055,7 @@ class MyPropertiesThing(PropertiesMixin):
 
 def adaptMyProperties(mp):
     return mp.properties
+
 
 components.registerAdapter(adaptMyProperties, MyPropertiesThing, IProperties)
 
@@ -1106,7 +1112,7 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests")
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       1)
         return d
 
@@ -1115,7 +1121,7 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests")
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "string")
         return d
 
@@ -1123,7 +1129,7 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests")
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       None)
         return d
 
@@ -1131,7 +1137,7 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests", default="Hello!")
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "Hello!")
         return d
 
@@ -1141,7 +1147,7 @@ class TestProperty(unittest.TestCase):
                          default=WithProperties("a-%(xxx)s-b"))
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "a-yyy-b")
         return d
 
@@ -1150,7 +1156,7 @@ class TestProperty(unittest.TestCase):
         value = Property("do-tests", default="Hello!")
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "string")
         return d
 
@@ -1166,7 +1172,7 @@ class TestProperty(unittest.TestCase):
                  Property("do-tests-None", default="Hello!")]
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["Hello!"] * 4)
         return d
 
@@ -1184,7 +1190,7 @@ class TestProperty(unittest.TestCase):
                  Property("do-tests-None", default="Hello!", defaultWhenFalse=False)]
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["", 0, [], None])
         return d
 
@@ -1192,7 +1198,7 @@ class TestProperty(unittest.TestCase):
         default = DeferredRenderable()
         value = Property("no-such-property", default)
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       "default-value")
         default.callback("default-value")
         return d
@@ -1202,7 +1208,7 @@ class TestProperty(unittest.TestCase):
         value = FlattenList([Property("do-tests"), ["bla"]])
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["string", "bla"])
         return d
 
@@ -1212,7 +1218,7 @@ class TestProperty(unittest.TestCase):
         value = value + FlattenList([Property("do-tests"), ["bla"]])
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["string", "bla", "string", "bla"])
         return d
 
@@ -1222,7 +1228,7 @@ class TestProperty(unittest.TestCase):
         value = value + [Property("do-tests"), ["bla"]]
 
         d = self.build.render(value)
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["string", "bla", "string", "bla"])
         return d
 
@@ -1241,7 +1247,7 @@ class TestRenderableAdapters(unittest.TestCase):
         r1 = DeferredRenderable()
         r2 = DeferredRenderable()
         d = self.build.render([r1, r2])
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ["lispy", "lists"])
         r2.callback("lists")
         r1.callback("lispy")
@@ -1251,7 +1257,7 @@ class TestRenderableAdapters(unittest.TestCase):
         r1 = DeferredRenderable()
         r2 = DeferredRenderable()
         d = self.build.render((r1, r2))
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       ("totally", "tupled"))
         r2.callback("tupled")
         r1.callback("totally")
@@ -1263,7 +1269,7 @@ class TestRenderableAdapters(unittest.TestCase):
         k1 = DeferredRenderable()
         k2 = DeferredRenderable()
         d = self.build.render({k1: r1, k2: r2})
-        d.addCallback(self.failUnlessEqual,
+        d.addCallback(self.assertEqual,
                       {"lock": "load", "dict": "lookup"})
         k1.callback("lock")
         r1.callback("load")
@@ -1282,7 +1288,7 @@ class Renderer(unittest.TestCase):
         self.props.setProperty("x", "X", "test")
         d = self.build.render(
             renderer(lambda p: 'x%sx' % p.getProperty('x')))
-        d.addCallback(self.failUnlessEqual, 'xXx')
+        d.addCallback(self.assertEqual, 'xXx')
         return d
 
     def test_renderer_called(self):
@@ -1290,7 +1296,7 @@ class Renderer(unittest.TestCase):
         # It's not a function anymore.
         d = defer.maybeDeferred(lambda:
                                 self.build.render(renderer(lambda p: 'x')('y')))
-        self.failUnlessFailure(d, TypeError)
+        self.assertFailure(d, TypeError)
         return d
 
     def test_renderer_decorator(self):
@@ -1300,155 +1306,165 @@ class Renderer(unittest.TestCase):
         def rend(p):
             return 'x%sx' % p.getProperty('x')
         d = self.build.render(rend)
-        d.addCallback(self.failUnlessEqual, 'xXx')
+        d.addCallback(self.assertEqual, 'xXx')
         return d
 
     def test_renderer_deferred(self):
         self.props.setProperty("x", "X", "test")
         d = self.build.render(
             renderer(lambda p: defer.succeed('y%sy' % p.getProperty('x'))))
-        d.addCallback(self.failUnlessEqual, 'yXy')
+        d.addCallback(self.assertEqual, 'yXy')
         return d
 
     def test_renderer_fails(self):
         d = self.build.render(
             renderer(lambda p: defer.fail(RuntimeError("oops"))))
-        self.failUnlessFailure(d, RuntimeError)
+        self.assertFailure(d, RuntimeError)
+        return d
+
+    def test_renderer_recursive(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p):
+            return Interpolate("x%(prop:x)sx")
+        d = self.build.render(rend)
+        d.addCallback(self.assertEqual, 'xXx')
         return d
 
 
 class Compare(unittest.TestCase):
 
     def test_WithProperties_lambda(self):
-        self.failIfEqual(WithProperties("%(key)s", key=lambda p: 'val'), WithProperties(
+        self.assertNotEqual(WithProperties("%(key)s", key=lambda p: 'val'), WithProperties(
             "%(key)s", key=lambda p: 'val'))
 
         def rend(p):
             return "val"
-        self.failUnlessEqual(
+        self.assertEqual(
             WithProperties("%(key)s", key=rend),
             WithProperties("%(key)s", key=rend))
-        self.failIfEqual(
+        self.assertNotEqual(
             WithProperties("%(key)s", key=rend),
             WithProperties("%(key)s", otherkey=rend))
 
     def test_WithProperties_positional(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             WithProperties("%s", 'key'),
             WithProperties("%s", 'otherkey'))
-        self.failUnlessEqual(
+        self.assertEqual(
             WithProperties("%s", 'key'),
             WithProperties("%s", 'key'))
-        self.failIfEqual(
+        self.assertNotEqual(
             WithProperties("%s", 'key'),
             WithProperties("k%s", 'key'))
 
     def test_Interpolate_constant(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             Interpolate('some text here'),
             Interpolate('and other text there'))
-        self.failUnlessEqual(
+        self.assertEqual(
             Interpolate('some text here'),
             Interpolate('some text here'))
 
     def test_Interpolate_positional(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             Interpolate('%s %s', "test", "text"),
             Interpolate('%s %s', "other", "text"))
-        self.failUnlessEqual(
+        self.assertEqual(
             Interpolate('%s %s', "test", "text"),
             Interpolate('%s %s', "test", "text"))
 
     def test_Interpolate_kwarg(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             Interpolate("%(kw:test)s", test=object(), other=2),
             Interpolate("%(kw:test)s", test=object(), other=2))
-        self.failUnlessEqual(
+        self.assertEqual(
             Interpolate('testing: %(kw:test)s', test="test", other=3),
             Interpolate('testing: %(kw:test)s', test="test", other=3))
 
     def test_renderer(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             renderer(lambda p: 'val'),
             renderer(lambda p: 'val'))
 
         def rend(p):
             return "val"
-        self.failUnlessEqual(
+        self.assertEqual(
             renderer(rend),
             renderer(rend))
 
     def test_Lookup_simple(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'other'),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test'),
             _Lookup({'test': 5, 'other': 6}, 'test'))
 
     def test_Lookup_default(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', default='default'),
             _Lookup({'test': 5, 'other': 6}, 'test', default='default'))
 
     def test_Lookup_defaultWhenFalse(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=False),
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True),
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test'),
             _Lookup({'test': 5, 'other': 6}, 'test', defaultWhenFalse=True))
 
     def test_Lookup_hasKey(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey=None),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='other-key'))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'),
             _Lookup({'test': 5, 'other': 6}, 'test', hasKey='has-key'))
 
     def test_Lookup_elideNoneAs(self):
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=None),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''),
             _Lookup({'test': 5, 'other': 6}, 'test'))
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs=''))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'),
             _Lookup({'test': 5, 'other': 6}, 'test', elideNoneAs='got None'))
 
     def test_Lazy(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _Lazy(5),
             _Lazy(6))
-        self.failUnlessEqual(
+        self.assertEqual(
             _Lazy(5),
             _Lazy(5))
 
     def test_SourceStampDict(self):
-        self.failIfEqual(
+        self.assertNotEqual(
             _SourceStampDict('binary'),
             _SourceStampDict('library'))
-        self.failUnlessEqual(
+        self.assertEqual(
             _SourceStampDict('binary'),
             _SourceStampDict('binary'))
 
@@ -1465,7 +1481,7 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
     def test_argless(self):
         t = Transform(lambda: 'abc')
         d = self.props.render(t)
-        d.addCallback(self.failUnlessEqual, 'abc')
+        d.addCallback(self.assertEqual, 'abc')
         return d
 
     def test_argless_renderable(self):
@@ -1475,21 +1491,21 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
 
         t = Transform(function)
         d = self.props.render(t)
-        d.addCallback(self.failUnlessEqual, 'propvalue')
+        d.addCallback(self.assertEqual, 'propvalue')
         return d
 
     def test_args(self):
         t = Transform(lambda x, y: x + '|' + y,
                       'abc', Property('propname'))
         d = self.props.render(t)
-        d.addCallback(self.failUnlessEqual, 'abc|propvalue')
+        d.addCallback(self.assertEqual, 'abc|propvalue')
         return d
 
     def test_kwargs(self):
         t = Transform(lambda x, y: x + '|' + y,
                       x='abc', y=Property('propname'))
         d = self.props.render(t)
-        d.addCallback(self.failUnlessEqual, 'abc|propvalue')
+        d.addCallback(self.assertEqual, 'abc|propvalue')
         return d
 
     def test_deferred(self):
@@ -1499,7 +1515,7 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
 
         t = Transform(function, arg, y=kwarg)
         d = self.props.render(t)
-        d.addCallback(self.failUnlessEqual, 'abc|def')
+        d.addCallback(self.assertEqual, 'abc|def')
 
         function.callback(lambda x, y: x + '|' + y)
         arg.callback('abc')

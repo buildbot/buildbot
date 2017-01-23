@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.application import strports
 from twisted.cred import checkers
 from twisted.cred import credentials
@@ -22,7 +25,7 @@ from twisted.internet import defer
 from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.util import service
 
@@ -107,8 +110,8 @@ class Registration(object):
         return disp.port.getHost().port
 
 
+@implementer(portal.IRealm, checkers.ICredentialsChecker)
 class Dispatcher(service.AsyncService):
-    implements(portal.IRealm, checkers.ICredentialsChecker)
 
     credentialInterfaces = [credentials.IUsernamePassword,
                             credentials.IUsernameHashedPassword]

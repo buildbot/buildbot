@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import textwrap
 
 from twisted.internet import defer
@@ -23,9 +27,10 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import logging
 
 
-class TestDataUtils(unittest.TestCase):
+class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
     LOGCONTENT = textwrap.dedent(u"""\
         line zero
         line 1
@@ -39,7 +44,7 @@ class TestDataUtils(unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=9, buildsetid=97, builderid=80),
@@ -67,9 +72,11 @@ class TestDataUtils(unittest.TestCase):
         for _id in (20, 21):
             self.db.insertTestData([
                 fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="sl"),
+                    buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(
                     buildid=_id, name="reason", value="because"),
+                fakedb.BuildProperty(
+                    buildid=_id, name="owner", value="him"),
                 fakedb.Step(id=100 + _id, buildid=_id, name="step1"),
                 fakedb.Step(id=200 + _id, buildid=_id, name="step2"),
                 fakedb.Log(id=60 + _id, stepid=100 + _id, name='stdio', slug='stdio', type='s',
@@ -96,7 +103,8 @@ class TestDataUtils(unittest.TestCase):
         build2 = res['builds'][1]
         buildset = res['buildset']
         self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
-                                                u'workername': (u'sl', u'fakedb')})
+                                                u'owner': (u'him', u'fakedb'),
+                                                u'workername': (u'wrk', u'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)
@@ -132,7 +140,29 @@ class TestDataUtils(unittest.TestCase):
     def test_getResponsibleUsersForBuild(self):
         self.setupDb()
         res = yield utils.getResponsibleUsersForBuild(self.master, 20)
-        self.assertEqual(res, ["me@foo"])
+        self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
+
+    @defer.inlineCallbacks
+    def test_getResponsibleUsersForBuildWithBadOwner(self):
+        self.setUpLogging()
+        self.setupDb()
+        self.db.insertTestData([
+            fakedb.BuildProperty(
+                buildid=20, name="owner", value=["him"]),
+        ])
+        res = yield utils.getResponsibleUsersForBuild(self.master, 20)
+        self.assertLogged("Please report a bug")
+        self.assertEqual(sorted(res), sorted(["me@foo", "him"]))
+
+    @defer.inlineCallbacks
+    def test_getResponsibleUsersForBuildWithOwners(self):
+        self.setupDb()
+        self.db.insertTestData([
+            fakedb.BuildProperty(
+                buildid=20, name="owners", value=["him", "her"]),
+        ])
+        res = yield utils.getResponsibleUsersForBuild(self.master, 20)
+        self.assertEqual(sorted(res), sorted(["me@foo", "him", "her"]))
 
     @defer.inlineCallbacks
     def test_getPreviousBuild(self):

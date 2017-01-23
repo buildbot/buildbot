@@ -13,7 +13,10 @@
 #
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
+
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import os
 
@@ -25,8 +28,8 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.util.eventual import eventually
-from buildbot.worker.base import AbstractLatentWorker
-from buildbot.worker.base import AbstractWorker
+from buildbot.worker import AbstractLatentWorker
+from buildbot.worker import AbstractWorker
 
 try:
     import libvirt
@@ -190,7 +193,6 @@ class LibVirtWorker(AbstractLatentWorker):
             name = yield d.name()
             if name.startswith(self.workername):
                 self.domain = d
-                self.substantiated = True
                 break
 
         self.ready = True

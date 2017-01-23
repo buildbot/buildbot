@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import string_types
+
 import warnings
 import weakref
 
@@ -19,14 +24,14 @@ from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
-from buildbot.status.builder import RETRY
+from buildbot.process.results import RETRY
 from buildbot.util import service as util_service
 from buildbot.util import ascii2unicode
 from buildbot.util import epoch2datetime
@@ -38,10 +43,12 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 def enforceChosenWorker(bldr, workerforbuilder, breq):
     if 'workername' in breq.properties:
         workername = breq.properties['workername']
-        if isinstance(workername, basestring):
+        if isinstance(workername, string_types):
             return workername == workerforbuilder.worker.workername
 
     return True
+
+
 deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
 
 
@@ -204,10 +211,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if w == worker:
                 break
         else:
-            sb = workerforbuilder.LatentWorkerForBuilder(worker, self)
-            self.builder_status.addPointEvent(
-                ['added', 'latent', worker.workername])
-            self.workers.append(sb)
+            wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
+            self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
     deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
@@ -239,18 +244,17 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 # just ignore it.
                 return defer.succeed(self)
 
-        sb = workerforbuilder.WorkerForBuilder()
-        sb.setBuilder(self)
-        self.attaching_workers.append(sb)
-        d = sb.attached(worker, commands)
+        wfb = workerforbuilder.WorkerForBuilder()
+        wfb.setBuilder(self)
+        self.attaching_workers.append(wfb)
+        d = wfb.attached(worker, commands)
         d.addCallback(self._attached)
         d.addErrback(self._not_attached, worker)
         return d
 
-    def _attached(self, sb):
-        self.builder_status.addPointEvent(['connect', sb.worker.workername])
-        self.attaching_workers.remove(sb)
-        self.workers.append(sb)
+    def _attached(self, wfb):
+        self.attaching_workers.remove(wfb)
+        self.workers.append(wfb)
 
         self.updateBigStatus()
 
@@ -261,9 +265,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # TODO: remove from self.workers (except that detached() should get
         #       run first, right?)
         log.err(why, 'worker failed to attach')
-        self.builder_status.addPointEvent(['failed', 'connect',
-                                           worker.workername])
-        # TODO: add an HTMLLogFile of the exception
 
     def detached(self, worker):
         """This is called when the connection to the bot is lost."""
@@ -283,7 +284,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if wfb in self.workers:
             self.workers.remove(wfb)
 
-        self.builder_status.addPointEvent(['disconnect', worker.workername])
         # inform the WorkerForBuilder that their worker went away
         wfb.detached()
         self.updateBigStatus()
@@ -462,8 +462,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return buildrequest.BuildRequest.canBeCollapsed(master, brdict1, brdict2)
 
 
+@implementer(interfaces.IBuilderControl)
 class BuilderControl:
-    implements(interfaces.IBuilderControl)
 
     def __init__(self, builder, control):
         self.original = builder
@@ -493,7 +493,6 @@ class BuilderControl:
 
     def ping(self):
         if not self.original.workers:
-            self.original.builder_status.addPointEvent(["ping", "no worker"])
             return defer.succeed(False)  # interfaces.NoWorkerError
         dl = []
         for w in self.original.workers:

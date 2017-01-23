@@ -16,13 +16,15 @@
 # Utility functions for catching Python warnings.
 # Twisted's TestCase already gathers produced warnings
 # (see t.t.u.T.flushWarnings()), however Twisted's implementation doesn't
-# allow fine-grained control over catched warnings.
+# allow fine-grained control over caught warnings.
 # This implementation uses context wrapper style to specify interesting
 # block of code to catch warnings, which allows to easily specify which
 # exactly statements should generate warnings and which shouldn't.
 # Also this implementation allows nested checks.
 
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
 import contextlib
 import re

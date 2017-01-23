@@ -13,6 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import multiprocessing
 import os.path
 import socket
@@ -28,6 +31,7 @@ import buildbot_worker
 from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
+from buildbot_worker.compat import bytes2NativeString
 
 
 class UnknownCommand(pb.Error):
@@ -76,7 +80,8 @@ class WorkerForBuilderBase(service.Service):
     def setBuilddir(self, builddir):
         assert self.parent
         self.builddir = builddir
-        self.basedir = os.path.join(self.bot.basedir, self.builddir)
+        self.basedir = os.path.join(bytes2NativeString(self.bot.basedir),
+                                    bytes2NativeString(self.builddir))
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
@@ -312,7 +317,12 @@ class BotBase(service.MultiService):
                 if os.path.isfile(filename):
                     files[f] = open(filename, "r").read()
         if not self.numcpus:
-            self.numcpus = multiprocessing.cpu_count()
+            try:
+                self.numcpus = multiprocessing.cpu_count()
+            except NotImplementedError:
+                log.msg("warning: could not detect the number of CPUs for "
+                        "this worker. Assuming 1 CPU.")
+                self.numcpus = 1
         files['environ'] = os.environ.copy()
         files['system'] = os.name
         files['basedir'] = self.basedir
@@ -330,7 +340,7 @@ class BotBase(service.MultiService):
         log.msg("worker shutting down on command from master")
         # there's no good way to learn that the PB response has been delivered,
         # so we'll just wait a bit, in hopes the master hears back.  Masters are
-        # resilinet to workers dropping their connections, so there is no harm
+        # resilient to workers dropping their connections, so there is no harm
         # if this timeout is too short.
         reactor.callLater(0.2, reactor.stop)
 

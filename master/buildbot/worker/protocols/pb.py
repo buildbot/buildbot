@@ -12,11 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
 from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.utils import itervalues
 
 import contextlib
 
-from future.utils import itervalues
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -198,6 +201,9 @@ class Connection(base.Connection, pb.Avatar):
                 info = yield self.mind.callRemote('getWorkerInfo')
             defer.returnValue(info)
         except _NoSuchMethod:
+            yield self.remotePrint(
+                "buildbot-slave detected, failing back to deprecated buildslave API. "
+                "(Ignoring missing getWorkerInfo method.)")
             info = {}
 
             # Probably this is deprecated buildslave.

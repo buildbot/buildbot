@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.utils import lrange
+
+import sys
+import urllib
+
 """check_buildbot.py -H hostname -p httpport [options]
 
 nagios check for buildbot.
@@ -12,16 +21,14 @@ try:
 except ImportError:
     import json
 
-import sys
-import urllib
 
-OK, WARNING, CRITICAL, UNKNOWN = range(4)
+OK, WARNING, CRITICAL, UNKNOWN = lrange(4)
 STATUS_TEXT = ["OK", "Warning", "Critical", "Unknown"]
 STATUS_CODES = dict(OK=OK, WARNING=WARNING, CRIT=CRITICAL)
 
 
 def exit(level, msg):
-    print "%s: %s" % (STATUS_TEXT[level], msg)
+    print("%s: %s" % (STATUS_TEXT[level], msg))
     sys.exit(level)
 
 
@@ -45,7 +52,8 @@ def main():
     options, args = parser.parse_args()
 
     if options.hostname and options.httpport:
-        url = "http://%s:%s/json/metrics" % (options.hostname, options.httpport)
+        url = "http://%s:%s/json/metrics" % (options.hostname,
+                                             options.httpport)
     elif options.url:
         url = options.url
     else:
@@ -75,7 +83,8 @@ def main():
             alarm_code = STATUS_CODES[alarm_state[0]]
         except (KeyError, IndexError):
             status = UNKNOWN
-            messages.append("%s has unknown alarm state %s" % (alarm_name, alarm_state))
+            messages.append("%s has unknown alarm state %s" %
+                            (alarm_name, alarm_state))
             continue
 
         status = max(status, alarm_code)

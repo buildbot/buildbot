@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.internet import threads
 from twisted.trial import unittest
@@ -116,8 +121,8 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
                                   "fake_url", "fake_port", "fake_user", "fake_password",
                                   "fake_db", captures))
 
-        # if instead influxdb is installed, then intialize it - no errors
-        # should be reaised
+        # if instead influxdb is installed, then initialize it - no errors
+        # should be realized
         else:
             new_storage_backends = [
                 InfluxStorageService("fake_url", "fake_port", "fake_user", "fake_password",
@@ -157,7 +162,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             'tags': {'x': 'y'}
         }
         points = [data]
-        self.assertEquals(svc.client.points, points)
+        self.assertEqual(svc.client.points, points)
 
     def test_influx_service_not_inited(self):
         self.setUpLogging()
@@ -174,7 +179,7 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
 
         r = svc.thd_postStatsValue("test", "test", "test")
         assert isinstance(r, defer.Deferred)
-        assert r.result == None
+        assert r.result is None
 
 
 class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):

@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 from docutils import nodes
 from sphinx import addnodes
 from sphinx.domains import Domain
@@ -71,7 +75,8 @@ class BBRefTargetDirective(Directive):
             else:
                 indextype = 'single'
                 indexentry = tpl % (fullname,)
-            entries.append((indextype, indexentry, targetname, targetname))
+            entries.append(
+                (indextype, indexentry, targetname, targetname, None))
 
         if entries:
             inode = addnodes.index(entries=entries)
@@ -141,7 +146,7 @@ class BBIndex(Index):
     def generate(self, docnames=None):
         content = {}
         idx_targets = self.domain.data['targets'].get(self.name, {})
-        for name, (docname, targetname) in idx_targets.iteritems():
+        for name, (docname, targetname) in iteritems(idx_targets):
             letter = name[0].upper()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))
@@ -215,10 +220,10 @@ class BBDomain(Domain):
                                               'single: %s Build Step',
                                           ]),
         'reporter': make_ref_target_directive('reporter',
-                                            indextemplates=[
-                                                'single: Reporter Targets; %s',
-                                                'single: %s Reporter Target',
-                                            ]),
+                                              indextemplates=[
+                                                  'single: Reporter Targets; %s',
+                                                  'single: %s Reporter Target',
+                                              ]),
         'worker': make_ref_target_directive('worker',
                                             indextemplates=[
                                                 'single: Build Workers; %s',
@@ -238,7 +243,8 @@ class BBDomain(Domain):
                                          doc_field_types=[
                                              TypedField('key', label='Keys', names=('key',),
                                                         typenames=('type',), can_collapse=True),
-                                             Field('var', label='Variable', names=('var',)),
+                                             Field('var', label='Variable',
+                                                   names=('var',)),
                                          ]),
         'event': make_ref_target_directive('event',
                                            indextemplates=[
@@ -269,6 +275,17 @@ class BBDomain(Domain):
                                                           names=('pathkey',), typenames=('type',),
                                                           can_collapse=True),
                                            ]),
+        'raction': make_ref_target_directive('raction',
+                                             indextemplates=[
+                                                 'single: Resource Action; %s',
+                                             ],
+                                             name_annotation='POST with method:',
+                                             has_content=True,
+                                             doc_field_types=[
+                                                 TypedField('body', label='Body keys',
+                                                            names=('body',), typenames=('type',),
+                                                            can_collapse=True),
+                                             ]),
     }
 
     roles = {
@@ -300,8 +317,9 @@ class BBDomain(Domain):
         make_index("cmdline", "Command Line Index"),
         make_index("msg", "MQ Routing Key Index"),
         make_index("event", "Data API Event Index"),
-        make_index("rtype", "Data API Resource Type Index"),
-        make_index("rpath", "Data API Path Index"),
+        make_index("rtype", "REST/Data API Resource Type Index"),
+        make_index("rpath", "REST/Data API Path Index"),
+        make_index("raction", "REST/Data API Actions Index"),
     ]
 
     def resolve_xref(self, env, fromdocname, builder, typ, target, node,

@@ -12,10 +12,14 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-from StringIO import StringIO
+
+from __future__ import absolute_import
+from __future__ import print_function
 
 from mock import Mock
+
 from twisted.internet import defer
+from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 
@@ -52,7 +56,7 @@ class FakeRequest(Mock):
             args = {}
 
         self.args = args
-        self.content = StringIO(content)
+        self.content = NativeStringIO(content)
         self.site = Mock()
         self.site.buildbot_service = Mock()
         self.uri = '/'

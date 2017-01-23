@@ -14,6 +14,9 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2013 Cray Inc.
 
+from __future__ import absolute_import
+from __future__ import print_function
+
 import uuid
 
 ACTIVE = 'ACTIVE'
@@ -22,20 +25,69 @@ DELETED = 'DELETED'
 ERROR = 'ERROR'
 UNKNOWN = 'UNKNOWN'
 
+TEST_UUIDS = {
+    'image': '28a65eb4-f354-4420-97dc-253b826547f7',
+    'volume': '65fbb9f1-c4d5-40a8-a233-ad47c52bb837',
+    'snapshot': 'ab89152d-3c26-4d30-9ae5-65b705f874b7',
+}
+
 
 # Parts used from novaclient
 class Client():
 
     def __init__(self, version, username, password, tenant_name, auth_url):
-        self.images = Images()
+        self.images = ItemManager()
+        self.images._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
+        self.volumes = ItemManager()
+        self.volumes._add_items([Volume(TEST_UUIDS['volume'], 'CirrOS 0.3.4', 4)])
+        self.volume_snapshots = ItemManager()
+        self.volume_snapshots._add_items([Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
         self.servers = Servers()
 
 
-class Images():
-    images = []
+class ItemManager():
+
+    def __init__(self):
+        self._items = {}
+
+    def _add_items(self, new_items):
+        for item in new_items:
+            self._items[item.id] = item
 
     def list(self):
-        return self.images
+        return self._items.values()
+
+    def get(self, uuid):
+        if uuid in self._items:
+            return self._items[uuid]
+        else:
+            raise NotFound
+
+
+# This exists because Image needs an attribute that isn't supported by
+# namedtuple. And once the base code is there might as well have Volume and
+# Snapshot use it too.
+class Item():
+
+    def __init__(self, id, name, size):
+        self.id = id
+        self.name = name
+        self.size = size
+
+
+class Image(Item):
+
+    def __init__(self, *args, **kwargs):
+        Item.__init__(self, *args, **kwargs)
+        setattr(self, 'OS-EXT-IMG-SIZE:size', self.size)
+
+
+class Volume(Item):
+    pass
+
+
+class Snapshot(Item):
+    pass
 
 
 class Servers():
@@ -88,5 +140,5 @@ class Instance():
 # Parts used from novaclient.exceptions.
 
 
-class NotFound():
+class NotFound(Exception):
     pass

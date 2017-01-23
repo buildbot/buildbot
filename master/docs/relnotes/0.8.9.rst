@@ -178,7 +178,7 @@ Features
 
 * Added zsh and bash tab-completions support for 'buildbot' command.
 
-* An example of a declarative configuration is included in :src:`master/contrib/SimpleConfig.py`, with copious comments.
+* An example of a declarative configuration is included in ``master/contrib/SimpleConfig.py``, with copious comments.
 
 * Systemd unit files for Buildbot are available in the :src:`master/contrib/` directory.
 
@@ -242,11 +242,11 @@ Fixes
 
 * :bb:step:`Git` no longer fails when work dir exists but isn't a checkout (:bug:`2531`).
 
-* The `haltOnFailure` and `flunkOnFailure` attricutes of :bb:step:`ShellCommand` are now renderable. (:bug:`2486`).
+* The `haltOnFailure` and `flunkOnFailure` attributes of :bb:step:`ShellCommand` are now renderable. (:bug:`2486`).
 
 * The `rotateLength` and `maxRotatedFile` arguments are no longer treated as strings in :file:`buildbot.tac`. This fixes log rotation. The upgrade_master command will notify users if they have this problem.
 
-* Builbot no longer specifies a revision when pulling from a mercurial (:bug:`438`).
+* Buildbot no longer specifies a revision when pulling from a mercurial (:bug:`438`).
 
 * The WebStatus no longer incorrectly refers to fields that might not be visible.
 
@@ -324,7 +324,7 @@ Changes for Developers
 
 * The :py:class:`CompositeStepMixin` now provides a ``runGlob`` method to check for files on the slave that match a given shell-style pattern.
 
-* The :py:class:`BuilderStatus` now allows you to pass a ``filter_fn`` arguent to ``generateBuilds``.
+* The :py:class:`BuilderStatus` now allows you to pass a ``filter_fn`` argument to ``generateBuilds``.
 
 Slave
 -----

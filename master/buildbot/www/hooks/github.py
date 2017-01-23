@@ -12,13 +12,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import hmac
 import logging
 import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
+
 from twisted.python import log
+
+from buildbot.util import unicode2bytes
 
 try:
     import json
@@ -73,7 +80,9 @@ class GitHubEventHandler(object):
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: %s' % (hash_type,))
 
-            mac = hmac.new(self._secret, msg=content, digestmod=sha1)
+            mac = hmac.new(unicode2bytes(self._secret),
+                           msg=unicode2bytes(content),
+                           digestmod=sha1)
             # NOTE: hmac.compare_digest should be used, but it's only available
             # starting Python 2.7.7
             if mac.hexdigest() != hexdigest:
@@ -114,7 +123,7 @@ class GitHubEventHandler(object):
     def handle_pull_request(self, payload):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/%d/head' % (number,)
+        refname = 'refs/pull/%d/merge' % (number,)
         commits = payload['pull_request']['commits']
 
         log.msg('Processing GitHub PR #%d' % number, logLevel=logging.DEBUG)
@@ -173,11 +182,6 @@ class GitHubEventHandler(object):
             return changes
 
         for commit in payload['commits']:
-            if not commit.get('distinct', True):
-                log.msg('Commit `%s` is a non-distinct commit, ignoring...' %
-                        (commit['id'],))
-                continue
-
             files = []
             for kind in ('added', 'modified', 'removed'):
                 files.extend(commit.get(kind, []))
@@ -196,7 +200,8 @@ class GitHubEventHandler(object):
                 'branch': branch,
                 'revlink': commit['url'],
                 'repository': repo_url,
-                'project': project
+                'project': project,
+                'properties': {'github_distinct': commit.get('distinct', True)}
             }
 
             if callable(self._codebase):

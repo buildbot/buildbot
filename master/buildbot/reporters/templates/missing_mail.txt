@@ -1,0 +1,10 @@
+The Buildbot working for '{{buildbot_title}}' has noticed that the worker named {{worker.name}} went away.
+
+It last disconnected at {{worker.last_connection}}.
+
+{% if 'admin' in worker['workerinfo'] %}
+The admin on record (as reported by WORKER:info/admin) was {{worker.workerinfo.admin}}.
+{% endif %}
+
+Sincerely,
+ -The Buildbot

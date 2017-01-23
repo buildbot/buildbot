@@ -71,6 +71,7 @@ These are the same details set in either environment variables or passed as opti
 ``block_devices``
     A list of dictionaries.
     Each dictionary specifies a block device to set up during instance creation.
+    The values support using properties from the build and will be rendered when the instance is started.
 
     Supported keys
 
@@ -78,8 +79,9 @@ These are the same details set in either environment variables or passed as opti
         (required):
         The image, snapshot, or volume UUID.
     ``volume_size``
-        (required):
+        (optional):
         Size of the block device in GiB.
+        If not specified, the minimum size in GiB to contain the source will be calculated and used.
     ``device_name``
         (optional): defaults to ``vda``.
         The name of the device in the instance; e.g. vda or xda.
@@ -134,8 +136,10 @@ The invocation happens in a separate thread to prevent blocking the build master
 
     def find_image(images):
         # Sort oldest to newest.
-        cmp_fn = lambda x,y: cmp(x.created, y.created)
-        candidate_images = sorted(images, cmp=cmp_fn)
+        def key_fn(x):
+            return x.created
+
+        candidate_images = sorted(images, key=key_fn)
         # Return the oldest candiate image.
         return candidate_images[0]
 

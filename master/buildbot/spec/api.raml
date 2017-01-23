@@ -115,6 +115,10 @@ types:
                                         type: string
                                         required: false
                                         description: The reason why the build was stopped
+                                    results:
+                                        type: integer
+                                        required: false
+                                        description: optionally results value override (default CANCELLED)
                 /actions/rebuild:
                     post:
                         description: |
@@ -164,7 +168,7 @@ types:
                                             This endpoint does not provide paging capabilities.
                                             For stream log types, the type line header characters are dropped.
                                             'text/plain' is used as the mime type except for html logs, where 'text/html' is used.
-                                            The 'slug' is used as the filename for the resulting download. Some browsers are appending ".txt" or ".html" to this filename according to the mime-type.
+                                            The 'slug' is used as the filename for the resulting download. Some browsers are appending ``".txt"`` or ``".html"`` to this filename according to the mime-type.
                                         is:
                                         - bbgetraw:
 

@@ -345,7 +345,7 @@ The Git step takes the following arguments:
 
 ``branch``
    (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
-   If this this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
+   If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
@@ -844,11 +844,11 @@ This feature allows integrators to build with several pending interdependent cha
 
 ``util.repo.DownloadsFromChangeSource`` can be used as a renderable of the ``repoDownload`` parameter
 
-This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use the :command:`repo download` command of repo to download the additionnal changes introduced by a pending changeset.
+This rendereable integrates with :bb:chsrc:`GerritChangeSource`, and will automatically use the :command:`repo download` command of repo to download the additional changes introduced by a pending changeset.
 
 .. note::
 
-   You can use the two above Rendereable in conjuction by using the class ``buildbot.process.properties.FlattenList``
+   You can use the two above Rendereable in conjunction by using the class ``buildbot.process.properties.FlattenList``
 
 For example::
 
@@ -874,6 +874,25 @@ Gerrit
 Gerrit integration can be also triggered using forced build with property named ``gerrit_change`` with values in format ``change_number/patchset_number``.
 This property will be translated into a branch name.
 This feature allows integrators to build with several pending interdependent changes, which at the moment cannot be described properly in Gerrit, and can only be described by humans.
+
+.. bb:step:: GitHub
+
+.. _Step-GitHub:
+
+GitHub
+++++++
+
+.. py:class:: buildbot.steps.source.github.GitHub
+
+:bb:step:`GitHub` step is exactly like the :bb:step:`Git` step, except that it will ignore the revision sent by :bb:chsrc:`GitHub` change hook, and rather take the branch if the branch ends with /merge.
+
+This allows to test github pull requests merged directly into the mainline.
+
+GitHub indeed provides ``refs/origin/pull/NNN/merge`` on top of ``refs/origin/pull/NNN/head`` which is a magic ref that always create a merge commit to the latest version of the mainline (i.e. the target branch for the pull request).
+
+The revision in the GitHub event points to ``/head`` is important for the GitHub reporter as this is the revision that will be tagged with a CI status when the build is finished.
+
+If you want to use  :bb:step:`Trigger` to create sub tests and want to have the GitHub reporter still update the original revision, make sure you set ``updateSourceStamp=False`` in the :bb:step:`Trigger` configuration.
 
 .. bb:step:: Darcs
 
@@ -1064,7 +1083,7 @@ The :bb:step:`ShellCommand` arguments are:
                       command=["make", "test"],
                       env={'PYTHONPATH': "/home/buildbot/lib/python"}))
 
-    To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependant separator.
+    To avoid the need of concatenating path together in the master config file, if the value is a list, it will be joined together using the right platform dependent separator.
 
     Those variables support expansion so that if you just want to prepend :file:`/home/buildbot/bin` to the :envvar:`PATH` environment variable, you can do it by putting the value ``${PATH}`` at the end of the value like in the example below.
     Variables that don't exist on the worker will be replaced by ``""``.
@@ -1687,10 +1706,10 @@ Server error logs are added as additional log files, useful to debug test failur
 
 Optionally, data about the test run and any test failures can be inserted into a database for further analysis and report generation.
 To use this facility, create an instance of :class:`twisted.enterprise.adbapi.ConnectionPool` with connections to the database.
-The necessary tables can be created automatically by setting ``autoCreateTables`` to ``True``, or manually using the SQL found in the :file:`mtrlogobserver.py` source file.
+The necessary tables can be created automatically by setting ``autoCreateTables`` to ``True``, or manually using the SQL found in the :src:`mtrlogobserver.py <master/buildbot/steps/mtrlogobserver.py>` source file.
 
 One problem with specifying a database is that each reload of the configuration will get a new instance of ``ConnectionPool`` (even if the connection parameters are the same).
-To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equiality operation that avoids this problem.
+To avoid that Buildbot thinks the builder configuration has changed because of this, use the :class:`steps.mtrlogobserver.EqConnectionPool` subclass of :class:`ConnectionPool`, which implements an equality operation that avoids this problem.
 
 Example use::
 
@@ -1724,7 +1743,7 @@ The :bb:step:`MTR` step's arguments are:
 ``autoCreateTables``
     Boolean, defaults to ``False``.
     If ``True`` (and ``dbpool`` is specified), the necessary database tables will be created automatically if they do not exist already.
-    Alternatively, the tables can be created manually from the SQL statements found in the :file:`mtrlogobserver.py` source file.
+    Alternatively, the tables can be created manually from the SQL statements found in the :src:`mtrlogobserver.py <master/buildbot/steps/mtrlogobserver.py>` source file.
 
 ``test_type``
     Short string that will be inserted into the database in the row for the test run.
@@ -2193,7 +2212,7 @@ The `uploadDone` method is called once for each uploaded file and can be used to
 
         def allUploadsDone(self, result, sources, masterdest):
             if self.url:
-                notLinked = filter(lambda src: not self.linkFile(src), sources)
+                notLinked = [src for src in sources if not self.linkFile(src)]
                 numFiles = len(notLinked)
                 if numFiles:
                     self.addURL(self.url, '... %d more' % numFiles)
@@ -2323,8 +2342,8 @@ SetProperty
 
 .. py:class:: buildbot.steps.master.SetProperty
 
-SetProperty takes two arguments of ``property`` and ``value`` where the ``value`` is to be assigned to the ``property`` key.
-It is usually called with the ``value`` argument being specifed as a :ref:`Interpolate` object which allows the value to be built from other property values::
+:bb:step:`SetProperty` takes two arguments of ``property`` and ``value`` where the ``value`` is to be assigned to the ``property`` key.
+It is usually called with the ``value`` argument being specified as a :ref:`Interpolate` object which allows the value to be built from other property values::
 
     from buildbot.plugins import steps, util
 
@@ -2334,6 +2353,51 @@ It is usually called with the ``value`` argument being specifed as a :ref:`Inter
             value=util.Interpolate("sch=%(prop:scheduler)s, worker=%(prop:workername)s")
         )
     )
+
+.. bb:step:: SetProperties
+
+.. _Step-SetProperties:
+
+:class:`SetProperties` step
++++++++++++++++++++++++++++
+
+.. py:class:: buildbot.steps.master.SetProperty
+
+:bb:step:`SetProperties` takes a dictionary to be turned into build properties.
+
+It is similar to :bb:step:`SetProperty`, and meant to be used with a :ref:`renderer` function or a dictionary of  :ref:`Interpolate` objects which allows the value to be built from other property values:
+
+.. code-block:: python
+
+    """Example borrowed from Julia's master.cfg
+       https://github.com/staticfloat/julia-buildbot (MIT)"""
+    from buildbot.plugins import *
+
+    @util.renderer
+    def compute_artifact_filename(props):
+        # Get the output of the `make print-BINARYDIST_FILENAME` step
+        reported_filename = props.getProperty('artifact_filename')
+
+        # First, see if we got a BINARYDIST_FILENAME output
+        if reported_filename[:26] == "BINARYDIST_FILENAME=":
+            local_filename = util.Interpolate(reported_filename[26:].strip()+"%(prop:os_pkg_ext)s")
+        else:
+            # If not, use non-sf/consistent_distnames naming
+            if is_mac(props):
+                local_filename = util.Interpolate("contrib/mac/app/Julia-%(prop:version)s-%(prop:shortcommit)s.%(prop:os_pkg_ext)s")
+            elif is_winnt(props):
+                local_filename = util.Interpolate("julia-%(prop:version)s-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+            else:
+                local_filename = util.Interpolate("julia-%(prop:shortcommit)s-Linux-%(prop:tar_arch)s.%(prop:os_pkg_ext)s")
+
+        # upload_filename always follows sf/consistent_distname rules
+        upload_filename = util.Interpolate("julia-%(prop:shortcommit)s-%(prop:os_name)s%(prop:bits)s.%(prop:os_pkg_ext)s")
+        return {
+            "local_filename": local_filename
+            "upload_filename": upload_filename
+        }
+
+    f1.addStep(steps.SetProperties(properties=compute_artifact_filename))
 
 .. bb:step:: SetPropertyFromCommand
 
@@ -2443,6 +2507,10 @@ Hyperlinks are added to the build detail web pages for each triggered build.
 
         It is possible, but not advisable, to create a cycle where a build continually triggers itself, because the schedulers are specified by name.
 
+``unimportantSchedulerNames``
+    When ``waitForFinish`` is ``True``, all schedulers in this list will not cause the trigger step to fail. unimportantSchedulerNames must be a subset of schedulerNames
+    If ``waitForFinish`` is ``False``, unimportantSchedulerNames will simply be ignored.
+
 ``waitForFinish``
     If ``True``, the step will not finish until all of the builds from the triggered schedulers have finished.
 
@@ -2479,13 +2547,14 @@ Dynamic Trigger
 +++++++++++++++
 
 Sometimes it is desirable to select which scheduler to trigger, and which properties to set dynamically, at the time of the build.
-For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, and ``set_properties``.
+For this purpose, Trigger step supports a method that you can customize in order to override statically defined ``schedulernames``, ``set_properties`` and optionally ``unimportant``.
 
 .. py:method:: getSchedulersAndProperties()
 
-    :returns: list of tuples (schedulerName, propertiesDict) optionally via deferred
+    :returns: list of dictionaries containing the keys 'sched_name', 'props_to_set' and 'unimportant' optionally via deferred
 
-    This methods returns a list of tuples describing what scheduler to trigger, with which properties.
+    This method returns a list of dictionaries describing what scheduler to trigger, with which properties and if the scheduler is unimportant.
+    Old style list of tuples is still supported, in which case unimportant is considered ``False``.
     The properties should already be rendered (ie, concrete value, not objects wrapped by ``Interpolate`` or
     ``Property``). Since this function happens at build-time, the property values are available from the
     step and can be used to decide what schedulers or properties to use.

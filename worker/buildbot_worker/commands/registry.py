@@ -13,27 +13,30 @@
 #
 # Copyright Buildbot Team Members
 
-from twisted.python import reflect
+from __future__ import absolute_import
+from __future__ import print_function
+
+import buildbot_worker.commands.fs
+import buildbot_worker.commands.shell
+import buildbot_worker.commands.transfer
 
 commandRegistry = {
-    # command name : fully qualified factory name (callable)
-    "shell": "buildbot_worker.commands.shell.WorkerShellCommand",
-    "uploadFile": "buildbot_worker.commands.transfer.WorkerFileUploadCommand",
-    "uploadDirectory": "buildbot_worker.commands.transfer.WorkerDirectoryUploadCommand",
-    "downloadFile": "buildbot_worker.commands.transfer.WorkerFileDownloadCommand",
-    "repo": "buildbot_worker.commands.repo.Repo",
-    "mkdir": "buildbot_worker.commands.fs.MakeDirectory",
-    "rmdir": "buildbot_worker.commands.fs.RemoveDirectory",
-    "cpdir": "buildbot_worker.commands.fs.CopyDirectory",
-    "stat": "buildbot_worker.commands.fs.StatFile",
-    "glob": "buildbot_worker.commands.fs.GlobPath",
-    "listdir": "buildbot_worker.commands.fs.ListDir",
+    # command name : fully qualified factory (callable)
+    "shell": buildbot_worker.commands.shell.WorkerShellCommand,
+    "uploadFile": buildbot_worker.commands.transfer.WorkerFileUploadCommand,
+    "uploadDirectory": buildbot_worker.commands.transfer.WorkerDirectoryUploadCommand,
+    "downloadFile": buildbot_worker.commands.transfer.WorkerFileDownloadCommand,
+    "mkdir": buildbot_worker.commands.fs.MakeDirectory,
+    "rmdir": buildbot_worker.commands.fs.RemoveDirectory,
+    "cpdir": buildbot_worker.commands.fs.CopyDirectory,
+    "stat": buildbot_worker.commands.fs.StatFile,
+    "glob": buildbot_worker.commands.fs.GlobPath,
+    "listdir": buildbot_worker.commands.fs.ListDir,
 }
 
 
 def getFactory(command):
-    factory_name = commandRegistry[command]
-    factory = reflect.namedObject(factory_name)
+    factory = commandRegistry[command]
     return factory
 
 

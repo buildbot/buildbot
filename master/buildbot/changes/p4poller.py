@@ -17,12 +17,16 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 import datetime
-import exceptions
 import os
 import re
 
-import dateutil
+import dateutil.tz
+
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -32,6 +36,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot import util
 from buildbot.changes import base
+from buildbot.util import bytes2NativeString
 
 debug_logging = False
 
@@ -265,8 +270,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
             # decode the result from its designated encoding
             try:
-                result = result.decode(self.encoding)
-            except exceptions.UnicodeError as ex:
+                result = bytes2NativeString(result, self.encoding)
+            except UnicodeError as ex:
                 log.msg(
                     "P4Poller: couldn't decode changelist description: %s" % ex.encoding)
                 log.msg("P4Poller: in object: %s" % ex.object)
@@ -323,7 +328,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                     author=who,
                     files=branch_files[branch],
                     comments=comments,
-                    revision=unicode(num),
+                    revision=text_type(num),
                     when_timestamp=when,
                     branch=branch,
                     project=self.project)

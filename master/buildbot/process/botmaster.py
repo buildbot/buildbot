@@ -12,8 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -23,6 +27,9 @@ from buildbot import util
 from buildbot.process import metrics
 from buildbot.process.builder import Builder
 from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import RETRY
+from buildbot.process.workerforbuilder import States
 from buildbot.util import service
 
 
@@ -57,52 +64,72 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.brd = BuildRequestDistributor(self)
         self.brd.setServiceParent(self)
 
-    def cleanShutdown(self, _reactor=reactor):
+    @defer.inlineCallbacks
+    def cleanShutdown(self, quickMode=False, stopReactor=True, _reactor=reactor):
         """Shut down the entire process, once all currently-running builds are
-        complete."""
+        complete.
+        quickMode will mark all builds as retry (except the ones that were triggered)
+        """
         if self.shuttingDown:
             return
         log.msg("Initiating clean shutdown")
         self.shuttingDown = True
-
         # first, stop the distributor; this will finish any ongoing scheduling
         # operations before firing
-        d = self.brd.stopService()
+        yield self.brd.disownServiceParent()
 
-        # then wait for all builds to finish
-        @d.addCallback
-        def wait(_):
+        # Double check that we're still supposed to be shutting down
+        # The shutdown may have been cancelled!
+        while self.shuttingDown:
+            if quickMode:
+                for builder in self.builders.values():
+                    # As we stop the builds, builder.building might change during loop
+                    # so we need to copy the list
+                    for build in list(builder.building):
+                        # if build is waited for then this is a sub-build, so
+                        # no need to retry it
+                        if sum(br.waitedFor for br in build.requests):
+                            results = CANCELLED
+                        else:
+                            results = RETRY
+                        is_building = build.workerforbuilder.state == States.BUILDING
+                        build.stopBuild("Master Shutdown", results)
+                        if not is_building:
+                            # if it is not building, then it must be a latent worker
+                            # which is substantiating. Cancel it.
+                            build.workerforbuilder.worker.insubstantiate()
+            # then wait for all builds to finish
             l = []
             for builder in self.builders.values():
-                for build in builder.builder_status.getCurrentBuilds():
+                for build in builder.building:
                     l.append(build.waitUntilFinished())
             if len(l) == 0:
                 log.msg("No running jobs, starting shutdown immediately")
             else:
                 log.msg("Waiting for %i build(s) to finish" % len(l))
-                return defer.DeferredList(l)
+                yield defer.DeferredList(l)
 
-        # Finally, shut the whole process down
-        @d.addCallback
-        def shutdown(ign):
-            # Double check that we're still supposed to be shutting down
-            # The shutdown may have been cancelled!
-            if self.shuttingDown:
-                # Check that there really aren't any running builds
-                for builder in self.builders.values():
-                    n = len(builder.builder_status.getCurrentBuilds())
-                    if n > 0:
-                        log.msg(
-                            "Not shutting down, builder %s has %i builds running" % (builder, n))
-                        log.msg("Trying shutdown sequence again")
-                        self.shuttingDown = False
-                        self.cleanShutdown()
-                        return
-                log.msg("Stopping reactor")
-                _reactor.stop()
+            # Check that there really aren't any running builds
+            n = 0
+            for builder in self.builders.values():
+                if builder.building:
+                    num_builds = len(builder.building)
+                    log.msg("Builder %s has %i builds running" %
+                            (builder, num_builds))
+                    n += num_builds
+            if n > 0:
+                log.msg(
+                    "Not shutting down, there are %i builds running" % n)
+                log.msg("Trying shutdown sequence again")
+                yield util.asyncSleep(1)
             else:
-                self.brd.startService()
-        d.addErrback(log.err, 'while processing cleanShutdown')
+                if stopReactor and self.shuttingDown:
+                    log.msg("Stopping reactor")
+                    _reactor.stop()
+                break
+
+        if not self.shuttingDown:
+            yield self.brd.setServiceParent(self)
 
     def cancelCleanShutdown(self):
         """Cancel a clean shutdown that is already in progress, if any"""
@@ -200,6 +227,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 builder.master = None
                 builder.botmaster = None
 
+                # pylint: disable=cell-var-from-loop
                 yield defer.maybeDeferred(lambda:
                                           builder.disownServiceParent())
 
@@ -229,8 +257,6 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if self.buildrequest_consumer_unclaimed:
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
-        for b in itervalues(self.builders):
-            b.builder_status.addPointEvent(["master", "shutdown"])
         return service.AsyncMultiService.stopService(self)
 
     def getLockByID(self, lockid):

@@ -13,14 +13,20 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
-import new
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.builtins import range
+
 import sys
+import types
 
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
-fake_ldap = new.module('ldap3')
+fake_ldap = types.ModuleType('ldap3')
 fake_ldap.SEARCH_SCOPE_WHOLE_SUBTREE = 2
 with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
     from buildbot.www import ldapuserinfo
@@ -38,7 +44,7 @@ class CommonTestCase(unittest.TestCase):
 
     """Common fixture for all ldapuserinfo tests
 
-    we completetly fake the python3-ldap module, so no need to require
+    we completely fake the python3-ldap module, so no need to require
     it to run the unit tests
     """
 
@@ -63,7 +69,7 @@ class CommonTestCase(unittest.TestCase):
     def assertSearchCalledWith(self, exp):
         got = self.userInfoProvider.search.call_args_list
         self.assertEqual(len(exp), len(got))
-        for i in xrange(len(exp)):
+        for i in range(len(exp)):
             self.assertEqual(exp[i][0][0], got[i][0][1])
             self.assertEqual(exp[i][0][1], got[i][0][2])
             self.assertEqual(exp[i][0][2], got[i][1]['attributes'])
@@ -138,7 +144,7 @@ class LdapUserInfo(CommonTestCase):
                                'groups': ["group", "group2"], 'username': 'me'})
 
         # and if dn is decoded, it also works with an str groupMemberPattern,
-        # provided it's ASCII (can be decoded implicitely in any case)
+        # provided it's ASCII (can be decoded implicitly in any case)
         # promotion occurs because of the % operator
         self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
         self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",

@@ -12,7 +12,12 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -181,7 +186,7 @@ class TestLogLineObserver(unittest.TestCase):
         ])
 
     def test_old_setMaxLineLength(self):
-        # this method is gone, but used to be documented, so it's stil
+        # this method is gone, but used to be documented, so it's still
         # callable.  Just don't fail.
         lo = MyLogLineObserver()
         lo.setMaxLineLength(120939403)

@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.internet import defer
 
 from buildbot.schedulers import base
@@ -55,8 +59,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
         directory.
 
         If C{overrideBuildsetMethods} is true, then all of the
-        addBuildsetForXxx methods are overriden to simply append the method
-        name and arguments to self.addBuildsetCalls.  These overriden methods
+        addBuildsetForXxx methods are overridden to simply append the method
+        name and arguments to self.addBuildsetCalls.  These overridden methods
         return buildsets starting with 500 and buildrequest IDs starting with
         100.
 
@@ -94,8 +98,8 @@ class SchedulerMixin(interfaces.InterfaceTests):
                 self.assertArgSpecMatches(actual, fake)
                 setattr(scheduler, method, fake)
             self.addBuildsetCalls = []
-            self._bsidGenerator = iter(xrange(500, 999))
-            self._bridGenerator = iter(xrange(100, 999))
+            self._bsidGenerator = iter(range(500, 999))
+            self._bridGenerator = iter(range(100, 999))
 
             # temporarily override the sourcestamp and sourcestampset methods
             self.addedSourceStamps = []

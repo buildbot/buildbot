@@ -13,12 +13,17 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+from future.builtins import range
+from future.utils import PY3
+from future.utils import text_type
+
 import random
 import re
 import shlex
-from string import capitalize
-from string import join
-from string import lower
 
 from twisted.internet import defer
 from twisted.internet import protocol
@@ -36,6 +41,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
+from buildbot.reporters import utils
 from buildbot.util import service
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
@@ -81,7 +87,7 @@ def maybeColorize(text, color, useColors):
     ]
 
     if useColors:
-        return "%c%d%s%c" % (3, irc_colors.index(color), text, 3)
+        return "%c%d%s%c" % (3, irc_colors.index(color), text, 15)
     else:
         return text
 
@@ -292,7 +298,7 @@ class Contact(service.AsyncService):
     def splitArgs(self, args):
         """Returns list of arguments parsed by shlex.split() or
         raise UsageError if failed"""
-        if isinstance(args, unicode):
+        if not PY3 and isinstance(args, text_type):
             # shlex does not handle unicode.  See
             # http://bugs.python.org/issue1170
             args = args.encode('ascii')
@@ -548,25 +554,21 @@ class Contact(service.AsyncService):
 
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+            r = "Build %s containing revision(s) [%s] is complete: %s" % \
                 (builderName, ','.join(revisions), results[0])
         else:
-            r = "Hey! build %s #%d is complete: %s" % \
+            r = "Build %s #%d is complete: %s" % \
                 (builderName, buildNumber, results[0])
 
         r += ' [%s]' % maybeColorize(build['state_string'],
                                      results[1], self.useColors)
-        self.send(r)
 
         # FIXME: where do we get the list of changes for a build ?
         # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
         #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
-
-        # FIXME: where do we get the base_url? Then do we use the build Link to
-        # make the URL?
-        buildurl = None  # self.bot.status.getBuildbotURL() + build
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        r += " - %s" % utils.getURLForBuild(
+                        self.master, builder['builderid'], buildNumber)
+        self.send(r)
 
     results_descriptions = {
         SUCCESS: ("Success", 'GREEN'),
@@ -585,17 +587,16 @@ class Contact(service.AsyncService):
         if self.notify_for('finished'):
             defer.returnValue(True)
 
-        if self.notify_for(lower(self.results_descriptions.get(build['results'])[0])):
+        if self.notify_for(self.results_descriptions.get(build['results'])[0].lower()):
             defer.returnValue(True)
 
         prevBuild = yield self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
         if prevBuild:
             prevResult = prevBuild['results']
 
-            required_notification_control_string = join((lower(self.results_descriptions.get(prevResult)[0]),
-                                                         'To',
-                                                         capitalize(self.results_descriptions.get(build['results'])[0])),
-                                                        '')
+            required_notification_control_string = ''.join((self.results_descriptions.get(prevResult)[0].lower(),
+                                                            'To',
+                                                            self.results_descriptions.get(build['results'])[0].capitalize()))
 
             if (self.notify_for(required_notification_control_string)):
                 defer.returnValue(True)
@@ -621,21 +622,19 @@ class Contact(service.AsyncService):
         results = self.getResultsDescriptionAndColor(build['results'])
         if self.useRevisions:
             revisions = yield self.getRevisionsForBuild(build)
-            r = "Hey! build %s containing revision(s) [%s] is complete: %s" % \
+            r = "Build %s containing revision(s) [%s] is complete: %s" % \
                 (builder_name, ','.join(revisions), results[0])
         else:
-            r = "Hey! build %s #%d is complete: %s" % \
+            r = "Build %s #%d is complete: %s" % \
                 (builder_name, buildnum, results[0])
 
         r += ' [%s]' % maybeColorize(build['state_string'],
                                      results[1], self.useColors)
-        self.send(r)
 
-        # FIXME: where do we get the base_url? Then do we use the build Link to
-        # make the URL?
-        buildurl = None  # self.bot.status.getBuildbotURL() + build
-        if buildurl:
-            self.send("Build details are at %s" % buildurl)
+        r += " - %s" % utils.getURLForBuild(
+                self.master, builder['builderid'], buildnum)
+
+        self.send(r)
 
     @defer.inlineCallbacks
     def command_FORCE(self, args):

@@ -48,7 +48,7 @@ Extensibility
 Buildbot UI is designed for extensibility.
 The base application should be pretty minimal, and only include very basic status pages.
 Base application cannot be disabled so any page not absolutely necessary should be put in plugins.
-You can also completly replace the default application by another application more suitable to your needs.
+You can also completely replace the default application by another application more suitable to your needs.
 The ``md_base`` application is an example rewrite of the app using material design libraries.
 
 Some Web plugins are maintained inside buildbot's git repository, but this is absolutely not necessary.
@@ -280,4 +280,4 @@ Debug with karma
 
 ``console.log`` is available via karma.
 In order to debug the unit tests, you can also use the global variable ``dump``, which dumps any object for inspection in the console.
-This can be handy to be sure that you dont let debug logs in your code to always use ``dump``
+This can be handy to be sure that you don't let debug logs in your code to always use ``dump``

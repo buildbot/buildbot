@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 from twisted.trial.unittest import TestCase
 
 from buildbot.config import ConfigErrors
@@ -78,6 +82,16 @@ class TestCMake(BuildStepMixin, TestCase):
         }
         self.setupStep(CMake(definitions=definition))
         self.expect_and_run_command('-D%s=%s' % definition.items()[0])
+
+    def test_environment(self):
+        command = [CMake.DEFAULT_CMAKE]
+        environment = {'a': 'b'}
+        self.setupStep(CMake(env=environment))
+        self.expectCommands(
+            ExpectShell(
+                command=command, workdir='wkdir', env={'a': 'b'}) + 0)
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
 
     def test_definitions_interpolation(self):
         b_value = 'real_b'

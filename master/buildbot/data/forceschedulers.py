@@ -13,6 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import text_type
+
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -24,10 +28,10 @@ from buildbot.www.rest import BadJsonRpc2
 
 def forceScheduler2Data(sched):
     ret = dict(all_fields=[],
-               name=unicode(sched.name),
-               button_name=unicode(sched.buttonName),
-               label=unicode(sched.label),
-               builder_names=map(unicode, sched.builderNames))
+               name=text_type(sched.name),
+               button_name=text_type(sched.buttonName),
+               label=text_type(sched.label),
+               builder_names=map(text_type, sched.builderNames))
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
@@ -96,9 +100,9 @@ class ForceScheduler(base.ResourceType):
     keyFields = []
 
     class EntityType(types.Entity):
-        name = types.Identifier(20)
+        name = types.Identifier(50)
         button_name = types.String()
         label = types.String()
-        builder_names = types.List(of=types.Identifier(20))
+        builder_names = types.List(of=types.Identifier(50))
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)

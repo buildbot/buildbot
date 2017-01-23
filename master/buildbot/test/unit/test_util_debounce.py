@@ -12,7 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
 from future.utils import itervalues
+
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import failure
@@ -100,7 +104,7 @@ class DebounceTest(unittest.TestCase):
         ])
 
     def test_coalesce_calls(self):
-        """Multiple calls are ecoalesced during 4 seconds, but the function
+        """Multiple calls are coalesced during 4 seconds, but the function
         runs 4 seconds after the first call."""
         self.scenario([
             (1, 0.0, 'maybe'),

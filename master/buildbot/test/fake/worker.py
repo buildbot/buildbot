@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import os
 
 from twisted.internet import defer
@@ -39,7 +43,7 @@ class FakeWorker(object):
         self.worker_system = 'posix'
         self.path_module = os.path
         self.workerid = 1234
-        self.worker_basedir = '/sl'
+        self.worker_basedir = '/wrk'
         return defer.succeed(None)
 
     def detached(self):
@@ -55,4 +59,10 @@ class FakeWorker(object):
         pass
 
     def canStartBuild(self):
+        pass
+
+    def putInQuarantine(self):
+        pass
+
+    def resetQuarantine(self):
         pass

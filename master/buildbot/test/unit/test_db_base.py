@@ -12,10 +12,16 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import hashlib
 
-import mock
 import sqlalchemy as sa
+
+import mock
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -58,19 +64,19 @@ class TestBase(unittest.TestCase):
 
     def test_hashColumns_single(self):
         self.assertEqual(self.comp.hashColumns('master'),
-                         self._sha1('master'))
+                         self._sha1(b'master'))
 
     def test_hashColumns_multiple(self):
         self.assertEqual(self.comp.hashColumns('a', None, 'b', 1),
-                         self._sha1('a\0\xf5\x00b\x001'))
+                         self._sha1(b'a\0\xf5\x00b\x001'))
 
     def test_hashColumns_None(self):
         self.assertEqual(self.comp.hashColumns(None),
-                         self._sha1('\xf5'))
+                         self._sha1(b'\xf5'))
 
     def test_hashColumns_integer(self):
         self.assertEqual(self.comp.hashColumns(11),
-                         self._sha1('11'))
+                         self._sha1(b'11'))
 
     def test_hashColumns_unicode_ascii_match(self):
         self.assertEqual(self.comp.hashColumns('master'),
@@ -93,7 +99,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
     @defer.inlineCallbacks
     def test_findSomethingId_race(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1('somemaster').hexdigest()
+        hash = hashlib.sha1(b'somemaster').hexdigest()
 
         def race_thd(conn):
             conn.execute(tbl.insert(),
@@ -110,7 +116,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
     @defer.inlineCallbacks
     def test_findSomethingId_new(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1('somemaster').hexdigest()
+        hash = hashlib.sha1(b'somemaster').hexdigest()
         id = yield self.db.base.findSomethingId(
             tbl=self.db.model.masters,
             whereclause=(tbl.c.name_hash == hash),
@@ -121,7 +127,7 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
     @defer.inlineCallbacks
     def test_findSomethingId_existing(self):
         tbl = self.db.model.masters
-        hash = hashlib.sha1('somemaster').hexdigest()
+        hash = hashlib.sha1(b'somemaster').hexdigest()
 
         yield self.insertTestData([
             fakedb.Master(id=7, name='somemaster', name_hash=hash),

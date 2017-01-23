@@ -12,6 +12,10 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 import re
 
 from twisted.cred.checkers import FilePasswordDB
@@ -24,7 +28,7 @@ from twisted.web.guard import BasicCredentialFactory
 from twisted.web.guard import DigestCredentialFactory
 from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
-from zope.interface import implements
+from zope.interface import implementer
 
 from buildbot.util import config
 from buildbot.www import resource
@@ -120,8 +124,8 @@ class RemoteUserAuth(AuthBase):
             yield self.updateUserInfo(request)
 
 
+@implementer(IRealm)
 class AuthRealm(object):
-    implements(IRealm)
 
     def __init__(self, master, auth):
         self.auth = auth

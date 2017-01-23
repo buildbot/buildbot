@@ -12,6 +12,11 @@
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+from future.utils import iteritems
+
 import copy
 import json
 import os
@@ -38,10 +43,15 @@ class RamlSpec(object):
         # waiting for raml1.0 support in ramlfications
         # we cannot use its raml parser
         # so we just use its loader
-        self.api = ramlfications.load(os.path.join(
-            os.path.dirname(__file__), os.pardir, 'spec', 'api.raml'))
+        fn = os.path.join(os.path.dirname(__file__),
+                          os.pardir, 'spec', 'api.raml')
+        self.api = ramlfications.load(fn)
+        with open(fn) as f:
+            self.rawraml = f.read()
+
         endpoints = {}
         self.endpoints_by_type = {}
+        self.rawendpoints = {}
         self.endpoints = self.parse_endpoints(endpoints, "", self.api)
         self.types = self.parse_types()
 
@@ -49,7 +59,7 @@ class RamlSpec(object):
         if uriParameters is None:
             uriParameters = OrderedDict()
 
-        for k, v in api.iteritems():
+        for k, v in iteritems(api):
             if k.startswith("/"):
                 ep = base + k
                 p = copy.deepcopy(uriParameters)
@@ -65,6 +75,9 @@ class RamlSpec(object):
                             v['eptype'] = _is['bbget']['bbtype']
                             self.endpoints_by_type.setdefault(v['eptype'], {})
                             self.endpoints_by_type[v['eptype']][base] = api
+                        if 'bbgetraw' in _is:
+                            self.rawendpoints.setdefault(base, {})
+                            self.rawendpoints[base] = api
         return endpoints
 
     def reindent(self, s, indent):
@@ -77,3 +90,13 @@ class RamlSpec(object):
     def parse_types(self):
         types = self.api['types']
         return types
+
+    def iter_actions(self, endpoint):
+        ACTIONS_MAGIC = '/actions/'
+        for k, v in iteritems(endpoint):
+            if k.startswith(ACTIONS_MAGIC):
+                k = k[len(ACTIONS_MAGIC):]
+                v = v['post']
+                # simplify the raml tree for easier processing
+                v['body'] = v['body']['application/json'].get('properties', {})
+                yield (k, v)
