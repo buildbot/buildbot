@@ -336,15 +336,15 @@ class ResultSpec(object):
                 # Do a multi-level sort by sorting from
                 # the least significant key to the most
                 # significant key.  If we are given the keys
-                # ('ln', 'fn', 'age'):
+                # ('lastName', 'firstName', 'age'):
                 #   - first sort by 'age'
-                #   - then sort by 'fn'
-                #   - then sort by 'ln'
+                #   - then sort by 'firstName'
+                #   - then sort by 'lastName'
                 for k in reversed(self.order):
                     doReverse = False
                     if k[0] == '-':
-                        # If we get a key '-ln',
-                        # it means sort by 'ln' in reverse.
+                        # If we get a key '-lastName',
+                        # it means sort by 'lastName' in reverse.
                         k = k[1:]
                         doReverse = True
 
