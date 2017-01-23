@@ -707,6 +707,7 @@ statm
 statusdict
 stderr
 stdin
+stdlib
 stdout
 stepid
 stickysidebar

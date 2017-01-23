@@ -16,13 +16,16 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.moves.urllib import request as urllib_request
 
-import urllib2
+import os
+from unittest.case import SkipTest
 
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
+import buildbot.buildbot_net_usage_data
 from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
 from buildbot.buildbot_net_usage_data import computeUsageData
 from buildbot.config import BuilderConfig
@@ -94,7 +97,8 @@ class Tests(unittest.TestCase):
         self.assertEqual(sorted(data.keys()),
                          sorted(['db']))
 
-    def test_urllib2(self):
+    def test_urllib(self):
+        self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest(object):
             def __init__(self, *args, **kwargs):
@@ -114,10 +118,18 @@ class Tests(unittest.TestCase):
             def close(self):
                 pass
 
-        self.patch(urllib2, "Request", FakeRequest)
-        self.patch(urllib2, "urlopen", urlopen)
+        self.patch(urllib_request, "Request", FakeRequest)
+        self.patch(urllib_request, "urlopen", urlopen)
         _sendBuildbotNetUsageData({'foo': 'bar'})
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
-                        ('https://events.buildbot.net/events/phone_home',
+                         ('https://events.buildbot.net/events/phone_home',
                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
+
+    def test_real(self):
+        if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:
+            raise SkipTest(
+                "_sendBuildbotNetUsageData real test only run when environment variable"
+                " TEST_BUILDBOTNET_USAGEDATA is set")
+
+        _sendBuildbotNetUsageData({'foo': 'bar'})
