@@ -289,9 +289,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         def do_start(_):
             return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['echo', 'hello'],
-                                          workdir='workdir'))
+                                       "13", "shell", dict(
+                command=['echo', 'hello'],
+                workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 
@@ -323,9 +323,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         def do_start(_):
             return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['sleep', '10'],
-                                          workdir='workdir'))
+                                       "13", "shell", dict(
+                command=['sleep', '10'],
+                workdir='workdir'))
         d.addCallback(do_start)
 
         # wait a jiffy..
@@ -370,9 +370,9 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         def do_start(_):
             return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['sleep', '10'],
-                                          workdir='workdir'))
+                                       "13", "shell", dict(
+                command=['sleep', '10'],
+                workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 
@@ -389,7 +389,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         def do_start():
             return self.wfb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict())
+                                       "13", "shell", dict())
 
         yield self.assertFailure(do_start(), ValueError)
 
