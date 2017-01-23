@@ -175,6 +175,7 @@ linkcheck_ignore = [
     # Anchor check fails on rendered user files on GitHub, since GitHub uses
     # custom prefix for anchors in user generated content.
     r'https://github\.com/buildbot/guanlecoja-ui/tree/master#changelog',
+    r'http://mesosphere.github.io/marathon/docs/rest-api.html#post-v2-apps',
 ]
 linkcheck_timeout = 10
 linkcheck_retries = 3

@@ -43,7 +43,7 @@ SVN
 
 Darcs
 
-* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`src/contrib/darcs_buildbot.py` in a commit script)
+* :bb:chsrc:`PBChangeSource` (listening for connections from :src:`master/contrib/darcs_buildbot.py` in a commit script)
 * :bb:chsrc:`Change Hooks` in WebStatus
 
 Mercurial

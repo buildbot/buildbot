@@ -178,7 +178,7 @@ Features
 
 * Added zsh and bash tab-completions support for 'buildbot' command.
 
-* An example of a declarative configuration is included in :src:`master/contrib/SimpleConfig.py`, with copious comments.
+* An example of a declarative configuration is included in ``master/contrib/SimpleConfig.py``, with copious comments.
 
 * Systemd unit files for Buildbot are available in the :src:`master/contrib/` directory.
 

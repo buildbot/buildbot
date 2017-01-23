@@ -184,7 +184,7 @@ Features
   all the triggered builds. This URL is displayed in the waterfall and build
   details. See :bug:`2170`.
 
-* The :src:`master/contrib/fakemaster.py` script allows you to run arbitrary commands on a slave by emulating a master.
+* The ``master/contrib/fakemaster.py`` script allows you to run arbitrary commands on a slave by emulating a master.
   See the file itself for documentation.
 
 * MailNotifier allows multiple notification modes in the same instance.  See
