@@ -110,8 +110,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (worker, [brids])
         builds_started = [
-            (sl.name, [br.id for br in buildreqs])
-            for (sl, buildreqs) in self.builds_started]
+            (wrk.name, [br.id for br in buildreqs])
+            for (wrk, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     def setWorkerForBuilders(self, workerforbuilders):

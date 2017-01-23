@@ -1160,9 +1160,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
     def test_check_builders_unknown_worker(self):
-        sl = mock.Mock()
-        sl.workername = 'xyz'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'xyz'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1')
         self.cfg.builders = [b1]
@@ -1190,9 +1190,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                "duplicate builder builddir 'dir'")
 
     def test_check_builders(self):
-        sl = mock.Mock()
-        sl.workername = 'a'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'a'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1')
         b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2')
