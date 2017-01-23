@@ -43,7 +43,7 @@ class FakeWorker(object):
         self.worker_system = 'posix'
         self.path_module = os.path
         self.workerid = 1234
-        self.worker_basedir = '/sl'
+        self.worker_basedir = '/wrk'
         return defer.succeed(None)
 
     def detached(self):
