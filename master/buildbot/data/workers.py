@@ -78,10 +78,10 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        sldicts = yield self.master.db.workers.getWorkers(
+        workers_dicts = yield self.master.db.workers.getWorkers(
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'))
-        defer.returnValue([self.db2data(sl) for sl in sldicts])
+        defer.returnValue([self.db2data(w) for w in workers_dicts])
 
 
 class Worker(base.ResourceType):
