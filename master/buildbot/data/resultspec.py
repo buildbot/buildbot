@@ -348,8 +348,8 @@ class ResultSpec(object):
                         k = k[1:]
                         doReverse = True
 
-                    def keyFunc(a):
-                        val = a[k]
+                    def keyFunc(a, sortBy=k):
+                        val = a[sortBy]
                         if val is None:
                             val = MinType()
                         return val
