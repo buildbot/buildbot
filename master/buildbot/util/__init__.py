@@ -220,16 +220,20 @@ def none_or_str(x):
     return x
 
 
-def ascii2unicode(x):
+def unicode2bytes(x, encoding='utf-8', errors='strict'):
+    if isinstance(x, text_type):
+        x = x.encode(encoding, errors)
+    return x
+
+
+def bytes2unicode(x, encoding='utf-8', errors='strict'):
     if isinstance(x, (text_type, type(None))):
         return x
-    return text_type(x, 'ascii')
+    return text_type(x, encoding, errors)
 
 
-def unicode2bytes(x, encoding='utf8'):
-    if isinstance(x, text_type):
-        x = x.encode(encoding)
-    return x
+def ascii2unicode(x, errors='strict'):
+    return bytes2unicode(x, encoding='ascii', errors=errors)
 
 
 def bytes2NativeString(x, encoding='utf-8'):

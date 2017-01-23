@@ -27,6 +27,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 
 
@@ -111,7 +112,8 @@ class HgPoller(base.PollingChangeSource):
         @d.addCallback
         def process(output):
             # all file names are on one line
-            date, author, files, comments = output.decode(self.encoding, "replace").split(
+            output = bytes2unicode(output, self.encoding, "replace")
+            date, author, files, comments = output.split(
                 os.linesep, 3)
 
             if not self.usetimestamps:

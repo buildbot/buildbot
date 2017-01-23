@@ -129,7 +129,8 @@ class String(Instance):
     ramlType = "string"
 
     def valueFromString(self, arg):
-        return arg.decode('utf-8')
+        val = util.bytes2unicode(arg)
+        return val
 
 
 class Binary(Instance):
@@ -163,7 +164,7 @@ class Identifier(Type):
         self.len = len
 
     def valueFromString(self, arg):
-        val = arg.decode('utf-8')
+        val = util.bytes2unicode(arg)
         if not self.identRe.match(val) or not 0 < len(val) <= self.len:
             raise TypeError
         return val

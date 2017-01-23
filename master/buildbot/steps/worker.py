@@ -23,6 +23,7 @@ from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
+from buildbot.util import ascii2unicode
 from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
@@ -153,12 +154,8 @@ class CopyDirectory(WorkerBuildStep):
 
     # TODO: BuildStep subclasses don't have a describe()....
     def getResultSummary(self):
-        src = self.src
-        if isinstance(src, str):
-            src = src.decode('ascii', 'replace')
-        dest = self.dest
-        if isinstance(dest, str):
-            dest = dest.decode('ascii', 'replace')
+        src = ascii2unicode(self.src, 'replace')
+        dest = ascii2unicode(self.dest, 'replace')
         copy = u"%s to %s" % (src, dest)
         if self.results == SUCCESS:
             rv = u'Copied ' + copy

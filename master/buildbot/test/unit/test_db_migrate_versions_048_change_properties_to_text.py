@@ -58,6 +58,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             random_length = 65535
             random_string = ''.join(choice(ascii_lowercase)
                                     for byte in range(random_length))
+            random_string = random_string.encode("ascii")
 
             # Verify column type is text
             change_properties = sautils.Table(
@@ -73,7 +74,7 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             )])
             q = conn.execute(sa.select(
                 [change_properties.c.property_value]).where(change_properties.c.changeid == 1))
-            [self.assertEqual(q_string[0].encode("ascii"), random_string)
+            [self.assertEqual(q_string[0], random_string)
              for q_string in q]
 
         return self.do_test_migration(47, 48, setup_thd, verify_thd)

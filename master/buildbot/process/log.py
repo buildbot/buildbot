@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import itervalues
-from future.utils import string_types
 from future.utils import text_type
 
 import re
@@ -46,7 +45,7 @@ class Log(object):
 
     @staticmethod
     def _decoderFromString(cfg):
-        if isinstance(cfg, string_types):
+        if isinstance(cfg, bytes):
             return lambda s: s.decode(cfg, 'replace')
         else:
             return cfg
