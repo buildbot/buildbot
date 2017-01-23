@@ -2858,3 +2858,49 @@ Example::
                             'workername': util.Property('workername'),
                             'revision': util.Property('got_revision')
                          }))
+
+
+
+.. bb:step:: PopulateSecrets
+
+PopulateSecrets
++++++++++++++++
+
+The step creates files containing secrets datas in a selected path.
+
+The parameters are contained in a list of dict for the following parameters:
+
+``secret_worker_path``
+  (mandatory) Path where the files will be registered
+
+``template``
+  (optional)
+
+``secret_keys``
+  (mandatory) list of secrets key to retrieve in the secret storage.
+
+Example::
+
+      f1.addStep(PopulateSecrets([
+        #  populate a secret by putting the whole data in the file
+        dict(worker_path="~/.ssh/id_rsa", secret_key="ssh_user1"),
+        #  populate a secret by putting the secrets inside a template
+        dict(secret_worker_path="~/.netrc", template="""
+        machine ftp.mycompany.com
+          login buildbot
+          password {ftppassword}
+          machine www.mycompany.com
+            login buildbot
+            password {webpassword}
+        """, secret_keys=["ftppassword", "webpassword"])])
+
+.. bb:step:: RemoveSecrets
+
+RemoveSecrets
++++++++++++++
+
+The step removes all secrets files written by the step PopulateSecrets.
+
+Example::
+
+      f1.addStep(RemoveSecrets())

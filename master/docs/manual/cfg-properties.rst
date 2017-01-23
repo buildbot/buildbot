@@ -206,6 +206,9 @@ The following selectors are supported.
     The key refers to a keyword argument passed to ``Interpolate``.
     Those keyword arguments may be ordinary values or renderables.
 
+``secret``
+    The key refers to a secret provided by a provider declared in :bb:cfg:`secretProviders` .
+
 The following ways of interpreting the value are available.
 
 ``-replacement``

@@ -9,6 +9,7 @@ Buildbot Manual
    introduction
    installation/index
    concepts
+   secretsmanagement
    configuration
    worker-transition
    customization
@@ -18,4 +19,3 @@ Buildbot Manual
    optimization
    plugins
    deploy
-   secretsmanagement

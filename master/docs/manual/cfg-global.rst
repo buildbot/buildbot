@@ -822,6 +822,23 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
    ``name=None``
      (Optional) The name of this storage backend.
 
+.. bb:cfg:: secretProviders
+
+secretProviders
+~~~~~~~~~~~~~~~
+
+see :ref:`secretManagement` for details on secret concepts.
+
+Example usage:
+
+.. code-block:: python
+
+    c['secretProviders'] = [ .. ]
+
+secretProviders is a  list of secrets storage.
+See :ref:`secretManagement` to configue an available secret storage provider.
+
+
 .. bb:cfg:: buildbotNetUsageData
 
 BuildbotNetUsageData

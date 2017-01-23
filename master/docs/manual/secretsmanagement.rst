@@ -1,106 +1,112 @@
+
+.. _secretManagement:
+
 =================
 Secret Management
 =================
 
 Requirements
 ============
+
 Buildbot steps might need secrets to execute their actions.
 Secrets are used to execute commands or to create authenticated network connections.
-Secrets could be a ssh key, a password, or a file content like a wgetrc file or a public ssh key.
+Secrets may be a ssh key, a password, or a file content like a wgetrc file or a public ssh key.
+To preserve confidentiality the secrets values must not be logged in the twisted logs or steps logs.
+Secrets must not be stored in the Buildbot configuration (master.cfg), as the source code is usually shared in SCM like git.
+
+How to use Buildbot Secret Managment
+====================================
 
 Secrets and providers
-=====================
+---------------------
 
-To implement actions with secrets, secrets have to be readable by Buildbot.
-To preserve confidentiality the secrets values should not be printed.
-Secrets could not be stored in the Buildbot configuration (master.cfg) if the source code is shared in SCM like git.
-Buildbot allows providers to retrieve secrets. Secrets providers are based on a file storage or a secret backend.
-In a file system secrets are written in a file. In the backend secrets are stored in a data base.
-Secrets providers are instantiated if needed in the master configuration.
+Buildbot implements several providers for secrets retrieval:
+
+- File system based: secrets are written in a file.
+  This is a simple solution for example when secrets are managed by config management system like Ansible Vault.
+
+- Third party backend based: secrets are stored by a specialized software.
+  These solution are usually more secured.
+
+Secrets providers are configured if needed in the master configuration.
+Multiple providers can be configured at once.
 The secret manager is a Buildbot service. The secret manager returns the specific provider results related to the providers registered in the configuration.
-Using a backend framework, allows to encrypt and store the values.
 
-Kind of secret
---------------
+How to use secrets in Buildbot
+------------------------------
 
-Secret case key:value
-`````````````````````
+The following example shows a basic usage of secrets in buildbot
 
-For example a password could be used in a command by Buildbot.
-The secret is a couple ``key:value``.
-The password is stored with 2 entities: a ``key``, and a ``value``.
+.. code-block:: python
 
-Secret case with file content
-`````````````````````````````
+    # First we declare that the secrets are stored in a directory of the filesystem
+    # each file contain one secret identified by the filename
+    c['secretsManagers'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
 
-The file content is stored with a secured content (ssh key, or some text to add in a wgetrc file).
-The new file content will be written during a step where secrets are populated.
-The content is returned by the provider and the file name is given as an argument when the step is created.
-the file name is the ``key`` and the content is stored as ``value``.
-An other example could be a key used to send a ssh command, usually stored in a ``ssh text file`` (like id_rsa) in the :envvar:`HOME` directory.
-The ssh key registering is done with 2 entities: a ``name`` (ssh file name), a ``value`` (ssh_key value).
+    # then in a buildfactory:
 
-Secrets storage
----------------
+    f1.addStep(PopulateSecrets([
+      #  populate a secret by putting the whole data in the file
+      dict(secret_worker_path="~/.ssh/id_rsa", secret_keys="ssh_user1"),
 
-Storage in a file directory storing secrets
-```````````````````````````````````````````
+      #  populate a secret by putting the secrets inside a template
+      dict(secret_worker_path="~/.netrc", template="""
+      machine ftp.mycompany.com
+        login buildbot
+        password {ftppassword}
+        machine www.mycompany.com
+          login buildbot
+          password {webpassword}
+      """, secret_keys=["ftppassword", "webpassword"])])
 
-In a directory, a file named ``key`` contains the text ``value``.
-e.g: a file ``user`` contains the text ``password``.
+    #  use a secret on a shell command via Interpolate
+    f1.addStep(ShellCommand(Interpolate("wget -u user -p %{secrets:userpassword}s %{prop:urltofetch}s")))
 
-Backend Storage: Vault
-``````````````````````
-Vault secures, stores, and tightly controls access to secrets. Vault presents an unified API to access multiple backends.
-To be authenticated in Vault, Buildbot need to send to the vault server a token.
-The token is generated when the Vault instance is initialized for the first time.
-This token and the Vault server address have to be stored in the master configuration.
-Vault store tuples (key, value).
+    # Remove secrets remove all the secrets that was populated before
+    f1.addStep(RemoveSecrets())
 
-Secrets manager
----------------
+Secrets populated are finally stored in files like netrc or id_rsa keys file.
+Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
+Then secrets files are deleted at the end of the build.
 
-The manager is a Buildbot service.
-The secret manager allows Buildbot to get secrets calling a get method.
-Depending to the kind of storage choosen and declared in the configuration, the manager get the selected provider and return the value.
+Secrets storages
+----------------
 
-Secrets providers
------------------
+SecretInFile
+````````````
 
-The secrets providers are sub services manager, implementing the specific getters, related to the storage chosen.
-
-File provider
-`````````````
-
-In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
-File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
-The provider SecretInFile allows Buildbot read secrets in the secret directory.
-In the master configuration, the provider will be added by:
-
-.. code-block:: shell
+.. code-block:: python
 
     c['secretsManagers'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
 
-Vault provider
-``````````````
+In the passed directory, every file contains a secret identified by the filename.
 
-In the master configuration the Vault provider is instantiated trough the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
-The token key is the only ``secrets`` written in the Buildbot configuration.
-The provider SecretInVault allows Buildbot to read secrets in Vault.
-For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
-With Vault, secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using the :class:`Obfuscated`.
-The class Obfuscated changes the password characters in ``####`` characters in the logs.
-In the master configuration, the provider will be added by:
+e.g: a file ``user`` contains the text ``pa$$w0rd``.
 
-.. code-block:: shell
+SecretInVault
+`````````````
+
+.. code-block:: python
 
     c['secretsManagers'] = [util.SecretInVault(
-                            vaultToken="8e77569d-0c39-2219-dfdf-7389a7bfe020",
+                            vaultToken=open('VAULT_TOKEN').read(),
                             vaultServer="http://localhost:8200"
     )]
 
+Vault secures, stores, and tightly controls access to secrets. Vault presents an unified API to access multiple backends.
+To be authenticated in Vault, Buildbot need to send a token to the vault server.
+The token is generated when the Vault instance is initialized for the first time.
+
+
+In the master configuration the Vault provider is instantiated trough the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
+The provider SecretInVault allows Buildbot to read secrets in Vault.
+For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
+
 How to configure a Vault instance
 ---------------------------------
+
+Vault being a very generic system, it can be complex to install for the first time.
+Here is a simple tutorial to install the minimal Vault for use with Buildbot.
 
 A Docker file to install Vault
 ``````````````````````````````
@@ -155,22 +161,3 @@ Unsealing Vault
 
 Vault has to be unsealed manually. Follow the Vault manual for more informations.
 Unsealing Vault allows Buildbot to use the feature. 3 unseal keys are needed. Please save the unseal keys in a secure file.
-
-How to use secrets in Buildbot
-------------------------------
-
-A Generic API function helps to populate the secrets in a master build step.
-Secrets populated are finally stored in files like wgetrc or id_rsa keys file.
-Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
-Then secrets files are deleted at the end of the build.
-
-The step PopulateSecrets is instantiated with kwargs arguments, the key is the file name, the value is the secret key, that will return the value during the step.
-
-Secrets values are obfuscated in the steps logs.
-
-.. code-block:: python
-
-        # e.g in a build:
-        f1.addStep(PopulateSecrets(ssh_keys=['ssh_user'], wgetrc=['userpassword'])
-        f1.addStep(ShellCommand(Interpolate("wget -u user -p %{secrets:userpassword}s %{prop:urltofetch}s")))
-        f1.addStep(RemoveSecrets(['ssh_keys'])
