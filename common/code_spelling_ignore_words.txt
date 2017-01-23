@@ -164,6 +164,7 @@ commitish
 committer
 committers
 compability
+compat
 comparaison
 completers
 comspec
@@ -465,6 +466,7 @@ multithreading
 mumbo
 munge
 mysql
+mysqlclient
 mysqld
 mysql's
 namedtuple

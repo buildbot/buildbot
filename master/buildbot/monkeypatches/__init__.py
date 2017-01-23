@@ -58,6 +58,26 @@ def patch_testcase_assert_raises_regexp():
 
 
 @onlyOnce
+def patch_mysqlclient_warnings():
+    try:
+        from _mysql_exceptions import Warning
+        # MySQLdb.compat is only present in mysqlclient
+        import MySQLdb.compat  # noqa pylint: disable=unused-import
+    except ImportError:
+        return
+    # workaround for https://twistedmatrix.com/trac/ticket/9005
+    # mysqlclient is easier to patch than twisted
+    # we swap _mysql_exceptions.Warning arguments so that the code is in second place
+
+    def patched_init(self, *args):
+        if isinstance(args[0], long):
+            super(Warning, self).__init__(args[1], args[0], *args[2:])
+        else:
+            super(Warning, self).__init__(*args)
+    Warning.__init__ = patched_init
+
+
+@onlyOnce
 def patch_decorators():
     from buildbot.monkeypatches import decorators
     decorators.patch()
@@ -68,5 +88,6 @@ def patch_all(for_tests=False):
         patch_servicechecks()
         patch_testcase_assert_raises_regexp()
         patch_decorators()
+        patch_mysqlclient_warnings()
 
     patch_python14653()
