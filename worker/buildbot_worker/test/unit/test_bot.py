@@ -244,8 +244,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # get a WorkerForBuilder object from the bot and wrap it as a fake
         # remote
-        builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
-        self.wfb = FakeRemote(builders['sb'])
+        builders = yield self.bot.remote_setBuilderList([('wfb', 'wfb')])
+        self.wfb = FakeRemote(builders['wfb'])
 
         self.setUpCommand()
 
@@ -278,7 +278,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
             Expect(['echo', 'hello'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             {'hdr': 'headers'} +
             {'stdout': 'hello\n'} +
             {'rc': 0} +
@@ -314,7 +314,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # except that we interrupt it)
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             {'hdr': 'headers'} +
             {'wait': True}
         )
@@ -359,7 +359,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to generate a failure
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             failure.Failure(Exception("Oops"))
         )
         # patch the log.err, otherwise trial will think something *actually*

@@ -200,7 +200,7 @@ class ILatentWorker(IWorker):
     def buildStarted(wfb):
         """Inform the latent worker that a build has started.
 
-        @param wfb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
+        @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
 
