@@ -187,9 +187,9 @@ class RunSteps(unittest.TestCase):
         self.conn = fakeprotocol.FakeConnection(self.master, self.worker)
         yield self.worker.attached(self.conn)
 
-        sb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
-        sb.setBuilder(self.builder)
-        yield sb.attached(self.worker, {})
+        wfb = self.workerforbuilder = workerforbuilder.WorkerForBuilder()
+        wfb.setBuilder(self.builder)
+        yield wfb.attached(self.worker, {})
 
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(

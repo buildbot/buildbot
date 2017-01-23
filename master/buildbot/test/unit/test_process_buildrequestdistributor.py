@@ -113,11 +113,11 @@ class TestBRDBase(unittest.TestCase):
     def addWorkers(self, workerforbuilders):
         """C{workerforbuilders} maps name : available"""
         for name, avail in iteritems(workerforbuilders):
-            sb = mock.Mock(spec=['isAvailable'], name=name)
-            sb.name = name
-            sb.isAvailable.return_value = avail
+            wfb = mock.Mock(spec=['isAvailable'], name=name)
+            wfb.name = name
+            wfb.isAvailable.return_value = avail
             for bldr in self.builders.values():
-                bldr.workers.append(sb)
+                bldr.workers.append(wfb)
 
     @defer.inlineCallbacks
     def createBuilder(self, name, builderid=None, builder_config=None):

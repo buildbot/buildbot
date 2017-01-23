@@ -512,8 +512,8 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [sb for sb in itervalues(self.workerforbuilders)
-                               if sb.isBusy()]
+            active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+                               if wfb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
 
@@ -540,8 +540,8 @@ class AbstractWorker(service.BuildbotService, object):
         and has no active builders."""
         if not self.worker_status.getGraceful():
             return
-        active_builders = [sb for sb in itervalues(self.workerforbuilders)
-                           if sb.isBusy()]
+        active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+                           if wfb.isBusy()]
         if active_builders:
             return
         d = self.shutdown()
@@ -600,9 +600,9 @@ class Worker(AbstractWorker):
             log.err(e, "worker %s cannot attach" % (self.name,))
             return
 
-    def buildFinished(self, sb):
+    def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
-        AbstractWorker.buildFinished(self, sb)
+        AbstractWorker.buildFinished(self, wfb)
 
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect

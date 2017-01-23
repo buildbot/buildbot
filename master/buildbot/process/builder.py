@@ -211,8 +211,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             if w == worker:
                 break
         else:
-            sb = workerforbuilder.LatentWorkerForBuilder(worker, self)
-            self.workers.append(sb)
+            wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
+            self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
     deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
@@ -244,17 +244,17 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 # just ignore it.
                 return defer.succeed(self)
 
-        sb = workerforbuilder.WorkerForBuilder()
-        sb.setBuilder(self)
-        self.attaching_workers.append(sb)
-        d = sb.attached(worker, commands)
+        wfb = workerforbuilder.WorkerForBuilder()
+        wfb.setBuilder(self)
+        self.attaching_workers.append(wfb)
+        d = wfb.attached(worker, commands)
         d.addCallback(self._attached)
         d.addErrback(self._not_attached, worker)
         return d
 
-    def _attached(self, sb):
-        self.attaching_workers.remove(sb)
-        self.workers.append(sb)
+    def _attached(self, wfb):
+        self.attaching_workers.remove(wfb)
+        self.workers.append(wfb)
 
         self.updateBigStatus()
 

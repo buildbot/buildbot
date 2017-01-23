@@ -96,7 +96,7 @@ class AbstractLatentWorker(AbstractWorker):
     def substantiated(self):
         return self.conn is not None
 
-    def substantiate(self, sb, build):
+    def substantiate(self, wfb, build):
         if self.conn is not None:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
@@ -172,8 +172,8 @@ class AbstractLatentWorker(AbstractWorker):
             self._substantiation_notifier.notify(True)
 
     def attachBuilder(self, builder):
-        sb = self.workerforbuilders.get(builder.name)
-        return sb.attached(self, self.worker_commands)
+        wfb = self.workerforbuilders.get(builder.name)
+        return wfb.attached(self, self.worker_commands)
 
     def detached(self):
         AbstractWorker.detached(self)
@@ -207,12 +207,12 @@ class AbstractLatentWorker(AbstractWorker):
             return False
         return AbstractWorker.canStartBuild(self)
 
-    def buildStarted(self, sb):
-        assert sb.isBusy()
+    def buildStarted(self, wfb):
+        assert wfb.isBusy()
         self._clearBuildWaitTimer()
 
-    def buildFinished(self, sb):
-        assert not sb.isBusy()
+    def buildFinished(self, wfb):
+        assert not wfb.isBusy()
         if not self.building:
             if self.build_wait_timeout == 0:
                 # we insubstantiate asynchronously to trigger more bugs with
@@ -225,7 +225,7 @@ class AbstractLatentWorker(AbstractWorker):
 
         # AbstractWorker.buildFinished() will try to start the next build for
         # that worker
-        AbstractWorker.buildFinished(self, sb)
+        AbstractWorker.buildFinished(self, wfb)
 
     def _clearBuildWaitTimer(self):
         if self.build_wait_timer is not None:

@@ -197,10 +197,10 @@ class ILatentWorker(IWorker):
 
     # there is an insubstantiate too, but that is not used externally ATM.
 
-    def buildStarted(sb):
+    def buildStarted(wfb):
         """Inform the latent worker that a build has started.
 
-        @param sb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
+        @param wfb: a L{LatentWorkerForBuilder}.  The sb is the one for whom the
         build finished.
         """
 
