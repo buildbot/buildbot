@@ -142,7 +142,7 @@ class TestBRDBase(unittest.TestCase):
 
         bldr.workers = []
         bldr.getAvailableWorkers = lambda: [
-            s for s in bldr.workers if s.isAvailable()]
+            w for w in bldr.workers if w.isAvailable()]
         bldr.getBuilderId = lambda: (builderid)
         if builder_config is None:
             bldr.config.nextWorker = None
