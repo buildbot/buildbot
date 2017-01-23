@@ -60,13 +60,14 @@ matrix:
   include:
     # Tests of buildbot-worker on python 2.6
     # Specify SQLALCHEMY=latest to avoid errors installing.
+    - python: "3.5"
+      env: TWISTED=trunk TESTS=trial SQLALCHEMY=latest
+
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
-    - python: "3.5"
-      env: TWISTED=latest TESTS=trial SQLALCHEMY=latest
 
   allow_failures:
     - python: 3.5
@@ -77,7 +78,8 @@ install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
   - pip install codecov
-  - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
+  - "[ $TWISTED != trunk ] || pip install git+https://github.com/twisted/twisted"
+  - "[ $TWISTED = latest ] || [ $TWISTED = trunk ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
   # Install mysqlclient for tests that uses real MySQL
