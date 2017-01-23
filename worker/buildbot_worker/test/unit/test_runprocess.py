@@ -451,7 +451,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.assertFalse(re.match('\bFOO=a{}b\b'.format(os.pathsep), headers),
+            self.assertFalse(re.match('\bFOO=a{0}b\b'.format(os.pathsep), headers),
                              "got:\n" + headers)
         d.addCallback(check)
         return d
