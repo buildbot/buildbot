@@ -23,7 +23,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.moves import urllib
 from future.moves.urllib import request as urllib_request
-from future.moves.urllib.request import urlopen as urllib_open
 
 import hashlib
 import inspect
@@ -93,8 +92,7 @@ def basicData(master):
     # to get as much as possible an unique id
     # we hash it to not leak private information about the installation such as hostnames and domain names
     installid = hashlib.sha1(
-        master.name  # master name contains hostname + master basepath
-        +
+        master.name +  # master name contains hostname + master basepath
         socket.getfqdn()  # we add the fqdn to account for people
                           # call their buildbot host 'buildbot' and install it in /var/lib/buildbot
     ).hexdigest()
@@ -184,7 +182,7 @@ def _sendBuildbotNetUsageData(data):
         log.msg("buildbotNetUsageData: Could not send using https, "
                 "please `pip install 'requests[security]'` for proper SSL implementation`")
         data['buggySSL'] = True
-        res = _sendWithUrlib2(PHONE_HOME_URL.replace("https://", "http://"), data)
+        res = _sendWithUrlib(PHONE_HOME_URL.replace("https://", "http://"), data)
 
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
 
