@@ -60,7 +60,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=results, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
@@ -83,7 +83,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         for _id in (20,):
             self.db.insertTestData([
                 fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="sl"),
+                    buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(
                     buildid=_id, name="reason", value="because"),
                 fakedb.BuildProperty(

@@ -50,8 +50,8 @@ class BuilderMixin(object):
                     **config_kwargs):
         """Set up C{self.bldr}"""
         # only include the necessary required config, plus user-requested
-        config_args = dict(name=name, workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory)
+        config_args = dict(name=name, workername="wrk", builddir="bdir",
+                           workerbuilddir="wbdir", factory=self.factory)
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(
@@ -110,8 +110,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (worker, [brids])
         builds_started = [
-            (sl.name, [br.id for br in buildreqs])
-            for (sl, buildreqs) in self.builds_started]
+            (wrk.name, [br.id for br in buildreqs])
+            for (wrk, buildreqs) in self.builds_started]
         self.assertEqual(sorted(builds_started), sorted(exp))
 
     def setWorkerForBuilders(self, workerforbuilders):
@@ -508,8 +508,8 @@ class TestReconfig(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_reconfig(self):
         yield self.makeBuilder(description="Old", tags=["OldTag"])
-        config_args = dict(name='bldr', workername="slv", builddir="bdir",
-                           workerbuilddir="sbdir", factory=self.factory,
+        config_args = dict(name='bldr', workername="wrk", builddir="bdir",
+                           workerbuilddir="wbdir", factory=self.factory,
                            description='Noe', tags=['NewTag'])
         new_builder_config = config.BuilderConfig(**config_args)
         new_builder_config.description = "New"

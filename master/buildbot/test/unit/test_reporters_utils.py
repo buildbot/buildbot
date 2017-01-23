@@ -44,7 +44,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=98, results=SUCCESS, reason="testReason1"),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.BuildRequest(id=9, buildsetid=97, builderid=80),
@@ -72,7 +72,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         for _id in (20, 21):
             self.db.insertTestData([
                 fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="sl"),
+                    buildid=_id, name="workername", value="wrk"),
                 fakedb.BuildProperty(
                     buildid=_id, name="reason", value="because"),
                 fakedb.BuildProperty(
@@ -104,7 +104,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         buildset = res['buildset']
         self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
                                                 u'owner': (u'him', u'fakedb'),
-                                                u'workername': (u'sl', u'fakedb')})
+                                                u'workername': (u'wrk', u'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)

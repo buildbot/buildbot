@@ -42,7 +42,7 @@ class ReporterTestMixin(object):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
@@ -67,7 +67,7 @@ class ReporterTestMixin(object):
                 fakedb.LogChunk(logid=60 + i, first_line=0, last_line=1, compressed=0,
                                 content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
                 fakedb.BuildProperty(
-                    buildid=20 + i, name="workername", value="sl"),
+                    buildid=20 + i, name="workername", value="wrk"),
                 fakedb.BuildProperty(
                     buildid=20 + i, name="reason", value="because"),
                 fakedb.BuildProperty(

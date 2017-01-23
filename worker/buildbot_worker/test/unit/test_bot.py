@@ -244,8 +244,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # get a WorkerForBuilder object from the bot and wrap it as a fake
         # remote
-        builders = yield self.bot.remote_setBuilderList([('sb', 'sb')])
-        self.sb = FakeRemote(builders['sb'])
+        builders = yield self.bot.remote_setBuilderList([('wfb', 'wfb')])
+        self.wfb = FakeRemote(builders['wfb'])
 
         self.setUpCommand()
 
@@ -260,16 +260,16 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.sb.callRemote("print", "Hello, WorkerForBuilder.")
+        return self.wfb.callRemote("print", "Hello, WorkerForBuilder.")
 
     def test_setMaster(self):
         # not much to check here - what the WorkerForBuilder does with the
         # master is not part of the interface (and, in fact, it does very
         # little)
-        return self.sb.callRemote("setMaster", mock.Mock())
+        return self.wfb.callRemote("setMaster", mock.Mock())
 
     def test_startBuild(self):
-        return self.sb.callRemote("startBuild")
+        return self.wfb.callRemote("startBuild")
 
     def test_startCommand(self):
         # set up a fake step to receive updates
@@ -278,7 +278,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to handle the 'echo', below
         self.patch_runprocess(
             Expect(['echo', 'hello'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             {'hdr': 'headers'} +
             {'stdout': 'hello\n'} +
             {'rc': 0} +
@@ -288,10 +288,10 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.sb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['echo', 'hello'],
-                                          workdir='workdir'))
+            return self.wfb.callRemote("startCommand", FakeRemote(st),
+                                       "13", "shell", dict(
+                command=['echo', 'hello'],
+                workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 
@@ -314,7 +314,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # except that we interrupt it)
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             {'hdr': 'headers'} +
             {'wait': True}
         )
@@ -322,10 +322,10 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.sb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['sleep', '10'],
-                                          workdir='workdir'))
+            return self.wfb.callRemote("startCommand", FakeRemote(st),
+                                       "13", "shell", dict(
+                command=['sleep', '10'],
+                workdir='workdir'))
         d.addCallback(do_start)
 
         # wait a jiffy..
@@ -337,7 +337,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # and then interrupt the step
         def do_interrupt(_):
-            return self.sb.callRemote("interruptCommand", "13", "tl/dr")
+            return self.wfb.callRemote("interruptCommand", "13", "tl/dr")
         d.addCallback(do_interrupt)
 
         d.addCallback(lambda _: st.wait_for_finish())
@@ -359,7 +359,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         # patch runprocess to generate a failure
         self.patch_runprocess(
             Expect(['sleep', '10'], os.path.join(
-                self.basedir, 'sb', 'workdir')) +
+                self.basedir, 'wfb', 'workdir')) +
             failure.Failure(Exception("Oops"))
         )
         # patch the log.err, otherwise trial will think something *actually*
@@ -369,10 +369,10 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.sb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict(
-                                          command=['sleep', '10'],
-                                          workdir='workdir'))
+            return self.wfb.callRemote("startCommand", FakeRemote(st),
+                                       "13", "shell", dict(
+                command=['sleep', '10'],
+                workdir='workdir'))
         d.addCallback(do_start)
         d.addCallback(lambda _: st.wait_for_finish())
 
@@ -388,8 +388,8 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         st = FakeStep()
 
         def do_start():
-            return self.sb.callRemote("startCommand", FakeRemote(st),
-                                      "13", "shell", dict())
+            return self.wfb.callRemote("startCommand", FakeRemote(st),
+                                       "13", "shell", dict())
 
         yield self.assertFailure(do_start(), ValueError)
 

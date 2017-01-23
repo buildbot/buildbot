@@ -277,7 +277,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
             # set up a running build with some steps
             fakedb.Builder(id=77, name='b1'),
-            fakedb.Worker(id=13, name='sl'),
+            fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, builderid=77, buildsetid=8822),
             fakedb.BuildRequestClaim(brid=82, masterid=14,

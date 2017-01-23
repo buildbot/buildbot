@@ -838,10 +838,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers(self):
-        sl = worker.Worker('foo', 'x')
+        wrk = worker.Worker('foo', 'x')
         self.cfg.load_workers(self.filename,
-                              dict(workers=[sl]))
-        self.assertResults(workers=[sl])
+                              dict(workers=[wrk]))
+        self.assertResults(workers=[wrk])
 
     def test_load_workers_old_api(self):
         w = worker.Worker("name", 'x')
@@ -1160,9 +1160,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.assertNoConfigErrors(self.errors)
 
     def test_check_builders_unknown_worker(self):
-        sl = mock.Mock()
-        sl.workername = 'xyz'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'xyz'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['xyz', 'abc'], builddir='x', name='b1')
         self.cfg.builders = [b1]
@@ -1190,9 +1190,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                "duplicate builder builddir 'dir'")
 
     def test_check_builders(self):
-        sl = mock.Mock()
-        sl.workername = 'a'
-        self.cfg.workers = [sl]
+        wrk = mock.Mock()
+        wrk.workername = 'a'
+        self.cfg.workers = [wrk]
 
         b1 = FakeBuilder(workernames=['a'], name='b1', builddir='dir1')
         b2 = FakeBuilder(workernames=['a'], name='b2', builddir='dir2')
@@ -1408,7 +1408,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_args(self):
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, category='c',
+            workerbuilddir='wbd', factory=self.factory, category='c',
             nextWorker=lambda: 'ns', nextBuild=lambda: 'nb', locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1417,7 +1417,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               name='b',
                               workernames=['s2', 's1'],
                               builddir='bd',
-                              workerbuilddir='sbd',
+                              workerbuilddir='wbd',
                               tags=['c'],
                               locks=['l'],
                               env={'x': 10},
@@ -1430,7 +1430,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         nb = lambda: 'nb'
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
-            workerbuilddir='sbd', factory=self.factory, tags=['c'],
+            workerbuilddir='wbd', factory=self.factory, tags=['c'],
             nextWorker=ns, nextBuild=nb, locks=['l'],
             env=dict(x=10), properties=dict(y=20), collapseRequests='cr',
             description='buzz')
@@ -1445,7 +1445,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                'nextBuild': nb,
                                                'nextWorker': ns,
                                                'properties': {'y': 20},
-                                               'workerbuilddir': 'sbd',
+                                               'workerbuilddir': 'wbd',
                                                'workernames': ['s2', 's1'],
                                                })
 

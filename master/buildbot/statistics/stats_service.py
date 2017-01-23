@@ -30,8 +30,8 @@ class StatsService(service.BuildbotService):
     """
 
     def checkConfig(self, storage_backends):
-        for sb in storage_backends:
-            if not isinstance(sb, StatsStorageBase):
+        for wfb in storage_backends:
+            if not isinstance(wfb, StatsStorageBase):
                 raise TypeError("Invalid type of stats storage service {0!r}. "
                                 "Should be of type StatsStorageBase, "
                                 "is: {0!r}".format(type(StatsStorageBase)))

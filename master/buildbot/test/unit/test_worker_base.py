@@ -51,63 +51,63 @@ class FakeBuilder:
 class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_workername(self):
-        self.assertTrue(hasattr(self.sl, 'workername'))
+        self.assertTrue(hasattr(self.wrk, 'workername'))
 
     def test_attr_properties(self):
-        self.assertTrue(hasattr(self.sl, 'properties'))
+        self.assertTrue(hasattr(self.wrk, 'properties'))
 
     @defer.inlineCallbacks
     def test_attr_worker_basedir(self):
         yield self.callAttached()
-        self.assertIsInstance(self.sl.worker_basedir, str)
+        self.assertIsInstance(self.wrk.worker_basedir, str)
 
     @defer.inlineCallbacks
     def test_attr_path_module(self):
         yield self.callAttached()
-        self.assertTrue(hasattr(self.sl, 'path_module'))
+        self.assertTrue(hasattr(self.wrk, 'path_module'))
 
     @defer.inlineCallbacks
     def test_attr_worker_system(self):
         yield self.callAttached()
-        self.assertTrue(hasattr(self.sl, 'worker_system'))
+        self.assertTrue(hasattr(self.wrk, 'worker_system'))
 
     def test_signature_acquireLocks(self):
-        @self.assertArgSpecMatches(self.sl.acquireLocks)
+        @self.assertArgSpecMatches(self.wrk.acquireLocks)
         def acquireLocks(self):
             pass
 
     def test_signature_releaseLocks(self):
-        @self.assertArgSpecMatches(self.sl.releaseLocks)
+        @self.assertArgSpecMatches(self.wrk.releaseLocks)
         def releaseLocks(self):
             pass
 
     def test_signature_attached(self):
-        @self.assertArgSpecMatches(self.sl.attached)
+        @self.assertArgSpecMatches(self.wrk.attached)
         def attached(self, conn):
             pass
 
     def test_signature_detached(self):
-        @self.assertArgSpecMatches(self.sl.detached)
+        @self.assertArgSpecMatches(self.wrk.detached)
         def detached(self):
             pass
 
     def test_signature_addWorkerForBuilder(self):
-        @self.assertArgSpecMatches(self.sl.addWorkerForBuilder)
+        @self.assertArgSpecMatches(self.wrk.addWorkerForBuilder)
         def addWorkerForBuilder(self, wfb):
             pass
 
     def test_signature_removeWorkerForBuilder(self):
-        @self.assertArgSpecMatches(self.sl.removeWorkerForBuilder)
+        @self.assertArgSpecMatches(self.wrk.removeWorkerForBuilder)
         def removeWorkerForBuilder(self, wfb):
             pass
 
     def test_signature_buildFinished(self):
-        @self.assertArgSpecMatches(self.sl.buildFinished)
+        @self.assertArgSpecMatches(self.wrk.buildFinished)
         def buildFinished(self, wfb):
             pass
 
     def test_signature_canStartBuild(self):
-        @self.assertArgSpecMatches(self.sl.canStartBuild)
+        @self.assertArgSpecMatches(self.wrk.canStartBuild)
         def canStartBuild(self):
             pass
 
@@ -115,7 +115,7 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
-        self.sl = ConcreteWorker('sl', 'pa')
+        self.wrk = ConcreteWorker('wrk', 'pa')
 
     def callAttached(self):
         self.master = fakemaster.make_master(testcase=self, wantData=True)
@@ -123,20 +123,20 @@ class RealWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
         self.workers = bworkermanager.FakeWorkerManager()
         self.workers.setServiceParent(self.master)
         self.master.workers = self.workers
-        self.sl.setServiceParent(self.master.workers)
-        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
-        return self.sl.attached(self.conn)
+        self.wrk.setServiceParent(self.master.workers)
+        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        return self.wrk.attached(self.conn)
 
 
 class FakeWorkerItfc(unittest.TestCase, WorkerInterfaceTests):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self)
-        self.sl = worker.FakeWorker(self.master)
+        self.wrk = worker.FakeWorker(self.master)
 
     def callAttached(self):
-        self.conn = fakeprotocol.FakeConnection(self.master, self.sl)
-        return self.sl.attached(self.conn)
+        self.conn = fakeprotocol.FakeConnection(self.master, self.wrk)
+        return self.wrk.attached(self.conn)
 
 
 class TestAbstractWorker(unittest.TestCase):

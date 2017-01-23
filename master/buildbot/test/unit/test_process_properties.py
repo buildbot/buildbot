@@ -525,7 +525,7 @@ class TestInterpolateSrc(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
         sa = FakeSource()
-        sb = FakeSource()
+        wfb = FakeSource()
         sc = FakeSource()
 
         sa.repository = 'cvs://A..'
@@ -533,10 +533,10 @@ class TestInterpolateSrc(unittest.TestCase):
         sa.project = "Project"
         self.build.sources['cbA'] = sa
 
-        sb.repository = 'cvs://B..'
-        sb.codebase = 'cbB'
-        sb.project = "Project"
-        self.build.sources['cbB'] = sb
+        wfb.repository = 'cvs://B..'
+        wfb.codebase = 'cbB'
+        wfb.project = "Project"
+        self.build.sources['cbB'] = wfb
 
         sc.repository = 'cvs://C..'
         sc.codebase = 'cbC'
