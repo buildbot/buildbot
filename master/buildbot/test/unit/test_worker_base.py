@@ -44,6 +44,7 @@ class ConcreteWorker(base.AbstractWorker):
 
 
 class FakeBuilder:
+
     def getBuilderId(self):
         return defer.succeed(1)
 

@@ -80,10 +80,10 @@ class TestLocalWorker(unittest.TestCase):
     @defer.inlineCallbacks
     def test_workerinfo(self):
         wrk = self.createWorker('bot',
-                               max_builds=2,
-                               notify_on_missing=['me@me.com'],
-                               missing_timeout=120,
-                               properties={'a': 'b'})
+                                max_builds=2,
+                                notify_on_missing=['me@me.com'],
+                                missing_timeout=120,
+                                properties={'a': 'b'})
         yield wrk.startService()
         info = yield wrk.conn.remoteGetWorkerInfo()
         self.assertIn("worker_commands", info)
