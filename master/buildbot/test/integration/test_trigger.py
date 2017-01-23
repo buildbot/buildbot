@@ -20,7 +20,6 @@ from io import StringIO
 
 from twisted.internet import defer
 
-from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
 
