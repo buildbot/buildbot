@@ -238,7 +238,10 @@ elif [[ ! -f common/pylintrc ]]; then
 else
     pylint_ok=true
     for filename in ${py_files[@]}; do
-        if ! pylint --rcfile=common/pylintrc --disable=R,line-too-long --enable=W0611 --output-format=text --reports=no "$filename"; then
+        if ! pylint --rcfile=common/pylintrc --disable=R,line-too-long \
+                --enable=W0611 --output-format=text --reports=no \
+                --spelling-private-dict-file=common/code_spelling_ignore_words.txt \
+                "$filename"; then
             pylint_ok=false
         fi
     done
