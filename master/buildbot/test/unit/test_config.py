@@ -838,10 +838,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers(self):
-        sl = worker.Worker('foo', 'x')
+        wrk = worker.Worker('foo', 'x')
         self.cfg.load_workers(self.filename,
-                              dict(workers=[sl]))
-        self.assertResults(workers=[sl])
+                              dict(workers=[wrk]))
+        self.assertResults(workers=[wrk])
 
     def test_load_workers_old_api(self):
         w = worker.Worker("name", 'x')
