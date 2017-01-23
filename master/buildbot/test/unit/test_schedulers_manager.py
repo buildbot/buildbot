@@ -76,8 +76,10 @@ class SchedulerManager(unittest.TestCase):
                 assert self.objectid is not None
             d.addCallback(still_set)
             return d
+
         def __repr__(self):
             return "{}(attr={})".format(self.__class__.__name__, self.attr)
+
     class ReconfigSched(Sched):
 
         def reconfigServiceWithSibling(self, new_config):

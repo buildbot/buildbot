@@ -60,7 +60,7 @@ def masterConfig():
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers
+    from buildbot.plugins import steps
 
     c['schedulers'] = [
         schedulers.AnyBranchScheduler(

@@ -492,7 +492,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             try:
                 yield svc.reconfigServiceWithSibling(config_sibling)
             except NotImplementedError:
-                # legacy support. Its too painful to transition old code to new Service lifecycle
+                # legacy support. Its too painful to transition old code to new Service life cycle
                 # so we implement switch of child when the service raises NotImplementedError
                 # Note this means that self will stop, and sibling will take ownership
                 # means that we have a small time where the service is unavailable.
