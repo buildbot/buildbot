@@ -130,14 +130,13 @@ script:
   - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} != false ] || make frontend_install_tests"
 
   - |
-    TESTS=py3status
     if [ $TESTS = py3status ]; then
         trial  --reporter=summary buildbot.test buildbot_worker.test| tail -n 1 | python -c "
-    import sys, requests
+    import sys, requests, os
     (timeTaken, tests, _, errors, failures, skips) = sys.stdin.read().split()
-    requests.post('https://events.buildbot.net/events/py3kstatus', json={
+    requests.post('https://events.buildbot.net/events/py3kstatus', json={'py3kstatus': {
         'timeTaken': float(timeTaken), 'tests': int(tests), 'errors': int(errors), 'failures': int(failures), 'skips': int(skips)
-    })"
+    }, 'env': dict(os.environ)})"
     fi
   - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildbot_worker.test"
   - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
