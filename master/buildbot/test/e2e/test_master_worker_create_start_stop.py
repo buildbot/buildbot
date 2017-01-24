@@ -200,13 +200,13 @@ def wait_for_completion(is_completed_pred,
     return caller.start(check_interval, now=True)
 
 
-def _read_dir_contents(dir):
+def _read_dir_contents(dirname):
     contents = {}
-    for root, _, files in os.walk(dir):
+    for root, _, files in os.walk(dirname):
         for name in files:
-            fn = os.path.join(root, name)
-            with open(fn) as f:
-                contents[fn] = f.read()
+            filename = os.path.join(root, name)
+            with open(filename) as f:
+                contents[filename] = f.read()
     return contents
 
 
