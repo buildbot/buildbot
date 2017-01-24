@@ -71,7 +71,7 @@ matrix:
 
   allow_failures:
     - python: 3.5
-      TESTS: py3status
+      env: TESTS=py3status
 
 # Dependencies installation commands
 install:
