@@ -52,7 +52,7 @@ def patch_testcase_timeout():
     # but we know that the DB tests are very slow, so we increase a bit that value for
     # real database tests
     if os.environ.get("BUILDBOT_TEST_DB_URL", None) is not None:
-        unittest.TestCase.timeout = 20
+        unittest.TestCase.timeout = 120
 
 
 @onlyOnce
