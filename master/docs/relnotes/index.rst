@@ -1,132 +1,117 @@
-Release Notes for Buildbot ``|version|``
-========================================
-
+Release Notes
+~~~~~~~~~~~~~
 ..
-    Any change that adds a feature or fixes a bug should have an entry here.
-    Most simply need an additional bulleted list item, but more significant
-    changes can be given a subsection of their own.
+    Don't write to this file anymore!!
 
-    If you can:
+    Buildbot now uses towncrier to manage its release notes.
+    towncrier helps to avoid the need for rebase when several people work at the same time on the releasenote files.
 
-       please point to the bug using syntax: (:bug:`NNN`)
-       please point to classes using syntax: :py:class:`~buildbot.reporters.http.HttpStatusBase`
+    Each PR should come with a file in the master/buildbot/newsfragment directory
 
-..
-    NOTE: When releasing 0.9.0, combine these notes with those from 0.9.0b*
-    into one single set of notes.  Also, link prominently to the migration guide.
+.. towncrier release notes start
 
-The following are the release notes for Buildbot ``|version|``.
+Buildbot ``0.9.3`` ( ``2017-01-11`` )
+===================================================
 
-See :ref:`Upgrading to Nine` for a guide to upgrading from 0.8.x to 0.9.x
+Bug fixes
+---------
 
-Master
-------
+- Fix :bb:reporter:`BitbucketStatusPush` ``ep should start with /`` assertion
+  error.
+- Fix duplicate worker use case, where a worker with the same name would make
+  the other worker also disconnect (:bug:`3656`)
+- :py:class:`~buildbot.changes.GitPoller`: ``buildPushesWithNoCommits`` now
+  rebuilds for a known branch that was updated to an existing commit.
+- Fix issue with log viewer not staying at bottom of the log when loading log
+  lines.
+- Fixed `addBuildURLs` in :py:class:`~buildbot.steps.trigger.Trigger` to use
+  results from triggered builds to include in the URL name exposed by API.
+- Fix :ref:`mq-Wamp` :bb:cfg:`mq` support by removing ``debug``, ``debug_amp``
+  and ``debug_app`` from the :bb:cfg:`mq` config, which is not available in
+  latest version of `Python Autobahn <http://autobahn.ws>`_. You can now use
+  ``wamp_debug_level`` option instead.
+- fix issue with factory.workdir AttributeError are not properly reported.
 
 Features
-~~~~~~~~
+--------
 
-* new :bb:reporter:`HipchatStatusPush` to report build results to Hipchat.
-* new steps for Visual Studio 2015 (VS2015, VC14, and MsBuild14).
+- Optimize the memory consumption of the log compression process. Buildbot do
+  not load the whole log into memory anymore. This should improve a lot
+  buildbot memory footprint.
+- Changed the build page so that the preview of the logs are shown in live. It
+  is a preview means the last lines of log. How many lines is configurable per
+  user in the user settings page.
+- Log viewer line numbers are no longer selectable, so that it is easier to
+  copy paste.
+- :py:class:`~buildbot.plugins.worker.DockerLatentWorker` accepts now
+  renderable Dockerfile
+- :ref:`Renderer` function can now return
+  :class:`~buildbot.interfaces.IRenderable` objects.
+- new :bb:step:`SetProperties` which allows to generate and transform
+  properties separately.
+- Handle new workers in `windows_service.py` script.
+- Sort the builders in the waterfall view by name instead of ID.
 
-* The :bb:step:`P4` step now obfuscates the password in status logs.
 
-* Added support for specifying the depth of a shallow clone in :bb:step:`Git`.
+Buildbot ``0.9.2`` ( ``2016-12-13`` )
+===================================================
 
-* :bb:worker:`OpenStackLatentWorker` now uses a single novaclient instance to not require re-authentication when starting or stopping instances.
+Bug fixes
+---------
 
-Fixes
-~~~~~
-
-* :bb:reporter:`GerritStatusPush` now includes build properties in the ``startCB`` and ``reviewCB`` functions. ``startCB`` now must return a dictionary.
-* Fix TypeError exception with :py:class:`~buildbot.changes.HgPoller` if ``usetimestamps=False`` is used (:bug:`3562`)
-* Fix recovery upon master unclean kill or crash (:bug:`3564`)
-
-* sqlite access is serialized in order to improve stability (:bug:`3565`)
-
-Changes for Developers
-~~~~~~~~~~~~~~~~~~~~~~
+- Fix :py:class:`~buildbot.www.oauth2.GitHubAuth` to retrieve all organizations
+  instead of only those publicly available.
+- Fixed `ref` to point to `branch` instead of commit `sha` in
+  :py:class:`~buildbot.reporters.GitlabStatusPush`
+- :bb:reporter:`IRC` :py:meth:`maybeColorize` is able to highlight single words
+  and stop colorization at the end. The previous implementation only stopped
+  colorization but not boldface.
+- fix compatibility issue with mysql5 (do not set default value for TEXT
+  column).
+- Fixed `addChange` in :py:class:`~buildbot.data.changes.Change` to use the
+  `revlink` configuration option to generate the revlink.
+- fix threading issue in
+  :py:class:`~buildbot.plugins.worker.DockerLatentWorker`
 
 Features
-~~~~~~~~
+--------
 
-Fixes
-~~~~~
-
-
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Support for python 2.6 was dropped from the master.
-
-* ``public_html`` directory is not created anymore in ``buildbot create-master`` (it's not used for some time already).
-  Documentation was updated with suggestions to use third party web server for serving static file.
-
-* ``usePTY`` default value has been changed from ``slave-config`` to ``None`` (use of ``slave-config`` will still work).
-
-* ``GithubStatusPush`` reporter was renamed to :bb:reporter:`GitHubStatusPush`.
-
-Buildslave
-----------
-
-Fixes
-~~~~~
-
-* ``buildslave`` script now outputs messages to the terminal.
-
-
-Worker
-------
-
-Fixes
-~~~~~
-
-* ``runGlob()`` uses the correct remote protocol for both :py:class:`~buildbot.process.buildstep.CommandMixin` and :py:class:`~buildbot.steps.worker.ComposititeStepMixin`.
-
-* Rename ``glob()`` to ``runGlob()`` in :py:class:`~buildbot.process.buildstep.CommandMixin`
-
-Changes for Developers
-~~~~~~~~~~~~~~~~~~~~~~
-
-* EC2 Latent Worker upgraded from ``boto2`` to ``boto3``.
-
-Deprecations, Removals, and Non-Compatible Changes
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-* Worker commands version bumped to 3.0.
-
-* Master/worker protocol has been changed:
-
-  * ``slave_commands`` key in worker information was renamed to ``worker_commands``.
-
-  * ``getSlaveInfo`` remote method was renamed to ``getWorkerInfo``.
-
-  * ``slave-config`` value of ``usePTY`` is not supported anymore.
-
-  * ``slavesrc`` command argument was renamed to ``workersrc`` in ``uploadFile`` and ``uploadDirectory`` commands.
-
-  * ``slavedest`` command argument was renamed to ``workerdest`` in ``downloadFile`` command.
-
-  * Previously deprecated ``WorkerForBuilder.remote_shutdown()`` remote command has been removed.
+- Implement :py:class:`~buildbot.www.oauth2.BitbucketAuth`.
+- New :bb:chsrc:`GerritEventLogPoller` poller to poll Gerrit changes via http
+  API.
+- New :bb:reporter:`GerritVerifyStatusPush` can send multiple review status for
+  the same Gerrit change.
+- :bb:reporter:`IRC` appends the builder URL to a successful/failed build if
+  available
+- :bb:reporter:`MailNotifier` now accepts ``useSmtps`` parameter for initiating
+  connection over an SSL/TLS encrypted connection (SMTPS)
+- New support for ``Mesos`` and `Marathon
+  <https://mesosphere.github.io/marathon/>`_ via
+  :py:class:`~buildbot.plugins.worker.MarathonLatentWorker`. ``Marathon`` is a
+  production-grade container orchestration platform for Mesosphere's Data-
+  center Operating System (DC/OS) and Apache ``Mesos``.
+- ``password`` in :py:class:`~buildbot.plugins.worker.DockerLatentWorker` and
+  :py:class:`~buildbot.plugins.worker.HyperLatentWorker`, can be None. In that
+  case, they will be auto-generated from random number.
+- :bb:reporter:`StashStatusPush` now accepts ``key``, ``buildName``,
+  ``endDescription``, ``startDescription``, and ``verbose`` parameters to
+  control the JSON sent to Stash.
+- Buildbot can now be configured to deny read access to REST api resources
+  based on authorization rules.
 
 
-Details
--------
-
-For a more detailed description of the changes made in this version, see the git log itself:
-
-.. code-block:: bash
-
-   git log v0.9.0b9..master
-
-Older Versions
---------------
-
-Release notes for older versions of Buildbot are available in the :src:`master/docs/relnotes/` directory of the source tree.
-Newer versions are also available here:
+Older Release Notes
+~~~~~~~~~~~~~~~~~~~
 
 .. toctree::
     :maxdepth: 1
 
+    0.9.1
+    0.9.0
+    0.9.0rc4
+    0.9.0rc3
+    0.9.0rc2
+    0.9.0rc1
     0.9.0b9
     0.9.0b8
     0.9.0b7
