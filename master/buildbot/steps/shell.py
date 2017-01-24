@@ -134,8 +134,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
         if PY3:
-            valid_rsc_args = inspect.signature(
+            signature = inspect.signature(
                 remotecommand.RemoteShellCommand.__init__)
+            valid_rsc_args = signature.parameters.keys()
         else:
             valid_rsc_args = inspect.getargspec(
                 remotecommand.RemoteShellCommand.__init__)[0]
