@@ -20,7 +20,6 @@ from io import StringIO
 
 from twisted.internet import defer
 
-from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
 
@@ -44,7 +43,6 @@ expectedOutput = """\
 
 class TriggeringMaster(RunMasterBase):
 
-    @flaky(bugNumber=3339)
     @defer.inlineCallbacks
     def test_trigger(self):
         yield self.setupConfig(masterConfig())
