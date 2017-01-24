@@ -378,7 +378,7 @@ class JoinList(unittest.TestCase):
         self.assertEqual(util.join_list(u'abc'), u'abc')
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda: util.join_list(['\xff']))
+        self.assertRaises(UnicodeDecodeError, lambda: util.join_list([b'\xff']))
 
 
 class CommandToString(unittest.TestCase):
