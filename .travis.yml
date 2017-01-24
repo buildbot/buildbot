@@ -94,7 +94,7 @@ install:
   # install buildbot-www from pip in order to run the www tests
   # install deprecated buildbot-slave in order to test backward compatibility
   - |
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker -a $TESTS != trial_worker_only ] || \
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker_only ] || \
       (pip install wheel && pip install buildbot-www buildbot-slave)
 
   - "pip install -e worker future"
