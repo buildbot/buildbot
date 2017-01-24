@@ -64,7 +64,7 @@ class TestBRDBase(unittest.TestCase):
 
         def prioritizeBuilders(master, builders):
             # simple sort-by-name by default
-            return sorted(builders, lambda b1, b2: cmp(b1.name, b2.name))
+            return sorted(builders, key=lambda b1: b1.name)
         self.master = self.botmaster.master = fakemaster.make_master(testcase=self,
                                                                      wantData=True, wantDb=True)
         self.master.caches = fakemaster.FakeCaches()
