@@ -130,7 +130,6 @@ script:
   - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} != false ] || make frontend_install_tests"
 
   - |
-    TESTS=py3status
     if [ $TESTS = py3status ]; then
         trial  --reporter=summary buildbot.test buildbot_worker.test| tail -n 1 | python -c "
     import sys, requests
