@@ -29,6 +29,7 @@ from buildbot.test.util import changesource
 
 
 class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+    timeout = 120
 
     class Subclass(base.ChangeSource):
         pass
@@ -77,6 +78,7 @@ class TestChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
 
 
 class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+    timeout = 120
 
     class Subclass(base.PollingChangeSource):
         pass

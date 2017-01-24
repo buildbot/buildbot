@@ -31,6 +31,7 @@ from buildbot.process import buildrequestdistributor
 from buildbot.process import factory
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.util.eventual import fireEventually
 
@@ -804,12 +805,21 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     # nextWorker
     @defer.inlineCallbacks
-    def do_test_nextWorker(self, nextWorker, exp_choice=None):
-        builder_config = config.BuilderConfig(name='bldrconf',
-                                              workernames=['wk1', 'wk2'],
-                                              builddir='bdir',
-                                              factory=factory.BuildFactory(),
-                                              nextWorker=nextWorker)
+    def do_test_nextWorker(self, nextWorker, exp_choice=None, exp_warning=False):
+
+        def makeBuilderConfig():
+            return config.BuilderConfig(name='bldrconf',
+                                        workernames=['wk1', 'wk2'],
+                                        builddir='bdir',
+                                        factory=factory.BuildFactory(),
+                                        nextWorker=nextWorker)
+        if exp_warning:
+            with assertProducesWarning(config.ConfigWarning,
+                                       message_pattern=r"nextWorker now takes a 3rd argument"):
+                builder_config = makeBuilderConfig()
+        else:
+            builder_config = makeBuilderConfig()
+
         self.bldr = yield self.createBuilder('B', builderid=78,
                                              builder_config=builder_config)
         for i in range(4):
@@ -841,7 +851,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_nextWorker_2args_in_signature(self):
         def nextWorker(builder, lst):
             return lst[0] if lst else None
-        return self.do_test_nextWorker(nextWorker, exp_choice=0)
+        return self.do_test_nextWorker(nextWorker, exp_choice=0, exp_warning=True)
 
     def test_nextWorker_default(self):
         import random
@@ -862,14 +872,14 @@ class TestMaybeStartBuilds(TestBRDBase):
 
     @defer.inlineCallbacks
     def test_nextWorker_exception(self):
-        def nextWorker(bldr, lst):
+        def nextWorker(bldr, lst, br=None):
             raise RuntimeError("")
         yield self.do_test_nextWorker(nextWorker)
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
 
     @defer.inlineCallbacks
     def test_nextWorker_failure(self):
-        def nextWorker(bldr, lst):
+        def nextWorker(bldr, lst, br=None):
             return defer.fail(failure.Failure(RuntimeError()))
         yield self.do_test_nextWorker(nextWorker)
         self.assertEqual(1, len(self.flushLoggedErrors(RuntimeError)))
