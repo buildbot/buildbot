@@ -74,7 +74,6 @@ command_version = "3.0"
 #  >= 2.16: runprocess supports obfuscation via tuples (#1748)
 #  >= 2.16: listdir command added to read a directory
 #  >= 3.0: new buildbot-worker package:
-#    * "slave_commands" key in worker information renamed to "worker_commands",
 #    * worker-side usePTY configuration (usePTY='slave-config') support
 #      dropped,
 #    * remote method getSlaveInfo() renamed to getWorkerInfo().
