@@ -26,9 +26,11 @@ from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 import buildbot.buildbot_net_usage_data
+from buildbot import config
 from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
 from buildbot.buildbot_net_usage_data import computeUsageData
 from buildbot.config import BuilderConfig
+from buildbot.config import ConfigWarning
 from buildbot.master import BuildMaster
 from buildbot.plugins import steps
 from buildbot.process.factory import BuildFactory
@@ -71,7 +73,7 @@ class Tests(unittest.TestCase):
     def test_basic(self):
         self.patch(config, "_in_unit_tests", False)
         with assertProducesWarning(
-                config.ConfigWarning,
+                ConfigWarning,
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
             master = self.getMaster(self.getBaseConfig())
         data = computeUsageData(master)
@@ -106,6 +108,7 @@ class Tests(unittest.TestCase):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest(object):
+
             def __init__(self, *args, **kwargs):
                 self.args = args
                 self.kwargs = kwargs
@@ -113,6 +116,7 @@ class Tests(unittest.TestCase):
         open_url = []
 
         class urlopen(object):
+
             def __init__(self, r):
                 self.request = r
                 open_url.append(self)
@@ -129,7 +133,7 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
                          ('https://events.buildbot.net/events/phone_home',
-                         '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
+                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
 
     def test_real(self):
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:

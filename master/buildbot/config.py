@@ -96,6 +96,7 @@ def warnDeprecated(version, msg):
 
 _in_unit_tests = False
 
+
 def loadConfigDict(basedir, configFileName):
     if not os.path.isdir(basedir):
         raise ConfigErrors([

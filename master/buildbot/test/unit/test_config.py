@@ -279,6 +279,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             with open(file, "w") as f:
                 f.write(contents)
     # tests
+
     def test_defaults(self):
         cfg = config.MasterConfig()
         expected = dict(

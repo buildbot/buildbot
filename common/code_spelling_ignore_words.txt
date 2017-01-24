@@ -82,6 +82,7 @@ builbot
 buildable
 buildbot
 buildbots
+buildbotNetUsageData
 buildbot's
 buildbotting
 builddir

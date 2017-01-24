@@ -50,7 +50,7 @@ def patch_testcase_timeout():
     unittest.TestCase.timeout = 5
 
     # but we know that the DB tests are very slow, so we increase a bit that value for
-    # realdb tests
+    # real database tests
     if os.environ.get("BUILDBOT_TEST_DB_URL", None) is not None:
         unittest.TestCase.timeout = 20
 
@@ -90,7 +90,7 @@ def patch_decorators():
 @onlyOnce
 def patch_config_for_unit_tests():
     from buildbot import config
-    # by default, buildbot.config warns about unconfigured
+    # by default, buildbot.config warns about not configured buildbotNetUsageData.
     # its important for users to not leak information, but unneeded and painful for tests
     config._in_unit_tests = True
 
@@ -102,5 +102,5 @@ def patch_all(for_tests=False):
         patch_decorators()
         patch_mysqlclient_warnings()
         patch_config_for_unit_tests()
-    
+
     patch_python14653()

@@ -15,7 +15,6 @@
 
 import sys
 import warnings
-import exceptions
 
 from distutils.version import LooseVersion
 
@@ -112,11 +111,11 @@ with assertProducesWarning(
 # warnings in tests shall be forcefully tested with assertProducesWarning,
 # or shutdown using the warning module
 warnings.filterwarnings('error')
-# if buildbot_worker is installed in pi install -e mode, then the docker directory will
+# if buildbot_worker is installed in pip install -e mode, then the docker directory will
 # match "import docker", and produce a warning.
 # We just suppress this warning instead of doing silly workaround.
 warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __init__.py",
-                        category=exceptions.ImportWarning)
+                        category=ImportWarning)
 
 # FIXME: needs to be sorted out (#3666)
 warnings.filterwarnings('ignore', "Invalid utf8 character string")
