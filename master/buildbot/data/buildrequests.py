@@ -143,8 +143,10 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             claimed=claimed,
             bsid=bsid,
             resultSpec=resultSpec)
-        defer.returnValue(
-            [(yield self.db2data(br)) for br in buildrequests])
+        results = []
+        for br in buildrequests:
+            results.append((yield self.db2data(br)))
+        defer.returnValue(results)
 
 
 class BuildRequest(base.ResourceType):

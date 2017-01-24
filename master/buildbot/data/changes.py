@@ -90,8 +90,10 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
                 changes = yield self.master.db.changes.getRecentChanges(resultSpec.limit)
             else:
                 changes = yield self.master.db.changes.getChanges()
-        changes = [(yield self._fixChange(ch)) for ch in changes]
-        defer.returnValue(changes)
+        results = []
+        for ch in changes:
+            results.append((yield self._fixChange(ch)))
+        defer.returnValue(results)
 
 
 class Change(base.ResourceType):
