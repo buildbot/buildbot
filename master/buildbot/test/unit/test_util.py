@@ -268,7 +268,7 @@ class Ascii2Unicode(unittest.TestCase):
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
-                          util.ascii2unicode('a\x85'))
+                          util.ascii2unicode(b'a\x85'))
 
     def test_None(self):
         self.assertEqual(util.ascii2unicode(None), None)
@@ -302,7 +302,7 @@ class StringToBoolean(unittest.TestCase):
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
-                          util.ascii2unicode('a\x85'))
+                          util.ascii2unicode(b'a\x85'))
 
     def test_None(self):
         self.assertEqual(util.ascii2unicode(None), None)
