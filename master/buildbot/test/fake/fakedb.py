@@ -1213,7 +1213,10 @@ class FakeSourceStampsComponent(FakeDBComponent):
         breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])
         bset = yield self.db.buildsets.getBuildset(breq['buildsetid'])
 
-        defer.returnValue([(yield self.getSourceStamp(ssid)) for ssid in bset['sourcestamps']])
+        results = []
+        for ssid in bset['sourcestamps']:
+            results.append((yield self.getSourceStamp(ssid)))
+        defer.returnValue(results)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
