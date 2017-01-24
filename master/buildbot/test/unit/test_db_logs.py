@@ -31,6 +31,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
+from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 
 
 class Tests(interfaces.InterfaceTests):
@@ -222,11 +224,13 @@ class Tests(interfaces.InterfaceTests):
         content = self.bug3101Content
         yield self.insertTestData(self.backgroundData + self.bug3101Rows)
         # overall content is the same, with '\n' padding at the end
+        expected = bytes2NativeString(self.bug3101Content + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)),
-                         self.bug3101Content + '\n')
+                         expected)
         # try to fetch just one line
+        expected = bytes2NativeString(content.split(b'\n')[0] + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)),
-                         content.split('\n')[0] + '\n')
+                         expected)
 
     @defer.inlineCallbacks
     def test_addLog_getLog(self):
@@ -322,7 +326,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 10,
-            'content': 'abc\ndef\nghi\njkl',
+            'content': b'abc\ndef\nghi\njkl',
             'compressed': 0})
 
     @defer.inlineCallbacks
@@ -364,7 +368,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': 'abc',
+            'content': b'abc',
             'compressed': 0})
 
     @defer.inlineCallbacks
@@ -388,7 +392,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': line,
+            'content': unicode2bytes(line),
             'compressed': 0})
 
     @defer.inlineCallbacks
@@ -413,7 +417,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': zlib.compress(line, 9),
+            'content': zlib.compress(unicode2bytes(line), 9),
             'compressed': 1})
 
     @defer.inlineCallbacks
@@ -438,7 +442,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': bz2.compress(line, 9),
+            'content': bz2.compress(unicode2bytes(line), 9),
             'compressed': 2})
 
     @defer.inlineCallbacks
