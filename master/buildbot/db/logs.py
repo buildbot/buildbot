@@ -172,7 +172,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         chunk_first_line = last_line = first_line
         while remaining:
             chunk, remaining = self._splitBigChunk(remaining, logid)
-            last_line = chunk_first_line + chunk.count('\n')
+            last_line = chunk_first_line + chunk.count(b'\n')
 
             chunk, compressed_id = self.thdCompressChunk(chunk)
             conn.execute(self.db.model.logchunks.insert(),
