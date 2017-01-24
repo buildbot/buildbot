@@ -28,6 +28,10 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 
 
+def builderKey(builder):
+    return builder['id']
+
+
 class Tests(interfaces.InterfaceTests):
 
     # common sample data
@@ -197,14 +201,14 @@ class Tests(interfaces.InterfaceTests):
         builderlist = yield self.db.builders.getBuilders()
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(sorted(builderlist), sorted([
+        self.assertEqual(sorted(builderlist, key=builderKey), sorted([
             dict(id=7, name='some:builder', masterids=[
                  3], tags=[], description=None),
             dict(id=8, name='other:builder', masterids=[
                  3, 4], tags=[], description=None),
             dict(id=9, name='third:builder',
                  masterids=[], tags=[], description=None),
-        ]))
+        ], key=builderKey))
 
     @defer.inlineCallbacks
     def test_getBuilders_masterid(self):
@@ -221,12 +225,12 @@ class Tests(interfaces.InterfaceTests):
         builderlist = yield self.db.builders.getBuilders(masterid=3)
         for builderdict in builderlist:
             validation.verifyDbDict(self, 'builderdict', builderdict)
-        self.assertEqual(sorted(builderlist), sorted([
+        self.assertEqual(sorted(builderlist, key=builderKey), sorted([
             dict(id=7, name='some:builder', masterids=[
                  3], tags=[], description=None),
             dict(id=8, name='other:builder', masterids=[
                  3, 4], tags=[], description=None),
-        ]))
+        ], key=builderKey))
 
     @defer.inlineCallbacks
     def test_getBuilders_empty(self):

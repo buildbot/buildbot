@@ -286,8 +286,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             reason=u'power', sourcestamps=sourcestamps, waited_for=False)
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
         call = self.master.data.updates.addBuildset.mock_calls[0]
-        self.assertEqual(sorted(call[2]['sourcestamps']),
-                         sorted(exp_sourcestamps))
+
+        def sourceStampKey(sourceStamp):
+            repository = sourceStamp.get('repository', '') if not None else ''
+            branch = sourceStamp.get('branch', '') if not None else ''
+            return (repository, branch)
+
+        self.assertEqual(sorted(call[2]['sourcestamps'], key=sourceStampKey),
+                         sorted(exp_sourcestamps, key=sourceStampKey))
 
     def test_addBuildsetForSourceStampsWithDefaults(self):
         codebases = {

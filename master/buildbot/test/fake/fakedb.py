@@ -130,7 +130,7 @@ class Row(object):
     def __lt__(self, other):
         if self.__class__ != other.__class__:
             raise TypeError("Cannot compare {} and {}".format(
-                              self.__class__, other.__class__))
+                self.__class__, other.__class__))
         return self.values < other.values
 
     def __repr__(self):
@@ -2326,7 +2326,8 @@ class FakeMastersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getMasters(self):
-        return defer.succeed(sorted(self.masters.values()))
+        return defer.succeed(sorted(self.masters.values(),
+                                    key=lambda x: x['id']))
 
     # test helpers
 

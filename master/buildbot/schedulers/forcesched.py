@@ -186,7 +186,7 @@ class BaseParameter(object):
         """Secondary customization point, called from getFromKwargs to turn
            a validated value into a single property value"""
         if self.multiple:
-            return map(self.parse_from_arg, l)
+            return [self.parse_from_arg(arg) for arg in l]
         else:
             return self.parse_from_arg(l[0])
 
@@ -737,7 +737,7 @@ class ForceScheduler(base.BaseScheduler):
                                                     sourcestamps=sourcestamps,
                                                     collector=collector,
                                                     kwargs=kwargs)
-        changeids = map(lambda a: type(a) == int and a or a.number, changeids)
+        changeids = [type(a) == int and a or a.number for a in changeids]
 
         real_properties = Properties()
         for pname, pvalue in iteritems(properties):

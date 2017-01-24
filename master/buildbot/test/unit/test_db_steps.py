@@ -262,9 +262,15 @@ class Tests(interfaces.InterfaceTests):
             self.db.steps.addURL(stepid=72, name=u'foo2', url=u'bar2')])
 
         stepdict = yield self.db.steps.getStep(stepid=72)
+
+        def urlKey(url):
+            return url['name']
+
         # order is not guaranteed though
-        self.assertEqual(sorted(stepdict['urls']), [{'name': u'foo', 'url': u'bar'},
-                                                    {'name': u'foo2', 'url': u'bar2'}])
+        self.assertEqual(sorted(stepdict['urls'], key=urlKey),
+                         sorted([{'name': u'foo', 'url': u'bar'},
+                                 {'name': u'foo2', 'url': u'bar2'}],
+                                key=urlKey))
 
     @defer.inlineCallbacks
     def test_finishStep(self):
