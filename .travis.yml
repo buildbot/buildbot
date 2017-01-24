@@ -94,7 +94,7 @@ install:
   # install buildbot_www from pip in order to run the www tests
   - |
       [ $TESTS != trial -a $TESTS != coverage -a $TESTS != trial_worker -a $TESTS != trial_worker_only ] || \
-      pip install --pre buildbot_www
+      (pip install wheel && pip install buildbot-www)
 
   - "pip install -e worker future"
 
