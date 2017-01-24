@@ -26,7 +26,10 @@ install:
   - "%PYTHON%\\python.exe -m pip install -e worker"
 
   # Install prebuilt WWW packages, it's not easy to build them.
-  - "%PYTHON%\\python.exe -m pip install --pre buildbot_www"
+  - "%PYTHON%\\python.exe -m pip install wheel"
+  - "%PYTHON%\\python.exe -m pip install buildbot-www"
+  # install deprecated buildbot-slave in order to test backward compatibility
+  - "%PYTHON%\\python.exe -m pip install buildbot-slave"
 
   - "%PYTHON%\\python.exe -m pip list"
 
