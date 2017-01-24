@@ -183,3 +183,96 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
             self.assertEqual(loops, [0.0, 5.0, 10.0])
         reactor.callWhenRunning(d.callback, None)
         return d
+
+
+class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase):
+
+    class Subclass(base.ReconfigurablePollingChangeSource):
+        pass
+
+    def setUp(self):
+        # patch in a Clock so we can manipulate the reactor's time
+        self.clock = task.Clock()
+        self.patch(reactor, 'callLater', self.clock.callLater)
+        self.patch(reactor, 'seconds', self.clock.seconds)
+
+        d = self.setUpChangeSource()
+
+        @d.addCallback
+        def create_changesource(_):
+            self.attachChangeSource(self.Subclass(name="DummyCS"))
+        return d
+
+    def tearDown(self):
+        return self.tearDownChangeSource()
+
+    def runClockFor(self, secs):
+        self.clock.pump([1.0] * secs)
+
+    @defer.inlineCallbacks
+    def test_loop_loops(self):
+        # track when poll() gets called
+        loops = []
+        self.changesource.poll = \
+            lambda: loops.append(self.clock.seconds())
+
+        yield self.startChangeSource()
+        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+
+        yield self.runClockFor(12)
+        # note that it does *not* poll at time 0
+        self.assertEqual(loops, [5.0, 10.0])
+
+    @defer.inlineCallbacks
+    def test_loop_exception(self):
+        # track when poll() gets called
+        loops = []
+
+        def poll():
+            loops.append(self.clock.seconds())
+            raise RuntimeError("oh noes")
+        self.changesource.poll = poll
+
+        yield self.startChangeSource()
+        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+
+        yield self.runClockFor(12)
+        # note that it keeps looping after error
+        self.assertEqual(loops, [5.0, 10.0])
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 2)
+
+    @defer.inlineCallbacks
+    def test_poll_only_if_activated(self):
+        """The polling logic only applies if the source actually starts!"""
+
+        self.setChangeSourceToMaster(self.OTHER_MASTER_ID)
+
+        loops = []
+        self.changesource.poll = \
+            lambda: loops.append(self.clock.seconds())
+
+        yield self.startChangeSource()
+        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+            name="DummyCS", pollInterval=5, pollAtLaunch=False))
+
+        yield self.runClockFor(12)
+
+        # it doesn't do anything because it was already claimed
+        self.assertEqual(loops, [])
+
+    @defer.inlineCallbacks
+    def test_pollAtLaunch(self):
+        # track when poll() gets called
+        loops = []
+        self.changesource.poll = \
+            lambda: loops.append(self.clock.seconds())
+        yield self.startChangeSource()
+        yield self.changesource.reconfigServiceWithSibling(self.Subclass(
+            name="DummyCS", pollInterval=5, pollAtLaunch=True))
+
+        yield self.runClockFor(12)
+
+        # note that it *does* poll at time 0
+        self.assertEqual(loops, [0.0, 5.0, 10.0])

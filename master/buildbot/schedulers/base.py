@@ -92,6 +92,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
+    def reconfigService(self, *args, **kwargs):
+        raise NotImplementedError()
+
     # activity handling
 
     def activate(self):
