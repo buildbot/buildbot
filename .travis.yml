@@ -60,20 +60,26 @@ matrix:
   include:
     # Tests of buildbot-worker on python 2.6
     # Specify SQLALCHEMY=latest to avoid errors installing.
+    - python: "3.5"
+      env: TWISTED=trunk TESTS=py3status SQLALCHEMY=latest
+
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
-    - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
+
+  allow_failures:
+    - python: 3.5
+      TESTS: py3status
 
 # Dependencies installation commands
 install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
   - pip install codecov
-  - "[ $TWISTED = latest ] || pip install Twisted==$TWISTED"
+  - "[ $TWISTED != trunk ] || pip install git+https://github.com/twisted/twisted"
+  - "[ $TWISTED = latest ] || [ $TWISTED = trunk ] || pip install Twisted==$TWISTED"
   - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
 
   # Install mysqlclient for tests that uses real MySQL
@@ -123,6 +129,16 @@ script:
   - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} = false ] || make frontend"
   - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} != false ] || make frontend_install_tests"
 
+  - |
+    TESTS=py3status
+    if [ $TESTS = py3status ]; then
+        trial  --reporter=summary buildbot.test buildbot_worker.test| tail -n 1 | python -c "
+    import sys, requests
+    (timeTaken, tests, _, errors, failures, skips) = sys.stdin.read().split()
+    requests.post('https://events.buildbot.net/events/py3kstatus', json={
+        'timeTaken': float(timeTaken), 'tests': int(tests), 'errors': int(errors), 'failures': int(failures), 'skips': int(skips)
+    })"
+    fi
   - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildbot_worker.test"
   - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
   # run tests under coverage for latest only (it's slower..)
