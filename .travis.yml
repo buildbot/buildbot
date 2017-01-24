@@ -85,7 +85,7 @@ install:
   # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js -a $TESTS != py3status ] || \
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
