@@ -253,7 +253,7 @@ class ResultSpec(object):
             self.filters = unmatched_filters
             self.order = unmatched_order
             return query, None
-        count_query = sa.select([sa.func.count()]).select_from(query)
+        count_query = sa.select([sa.func.count()]).select_from(query.alias('query'))
         self.order = None
         self.filters = []
         # finally, slice out the limit/offset
