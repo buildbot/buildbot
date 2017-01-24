@@ -131,7 +131,8 @@ script:
 
   - |
     if [ $TESTS = py3status ]; then
-        trial  --reporter=summary buildbot.test buildbot_worker.test| tail -n 1 | python -c "
+       trial --reporter=summary buildbot.test | tee py3status
+       tail -n 1 py3status | python -c "
     import sys, requests, os
     (timeTaken, tests, _, errors, failures, skips) = sys.stdin.read().split()
     requests.post('https://events.buildbot.net/events/py3kstatus', json={'py3kstatus': {
@@ -142,8 +143,6 @@ script:
   - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
   # run tests under coverage for latest only (it's slower..)
   - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test"
-
-  - "trial  --reporter=text --rterrors buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "[ $TESTS != lint ] || make pylint"
