@@ -152,9 +152,11 @@ class Buildset(base.ResourceType):
 
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
-        sourcestamps = [
-            (yield self.master.data.get(('sourcestamps', str(ssid)))).copy()
-            for ssid in bsdict['sourcestamps']]
+        sourcestamps = []
+        for ssid in bsdict['sourcestamps']:
+            sourcestamps.append(
+                (yield self.master.data.get(('sourcestamps', str(ssid)))).copy()
+            )
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
@@ -222,10 +224,13 @@ class Buildset(base.ResourceType):
         # get the sourcestamps for the message
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
-        sourcestamps = [
-            copy.deepcopy((yield self.master.data.get(
-                ('sourcestamps', str(ssid)))))
-            for ssid in bsdict['sourcestamps']]
+        sourcestamps = []
+        for ssid in bsdict['sourcestamps']:
+            sourcestamps.append(
+                copy.deepcopy(
+                    (yield self.master.data.get(('sourcestamps', str(ssid))))
+                )
+            )
 
         msg = dict(
             bsid=bsid,
