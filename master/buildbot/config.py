@@ -595,6 +595,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                     if not isinstance(value, int):
                         error("value for cache size '%s' must be an integer"
                               % name)
+                        return
                     if value < 1:
                         error("'%s' cache size must be at least 1, got '%s'"
                               % (name, value))
