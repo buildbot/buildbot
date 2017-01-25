@@ -285,9 +285,10 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Hy
 
 .. code-block:: python
 
-    import requests, urlparse
+    from future.moves.urllib.parse import urlparse
+    import requests
     r = requests.get("http://localhost:4040/api/tunnels/command_line").json()
-    masterFQDN = urlparse.urlparse(r['public_url']).netloc
+    masterFQDN = urlparse(r['public_url']).netloc
 
 
 ``hyper_accesskey``
