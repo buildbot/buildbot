@@ -320,7 +320,7 @@ class GerritStatusPush(service.BuildbotService):
 
     @defer.inlineCallbacks
     def sendBuildSetSummary(self, buildset, builds):
-        builds = filter(self.isBuildReported, builds)
+        builds = [build for build in builds if self.isBuildReported(build)]
         if builds and self.summaryCB:
             def getBuildInfo(build):
                 result = build['results']
