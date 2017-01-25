@@ -69,49 +69,52 @@ matrix:
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
 
+
 # Dependencies installation commands
 install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
   - pip install codecov
-  - "[ $TWISTED != trunk ] || pip install git+https://github.com/twisted/twisted"
-  - "[ $TWISTED = latest ] || [ $TWISTED = trunk ] || pip install Twisted==$TWISTED"
-  - "[ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY"
+  - "if [ $TWISTED = trunk ]; then pip install git+https://github.com/twisted/twisted ; fi"
+  - "if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi"
+  - "if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi"
 
   # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js -a $TESTS != py3status ] || \
+      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js -o $TESTS = py3status ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
                   mysqlclient \
                   psycopg2 \
-                  pg8000 \
+                  pg8000
+      fi
 
   - |
-      [ $TESTS != trial_worker ] || \
+      if [ $TESTS = trial_worker ]; then
       pip install -e 'worker[test]'
+      fi
 
   # install buildbot_www from pip in order to run the www tests
-  - "[ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www"
+  - "if [ $TESTS = trial -o $TESTS = coverage ]; then pip install --pre buildbot_www ; fi"
 
 
   - "pip install -e worker future"
 
-  - "[ $TESTS != lint ] || pip install 'flake8~=2.6.0'"
+  - "if [ $TESTS = lint ]; then pip install 'flake8~=2.6.0' ; fi"
   # Install sphinx so that pylint will be able to import it
-  - "[ $TESTS != lint ] || pip install sphinx"
+  - "if [ $TESTS = lint ]; then  pip install sphinx ; fi"
   # Install docs dependencies for running the tests
   # until towncrier toml is released, we need to fetch from git :-/
-  - "[ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'"
+  - "if [ $TESTS = docs ]; then  pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier' ; fi"
 
   # Check that Twisted is not installed during previous steps on setuppy_test configuration.
   # In setuppy_test all dependencies should be installed by setuptools during tests.
-  - "[ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)"
+  - "if [ $TESTS = setuppy_test ]; then ! (pip list | grep Twisted) ; fi"
   # Automatic installation of autobahn during `setup.py test` fails due to:
   # https://github.com/pypa/setuptools/issues/500
-  - "[ $TESTS != setuppy_test ] || pip install autobahn Twisted"
+  - "if [ $TESTS = setuppy_test ]; then pip install autobahn Twisted ; fi"
 
 before_script:
   # create real MySQL database for tests
@@ -122,8 +125,8 @@ before_script:
 # Tests running commands
 script:
   # make frontend_install_tests takes 17 min, so we only do it post submit
-  - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} = false ] || make frontend"
-  - "[ $TESTS != js -o ${TRAVIS_PULL_REQUEST} != false ] || make frontend_install_tests"
+  - "if [ $TESTS = js -a ${TRAVIS_PULL_REQUEST} = false ]; then make frontend ; fi"
+  - "if [ $TESTS = js -a ${TRAVIS_PULL_REQUEST} = false ]; then make frontend_install_tests ; fi"
 
   - |
     if [ $TESTS = py3status ]; then
@@ -135,31 +138,31 @@ script:
         'timeTaken': float(timeTaken), 'tests': int(tests), 'errors': int(errors), 'failures': int(failures), 'skips': int(skips)
     }, 'env': dict(os.environ)})"
     fi
-  - "[ $TESTS != trial ]   || trial  --reporter=text --rterrors buildbot.test buildbot_worker.test"
-  - "[ $TESTS != trial_worker ] || trial  --reporter=text --rterrors buildbot_worker.test"
+  - "if [ $TESTS = trial ]; then trial  --reporter=text --rterrors buildbot.test buildbot_worker.test; fi"
+  - "if [ $TESTS = trial_worker ]; then trial  --reporter=text --rterrors buildbot_worker.test; fi"
   # run tests under coverage for latest only (it's slower..)
-  - "[ $TESTS != coverage ] || coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "if [ $TESTS = coverage ]; then coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test ; fi"
 
   # Run additional tests in their separate job
-  - "[ $TESTS != lint ] || make pylint"
-  - "[ $TESTS != lint ] || make flake8"
-  - "[ $TESTS != lint ] || isort --check -df `git ls-files |grep '.py$'`"
+  - "if [ $TESTS = lint ]; then make pylint ; fi"
+  - "if [ $TESTS = lint ]; then make flake8; fi"
+  - "if [ $TESTS = lint ]; then isort --check -df `git ls-files |grep '.py$'` ; fi"
   # Build documentation
-  - "[ $TESTS != docs ] || make docs"
+  - "if [ $TESTS = docs ]; then make docs ; fi"
   # Run spell checker on documentation
-  - "[ $TESTS != docs ] || make -C master/docs SPHINXOPTS=-W spelling"
+  - "if [ $TESTS = docs ]; then make -C master/docs SPHINXOPTS=-W spelling ; fi"
   # Runs Sphinx' external link checker only on post submit build (it is too unstable)
-  - "[ $TESTS != docs -o ${TRAVIS_PULL_REQUEST} != false ] || make -C master/docs SPHINXOPTS=-q linkcheck"
+  - "if [ $TESTS = docs -a ${TRAVIS_PULL_REQUEST} = false ]; then make -C master/docs SPHINXOPTS=-q linkcheck; fi"
 
-  - "[ $TESTS != setuppy_test ] || (cd master; python setup.py test)"
-  - "[ $TESTS != setuppy_test ] || (cd worker; python setup.py test)"
+  - "if [ $TESTS = setuppy_test ]; then (cd master; python setup.py test) ; fi"
+  - "if [ $TESTS = setuppy_test ]; then (cd worker; python setup.py test) ; fi"
 
 
 notifications:
   email: false
 
 after_success:
-  - "[ $TESTS != coverage ] || codecov"
+  - "if [ $TESTS = coverage ]; then codecov ; fi"
 
 after_script:
   # List installed packages along with their versions.
