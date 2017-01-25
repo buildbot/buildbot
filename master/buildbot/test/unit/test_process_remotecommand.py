@@ -166,7 +166,7 @@ class TestRunCommand(unittest.TestCase, Tests):
             return '2.16'
 
         def workerVersionIsOlderThan(command, minversion):
-            return ('2', '16') > minversion.split('.')
+            return ['2', '16'] < minversion.split('.')
 
         step = mock.Mock()
         step.workerVersionIsOlderThan = workerVersionIsOlderThan
