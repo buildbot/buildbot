@@ -98,19 +98,6 @@ class Filter(FieldBase):
     """
 
 
-def nonecmp(a, b):
-    # Some fields are nullable, and could raise TypeException, when REST is requesting sorting
-    # I order to fix that, we create a custom cmp function which treats None
-    # as smaller than anything
-    if a is None and b is None:
-        return 0
-    if a is None:
-        return -1
-    if b is None:
-        return 1
-    return cmp(a, b)
-
-
 class NoneComparator(object):
     """
     Object which wraps 'None' when doing comparisons in sorted().

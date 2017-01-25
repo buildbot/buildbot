@@ -305,21 +305,3 @@ class ResultSpec(unittest.TestCase):
         rs = resultspec.ResultSpec(fields=['foo', 'bar'])
         self.assertFalse(rs.popField('nosuch'))
         self.assertEqual(rs.fields, ['foo', 'bar'])
-
-
-class NoneCmp(unittest.TestCase):
-
-    def test_nonecmp(self):
-        nonecmp = resultspec.nonecmp
-        self.assertEqual(nonecmp(None, datetime.datetime(1, 1, 1)),
-                         -1)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), None),
-                         1)
-        self.assertEqual(nonecmp(None, None),
-                         0)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 1)),
-                         0)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 2), datetime.datetime(1, 1, 1)),
-                         1)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 2)),
-                         -1)
