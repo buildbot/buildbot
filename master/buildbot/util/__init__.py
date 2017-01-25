@@ -417,7 +417,7 @@ def join_list(maybeList):
 
 def command_to_string(command):
     words = command
-    if isinstance(words, string_types):
+    if isinstance(words, (bytes, string_types)):
         words = words.split()
 
     try:
@@ -433,7 +433,14 @@ def command_to_string(command):
 
     # strip instances and other detritus (which can happen if a
     # description is requested before rendering)
-    words = [w for w in words if isinstance(w, (string_types))]
+    stringWords = []
+    for w in words:
+        if isinstance(w, (bytes, string_types)):
+            # If command was bytes, be gentle in
+            # trying to covert it.
+            w = ascii2unicode(w, "replace")
+            stringWords.append(w)
+    words = stringWords
 
     if len(words) < 1:
         return None
@@ -441,11 +448,6 @@ def command_to_string(command):
         rv = "'%s'" % (' '.join(words))
     else:
         rv = "'%s ...'" % (' '.join(words[:2]))
-
-    # cmd was a command and thus probably a bytestring.  Be gentle in
-    # trying to covert it.
-    if isinstance(rv, bytes):
-        rv = rv.decode('ascii', 'replace')
 
     return rv
 
