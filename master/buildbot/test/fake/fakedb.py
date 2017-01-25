@@ -1731,10 +1731,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
             if branch or repository:
                 buildset = yield self.db.buildsets.getBuildset(br.buildsetid)
-                sourcestamps = [
-                    (yield self.db.sourcestamps.getSourceStamp(ssid))
-                    for ssid in buildset['sourcestamps']
-                ]
+                sourcestamps = []
+                for ssid in buildset['sourcestamps']:
+                    sourcestamps.append((yield self.db.sourcestamps.getSourceStamp(ssid)))
 
                 if branch and not any(branch == s['branch'] for s in sourcestamps):
                     continue
