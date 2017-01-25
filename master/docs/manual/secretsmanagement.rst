@@ -76,12 +76,12 @@ The provider SecretInVault allows Buildbot to create, delete, read and write sec
                             vaultServer="http://localhost:8200"
     )]
 
-A Docker File to install Vault
+A Docker file to install Vault
 ------------------------------
 
-A DockerFile is available to help users installing Vault.
+A Docker file is available to help users installing Vault.
 
-In the dockerFile directory:
+In the Docker file directory:
 
 .. code-block:: shell
 
@@ -133,7 +133,7 @@ How to use secrets in Buildbot
 ------------------------------
 
 A Generic API function helps to populate the secrets in a master build step.
-Secrets populated are finally stored in files like getrc or id_rsa keys file.
+Secrets populated are finally stored in files like wgetrc or id_rsa keys file.
 Secrets are also interpolated in the build like properties are, and will be used in a command line for example and obfuscated.
 Then secrets files are deleted at the end of the build.
 
