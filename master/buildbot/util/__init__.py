@@ -253,6 +253,8 @@ def bytes2NativeString(x, encoding='utf-8'):
     @return: a string of type C{str}
     """
     if isinstance(x, bytes) and type("") != type(b""):
+        # On Python 3 and higher, type("") != type(b"")
+        # so we need to decode() to return a native string.
         return x.decode(encoding)
     return x
 
