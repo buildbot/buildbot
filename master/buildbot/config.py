@@ -986,7 +986,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             nextWorker = nextSlave
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, text_type):
+        if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
