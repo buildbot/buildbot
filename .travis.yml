@@ -69,10 +69,6 @@ matrix:
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
 
-  allow_failures:
-    - python: 3.5
-      TESTS: py3status
-
 # Dependencies installation commands
 install:
   - pip install -U pip
