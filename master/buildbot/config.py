@@ -94,6 +94,7 @@ def warnDeprecated(version, msg):
         category=ConfigWarning,
     )
 
+
 _in_unit_tests = False
 
 
