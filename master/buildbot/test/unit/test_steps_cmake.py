@@ -81,7 +81,7 @@ class TestCMake(BuildStepMixin, TestCase):
             'a': 'b'
         }
         self.setupStep(CMake(definitions=definition))
-        self.expect_and_run_command('-D%s=%s' % definition.items()[0])
+        self.expect_and_run_command('-D%s=%s' % list(definition.items())[0])
 
     def test_environment(self):
         command = [CMake.DEFAULT_CMAKE]
