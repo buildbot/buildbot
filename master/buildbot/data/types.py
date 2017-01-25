@@ -44,7 +44,13 @@ class Type(object):
         raise TypeError
 
     def cmp(self, val, arg):
-        return cmp(val, self.valueFromString(arg))
+        argVal = self.valueFromString(arg)
+        if val < argVal:
+            return -1
+        elif val == argVal:
+            return 0
+        else:
+            return 1
 
     def validate(self, name, object):
         raise NotImplementedError
