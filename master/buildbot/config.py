@@ -21,6 +21,7 @@ from future.utils import itervalues
 from future.utils import string_types
 from future.utils import text_type
 
+import inspect
 import os
 import re
 import sys
@@ -1071,14 +1072,16 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         self._registerOldWorkerAttr("nextWorker")
         if nextWorker and not callable(nextWorker):
             error('nextWorker must be a callable')
-            # Keeping support of the previous nextWorker API
-        if nextWorker and (nextWorker.func_code.co_argcount == 2 or
-                           (isinstance(nextWorker, MethodType) and
-                            nextWorker.func_code.co_argcount == 3)):
-            warnDeprecated(
-                "0.9", "nextWorker now takes a 3rd argument (build request)")
-            self.nextWorker = lambda x, y, z: nextWorker(
-                x, y)  # pragma: no cover
+        # Keeping support of the previous nextWorker API
+        if nextWorker:
+            argCount = self._countFuncArgs(nextWorker)
+            if (argCount == 2 or (isinstance(nextWorker, MethodType) and
+                                 argCount == 3)):
+                warnDeprecated(
+                    "0.9", "nextWorker now takes a "
+                    "3rd argument (build request)")
+                self.nextWorker = lambda x, y, z: nextWorker(
+                    x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -1122,3 +1125,14 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if self.description:
             rv['description'] = self.description
         return rv
+
+    def _countFuncArgs(self, func):
+        if getattr(inspect, 'signature', None):
+            # Python 3
+            signature = inspect.signature(func)
+            argCount = len(signature.parameters)
+        else:
+            # Python 2
+            argSpec = inspect.getargspec(func)
+            argCount = len(argSpec.args)
+        return argCount
