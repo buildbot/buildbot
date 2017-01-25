@@ -69,9 +69,6 @@ matrix:
     - python: "3.5"
       env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
 
-  allow_failures:
-    - python: 3.5
-      env: TESTS=py3status
 
 # Dependencies installation commands
 install:
@@ -85,7 +82,7 @@ install:
   # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js ]; then
+      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js -o $TESTS = py3status ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -133,19 +130,18 @@ script:
 
   - |
     if [ $TESTS = py3status ]; then
-        trial  --reporter=summary buildbot.test buildbot_worker.test| tail -n 1 | python -c "
-    import sys, requests
+       trial --reporter=summary buildbot.test | tee py3status
+       tail -n 1 py3status | python -c "
+    import sys, requests, os
     (timeTaken, tests, _, errors, failures, skips) = sys.stdin.read().split()
-    requests.post('https://events.buildbot.net/events/py3kstatus', json={
+    requests.post('https://events.buildbot.net/events/py3kstatus', json={'py3kstatus': {
         'timeTaken': float(timeTaken), 'tests': int(tests), 'errors': int(errors), 'failures': int(failures), 'skips': int(skips)
-    })"
+    }, 'env': dict(os.environ)})"
     fi
   - "if [ $TESTS = trial ]; then trial  --reporter=text --rterrors buildbot.test buildbot_worker.test; fi"
   - "if [ $TESTS = trial_worker ]; then trial  --reporter=text --rterrors buildbot_worker.test; fi"
   # run tests under coverage for latest only (it's slower..)
   - "if [ $TESTS = coverage ]; then coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test ; fi"
-
-  - "trial  --reporter=text --rterrors buildbot_worker.test"
 
   # Run additional tests in their separate job
   - "if [ $TESTS = lint ]; then make pylint ; fi"
