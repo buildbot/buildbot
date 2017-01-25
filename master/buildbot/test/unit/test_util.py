@@ -407,7 +407,7 @@ class CommandToString(unittest.TestCase):
                          u"'ab cd'")
 
     def test_invalid_ascii(self):
-        self.assertEqual(util.command_to_string('a\xffc'), u"'a\ufffdc'")
+        self.assertEqual(util.command_to_string(b'a\xffc'), u"'a\ufffdc'")
 
 
 class TestRewrap(unittest.TestCase):
