@@ -1,8 +1,8 @@
 Secret Management
 =================
 
-Buildbot uses secrets when it is executing tasks during a build.
-Secrets are used to execute commands or remote connections.
+Buildbot steps might need secrets to execute their actions.
+Secrets can be used to execute commands or to create authenticated network connections.
 Secrets could be a ssh key, a password, or the content of a file like a wgetrc file.
 
 Secrets and providers

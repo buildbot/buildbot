@@ -18,4 +18,4 @@ Buildbot Manual
    optimization
    plugins
    deploy
-   secretmanagement
+   secretsmanagement
