@@ -28,6 +28,7 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
+from buildbot.util import PY3
 
 
 class formatInterval(unittest.TestCase):
@@ -272,6 +273,33 @@ class Ascii2Unicode(unittest.TestCase):
 
     def test_None(self):
         self.assertEqual(util.ascii2unicode(None), None)
+
+
+class Bytes2Unicode(unittest.TestCase):
+
+    def test_bytes2unicode(self):
+        rv1 = util.bytes2unicode(b'abcd')
+        rv2 = util.bytes2unicode('efgh')
+
+        if PY3:
+            self.assertEqual(type(rv1), str)
+            self.assertEqual(type(rv2), str)
+        else:
+            self.assertEqual(type(rv1), unicode)
+            self.assertEqual(type(rv2), unicode)
+
+    def test_bytes2NativeString(self):
+        rv = util.bytes2NativeString(b'abcd')
+        self.assertEqual((rv, type(rv)), ('abcd', str))
+        rv = util.bytes2NativeString('efgh')
+        self.assertEqual((rv, type(rv)), ('efgh', str))
+
+        if PY3:
+            self.assertNotEqual(type('abcd'), type(b'abcd'))
+            self.assertNotEqual(str, bytes)
+        else:
+            self.assertEqual(type('abcd'), type(b'abcd'))
+            self.assertEqual(str, bytes)
 
 
 class StringToBoolean(unittest.TestCase):

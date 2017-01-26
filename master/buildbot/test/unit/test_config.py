@@ -21,6 +21,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.utils import PY3
 from future.utils import iteritems
 
 import os
@@ -1041,9 +1042,14 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         myService = MyService()
         self.cfg.load_services(self.filename, dict(
             services=[myService]))
-        self.assertConfigError(self.errors,
-                               "<class 'buildbot.test.unit.test_config.MyService'> "
-                               "object should be an instance of buildbot.util.service.BuildbotService")
+        if PY3:
+            errMsg = ("<class 'buildbot.test.unit.test_config."
+                      "MasterConfig_loaders.test_load_services_badservice."
+                      "<locals>.MyService'> ")
+        else:
+            errMsg = "<class 'buildbot.test.unit.test_config.MyService'> "
+        errMsg += "object should be an instance of buildbot.util.service.BuildbotService"
+        self.assertConfigError(self.errors, errMsg)
 
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
