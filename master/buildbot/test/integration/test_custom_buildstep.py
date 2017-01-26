@@ -17,14 +17,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 
-from io import StringIO
-
 import mock
 
 from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
+from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot import config
@@ -128,7 +127,7 @@ class OldBuildEPYDoc(shell.ShellCommand):
         return defer.succeed(None)
 
     def createSummary(self, log):
-        for line in StringIO(log.getText()):
+        for line in NativeStringIO(log.getText()):
             # what we do with the line isn't important to the test
             assert line in ('some\n', 'output\n')
 
