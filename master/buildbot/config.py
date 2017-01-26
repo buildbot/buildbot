@@ -42,6 +42,7 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import service as util_service
 from buildbot.util import ComparableMixin
+from buildbot.util import bytes2NativeString
 from buildbot.util import safeTranslate
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
@@ -1032,6 +1033,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
+            builddir = bytes2NativeString(builddir)
         self.builddir = builddir
 
         # workerbuilddir defaults to builddir
@@ -1077,7 +1079,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if nextWorker:
             argCount = self._countFuncArgs(nextWorker)
             if (argCount == 2 or (isinstance(nextWorker, MethodType) and
-                                 argCount == 3)):
+                                  argCount == 3)):
                 warnDeprecated(
                     "0.9", "nextWorker now takes a "
                     "3rd argument (build request)")
