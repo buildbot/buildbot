@@ -91,7 +91,8 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         newfile = os.path.join(self.newdir, "newmsg")
         open(tmpfile, "w").close()
         os.rename(tmpfile, newfile)
-        self.svc.moveToCurDir("newmsg")
+        f = self.svc.moveToCurDir("newmsg")
+        f.close()
         self.assertEqual([os.path.exists(os.path.join(d, "newmsg"))
                           for d in (self.newdir, self.curdir, self.tmpdir)],
                          [False, True, False])

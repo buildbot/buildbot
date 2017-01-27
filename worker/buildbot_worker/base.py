@@ -315,7 +315,8 @@ class BotBase(service.MultiService):
             for f in os.listdir(basedir):
                 filename = os.path.join(basedir, f)
                 if os.path.isfile(filename):
-                    files[f] = open(filename, "r").read()
+                    with open(filename, "r") as fin:
+                        files[f] = fin.read()
         if not self.numcpus:
             try:
                 self.numcpus = multiprocessing.cpu_count()
@@ -386,6 +387,7 @@ class WorkerBase(service.MultiService):
             hostname = socket.getfqdn()
 
         try:
-            open(filename, "w").write("%s\n" % hostname)
+            with open(filename, "w") as f:
+                f.write("%s\n" % hostname)
         except Exception:
             log.msg("failed - ignoring")

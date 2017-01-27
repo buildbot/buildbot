@@ -75,8 +75,9 @@ class JobdirService(MaildirService):
         MaildirService.__init__(self, basedir)
 
     def messageReceived(self, filename):
-        f = self.moveToCurDir(filename)
-        return self.scheduler.handleJobFile(filename, f)
+        with self.moveToCurDir(filename) as f:
+            rv = self.scheduler.handleJobFile(filename, f)
+        return rv
 
 
 class Try_Jobdir(TryBase):

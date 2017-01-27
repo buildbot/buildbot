@@ -112,13 +112,16 @@ class FileIOMixin(object):
         @param file_contents: contents that will be returned by file object's
                               read() method
         """
-        # create mocked file object that returns 'file_contents' on read()
-        # and tracks any write() calls
-        self.fileobj = mock.Mock()
-        self.fileobj.read = mock.Mock(return_value=file_contents)
-        self.fileobj.write = mock.Mock()
+        # Use mock.mock_open() to create a substitute for
+        # open().
+        fakeOpen = mock.mock_open(read_data=file_contents)
 
-        # patch open() to return mocked object
+        # When fakeOpen() is called, it returns a Mock
+        # that has these methods: read(), write(), __enter__(), __exit__().
+        # read() will always return the value of the 'file_contents variable.
+        self.fileobj = fakeOpen()
+
+        # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 
@@ -131,7 +134,14 @@ class FileIOMixin(object):
         @param strerror: exception's strerror value
         @param filename: exception's filename value
         """
-        self.open = mock.Mock(side_effect=IOError(errno, strerror, filename))
+        # Use mock.mock_open() to create a substitute for
+        # open().
+        fakeOpen = mock.mock_open()
+
+        # Add side_effect so that calling fakeOpen() will always
+        # raise an IOError.
+        fakeOpen.side_effect = IOError(errno, strerror, filename)
+        self.open = fakeOpen
         self.patch(builtins, "open", self.open)
 
     def setUpReadError(self, errno=errno.EIO, strerror="dummy-msg",
@@ -144,9 +154,19 @@ class FileIOMixin(object):
         @param filename: exception's filename value
 
         """
-        self.fileobj = mock.Mock()
-        self.fileobj.read = mock.Mock(side_effect=IOError(errno, strerror,
-                                                          filename))
+        # Use mock.mock_open() to create a substitute for
+        # open().
+        fakeOpen = mock.mock_open()
+
+        # When fakeOpen() is called, it returns a Mock
+        # that has these methods: read(), write(), __enter__(), __exit__().
+        self.fileobj = fakeOpen()
+
+        # Add side_effect so that calling read() will always
+        # raise an IOError.
+        self.fileobj.read.side_effect = IOError(errno, strerror, filename)
+
+        # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 
@@ -159,9 +179,19 @@ class FileIOMixin(object):
         @param strerror: exception's strerror value
         @param filename: exception's filename value
         """
-        self.fileobj = mock.Mock()
-        self.fileobj.write = mock.Mock(side_effect=IOError(errno, strerror,
-                                                           filename))
+        # Use mock.mock_open() to create a substitute for
+        # open().
+        fakeOpen = mock.mock_open()
+
+        # When fakeOpen() is called, it returns a Mock
+        # that has these methods: read(), write(), __enter__(), __exit__().
+        self.fileobj = fakeOpen()
+
+        # Add side_effect so that calling write() will always
+        # raise an IOError.
+        self.fileobj.write.side_effect = IOError(errno, strerror, filename)
+
+        # patch open() to always return our Mock file object
         self.open = mock.Mock(return_value=self.fileobj)
         self.patch(builtins, "open", self.open)
 

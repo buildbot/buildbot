@@ -54,7 +54,8 @@ def getVersion(init_file):
     try:
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
-        version = open(fn).read().strip()
+        with open(fn) as f:
+            version = f.read().strip()
         return version
     except IOError:
         pass
