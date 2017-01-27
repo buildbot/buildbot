@@ -477,7 +477,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         for pidfile in self.pidfiles:
             if not os.path.exists(pidfile):
                 continue
-            pid = open(pidfile).read()
+            with open(pidfile) as f:
+                pid = f.read()
             if not pid:
                 return
             pid = int(pid)

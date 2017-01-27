@@ -43,7 +43,8 @@ class our_install_data(install_data):
         install_data.run(self)
         # ensure there's a buildbot_worker/VERSION file
         fn = os.path.join(self.install_dir, 'buildbot_worker', 'VERSION')
-        open(fn, 'w').write(version)
+        with open(fn, 'w') as f:
+            f.write(version)
         self.outfiles.append(fn)
 
 
@@ -58,10 +59,12 @@ class our_sdist(sdist):
         # ensure that NEWS has a copy of the latest release notes, copied from
         # the master tree, with the proper version substituted
         src_fn = os.path.join('..', 'master', 'docs', 'relnotes/index.rst')
-        src = open(src_fn).read()
+        with open(src_fn) as f:
+            src = f.read()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
-        open(dst_fn, 'w').write(src)
+        with open(dst_fn, 'w') as f:
+            f.write(src)
 
 setup_args = {
     'name': "buildbot-worker",

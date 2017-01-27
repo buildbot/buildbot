@@ -104,12 +104,14 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.tearDownDirs()
 
     def assertInTacFile(self, str):
-        self.assertIn(str,
-                      open(os.path.join('test', 'buildbot.tac'), 'rt').read())
+        with open(os.path.join('test', 'buildbot.tac'), 'rt') as f:
+            content = f.read()
+        self.assertIn(str, content)
 
     def assertNotInTacFile(self, str):
-        self.assertNotIn(str,
-                         open(os.path.join('test', 'buildbot.tac'), 'rt').read())
+        with open(os.path.join('test', 'buildbot.tac'), 'rt') as f:
+            content = f.read()
+        self.assertNotIn(str, content)
 
     def assertDBSetup(self, basedir=None, db_url='sqlite:///state.sqlite',
                       verbose=True):

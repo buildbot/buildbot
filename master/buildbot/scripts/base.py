@@ -102,7 +102,8 @@ def isBuildmasterDir(dir):
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        contents = open(buildbot_tac).read()
+        with open(buildbot_tac) as f:
+            contents = f.read()
     except IOError as exception:
         print_error("error reading '%s': %s" %
                     (buildbot_tac, exception.strerror))
@@ -122,7 +123,8 @@ def getConfigFromTac(basedir, quiet=False):
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
         try:
-            exec(open(tacFile).read(), tacGlobals)
+            with open(tacFile) as f:
+                exec(f.read(), tacGlobals)
         except Exception:
             if not quiet:
                 traceback.print_exc()

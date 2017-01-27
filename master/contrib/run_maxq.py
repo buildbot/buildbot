@@ -41,7 +41,8 @@ for testlist in files:
         print("running test", test)
 
         try:
-            exec(open(test).read(), globals().copy())
+            with open(test) as f:
+                exec(f.read(), globals().copy())
 
         except Exception:
             ei = sys.exc_info()
