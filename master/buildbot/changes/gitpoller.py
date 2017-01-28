@@ -29,6 +29,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
+from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util.state import StateMixin
 
@@ -355,6 +356,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                                         path):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
+            stdout = bytes2NativeString(stdout)
+            stderr = bytes2NativeString(stderr)
+            args = bytes2NativeString(args)
             if code != 0:
                 if code == 128:
                     raise GitError('command %s %s in %s on repourl %s failed with exit code %d: %s'
