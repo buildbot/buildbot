@@ -98,17 +98,63 @@ class Filter(FieldBase):
     """
 
 
-def nonecmp(a, b):
-    # Some fields are nullable, and could raise TypeException, when REST is requesting sorting
-    # I order to fix that, we create a custom cmp function which treats None
-    # as smaller than anything
-    if a is None and b is None:
-        return 0
-    if a is None:
-        return -1
-    if b is None:
-        return 1
-    return cmp(a, b)
+class NoneComparator(object):
+    """
+    Object which wraps 'None' when doing comparisons in sorted().
+    '> None' and '< None' are not supported
+    in Python 3.
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __lt__(self, other):
+        if self.value is None and other.value is None:
+            return False
+        elif self.value is None:
+            return True
+        elif other.value is None:
+            return False
+        else:
+            return self.value < other.value
+
+    def __eq__(self, other):
+        return self.value == other.value
+
+    def __ne__(self, other):
+        return self.value != other.value
+
+    def __gt_(self, other):
+        if self.value is None and other.value is None:
+            return False
+        elif self.value is None:
+            return False
+        elif other.value is None:
+            return True
+        else:
+            return self.value < other.value
+
+
+class ReverseComparator(object):
+    """
+    Object which swaps '<' and '>' so
+    instead of a < b, it does b < a,
+    and instead of a > b, it does b > a.
+    This can be used in reverse comparisons.
+    """
+    def __init__(self, value):
+        self.value = value
+
+    def __lt__(self, other):
+        return other.value < self.value
+
+    def __eq__(self, other):
+        return other.value == self.value
+
+    def __ne__(self, other):
+        return other.value != self.value
+
+    def __gt_(self, other):
+        return other.value > self.value
 
 
 class ResultSpec(object):
@@ -324,20 +370,36 @@ class ResultSpec(object):
             if total is None:
                 total = len(data)
 
-            # precompute the ordering functions and sort
             if self.order:
-                order = [(lambda a, b, k=k[1:]: nonecmp(b[k], a[k]))
-                         if k[0] == '-' else
-                         (lambda a, b, k=k: nonecmp(a[k], b[k]))
-                         for k in self.order]
+                def keyFunc(elem, order=self.order):
+                    """
+                    Do a multi-level sort by passing in the keys
+                    to sort by.
 
-                def cmpFunc(a, b):
-                    for f in order:
-                        c = f(a, b)
-                        if c:
-                            return c
-                    return 0
-                data.sort(cmp=cmpFunc)
+                    @param elem: each item in the list to sort.  It must be
+                              a C{dict}
+                    @param order: a list of keys to sort by, such as:
+                                ('lastName', 'firstName', 'age')
+                    @return: a key used by sorted(). This will be a
+                             list such as:
+                             [a['lastName', a['firstName'], a['age']]
+                    @rtype: a C{list}
+                    """
+                    compareKey = []
+                    for k in order:
+                        doReverse = False
+                        if k[0] == '-':
+                            # If we get a key '-lastName',
+                            # it means sort by 'lastName' in reverse.
+                            k = k[1:]
+                            doReverse = True
+                        val = NoneComparator(elem[k])
+                        if doReverse:
+                            val = ReverseComparator(val)
+                        compareKey.append(val)
+                    return compareKey
+
+                data.sort(key=keyFunc)
 
             # finally, slice out the limit/offset
             if self.offset is not None or self.limit is not None:
