@@ -111,6 +111,14 @@ def nonecmp(a, b):
     return cmp(a, b)
 
 
+class MinType(object):
+    def __lt__(self, other):
+        return True
+
+    def __eq__(self, other):
+        return self == other
+
+
 class ResultSpec(object):
 
     __slots__ = ['filters', 'fields', 'properties',
@@ -326,18 +334,28 @@ class ResultSpec(object):
 
             # precompute the ordering functions and sort
             if self.order:
-                order = [(lambda a, b, k=k[1:]: nonecmp(b[k], a[k]))
-                         if k[0] == '-' else
-                         (lambda a, b, k=k: nonecmp(a[k], b[k]))
-                         for k in self.order]
+                # Do a multi-level sort by sorting from
+                # the least significant key to the most
+                # significant key.  If we are given the keys
+                # ('lastName', 'firstName', 'age'):
+                #   - first sort by 'age'
+                #   - then sort by 'firstName'
+                #   - then sort by 'lastName'
+                for k in reversed(self.order):
+                    doReverse = False
+                    if k[0] == '-':
+                        # If we get a key '-lastName',
+                        # it means sort by 'lastName' in reverse.
+                        k = k[1:]
+                        doReverse = True
 
-                def cmpFunc(a, b):
-                    for f in order:
-                        c = f(a, b)
-                        if c:
-                            return c
-                    return 0
-                data.sort(cmp=cmpFunc)
+                    def keyFunc(a, sortBy=k):
+                        val = a[sortBy]
+                        if val is None:
+                            val = MinType()
+                        return val
+
+                    data.sort(key=keyFunc, reverse=doReverse)
 
             # finally, slice out the limit/offset
             if self.offset is not None or self.limit is not None:
