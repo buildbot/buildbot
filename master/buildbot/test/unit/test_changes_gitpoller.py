@@ -32,6 +32,7 @@ from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
+from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 
 # Test that environment variables get propagated to subprocesses (See #2116)
@@ -220,7 +221,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
             self.master.db.state.assertStateByClass(
-                name=self.REPOURL, class_name='GitPoller',
+                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
                 })
@@ -362,7 +363,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         def cb(_):
             self.assertAllCommandsRan()
             self.master.db.state.assertStateByClass(
-                name=self.REPOURL, class_name='GitPoller',
+                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                 })
@@ -1177,7 +1178,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             self.master.db.state.assertStateByClass(
-                name=self.REPOURL, class_name='GitPoller',
+                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                 })
@@ -1286,7 +1287,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         startService = mock.Mock()
         self.patch(base.PollingChangeSource, "startService", startService)
         self.master.db.state.fakeState(
-            name=self.REPOURL, class_name='GitPoller',
+            name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 
