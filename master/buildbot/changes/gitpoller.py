@@ -290,7 +290,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # get the change list
         revListArgs = ([r'--format=%H', r'%s' % newRev] +
                        [r'^%s' % rev.encode('ascii', 'ignore')
-                        for rev in itervalues(self.lastRev)] +
+                        for rev in sorted(itervalues(self.lastRev))] +
                        [r'--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
