@@ -264,7 +264,7 @@ class HgPoller(base.PollingChangeSource):
         # also, if a numeric revision does not exist, a node may match.
         # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
-        if head <= current:
+        if not head or head <= current:
             return
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
