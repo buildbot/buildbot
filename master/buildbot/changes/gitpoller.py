@@ -29,6 +29,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util.state import StateMixin
 
 
@@ -235,7 +236,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             # git use octal char sequences in quotes when non ASCII
             match = re.match('^"(.*)"$', file)
             if match:
-                file = match.groups()[0].decode('string_escape')
+                file = bytes2unicode(match.groups()[0], 'unicode_escape')
             return self._decode(file)
 
         @d.addCallback
