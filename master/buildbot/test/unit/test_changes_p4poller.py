@@ -314,7 +314,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         # p4poller uses only those arguments at the moment
         def spawnProcess(pp, cmd, argv, env):
             self.assertEqual([cmd, argv],
-                             ['p4', ['p4', 'login', '-p']])
+                             ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
             self.assertEqual('pass\n', transport.msg)
             pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
