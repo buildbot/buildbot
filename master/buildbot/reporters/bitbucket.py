@@ -15,8 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-
-from urlparse import urlparse
+from future.moves.urllib.parse import urlparse
 
 from twisted.internet import defer
 
@@ -90,7 +89,8 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
 
             self._http.updateHeaders({'Authorization': 'Bearer ' + token})
 
-            bitbucket_uri = '/' + '/'.join([owner, repo, 'commit', sha, 'statuses', 'build'])
+            bitbucket_uri = '/' + \
+                '/'.join([owner, repo, 'commit', sha, 'statuses', 'build'])
 
             response = yield self._http.post(bitbucket_uri, json=body)
             if response.code != 201:
