@@ -27,6 +27,7 @@ from zope.interface import implementer
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import httpclientservice
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
 
 log = Logger()
@@ -39,7 +40,8 @@ class ResponseWrapper(object):
         self._code = code
 
     def content(self):
-        return defer.succeed(self._content)
+        content = unicode2bytes(self._content)
+        return defer.succeed(content)
 
     def json(self):
         return defer.succeed(jsonmodule.loads(self._content))
