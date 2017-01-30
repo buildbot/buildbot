@@ -253,7 +253,7 @@ class HgPoller(base.PollingChangeSource):
     def _processChanges(self, unused_output):
         """Send info about pulled changes to the master and record current.
 
-        GitPoller does the recording by moving the working dir to the head
+        HgPoller does the recording by moving the working dir to the head
         of the branch.
         We don't update the tree (unnecessary treatment and waste of space)
         instead, we simply store the current rev number in a file.
@@ -264,7 +264,9 @@ class HgPoller(base.PollingChangeSource):
         # also, if a numeric revision does not exist, a node may match.
         # Therefore, we have to check explicitly that branch head > current.
         head = yield self._getHead()
-        if not head or head <= current:
+        if head is None:
+            return
+        elif current is not None and head <= current:
             return
         if current is None:
             # we could have used current = -1 convention as well (as hg does)
