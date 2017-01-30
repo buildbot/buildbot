@@ -1,73 +1,96 @@
+=================
 Secret Management
 =================
 
+Requirements
+============
 Buildbot steps might need secrets to execute their actions.
-Secrets can be used to execute commands or to create authenticated network connections.
-Secrets could be a ssh key, a password, or the content of a file like a wgetrc file.
+Secrets are used to execute commands or to create authenticated network connections.
+Secrets could be a ssh key, a password, or a file content like a wgetrc file or a public ssh key.
 
 Secrets and providers
----------------------
+=====================
 
-Secrets have to be stored and to be obfuscated.
-Secrets could not be stored in the Buildbot configuration (master.cfg) due to the source code sharing in SCM like git.
-Secrets providers are instantiated in the master configuration.
-Buildbot allows different providers to retrieve secrets. Secrets could be stored in a file system or in a backend.
+To implement actions with secrets, secrets have to be readable by Buildbot.
+To preserve confidentiality the secrets values should not be printed.
+Secrets could not be stored in the Buildbot configuration (master.cfg) if the source code is shared in SCM like git.
+Buildbot allows providers to retrieve secrets. Secrets providers are based on a file storage or a secret backend.
+In a file system secrets are written in a file. In the backend secrets are stored in a data base.
+Secrets providers are instantiated if needed in the master configuration.
 The secret manager is a Buildbot service. The secret manager returns the specific provider results related to the providers registered in the configuration.
 Using a backend framework, allows to encrypt and store the values.
-An other solution is to store secrets in a file directory.
 
-Secrets key:value
------------------
+Kind of secret
+--------------
+
+Secret case key:value
+`````````````````````
 
 For example a password could be used in a command by Buildbot.
 The secret is a couple ``key:value``.
 The password is stored with 2 entities: a ``key``, and a ``value``.
 
-Secret with file content
-------------------------
+Secret case with file content
+`````````````````````````````
 
 The file content is stored with a secured content (ssh key, or some text to add in a wgetrc file).
-The file content will be written during a step. The content is given by a provider and the file name is given when the step is created.
+The new file content will be written during a step where secrets are populated.
+The content is returned by the provider and the file name is given as an argument when the step is created.
 the file name is the ``key`` and the content is stored as ``value``.
 An other example could be a key used to send a ssh command, usually stored in a ``ssh text file`` (like id_rsa) in the :envvar:`HOME` directory.
 The ssh key registering is done with 2 entities: a ``name`` (ssh file name), a ``value`` (ssh_key value).
 
-File directory storing secrets
-------------------------------
+Secrets storage
+---------------
 
-Secrets could be stored in a file directory. A file named ``key`` contains the text ``value``.
+Storage in a file directory storing secrets
+```````````````````````````````````````````
+
+In a directory, a file named ``key`` contains the text ``value``.
 e.g: a file ``user`` contains the text ``password``.
 
-File provider
--------------
+Backend Storage: Vault
+``````````````````````
+Vault secures, stores, and tightly controls access to secrets. Vault presents an unified API to access multiple backends.
+To be authenticated in Vault, Buildbot need to send to the vault server a token.
+The token is generated when the Vault instance is initialized for the first time.
+This token and the Vault server address have to be stored in the master configuration.
+Vault store tuples (key, value).
 
-The provider is instantiated with the file directory.
-File provider is reading the file named by the key wanted by Buildbot and returns the contained text value.
-The provider SecretInFile allows Buildbot to create, delete, read and write secrets in the secret directory.
+Secrets manager
+---------------
+
+The manager is a Buildbot service.
+The secret manager allows Buildbot to get secrets calling a get method.
+Depending to the kind of storage choosen and declared in the configuration, the manager get the selected provider and return the value.
+
+Secrets providers
+-----------------
+
+The secrets providers are sub services manager, implementing the specific getters, related to the storage chosen.
+
+File provider
+`````````````
+
+In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
+File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
+The provider SecretInFile allows Buildbot read secrets in the secret directory.
 In the master configuration, the provider will be added by:
 
 .. code-block:: shell
 
     c['secretsManagers'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
 
-Vault to store secrets
-----------------------
-
-Vault secures, stores, and tightly controls access to secrets. Vault presents an unified API to access multiple backends.
-To be authenticated in Vault, Buildbot need to send to the vault server a token. This token and the Vault server address have to be stored in the master configuration.
-Vault store tuples (key, value).
-Buildbot access to the secrets versus API commands.
-Only the key tokens have to be stored in the Buildbot configuration.
-
-For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
-With Vault, secrets are never visible to the normal user via logs and thus are transmitted to the workers using the :class:`Obfuscated`
-In the master configuration, the provider will be added by:
-
 Vault provider
---------------
+``````````````
 
-Vault is instantiated trough a the Buildbot service manager as a secret provider with the Token generated when Vault was initialized and the server address.
-The provider SecretInVault allows Buildbot to create, delete, read and write secrets in Vault.
+In the master configuration the Vault provider is instantiated trough the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
+The token key is the only ``secrets`` written in the Buildbot configuration.
+The provider SecretInVault allows Buildbot to read secrets in Vault.
+For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
+With Vault, secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using the :class:`Obfuscated`.
+The class Obfuscated changes the password characters in ``####`` characters in the logs.
+In the master configuration, the provider will be added by:
 
 .. code-block:: shell
 
@@ -76,8 +99,11 @@ The provider SecretInVault allows Buildbot to create, delete, read and write sec
                             vaultServer="http://localhost:8200"
     )]
 
+How to configure a Vault instance
+---------------------------------
+
 A Docker file to install Vault
-------------------------------
+``````````````````````````````
 
 A Docker file is available to help users installing Vault.
 
@@ -88,7 +114,7 @@ In the Docker file directory:
     docker-compose up # to launch the install
 
 Starting the vault instance
----------------------------
+```````````````````````````
 
 Once the docker image is created, launch a shell terminal on the docker image:
 
@@ -103,7 +129,7 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
       export VAULT_ADDR='vault.server.adress'
 
 Init Vault
-----------
+``````````
 
 Vault has to initialized to launch encryption and allows users to access to the secret backend.
 The first initialization will provide keys to seal/unseal Vault in the future and a root token needed by Vault commands.
@@ -124,8 +150,9 @@ Export the root token once given:
 
       export VAULT_TOKEN=VAULT_TOKEN
 
-UNSEAL VAULT
-------------
+Unsealing Vault
+```````````````
+
 Vault has to be unsealed manually. Follow the Vault manual for more informations.
 Unsealing Vault allows Buildbot to use the feature. 3 unseal keys are needed. Please save the unseal keys in a secure file.
 
@@ -134,7 +161,7 @@ How to use secrets in Buildbot
 
 A Generic API function helps to populate the secrets in a master build step.
 Secrets populated are finally stored in files like wgetrc or id_rsa keys file.
-Secrets are also interpolated in the build like properties are, and will be used in a command line for example and obfuscated.
+Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
 Then secrets files are deleted at the end of the build.
 
 The step PopulateSecrets is instantiated with kwargs arguments, the key is the file name, the value is the secret key, that will return the value during the step.
