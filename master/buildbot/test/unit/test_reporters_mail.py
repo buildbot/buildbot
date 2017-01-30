@@ -35,6 +35,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import mail
 from buildbot.reporters import utils
+from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -46,6 +47,10 @@ py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
 
 
 class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
+
+    if not ESMTPSenderFactory:
+        skip = ("twisted-mail unavailable, "
+                "see: https://twistedmatrix.com/trac/ticket/8770")
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
@@ -432,7 +437,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn.messageFormatter = Mock(spec=mn.messageFormatter)
         mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
-                                            "subject": "subject"}
+                                                                         "subject": "subject"}
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)
@@ -583,12 +588,14 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         recipients = mn.sendMessage.call_args[0][1]
         self.assertEqual(recipients, ['workeradmin@example.org'])
         text = mail.get_payload()
-        self.assertIn("has noticed that the worker named myworker went away", text)
+        self.assertIn(
+            "has noticed that the worker named myworker went away", text)
 
     @defer.inlineCallbacks
     def do_test_sendMessage(self, **mnKwargs):
         fakeSenderFactory = Mock()
-        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[5].callback(True)
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
         self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
 
         _, builds = yield self.setupBuildResults(SUCCESS)
@@ -598,7 +605,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
                                                                          "subject": "subject"}
 
-        mn.findInterrestedUsersEmails = Mock(spec=mn.findInterrestedUsersEmails)
+        mn.findInterrestedUsersEmails = Mock(
+            spec=mn.findInterrestedUsersEmails)
         mn.findInterrestedUsersEmails.return_value = "<recipients>"
 
         mn.processRecipients = Mock(spec=mn.processRecipients)
@@ -618,7 +626,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn, builds = yield self.do_test_sendMessage()
 
         self.assertEqual(1, len(fakereactor.method_calls))
-        self.assertIn(('connectTCP', ('localhost', 25, None), {}), fakereactor.method_calls)
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
 
     @ssl.skipUnless
     @defer.inlineCallbacks
@@ -629,7 +638,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn, builds = yield self.do_test_sendMessage(useSmtps=True)
 
         self.assertEqual(1, len(fakereactor.method_calls))
-        self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[0][3]), {}), fakereactor.method_calls)
+        self.assertIn(('connectSSL', ('localhost', 25, None, fakereactor.connectSSL.call_args[
+                      0][3]), {}), fakereactor.method_calls)
 
 
 def create_msgdict(funny_chars=u'\u00E5\u00E4\u00F6'):
