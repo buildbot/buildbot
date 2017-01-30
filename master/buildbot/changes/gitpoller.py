@@ -29,6 +29,9 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
+from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
+from buildbot.util import unicode2bytes
 from buildbot.util.state import StateMixin
 
 
@@ -114,7 +117,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     def describe(self):
         str = ('GitPoller watching the remote git repository ' +
-               self.repourl)
+               bytes2NativeString(self.repourl, self.encoding))
 
         if self.branches:
             if self.branches is True:
@@ -190,7 +193,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             try:
                 rev = yield self._dovccmd(
                     'rev-parse', [self._trackerBranch(branch)], path=self.workdir)
-                revs[branch] = str(rev)
+                revs[branch] = bytes2NativeString(rev, self.encoding)
                 yield self._process_changes(revs[branch], branch)
             except Exception:
                 log.err(_why="trying to poll branch %s of %s"
@@ -200,7 +203,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         yield self.setState('lastRev', self.lastRev)
 
     def _decode(self, git_output):
-        return git_output.decode(self.encoding)
+        return bytes2unicode(git_output, self.encoding)
 
     def _get_commit_comments(self, rev):
         args = ['--no-walk', r'--format=%s%n%b', rev, '--']
@@ -235,7 +238,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             # git use octal char sequences in quotes when non ASCII
             match = re.match('^"(.*)"$', file)
             if match:
-                file = match.groups()[0].decode('string_escape')
+                file = bytes2unicode(match.groups()[0], 'unicode_escape')
             return self._decode(file)
 
         @d.addCallback
@@ -288,10 +291,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                     rebuild = True
 
         # get the change list
-        revListArgs = ([r'--format=%H', r'%s' % newRev] +
-                       [r'^%s' % rev.encode('ascii', 'ignore')
-                        for rev in itervalues(self.lastRev)] +
-                       [r'--'])
+        revListArgs = ([b'--format=%H', r'%s' % newRev] +
+                       [b'^' + unicode2bytes(rev, 'ascii', 'ignore')
+                        for rev in sorted(itervalues(self.lastRev))] +
+                       [b'--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
@@ -354,6 +357,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                                         path):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
+            stdout = bytes2NativeString(stdout, self.encoding)
+            stderr = bytes2NativeString(stderr, self.encoding)
+            args = bytes2NativeString(args, self.encoding)
             if code != 0:
                 if code == 128:
                     raise GitError('command %s %s in %s on repourl %s failed with exit code %d: %s'
