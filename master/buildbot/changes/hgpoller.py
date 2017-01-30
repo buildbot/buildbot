@@ -253,7 +253,7 @@ class HgPoller(base.PollingChangeSource):
     def _processChanges(self, unused_output):
         """Send info about pulled changes to the master and record current.
 
-        GitPoller does the recording by moving the working dir to the head
+        HgPoller does the recording by moving the working dir to the head
         of the branch.
         We don't update the tree (unnecessary treatment and waste of space)
         instead, we simply store the current rev number in a file.
