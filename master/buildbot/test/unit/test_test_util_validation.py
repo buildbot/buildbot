@@ -61,13 +61,13 @@ class VerifyDict(unittest.TestCase):
                               good=[
                                   u"unicode only"
         ], bad=[
-                                  None, "bytestring"
+                                  None, b"bytestring"
         ])
 
     def test_BinaryValidator(self):
         self.doValidationTest(validation.BinaryValidator(),
                               good=[
-                                  "bytestring"
+                                  b"bytestring"
         ], bad=[
                                   None, u"no unicode"
         ])
@@ -88,7 +88,7 @@ class VerifyDict(unittest.TestCase):
                               good=[
                                   u"linux", u"Linux", u"abc123", u"a" * 50,
         ], bad=[
-                                  None, u'', 'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+                                  None, u'', b'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
                                   u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
                                   u"123 no initial digits",
         ])
@@ -152,25 +152,25 @@ class VerifyDict(unittest.TestCase):
                               good=[
                                   {u'pname': ('{"a":"b"}', u'test')},
         ], bad=[
-                                  None, 1, "hi",
-                                  {u'pname': {'a': 'b'}},  # no source
+                                  None, 1, b"hi",
+                                  {u'pname': {b'a': b'b'}},  # no source
                                   # name not unicode
-                                  {'pname': ({'a': 'b'}, u'test')},
+                                  {'pname': ({b'a': b'b'}, u'test')},
                                   # source not unicode
-                                  {u'pname': ({'a': 'b'}, 'test')},
+                                  {u'pname': ({b'a': b'b'}, 'test')},
                                   # self is not json-able
                                   {u'pname': (self, u'test')},
         ])
 
     def test_MessageValidator(self):
         self.doValidationTest(validation.MessageValidator(
-            events=['started', 'stopped'],
+            events=[b'started', b'stopped'],
             messageValidator=validation.DictValidator(
                 a=validation.BooleanValidator(),
                 xid=validation.IntValidator(),
                 yid=validation.IntValidator())),
             good=[
-                (('thing', '1', '2', 'started'),
+                ((b'thing', b'1', b'2', b'started'),
                  {'xid': 1, 'yid': 2, 'a': True}),
         ], bad=[
                 # routingKey is not a tuple
