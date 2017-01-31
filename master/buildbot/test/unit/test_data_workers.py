@@ -194,8 +194,10 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         @d.addCallback
         def check(workers):
-            [self.validateData(b) for b in workers]
-            [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+            for b in workers:
+                self.validateData(b)
+                b['configured_on'] = sorted(b['configured_on'],
+                                            key=configuredOnKey)
             self.assertEqual(sorted(workers, key=configuredOnKey),
                              sorted([w1(), w2()], key=configuredOnKey))
         return d
