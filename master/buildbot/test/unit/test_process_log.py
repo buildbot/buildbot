@@ -51,7 +51,7 @@ class Tests(unittest.TestCase):
         otilde = u'\u00f5'
         otilde_utf8 = otilde.encode('utf-8')
         otilde_latin1 = otilde.encode('latin1')
-        invalid_utf8 = '\xff'
+        invalid_utf8 = b'\xff'
         replacement = u'\ufffd'
 
         f = log.Log._decoderFromString('latin-1')
