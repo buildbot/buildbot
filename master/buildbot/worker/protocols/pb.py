@@ -167,7 +167,7 @@ class Connection(base.Connection, pb.Avatar):
             # loseConnection) somehow prevents the notifyOnDisconnect
             # handlers from being run. Bummer.
             tport.offset = 0
-            tport.dataBuffer = ""
+            tport.dataBuffer = b""
         except Exception:
             # however, these hacks are pretty internal, so don't blow up if
             # they fail or are unavailable
