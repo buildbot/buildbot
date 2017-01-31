@@ -20,6 +20,7 @@ import base64
 
 from twisted.internet import defer
 
+from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.util.integration import RunMasterBase
 
@@ -27,6 +28,10 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
 class MailMaster(RunMasterBase):
+
+    if not ESMTPSenderFactory:
+        skip = ("twisted-mail unavailable, "
+                "see: https://twistedmatrix.com/trac/ticket/8770")
 
     def setUp(self):
         self.mailDeferred = defer.Deferred()
