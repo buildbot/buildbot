@@ -202,7 +202,7 @@ class Sender(unittest.TestCase):
                      category=u'\U0001F640',  # WEARY CAT FACE
                      when=1234,
                      # NOTE: not decoded!
-                     properties={'\xc4\x81': 'b'},
+                     properties={b'\xc4\x81': 'b'},
                      revlink=u'\U0001F517',  # LINK SYMBOL
                      src=None)])
         d.addCallback(check)
@@ -238,7 +238,7 @@ class Sender(unittest.TestCase):
                      category=u'\N{PILCROW SIGN}',
                      when=1234,
                      # NOTE: not decoded!
-                     properties={'\xb9': 'b'},
+                     properties={b'\xb9': 'b'},
                      revlink=u'\N{INVERTED QUESTION MARK}',
                      src=None)])
         d.addCallback(check)
