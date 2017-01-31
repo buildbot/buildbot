@@ -93,7 +93,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         @d.addCallback
         def cb(res):
-            self.assertEqual(res, ('', '', 0))
+            self.assertEqual(res, (b'', b'', 0))
             print(res)
         return d
 
@@ -103,7 +103,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
         @d.addCallback
         def cb(res):
-            self.assertEqual(res, ('', '', 0))
+            self.assertEqual(res, (b'', b'', 0))
             print(res)
         return d
 
