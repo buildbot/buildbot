@@ -267,5 +267,5 @@ class Worker(interfaces.InterfaceTests, unittest.TestCase):
         self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findWorkerId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, b'foo')
         self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')
