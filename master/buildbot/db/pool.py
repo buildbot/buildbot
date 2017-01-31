@@ -51,7 +51,7 @@ def timed_do_fn(f):
         file, line, name, _ = st[0]
 
         # and its locals
-        frame = inspect.currentframe(1)
+        frame = inspect.currentframe()
         locals = frame.f_locals
 
         # invent a unique ID for the description
