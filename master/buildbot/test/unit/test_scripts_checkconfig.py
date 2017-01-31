@@ -101,9 +101,16 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         config = textwrap.dedent("""\
                 import test_scripts_checkconfig_does_not_exist
                 """)
+        # Python 3 displays this error:
+        #   No module named 'test_scripts_checkconfig_does_not_exist'
+        #
+        # Python 2 displays this error:
+        #   No module named test_scripts_checkconfig_does_not_exist
+        #
+        # We need a regexp that matches both.
         self.do_test_load(config=config,
                           stderr_re=re.compile(
-                              'No module named test_scripts_checkconfig_does_not_exist'))
+                              "No module named '?test_scripts_checkconfig_does_not_exist'?"))
         self.flushLoggedErrors()
 
     def test_failure_no_workers(self):
