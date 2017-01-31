@@ -619,7 +619,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         buildrequest = yield self.master.data.get(('buildrequests', 82))
         new_bsid, brid_dict = yield self.rtype.rebuildBuildrequest(buildrequest)
 
-        self.assertEqual(brid_dict.keys(), [77])
+        self.assertEqual(list(brid_dict.keys()), [77])
         buildrequest = yield self.master.data.get(('buildrequests', brid_dict[77]))
         # submitted_at is the time of the test, so better not depend on it
         self.assertTrue(buildrequest['submitted_at'] is not None)
