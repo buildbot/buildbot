@@ -1624,6 +1624,11 @@ class FakeStateComponent(FakeDBComponent):
         self.states[objectid][name] = json.dumps(value)
         return defer.succeed(None)
 
+    def atomicCreateState(self, objectid, name, thd_create_callback):
+        value = thd_create_callback()
+        self.states[objectid][name] = json.dumps(value)
+        return defer.succeed(value)
+
     # fake methods
 
     def fakeState(self, name, class_name, **kwargs):

@@ -24,6 +24,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 
+import jwt
 from buildbot.test.unit import test_www_hooks_base
 from buildbot.test.util import www
 from buildbot.www import auth
@@ -203,3 +204,25 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, '/change_hook/base')
         # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))
+
+
+class TestBuildbotSite(unittest.SynchronousTestCase):
+    SECRET = 'secret'
+
+    def setUp(self):
+        self.site = service.BuildbotSite(None, "logs", 0, 0)
+        self.site.setSessionSecret(self.SECRET)
+
+    def test_getSession_from_bad_jwt(self):
+        """ if the cookie is bad (maybe from previous version of buildbot),
+            then we should raise KeyError for consumption by caller,
+            and log the jwt error
+        """
+        self.assertRaises(KeyError, self.site.getSession, "xxx")
+        self.flushLoggedErrors(jwt.exceptions.DecodeError)
+
+    def test_getSession_from_correct_jwt(self):
+        payload = {'user_info': {'some': 'payload'}}
+        uid = jwt.encode(payload, self.SECRET, algorithm='HS256')
+        session = self.site.getSession(uid)
+        self.assertEqual(session.user_info, {'some': 'payload'})

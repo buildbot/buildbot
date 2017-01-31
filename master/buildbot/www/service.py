@@ -17,18 +17,23 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 
+import calendar
+import datetime
 import os
+from binascii import hexlify
 
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.logfile import LogFile
 from twisted.web import guard
 from twisted.web import resource
 from twisted.web import server
 from zope.interface import implementer
 
+import jwt
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
 from buildbot.www import config as wwwconfig
@@ -39,13 +44,96 @@ from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
 
+# as per: http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+# we need 128 bit key for HS256
+SESSION_SECRET_LENGTH = 128
+SESSION_SECRET_ALGORITHM = "HS256"
 
-# todo: need to store session infos in the db for multimaster
-# rough examination, it looks complicated, as all the session APIs are sync
+
 class BuildbotSession(server.Session):
-    # default session timeout is 15min, which is very short for our usage.
-    # put it to one week
-    sessionTimeout = 7 * 24 * 60
+    expDelay = datetime.timedelta(weeks=1)
+
+    def asJWTClaims(self):
+        exp = datetime.datetime.utcnow() + self.expDelay
+        return {
+            'user_info': self.user_info,
+            'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
+
+    def fromJWTClaims(self, d):
+        # might raise KeyError: will be catched by called, and taken as invalid
+        self.user_info = d['user_info']
+
+    def updateSession(self, request):
+        self.site.updateSession(self, request)
+
+    def expire(self):
+        self.user_info = {"anonymous": True}
+
+
+class BuildbotSite(server.Site):
+
+    """ A custom Site for Buildbot needs.
+        Supports rotating logs, and JWT sessions
+    """
+
+    def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
+        server.Site.__init__(self, root, logPath=logPath)
+        self.rotateLength = rotateLength
+        self.maxRotatedFiles = maxRotatedFiles
+        self.session_secret = None
+
+    def _openLogFile(self, path):
+        return LogFile.fromFullPath(
+            path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
+
+    def setSessionSecret(self, secret):
+        self.session_secret = secret
+
+    def makeSession(self):
+        """
+        Generate a new Session instance, and store it for future reference.
+        """
+        session = BuildbotSession(self, '')
+        session.expire()
+        uid = jwt.encode(session.asJWTClaims(), self.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
+        session.uid = uid
+        session = self.sessions[uid] = session
+        return session
+
+    def getSession(self, uid):
+        """
+        Get a previously generated session.
+        @param uid: Unique ID of the session.
+        @type uid: L{bytes}.
+        @raise: L{KeyError} if the session is not found.
+        """
+        try:
+            decoded = jwt.decode(uid, self.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+        except jwt.exceptions.ExpiredSignatureError as e:
+            raise KeyError(str(e))
+        except Exception as e:
+            log.err(e, "while decoding JWT session")
+            raise KeyError(str(e))
+        session = BuildbotSession(self, uid)
+        session.fromJWTClaims(decoded)
+        return session
+
+    def updateSession(self, session, request):
+        session.uid = jwt.encode(
+            session.asJWTClaims(), self.session_secret,
+            algorithm=SESSION_SECRET_ALGORITHM)
+
+        # Make sure we aren't creating a secure session on a non-secure page
+        secure = request.isSecure()
+
+        if not secure:
+            cookieString = b"TWISTED_SESSION"
+        else:
+            cookieString = b"TWISTED_SECURE_SESSION"
+
+        cookiename = b"_".join([cookieString] + request.sitepath)
+        request.addCookie(cookiename, session.uid, path=b"/",
+                          secure=secure)
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -86,6 +174,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if self.site:
             self.reconfigSite(new_config)
+            yield self.makeSessionSecret()
 
         if www['port'] != self.port:
             if self.port_service:
@@ -190,35 +279,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         maxRotatedFiles = new_config.www.get(
             'maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
 
-        class RotateLogSite(server.Site):
-
-            """ A Site that logs to a separate file: http.log, and rotate its logs """
-
-            def _openLogFile(self, path):
-                try:
-                    from twisted.python.logfile import LogFile
-                    log.msg("Setting up http.log rotating %s files of %s bytes each" %
-                            (maxRotatedFiles, rotateLength))
-                    # not present in Twisted-2.5.0
-                    if hasattr(LogFile, "fromFullPath"):
-                        return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
-                    else:
-                        log.msg(
-                            "WebStatus: rotated http logs are not supported on this version of Twisted")
-                except ImportError as e:
-                    log.msg(
-                        "WebStatus: Unable to set up rotating http.log: %s" % e)
-
-                # if all else fails, just call the parent method
-                return server.Site._openLogFile(self, path)
-
         httplog = None
         if new_config.www['logfileName']:
             httplog = os.path.abspath(
                 os.path.join(self.master.basedir, new_config.www['logfileName']))
-        self.site = RotateLogSite(root, logPath=httplog)
+        self.site = BuildbotSite(root, logPath=httplog, rotateLength=rotateLength,
+                                 maxRotatedFiles=maxRotatedFiles)
 
-        self.site.sessionFactory = BuildbotSession
+        self.site.sessionFactory = None
 
         # Make sure site.master is set. It is required for poller change_hook
         self.site.master = self.master
@@ -232,8 +300,28 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def reconfigSite(self, new_config):
         new_config.www['auth'].reconfigAuth(self.master, new_config)
+        cookie_expiration_time = new_config.www.get('cookie_expiration_time')
+        if cookie_expiration_time is not None:
+            BuildbotSession.expDelay = cookie_expiration_time
+
         for rsrc in self.reconfigurableResources:
             rsrc.reconfigResource(new_config)
+
+    @defer.inlineCallbacks
+    def makeSessionSecret(self):
+        state = self.master.db.state
+        objectid = yield state.getObjectId(
+            "www", "buildbot.www.service.WWWService")
+
+        def create_session_secret():
+            # Bootstrap: We need to create a key, that will be shared with other masters
+            # and other runs of this master
+
+            # we encode that in hex for db storage convenience
+            return hexlify(os.urandom(SESSION_SECRET_LENGTH / 8))
+
+        session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
+        self.site.setSessionSecret(session_secret)
 
     def setupProtectedResource(self, resource_obj, checkers):
         @implementer(IRealm)
@@ -256,7 +344,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getUserInfos(self, request):
         session = request.getSession()
-        return getattr(session, "user_info", {"anonymous": True})
+        return session.user_info
 
     def assertUserAllowed(self, request, ep, action, options):
         user_info = self.getUserInfos(request)

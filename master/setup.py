@@ -443,6 +443,7 @@ setup_args['install_requires'] = [
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
+    'PyJWT',
 ]
 
 # Unit test dependencies.
@@ -474,7 +475,7 @@ setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
         'isort',
-        # spellcheck introduced in version 1.4.0  
+        # spellcheck introduced in version 1.4.0
         'pylint>=1.4.0',
         'pyenchant',
         'flake8~=2.6.0',

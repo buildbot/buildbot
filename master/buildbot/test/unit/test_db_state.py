@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
+
 from buildbot.db import state
 from buildbot.test.fake import fakedb
 from buildbot.test.util import connector_component
@@ -193,3 +195,29 @@ class TestStateConnectorComponent(
             return self.db.pool.do(thd)
         d.addCallback(check)
         return d
+
+    @defer.inlineCallbacks
+    def test_atomicCreateState(self):
+        yield self.insertTestData([
+            fakedb.Object(id=10, name='-', class_name='-'),
+        ])
+        res = yield self.db.state.atomicCreateState(10, 'x', lambda: [1, 2])
+        self.assertEqual(res, [1, 2])
+        res = yield self.db.state.getState(10, 'x')
+        self.assertEqual(res, [1, 2])
+
+    @defer.inlineCallbacks
+    def test_atomicCreateState_conflict(self):
+        yield self.insertTestData([
+            fakedb.Object(id=10, name='-', class_name='-'),
+        ])
+
+        def hook(conn):
+            conn.execute(self.db.model.object_state.insert(),
+                         objectid=10, name='x', value_json='22')
+        self.db.state._test_timing_hook = hook
+
+        res = yield self.db.state.atomicCreateState(10, 'x', lambda: [1, 2])
+        self.assertEqual(res, 22)
+        res = yield self.db.state.getState(10, 'x')
+        self.assertEqual(res, 22)

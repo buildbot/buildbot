@@ -1255,11 +1255,24 @@ state
         :param name: the name of the value to change
         :param value: the value to set
         :type value: JSON-able value
-        :param returns: Deferred
+        :param returns: value actually written via Deferred
         :raises: TypeError if JSONification fails
 
         Set the state value for ``name`` for the object with id ``objectid``,
         overwriting any existing value.
+        In case of two racing writes, the first (as per db rule) one wins, the seconds returns the value from the first.
+
+    .. py:method:: atomicCreateState(objectid, name, thd_create_callback)
+
+        :param objectid: the objectid for which the state should be created
+        :param name: the name of the value to create
+        :param thd_create_callback: the function to call from thread to create the value if non-existant. (returns JSON-able value)
+        :param returns: Deferred
+        :raises: TypeError if JSONification fails
+
+        Atomically creates the state value for ``name`` for the object with id ``objectid``,
+        If there is an existing value, returns that instead.
+        This implementation ensures the state is created only once for the whole cluster.
 
     Those 3 methods have their threaded equivalent, ``thdGetObjectId``, ``thdGetState``, ``thdSetState`` that are intended to run in synchronous code, (e.g master.cfg environment)
 

@@ -70,6 +70,7 @@ class AuthBase(config.ConfiguredMixin):
         if self.userInfoProvider is not None:
             infos = yield self.userInfoProvider.getUserInfo(session.user_info['username'])
             session.user_info.update(infos)
+            session.updateSession(request)
 
     def getConfigDict(self):
         return {'name': type(self).__name__}
@@ -119,7 +120,7 @@ class RemoteUserAuth(AuthBase):
                 403, 'http header does not match regex! "%s" not matching %s' %
                 (header, self.headerRegex.pattern))
         session = request.getSession()
-        if not hasattr(session, "user_info"):
+        if session.user_info != dict(res.groupdict()):
             session.user_info = dict(res.groupdict())
             yield self.updateUserInfo(request)
 
@@ -194,4 +195,5 @@ class LogoutResource(resource.Resource):
     def render_GET(self, request):
         session = request.getSession()
         session.expire()
+        session.updateSession(request)
         return ""

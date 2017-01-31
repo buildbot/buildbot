@@ -1017,6 +1017,12 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertConfigError(
             self.errors, 'Invalid www configuration value of versions')
 
+    def test_load_www_cookie_expiration_time_not_timedelta(self):
+        self.cfg.load_www(
+            self.filename, {'www': dict(cookie_expiration_time=1)})
+        self.assertConfigError(
+            self.errors, 'Invalid www["cookie_expiration_time"]')
+
     def test_load_www_unknown(self):
         self.cfg.load_www(self.filename,
                           dict(www=dict(foo="bar")))

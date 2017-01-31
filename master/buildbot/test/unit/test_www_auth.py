@@ -192,6 +192,8 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
         def updateUserInfo(request):
             session = request.getSession()
             session.user_info['email'] = session.user_info['username'] + "@org"
+            session.updateSession(request)
+
         self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
 
         res = yield self.render_resource(self.rsrc, '/auth/login')
