@@ -549,7 +549,7 @@ class CodebaseParameter(NestedParameter):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
-        fields = filter(None, fields_dict.values())
+        fields = [val for val in fields_dict.values() if val]
 
         NestedParameter.__init__(self, name=name, label=label,
                                  codebase=codebase,
