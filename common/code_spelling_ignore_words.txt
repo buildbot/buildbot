@@ -246,6 +246,7 @@ erroring
 errortoo
 et
 exe
+execfile
 executables
 exe's
 expanduser
