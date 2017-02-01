@@ -189,7 +189,7 @@ notifications:
 after_script:
   - |
       # codecov
-      [ $TESTS != coverage ] || codecov
+      [ $TESTS != coverage ] || CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov
   # List installed packages along with their versions.
   - "pip list"
 
