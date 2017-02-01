@@ -347,8 +347,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertEqual(prop.name, name)
         self.assertEqual(prop.label, kwargs.get('label', prop.name))
         if expectJson is not None:
-            gotJson = json.dumps(prop.getSpec())
-            if gotJson != expectJson:
+            gotSpec = prop.getSpec()
+            gotJson = json.dumps(gotSpec)
+            expectSpec = json.loads(expectJson)
+            if gotSpec != expectSpec:
                 try:
                     import xerox
                     formated = self.formatJsonForTest(gotJson)
@@ -358,7 +360,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                     input()
                 except ImportError:
                     print("Note: for quick fix, pip install xerox")
-            self.assertEqual(gotJson, expectJson)
+            self.assertEqual(gotSpec, expectSpec)
 
         sched = self.makeScheduler(properties=[prop])
 
