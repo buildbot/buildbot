@@ -1266,7 +1266,7 @@ state
 
         :param objectid: the objectid for which the state should be created
         :param name: the name of the value to create
-        :param thd_create_callback: the function to call from thread to create the value if non-existant. (returns JSON-able value)
+        :param thd_create_callback: the function to call from thread to create the value if non-existent. (returns JSON-able value)
         :param returns: Deferred
         :raises: TypeError if JSONification fails
 

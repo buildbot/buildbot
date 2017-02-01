@@ -22,6 +22,8 @@ import datetime
 import os
 from binascii import hexlify
 
+import jwt
+
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
@@ -34,7 +36,6 @@ from twisted.web import resource
 from twisted.web import server
 from zope.interface import implementer
 
-import jwt
 from buildbot.plugins.db import get_plugins
 from buildbot.util import service
 from buildbot.www import config as wwwconfig
@@ -54,8 +55,8 @@ SESSION_SECRET_ALGORITHM = "HS256"
 class BuildbotSession(server.Session):
     # We deviate a bit from the twisted API in order to implement that.
     # We keep it a subclass of server.Session (to be safe against isinstance),
-    # but we reimplement all its API.
-    # But as there is no support in twisted web for clustered session managment, this leaves
+    # but we re implement all its API.
+    # But as there is no support in twisted web for clustered session management, this leaves
     # us with few choice.
     expDelay = datetime.timedelta(weeks=1)
 
@@ -82,12 +83,12 @@ class BuildbotSession(server.Session):
         except Exception as e:
             log.err(e, "while decoding JWT session")
             raise KeyError(str(e))
-        # might raise KeyError: will be catched by caller, which makes the token invalid
+        # might raise KeyError: will be caught by caller, which makes the token invalid
         self.user_info = decoded['user_info']
 
     def updateSession(self, request):
         """
-        Update the sessions's cookie after session object was modified
+        Update the cookie after session object was modified
         @param request: the request object which should get a new cookie
         """
         # we actually need to copy some hardcoded constants from twisted :-(
@@ -124,7 +125,7 @@ class BuildbotSession(server.Session):
         claims = {
             'user_info': self.user_info,
             # Note that we use JWT standard 'exp' field to implement session expiration
-            # we completly bypass twisted.web session expiration mechanisms
+            # we completely bypass twisted.web session expiration mechanisms
             'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
 
         return jwt.encode(claims, self.site.session_secret, algorithm=SESSION_SECRET_ALGORITHM)

@@ -19,6 +19,8 @@ from __future__ import print_function
 import calendar
 import datetime
 
+import jwt
+
 import mock
 
 from twisted.cred import strcred
@@ -28,7 +30,6 @@ from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
 from twisted.web.server import Request
 
-import jwt
 from buildbot.test.unit import test_www_hooks_base
 from buildbot.test.util import www
 from buildbot.www import auth
@@ -231,7 +232,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
     def test_getSession_from_bad_jwt(self):
         """ if the cookie is bad (maybe from previous version of buildbot),
             then we should raise KeyError for consumption by caller,
-            and log the jwt error
+            and log the JWT error
         """
         self.assertRaises(KeyError, self.site.getSession, "xxx")
         self.flushLoggedErrors(jwt.exceptions.DecodeError)
@@ -261,11 +262,13 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_updateSession(self):
         session = self.site.makeSession()
+
         class FakeChannel(object):
             transport = None
+
             def isSecure(self):
                 return False
-        request = Request(FakeChannel())
+        request = Request(FakeChannel(), False)
         request.sitepath = ["bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)

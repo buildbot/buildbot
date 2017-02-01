@@ -147,7 +147,7 @@ In order to access control features in the web UI, you will need to configure an
 .. note::
 
    As of Buildbot 0.9.4, user session is managed via a JWT_ token, using HS256_ algorithm.
-   The session secret is stored in the sql database in the ``object_state`` table with ``name`` column being ``session_secret``.
+   The session secret is stored in the database in the ``object_state`` table with ``name`` column being ``session_secret``.
    Please make sure appropriate access restriction is made to this database table.
 
 .. _JWT: https://en.wikipedia.org/wiki/JSON_Web_Token
