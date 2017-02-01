@@ -268,10 +268,15 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                                             codebases=[]))
 
         # codebases cannot be a dictionary
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' should be a list of strings or CodebaseParameter, not <type 'dict'>",
+        # dictType on Python 3 is: "<class 'dict'>"
+        # dictType on Python 2 is: "<type 'dict'>"
+        dictType = str(type({}))
+        errMsg = ("ForceScheduler 'foo': 'codebases' should be a list "
+                  "of strings or CodebaseParameter, "
+                  "not {}".format(dictType))
+        self.assertRaisesConfigError(errMsg,
                                      lambda: ForceScheduler(name='foo',
-                                                            builderNames=[
-                                                                'bar'],
+                                                            builderNames=['bar'],
                                                             codebases={'cb': {'branch': 'trunk'}}))
 
     @defer.inlineCallbacks
