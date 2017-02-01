@@ -194,8 +194,10 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         @d.addCallback
         def check(workers):
-            [self.validateData(b) for b in workers]
-            [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+            for b in workers:
+                self.validateData(b)
+                b['configured_on'] = sorted(b['configured_on'],
+                                            key=configuredOnKey)
             self.assertEqual(sorted(workers, key=configuredOnKey),
                              sorted([w1(), w2()], key=configuredOnKey))
         return d
@@ -267,5 +269,5 @@ class Worker(interfaces.InterfaceTests, unittest.TestCase):
         self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findWorkerId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, b'foo')
         self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')
