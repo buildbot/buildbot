@@ -58,9 +58,8 @@ def doCleanupDatabase(config, master_cfg):
 
         # sqlite vacuum function rebuild the whole database to claim
         # free disk space back
-        def thd(engine):
-            r = engine.execute("vacuum;")
-            r.close()
+        def thd(conn):
+            conn.execute("vacuum;").close()
         yield db.pool.do(thd)
 
 
