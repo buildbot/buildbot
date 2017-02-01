@@ -16,6 +16,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import calendar
+import datetime
+
 import mock
 
 from twisted.cred import strcred
@@ -223,6 +226,19 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_getSession_from_correct_jwt(self):
         payload = {'user_info': {'some': 'payload'}}
-        uid = jwt.encode(payload, self.SECRET, algorithm='HS256')
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
         session = self.site.getSession(uid)
         self.assertEqual(session.user_info, {'some': 'payload'})
+
+    def test_getSession_from_expired_jwt(self):
+        # expired one week ago
+        exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
+        exp = calendar.timegm(datetime.datetime.timetuple(exp))
+        payload = {'user_info': {'some': 'payload'}, 'exp': exp}
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertRaises(KeyError, self.site.getSession, uid)
+
+    def test_getSession_with_no_user_info(self):
+        payload = {'foo': 'bar'}
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertRaises(KeyError, self.site.getSession, uid)

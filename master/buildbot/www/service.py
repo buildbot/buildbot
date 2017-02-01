@@ -26,6 +26,7 @@ from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
+from twisted.python import components
 from twisted.python import log
 from twisted.python.logfile import LogFile
 from twisted.web import guard
@@ -51,23 +52,83 @@ SESSION_SECRET_ALGORITHM = "HS256"
 
 
 class BuildbotSession(server.Session):
+    # We deviate a bit from the twisted API in order to implement that.
+    # We keep it a subclass of server.Session (to be safe against isinstance),
+    # but we reimplement all its API.
+    # But as there is no support in twisted web for clustered session managment, this leaves
+    # us with few choice.
     expDelay = datetime.timedelta(weeks=1)
 
-    def asJWTClaims(self):
-        exp = datetime.datetime.utcnow() + self.expDelay
-        return {
-            'user_info': self.user_info,
-            'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
+    def __init__(self, site, token=None):
+        """
+        Initialize a session with a unique ID for that session.
+        """
+        self.site = site
+        assert self.site.session_secret is not None, "site.session_secret is not configured yet!"
+        components.Componentized.__init__(self)
+        if token:
+            self._fromToken(token)
+        else:
+            self._defaultValue()
 
-    def fromJWTClaims(self, d):
-        # might raise KeyError: will be catched by called, and taken as invalid
-        self.user_info = d['user_info']
+    def _defaultValue(self):
+        self.user_info = {"anonymous": True}
+
+    def _fromToken(self, token):
+        try:
+            decoded = jwt.decode(token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+        except jwt.exceptions.ExpiredSignatureError as e:
+            raise KeyError(str(e))
+        except Exception as e:
+            log.err(e, "while decoding JWT session")
+            raise KeyError(str(e))
+        # might raise KeyError: will be catched by caller, which makes the token invalid
+        self.user_info = decoded['user_info']
 
     def updateSession(self, request):
+        """
+        Update the sessions's cookie after session object was modified
+        @param request: the request object which should get a new cookie
+        """
+        # we actually need to copy some hardcoded constants from twisted :-(
+
+        # Make sure we aren't creating a secure session on a non-secure page
+        secure = request.isSecure()
+
+        if not secure:
+            cookieString = b"TWISTED_SESSION"
+        else:
+            cookieString = b"TWISTED_SECURE_SESSION"
+
+        cookiename = b"_".join([cookieString] + request.sitepath)
+        request.addCookie(cookiename, self.uid, path=b"/",
+                          secure=secure)
         self.site.updateSession(self, request)
 
     def expire(self):
-        self.user_info = {"anonymous": True}
+        # caller must still call self.updateSession() to actually expire it
+        self._defaultValue()
+
+    def notifyOnExpire(self, callback):
+        raise NotImplementedError("BuildbotSession can't support notify on session expiration")
+
+    def touch(self):
+        pass
+
+    @property
+    def uid(self):
+        """uid is now generated automatically according to the claims.
+
+        This should actually only be used for cookie generation
+        """
+        exp = datetime.datetime.utcnow() + self.expDelay
+        claims = {
+            'user_info': self.user_info,
+            # Note that we use JWT standard 'exp' field to implement session expiration
+            # we completly bypass twisted.web session expiration mechanisms
+            'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
+
+        return jwt.encode(claims, self.site.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
 
 
 class BuildbotSite(server.Site):
@@ -91,49 +152,20 @@ class BuildbotSite(server.Site):
 
     def makeSession(self):
         """
-        Generate a new Session instance, and store it for future reference.
+        Generate a new Session instance, but not store it for future reference
+        (because it will be used by another master instance)
+        The session will still be cached by twisted.request
         """
-        session = BuildbotSession(self, '')
-        session.expire()
-        uid = jwt.encode(session.asJWTClaims(), self.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
-        session.uid = uid
-        session = self.sessions[uid] = session
-        return session
+        return BuildbotSession(self)
 
     def getSession(self, uid):
         """
         Get a previously generated session.
-        @param uid: Unique ID of the session.
+        @param uid: Unique ID of the session (a JWT token).
         @type uid: L{bytes}.
         @raise: L{KeyError} if the session is not found.
         """
-        try:
-            decoded = jwt.decode(uid, self.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
-        except jwt.exceptions.ExpiredSignatureError as e:
-            raise KeyError(str(e))
-        except Exception as e:
-            log.err(e, "while decoding JWT session")
-            raise KeyError(str(e))
-        session = BuildbotSession(self, uid)
-        session.fromJWTClaims(decoded)
-        return session
-
-    def updateSession(self, session, request):
-        session.uid = jwt.encode(
-            session.asJWTClaims(), self.session_secret,
-            algorithm=SESSION_SECRET_ALGORITHM)
-
-        # Make sure we aren't creating a secure session on a non-secure page
-        secure = request.isSecure()
-
-        if not secure:
-            cookieString = b"TWISTED_SESSION"
-        else:
-            cookieString = b"TWISTED_SECURE_SESSION"
-
-        cookiename = b"_".join([cookieString] + request.sitepath)
-        request.addCookie(cookiename, session.uid, path=b"/",
-                          secure=secure)
+        return BuildbotSession(self, uid)
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):

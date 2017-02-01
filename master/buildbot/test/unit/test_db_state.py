@@ -221,3 +221,12 @@ class TestStateConnectorComponent(
         self.assertEqual(res, 22)
         res = yield self.db.state.getState(10, 'x')
         self.assertEqual(res, 22)
+
+    @defer.inlineCallbacks
+    def test_atomicCreateState_nojsonable(self):
+        yield self.insertTestData([
+            fakedb.Object(id=10, name='-', class_name='-'),
+        ])
+
+        d = self.db.state.atomicCreateState(10, 'x', lambda: object())
+        yield self.assertFailure(d, TypeError)
