@@ -186,12 +186,10 @@ script:
 notifications:
   email: false
 
-after_success:
+after_script:
   - |
       # codecov
       [ $TESTS != coverage ] || codecov
-
-after_script:
   # List installed packages along with their versions.
   - "pip list"
 
