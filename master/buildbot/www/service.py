@@ -103,7 +103,6 @@ class BuildbotSession(server.Session):
         cookiename = b"_".join([cookieString] + request.sitepath)
         request.addCookie(cookiename, self.uid, path=b"/",
                           secure=secure)
-        self.site.updateSession(self, request)
 
     def expire(self):
         # caller must still call self.updateSession() to actually expire it

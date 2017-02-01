@@ -26,6 +26,7 @@ from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
+from twisted.web.server import Request
 
 import jwt
 from buildbot.test.unit import test_www_hooks_base
@@ -94,6 +95,17 @@ class Test(www.WwwTestMixin, unittest.TestCase):
             self.assertNotEqual(self.svc.site, None)
             self.assertNotEqual(self.svc.port_service, None)
             self.assertEqual(self.svc.port, 20)
+        return d
+
+    def test_reconfigService_expiration_time(self):
+        new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+
+        @d.addCallback
+        def check(_):
+            self.assertNotEqual(self.svc.site, None)
+            self.assertNotEqual(self.svc.port_service, None)
+            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
         return d
 
     def test_reconfigService_port_changes(self):
@@ -242,3 +254,22 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         payload = {'foo': 'bar'}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertRaises(KeyError, self.site.getSession, uid)
+
+    def test_makeSession(self):
+        session = self.site.makeSession()
+        self.assertEqual(session.user_info, {'anonymous': True})
+
+    def test_updateSession(self):
+        session = self.site.makeSession()
+        class FakeChannel(object):
+            transport = None
+            def isSecure(self):
+                return False
+        request = Request(FakeChannel())
+        request.sitepath = ["bb"]
+        session.updateSession(request)
+        self.assertEqual(len(request.cookies), 1)
+        name, value = request.cookies[0].split(";")[0].split("=")
+        decoded = jwt.decode(value, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertEqual(decoded['user_info'], {'anonymous': True})
+        self.assertIn('exp', decoded)
