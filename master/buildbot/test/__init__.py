@@ -119,3 +119,6 @@ warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __i
 
 # FIXME: needs to be sorted out (#3666)
 warnings.filterwarnings('ignore', "Invalid utf8 character string")
+
+# twisted.compat.execfile is using 'U' https://twistedmatrix.com/trac/ticket/9023
+warnings.filterwarnings('ignore', "'U' mode is deprecated", DeprecationWarning)

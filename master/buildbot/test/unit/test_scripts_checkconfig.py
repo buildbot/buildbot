@@ -35,7 +35,9 @@ from buildbot.test.util import dirs
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
-        return self.setUpDirs('configdir')
+        # config dir must be unique so that the python runtime does not optimize its list of module
+        self.configdir = self.mktemp()
+        return self.setUpDirs(self.configdir)
 
     def tearDown(self):
         return self.tearDownDirs()
@@ -44,17 +46,17 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     def do_test_load(self, config='', other_files={},
                      stdout_re=None, stderr_re=None):
-        configFile = os.path.join('configdir', 'master.cfg')
+        configFile = os.path.join(self.configdir, 'master.cfg')
         with open(configFile, "w") as f:
             f.write(config)
         for filename, contents in iteritems(other_files):
             if isinstance(filename, type(())):
-                fn = os.path.join('configdir', *filename)
+                fn = os.path.join(self.configdir, *filename)
                 dn = os.path.dirname(fn)
                 if not os.path.isdir(dn):
                     os.makedirs(dn)
             else:
-                fn = os.path.join('configdir', filename)
+                fn = os.path.join(self.configdir, filename)
             with open(fn, "w") as f:
                 f.write(contents)
 
@@ -63,7 +65,7 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
         stderr = sys.stderr = NativeStringIO()
         try:
             checkconfig._loadConfig(
-                basedir='configdir', configFile="master.cfg", quiet=False)
+                basedir=self.configdir, configFile="master.cfg", quiet=False)
         finally:
             sys.stdout, sys.stderr = old_stdout, old_stderr
         if stdout_re:
