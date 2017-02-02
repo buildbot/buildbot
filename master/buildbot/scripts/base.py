@@ -43,6 +43,10 @@ def captureErrors(errors, msg):
         defer.returnValue(1)
 
 
+class BusyError(RuntimeError):
+    pass
+
+
 def checkPidFile(pidfile):
     """ mostly comes from _twistd_unix.py which is not twisted public API :-/
 
@@ -65,7 +69,7 @@ def checkPidFile(pidfile):
                 raise OSError("Can't check status of PID %s from pidfile %s: %s" %
                               (pid, pidfile, why[1]))
         else:
-            raise AssertionError("'%s' exists - is this master still running?")
+            raise BusyError("'%s' exists - is this master still running?")
 
 
 def checkBasedir(config):
