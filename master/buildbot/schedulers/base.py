@@ -268,7 +268,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
         sourcestamps = []
-        for codebase in self.codebases:
+        for codebase in sorted(self.codebases):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes
