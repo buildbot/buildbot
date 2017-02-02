@@ -117,21 +117,41 @@ class Row(object):
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
-    def __cmp__(self, other):
-        # NOTE: __cmp__() and cmp() are gone on Python 3,
-        #       in favor of __le__ and __eq__().
-        return cmp(self.__class__, other.__class__) \
-            or cmp(self.values, other.values)
-
     def __eq__(self, other):
-        return (self.__class__ == other.__class__ and
-                self.values == other.values)
+        if self.__class__ != other.__class__:
+            return False
+        else:
+            return self.values == other.values
+
+    def __ne__(self, other):
+        if self.__class__ != other.__class__:
+            return True
+        else:
+            return self.values != other.values
 
     def __lt__(self, other):
         if self.__class__ != other.__class__:
             raise TypeError("Cannot compare {} and {}".format(
                 self.__class__, other.__class__))
         return self.values < other.values
+
+    def __le__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values <= other.values
+
+    def __gt__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values > other.values
+
+    def __ge__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values >= other.values
 
     def __repr__(self):
         return '%s(**%r)' % (self.__class__.__name__, self.values)

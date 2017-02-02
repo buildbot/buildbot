@@ -63,6 +63,36 @@ class Change(unittest.TestCase):
             revision=u'deadbeef'))
         self.change23.number = 23
 
+        self.change24 = changes.Change(**dict(
+            category='devel',
+            repository=u'git://warner',
+            codebase=u'mainapp',
+            who=u'dustin',
+            when=266738405,
+            comments=u'fix whitespace again',
+            project=u'Buildbot',
+            branch=u'warnerdb',
+            revlink=u'http://warner/0e92a098c',
+            properties={'notest': "no"},
+            files=[u'master/README.txt', u'worker/README.txt'],
+            revision=u'deadbeef'))
+        self.change24.number = 24
+
+        self.change25 = changes.Change(**dict(
+            category='devel',
+            repository=u'git://warner',
+            codebase=u'mainapp',
+            who=u'dustin',
+            when=266738406,
+            comments=u'fix whitespace again',
+            project=u'Buildbot',
+            branch=u'warnerdb',
+            revlink=u'http://warner/0e92a098d',
+            properties={'notest': "no"},
+            files=[u'master/README.txt', u'worker/README.txt'],
+            revision=u'deadbeef'))
+        self.change25.number = 25
+
     @defer.inlineCallbacks
     def test_fromChdict(self):
         # get a real honest-to-goodness chdict from the fake db
@@ -149,3 +179,13 @@ class Change(unittest.TestCase):
 
     def test_getLogs(self):
         self.assertEqual(self.change23.getLogs(), {})
+
+    def test_compare(self):
+        self.assertEqual(self.change23, self.change23)
+        self.assertNotEqual(self.change24, self.change23)
+        self.assertGreater(self.change24, self.change23)
+        self.assertGreaterEqual(self.change24, self.change23)
+        self.assertGreaterEqual(self.change24, self.change24)
+        self.assertLessEqual(self.change24, self.change24)
+        self.assertLessEqual(self.change23, self.change24)
+        self.assertLess(self.change23, self.change25)
