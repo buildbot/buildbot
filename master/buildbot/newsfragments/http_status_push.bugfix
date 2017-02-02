@@ -1,0 +1,1 @@
+Fix issue with :bb:reporter:`HttpStatusPush` raising datetime is not JSON serializable error.
