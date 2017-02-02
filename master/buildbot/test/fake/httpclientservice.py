@@ -27,6 +27,7 @@ from zope.interface import implementer
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import httpclientservice
 from buildbot.util import service
+from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
 
@@ -35,6 +36,7 @@ log = Logger()
 
 @implementer(IHttpResponse)
 class ResponseWrapper(object):
+
     def __init__(self, code, content):
         self._content = content
         self._code = code
@@ -101,7 +103,7 @@ class HTTPClientService(service.SharedService):
             return ValueError("content and content_json cannot be both specified")
 
         if content_json is not None:
-            content = jsonmodule.dumps(content_json)
+            content = jsonmodule.dumps(content_json, default=toJson)
 
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
@@ -116,6 +118,9 @@ class HTTPClientService(service.SharedService):
         if not self.quiet:
             log.debug("{method} {ep} {params!r} <- {data!r}",
                       method=method, ep=ep, params=params, data=data or json)
+        if json is not None:
+            # ensure that the json is really jsonable
+            jsonmodule.dumps(json, default=toJson)
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
