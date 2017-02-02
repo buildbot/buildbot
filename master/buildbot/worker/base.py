@@ -302,7 +302,8 @@ class AbstractWorker(service.BuildbotService, object):
 
     def stopMissingTimer(self):
         if self.missing_timer:
-            self.missing_timer.cancel()
+            if self.missing_timer.active():
+                self.missing_timer.cancel()
             self.missing_timer = None
 
     def isConnected(self):
@@ -314,7 +315,7 @@ class AbstractWorker(service.BuildbotService, object):
         if not self.parent:
             return
         last_connection = time.ctime(time.time() - self.missing_timeout)
-        yield self.master.data.updates.workerMissing(
+        self.master.data.updates.workerMissing(
             workerid=self.workerid,
             masterid=self.master.masterid,
             last_connection=last_connection,
