@@ -18,6 +18,7 @@ from __future__ import print_function
 from future.utils import iteritems
 
 import abc
+import copy
 
 from twisted.internet import defer
 from twisted.python import log
@@ -42,6 +43,7 @@ class HttpStatusPushBase(service.BuildbotService):
         yield service.BuildbotService.reconfigService(self)
 
         self.builders = builders
+        self.neededDetails = copy.copy(self.neededDetails)
         for k, v in iteritems(kwargs):
             if k.startswith("want"):
                 self.neededDetails[k] = v

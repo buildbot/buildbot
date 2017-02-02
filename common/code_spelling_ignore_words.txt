@@ -369,6 +369,7 @@ jobfiles
 jobid
 joe
 json
+jsonable
 jsonapi
 json'd
 jsonrc

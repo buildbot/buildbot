@@ -18,6 +18,7 @@ from __future__ import print_function
 from future.builtins import range
 from future.utils import iteritems
 
+import datetime
 import json
 import os
 
@@ -73,13 +74,15 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http.put('/bar', json={'foo': 'bar'})
         self._http._session.request.assert_called_once_with('put', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            json=dict(foo='bar'), headers={})
+                                                            data=json.dumps(dict(foo='bar')),
+                                                            headers={'Content-Type': 'application/json'})
 
     def test_post(self):
         self._http.post('/bar', json={'foo': 'bar'})
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            json=dict(foo='bar'), headers={})
+                                                            data=json.dumps(dict(foo='bar')),
+                                                            headers={'Content-Type': 'application/json'})
 
     def test_delete(self):
         self._http.delete('/bar')
@@ -92,9 +95,11 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http.post('/bar', json={'foo': 'bar'})
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            json=dict(
-                                                                foo='bar'),
-                                                            headers={'X-TOKEN': 'XXXYYY'})
+                                                            data=json.dumps(dict(
+                                                                foo='bar')),
+                                                            headers={
+                                                                'X-TOKEN': 'XXXYYY',
+                                                                'Content-Type': 'application/json'})
 
     def test_post_auth(self):
         self._http = self.successResultOf(
@@ -103,11 +108,12 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http.post('/bar', json={'foo': 'bar'})
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            json=dict(
-                                                                foo='bar'),
+                                                            data=json.dumps(dict(
+                                                                foo='bar')),
                                                             auth=(
                                                                 'user', 'pa$$'),
                                                             headers={
+                                                                'Content-Type': 'application/json'
                                                             })
 
 
@@ -204,6 +210,10 @@ class MyResource(resource.Resource):
                 return x
 
         args = decode(request.args)
+        content_type = request.getHeader(b'content-type')
+        if content_type is not None and content_type == "application/json":
+            args['json_received'] = json.loads(request.content.read())
+
         data = json.dumps(args)
         data = unicode2bytes(data)
         request.setHeader(b'content-type', networkString('application/json'))
@@ -273,6 +283,25 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
         res = yield self._http.post('/', data=dict(a='b'))
         content = yield res.content()
         self.assertEqual(content, b'{"a": ["b"]}')
+
+    @defer.inlineCallbacks
+    def test_put_content_with_json(self):
+        exp_content_json = dict(json_received=dict(a='b'))
+        self.expect('post', '/', json=dict(a='b'), content_json=exp_content_json)
+        res = yield self._http.post('/', json=dict(a='b'))
+        content = yield res.content()
+        content = json.loads(content)
+        self.assertEqual(content, exp_content_json)
+
+    @defer.inlineCallbacks
+    def test_put_content_with_json_datetime(self):
+        exp_content_json = dict(json_received=dict(a='b', ts=12))
+        dt = datetime.datetime.utcfromtimestamp(12)
+        self.expect('post', '/', json=dict(a='b', ts=dt), content_json=exp_content_json)
+        res = yield self._http.post('/', json=dict(a='b', ts=dt))
+        content = yield res.content()
+        content = json.loads(content)
+        self.assertEqual(content, exp_content_json)
 
     @defer.inlineCallbacks
     def test_json(self):
