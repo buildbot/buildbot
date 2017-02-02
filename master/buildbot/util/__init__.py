@@ -129,27 +129,6 @@ class ComparableMixin(object):
                 [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
-    def __cmp__(self, them):
-        # NOTE: __cmp__() and cmp() are gone on Python 3,
-        #       in favor of __le__ and __eq__().
-        result = cmp(type(self), type(them))
-        if result:
-            return result
-
-        result = cmp(self.__class__, them.__class__)
-        if result:
-            return result
-
-        compare_attrs = []
-        reflect.accumulateClassList(
-            self.__class__, 'compare_attrs', compare_attrs)
-
-        self_list = [getattr(self, name, self._None)
-                     for name in compare_attrs]
-        them_list = [getattr(them, name, self._None)
-                     for name in compare_attrs]
-        return cmp(self_list, them_list)
-
     def _cmp_common(self, them):
         if type(self) != type(them):
             return (False, None, None)
@@ -173,11 +152,35 @@ class ComparableMixin(object):
             return False
         return self_list == them_list
 
+    def __ne__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return True
+        return self_list != them_list
+
     def __lt__(self, them):
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
         return self_list < them_list
+
+    def __le__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list <= them_list
+
+    def __gt__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list > them_list
+
+    def __ge__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list >= them_list
 
     def getConfigDict(self):
         compare_attrs = []
