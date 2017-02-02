@@ -268,7 +268,7 @@ class RunSteps(unittest.TestCase):
             # instant step
             u'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
-            u'Observer saw [u\'stdout\\n\', u\'\\u2603\\n\']\n',
+            u'Observer saw [' + repr(u'stdout\n') + u", " + repr(u"\u2603\n") + u"]\n"
         })
 
     def test_OldStyleCustomBuildStep(self):

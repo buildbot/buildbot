@@ -391,7 +391,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: u'abcdef'")
+        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
         return self.runStep()
 
     def test_renderable_workdir(self):
@@ -406,7 +406,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: u'abcdef'")
+        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
         return self.runStep()
 
     def test_run_property_no_strip(self):
@@ -421,7 +421,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: u'\n\nabcdef\n'")
+        self.expectLogfile('property changes', r"res: " + repr(u'\n\nabcdef\n'))
         return self.runStep()
 
     def test_run_failure(self):
