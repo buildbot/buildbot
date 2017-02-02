@@ -58,11 +58,13 @@ cache:
 matrix:
   fast_finish: true
   include:
-    # Tests of buildbot-worker on python 2.6
     # Specify SQLALCHEMY=latest to avoid errors installing.
+    - python: "3.5"
+      env: TWISTED=trunk TESTS=flake8 SQLALCHEMY=latest
     - python: "3.5"
       env: TWISTED=trunk TESTS=py3status SQLALCHEMY=latest
 
+    # Tests of buildbot-worker on python 2.6
     - python: "2.6"
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
@@ -102,7 +104,7 @@ install:
 
   - "pip install -e worker future"
 
-  - "if [ $TESTS = lint ]; then pip install 'flake8~=2.6.0' ; fi"
+  - "if [ $TESTS = lint -o $TESTS = flake8 ]; then pip install 'flake8~=2.6.0' ; fi"
   # Install sphinx so that pylint will be able to import it
   - "if [ $TESTS = lint ]; then  pip install sphinx ; fi"
   # Install docs dependencies for running the tests
@@ -145,7 +147,7 @@ script:
 
   # Run additional tests in their separate job
   - "if [ $TESTS = lint ]; then make pylint ; fi"
-  - "if [ $TESTS = lint ]; then make flake8; fi"
+  - "if [ $TESTS = lint -o $TESTS = flake8 ]; then make flake8; fi"
   - "if [ $TESTS = lint ]; then isort --check -df `git ls-files |grep '.py$'` ; fi"
   # Build documentation
   - "if [ $TESTS = docs ]; then make docs ; fi"
