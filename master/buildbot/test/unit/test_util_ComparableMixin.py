@@ -78,22 +78,22 @@ class ComparableMixin(unittest.TestCase):
         self.assertNotEqual(self.f123, self.b123)
 
     def test_compare(self):
-         self.assertEqual(self.f123, self.f123)
-         self.assertNotEqual(self.b223, self.b213)
-         self.assertGreater(self.b223, self.b213)
+        self.assertEqual(self.f123, self.f123)
+        self.assertNotEqual(self.b223, self.b213)
+        self.assertGreater(self.b223, self.b213)
 
-         # Different classes
-         self.assertFalse(self.b223 > self.f123)
+        # Different classes
+        self.assertFalse(self.b223 > self.f123)
 
-         self.assertGreaterEqual(self.b223, self.b213)
-         self.assertGreaterEqual(self.b223, self.b223)
+        self.assertGreaterEqual(self.b223, self.b213)
+        self.assertGreaterEqual(self.b223, self.b223)
 
-         # Different classes
-         self.assertFalse(self.f123 >= self.b123)
+        # Different classes
+        self.assertFalse(self.f123 >= self.b123)
 
-         self.assertLess(self.b213, self.b223)
-         self.assertLessEqual(self.b213, self.b223)
-         self.assertLessEqual(self.b213, self.b213)
+        self.assertLess(self.b213, self.b223)
+        self.assertLessEqual(self.b213, self.b223)
+        self.assertLessEqual(self.b213, self.b213)
 
-         # Different classes
-         self.assertFalse(self.f123 <= self.b123)
+        # Different classes
+        self.assertFalse(self.f123 <= self.b123)
