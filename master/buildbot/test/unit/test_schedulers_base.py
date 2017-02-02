@@ -288,8 +288,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         call = self.master.data.updates.addBuildset.mock_calls[0]
 
         def sourceStampKey(sourceStamp):
-            repository = sourceStamp.get('repository', '') if not None else ''
+            repository = sourceStamp.get('repository', '')
+            if repository is None:
+                repository = ''
             branch = sourceStamp.get('branch', '') if not None else ''
+            if branch is None:
+                branch = ''
             return (repository, branch)
 
         self.assertEqual(sorted(call[2]['sourcestamps'], key=sourceStampKey),
@@ -460,6 +464,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         bsid, brids = yield sched.addBuildsetForChanges(reason=u'power',
                                                         waited_for=True, changeids=[14, 12, 17, 16, 13, 15])
         self.assertEqual((bsid, brids), self.exp_bsid_brids)
+
         self.master.data.updates.addBuildset.assert_called_with(
             waited_for=True,
             builderids=[1, 2],
@@ -469,13 +474,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             properties={
                 u'scheduler': ('n', u'Scheduler'),
             },
-            sourcestamps=[917,  # NOTE: order here is dict-hash dependent..
+            sourcestamps=[914,
+                          917,
                           dict(branch='stable', repository='svn://C..',
                                codebase='cbC', project='', revision='12345'),
-                          914,
                           dict(branch=None, repository='svn://D..', codebase='cbD',
-                               project='', revision=None),
-                          ])
+                               project='', revision=None)
+                          ]
+        )
 
     @defer.inlineCallbacks
     def test_addBuildsetForSourceStamp(self):
