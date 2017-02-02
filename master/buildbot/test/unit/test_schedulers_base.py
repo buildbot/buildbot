@@ -288,8 +288,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         call = self.master.data.updates.addBuildset.mock_calls[0]
 
         def sourceStampKey(sourceStamp):
-            repository = sourceStamp.get('repository', '') if not None else ''
+            repository = sourceStamp.get('repository', '')
+            if repository is None:
+                repository = ''
             branch = sourceStamp.get('branch', '') if not None else ''
+            if branch is None:
+                branch = ''
             return (repository, branch)
 
         self.assertEqual(sorted(call[2]['sourcestamps'], key=sourceStampKey),
