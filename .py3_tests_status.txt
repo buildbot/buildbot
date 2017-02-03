@@ -28,13 +28,11 @@ buildbot.test.unit.test_data_connector
 buildbot.test.unit.test_data_logchunks
 buildbot.test.unit.test_data_logs
 buildbot.test.unit.test_data_masters
-buildbot.test.unit.test_data_properties
 buildbot.test.unit.test_data_resultspec
 buildbot.test.unit.test_data_root
 buildbot.test.unit.test_data_schedulers
 buildbot.test.unit.test_data_sourcestamps
 buildbot.test.unit.test_data_steps
-buildbot.test.unit.test_data_types
 buildbot.test.unit.test_data_workers
 buildbot.test.unit.test_db_base
 buildbot.test.unit.test_db_builders
@@ -94,7 +92,6 @@ buildbot.test.unit.test_schedulers_manager
 buildbot.test.unit.test_schedulers_timed_Nightly
 buildbot.test.unit.test_schedulers_timed_Periodic
 buildbot.test.unit.test_schedulers_triggerable.TriggerableInterfaceTest
-buildbot.test.unit.test_schedulers_trysched
 buildbot.test.unit.test_scripts_base.TestIBD
 buildbot.test.unit.test_scripts_base.TestLoadOptionsFile
 buildbot.test.unit.test_scripts_base.TestSubcommandOptions
@@ -135,7 +132,6 @@ buildbot.test.unit.test_steps_python.BuildEPYDoc
 buildbot.test.unit.test_steps_python.PyFlakes
 buildbot.test.unit.test_steps_python.TestSphinx
 buildbot.test.unit.test_steps_python_twisted
-buildbot.test.unit.test_steps_shell
 buildbot.test.unit.test_steps_source_base_Source
 buildbot.test.unit.test_steps_source_bzr
 buildbot.test.unit.test_steps_source_cvs
@@ -151,7 +147,6 @@ buildbot.test.unit.test_steps_subunit
 buildbot.test.unit.test_steps_transfer.TestDirectoryUpload
 buildbot.test.unit.test_steps_transfer.TestFileDownload
 buildbot.test.unit.test_steps_transfer.TestFileUpload
-buildbot.test.unit.test_steps_transfer.TestJSONPropertiesDownload
 buildbot.test.unit.test_steps_transfer.TestJSONStringDownload
 buildbot.test.unit.test_steps_transfer.TestMultipleFileUpload
 buildbot.test.unit.test_steps_trigger.TriggerableInterfaceTest
@@ -164,7 +159,6 @@ buildbot.test.unit.test_util
 buildbot.test.unit.test_wamp_connector
 buildbot.test.unit.test_worker_base
 buildbot.test.unit.test_worker_docker.testDockerPyStreamLogs
-buildbot.test.unit.test_worker_ec2
 buildbot.test.unit.test_worker_hyper
 buildbot.test.unit.test_worker_libvirt
 buildbot.test.unit.test_worker_local
