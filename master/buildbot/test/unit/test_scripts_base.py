@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import errno
 import os
 import string
 import textwrap
@@ -319,11 +320,65 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     @skipUnlessPlatformIs('posix')
     def test_checkBasedir_active_pidfile(self):
+        """
+        active PID file is giving error.
+        """
         self.activeBasedir()
-        open(os.path.join('test', 'twistd.pid'), 'w').close()
+        # write our own pid in the file
+        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+            f.write(str(os.getpid()))
         rv = base.checkBasedir(mkconfig())
         self.assertFalse(rv)
         self.assertInStdout('still running')
+
+    @skipUnlessPlatformIs('posix')
+    def test_checkBasedir_bad_pidfile(self):
+        """
+        corrupted PID file is giving error.
+        """
+        self.activeBasedir()
+        with open(os.path.join('test', 'twistd.pid'), 'w') as f:
+            f.write("xxx")
+        rv = base.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('twistd.pid contains non-numeric value')
+
+    @skipUnlessPlatformIs('posix')
+    def test_checkBasedir_stale_pidfile(self):
+        """
+        Stale PID file is removed without causing a system exit.
+        """
+        self.activeBasedir()
+        pidfile = os.path.join('test', 'twistd.pid')
+        with open(pidfile, 'w') as f:
+            f.write(str(os.getpid() + 1))
+
+        def kill(pid, sig):
+            raise OSError(errno.ESRCH, "fake")
+        self.patch(os, "kill", kill)
+        rv = base.checkBasedir(mkconfig())
+        self.assertTrue(rv)
+        self.assertInStdout('Removing stale pidfile test')
+        self.assertFalse(os.path.exists(pidfile))
+
+    @skipUnlessPlatformIs('posix')
+    def test_checkBasedir_pidfile_kill_error(self):
+        """
+        if ping-killing the PID file does not work, we should error out.
+        """
+        self.activeBasedir()
+        # write our own pid in the file
+        pidfile = os.path.join('test', 'twistd.pid')
+        with open(pidfile, 'w') as f:
+            f.write(str(os.getpid() + 1))
+
+        def kill(pid, sig):
+            raise OSError(errno.EPERM, "fake")
+        self.patch(os, "kill", kill)
+        rv = base.checkBasedir(mkconfig())
+        self.assertFalse(rv)
+        self.assertInStdout('Can\'t check status of PID')
+        self.assertTrue(os.path.exists(pidfile))
 
     def test_checkBasedir_invalid_rotateLength(self):
         self.activeBasedir(extra_lines=['rotateLength="32"'])

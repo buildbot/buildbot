@@ -1,0 +1,1 @@
+Like for ``buildbot start``, ``buildbot upgrade-master`` will now erase an old pidfile if the process is not live anymore instead of just failing.
