@@ -58,7 +58,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         evts = []
         b.groupChat('#chan', 'hi')
-        self.assertEqual(evts, [('n', '#chan', 'hi')])
+        self.assertEqual(evts, [('n', '#chan', b'hi')])
 
     def test_chat(self):
         b = self.makeBot()
@@ -66,7 +66,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
         evts = []
         b.chat('nick', 'hi')
-        self.assertEqual(evts, [('m', 'nick', 'hi')])
+        self.assertEqual(evts, [('m', 'nick', b'hi')])
 
     def test_getContact(self):
         b = self.makeBot()
