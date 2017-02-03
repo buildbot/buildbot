@@ -40,7 +40,7 @@ class Client(object):
         return 0
 
     def build(self, fileobj, tag):
-        if fileobj.read() == 'BUG':
+        if fileobj.read() == b'BUG':
             pass
         else:
             logs = []
