@@ -314,7 +314,7 @@ setup_args = {
             ('buildbot.reporters.gerrit_verify_status',
              ['GerritVerifyStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
-            ('buildbot.reporters.github', ['GitHubStatusPush']),
+            ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),

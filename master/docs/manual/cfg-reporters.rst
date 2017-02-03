@@ -848,6 +848,47 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verbose: if True, logs a message for each successful status push
     :param list builders: only send update for specified builders
 
+.. bb:reporter:: GitHubCommentPush
+
+GitHubCommentPush
+~~~~~~~~~~~~~~~~~
+
+
+.. @cindex GitHubCommentPush
+.. py:class:: buildbot.reporters.github.GitHubCommentPush
+
+::
+
+    from buildbot.plugins import reporters, util
+
+    gc = status.GitHubCommentPush(token='githubAPIToken',
+                                  startDescription='Build started.',
+                                  endDescription='Build done.')
+    factory = util.BuildFactory()
+    buildbot_bbtools = util.BuilderConfig(
+        name='builder-name',
+        workernames=['worker1'],
+        factory=factory)
+    c['builders'].append(buildbot_bbtools)
+    c['services'].append(gc)
+
+:class:`GitHubCommentPush` publishes a comment on a PR using `GitHub Review Comments API <https://developer.github.com/v3/pulls/comments/>`_.
+
+It requires `txrequests`_ package to allow interaction with GitHub REST API.
+
+It is configured with at least a GitHub API token. By default, it will only comment at the end of a build unless a ``startDescription`` is provided.
+
+You can create a token from you own `GitHub - Profile - Applications - Register new application <https://github.com/settings/applications>`_ or use an external tool to generate one.
+
+.. py:class:: GitHubCommentPush(token, startDescription=None, endDescription=None, baseURL=None, verbose=False, builders=None)
+
+    :param string token: token used for authentication.
+    :param rendereable string startDescription: Custom start message (default: None)
+    :param rendereable string endDescription: Custom end message (default: 'Build done.')
+    :param string baseURL: specify the github api endpoint if you work with GitHub Enterprise
+    :param boolean verbose: if True, logs a message for each successful status push
+    :param list builders: only send update for specified builders
+
 .. bb:reporter:: StashStatusPush
 
 StashStatusPush
