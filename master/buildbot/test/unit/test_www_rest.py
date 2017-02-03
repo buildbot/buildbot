@@ -462,6 +462,32 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
                                   total=8, orderSignificant=True)
 
     @defer.inlineCallbacks
+    def test_api_collection_filter_and_order(self):
+        yield self.render_resource(self.rsrc, '/test?field=info&order=info')
+        self.assertRestCollection(typeName='tests',
+                                  items=sorted(list([{'info': v['info']}
+                                                     for v in itervalues(endpoint.testData)]),
+                                               key=lambda v: v['info']),
+                                  total=8, orderSignificant=True)
+
+    @defer.inlineCallbacks
+    def test_api_collection_order_desc(self):
+        yield self.render_resource(self.rsrc, '/test?order=-info')
+        self.assertRestCollection(typeName='tests',
+                                  items=sorted(list(itervalues(endpoint.testData)),
+                                               key=lambda v: v['info'], reverse=True),
+                                  total=8, orderSignificant=True)
+
+    @defer.inlineCallbacks
+    def test_api_collection_filter_and_order_desc(self):
+        yield self.render_resource(self.rsrc, '/test?field=info&order=-info')
+        self.assertRestCollection(typeName='tests',
+                                  items=sorted(list([{'info': v['info']}
+                                                     for v in itervalues(endpoint.testData)]),
+                                               key=lambda v: v['info'], reverse=True),
+                                  total=8, orderSignificant=True)
+
+    @defer.inlineCallbacks
     def test_api_collection_order_on_unselected(self):
         yield self.render_resource(self.rsrc, '/test?field=id&order=info')
         self.assertRestError(message="cannot order on un-selected fields",
