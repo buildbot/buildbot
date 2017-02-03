@@ -50,6 +50,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
+from buildbot.secrets.manager import SecretManager
 from buildbot.status.master import Status
 from buildbot.util import ascii2unicode
 from buildbot.util import check_functional_environment
@@ -147,6 +148,8 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
     def create_child_services(self):
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
+        self.secret_manager = SecretManager()
+        self.secret_manager.setServiceParent(self)
 
         self.metrics = metrics.MetricLogObserver()
         self.metrics.setServiceParent(self)
