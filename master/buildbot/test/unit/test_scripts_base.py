@@ -320,6 +320,9 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     @skipUnlessPlatformIs('posix')
     def test_checkBasedir_active_pidfile(self):
+        """
+        active PID file is giving error.
+        """
         self.activeBasedir()
         # write our own pid in the file
         with open(os.path.join('test', 'twistd.pid'), 'w') as f:
@@ -330,8 +333,10 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     @skipUnlessPlatformIs('posix')
     def test_checkBasedir_bad_pidfile(self):
+        """
+        corrupted PID file is giving error.
+        """
         self.activeBasedir()
-        # write our own pid in the file
         with open(os.path.join('test', 'twistd.pid'), 'w') as f:
             f.write("xxx")
         rv = base.checkBasedir(mkconfig())
@@ -344,7 +349,6 @@ class TestLoadConfig(dirs.DirsMixin, misc.StdoutAssertionsMixin,
         Stale PID file is removed without causing a system exit.
         """
         self.activeBasedir()
-        # write our own pid in the file
         pidfile = os.path.join('test', 'twistd.pid')
         with open(pidfile, 'w') as f:
             f.write(str(os.getpid() + 1))
