@@ -37,7 +37,12 @@ from buildbot.www import authz
 
 
 class FakeSession(object):
-    pass
+
+    def __init__(self):
+        self.user_info = {"anonymous": True}
+
+    def updateSession(self, request):
+        pass
 
 
 class FakeRequest(object):

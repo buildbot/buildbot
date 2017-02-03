@@ -21,6 +21,7 @@ from future.utils import itervalues
 from future.utils import string_types
 from future.utils import text_type
 
+import datetime
 import inspect
 import os
 import re
@@ -790,7 +791,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                        'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles', 'versions',
                        'change_hook_dialects', 'change_hook_auth',
-                       'custom_templates_dir'])
+                       'custom_templates_dir', 'cookie_expiration_time'])
         unknown = set(list(www_cfg)) - allowed
 
         if unknown:
@@ -810,6 +811,11 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                         break
                     cleaned_versions.append(v)
             www_cfg['versions'] = cleaned_versions
+
+        cookie_expiration_time = www_cfg.get('cookie_expiration_time')
+        if cookie_expiration_time is not None:
+            if not isinstance(cookie_expiration_time, datetime.timedelta):
+                error('Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
 
         self.www.update(www_cfg)
 

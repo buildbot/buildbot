@@ -17,13 +17,20 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
 
+import calendar
+import datetime
 import os
+from binascii import hexlify
+
+import jwt
 
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
+from twisted.python import components
 from twisted.python import log
+from twisted.python.logfile import LogFile
 from twisted.web import guard
 from twisted.web import resource
 from twisted.web import server
@@ -39,13 +46,126 @@ from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
 
+# as per: http://security.stackexchange.com/questions/95972/what-are-requirements-for-hmac-secret-key
+# we need 128 bit key for HS256
+SESSION_SECRET_LENGTH = 128
+SESSION_SECRET_ALGORITHM = "HS256"
 
-# todo: need to store session infos in the db for multimaster
-# rough examination, it looks complicated, as all the session APIs are sync
+
 class BuildbotSession(server.Session):
-    # default session timeout is 15min, which is very short for our usage.
-    # put it to one week
-    sessionTimeout = 7 * 24 * 60
+    # We deviate a bit from the twisted API in order to implement that.
+    # We keep it a subclass of server.Session (to be safe against isinstance),
+    # but we re implement all its API.
+    # But as there is no support in twisted web for clustered session management, this leaves
+    # us with few choice.
+    expDelay = datetime.timedelta(weeks=1)
+
+    def __init__(self, site, token=None):
+        """
+        Initialize a session with a unique ID for that session.
+        """
+        self.site = site
+        assert self.site.session_secret is not None, "site.session_secret is not configured yet!"
+        components.Componentized.__init__(self)
+        if token:
+            self._fromToken(token)
+        else:
+            self._defaultValue()
+
+    def _defaultValue(self):
+        self.user_info = {"anonymous": True}
+
+    def _fromToken(self, token):
+        try:
+            decoded = jwt.decode(token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+        except jwt.exceptions.ExpiredSignatureError as e:
+            raise KeyError(str(e))
+        except Exception as e:
+            log.err(e, "while decoding JWT session")
+            raise KeyError(str(e))
+        # might raise KeyError: will be caught by caller, which makes the token invalid
+        self.user_info = decoded['user_info']
+
+    def updateSession(self, request):
+        """
+        Update the cookie after session object was modified
+        @param request: the request object which should get a new cookie
+        """
+        # we actually need to copy some hardcoded constants from twisted :-(
+
+        # Make sure we aren't creating a secure session on a non-secure page
+        secure = request.isSecure()
+
+        if not secure:
+            cookieString = b"TWISTED_SESSION"
+        else:
+            cookieString = b"TWISTED_SECURE_SESSION"
+
+        cookiename = b"_".join([cookieString] + request.sitepath)
+        request.addCookie(cookiename, self.uid, path=b"/",
+                          secure=secure)
+
+    def expire(self):
+        # caller must still call self.updateSession() to actually expire it
+        self._defaultValue()
+
+    def notifyOnExpire(self, callback):
+        raise NotImplementedError("BuildbotSession can't support notify on session expiration")
+
+    def touch(self):
+        pass
+
+    @property
+    def uid(self):
+        """uid is now generated automatically according to the claims.
+
+        This should actually only be used for cookie generation
+        """
+        exp = datetime.datetime.utcnow() + self.expDelay
+        claims = {
+            'user_info': self.user_info,
+            # Note that we use JWT standard 'exp' field to implement session expiration
+            # we completely bypass twisted.web session expiration mechanisms
+            'exp': calendar.timegm(datetime.datetime.timetuple(exp))}
+
+        return jwt.encode(claims, self.site.session_secret, algorithm=SESSION_SECRET_ALGORITHM)
+
+
+class BuildbotSite(server.Site):
+
+    """ A custom Site for Buildbot needs.
+        Supports rotating logs, and JWT sessions
+    """
+
+    def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
+        server.Site.__init__(self, root, logPath=logPath)
+        self.rotateLength = rotateLength
+        self.maxRotatedFiles = maxRotatedFiles
+        self.session_secret = None
+
+    def _openLogFile(self, path):
+        return LogFile.fromFullPath(
+            path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
+
+    def setSessionSecret(self, secret):
+        self.session_secret = secret
+
+    def makeSession(self):
+        """
+        Generate a new Session instance, but not store it for future reference
+        (because it will be used by another master instance)
+        The session will still be cached by twisted.request
+        """
+        return BuildbotSession(self)
+
+    def getSession(self, uid):
+        """
+        Get a previously generated session.
+        @param uid: Unique ID of the session (a JWT token).
+        @type uid: L{bytes}.
+        @raise: L{KeyError} if the session is not found.
+        """
+        return BuildbotSession(self, uid)
 
 
 class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
@@ -86,6 +206,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
         if self.site:
             self.reconfigSite(new_config)
+            yield self.makeSessionSecret()
 
         if www['port'] != self.port:
             if self.port_service:
@@ -190,35 +311,14 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         maxRotatedFiles = new_config.www.get(
             'maxRotatedFiles') or self.master.log_rotation.maxRotatedFiles
 
-        class RotateLogSite(server.Site):
-
-            """ A Site that logs to a separate file: http.log, and rotate its logs """
-
-            def _openLogFile(self, path):
-                try:
-                    from twisted.python.logfile import LogFile
-                    log.msg("Setting up http.log rotating %s files of %s bytes each" %
-                            (maxRotatedFiles, rotateLength))
-                    # not present in Twisted-2.5.0
-                    if hasattr(LogFile, "fromFullPath"):
-                        return LogFile.fromFullPath(path, rotateLength=rotateLength, maxRotatedFiles=maxRotatedFiles)
-                    else:
-                        log.msg(
-                            "WebStatus: rotated http logs are not supported on this version of Twisted")
-                except ImportError as e:
-                    log.msg(
-                        "WebStatus: Unable to set up rotating http.log: %s" % e)
-
-                # if all else fails, just call the parent method
-                return server.Site._openLogFile(self, path)
-
         httplog = None
         if new_config.www['logfileName']:
             httplog = os.path.abspath(
                 os.path.join(self.master.basedir, new_config.www['logfileName']))
-        self.site = RotateLogSite(root, logPath=httplog)
+        self.site = BuildbotSite(root, logPath=httplog, rotateLength=rotateLength,
+                                 maxRotatedFiles=maxRotatedFiles)
 
-        self.site.sessionFactory = BuildbotSession
+        self.site.sessionFactory = None
 
         # Make sure site.master is set. It is required for poller change_hook
         self.site.master = self.master
@@ -232,8 +332,28 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def reconfigSite(self, new_config):
         new_config.www['auth'].reconfigAuth(self.master, new_config)
+        cookie_expiration_time = new_config.www.get('cookie_expiration_time')
+        if cookie_expiration_time is not None:
+            BuildbotSession.expDelay = cookie_expiration_time
+
         for rsrc in self.reconfigurableResources:
             rsrc.reconfigResource(new_config)
+
+    @defer.inlineCallbacks
+    def makeSessionSecret(self):
+        state = self.master.db.state
+        objectid = yield state.getObjectId(
+            "www", "buildbot.www.service.WWWService")
+
+        def create_session_secret():
+            # Bootstrap: We need to create a key, that will be shared with other masters
+            # and other runs of this master
+
+            # we encode that in hex for db storage convenience
+            return hexlify(os.urandom(SESSION_SECRET_LENGTH / 8))
+
+        session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
+        self.site.setSessionSecret(session_secret)
 
     def setupProtectedResource(self, resource_obj, checkers):
         @implementer(IRealm)
@@ -256,7 +376,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def getUserInfos(self, request):
         session = request.getSession()
-        return getattr(session, "user_info", {"anonymous": True})
+        return session.user_info
 
     def assertUserAllowed(self, request, ep, action, options):
         user_info = self.getUserInfos(request)

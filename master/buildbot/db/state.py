@@ -167,3 +167,25 @@ class StateConnectorComponent(base.DBConnectorComponent):
         # called so tests can simulate another process inserting a database row
         # at an inopportune moment
         pass
+
+    def atomicCreateState(self, objectid, name, thd_create_callback):
+        def thd(conn):
+            object_state_tbl = self.db.model.object_state
+            res = self.thdGetState(conn, objectid, name, default=None)
+            if res is None:
+                res = thd_create_callback()
+                try:
+                    value_json = json.dumps(res)
+                except (TypeError, ValueError):
+                    raise TypeError("Error encoding JSON for %r" % (res,))
+                self._test_timing_hook(conn)
+                try:
+                    conn.execute(object_state_tbl.insert(),
+                                 objectid=objectid,
+                                 name=name,
+                                 value_json=value_json)
+                except (sqlalchemy.exc.IntegrityError, sqlalchemy.exc.ProgrammingError):
+                    # someone beat us to it - oh well return that value
+                    return self.thdGetState(conn, objectid, name)
+            return res
+        return self.db.pool.do(thd)

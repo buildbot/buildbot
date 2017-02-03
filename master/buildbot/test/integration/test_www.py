@@ -66,7 +66,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(table_names=['masters'],
+        yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
                                      sqlite_memory=False)
 
         master = fakemaster.FakeMaster()
