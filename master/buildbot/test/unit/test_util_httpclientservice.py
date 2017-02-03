@@ -27,7 +27,6 @@ import mock
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python.compat import intToBytes
-from twisted.python.compat import networkString
 from twisted.trial import unittest
 from twisted.web import resource
 from twisted.web import server
@@ -72,16 +71,20 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     def test_put(self):
         self._http.put('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        jsonBytes = unicode2bytes(jsonStr)
         self._http._session.request.assert_called_once_with('put', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            data=json.dumps(dict(foo='bar')),
+                                                            data=jsonBytes,
                                                             headers={'Content-Type': 'application/json'})
 
     def test_post(self):
         self._http.post('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        jsonBytes = unicode2bytes(jsonStr)
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            data=json.dumps(dict(foo='bar')),
+                                                            data=jsonBytes,
                                                             headers={'Content-Type': 'application/json'})
 
     def test_delete(self):
@@ -93,10 +96,11 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
     def test_post_headers(self):
         self.base_headers.update({'X-TOKEN': 'XXXYYY'})
         self._http.post('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        jsonBytes = unicode2bytes(jsonStr)
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            data=json.dumps(dict(
-                                                                foo='bar')),
+                                                            data=jsonBytes,
                                                             headers={
                                                                 'X-TOKEN': 'XXXYYY',
                                                                 'Content-Type': 'application/json'})
@@ -106,10 +110,11 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            auth=('user', 'pa$$')))
         self._http.post('/bar', json={'foo': 'bar'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        jsonBytes = unicode2bytes(jsonStr)
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
-                                                            data=json.dumps(dict(
-                                                                foo='bar')),
+                                                            data=jsonBytes,
                                                             auth=(
                                                                 'user', 'pa$$'),
                                                             headers={
@@ -136,14 +141,14 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http.put('/bar', json={'foo': 'bar'})
         httpclientservice.treq.put.assert_called_once_with('http://foo/bar',
                                                            agent=mock.ANY,
-                                                           data='{"foo": "bar"}',
+                                                           data=b'{"foo": "bar"}',
                                                            headers={'Content-Type': ['application/json']})
 
     def test_post(self):
         self._http.post('/bar', json={'foo': 'bar'})
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
-                                                            data='{"foo": "bar"}',
+                                                            data=b'{"foo": "bar"}',
                                                             headers={'Content-Type': ['application/json']})
 
     def test_delete(self):
@@ -157,7 +162,7 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http.post('/bar', json={'foo': 'bar'})
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
-                                                            data='{"foo": "bar"}',
+                                                            data=b'{"foo": "bar"}',
                                                             headers={
                                                                 'Content-Type': ['application/json'],
                                                                 'X-TOKEN': ['XXXYYY']})
@@ -169,7 +174,7 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http.post('/bar', json={'foo': 'bar'})
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
-                                                            data='{"foo": "bar"}',
+                                                            data=b'{"foo": "bar"}',
                                                             auth=(
                                                                 'user', 'pa$$'),
                                                             headers={
@@ -211,12 +216,14 @@ class MyResource(resource.Resource):
 
         args = decode(request.args)
         content_type = request.getHeader(b'content-type')
-        if content_type is not None and content_type == "application/json":
-            args['json_received'] = json.loads(request.content.read())
+        if content_type == b"application/json":
+            jsonBytes = request.content.read()
+            jsonStr = bytes2NativeString(jsonBytes)
+            args['json_received'] = json.loads(jsonStr)
 
         data = json.dumps(args)
         data = unicode2bytes(data)
-        request.setHeader(b'content-type', networkString('application/json'))
+        request.setHeader(b'content-type', b'application/json')
         request.setHeader(b'content-length', intToBytes(len(data)))
         if request.method == b'HEAD':
             return b''
@@ -287,7 +294,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     @defer.inlineCallbacks
     def test_put_content_with_json(self):
         exp_content_json = dict(json_received=dict(a='b'))
-        self.expect('post', '/', json=dict(a='b'), content_json=exp_content_json)
+        self.expect('post', '/', json=dict(a='b'),
+                    content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b'))
         content = yield res.content()
         content = json.loads(content)
@@ -297,7 +305,8 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
     def test_put_content_with_json_datetime(self):
         exp_content_json = dict(json_received=dict(a='b', ts=12))
         dt = datetime.datetime.utcfromtimestamp(12)
-        self.expect('post', '/', json=dict(a='b', ts=dt), content_json=exp_content_json)
+        self.expect('post', '/', json=dict(a='b', ts=dt),
+                    content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b', ts=dt))
         content = yield res.content()
         content = json.loads(content)
