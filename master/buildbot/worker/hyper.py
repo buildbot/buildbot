@@ -129,14 +129,22 @@ class HyperLatentWorker(DockerBaseWorker):
         defer.returnValue(True)
 
     def _thd_cleanup_instance(self):
+        container_name = self.getContainerName()
         instances = self.client.containers(
             all=1,
-            filters=dict(name=self.getContainerName()))
+            filters=dict(name=container_name))
         for instance in instances:
+            # hyper filtering will match 'hyper12" if you search for 'hyper1' !
+            if "".join(instance['Names']).strip("/") != container_name:
+                continue
             try:
                 self.client.remove_container(instance['Id'], v=True, force=True)
             except NotFound:
                 pass  # that's a race condition
+            except docker.errors.APIError as e:
+                if "Conflict operation on container" not in str(e):
+                    raise
+                # else: also race condition.
 
     def _thd_start_instance(self, image):
         t1 = time.time()
