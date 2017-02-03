@@ -36,7 +36,7 @@ class UrlForBuildMaster(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
-        self.assertIn("['echo', 'http://localhost:8080/#builders/1/builds/1']",
+        self.assertIn("echo 'http://localhost:8080/#builders/1/builds/1'",
                       build['steps'][0]['logs'][0]['contents']['content'])
 
 

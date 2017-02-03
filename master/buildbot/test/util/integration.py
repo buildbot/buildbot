@@ -19,12 +19,12 @@ from __future__ import print_function
 from future.utils import itervalues
 
 import sys
+from io import StringIO
 
 import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.python.compat import NativeStringIO
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 from zope.interface import implementer
@@ -140,8 +140,8 @@ class RunMasterBase(unittest.TestCase):
         @defer.inlineCallbacks
         def dump():
             if not self._passed:
-                dump = NativeStringIO()
-                print("FAILED! dumping build db for debug", file=dump)
+                dump = StringIO()
+                print(u"FAILED! dumping build db for debug", file=dump)
                 builds = yield self.master.data.get(("builds",))
                 for build in builds:
                     yield self.printBuild(build, dump, withLogs=True)
@@ -189,7 +189,8 @@ class RunMasterBase(unittest.TestCase):
         builds = yield self.master.data.get(
             ('builds',),
             filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
-        # if the build has been retried, there will be several matching builds. We return the last build
+        # if the build has been retried, there will be several matching builds.
+        # We return the last build
         build = builds[-1]
         finishedConsumer.stopConsuming()
         yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
@@ -216,22 +217,22 @@ class RunMasterBase(unittest.TestCase):
     def printBuild(self, build, out=sys.stdout, withLogs=False):
         # helper for debugging: print a build
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
-        print("*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
-                                                statusToString(build['results'])), file=out)
+        print(u"*** BUILD %d *** ==> %s (%s)" % (build['buildid'], build['state_string'],
+                                                 statusToString(build['results'])), file=out)
         for step in build['steps']:
-            print("    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
-                                                       statusToString(step['results'])), file=out)
+            print(u"    *** STEP %s *** ==> %s (%s)" % (step['name'], step['state_string'],
+                                                        statusToString(step['results'])), file=out)
             for url in step['urls']:
-                print("       url:%s (%s)" %
+                print(u"       url:%s (%s)" %
                       (url['name'], url['url']), file=out)
             for log in step['logs']:
-                print("        log:%s (%d)" %
+                print(u"        log:%s (%d)" %
                       (log['name'], log['num_lines']), file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
     def printLog(self, log, out):
-        print(" " * 8 + "*********** LOG: %s *********" %
+        print(u" " * 8 + "*********** LOG: %s *********" %
               (log['name'],), file=out)
         if log['type'] == 's':
             for line in log['contents']['content'].splitlines():
@@ -243,7 +244,7 @@ class RunMasterBase(unittest.TestCase):
                 if linetype == 'e':
                     # red
                     line = "\x1b[31m" + line + "\x1b[0m"
-                print(" " * 8 + line)
+                print(u" " * 8 + line)
         else:
-            print(log['contents']['content'], file=out)
-        print(" " * 8 + "********************************", file=out)
+            print(u"" + log['contents']['content'], file=out)
+        print(u" " * 8 + "********************************", file=out)
