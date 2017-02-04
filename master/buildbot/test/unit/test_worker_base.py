@@ -321,7 +321,7 @@ class TestAbstractWorker(unittest.TestCase):
                             missing_timeout=3600)
         bs.parent = mock.Mock()
         bs.startMissingTimer()
-        self.assertEqual(bs.missing_timer, None)
+        self.assertNotEqual(bs.missing_timer, None)
 
     def test_missing_timer(self):
         bs = ConcreteWorker('bot', 'pass',
@@ -506,6 +506,14 @@ class TestAbstractWorker(unittest.TestCase):
         yield worker.shutdownRequested()
         self.assertEqual(worker.worker_status.getGraceful(), True)
 
+    @defer.inlineCallbacks
+    def test_missing_timer_missing(self):
+        worker = self.createWorker(attached=False, missing_timeout=1)
+        yield worker.startService()
+        self.assertNotEqual(worker.missing_timer, None)
+        yield self.clock.advance(1)
+        self.assertEqual(worker.missing_timer, None)
+        self.assertEqual(len(self.master.data.updates.missingWorkers), 1)
 
 class TestAbstractLatentWorker(unittest.SynchronousTestCase):
 

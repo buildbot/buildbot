@@ -57,7 +57,8 @@ class FakeUpdates(service.AsyncService):
         self.stepStateString = {}  # { stepid : string }
         self.stepUrls = {}  # { stepid : [(name,url)] }
         self.properties = []
-    # extra assertions
+        self.missingWorkers = []
+        # extra assertions
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
@@ -437,6 +438,9 @@ class FakeUpdates(service.AsyncService):
     def deconfigureAllWorkersForMaster(self, masterid):
         return self.master.db.workers.deconfigureAllWorkersForMaster(
             masterid=masterid)
+
+    def workerMissing(self, workerid, masterid, last_connection, notify):
+        self.missingWorkers.append((workerid, masterid, last_connection, notify))
 
 
 class FakeDataConnector(service.AsyncMultiService):
