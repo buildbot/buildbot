@@ -53,7 +53,6 @@ if boto3 is None:
 
 class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
-
     def setUp(self):
         super(TestEC2LatentWorker, self).setUp()
         if boto3 is None:
@@ -173,7 +172,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  subnet_id=subnet.id,
                                  ami=amis[0].id
                                  )
-
+        bs._poll_resolution = 0
         instance_id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -203,6 +202,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      secret_identifier='privatekey',
                                      ami=amis[0].id
                                      )
+        bs._poll_resolution = 1
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
         self.assertTrue(image_id.startswith('ami-'))
@@ -338,6 +338,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  ami=ami.id,
                                  volumes=[(vol.id, "/dev/sdz")]
                                  )
+        bs._poll_resolution = 0
         id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -365,6 +366,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      tags=tags,
                                      ami=amis[0].id
                                      )
+        bs._poll_resolution = 0
         id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -387,6 +389,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  elastic_ip=elastic_ip,
                                  ami=amis[0].id
                                  )
+        bs._poll_resolution = 0
         id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -413,7 +416,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                  security_group_ids=[sg.id],
                                  subnet_id=subnet.id,
                                  )
-
+        bs._poll_resolution = 0
         instance_id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
@@ -446,6 +449,7 @@ class TestEC2LatentWorker(unittest.TestCase):
                                      max_spot_price=1.5,
                                      product_description=product_description
                                      )
+        bs._poll_resolution = 0
         instance_id, _, _ = bs._start_instance()
         instances = r.instances.filter(
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
