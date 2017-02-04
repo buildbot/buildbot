@@ -126,6 +126,7 @@ buildbot.test.unit.test_steps_mswin
 buildbot.test.unit.test_steps_mtrlogobserver
 buildbot.test.unit.test_steps_package_deb_lintian
 buildbot.test.unit.test_steps_package_deb_pbuilder
+buildbot.test.unit.test_steps_package_rpm_mock
 buildbot.test.unit.test_steps_package_rpm_rpmbuild
 buildbot.test.unit.test_steps_package_rpm_rpmlint
 buildbot.test.unit.test_steps_python.BuildEPYDoc
