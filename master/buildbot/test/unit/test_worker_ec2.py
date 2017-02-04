@@ -53,6 +53,7 @@ if boto3 is None:
 
 class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
+
     def setUp(self):
         super(TestEC2LatentWorker, self).setUp()
         if boto3 is None:
