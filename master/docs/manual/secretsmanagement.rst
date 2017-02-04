@@ -14,8 +14,8 @@ Secrets may be a ssh key, a password, or a file content like a wgetrc file or a 
 To preserve confidentiality the secrets values must not be logged in the twisted logs or steps logs.
 Secrets must not be stored in the Buildbot configuration (master.cfg), as the source code is usually shared in SCM like git.
 
-How to use Buildbot Secret Managment
-====================================
+How to use Buildbot Secret Management
+=====================================
 
 Secrets and providers
 ---------------------
