@@ -295,7 +295,7 @@ class AbstractWorker(service.BuildbotService, object):
         yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):
-        if self.notify_on_missing and self.missing_timeout and self.parent:
+        if self.missing_timeout and self.parent:
             self.stopMissingTimer()  # in case it's already running
             self.missing_timer = self.master.reactor.callLater(self.missing_timeout,
                                                                self._missing_timer_fired)
