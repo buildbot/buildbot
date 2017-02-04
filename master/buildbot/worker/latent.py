@@ -46,6 +46,7 @@ class AbstractLatentWorker(AbstractWorker):
     substantiation_build = None
     insubstantiating = False
     build_wait_timer = None
+    start_missing_on_startup = False
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
