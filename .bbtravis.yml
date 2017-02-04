@@ -73,8 +73,8 @@ matrix:
     #- python: "2.6"
     #  env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
-#    - python: "3.4"
-#      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
+    - python: "3.5"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=py3
 
 # Dependencies installation commands
 install:
@@ -87,7 +87,7 @@ install:
       set -e
       [ $TWISTED = latest ] || pip install Twisted==$TWISTED
       [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js ] || \
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js -a $TESTS != py3] || \
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -98,8 +98,7 @@ install:
 
       [ $TESTS != trial_worker ] || pip install -e 'worker[test]'
 
-      [ $TESTS != trial -a $TESTS != coverage ] || pip install --pre buildbot_www
-      [ $TESTS != py3 ] || pip install -e worker future
+      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != py3] || pip install buildbot_www
 
       [ $TESTS != lint ] || pip install -e './master[docs,test]'
       # until towncrier toml is released, we need to fetch from git :-/
@@ -145,7 +144,7 @@ script:
 
   - title: py3 tests
     condition: TESTS == "py3"
-    cmd: trial  --reporter=text --rterrors buildbot_worker.test"
+    cmd: trial  --reporter=text --rterrors `cat .py3_tests_status.txt`
 
   # Run additional tests in their separate job
   - title: pylint
