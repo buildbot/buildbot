@@ -44,7 +44,12 @@ class Client(object):
 
     def containers(self, filters=None, *args, **kwargs):
         if filters is not None:
-            return [c for c in self._containers.values() if c['name'] == filters['name']]
+            def match(name, names):
+                for n in names:
+                    if name in n:
+                        return True
+                return False
+            return [c for c in self._containers.values() if match(filters['name'], c['Names'])]
         return self._containers.values()
 
     def create_container(self, image, name=None, *args, **kwargs):
@@ -55,7 +60,9 @@ class Client(object):
                 raise Exception("cannot create with same name")
         ret = {'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
                'Warnings': None}
-        self._containers[ret['Id']] = {'started': False, 'image': image, 'Id': ret['Id'], "name": name}
+        self._containers[ret['Id']] = {
+            'started': False, 'image': image, 'Id': ret['Id'], "Names": ["/" + name]
+        }
         return ret
 
     def remove_container(self, id, **kwargs):
