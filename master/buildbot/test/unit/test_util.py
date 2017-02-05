@@ -281,12 +281,8 @@ class Bytes2Unicode(unittest.TestCase):
         rv1 = util.bytes2unicode(b'abcd')
         rv2 = util.bytes2unicode('efgh')
 
-        if PY3:
-            self.assertEqual(type(rv1), str)
-            self.assertEqual(type(rv2), str)
-        else:
-            self.assertEqual(type(rv1), unicode)
-            self.assertEqual(type(rv2), unicode)
+        self.assertEqual(type(rv1), text_type)
+        self.assertEqual(type(rv2), text_type)
 
     def test_bytes2NativeString(self):
         rv = util.bytes2NativeString(b'abcd')

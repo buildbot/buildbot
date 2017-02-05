@@ -16,6 +16,7 @@
 import sys
 
 from twisted.python import util
+from builtins import int
 
 
 def onlyOnce(fn):
@@ -74,7 +75,7 @@ def patch_mysqlclient_warnings():
     # we swap _mysql_exceptions.Warning arguments so that the code is in second place
 
     def patched_init(self, *args):
-        if isinstance(args[0], long):
+        if isinstance(args[0], int):
             super(Warning, self).__init__(args[1], args[0], *args[2:])
         else:
             super(Warning, self).__init__(*args)
