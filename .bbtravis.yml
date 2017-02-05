@@ -144,7 +144,7 @@ script:
 
   - title: py3 tests
     condition: TESTS == "py3"
-    cmd: trial  --reporter=text --rterrors `cat .py3_tests_status.txt`
+    cmd: python common/run_py3_working_tests.py
 
   # Run additional tests in their separate job
   - title: pylint
