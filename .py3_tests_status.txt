@@ -141,6 +141,7 @@ buildbot.test.unit.test_steps_source_gerrit
 buildbot.test.unit.test_steps_source_git
 buildbot.test.unit.test_steps_source_mercurial
 buildbot.test.unit.test_steps_source_mtn
+buildbot.test.unit.test_steps_source_p4
 buildbot.test.unit.test_steps_source_repo
 buildbot.test.unit.test_steps_source_svn.TestGetUnversionedFiles
 buildbot.test.unit.test_steps_source_svn.TestSVN
