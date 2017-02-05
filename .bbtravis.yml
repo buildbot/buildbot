@@ -85,9 +85,10 @@ install:
   - |
       # pip installs
       set -e
-      [ $TWISTED = latest ] || pip install Twisted==$TWISTED
-      [ $SQLALCHEMY = latest ] || pip install sqlalchemy==$SQLALCHEMY
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != lint -a $TESTS != js -a $TESTS != py3] || \
+      if [ $TWISTED = trunk ]; then pip install git+https://github.com/twisted/twisted ; fi
+      if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
+      if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
+      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js -o $TESTS = py3 ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -95,17 +96,18 @@ install:
                   psycopg2 \
                   pg8000 \
                   codecov
+      fi
 
-      [ $TESTS != trial_worker ] || pip install -e 'worker[test]'
+      if [ $TESTS = trial_worker ]; then pip install -e 'worker[test]'; fi
 
-      [ $TESTS != trial -a $TESTS != coverage -a $TESTS != py3] || pip install buildbot_www
+      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = py3 ]; then pip install buildbot_www; fi
 
-      [ $TESTS != lint ] || pip install -e './master[docs,test]'
+      if [ $TESTS = lint ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
-      [ $TESTS != docs ] || pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'
+      if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
 
-      [ $TESTS != setuppy_test ] || ! (pip list | grep Twisted)
-      [ $TESTS != setuppy_test ] || pip install autobahn Twisted
+      if [ $TESTS = setuppy_test ]; then ! (pip list | grep Twisted); fi
+      if [ $TESTS = setuppy_test ]; then pip install autobahn Twisted; fi
 
 before_script:
   # create real database for tests
@@ -188,7 +190,7 @@ notifications:
 after_script:
   - |
       # codecov
-      [ $TESTS != coverage ] || CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov
+      if [ $TESTS = coverage ]; then CODECOV_TOKEN="b80c80d7-689d-46d7-b1aa-59168bb4c9a9" codecov; fi
   # List installed packages along with their versions.
   - "pip list"
 
