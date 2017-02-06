@@ -1,10 +1,6 @@
 Secrets
 -------
 
-.. spelling::
-
-  secretDetails
-
 .. code-block:: python
 
   class SecretDetails(object):
@@ -14,9 +10,9 @@ Secrets
 
       def __init__(self, source, key, value):
 
-A secretDetails is a python object initialized with a provider name, a key, a value and properties if needed.
+A ``secretDetails`` is a python object initialized with a provider name, a key, a value and properties if needed.
 Each parameter is an object property that should be returned the value.
-Secrets founded are stored in a SecretDetails.
+Secrets founded are stored in a ``secretDetails``.
 
 Secrets manager
 ---------------
@@ -29,7 +25,7 @@ The manager is a Buildbot service.
     secretDetailsList = secretsService.get(self.secrets)
 
 The service execute a get method.
-Depending on the kind of storage chosen and declared in the configuration, the manager get the selected provider and return a list of secretDetails.
+Depending on the kind of storage chosen and declared in the configuration, the manager get the selected provider and return a list of ``secretDetails``.
 
 Secrets providers
 -----------------

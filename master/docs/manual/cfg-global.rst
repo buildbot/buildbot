@@ -824,12 +824,8 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
 
 .. bb:cfg:: secretProviders
 
-.. spelling::
-
-   secretProviders
-
-secretProviders
-~~~~~~~~~~~~~~~
+``secretProviders``
+~~~~~~~~~~~~~~~~~~~
 
 see :ref:`secretManagement` for details on secret concepts.
 
