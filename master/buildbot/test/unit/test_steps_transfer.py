@@ -520,6 +520,25 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    def testMultipleString(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(workersrcs="srcfile", masterdest=self.destdir))
+        self.expectCommands(
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                workersrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(remotetransfer.FileWriter)))
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0)
+        self.expectOutcome(
+            result=SUCCESS, state_string="uploading 1 file")
+        d = self.runStep()
+        return d
+
     def testGlob(self):
         self.setupStep(
             transfer.MultipleFileUpload(

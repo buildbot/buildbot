@@ -277,7 +277,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
 
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.workersrcs = workersrcs
+        self.workersrcs = workersrcs if isinstance(workersrcs, list) else [workersrcs]
         self._registerOldWorkerAttr("workersrcs")
         self.masterdest = masterdest
         self.maxsize = maxsize
