@@ -15,6 +15,7 @@
 
 from __future__ import print_function
 
+import functools
 import os
 import re
 import socket
@@ -233,6 +234,18 @@ def _read_dir_contents(dirname):
     return contents
 
 
+def record_test_failure(coro):
+    @functools.wraps(coro)
+    def wrapper(self):
+        try:
+            return coro(self)
+        except Exception:
+            self.success = False
+            raise
+
+    return wrapper
+
+
 # TODO: Current implementation uses the fact that Buildbot processes are being
 # daemonized, which is not the case on Windows.
 # Implementation that uses `--nodaemon` version of Buildbot services can
@@ -260,7 +273,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.slaves_dirs = []
 
         self.logs = []
-        self.success = False
+        self.success = True
 
         self.session = Session()
 
@@ -522,6 +535,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         self.success = True
 
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
             "buildslave executable not found")
@@ -576,8 +590,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
                 indent(worker_connection_re, "    "),
                 indent(log, "    ")))
 
-        self.success = True
-
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
@@ -640,8 +653,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildbot_worker_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
 
-        self.success = True
-
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
@@ -706,8 +718,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildbot_worker_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
 
-        self.success = True
-
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
             "buildslave executable not found")
@@ -772,8 +783,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildslave_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
 
-        self.success = True
-
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
             "buildslave executable not found")
@@ -836,8 +846,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildslave_stop(worker_dir)
         yield self._buildbot_stop(master_dir)
 
-        self.success = True
-
+    @record_test_failure
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
@@ -943,5 +952,3 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         yield self._buildbot_worker_stop(worker_dir)
         yield self._buildslave_stop(slave_dir)
         yield self._buildbot_stop(master_dir)
-
-        self.success = True
