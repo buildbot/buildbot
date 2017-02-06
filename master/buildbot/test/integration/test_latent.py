@@ -418,8 +418,8 @@ class Tests(SynchronousTestCase):
         for i in ["err_text", "err_html"]:
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
-            self.assertIn(os.path.join(
-                "integration", "test_latent.py"), logs_by_name[i])
+            self.assertIn("buildbot.test.integration.test_latent.TestException",
+                logs_by_name[i])
         controller.auto_stop(True)
 
     def test_failed_ping_get_requeued(self):
@@ -483,8 +483,8 @@ class Tests(SynchronousTestCase):
         for i in ["err_text", "err_html"]:
             self.assertIn("can't ping", logs_by_name[i])
             # make sure stacktrace is present in html
-            self.assertIn(os.path.join(
-                "integration", "test_latent.py"), logs_by_name[i])
+            self.assertIn("buildbot.test.integration.test_latent.TestException",
+                logs_by_name[i])
         controller.auto_stop(True)
 
     def test_worker_close_connection_while_building(self):
