@@ -31,6 +31,7 @@ from twisted.trial import unittest
 from txrequests import Session
 
 from buildbot.test.util import dirs
+from buildbot.test.util.decorators import memoize
 from buildbot.test.util.decorators import skipIf
 from buildbot.test.util.decorators import skipUnlessInstalled
 from buildbot.test.util.decorators import skipUnlessPlatformIs
@@ -63,6 +64,7 @@ except ImportError:
         return ''.join(prefixed_lines())
 
 
+@memoize
 def get_buildslave_executable():
     return which("buildslave")
 
@@ -294,7 +296,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         for slave_dir in self.slaves_dirs:
             try:
                 yield self._run_command(
-                    ['buildslave', 'stop', slave_dir])
+                    [get_buildslave_executable(), 'stop', slave_dir])
             except Exception:
                 # Ignore errors.
                 pass
@@ -376,8 +378,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.slaves_dirs.append(slave_dir)
         master_addr = 'localhost:{port}'.format(port=self.master_port)
         stdout, _ = yield self._run_command([
-            'buildslave', 'create-slave', slave_dir, master_addr,
-            name, password])
+            get_buildslave_executable(), 'create-slave', slave_dir,
+            master_addr, name, password])
         self.assertIn("buildslave configured in", stdout)
 
     @defer.inlineCallbacks
@@ -410,7 +412,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def _buildslave_start(self, slave_dir):
         stdout, _ = yield self._run_command([
-            'buildslave', 'start', slave_dir])
+            get_buildslave_executable(), 'start', slave_dir])
 
         self.assertIn(
             "The buildslave appears to have (re)started correctly",
@@ -419,7 +421,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def _buildslave_stop(self, slave_dir):
         stdout, _ = yield self._run_command(
-            ['buildslave', 'stop', slave_dir])
+            [get_buildslave_executable(), 'stop', slave_dir])
         self.assertRegexpMatches(stdout, r"buildslave process \d+ is dead")
 
     @defer.inlineCallbacks
