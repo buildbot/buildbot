@@ -31,6 +31,7 @@ from twisted.trial import unittest
 from txrequests import Session
 
 from buildbot.test.util import dirs
+from buildbot.test.util.decorators import skipIf
 from buildbot.test.util.decorators import skipUnlessInstalled
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
@@ -60,6 +61,10 @@ except ImportError:
             for line in text.splitlines(True):
                 yield (prefix + line if predicate(line) else line)
         return ''.join(prefixed_lines())
+
+
+def get_buildslave_executable():
+    return which("buildslave")
 
 
 def get_open_port():
@@ -503,8 +508,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildslave.bot',
-                         "buildslave package is not installed")
+    @skipIf(get_buildslave_executable() is None,
+            "buildslave executable not found")
     def test_master_slave_setup(self):
         """Create master and slave (with default pyflakes configuration),
         start them, stop them.
@@ -689,8 +694,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildslave.bot',
-                         "buildslave package is not installed")
+    @skipIf(get_buildslave_executable() is None,
+            "buildslave executable not found")
     def test_file_transfer_on_slave(self):
         """Run file transfer between master/buildslave."""
 
@@ -755,8 +760,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildslave.bot',
-                         "buildslave package is not installed")
+    @skipIf(get_buildslave_executable() is None,
+            "buildslave executable not found")
     def test_shell_command_on_slave(self):
         """Run simple ShellCommand on worker."""
 
@@ -821,8 +826,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     @skipUnlessInstalled('buildbot_worker',
                          "buildbot-worker package is not installed")
-    @skipUnlessInstalled('buildslave.bot',
-                         "buildslave package is not installed")
+    @skipIf(get_buildslave_executable() is None,
+            "buildslave executable not found")
     def test_shell_command_on_worker_and_slave(self):
         """Test simultaneous work of old and new workers."""
 
