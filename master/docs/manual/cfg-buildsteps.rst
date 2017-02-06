@@ -2175,7 +2175,8 @@ Transferring Multiple Files At Once
 
 In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files (and directories) in a single :class:`BuildStep`.
 The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``workersrc`` parameter it takes a (plural) ``workersrcs`` parameter.
-This parameter should either be a list, or something that can be rendered as a list.::
+This parameter should either be a list, or something that can be rendered as a list.
+Additionally it supports the ``glob`` parameter if this parameter is set to ``True`` all arguments in ``workersrcs`` will be parsed through ``glob`` and the results will be uploaded to ``masterdest``.::
 
     from buildbot.plugins import steps
 

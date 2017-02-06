@@ -31,6 +31,8 @@ from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SKIPPED
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util import flatten
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
@@ -248,14 +250,16 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
+class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
+                         CompositeStepMixin):
 
     name = 'upload'
+    logEnviron = False
 
     renderables = ['workersrcs', 'masterdest', 'url']
 
     def __init__(self, workersrcs=None, masterdest=None,
-                 workdir=None, maxsize=None, blocksize=16 * 1024,
+                 workdir=None, maxsize=None, blocksize=16 * 1024, glob=False,
                  mode=None, compress=None, keepstamp=False, url=None,
                  slavesrcs=None,  # deprecated, use `workersrcs` instead
                  **buildstep_kwargs):
@@ -286,6 +290,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
             config.error(
                 "'compress' must be one of None, 'gz', or 'bz2'")
         self.compress = compress
+        self.glob = glob
         self.keepstamp = keepstamp
         self.url = url
 
@@ -383,15 +388,46 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
             return self.finished(SKIPPED)
 
         @defer.inlineCallbacks
-        def uploadSources():
-            for source in sources:
-                result = yield self.startUpload(source, masterdest)
-                if result == FAILURE:
-                    defer.returnValue(FAILURE)
-                    return
-            defer.returnValue(SUCCESS)
+        def globSources(sources):
+            dl = defer.DeferredList([
+                self.runGlob(
+                    os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
+            ])
+            results = yield dl
+            results = [
+                result[1]
+                for result in filter(lambda result: result[0], results)
+            ]
+            results = flatten(results)
+            defer.returnValue(results)
 
-        d = uploadSources()
+        @defer.inlineCallbacks
+        def uploadSources(sources):
+            if not sources:
+                defer.returnValue(SKIPPED)
+            else:
+                for source in sources:
+                    result = yield self.startUpload(source, masterdest)
+                    if result == FAILURE:
+                        defer.returnValue(FAILURE)
+                defer.returnValue(SUCCESS)
+
+        def logUpload(sources):
+            log.msg("MultipleFileUpload started, from worker %r to master %r" %
+                    (sources, masterdest))
+            nsrcs = len(sources)
+            self.descriptionDone = 'uploading %d %s' % (nsrcs, 'file'
+                                                        if nsrcs == 1 else
+                                                        'files')
+            return sources
+
+        if self.glob:
+            s = globSources(sources)
+        else:
+            s = defer.succeed(sources)
+
+        s.addCallback(logUpload)
+        d = s.addCallback(uploadSources)
 
         @d.addCallback
         def allUploadsDone(result):
@@ -399,13 +435,6 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin):
                 self.allUploadsDone, result, sources, masterdest)
             d.addCallback(lambda _: result)
             return d
-
-        log.msg("MultipleFileUpload started, from worker %r to master %r"
-                % (sources, masterdest))
-
-        nsrcs = len(sources)
-        self.descriptionDone = 'uploading %d %s' % (
-            nsrcs, 'file' if nsrcs == 1 else 'files')
 
         d.addCallback(self.finished).addErrback(self.failed)
 

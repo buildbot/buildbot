@@ -520,6 +520,43 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    def testGlob(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(
+                workersrcs=["src*"], masterdest=self.destdir, glob=True))
+        self.expectCommands(
+            Expect('glob', dict(path=os.path.join('wkdir', 'src*'), logEnviron=False))
+            + Expect.update('files', ["srcfile"])
+            + 0,
+            Expect('stat', dict(file="srcfile",
+                                workdir='wkdir'))
+            + Expect.update('stat', [stat.S_IFREG, 99, 99])
+            + 0,
+            Expect('uploadFile', dict(
+                workersrc="srcfile", workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(remotetransfer.FileWriter)))
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0,
+        )
+        self.expectOutcome(
+            result=SUCCESS, state_string="uploading 1 file")
+        d = self.runStep()
+        return d
+
+    def testFailedGlob(self):
+        self.setupStep(
+            transfer.MultipleFileUpload(
+                workersrcs=["src*"], masterdest=self.destdir, glob=True))
+        self.expectCommands(
+            Expect('glob', {'path': os.path.join('wkdir', 'src*'), 'logEnviron': False})
+            + Expect.update('files', [])
+            + 1,
+        )
+        self.expectOutcome(result=SKIPPED, state_string="uploading 0 files (skipped)")
+        d = self.runStep()
+        return d
+
     def testFileWorker2_16(self):
         self.setupStep(
             transfer.MultipleFileUpload(

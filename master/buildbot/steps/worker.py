@@ -279,14 +279,14 @@ class CompositeStepMixin():
                                                'logEnviron': self.logEnviron, },
                                      **kwargs)
 
-    def runGlob(self, path):
+    def runGlob(self, path, **kwargs):
         """ find files matching a shell-style pattern"""
         def commandComplete(cmd):
             return cmd.updates['files'][-1]
 
         return self.runRemoteCommand('glob', {'path': path,
                                               'logEnviron': self.logEnviron, },
-                                     evaluateCommand=commandComplete)
+                                     evaluateCommand=commandComplete, **kwargs)
 
     def getFileContentFromWorker(self, filename, abandonOnFailure=False):
         self.checkWorkerHasCommand("uploadFile")
