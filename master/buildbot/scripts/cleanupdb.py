@@ -59,8 +59,18 @@ def doCleanupDatabase(config, master_cfg):
         # sqlite vacuum function rebuild the whole database to claim
         # free disk space back
         def thd(engine):
-            r = engine.execute("vacuum;")
-            r.close()
+            # In Python 3.6 and higher, sqlite3 no longer commits an
+            # open transaction before DDL statements.
+            # It is necessary to set the isolation_level to none
+            # for auto-commit mode before doing a VACUUM.
+            # See: https://bugs.python.org/issue28518
+
+            # Get the underlying sqlite connection from SQLAlchemy.
+            sqlite_conn = engine.connection.connection
+            # Set isolation_level to 'auto-commit mode'
+            sqlite_conn.isolation_level = None
+            sqlite_conn.execute("vacuum;").close()
+
         yield db.pool.do(thd)
 
 
