@@ -78,6 +78,8 @@ from buildbot.plugins import *
 
 c = BuildmasterConfig = {}
 
+c['buildbotNetUsageData'] = None
+
 c['workers'] = [worker.Worker('example-worker', 'pass')]
 c['protocols'] = {'pb': {'port': 9989}}
 c['schedulers'] = [
@@ -105,6 +107,8 @@ WORKER_SLAVE_TEST_CONFIG = """\
 from buildbot.plugins import *
 
 c = BuildmasterConfig = {}
+
+c['buildbotNetUsageData'] = None
 
 c['workers'] = [
     # worker.Worker and buildslave.BuildSlave are synonims, there is no actual
@@ -146,6 +150,8 @@ FILE_UPLOAD_TEST_CONFIG = """\
 from buildbot.plugins import *
 
 c = BuildmasterConfig = {}
+
+c['buildbotNetUsageData'] = None
 
 c['workers'] = [worker.Worker('example-worker', 'pass')]
 c['protocols'] = {'pb': {'port': 9989}}
