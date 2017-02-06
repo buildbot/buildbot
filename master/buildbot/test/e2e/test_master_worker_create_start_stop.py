@@ -500,6 +500,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Disable www plugins (they are not installed on Travis).
         master_cfg = re.sub(r"plugins=dict\([^)]+\)", "plugins={}", master_cfg)
+        # Disable usage reporting.
+        master_cfg += """\nc['buildbotNetUsageData'] = None\n"""
 
         self._write_master_config(master_dir, master_cfg)
 
@@ -555,6 +557,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
 
         # Disable www plugins (they are not installed on Travis).
         master_cfg = re.sub(r"plugins=dict\([^)]+\)", "plugins={}", master_cfg)
+        # Disable usage reporting.
+        master_cfg += """\nc['buildbotNetUsageData'] = None\n"""
 
         self._write_master_config(master_dir, master_cfg)
 
