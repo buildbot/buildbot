@@ -24,7 +24,6 @@ from twisted.internet import defer
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 
-
 # This integration test creates a master and worker environment
 # and make sure the transfer steps are working
 
@@ -61,6 +60,21 @@ class TransferStepsMasterPb(RunMasterBase):
         shutil.rmtree("dir")
         os.unlink("master.txt")
 
+    @defer.inlineCallbacks
+    def test_globTransfer(self):
+        yield self.setupConfig(masterGlobConfig())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['results'], SUCCESS)
+        dirContents = self.readMasterDirContents("dest")
+        self.assertEqual(dirContents, {
+            os.path.join('dest', 'file1.txt'): 'filecontent',
+            os.path.join('dest', 'notafile1.txt'): 'filecontent2',
+            os.path.join('dest', 'only1.txt'): 'filecontent2'
+        })
+
+        # cleanup
+        shutil.rmtree("dest")
+
 
 class TransferStepsMasterNull(TransferStepsMasterPb):
     proto = "null"
@@ -91,5 +105,34 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       factory=f)
+    ]
+    return c
+
+
+def masterGlobConfig():
+    c = {}
+    from buildbot.config import BuilderConfig
+    from buildbot.process.factory import BuildFactory
+    from buildbot.plugins import steps, schedulers
+
+    c['schedulers'] = [
+        schedulers.ForceScheduler(
+            name="force", builderNames=["testy"])
+    ]
+
+    f = BuildFactory()
+    f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
+    f.addStep(
+        steps.StringDownload(
+            "filecontent2", workerdest="dir/notafile1.txt"))
+    f.addStep(steps.StringDownload("filecontent2", workerdest="dir/only1.txt"))
+    f.addStep(
+        steps.MultipleFileUpload(
+            workersrcs=["dir/file*.txt", "dir/not*.txt", "dir/only?.txt"],
+            masterdest="dest/",
+            glob=True))
+    c['builders'] = [
+        BuilderConfig(
+            name="testy", workernames=["local1"], factory=f)
     ]
     return c
