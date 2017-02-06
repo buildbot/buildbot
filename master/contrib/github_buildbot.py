@@ -183,10 +183,16 @@ class GitHubBuildBot(resource.Resource):
         changes = None
         refname = payload['ref']
 
+        if self.filter_push_branch:
+            if refname != "refs/heads/%s" % self.filter_push_branch:
+                logging.info("Ignoring refname '%s': Not a push to branch '%s'"
+                             % (refname, self.filter_push_branch))
+                return changes
+
         m = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not m:
             logging.info(
-                "Ignoring refname `%s': Not a branch or a tag", refname)
+                "Ignoring refname '%s': Not a branch or a tag", refname)
             return changes
 
         refname = m.group(2)
@@ -373,6 +379,11 @@ def setup_options():
                       help="Category for the build change",
                       default=None, dest="category")
 
+    parser.add_option("--filter-push-branch",
+                      help="Only trigger builds for pushes to a given "
+                      "branch name.",
+                      default=None, dest="filter_push_branch")
+
     (options, _) = parser.parse_args()
 
     if options.auth is not None and ":" not in options.auth:
@@ -404,6 +415,7 @@ def run_hook(options):
     github_bot.auth = options.auth
     github_bot.head_commit = options.head_commit
     github_bot.category = options.category
+    github_bot.filter_push_branch = options.filter_push_branch
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)
