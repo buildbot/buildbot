@@ -21,6 +21,8 @@ from future.utils import itervalues
 from future.utils import string_types
 from future.utils import text_type
 
+import datetime
+import inspect
 import os
 import re
 import sys
@@ -41,6 +43,7 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import service as util_service
 from buildbot.util import ComparableMixin
+from buildbot.util import bytes2NativeString
 from buildbot.util import safeTranslate
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
@@ -93,6 +96,9 @@ def warnDeprecated(version, msg):
         "[%s and later] %s" % (version, msg),
         category=ConfigWarning,
     )
+
+
+_in_unit_tests = False
 
 
 def loadConfigDict(basedir, configFileName):
@@ -392,15 +398,19 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                        check_type=string_types, check_type_name='a string or callable', can_be_callable=True)
 
         if "buildbotNetUsageData" not in config_dict:
-            warnDeprecated(
-                '0.9.0',
-                '`buildbotNetUsageData` is not configured and defaults to basic\n'
-                'This parameter helps the buildbot development team to understand the installation base\n'
-                'No personal information is collected.\n'
-                'Only installation software version info and plugin usage is sent\n'
-                'You can `opt-out` by setting this variable to None\n'
-                'Or `opt-in` for more information by setting it to "full"\n'
-            )
+            if _in_unit_tests:
+                self.buildbotNetUsageData = None
+            else:
+                warnDeprecated(
+                    '0.9.0',
+                    '`buildbotNetUsageData` is not configured and defaults to basic.\n'
+                    'This parameter helps the buildbot development team to understand'
+                    ' the installation base.\n'
+                    'No personal information is collected.\n'
+                    'Only installation software version info and plugin usage is sent.\n'
+                    'You can `opt-out` by setting this variable to None.\n'
+                    'Or `opt-in` for more information by setting it to "full".\n'
+                )
         copy_str_or_callable_param('buildbotNetUsageData')
 
         copy_int_param('changeHorizon')
@@ -588,6 +598,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                     if not isinstance(value, int):
                         error("value for cache size '%s' must be an integer"
                               % name)
+                        return
                     if value < 1:
                         error("'%s' cache size must be at least 1, got '%s'"
                               % (name, value))
@@ -780,7 +791,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                        'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
                        'logRotateLength', 'maxRotatedFiles', 'versions',
                        'change_hook_dialects', 'change_hook_auth',
-                       'custom_templates_dir'])
+                       'custom_templates_dir', 'cookie_expiration_time'])
         unknown = set(list(www_cfg)) - allowed
 
         if unknown:
@@ -800,6 +811,11 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                         break
                     cleaned_versions.append(v)
             www_cfg['versions'] = cleaned_versions
+
+        cookie_expiration_time = www_cfg.get('cookie_expiration_time')
+        if cookie_expiration_time is not None:
+            if not isinstance(cookie_expiration_time, datetime.timedelta):
+                error('Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
 
         self.www.update(www_cfg)
 
@@ -979,7 +995,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             nextWorker = nextSlave
 
         # name is required, and can't start with '_'
-        if not name or type(name) not in (str, text_type):
+        if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
             name = '<unknown>'
         elif name[0] == '_':
@@ -1024,6 +1040,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
+            builddir = bytes2NativeString(builddir)
         self.builddir = builddir
 
         # workerbuilddir defaults to builddir
@@ -1065,14 +1082,16 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         self._registerOldWorkerAttr("nextWorker")
         if nextWorker and not callable(nextWorker):
             error('nextWorker must be a callable')
-            # Keeping support of the previous nextWorker API
-        if nextWorker and (nextWorker.func_code.co_argcount == 2 or
-                           (isinstance(nextWorker, MethodType) and
-                            nextWorker.func_code.co_argcount == 3)):
-            warnDeprecated(
-                "0.9", "nextWorker now takes a 3rd argument (build request)")
-            self.nextWorker = lambda x, y, z: nextWorker(
-                x, y)  # pragma: no cover
+        # Keeping support of the previous nextWorker API
+        if nextWorker:
+            argCount = self._countFuncArgs(nextWorker)
+            if (argCount == 2 or (isinstance(nextWorker, MethodType) and
+                                  argCount == 3)):
+                warnDeprecated(
+                    "0.9", "nextWorker now takes a "
+                    "3rd argument (build request)")
+                self.nextWorker = lambda x, y, z: nextWorker(
+                    x, y)  # pragma: no cover
         self.nextBuild = nextBuild
         if nextBuild and not callable(nextBuild):
             error('nextBuild must be a callable')
@@ -1116,3 +1135,14 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if self.description:
             rv['description'] = self.description
         return rv
+
+    def _countFuncArgs(self, func):
+        if getattr(inspect, 'signature', None):
+            # Python 3
+            signature = inspect.signature(func)
+            argCount = len(signature.parameters)
+        else:
+            # Python 2
+            argSpec = inspect.getargspec(func)
+            argCount = len(argSpec.args)
+        return argCount

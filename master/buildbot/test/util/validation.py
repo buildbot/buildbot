@@ -77,7 +77,7 @@ class StringValidator(InstanceValidator):
 
 
 class BinaryValidator(InstanceValidator):
-    types = (str,)
+    types = (bytes,)
     name = 'bytestring'
 
 
@@ -316,7 +316,7 @@ dbdict = {}
 message['masters'] = Selector()
 message['masters'].add(None,
                        MessageValidator(
-                           events=['started', 'stopped'],
+                           events=[b'started', b'stopped'],
                            messageValidator=DictValidator(
                                masterid=IntValidator(),
                                name=StringValidator(),

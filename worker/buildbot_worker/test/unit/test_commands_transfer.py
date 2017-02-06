@@ -422,7 +422,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile, mode="rb").read(), test_data)
+            with open(datafile, mode="rb") as f:
+                datafileContent = f.read()
+            self.assertEqual(datafileContent, test_data)
             if runtime.platformType != 'win32':
                 self.assertEqual(os.stat(datafile).st_mode & 0o777, 0o777)
         d.addCallback(check)
@@ -449,7 +451,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'workdir', 'subdir', 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile, mode="rb").read(), test_data)
+            with open(datafile, mode="rb") as f:
+                datafileContent = f.read()
+            self.assertEqual(datafileContent, test_data)
         d.addCallback(check)
         return d
 

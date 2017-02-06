@@ -19,6 +19,7 @@ from __future__ import print_function
 from future.builtins import range
 
 import copy
+import errno
 import os
 import stat
 import sys
@@ -42,6 +43,35 @@ def captureErrors(errors, msg):
         defer.returnValue(1)
 
 
+class BusyError(RuntimeError):
+    pass
+
+
+def checkPidFile(pidfile):
+    """ mostly comes from _twistd_unix.py which is not twisted public API :-/
+
+        except it returns an exception instead of exiting
+    """
+    if os.path.exists(pidfile):
+        try:
+            with open(pidfile) as f:
+                pid = int(f.read())
+        except ValueError:
+            raise ValueError('Pidfile %s contains non-numeric value' % pidfile)
+        try:
+            os.kill(pid, 0)
+        except OSError as why:
+            if why.errno == errno.ESRCH:
+                # The pid doesn't exist.
+                print('Removing stale pidfile %s' % pidfile)
+                os.remove(pidfile)
+            else:
+                raise OSError("Can't check status of PID %s from pidfile %s: %s" %
+                              (pid, pidfile, why[1]))
+        else:
+            raise BusyError("'%s' exists - is this master still running?")
+
+
 def checkBasedir(config):
     if not config['quiet']:
         print("checking basedir")
@@ -52,9 +82,12 @@ def checkBasedir(config):
     if runtime.platformType != 'win32':  # no pids on win32
         if not config['quiet']:
             print("checking for running master")
+
         pidfile = os.path.join(config['basedir'], 'twistd.pid')
-        if os.path.exists(pidfile):
-            print("'%s' exists - is this master still running?" % (pidfile,))
+        try:
+            checkPidFile(pidfile)
+        except Exception as e:
+            print(str(e))
             return False
 
     tac = getConfigFromTac(config['basedir'])
@@ -102,7 +135,8 @@ def isBuildmasterDir(dir):
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        contents = open(buildbot_tac).read()
+        with open(buildbot_tac) as f:
+            contents = f.read()
     except IOError as exception:
         print_error("error reading '%s': %s" %
                     (buildbot_tac, exception.strerror))
@@ -122,7 +156,8 @@ def getConfigFromTac(basedir, quiet=False):
         # relocatable buildmasters
         tacGlobals = {'__file__': tacFile}
         try:
-            exec(open(tacFile).read(), tacGlobals)
+            with open(tacFile) as f:
+                exec(f.read(), tacGlobals)
         except Exception:
             if not quiet:
                 traceback.print_exc()
@@ -166,8 +201,8 @@ class SubcommandOptions(usage.Options):
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
                     for i in range(len(op)):
-                        if (op[i][0] == option_name
-                                and optfile_name in optfile):
+                        if (op[i][0] == option_name and
+                                optfile_name in optfile):
                             op[i] = list(op[i])
                             op[i][2] = optfile[optfile_name]
         usage.Options.__init__(self, *args)

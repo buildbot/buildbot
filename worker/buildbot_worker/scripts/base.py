@@ -26,7 +26,8 @@ def isWorkerDir(dir):
 
     buildbot_tac = os.path.join(dir, "buildbot.tac")
     try:
-        contents = open(buildbot_tac).read()
+        with open(buildbot_tac) as f:
+            contents = f.read()
     except IOError as exception:
         print_error("error reading '%s': %s" %
                     (buildbot_tac, exception.strerror))

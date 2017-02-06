@@ -64,8 +64,9 @@ class MaildirSource(MaildirService, util.ComparableMixin):
 
         @d.addCallback
         def parse_file(_):
-            f = self.moveToCurDir(filename)
-            return self.parse_file(f, self.prefix)
+            with self.moveToCurDir(filename) as f:
+                parsedFile = self.parse_file(f, self.prefix)
+            return parsedFile
 
         @d.addCallback
         def add_change(chtuple):

@@ -16,6 +16,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import calendar
+import datetime
+
+import jwt
+
 import mock
 
 from twisted.cred import strcred
@@ -23,6 +28,7 @@ from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
 from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web._auth.wrapper import HTTPAuthSessionWrapper
+from twisted.web.server import Request
 
 from buildbot.test.unit import test_www_hooks_base
 from buildbot.test.util import www
@@ -90,6 +96,17 @@ class Test(www.WwwTestMixin, unittest.TestCase):
             self.assertNotEqual(self.svc.site, None)
             self.assertNotEqual(self.svc.port_service, None)
             self.assertEqual(self.svc.port, 20)
+        return d
+
+    def test_reconfigService_expiration_time(self):
+        new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
+        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+
+        @d.addCallback
+        def check(_):
+            self.assertNotEqual(self.svc.site, None)
+            self.assertNotEqual(self.svc.port_service, None)
+            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
         return d
 
     def test_reconfigService_port_changes(self):
@@ -203,3 +220,59 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, '/change_hook/base')
         # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))
+
+
+class TestBuildbotSite(unittest.SynchronousTestCase):
+    SECRET = 'secret'
+
+    def setUp(self):
+        self.site = service.BuildbotSite(None, "logs", 0, 0)
+        self.site.setSessionSecret(self.SECRET)
+
+    def test_getSession_from_bad_jwt(self):
+        """ if the cookie is bad (maybe from previous version of buildbot),
+            then we should raise KeyError for consumption by caller,
+            and log the JWT error
+        """
+        self.assertRaises(KeyError, self.site.getSession, "xxx")
+        self.flushLoggedErrors(jwt.exceptions.DecodeError)
+
+    def test_getSession_from_correct_jwt(self):
+        payload = {'user_info': {'some': 'payload'}}
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        session = self.site.getSession(uid)
+        self.assertEqual(session.user_info, {'some': 'payload'})
+
+    def test_getSession_from_expired_jwt(self):
+        # expired one week ago
+        exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
+        exp = calendar.timegm(datetime.datetime.timetuple(exp))
+        payload = {'user_info': {'some': 'payload'}, 'exp': exp}
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertRaises(KeyError, self.site.getSession, uid)
+
+    def test_getSession_with_no_user_info(self):
+        payload = {'foo': 'bar'}
+        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertRaises(KeyError, self.site.getSession, uid)
+
+    def test_makeSession(self):
+        session = self.site.makeSession()
+        self.assertEqual(session.user_info, {'anonymous': True})
+
+    def test_updateSession(self):
+        session = self.site.makeSession()
+
+        class FakeChannel(object):
+            transport = None
+
+            def isSecure(self):
+                return False
+        request = Request(FakeChannel(), False)
+        request.sitepath = ["bb"]
+        session.updateSession(request)
+        self.assertEqual(len(request.cookies), 1)
+        name, value = request.cookies[0].split(";")[0].split("=")
+        decoded = jwt.decode(value, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        self.assertEqual(decoded['user_info'], {'anonymous': True})
+        self.assertIn('exp', decoded)

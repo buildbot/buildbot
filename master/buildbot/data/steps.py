@@ -87,7 +87,10 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             if buildid is None:
                 return
         steps = yield self.master.db.steps.getSteps(buildid=buildid)
-        defer.returnValue([(yield self.db2data(dbdict)) for dbdict in steps])
+        results = []
+        for dbdict in steps:
+            results.append((yield self.db2data(dbdict)))
+        defer.returnValue(results)
 
 
 class Step(base.ResourceType):

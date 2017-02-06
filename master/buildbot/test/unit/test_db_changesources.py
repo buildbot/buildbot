@@ -28,6 +28,10 @@ from buildbot.test.util import interfaces
 from buildbot.test.util import validation
 
 
+def changeSourceKey(changeSource):
+    return changeSource['id']
+
+
 class Tests(interfaces.InterfaceTests):
 
     # test data
@@ -180,10 +184,10 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources()
         [validation.verifyDbDict(self, 'changesourcedict', cs)
          for cs in cslist]
-        self.assertEqual(sorted(cslist), sorted([
+        self.assertEqual(sorted(cslist, key=changeSourceKey), sorted([
             dict(id=42, name='cool_source', masterid=13),
             dict(id=87, name='lame_source', masterid=None),
-        ]))
+        ], key=changeSourceKey))
 
     @defer.inlineCallbacks
     def test_getChangeSources_masterid(self):
@@ -195,9 +199,9 @@ class Tests(interfaces.InterfaceTests):
         cslist = yield self.db.changesources.getChangeSources(masterid=13)
         [validation.verifyDbDict(self, 'changesourcedict', cs)
          for cs in cslist]
-        self.assertEqual(sorted(cslist), sorted([
+        self.assertEqual(sorted(cslist, key=changeSourceKey), sorted([
             dict(id=42, name='cool_source', masterid=13),
-        ]))
+        ], key=changeSourceKey))
 
     @defer.inlineCallbacks
     def test_getChangeSources_active(self):

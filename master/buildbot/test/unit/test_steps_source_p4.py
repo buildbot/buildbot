@@ -32,6 +32,7 @@ from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import sourcesteps
 from buildbot.test.util.properties import ConstantRenderable
+from buildbot.util import unicode2bytes
 
 _is_windows = (platform.system() == 'Windows')
 
@@ -117,6 +118,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',  # defaults to this, only changes if it has a copy mode.
@@ -124,20 +126,20 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,  # expected exit status
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'client', '-i'],
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-P', ('obfuscated', b'pass', 'XXXXXX'),
+                                 b'-c', b'p4_client1', b'client', b'-i'],
                         initialStdin=client_spec)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'sync', '//depot...@100'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-P', ('obfuscated', b'pass', 'XXXXXX'),
+                                 b'-c', b'p4_client1', b'sync', b'//depot...@100'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-P', ('obfuscated', b'pass', 'XXXXXX'),
+                                 b'-c', b'p4_client1', b'changes', b'-m1', b'#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -157,22 +159,22 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
             ExpectShell(workdir=workdir,
                         timeout=timeout,
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'client', '-i'],
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-P', ('obfuscated', b'pass', 'XXXXXX'),
+                                 b'-c', b'p4_client1', b'client', b'-i'],
                         initialStdin=client_stdin,)
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
-                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                  '-P', ('obfuscated', 'pass', 'XXXXXX'), '-c', 'p4_client1']
-                                 + extra_args + ['sync']))
+                        command=([b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                  b'-P', ('obfuscated', b'pass', 'XXXXXX'), b'-c', b'p4_client1']
+                                 + extra_args + [b'sync']))
             + 0,
             ExpectShell(workdir=workdir,
                         timeout=timeout,
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                 '-P', ('obfuscated', 'pass', 'XXXXXX'),
-                                 '-c', 'p4_client1', 'changes', '-m1', '#have'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-P', ('obfuscated', b'pass', 'XXXXXX'),
+                                 b'-c', b'p4_client1', b'changes', b'-m1', b'#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -206,6 +208,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_no_branch(self):
@@ -233,6 +236,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4base_with_p4extra_views(self):
@@ -266,6 +270,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t-//depot/trunk/doc/... //p4_client1/doc/...
         \t"-//depot/trunk/white space/..." "//p4_client1/white space/..."
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec(self):
@@ -297,6 +302,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4viewspec_suffix(self):
@@ -330,6 +336,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t"//depot/white space/..." "//p4_client1/white space/..."
         \t"-//depot/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_p4client_spec_options(self):
@@ -358,6 +365,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec)
 
     def test_mode_incremental_parent_workdir(self):
@@ -386,6 +394,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_incremental_p4extra_args(self):
@@ -414,7 +423,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
-        self._incremental(client_stdin=client_spec, extra_args=['-Zproxyload'])
+        client_spec = unicode2bytes(client_spec)
+        self._incremental(client_stdin=client_spec, extra_args=[b'-Zproxyload'])
 
     def test_mode_incremental_timeout(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
@@ -442,16 +452,17 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._incremental(client_stdin=client_spec, timeout=60 * 60)
 
-    def _full(self, client_stdin='', p4client='p4_client1', p4user='user',
+    def _full(self, client_stdin='', p4client=b'p4_client1', p4user=b'user',
               workdir='wkdir', extra_args=None, obfuscated_pass=True):
         if extra_args is None:
             extra_args = []
         if obfuscated_pass:
-            expected_pass = ('obfuscated', 'pass', 'XXXXXX')
+            expected_pass = ('obfuscated', b'pass', 'XXXXXX')
         else:
-            expected_pass = 'pass'
+            expected_pass = b'pass'
 
         self.expectCommands(
             ExpectShell(workdir=workdir,
@@ -459,30 +470,30 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,  # expected exit status
 
             ExpectShell(workdir=workdir,
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', expected_pass,
-                                 '-c', p4client, 'client', '-i'],
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', p4user,
+                                 b'-P', expected_pass,
+                                 b'-c', p4client, b'client', b'-i'],
                         initialStdin=client_stdin)
             + 0,
             ExpectShell(workdir=workdir,
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', expected_pass, '-c', p4client]
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', p4user,
+                                 b'-P', expected_pass, b'-c', p4client]
                         + extra_args
-                        + ['sync', '#none'])
+                        + [b'sync', b'#none'])
             + 0,
 
             Expect('rmdir', {'dir': workdir, 'logEnviron': True})
             + 0,
 
             ExpectShell(workdir=workdir,
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', expected_pass, '-c', p4client]
-                        + extra_args + ['sync'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', p4user,
+                                 b'-P', expected_pass, b'-c', p4client]
+                        + extra_args + [b'sync'])
             + 0,
             ExpectShell(workdir=workdir,
-                        command=['p4', '-p', 'localhost:12000', '-u', p4user,
-                                 '-P', expected_pass, '-c', p4client,
-                                 'changes', '-m1', '#have'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', p4user,
+                                 b'-P', expected_pass, b'-c', p4client,
+                                 b'changes', b'-m1', b'#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,
@@ -516,6 +527,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        client_stdin = unicode2bytes(client_stdin)
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_p4base_not_obfuscated(self):
@@ -544,6 +556,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client1/...\n''' % root_dir)
+        client_stdin = unicode2bytes(client_stdin)
         self._full(client_stdin=client_stdin, obfuscated_pass=False)
 
     def test_mode_full_p4base_with_no_branch(self):
@@ -571,6 +584,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4viewspec(self):
@@ -604,7 +618,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t"//depot/main/white space/..." "//p4_client1/white space/..."
         \t"-//depot/main/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
-
+        client_stdin = unicode2bytes(client_stdin)
         self._full(client_stdin=client_stdin)
 
     def test_mode_full_renderable_p4base(self):
@@ -634,8 +648,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/release/1.0/... //p4_client2/...\n''' % root_dir)
-
-        self._full(client_stdin=client_stdin, p4client='p4_client2')
+        client_stdin = unicode2bytes(client_stdin)
+        self._full(client_stdin=client_stdin, p4client=b'p4_client2')
 
     def test_mode_full_renderable_p4client(self):
         # Note that the config check skips checking p4base if it's a renderable
@@ -664,8 +678,9 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/trunk/... //p4_client_render/...\n''' % root_dir)
+        client_stdin = unicode2bytes(client_stdin)
 
-        self._full(client_stdin=client_stdin, p4client='p4_client_render')
+        self._full(client_stdin=client_stdin, p4client=b'p4_client_render')
 
     def test_mode_full_renderable_p4branch(self):
         # Note that the config check skips checking p4base if it's a renderable
@@ -694,6 +709,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/render_branch/... //p4_client1/...\n''' % root_dir)
+        client_stdin = unicode2bytes(client_stdin)
 
         self._full(client_stdin=client_stdin)
 
@@ -724,8 +740,9 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         View:
         \t//depot/render_trunk/... //p4_client1/...\n''' % root_dir)
+        client_stdin = unicode2bytes(client_stdin)
 
-        self._full(client_stdin=client_stdin, p4user='different_user')
+        self._full(client_stdin=client_stdin, p4user=b'different_user')
 
     def test_mode_full_p4viewspec_suffix(self):
         self.setupStep(P4(p4port='localhost:12000', mode='full',
@@ -758,6 +775,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t"//depot/trunk/white space/..." "//p4_client1/white space/..."
         \t"-//depot/trunk/white space/excluded/..." "//p4_client1/white space/excluded/..."
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._full(client_stdin=client_spec)
 
     def test_mode_full_p4client_spec_options(self):
@@ -786,6 +804,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._full(client_stdin=client_spec)
 
     def test_mode_full_parent_workdir(self):
@@ -814,6 +833,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
         self._full(client_stdin=client_spec, workdir='../another_wkdir')
 
     def test_mode_full_p4extra_args(self):
@@ -842,7 +862,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
-        self._full(client_stdin=client_spec, extra_args=['-Zproxyload'])
+        client_spec = unicode2bytes(client_spec)
+        self._full(client_stdin=client_spec, extra_args=[b'-Zproxyload'])
 
     def test_worker_connection_lost(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',
@@ -884,6 +905,7 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         View:
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
+        client_spec = unicode2bytes(client_spec)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir', command=['p4', '-V'])
@@ -892,26 +914,23 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
             # This is the extra step that gets run when using tickets,
             # and the password is not passed anymore after that.
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-c', 'p4_client1',
-                                       'login'],
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-c', b'p4_client1', b'login'],
                         initialStdin='pass\n')
             + 0,
 
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-c', 'p4_client1',
-                                       'client', '-i'],
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-c', b'p4_client1', b'client', b'-i'],
                         initialStdin=client_spec)
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=(['p4', '-p', 'localhost:12000', '-u', 'user',
-                                  '-c', 'p4_client1', 'sync']))
+                        command=([b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                  b'-c', b'p4_client1', b'sync']))
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['p4', '-p', 'localhost:12000', '-u', 'user',
-                                       '-c', 'p4_client1',
-                                       'changes', '-m1', '#have'])
+                        command=[b'p4', b'-p', b'localhost:12000', b'-u', b'user',
+                                 b'-c', b'p4_client1', b'changes', b'-m1', b'#have'])
             + ExpectShell.log('stdio',
                               stdout="Change 100 on 2013/03/21 by user@machine \'duh\'")
             + 0,

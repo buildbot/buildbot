@@ -87,7 +87,8 @@ if 'VERSION' in os.environ:
     version = os.environ['VERSION']
 else:
     gl = {'__file__': '../buildbot/__init__.py'}
-    exec(open('../buildbot/__init__.py').read(), gl)
+    with open('../buildbot/__init__.py') as f:
+        exec(f.read(), gl)
     version = gl['version']
 # The full version, including alpha/beta/rc tags.
 release = version

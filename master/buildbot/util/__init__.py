@@ -129,27 +129,6 @@ class ComparableMixin(object):
                 [getattr(self, name, self._None) for name in compare_attrs]
         return hash(tuple(map(str, alist)))
 
-    def __cmp__(self, them):
-        # NOTE: __cmp__() and cmp() are gone on Python 3,
-        #       in favor of __le__ and __eq__().
-        result = cmp(type(self), type(them))
-        if result:
-            return result
-
-        result = cmp(self.__class__, them.__class__)
-        if result:
-            return result
-
-        compare_attrs = []
-        reflect.accumulateClassList(
-            self.__class__, 'compare_attrs', compare_attrs)
-
-        self_list = [getattr(self, name, self._None)
-                     for name in compare_attrs]
-        them_list = [getattr(them, name, self._None)
-                     for name in compare_attrs]
-        return cmp(self_list, them_list)
-
     def _cmp_common(self, them):
         if type(self) != type(them):
             return (False, None, None)
@@ -173,11 +152,35 @@ class ComparableMixin(object):
             return False
         return self_list == them_list
 
+    def __ne__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return True
+        return self_list != them_list
+
     def __lt__(self, them):
         (isComparable, self_list, them_list) = self._cmp_common(them)
         if not isComparable:
             return False
         return self_list < them_list
+
+    def __le__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list <= them_list
+
+    def __gt__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list > them_list
+
+    def __ge__(self, them):
+        (isComparable, self_list, them_list) = self._cmp_common(them)
+        if not isComparable:
+            return False
+        return self_list >= them_list
 
     def getConfigDict(self):
         compare_attrs = []
@@ -252,7 +255,9 @@ def bytes2NativeString(x, encoding='utf-8'):
     @param encoding: an optional codec, default: 'utf-8'
     @return: a string of type C{str}
     """
-    if isinstance(x, bytes) and str != bytes:
+    if isinstance(x, bytes) and type("") != type(b""):
+        # On Python 3 and higher, type("") != type(b"")
+        # so we need to decode() to return a native string.
         return x.decode(encoding)
     return x
 
@@ -417,7 +422,7 @@ def join_list(maybeList):
 
 def command_to_string(command):
     words = command
-    if isinstance(words, string_types):
+    if isinstance(words, (bytes, string_types)):
         words = words.split()
 
     try:
@@ -433,7 +438,14 @@ def command_to_string(command):
 
     # strip instances and other detritus (which can happen if a
     # description is requested before rendering)
-    words = [w for w in words if isinstance(w, (string_types))]
+    stringWords = []
+    for w in words:
+        if isinstance(w, (bytes, string_types)):
+            # If command was bytes, be gentle in
+            # trying to covert it.
+            w = ascii2unicode(w, "replace")
+            stringWords.append(w)
+    words = stringWords
 
     if len(words) < 1:
         return None
@@ -441,11 +453,6 @@ def command_to_string(command):
         rv = "'%s'" % (' '.join(words))
     else:
         rv = "'%s ...'" % (' '.join(words[:2]))
-
-    # cmd was a command and thus probably a bytestring.  Be gentle in
-    # trying to covert it.
-    if isinstance(rv, bytes):
-        rv = rv.decode('ascii', 'replace')
 
     return rv
 

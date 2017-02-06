@@ -45,7 +45,13 @@ class Log(object):
 
     @staticmethod
     def _decoderFromString(cfg):
-        if isinstance(cfg, bytes):
+        """
+        Return a decoder function.
+        If cfg is a string such as 'latin-1' or u'latin-1',
+        then we return a new lambda, s.decode().
+        If cfg is already a lambda or function, then we return that.
+        """
+        if isinstance(cfg, (bytes, str)):
             return lambda s: s.decode(cfg, 'replace')
         else:
             return cfg

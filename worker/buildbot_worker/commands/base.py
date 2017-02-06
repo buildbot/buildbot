@@ -412,10 +412,13 @@ class SourceBaseCommand(Command):
         @returns: source data
         @raises: IOError if the file does not exist
         """
-        return open(self.sourcedatafile, "r").read()
+        with open(self.sourcedatafile, "r") as f:
+            sourceData = f.read()
+        return sourceData
 
     def writeSourcedata(self, res):
-        open(self.sourcedatafile, "w").write(self.sourcedata)
+        with open(self.sourcedatafile, "w") as f:
+            f.write(self.sourcedata)
         return res
 
     def sourcedirIsUpdateable(self):

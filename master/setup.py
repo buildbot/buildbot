@@ -89,10 +89,12 @@ class our_sdist(sdist):
         # ensure that NEWS has a copy of the latest release notes, with the
         # proper version substituted
         src_fn = os.path.join('docs', 'relnotes/index.rst')
-        src = open(src_fn).read()
+        with open(src_fn) as f:
+            src = f.read()
         src = src.replace('|version|', version)
         dst_fn = os.path.join(base_dir, 'NEWS')
-        open(dst_fn, 'w').write(src)
+        with open(dst_fn, 'w') as f:
+            f.write(src)
 
 
 def define_plugin_entry(name, module_name):
@@ -151,6 +153,8 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7'
     ],
 
     'packages': [
@@ -439,6 +443,7 @@ setup_args['install_requires'] = [
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
+    'PyJWT',
 ]
 
 # Unit test dependencies.
@@ -472,7 +477,7 @@ setup_args['extras_require'] = {
     'test': [
         'setuptools_trial',
         'isort',
-        # spellcheck introduced in version 1.4.0  
+        # spellcheck introduced in version 1.4.0
         'pylint>=1.4.0',
         'pyenchant',
         'flake8~=2.6.0',

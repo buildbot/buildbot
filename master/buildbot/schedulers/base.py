@@ -92,6 +92,9 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
 
+    def reconfigService(self, *args, **kwargs):
+        raise NotImplementedError()
+
     # activity handling
 
     def activate(self):
@@ -265,7 +268,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             changesByCodebase.setdefault(chdict["codebase"], []).append(chdict)
 
         sourcestamps = []
-        for codebase in self.codebases:
+        for codebase in sorted(self.codebases):
             if codebase not in changesByCodebase:
                 # codebase has no changes
                 # create a sourcestamp that has no changes

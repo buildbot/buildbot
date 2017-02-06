@@ -100,8 +100,8 @@ class Mock(ShellCommand):
         self.addLogObserver('state.log', MockStateObserver())
 
         cmd = remotecommand.RemoteCommand('rmdir', {'dir':
-                                                    map(lambda l: self.build.path_module.join('build', self.logfiles[l]),
-                                                        self.mock_logfiles)})
+                                                    [self.build.path_module.join('build', self.logfiles[l])
+                                                     for l in self.mock_logfiles]})
         d = self.runCommand(cmd)
 
         @d.addCallback

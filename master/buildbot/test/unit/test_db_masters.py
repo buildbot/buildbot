@@ -171,13 +171,17 @@ class Tests(interfaces.InterfaceTests):
         masterlist = yield self.db.masters.getMasters()
         for masterdict in masterlist:
             validation.verifyDbDict(self, 'masterdict', masterdict)
+
+        def masterKey(master):
+            return master['id']
+
         expected = sorted([
             dict(id=7, name='some:master',
                  active=0, last_active=SOMETIME_DT),
             dict(id=8, name='other:master',
                  active=1, last_active=OTHERTIME_DT),
-        ])
-        self.assertEqual(sorted(masterlist), expected)
+        ], key=masterKey)
+        self.assertEqual(sorted(masterlist, key=masterKey), expected)
 
 
 class RealTests(Tests):

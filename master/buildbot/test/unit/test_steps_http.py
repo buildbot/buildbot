@@ -43,12 +43,12 @@ class TestPage(Resource):
     isLeaf = True
 
     def render_GET(self, request):
-        if request.uri == "/404":
+        if request.uri == b"/404":
             request.setResponseCode(404)
-            return "404"
-        elif request.uri == "/header":
-            return "".join(request.requestHeaders.getRawHeaders("X-Test"))
-        return "OK"
+            return b"404"
+        elif request.uri == b"/header":
+            return b"".join(request.requestHeaders.getRawHeaders(b"X-Test"))
+        return b"OK"
 
 
 class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):

@@ -32,6 +32,11 @@ from buildbot.util import epoch2datetime
 CREATED_AT = 927845299
 
 
+def sourceStampKey(sourceStamp):
+    return (sourceStamp['repository'], sourceStamp['branch'],
+            sourceStamp['created_at'])
+
+
 class Tests(interfaces.InterfaceTests):
 
     def test_signature_findSourceStampId(self):
@@ -97,12 +102,12 @@ class Tests(interfaces.InterfaceTests):
         ssid1 = yield self.db.sourcestamps.findSourceStampId(
             branch='production', revision='abdef',
             repository='test://repo', codebase='cb', project='stamper',
-            patch_body='++ --', patch_level=1, patch_author='me',
+            patch_body=b'++ --', patch_level=1, patch_author='me',
             patch_comment='hi', patch_subdir='.')
         ssid2 = yield self.db.sourcestamps.findSourceStampId(
             branch='production', revision='abdef',
             repository='test://repo', codebase='cb', project='stamper',
-            patch_body='++ --', patch_level=1, patch_author='me',
+            patch_body=b'++ --', patch_level=1, patch_author='me',
             patch_comment='hi', patch_subdir='.')
         # even with the same patch contents, we get different ids
         self.assertNotEqual(ssid1, ssid2)
@@ -114,7 +119,7 @@ class Tests(interfaces.InterfaceTests):
         ssid = yield self.db.sourcestamps.findSourceStampId(
             branch=u'production', revision=u'abdef',
             repository=u'test://repo', codebase=u'cb', project=u'stamper',
-            patch_body='my patch', patch_level=3, patch_subdir=u'master/',
+            patch_body=b'my patch', patch_level=3, patch_subdir=u'master/',
             patch_author=u'me', patch_comment=u"comment", _reactor=clock)
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
         validation.verifyDbDict(self, 'ssdict', ssdict)
@@ -123,7 +128,7 @@ class Tests(interfaces.InterfaceTests):
             'codebase': u'cb',
             'patchid': 1,
             'patch_author': 'me',
-            'patch_body': 'my patch',
+            'patch_body': b'my patch',
             'patch_comment': 'comment',
             'patch_level': 3,
             'patch_subdir': 'master/',
@@ -193,7 +198,7 @@ class Tests(interfaces.InterfaceTests):
             validation.verifyDbDict(self, 'ssdict', ssdict)
             self.assertEqual(dict((k, v) for k, v in iteritems(ssdict)
                                   if k.startswith('patch_')),
-                             dict(patch_body='hello, world',
+                             dict(patch_body=b'hello, world',
                                   patch_level=3,
                                   patch_author='bar',
                                   patch_comment='foo',
@@ -226,35 +231,36 @@ class Tests(interfaces.InterfaceTests):
 
         @d.addCallback
         def check(sourcestamps):
-            self.assertEqual(sorted(sourcestamps), sorted([{
-                'branch': u'b',
-                'codebase': u'c',
-                'patch_author': u'bar',
-                'patchid': 99,
-                'patch_body': 'hello, world',
-                'patch_comment': u'foo',
-                'patch_level': 3,
-                'patch_subdir': u'/foo',
-                'project': u'p',
-                'repository': u'rep',
-                'revision': u'r',
-                'created_at': epoch2datetime(CREATED_AT),
-                'ssid': 234,
-            }, {
-                'branch': u'b2',
-                'codebase': u'c2',
-                'patchid': None,
-                'patch_author': None,
-                'patch_body': None,
-                'patch_comment': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'project': u'p2',
-                'repository': u'rep2',
-                'revision': u'r2',
-                'created_at': epoch2datetime(CREATED_AT + 10),
-                'ssid': 235,
-            }]))
+            self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
+                             sorted([{
+                                 'branch': u'b',
+                                 'codebase': u'c',
+                                 'patch_author': u'bar',
+                                 'patchid': 99,
+                                 'patch_body': b'hello, world',
+                                 'patch_comment': u'foo',
+                                 'patch_level': 3,
+                                 'patch_subdir': u'/foo',
+                                 'project': u'p',
+                                 'repository': u'rep',
+                                 'revision': u'r',
+                                 'created_at': epoch2datetime(CREATED_AT),
+                                 'ssid': 234,
+                             }, {
+                                 'branch': u'b2',
+                                 'codebase': u'c2',
+                                 'patchid': None,
+                                 'patch_author': None,
+                                 'patch_body': None,
+                                 'patch_comment': None,
+                                 'patch_level': None,
+                                 'patch_subdir': None,
+                                 'project': u'p2',
+                                 'repository': u'rep2',
+                                 'revision': u'r2',
+                                 'created_at': epoch2datetime(CREATED_AT + 10),
+                                 'ssid': 235,
+                             }], key=sourceStampKey))
         return d
 
     def test_getSourceStamps_empty(self):
@@ -278,7 +284,8 @@ class Tests(interfaces.InterfaceTests):
 
         @d.addCallback
         def check(sourcestamps):
-            self.assertEqual(sorted(sourcestamps), sorted(expected))
+            self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
+                             sorted(expected, key=sourceStampKey))
         return d
 
     def test_getSourceStampsForBuild_OneCodeBase(self):

@@ -55,7 +55,9 @@ class OAuth2LoginResource(auth.LoginResource):
             if self.auth.userInfoProvider is not None:
                 infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
                 details.update(infos)
-            request.getSession().user_info = details
+            session = request.getSession()
+            session.user_info = details
+            session.updateSession(request)
             state = request.args.get("state", [""])[0]
             if state:
                 for redirect in parse_qs(state).get('redirect', []):

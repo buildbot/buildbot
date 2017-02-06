@@ -411,20 +411,26 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # sort the transformed list synchronously, comparing None to the end of
         # the list
-        def nonekey(a):
-            if a[0] is None:
-                b = list(a)
+        def xformedKey(a):
+            """
+            Key function can be used to sort a list
+            where each list element is a tuple:
+                (datetime.datetime, Builder)
+
+            @return: a tuple of (date, builder name)
+            """
+            (date, builder) = a
+            if date is None:
                 # Choose a really big date, so that any
                 # date set to 'None' will appear at the
                 # end of the list during comparisons.
-                b[0] = datetime.max
+                date = datetime.max
                 # Need to set the timezone on the date, in order
                 # to perform comparisons with other dates which
                 # have the time zone set.
-                b[0] = b[0].replace(tzinfo=tzutc())
-                return tuple(b)
-            return a
-        xformed.sort(key=nonekey)
+                date = date.replace(tzinfo=tzutc())
+            return (date, builder.name)
+        xformed.sort(key=xformedKey)
 
         # and reverse the transform
         rv = [xf[1] for xf in xformed]

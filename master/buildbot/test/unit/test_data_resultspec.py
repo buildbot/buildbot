@@ -24,6 +24,8 @@ from twisted.trial import unittest
 
 from buildbot.data import base
 from buildbot.data import resultspec
+from buildbot.data.resultspec import NoneComparator
+from buildbot.data.resultspec import ReverseComparator
 
 
 def mklist(fld, *values):
@@ -307,19 +309,45 @@ class ResultSpec(unittest.TestCase):
         self.assertEqual(rs.fields, ['foo', 'bar'])
 
 
-class NoneCmp(unittest.TestCase):
+class Comparator(unittest.TestCase):
+    def test_noneComparator(self):
+        self.assertNotEqual(NoneComparator(None),
+                            NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertNotEqual(NoneComparator(datetime.datetime(1, 1, 1)),
+                            NoneComparator(None))
+        self.assertLess(NoneComparator(None),
+                        NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertGreater(NoneComparator(datetime.datetime(1, 1, 1)),
+                           NoneComparator(None))
+        self.assertLess(NoneComparator(datetime.datetime(1, 1, 1)),
+                        NoneComparator(datetime.datetime(1, 1, 2)))
+        self.assertEqual(NoneComparator(datetime.datetime(1, 1, 1)),
+                        NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertGreater(NoneComparator(datetime.datetime(1, 1, 2)),
+                           NoneComparator(datetime.datetime(1, 1, 1)))
+        self.assertEqual(NoneComparator(None),
+                         NoneComparator(None))
 
-    def test_nonecmp(self):
-        nonecmp = resultspec.nonecmp
-        self.assertEqual(nonecmp(None, datetime.datetime(1, 1, 1)),
-                         -1)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), None),
-                         1)
-        self.assertEqual(nonecmp(None, None),
-                         0)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 1)),
-                         0)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 2), datetime.datetime(1, 1, 1)),
-                         1)
-        self.assertEqual(nonecmp(datetime.datetime(1, 1, 1), datetime.datetime(1, 1, 2)),
-                         -1)
+    def test_noneComparison(self):
+        noneInList = ["z", None, None, "q", "a", None, "v"]
+        sortedList = sorted(noneInList, key=lambda x: NoneComparator(x))
+        self.assertEqual(sortedList, [None, None, None, "a", "q", "v", "z"])
+
+    def test_reverseComparator(self):
+        reverse35 = ReverseComparator(35)
+        reverse36 = ReverseComparator(36)
+        self.assertEqual(reverse35, reverse35)
+        self.assertNotEqual(reverse35, reverse36)
+        self.assertLess(reverse36, reverse35)
+        self.assertGreater(reverse35, reverse36)
+        self.assertLess(reverse36, reverse35)
+
+    def test_reverseComparison(self):
+        nums = [1, 2, 3, 4, 5]
+        nums.sort(key=lambda x: ReverseComparator(x))
+        self.assertEqual(nums, [5, 4, 3, 2, 1])
+
+    def test_reverseComparisonWithNone(self):
+        noneInList = ["z", None, None, "q", "a", None, "v"]
+        sortedList = sorted(noneInList, key=lambda x: ReverseComparator(NoneComparator(x)))
+        self.assertEqual(sortedList, ["z", "v", "q", "a", None, None, None])

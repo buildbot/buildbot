@@ -106,8 +106,19 @@ with assertProducesWarning(
         message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
     import buildbot.buildslave.openstack as _  # noqa
 
-# All deprecated modules should be loaded, consider future
-# DeprecatedWorkerModuleWarning in tests as errors.
-# All DeprecatedWorkerNameWarning warnings should be explicitly caught too,
-# so fail on any DeprecatedWorkerAPIWarning.
-warnings.filterwarnings('error', category=DeprecatedWorkerAPIWarning)
+# All deprecated modules should be loaded, consider future warnings in tests as errors.
+# In order to not pollute the test outputs,
+# warnings in tests shall be forcefully tested with assertProducesWarning,
+# or shutdown using the warning module
+warnings.filterwarnings('error')
+# if buildbot_worker is installed in pip install -e mode, then the docker directory will
+# match "import docker", and produce a warning.
+# We just suppress this warning instead of doing silly workaround.
+warnings.filterwarnings('ignore', "Not importing directory.*docker': missing __init__.py",
+                        category=ImportWarning)
+
+# FIXME: needs to be sorted out (#3666)
+warnings.filterwarnings('ignore', "Invalid utf8 character string")
+
+# twisted.compat.execfile is using 'U' https://twistedmatrix.com/trac/ticket/9023
+warnings.filterwarnings('ignore', "'U' mode is deprecated", DeprecationWarning)

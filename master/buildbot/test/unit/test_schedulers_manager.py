@@ -77,6 +77,9 @@ class SchedulerManager(unittest.TestCase):
             d.addCallback(still_set)
             return d
 
+        def __repr__(self):
+            return "{}(attr={})".format(self.__class__.__name__, self.attr)
+
     class ReconfigSched(Sched):
 
         def reconfigServiceWithSibling(self, new_config):
@@ -149,3 +152,47 @@ class SchedulerManager(unittest.TestCase):
         # instance
         self.assertIdentical(sch1_new.parent, self.sm)
         self.assertIdentical(sch1_new.master, self.master)
+
+    @defer.inlineCallbacks
+    def test_reconfigService_not_reconfigurable(self):
+        sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
+        self.new_config.schedulers = dict(sch1=sch1)
+
+        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+
+        self.assertIdentical(sch1.parent, self.sm)
+        self.assertIdentical(sch1.master, self.master)
+
+        sch1_new = self.makeSched(self.Sched, 'sch1', attr='alpha')
+        self.new_config.schedulers = dict(sch1=sch1_new)
+
+        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+
+        # sch1 had parameter change but is not reconfigurable, so sch1_new is now the active
+        # instance
+        self.assertEqual(sch1_new.running, True)
+        self.assertEqual(sch1.running, False)
+        self.assertIdentical(sch1_new.parent, self.sm)
+        self.assertIdentical(sch1_new.master, self.master)
+
+    @defer.inlineCallbacks
+    def test_reconfigService_not_reconfigurable_no_change(self):
+        sch1 = self.makeSched(self.Sched, 'sch1', attr='beta')
+        self.new_config.schedulers = dict(sch1=sch1)
+
+        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+
+        self.assertIdentical(sch1.parent, self.sm)
+        self.assertIdentical(sch1.master, self.master)
+
+        sch1_new = self.makeSched(self.Sched, 'sch1', attr='beta')
+        self.new_config.schedulers = dict(sch1=sch1_new)
+
+        yield self.sm.reconfigServiceWithBuildbotConfig(self.new_config)
+
+        # sch1 had its class name change, so sch1_new is now the active
+        # instance
+        self.assertIdentical(sch1_new.parent, None)
+        self.assertEqual(sch1_new.running, False)
+        self.assertIdentical(sch1_new.master, None)
+        self.assertEqual(sch1.running, True)

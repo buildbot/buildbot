@@ -172,7 +172,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         chunk_first_line = last_line = first_line
         while remaining:
             chunk, remaining = self._splitBigChunk(remaining, logid)
-            last_line = chunk_first_line + chunk.count('\n')
+            last_line = chunk_first_line + chunk.count(b'\n')
 
             chunk, compressed_id = self.thdCompressChunk(chunk)
             conn.execute(self.db.model.logchunks.insert(),
@@ -219,7 +219,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return content, None
 
         # find the last newline before the limit
-        i = content.rfind('\n', 0, self.MAX_CHUNK_SIZE)
+        i = content.rfind(b'\n', 0, self.MAX_CHUNK_SIZE)
         if i != -1:
             return content[:i], content[i + 1:]
 
@@ -235,7 +235,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 truncline = truncline[:-1]
 
         # then find the beginning of the next line
-        i = content.find('\n', self.MAX_CHUNK_SIZE)
+        i = content.find(b'\n', self.MAX_CHUNK_SIZE)
         if i == -1:
             return truncline, None
         else:

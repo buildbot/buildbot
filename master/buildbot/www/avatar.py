@@ -23,6 +23,7 @@ import hashlib
 from twisted.internet import defer
 
 from buildbot.util import config
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -41,8 +42,10 @@ class AvatarGravatar(AvatarBase):
 
     def getUserAvatar(self, email, size, defaultAvatarUrl):
         # construct the url
+        emailBytes = unicode2bytes(email.lower())
+        emailHash = hashlib.md5(emailBytes)
         gravatar_url = "//www.gravatar.com/avatar/"
-        gravatar_url += hashlib.md5(email.lower()).hexdigest() + "?"
+        gravatar_url += emailHash.hexdigest() + "?"
         if self.default != "url":
             defaultAvatarUrl = self.default
         gravatar_url += urlencode({'s': str(size), 'd': defaultAvatarUrl})

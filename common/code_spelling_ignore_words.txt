@@ -82,6 +82,7 @@ builbot
 buildable
 buildbot
 buildbots
+buildbotNetUsageData
 buildbot's
 buildbotting
 builddir
@@ -245,6 +246,7 @@ erroring
 errortoo
 et
 exe
+execfile
 executables
 exe's
 expanduser
@@ -368,10 +370,12 @@ jobfiles
 jobid
 joe
 json
+jsonable
 jsonapi
 json'd
 jsonrc
 jsonrpc
+jwt
 keepalive
 keepalives
 keepstamp
@@ -702,6 +706,7 @@ ssids
 ssl
 stacklevel
 stackoverflow
+stackexchange
 stacktrace
 startup
 stat'd

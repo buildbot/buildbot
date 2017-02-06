@@ -252,9 +252,12 @@ class Tests(interfaces.InterfaceTests):
                       self.db.buildsets.getBuildsets())
 
         def check(bsdictlist):
+            def bsdictKey(bsdict):
+                return bsdict['reason']
+
             for bsdict in bsdictlist:
                 validation.verifyDbDict(self, 'bsdict', bsdict)
-            self.assertEqual(sorted(bsdictlist), sorted([
+            self.assertEqual(sorted(bsdictlist, key=bsdictKey), sorted([
                 dict(external_idstring='extid', reason='rsn1', sourcestamps=[234],
                      submitted_at=datetime.datetime(1978, 6, 15, 12, 31, 15,
                                                     tzinfo=UTC),
@@ -269,7 +272,7 @@ class Tests(interfaces.InterfaceTests):
                                                    tzinfo=UTC),
                      complete=True, results=7, bsid=92,
                      parent_buildid=None, parent_relationship=None),
-            ]))
+            ], key=bsdictKey))
         d.addCallback(check)
         return d
 

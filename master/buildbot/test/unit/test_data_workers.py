@@ -54,6 +54,11 @@ testData = [
 ]
 
 
+def configuredOnKey(worker):
+    return (worker.get('masterid', 0),
+            worker.get('builderid', 0))
+
+
 def _filt(bs, builderid, masterid):
     bs['connected_to'] = sorted(
         [d for d in bs['connected_to']
@@ -61,7 +66,7 @@ def _filt(bs, builderid, masterid):
     bs['configured_on'] = sorted(
         [d for d in bs['configured_on']
          if (not masterid or masterid == d['masterid'])
-         and (not builderid or builderid == d['builderid'])])
+         and (not builderid or builderid == d['builderid'])], key=configuredOnKey)
     return bs
 
 
@@ -76,7 +81,7 @@ def w1(builderid=None, masterid=None):
         'configured_on': sorted([
             {'builderid': 40, 'masterid': 13},
             {'builderid': 40, 'masterid': 14},
-        ]),
+        ], key=configuredOnKey),
     }, builderid, masterid)
 
 
@@ -92,7 +97,7 @@ def w2(builderid=None, masterid=None):
             {'builderid': 40, 'masterid': 13},
             {'builderid': 41, 'masterid': 13},
             {'builderid': 40, 'masterid': 14},
-        ]),
+        ], key=configuredOnKey),
     }, builderid, masterid)
 
 
@@ -114,7 +119,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(worker):
             self.validateData(worker)
-            worker['configured_on'].sort()
+            worker['configured_on'] = sorted(
+                worker['configured_on'], key=configuredOnKey)
             self.assertEqual(worker, w2())
         return d
 
@@ -124,7 +130,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(worker):
             self.validateData(worker)
-            worker['configured_on'].sort()
+            worker['configured_on'] = sorted(
+                worker['configured_on'], key=configuredOnKey)
             self.assertEqual(worker, w1())
         return d
 
@@ -134,7 +141,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(worker):
             self.validateData(worker)
-            worker['configured_on'].sort()
+            worker['configured_on'] = sorted(
+                worker['configured_on'], key=configuredOnKey)
             self.assertEqual(worker, w2(masterid=14))
         return d
 
@@ -144,7 +152,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(worker):
             self.validateData(worker)
-            worker['configured_on'].sort()
+            worker['configured_on'] = sorted(
+                worker['configured_on'], key=configuredOnKey)
             self.assertEqual(worker, w2(builderid=40))
         return d
 
@@ -154,7 +163,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(worker):
             self.validateData(worker)
-            worker['configured_on'].sort()
+            worker['configured_on'] = sorted(
+                worker['configured_on'], key=configuredOnKey)
             self.assertEqual(worker, w2(masterid=13, builderid=40))
         return d
 
@@ -184,9 +194,12 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
         @d.addCallback
         def check(workers):
-            [self.validateData(b) for b in workers]
-            [b['configured_on'].sort() for b in workers]
-            self.assertEqual(sorted(workers), sorted([w1(), w2()]))
+            for b in workers:
+                self.validateData(b)
+                b['configured_on'] = sorted(b['configured_on'],
+                                            key=configuredOnKey)
+            self.assertEqual(sorted(workers, key=configuredOnKey),
+                             sorted([w1(), w2()], key=configuredOnKey))
         return d
 
     def test_get_masterid(self):
@@ -195,9 +208,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(workers):
             [self.validateData(b) for b in workers]
-            [b['configured_on'].sort() for b in workers]
-            self.assertEqual(sorted(workers),
-                             sorted([w1(masterid=13), w2(masterid=13)]))
+            [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+            self.assertEqual(sorted(workers, key=configuredOnKey),
+                             sorted([w1(masterid=13), w2(masterid=13)], key=configuredOnKey))
         return d
 
     def test_get_builderid(self):
@@ -206,9 +219,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(workers):
             [self.validateData(b) for b in workers]
-            [b['configured_on'].sort() for b in workers]
-            self.assertEqual(sorted(workers),
-                             sorted([w2(builderid=41)]))
+            [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+            self.assertEqual(sorted(workers, key=configuredOnKey),
+                             sorted([w2(builderid=41)], key=configuredOnKey))
         return d
 
     def test_get_masterid_builderid(self):
@@ -217,9 +230,9 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         @d.addCallback
         def check(workers):
             [self.validateData(b) for b in workers]
-            [b['configured_on'].sort() for b in workers]
-            self.assertEqual(sorted(workers),
-                             sorted([w2(masterid=13, builderid=41)]))
+            [sorted(b['configured_on'], key=configuredOnKey) for b in workers]
+            self.assertEqual(sorted(workers, key=configuredOnKey),
+                             sorted([w2(masterid=13, builderid=41)], key=configuredOnKey))
         return d
 
 
@@ -256,5 +269,5 @@ class Worker(interfaces.InterfaceTests, unittest.TestCase):
         self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findWorkerId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findWorkerId, 'foo')
+        self.assertRaises(ValueError, self.rtype.findWorkerId, b'foo')
         self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')

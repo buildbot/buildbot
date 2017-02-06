@@ -28,6 +28,8 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot.interfaces import IHttpResponse
 from buildbot.util import service
+from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
 
 try:
@@ -47,6 +49,7 @@ log = Logger()
 
 @implementer(IHttpResponse)
 class TxRequestsResponseWrapper(object):
+
     def __init__(self, res):
         self._res = res
 
@@ -88,7 +91,8 @@ class HTTPClientService(service.SharedService):
     MAX_THREADS = 5
 
     def __init__(self, base_url, auth=None, headers=None):
-        assert not base_url.endswith("/"), "baseurl should not end with /: " + base_url
+        assert not base_url.endswith(
+            "/"), "baseurl should not end with /: " + base_url
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
@@ -110,7 +114,8 @@ class HTTPClientService(service.SharedService):
                 from_module, HTTPClientService.TREQ_PROS_AND_CONS))
 
     def startService(self):
-        # treq only supports basicauth, so we force txrequests if the auth is something else
+        # treq only supports basicauth, so we force txrequests if the auth is
+        # something else
         if self._auth is not None and not isinstance(self._auth, tuple):
             self.PREFER_TREQ = False
         if txrequests is not None and not self.PREFER_TREQ:
@@ -141,6 +146,16 @@ class HTTPClientService(service.SharedService):
         if self._headers is not None:
             headers.update(self._headers)
         kwargs['headers'] = headers
+
+        # we manually do the json encoding in order to automatically convert timestamps
+        # for txrequests and treq
+        json = kwargs.pop('json', None)
+        if isinstance(json, dict):
+            jsonStr = jsonmodule.dumps(json, default=toJson)
+            jsonBytes = unicode2bytes(jsonStr)
+            kwargs['headers']['Content-Type'] = 'application/json'
+            kwargs['data'] = jsonBytes
+
         return url, kwargs
 
     def _doTxRequest(self, method, ep, **kwargs):
@@ -157,19 +172,12 @@ class HTTPClientService(service.SharedService):
         d.addCallback(IHttpResponse)
         return d
 
-    def _doTReq(self, method, ep, data=None, json=None, **kwargs):
+    def _doTReq(self, method, ep, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
         # treq requires header values to be an array
-        kwargs['headers'] = dict([(k, [v]) for k, v in kwargs['headers'].items()])
+        kwargs['headers'] = dict([(k, [v])
+                                  for k, v in kwargs['headers'].items()])
         kwargs['agent'] = self._agent
-
-        if isinstance(json, dict):
-            data = jsonmodule.dumps(json)
-            kwargs['headers']['Content-Type'] = ['application/json']
-            kwargs['data'] = data
-
-        if isinstance(data, dict):
-            kwargs['data'] = data
 
         d = getattr(treq, method)(url, **kwargs)
         d.addCallback(IHttpResponse)

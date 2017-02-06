@@ -305,7 +305,7 @@ class V2RootResource(resource.Resource):
         # if ordering or filtering is on a field that's not in fields, bail out
         if fields:
             fieldsSet = set(fields)
-            if order and set(order) - fieldsSet:
+            if order and set([o.lstrip('-') for o in order]) - fieldsSet:
                 raise BadRequest("cannot order on un-selected fields")
             for filter in filters:
                 if filter.field not in fieldsSet:

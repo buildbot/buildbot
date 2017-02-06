@@ -110,7 +110,11 @@ class GitHubStatusPush(http.HttpStatusPushBase):
 
         context = yield props.render(self.context)
 
-        sourcestamps = build['buildset']['sourcestamps']
+        sourcestamps = build['buildset'].get('sourcestamps')
+
+        if not sourcestamps or not sourcestamps[0]:
+            return
+
         project = sourcestamps[0]['project']
 
         if project:

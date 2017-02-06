@@ -151,8 +151,9 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
                                  "testy", "westy", self.basedir,
                                  keepalive=0, umask=0o22)
         self.worker.recordHostname(self.basedir)
-        self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
-                         'test-hostname.domain.com')
+        with open(os.path.join(self.basedir, "twistd.hostname")) as f:
+            twistdHostname = f.read().strip()
+        self.assertEqual(twistdHostname, 'test-hostname.domain.com')
 
     def test_recordHostname_getfqdn(self):
         def missing():
@@ -164,8 +165,9 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
                                  "testy", "westy", self.basedir,
                                  keepalive=0, umask=0o22)
         self.worker.recordHostname(self.basedir)
-        self.assertEqual(open(os.path.join(self.basedir, "twistd.hostname")).read().strip(),
-                         'test-hostname.domain.com')
+        with open(os.path.join(self.basedir, "twistd.hostname")) as f:
+            twistdHostname = f.read().strip()
+        self.assertEqual(twistdHostname, 'test-hostname.domain.com')
 
     def test_worker_graceful_shutdown(self):
         """Test that running the build worker's gracefulShutdown method results

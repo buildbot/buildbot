@@ -36,7 +36,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 debug_logging = False
 
@@ -270,7 +270,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
             # decode the result from its designated encoding
             try:
-                result = bytes2NativeString(result, self.encoding)
+                result = bytes2unicode(result, self.encoding)
             except UnicodeError as ex:
                 log.msg(
                     "P4Poller: couldn't decode changelist description: %s" % ex.encoding)

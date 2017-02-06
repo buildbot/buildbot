@@ -42,6 +42,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
@@ -1098,6 +1099,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
+                data = bytes2NativeString(data)
                 actualJson = json.loads(data)
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
@@ -1129,6 +1131,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
+                data = bytes2NativeString(data)
                 actualJson = json.loads(data)
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)

@@ -61,7 +61,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(sourcestamp['patch'], {
                 'patchid': 99,
                 'author': u'bar',
-                'body': 'hello, world',
+                'body': b'hello, world',
                 'comment': u'foo',
                 'level': 3,
                 'subdir': u'/foo',

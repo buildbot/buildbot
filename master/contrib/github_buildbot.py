@@ -154,8 +154,7 @@ class GitHubBuildBot(resource.Resource):
             trim = " ... (trimmed, commit message exceeds 1024 characters)"
             comments = comments[:1024 - len(trim)] + trim
 
-        return \
-            {'revision': change['id'],
+        info_change = {'revision': change['id'],
              'revlink': change['url'],
              'who': who,
              'comments': comments,
@@ -163,6 +162,11 @@ class GitHubBuildBot(resource.Resource):
              'files': files,
              'project': repo,
              'branch': branch}
+
+        if self.category:
+            info_change['category'] = self.category
+
+        return info_change
 
     def handle_ping(self, *_):
         return None
@@ -365,6 +369,10 @@ def setup_options():
                            "exit. [default: %default]",
                       default=None, dest="pidfile")
 
+    parser.add_option("--category",
+                      help="Category for the build change",
+                      default=None, dest="category")
+
     (options, _) = parser.parse_args()
 
     if options.auth is not None and ":" not in options.auth:
@@ -395,6 +403,7 @@ def run_hook(options):
     github_bot.secret = options.secret
     github_bot.auth = options.auth
     github_bot.head_commit = options.head_commit
+    github_bot.category = options.category
 
     site = server.Site(github_bot)
     reactor.listenTCP(options.port, site)

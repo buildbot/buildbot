@@ -84,9 +84,9 @@ class String(TypeMixin, unittest.TestCase):
 
     klass = types.String
     good = [u'', u'hello', u'\N{SNOWMAN}']
-    bad = [None, '', 'hello', 10]
+    bad = [None, b'', b'hello', 10]
     stringValues = [
-        ('hello', u'hello'),
+        (b'hello', u'hello'),
         (u'\N{SNOWMAN}'.encode('utf-8'), u'\N{SNOWMAN}'),
     ]
     badStringValues = ['\xe0\xe0']
@@ -96,7 +96,7 @@ class String(TypeMixin, unittest.TestCase):
 class Binary(TypeMixin, unittest.TestCase):
 
     klass = types.Binary
-    good = ['', '\x01\x80\xfe', u'\N{SNOWMAN}'.encode('utf-8')]
+    good = [b'', b'\x01\x80\xfe', u'\N{SNOWMAN}'.encode('utf-8')]
     bad = [None, 10, u'xyz']
     stringValues = [('hello', 'hello')]
     cmpResults = [('\x00\x80', '\x10\x10', -1)]
@@ -135,15 +135,15 @@ class Identifier(TypeMixin, unittest.TestCase):
         return types.Identifier(len=5)
 
     good = [u'a', u'abcde', u'a1234']
-    bad = [u'', u'abcdef', 'abcd', u'1234', u'\N{SNOWMAN}']
+    bad = [u'', u'abcdef', b'abcd', u'1234', u'\N{SNOWMAN}']
     stringValues = [
-        ('abcd', u'abcd'),
+        (b'abcd', u'abcd'),
     ]
     badStringValues = [
-        '', '\N{SNOWMAN}', 'abcdef'
+        b'', '\N{SNOWMAN}', b'abcdef'
     ]
     cmpResults = [
-        (u'aaaa', 'bbbb', -1),
+        (u'aaaa', b'bbbb', -1),
     ]
 
 
@@ -163,11 +163,11 @@ class SourcedProperties(TypeMixin, unittest.TestCase):
 
     klass = types.SourcedProperties
 
-    good = [{u'p': ('["a"]', u's')}]
+    good = [{u'p': (b'["a"]', u's')}]
     bad = [
         None, (), [],
-        {'not-unicode': ('["a"]', u'unicode')},
-        {u'unicode': ('["a"]', 'not-unicode')},
+        {b'not-unicode': ('["a"]', u'unicode')},
+        {u'unicode': ('["a"]', b'not-unicode')},
         {u'unicode': ('not, json', u'unicode')},
     ]
 

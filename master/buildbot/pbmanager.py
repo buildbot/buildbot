@@ -27,7 +27,9 @@ from twisted.python import log
 from twisted.spread import pb
 from zope.interface import implementer
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 debug = False
 
@@ -163,6 +165,7 @@ class Dispatcher(service.AsyncService):
 
     def requestAvatar(self, username, mind, interface):
         assert interface == pb.IPerspective
+        username = bytes2NativeString(username)
         if username not in self.users:
             d = defer.succeed(None)  # no perspective
         else:
@@ -193,9 +196,10 @@ class Dispatcher(service.AsyncService):
     # ICredentialsChecker
 
     def requestAvatarId(self, creds):
-        if creds.username in self.users:
-            password, _ = self.users[creds.username]
-            d = defer.maybeDeferred(creds.checkPassword, password)
+        username = bytes2NativeString(creds.username)
+        if username in self.users:
+            password, _ = self.users[username]
+            d = defer.maybeDeferred(creds.checkPassword, unicode2bytes(password))
 
             @d.addCallback
             def check(matched):

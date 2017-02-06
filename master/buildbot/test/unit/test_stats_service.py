@@ -313,7 +313,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'start-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'start-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_start_time_capturing_all_builders(self):
@@ -322,7 +322,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'start-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'start-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_start_time_capturing_alt_callback(self):
@@ -333,7 +333,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'start-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'start-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_end_time_capturing(self):
@@ -342,7 +342,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'end-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'end-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_end_time_capturing_all_builders(self):
@@ -351,7 +351,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'end-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'end-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_end_time_capturing_alt_callback(self):
@@ -362,7 +362,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'end-time', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'end-time', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def build_time_capture_helper(self, time_type, cb=None):
@@ -375,19 +375,19 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     def test_build_duration_capturing_seconds(self):
         yield self.build_time_capture_helper('seconds')
         self.assertEqual(
-            'duration', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_duration_capturing_minutes(self):
         yield self.build_time_capture_helper('minutes')
         self.assertEqual(
-            'duration', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_duration_capturing_hours(self):
         yield self.build_time_capture_helper('hours')
         self.assertEqual(
-            'duration', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     def test_build_duration_report_in_error(self):
         self.assertRaises(config.ConfigErrors,
@@ -399,7 +399,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             return 10
         yield self.build_time_capture_helper('seconds', cb)
         self.assertEqual(
-            'duration', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_duration_capturing_all_builders(self):
@@ -408,7 +408,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.end_build_call_consumers()
 
         self.assertEqual(
-            'duration', self.fake_storage_service.stored_data[0][0].keys()[0])
+            'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     @defer.inlineCallbacks
     def test_build_times_capturing_error(self):

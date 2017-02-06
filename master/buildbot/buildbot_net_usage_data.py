@@ -34,6 +34,7 @@ from twisted.internet import threads
 from twisted.python import log
 
 from buildbot.process.buildstep import _BuildStepFactory
+from buildbot.util import unicode2bytes
 from buildbot.www.config import IndexResource
 
 # This can't change! or we will need to make sure we are compatible with all
@@ -91,11 +92,14 @@ def basicData(master):
     # we hash the master's name + various other master dependent variables
     # to get as much as possible an unique id
     # we hash it to not leak private information about the installation such as hostnames and domain names
-    installid = hashlib.sha1(
+    hashInput = (
         master.name +  # master name contains hostname + master basepath
         socket.getfqdn()  # we add the fqdn to account for people
-                          # call their buildbot host 'buildbot' and install it in /var/lib/buildbot
-    ).hexdigest()
+                          # call their buildbot host 'buildbot'
+                          # and install it in /var/lib/buildbot
+    )
+    hashInput = unicode2bytes(hashInput)
+    installid = hashlib.sha1(hashInput).hexdigest()
     return {
         'installid': installid,
         'versions': dict(IndexResource.getEnvironmentVersions()),

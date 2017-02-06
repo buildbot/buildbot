@@ -66,7 +66,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def setUp(self):
         # set up a full master serving HTTP
-        yield self.setUpRealDatabase(table_names=['masters'],
+        yield self.setUpRealDatabase(table_names=['masters', 'objects', 'object_state'],
                                      sqlite_memory=False)
 
         master = fakemaster.FakeMaster()
@@ -95,7 +95,9 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         master.www.setServiceParent(master)
         yield master.www.startService()
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
-        master.www.site.sessionFactory = mock.Mock(return_value=mock.Mock())
+        session = mock.Mock()
+        session.uid = "0"
+        master.www.site.sessionFactory = mock.Mock(return_value=session)
 
         # now that we have a port, construct the real URL and insert it into
         # the config.  The second reconfig isn't really required, but doesn't

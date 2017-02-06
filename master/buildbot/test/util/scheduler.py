@@ -201,7 +201,11 @@ class SchedulerMixin(interfaces.InterfaceTests):
                                                     builderNames=None, **kw):
         properties = properties.asDict() if properties is not None else None
         self.assertIsInstance(sourcestamps, list)
-        sourcestamps.sort()
+
+        def sourceStampKey(sourceStamp):
+            return tuple(sourceStamp.values())
+
+        sourcestamps = sorted(sourcestamps, key=sourceStampKey)
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
                                       dict(reason=reason, sourcestamps=sourcestamps,
                                            waited_for=waited_for, properties=properties,

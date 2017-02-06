@@ -146,7 +146,7 @@ class SVN(Source):
             yield self._dovccmd(command)
 
     def clobber(self):
-        d = self.runRmdir(self.workdir)
+        d = self.runRmdir(self.workdir, timeout=self.timeout)
         d.addCallback(lambda _: self._checkout())
         return d
 
@@ -168,7 +168,7 @@ class SVN(Source):
 
     @defer.inlineCallbacks
     def copy(self):
-        yield self.runRmdir(self.workdir)
+        yield self.runRmdir(self.workdir, timeout=self.timeout)
 
         checkout_dir = 'source'
         if self.codebase:
@@ -361,7 +361,7 @@ class SVN(Source):
                 if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    d = self.runRmdir(files, abandonOnFailure=False)
+                    d = self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)
             return d
 
         @d.addCallback
@@ -394,7 +394,7 @@ class SVN(Source):
     @defer.inlineCallbacks
     def removeFiles(self, files):
         for filename in files:
-            res = yield self.runRmdir(filename, abandonOnFailure=False)
+            res = yield self.runRmdir(filename, abandonOnFailure=False, timeout=self.timeout)
             if res:
                 defer.returnValue(res)
                 return
@@ -485,7 +485,7 @@ class SVN(Source):
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir))
+                df.addCallback(lambda _: self.runRmdir(self.workdir, timeout=self.timeout))
                 df.addCallback(lambda _: self._checkout())
                 reactor.callLater(delay, df.callback, None)
                 return df

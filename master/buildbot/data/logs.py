@@ -86,7 +86,10 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
             defer.returnValue([])
             return
         logs = yield self.master.db.logs.getLogs(stepid=stepid)
-        defer.returnValue([(yield self.db2data(dbdict)) for dbdict in logs])
+        results = []
+        for dbdict in logs:
+            results.append((yield self.db2data(dbdict)))
+        defer.returnValue(results)
 
 
 class Log(base.ResourceType):

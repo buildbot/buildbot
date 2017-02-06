@@ -117,21 +117,41 @@ class Row(object):
         # make the values appear as attributes
         self.__dict__.update(self.values)
 
-    def __cmp__(self, other):
-        # NOTE: __cmp__() and cmp() are gone on Python 3,
-        #       in favor of __le__ and __eq__().
-        return cmp(self.__class__, other.__class__) \
-            or cmp(self.values, other.values)
-
     def __eq__(self, other):
-        return (self.__class__ == other.__class__ and
-                self.values == other.values)
+        if self.__class__ != other.__class__:
+            return False
+        else:
+            return self.values == other.values
+
+    def __ne__(self, other):
+        if self.__class__ != other.__class__:
+            return True
+        else:
+            return self.values != other.values
 
     def __lt__(self, other):
         if self.__class__ != other.__class__:
             raise TypeError("Cannot compare {} and {}".format(
-                              self.__class__, other.__class__))
+                self.__class__, other.__class__))
         return self.values < other.values
+
+    def __le__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values <= other.values
+
+    def __gt__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values > other.values
+
+    def __ge__(self, other):
+        if self.__class__ != other.__class__:
+            raise TypeError("Cannot compare {} and {}".format(
+                self.__class__, other.__class__))
+        return self.values >= other.values
 
     def __repr__(self):
         return '%s(**%r)' % (self.__class__.__name__, self.values)
@@ -1213,7 +1233,10 @@ class FakeSourceStampsComponent(FakeDBComponent):
         breq = yield self.db.buildrequests.getBuildRequest(build['buildrequestid'])
         bset = yield self.db.buildsets.getBuildset(breq['buildsetid'])
 
-        defer.returnValue([(yield self.getSourceStamp(ssid)) for ssid in bset['sourcestamps']])
+        results = []
+        for ssid in bset['sourcestamps']:
+            results.append((yield self.getSourceStamp(ssid)))
+        defer.returnValue(results)
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -1621,6 +1644,11 @@ class FakeStateComponent(FakeDBComponent):
         self.states[objectid][name] = json.dumps(value)
         return defer.succeed(None)
 
+    def atomicCreateState(self, objectid, name, thd_create_callback):
+        value = thd_create_callback()
+        self.states[objectid][name] = json.dumps(value)
+        return defer.succeed(value)
+
     # fake methods
 
     def fakeState(self, name, class_name, **kwargs):
@@ -1728,10 +1756,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
 
             if branch or repository:
                 buildset = yield self.db.buildsets.getBuildset(br.buildsetid)
-                sourcestamps = [
-                    (yield self.db.sourcestamps.getSourceStamp(ssid))
-                    for ssid in buildset['sourcestamps']
-                ]
+                sourcestamps = []
+                for ssid in buildset['sourcestamps']:
+                    sourcestamps.append((yield self.db.sourcestamps.getSourceStamp(ssid)))
 
                 if branch and not any(branch == s['branch'] for s in sourcestamps):
                     continue
@@ -2323,7 +2350,8 @@ class FakeMastersComponent(FakeDBComponent):
         return defer.succeed(None)
 
     def getMasters(self):
-        return defer.succeed(sorted(self.masters.values()))
+        return defer.succeed(sorted(self.masters.values(),
+                                    key=lambda x: x['id']))
 
     # test helpers
 

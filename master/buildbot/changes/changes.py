@@ -142,16 +142,23 @@ class Change:
             self.when, self.category, self.project, self.repository,
             self.codebase)
 
-    def __cmp__(self, other):
-        # NOTE: __cmp__() and cmp() are gone on Python 3,
-        #       in favor of __le__ and __eq__().
-        return self.number - other.number
-
     def __eq__(self, other):
         return self.number == other.number
 
+    def __ne__(self, other):
+        return self.number != other.number
+
     def __lt__(self, other):
         return self.number < other.number
+
+    def __le__(self, other):
+        return self.number <= other.number
+
+    def __gt__(self, other):
+        return self.number > other.number
+
+    def __ge__(self, other):
+        return self.number >= other.number
 
     def asText(self):
         data = ""
