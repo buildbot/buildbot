@@ -19,6 +19,7 @@ Various decorators for test cases
 from __future__ import absolute_import
 from __future__ import print_function
 
+import functools
 import os
 import sys
 
@@ -88,3 +89,18 @@ def skipIf(condition, error_message):
             test.skip = error_message
         return test
     return closure
+
+
+def memoize(func):
+    """Decorator that caches function call result"""
+
+    cache = []
+
+    @functools.wraps(func)
+    def wrapper():
+        if not cache:
+            cache.append(func())
+
+        return cache[0]
+
+    return wrapper
