@@ -824,6 +824,10 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
 
 .. bb:cfg:: secretProviders
 
+.. spelling::
+
+   secretProviders
+
 secretProviders
 ~~~~~~~~~~~~~~~
 
@@ -836,7 +840,7 @@ Example usage:
     c['secretProviders'] = [ .. ]
 
 secretProviders is a  list of secrets storage.
-See :ref:`secretManagement` to configue an available secret storage provider.
+See :ref:`secretManagement` to configure an available secret storage provider.
 
 
 .. bb:cfg:: buildbotNetUsageData

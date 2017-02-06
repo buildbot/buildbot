@@ -2866,7 +2866,7 @@ Example::
 PopulateSecrets
 +++++++++++++++
 
-The step creates files containing secrets datas in a selected path.
+The step creates files containing secrets data in a selected path.
 
 The parameters are contained in a list of dict for the following parameters:
 

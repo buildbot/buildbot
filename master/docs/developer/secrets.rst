@@ -1,6 +1,10 @@
 Secrets
 -------
 
+.. spelling::
+
+  secretDetails
+
 .. code-block:: python
 
   class SecretDetails(object):
@@ -22,10 +26,10 @@ The manager is a Buildbot service.
 .. code-block:: python
 
     secretsService = self.master.namedServices['secrets']
-    secretsDetailsList = secretsService.get(self.secrets)
+    secretDetailsList = secretsService.get(self.secrets)
 
 The service execute a get method.
-Depending on the kind of storage chosen and declared in the configuration, the manager get the selected provider and return a list of secretsDetails.
+Depending on the kind of storage chosen and declared in the configuration, the manager get the selected provider and return a list of secretDetails.
 
 Secrets providers
 -----------------
