@@ -3,30 +3,30 @@
 # to use previous and next link
 
 
-forcePage = require('./force.coffee')
-builderPage = require('./builder.coffee')
+homePage = require('./pages/home.coffee')
+forcePage = require('./pages/force.coffee')
+builderPage = require('./pages/builder.coffee')
 
-describe('', () ->
+describe 'rebuilds', () ->
     force = null
     builder = null
 
-    beforeEach(() ->
+    beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
         builder.goDefault()
-    )
 
-    describe 'rebuild button', () ->
-        it 'should navigate to a dedicated build and to use the rebuild button', () ->
+    afterEach () ->
+        new homePage().waitAllBuildsFinished()
+
+    it 'should navigate to a dedicated build and to use the rebuild button', () ->
+        builder.go()
+        builder.getLastSuccessBuildNumber().then (lastbuild) ->
+            builder.goForce()
+            force.getStartButton().click()
             builder.go()
-            builder.getLastSuccessBuildNumber().then (lastbuild) ->
-                builder.goForce()
-                force.getStartButton().click()
-                builder.go()
-                builder.waitNextBuildFinished(lastbuild)
-                builder.goBuild(lastbuild)
-                browser.getLocationAbsUrl().then (buildUrl) ->
-                    builder.getRebuildButton().click()
-                    builder.waitGoToBuild(lastbuild+2)
-
-)
+            builder.waitNextBuildFinished(lastbuild)
+            builder.goBuild(lastbuild)
+            browser.getLocationAbsUrl().then (buildUrl) ->
+                builder.getRebuildButton().click()
+                builder.waitGoToBuild(lastbuild+2)
