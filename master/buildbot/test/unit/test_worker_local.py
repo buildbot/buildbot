@@ -76,6 +76,7 @@ class TestLocalWorker(unittest.TestCase):
         # make sure that we can provide an absolute path
         self.assertEqual(
             old.remote_worker.bot.basedir, os.path.abspath('custom'))
+        yield old.stopService()
 
     @defer.inlineCallbacks
     def test_workerinfo(self):
@@ -87,3 +88,4 @@ class TestLocalWorker(unittest.TestCase):
         yield wrk.startService()
         info = yield wrk.conn.remoteGetWorkerInfo()
         self.assertIn("worker_commands", info)
+        yield wrk.stopService()

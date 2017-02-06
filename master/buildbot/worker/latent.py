@@ -46,6 +46,7 @@ class AbstractLatentWorker(AbstractWorker):
     substantiation_build = None
     insubstantiating = False
     build_wait_timer = None
+    start_missing_on_startup = False
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
@@ -102,11 +103,7 @@ class AbstractLatentWorker(AbstractWorker):
             self._setBuildWaitTimer()
             return defer.succeed(True)
         if not self._substantiation_notifier:
-            if self.parent and not self.missing_timer:
-                # start timer.  if timer times out, fail deferred
-                self.missing_timer = self.master.reactor.callLater(
-                    self.missing_timeout,
-                    self._substantiation_failed, defer.TimeoutError())
+            self.startMissingTimer()
             self.substantiation_build = build
             # if substantiate fails synchronously we need to have the deferred
             # ready to be notified
@@ -138,8 +135,7 @@ class AbstractLatentWorker(AbstractWorker):
             return result
 
         def clean_up(failure):
-            if self.missing_timer is not None:
-                self.missing_timer.cancel()
+            self.stopMissingTimer()
             self._substantiation_failed(failure)
             # swallow the failure as it is given to notified
             return None
@@ -181,8 +177,11 @@ class AbstractLatentWorker(AbstractWorker):
             d = self._substantiate(self.substantiation_build)
             d.addErrback(log.err, 'while re-substantiating')
 
-    def _substantiation_failed(self, failure):
+    def _missing_timer_fired(self):
         self.missing_timer = None
+        return self._substantiation_failed(defer.TimeoutError())
+
+    def _substantiation_failed(self, failure):
         if self.substantiation_build:
             self.substantiation_build = None
             self._substantiation_notifier.notify(failure)
@@ -270,9 +269,7 @@ class AbstractLatentWorker(AbstractWorker):
             yield AbstractWorker.disconnect(self)
             return
 
-        if self.missing_timer:
-            self.missing_timer.cancel()
-            self.missing_timer = None
+        self.stopMissingTimer()
 
         # if master is stopping, we will never achieve consistent state, as workermanager
         # wont accept new connection

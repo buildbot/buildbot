@@ -55,6 +55,7 @@ class AbstractWorker(service.BuildbotService, object):
     quarantine_timer = None
     quarantine_timeout = quarantine_initial_timeout = 10
     quarantine_max_timeout = 60 * 60
+    start_missing_on_startup = True
 
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
@@ -220,12 +221,15 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def startService(self):
         self.updateLocks()
-        self.startMissingTimer()
         self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
 
         yield self._getWorkerInfo()
         yield service.BuildbotService.startService(self)
+
+        # startMissingTimer wants the service to be running to really start
+        if self.start_missing_on_startup:
+            self.startMissingTimer()
 
     @defer.inlineCallbacks
     def reconfigService(self, name, password, max_builds=None,
@@ -295,14 +299,15 @@ class AbstractWorker(service.BuildbotService, object):
         yield service.BuildbotService.stopService(self)
 
     def startMissingTimer(self):
-        if self.notify_on_missing and self.missing_timeout and self.parent:
+        if self.missing_timeout and self.parent and self.running:
             self.stopMissingTimer()  # in case it's already running
             self.missing_timer = self.master.reactor.callLater(self.missing_timeout,
                                                                self._missing_timer_fired)
 
     def stopMissingTimer(self):
         if self.missing_timer:
-            self.missing_timer.cancel()
+            if self.missing_timer.active():
+                self.missing_timer.cancel()
             self.missing_timer = None
 
     def isConnected(self):
@@ -314,7 +319,7 @@ class AbstractWorker(service.BuildbotService, object):
         if not self.parent:
             return
         last_connection = time.ctime(time.time() - self.missing_timeout)
-        yield self.master.data.updates.workerMissing(
+        self.master.data.updates.workerMissing(
             workerid=self.workerid,
             masterid=self.master.masterid,
             last_connection=last_connection,
