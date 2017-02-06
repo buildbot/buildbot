@@ -31,9 +31,7 @@ from twisted.trial import unittest
 from txrequests import Session
 
 from buildbot.test.util import dirs
-from buildbot.test.util.decorators import memoize
 from buildbot.test.util.decorators import skipIf
-from buildbot.test.util.decorators import skipUnlessInstalled
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 try:
@@ -64,9 +62,21 @@ except ImportError:
         return ''.join(prefixed_lines())
 
 
-@memoize
 def get_buildslave_executable():
     return which("buildslave")
+
+
+def get_buildbot_executable():
+    return which("buildbot")
+
+
+def get_buildbot_worker_executable():
+    return which("buildbot-worker")
+
+
+buildslave_executable = get_buildslave_executable()
+buildbot_worker_executable = get_buildbot_worker_executable()
+buildbot_executable = get_buildbot_executable()
 
 
 def get_open_port():
@@ -288,7 +298,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         for worker_dir in self.workers_dirs:
             try:
                 yield self._run_command(
-                    ['buildbot-worker', 'stop', worker_dir])
+                    [buildbot_worker_executable, 'stop', worker_dir])
             except Exception:
                 # Ignore errors.
                 pass
@@ -296,14 +306,15 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         for slave_dir in self.slaves_dirs:
             try:
                 yield self._run_command(
-                    [get_buildslave_executable(), 'stop', slave_dir])
+                    [buildslave_executable, 'stop', slave_dir])
             except Exception:
                 # Ignore errors.
                 pass
 
         if self.master_dir is not None:
             try:
-                yield self._run_command(['buildbot', 'stop', self.master_dir])
+                yield self._run_command([
+                    buildbot_executable, 'stop', self.master_dir])
             except Exception:
                 # Ignore errors.
                 pass
@@ -361,7 +372,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         assert self.master_dir is None
         self.master_dir = master_dir
         stdout, _ = yield self._run_command(
-            ['buildbot', 'create-master', master_dir])
+            [buildbot_executable, 'create-master', master_dir])
         self.assertIn("buildmaster configured in", stdout)
 
     @defer.inlineCallbacks
@@ -369,8 +380,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.workers_dirs.append(worker_dir)
         master_addr = 'localhost:{port}'.format(port=self.master_port)
         stdout, _ = yield self._run_command([
-            'buildbot-worker', 'create-worker', worker_dir, master_addr,
-            name, password])
+            buildbot_worker_executable, 'create-worker', worker_dir,
+            master_addr, name, password])
         self.assertIn("worker configured in", stdout)
 
     @defer.inlineCallbacks
@@ -378,26 +389,28 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.slaves_dirs.append(slave_dir)
         master_addr = 'localhost:{port}'.format(port=self.master_port)
         stdout, _ = yield self._run_command([
-            get_buildslave_executable(), 'create-slave', slave_dir,
+            buildslave_executable, 'create-slave', slave_dir,
             master_addr, name, password])
         self.assertIn("buildslave configured in", stdout)
 
     @defer.inlineCallbacks
     def _buildbot_start(self, master_dir):
-        stdout, _ = yield self._run_command(['buildbot', 'start', master_dir])
+        stdout, _ = yield self._run_command([
+            buildbot_executable, 'start', master_dir])
         self.assertIn(
             "The buildmaster appears to have (re)started correctly",
             stdout)
 
     @defer.inlineCallbacks
     def _buildbot_stop(self, master_dir):
-        stdout, _ = yield self._run_command(['buildbot', 'stop', master_dir])
+        stdout, _ = yield self._run_command([
+            buildbot_executable, 'stop', master_dir])
         self.assertRegexpMatches(stdout, r"buildbot process \d+ is dead")
 
     @defer.inlineCallbacks
     def _buildbot_worker_start(self, worker_dir):
         stdout, _ = yield self._run_command([
-            'buildbot-worker', 'start', worker_dir])
+            buildbot_worker_executable, 'start', worker_dir])
 
         self.assertIn(
             "The buildbot-worker appears to have (re)started correctly",
@@ -406,13 +419,13 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def _buildbot_worker_stop(self, worker_dir):
         stdout, _ = yield self._run_command(
-            ['buildbot-worker', 'stop', worker_dir])
+            [buildbot_worker_executable, 'stop', worker_dir])
         self.assertRegexpMatches(stdout, r"worker process \d+ is dead")
 
     @defer.inlineCallbacks
     def _buildslave_start(self, slave_dir):
         stdout, _ = yield self._run_command([
-            get_buildslave_executable(), 'start', slave_dir])
+            buildslave_executable, 'start', slave_dir])
 
         self.assertIn(
             "The buildslave appears to have (re)started correctly",
@@ -421,7 +434,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def _buildslave_stop(self, slave_dir):
         stdout, _ = yield self._run_command(
-            [get_buildslave_executable(), 'stop', slave_dir])
+            [buildslave_executable, 'stop', slave_dir])
         self.assertRegexpMatches(stdout, r"buildslave process \d+ is dead")
 
     @defer.inlineCallbacks
@@ -456,8 +469,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
             f.write(master_cfg)
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildbot_worker',
-                         "buildbot-worker package is not installed")
+    @skipIf(buildbot_worker_executable is None,
+            "buildbot-worker executable not found")
     def test_master_worker_setup(self):
         """Create master and worker (with default pyflakes configuration),
         start them, stop them.
@@ -510,7 +523,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipIf(get_buildslave_executable() is None,
+    @skipIf(buildslave_executable is None,
             "buildslave executable not found")
     def test_master_slave_setup(self):
         """Create master and slave (with default pyflakes configuration),
@@ -566,8 +579,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildbot_worker',
-                         "buildbot-worker package is not installed")
+    @skipIf(buildbot_worker_executable is None,
+            "buildbot-worker executable not found")
     def test_shell_command_on_worker(self):
         """Run simple ShellCommand on worker."""
 
@@ -630,8 +643,8 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildbot_worker',
-                         "buildbot-worker package is not installed")
+    @skipIf(buildbot_worker_executable is None,
+            "buildbot-worker executable not found")
     def test_file_transfer_on_worker(self):
         """Run file transfer between master/worker."""
 
@@ -696,7 +709,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipIf(get_buildslave_executable() is None,
+    @skipIf(buildslave_executable is None,
             "buildslave executable not found")
     def test_file_transfer_on_slave(self):
         """Run file transfer between master/buildslave."""
@@ -762,7 +775,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipIf(get_buildslave_executable() is None,
+    @skipIf(buildslave_executable is None,
             "buildslave executable not found")
     def test_shell_command_on_slave(self):
         """Run simple ShellCommand on worker."""
@@ -826,9 +839,9 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         self.success = True
 
     @defer.inlineCallbacks
-    @skipUnlessInstalled('buildbot_worker',
-                         "buildbot-worker package is not installed")
-    @skipIf(get_buildslave_executable() is None,
+    @skipIf(buildbot_worker_executable is None,
+            "buildbot-worker executable not found")
+    @skipIf(buildslave_executable is None,
             "buildslave executable not found")
     def test_shell_command_on_worker_and_slave(self):
         """Test simultaneous work of old and new workers."""
