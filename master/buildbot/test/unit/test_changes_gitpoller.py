@@ -1330,10 +1330,24 @@ class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
         poller = gitpoller.GitPoller("/tmp/git.git", branches=True)
         self.assertEqual(poller.branches, True)
 
+    def test_only_tags_True(self):
+        poller = gitpoller.GitPoller("/tmp/git.git", only_tags=True)
+        self.assertIsNotNone(poller.branches)
+
     def test_branches_andBranch(self):
         self.assertRaisesConfigError("can't specify both branch and branches",
                                      lambda: gitpoller.GitPoller("/tmp/git.git",
                                                                  branch='bad', branches=['listy']))
+
+    def test_branches_and_only_tags(self):
+        self.assertRaisesConfigError("can't specify only_tags and branch/branches",
+                                     lambda: gitpoller.GitPoller("/tmp/git.git",
+                                                                 only_tags=True, branches=['listy']))
+
+    def test_branch_and_only_tags(self):
+        self.assertRaisesConfigError("can't specify only_tags and branch/branches",
+                                     lambda: gitpoller.GitPoller("/tmp/git.git",
+                                                                 only_tags=True, branch='bad'))
 
     def test_gitbin_default(self):
         poller = gitpoller.GitPoller("/tmp/git.git")
