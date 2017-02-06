@@ -54,6 +54,8 @@ def sendchange_cmd(master, revisionData):
         "--comments=%s" % revisionData['comments'],
         "--vc=%s" % 'svn',
     ]
+    if opts.revlink:
+        cmd.append("--revlink=%s/%s" % (opts.revlink, revisionData['revision']))
     if opts.category:
         cmd.append("--category=%s" % opts.category)
     if opts.branch:
@@ -192,6 +194,11 @@ def build_parser():
     parser.add_option(
         "-a", "--auth", dest="auth", action="store", default=None,
         help="Authentication token - username:password.",
+    )
+
+    parser.add_option(
+        "-l", "--link", dest="revlink", action="store", default=None,
+        help="A base URL for the revision links.",
     )
 
     parser.add_option(
