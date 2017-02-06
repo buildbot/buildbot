@@ -147,6 +147,7 @@ checkip
 childs
 chmod
 chroot
+ci
 clientid
 clientids
 clientsecret
@@ -192,6 +193,7 @@ cvar
 cvs
 cvsroot
 daemonize
+daemonized
 darcs
 datetime
 dateutil's
@@ -770,6 +772,7 @@ testpath
 testsuite
 texinfo
 textbox
+textwrap
 tf
 th
 that'll
