@@ -33,6 +33,7 @@ from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
+from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -150,8 +151,9 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
         yield deferLater(reactor, 0.01, lambda: None)
 
     def _write_config(self, config_str):
+        config_bytes = unicode2bytes(config_str)
         configfile = FilePath(self.mktemp())
-        configfile.setContent(config_str)
+        configfile.setContent(config_bytes)
         return configfile
 
     @defer.inlineCallbacks
