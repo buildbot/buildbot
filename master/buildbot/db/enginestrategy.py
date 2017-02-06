@@ -76,6 +76,9 @@ class SqlLiteStrategy(Strategy):
         # try to enable WAL logging
         if u.database:
             def connect_listener(connection, record):
+                # default for PY2, not anymore for PY3, and cause issue with VACUUM
+                # (it thinks it is in a transaction while it is not)
+                connection.isolation_level = None
                 connection.execute("pragma checkpoint_fullfsync = off")
 
             sa.event.listen(engine.pool, 'connect', connect_listener)
