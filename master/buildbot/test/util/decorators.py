@@ -80,3 +80,11 @@ def skipUnlessInstalled(module_name, error_message=None):
             test.skip = error_message
         return test
     return closure
+
+
+def skipIf(condition, error_message):
+    def closure(test):
+        if condition:
+            test.skip = error_message
+        return test
+    return closure
