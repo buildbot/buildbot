@@ -835,7 +835,7 @@ Example usage:
 
     c['secretProviders'] = [ .. ]
 
-secretProviders is a  list of secrets storage.
+``secretProviders`` is a  list of secrets storage.
 See :ref:`secretManagement` to configure an available secret storage provider.
 
 
