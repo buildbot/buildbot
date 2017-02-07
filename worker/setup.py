@@ -66,6 +66,7 @@ class our_sdist(sdist):
         with open(dst_fn, 'w') as f:
             f.write(src)
 
+
 setup_args = {
     'name': "buildbot-worker",
     'version': version,
@@ -87,8 +88,8 @@ setup_args = {
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.5'
+        # 'Programming Language :: Python :: 3',
+        # 'Programming Language :: Python :: 3.5'
     ],
 
     'packages': [
