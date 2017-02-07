@@ -46,6 +46,16 @@ describe 'ansicode service', ->
             {class: 'ansi1 ansi36', text: 'DEBUG [plugin]: '},
             {class: '', text: 'Loading plugin karma-jasmine.'}]
 
+    it 'should provide correct split_ansi_line for reset codes', ->
+        # code sequence from protractor
+        ret = ansicodesService.splitAnsiLine("\x1b[32m.\x1b[0m\x1b[31mF\x1b[0m\x1b[32m.\x1b[39m\x1b[32m.\x1b[0m")
+        expect(ret).toEqual [
+            {class: "ansi32", text: "."},
+            {class: "ansi31", text: "F"},
+            {class: "ansi32", text: "."},
+            {class: "ansi32", text: "."},
+         ]
+
     it 'should provide correct split_ansi_line for 256 colors', ->
         ret = ansicodesService.splitAnsiLine("\x1b[48;5;71mDEBUG \x1b[38;5;72m[plugin]: \x1b[39mLoading plugin karma-jasmine.")
         expect(ret).toEqual [
