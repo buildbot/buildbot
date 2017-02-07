@@ -1,5 +1,4 @@
 buildbot.test.integration.test_URLs.UrlForBuildMaster.test_url
-buildbot.test.integration.test_custom_buildstep.RunSteps.test_Latin1ProducingCustomBuildStep
 buildbot.test.integration.test_latent.Tests.test_failed_ping_get_requeued
 buildbot.test.integration.test_latent.Tests.test_failed_sendBuilderList_get_requeued
 buildbot.test.integration.test_transfer.TransferStepsMasterNull.test_transfer
