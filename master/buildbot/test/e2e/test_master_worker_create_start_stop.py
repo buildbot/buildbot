@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
 from __future__ import print_function
 
 import functools
@@ -20,6 +21,21 @@ import os
 import re
 import socket
 import textwrap
+
+from fastjsonrpc.client import Proxy
+from fastjsonrpc.client import jsonrpc
+from txrequests import Session
+
+from twisted.internet import reactor as global_reactor
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.internet import utils
+from twisted.python import log
+from twisted.trial import unittest
+
+from buildbot.test.util import dirs
+from buildbot.test.util.decorators import skipIf
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 try:
     from textwrap import indent
@@ -42,19 +58,6 @@ except ImportError:
                 yield (prefix + line if predicate(line) else line)
         return ''.join(prefixed_lines())
 
-from fastjsonrpc.client import Proxy
-from fastjsonrpc.client import jsonrpc
-from twisted.internet import reactor as global_reactor
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.internet import utils
-from twisted.python import log
-from twisted.trial import unittest
-from txrequests import Session
-
-from buildbot.test.util import dirs
-from buildbot.test.util.decorators import skipIf
-from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 try:
     from shutil import which
