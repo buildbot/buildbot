@@ -3,12 +3,12 @@
 # to test this part: two different builds need to be started
 
 
-forcePage = require('./force.coffee')
-builderPage = require('./builder.coffee')
-homePage = require('./home.coffee')
+forcePage = require('./pages/force.coffee')
+builderPage = require('./pages/builder.coffee')
+homePage = require('./pages/home.coffee')
 
 
-describe('', () ->
+describe 'home page', () ->
     force = null
     builder = null
     home = null
@@ -19,16 +19,16 @@ describe('', () ->
         home = new homePage()
         builder.goDefault()
     )
+    afterEach () ->
+        new homePage().waitAllBuildsFinished()
 
-    describe 'manage home web page', () ->
-        it 'should go to the home page and check the different builder', () ->
-            builderName = {
-                "0" : "runtests"
-            }
-            builder.go()
-            builder.goForce()
-            force.getStartButton().click()
-            home.go()
-            panel0 = home.getPanel(0)
-            expect(panel0.getText()).toContain(builderName[0])
-)
+    it 'should go to the home page and check the different builder', () ->
+        builderName = {
+            "0" : "runtests"
+        }
+        builder.go()
+        builder.goForce()
+        force.getStartButton().click()
+        home.go()
+        panel0 = home.getPanel(0)
+        expect(panel0.getText()).toContain(builderName[0])

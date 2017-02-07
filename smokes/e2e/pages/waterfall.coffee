@@ -32,7 +32,7 @@ class waterfallPage
         self.goBuild()
         popupClose = element.all(By.css('i.fa-times'))
         popupClose.click()
-        expect(element.all(By.css('modal-dialog')).isPresent).toBe(undefined)
+        expect($('modal-dialog').isPresent()).toBeFalsy()
 
     goBuildAndCheck: () ->
         self =  this

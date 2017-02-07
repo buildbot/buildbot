@@ -1,5 +1,6 @@
-consolePage = require('./console.coffee')
-builderPage = require('./builder.coffee')
+consolePage = require('./pages/console.coffee')
+builderPage = require('./pages/builder.coffee')
+homePage = require('./pages/home.coffee')
 
 describe 'change hook', () ->
     builder = null
@@ -8,6 +9,9 @@ describe 'change hook', () ->
         builder = new builderPage('runtest', 'force')
         console = new consolePage()
     )
+    afterEach () ->
+        new homePage().waitAllBuildsFinished()
+
     it 'should create a build', () ->
         builder.go()
         builder.getLastSuccessBuildNumber().then (lastbuild) ->

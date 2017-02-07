@@ -5,7 +5,6 @@
 
 class forcePage
     constructor: ->
-        browser.get('#/builders')
 
     setInputText: (cssLabel, value) ->
         setInputValue = element(By.css("forcefield label[for=#{cssLabel}] + div input"))
