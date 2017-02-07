@@ -1,0 +1,1 @@
+Fix issue with buildbot_worker not closing file handles when using the transfer steps

@@ -76,6 +76,7 @@ class WorkerFileUploadCommand(TransferCommand):
         self.keepstamp = args.get('keepstamp', False)
         self.stderr = None
         self.rc = 0
+        self.fp = None
 
     def start(self):
         if self.debug:
@@ -107,6 +108,8 @@ class WorkerFileUploadCommand(TransferCommand):
         self._reactor.callLater(0, self._loop, d)
 
         def _close_ok(res):
+            if self.fp:
+                self.fp.close()
             self.fp = None
             d1 = self.writer.callRemote("close")
 
@@ -118,6 +121,8 @@ class WorkerFileUploadCommand(TransferCommand):
 
         def _close_err(f):
             self.rc = 1
+            if self.fp:
+                self.fp.close()
             self.fp = None
             # call remote's close(), but keep the existing failure
             d1 = self.writer.callRemote("close")
@@ -244,6 +249,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
     def finished(self, res):
         self.fp.close()
+        self.fp = None
         os.remove(self.tarname)
         return TransferCommand.finished(self, res)
 
@@ -273,6 +279,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         self.mode = args['mode']
         self.stderr = None
         self.rc = 0
+        self.fp = None
 
     def start(self):
         if self.debug:
@@ -302,6 +309,8 @@ class WorkerFileDownloadCommand(TransferCommand):
                 os.chmod(self.path, self.mode)
         except IOError:
             # TODO: this still needs cleanup
+            if self.fp:
+                self.fp.close()
             self.fp = None
             self.stderr = "Cannot open file '%s' for download" % self.path
             self.rc = 1
@@ -372,7 +381,8 @@ class WorkerFileDownloadCommand(TransferCommand):
         return False
 
     def finished(self, res):
-        if self.fp is not None:
+        if self.fp:
             self.fp.close()
+        self.fp = None
 
         return TransferCommand.finished(self, res)
