@@ -35,11 +35,11 @@ describe 'previousnextlink', () ->
             builder.go()
             builder.waitNextBuildFinished(+lastbuild + 1)
             builder.goBuild(lastbuild)
-            lastBuildURL = browser.getLocationAbsUrl()
+            lastBuildURL = browser.getCurrentUrl()
             builder.getPreviousButton().click()
-            expect(browser.getLocationAbsUrl()).not.toMatch(lastBuildURL)
+            expect(browser.getCurrentUrl()).not.toMatch(lastBuildURL)
             builder.getNextButton().click()
-            expect(browser.getLocationAbsUrl()).toMatch(lastBuildURL)
+            expect(browser.getCurrentUrl()).toMatch(lastBuildURL)
 
 describe 'forceandstop', () ->
     force = null
@@ -54,5 +54,5 @@ describe 'forceandstop', () ->
 
         builder.goForce()
         force.getStartButton().click()
-        expect(browser.getLocationAbsUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]")
+        expect(browser.getCurrentUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]")
         builder.getStopButton().click()

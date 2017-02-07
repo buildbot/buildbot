@@ -10,18 +10,15 @@ class waterfallPage
     go: () ->
         browser.get('#/waterfall')
 
-    checkBuilder: (hrefBuilder) ->
-        browser.getLocationAbsUrl().then (localURL) ->
-            split = hrefBuilder[0].split('#')
-            expect(split[split.length-1]).toContain(localURL)
+    checkBuilder: () ->
+        browser.getCurrentUrl().then (currentUrl) ->
+            expect(currentUrl).toContain("builders/")
 
     checkBuildResult: () ->
         popupContents = element.all(By.css('a.ng-binding')).first()
         popupContents.getAttribute('href').then (linkTarget) ->
             popupContents.click()
-            browser.getLocationAbsUrl().then (buildUrl) ->
-                split = linkTarget.split('#')
-                expect(split[split.length-1]).toContain(buildUrl)
+            expect(browser.getCurrentUrl()).toEqual(linkTarget)
 
     goBuild: () ->
         buildList = element.all(By.css('text.id')).last()
@@ -42,8 +39,7 @@ class waterfallPage
     goBuilderAndCheck: (builderRef) ->
         self = this
         localBuilder = element.all(By.linkText(@builder))
-        localBuilder.getAttribute('href').then (str) ->
-            localBuilder.click()
-            self.checkBuilder(str)
+        localBuilder.click()
+        self.checkBuilder()
 
 module.exports = waterfallPage

@@ -18,7 +18,7 @@ env:
 
   # add js tests in separate job. Start it early because it is quite long
   - TWISTED=latest SQLALCHEMY=latest TESTS=js
-  - TWISTED=latest SQLALCHEMY=latest TESTS=tarballs
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes
 
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
@@ -180,10 +180,10 @@ script:
     cmd: make -C master/docs SPHINXOPTS=-q linkcheck
 
   - title: maketarballs
-    condition: TESTS == "tarballs"
+    condition: TESTS == "smokes"
     cmd: ./common/maketarballs.sh
 
-  - title: maketarballs
+  - title: protractor tests
     condition: TESTS == "smokes"
     cmd: ./common/smokedist.sh
 
