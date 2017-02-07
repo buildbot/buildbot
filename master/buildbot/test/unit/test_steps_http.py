@@ -99,15 +99,7 @@ class TestHTTPStep(steps.BuildStepMixin, unittest.TestCase):
 
     def test_POST(self):
         url = self.getURL("POST")
-        content = "\n<html>\n" \
-                  "  <head><title>405 - Method Not Allowed</title></head>\n" \
-                  "  <body>\n    <h1>Method Not Allowed</h1>\n    <p>Your browser " \
-                  "approached me (at /POST) with the method \"POST\".  I only allow the " \
-                  "methods HEAD, GET here.</p>\n  </body>\n</html>\n"
         self.setupStep(http.POST(url))
-        self.expectLogfile(
-            'log', "URL: %s\n ------ Content ------\n%s" % (url, content))
-        self.expectLogfile('content', content)
         self.expectOutcome(
             result=FAILURE, state_string="Status code: 405 (failure)")
         return self.runStep()
