@@ -27,6 +27,6 @@ describe 'rebuilds', () ->
             builder.go()
             builder.waitNextBuildFinished(lastbuild)
             builder.goBuild(lastbuild)
-            browser.getLocationAbsUrl().then (buildUrl) ->
+            browser.getCurrentUrl().then (buildUrl) ->
                 builder.getRebuildButton().click()
                 builder.waitGoToBuild(lastbuild+2)
