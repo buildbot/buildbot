@@ -290,6 +290,7 @@ funcname
 gcc
 gc'd
 gerrit
+getargspec
 getattr
 getexitcodeprocess
 getpid
