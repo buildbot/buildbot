@@ -53,7 +53,7 @@ class ansicodesService extends Factory('common')
                         css_classes[fgbg[ansi_classes[0]] + '-' + ansi_classes[2]] = true
                 else
                     for i in ansi_classes
-                        if i == '39' # color reset code
+                        if i == '39' or i == '0' # "color reset" code and "all attributes off" code
                             css_classes = {}
                         else
                             css_classes[i] = true
