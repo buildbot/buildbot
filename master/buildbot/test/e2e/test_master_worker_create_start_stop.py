@@ -21,26 +21,6 @@ import re
 import socket
 import textwrap
 
-from fastjsonrpc.client import Proxy
-from fastjsonrpc.client import jsonrpc
-from twisted.internet import reactor as global_reactor
-from twisted.internet import defer
-from twisted.internet import task
-from twisted.internet import utils
-from twisted.python import log
-from twisted.trial import unittest
-from txrequests import Session
-
-from buildbot.test.util import dirs
-from buildbot.test.util.decorators import skipIf
-from buildbot.test.util.decorators import skipUnlessPlatformIs
-
-try:
-    from shutil import which
-except ImportError:
-    # Backport of shutil.which() from Python 3.3.
-    from shutilwhich import which
-
 try:
     from textwrap import indent
 except ImportError:
@@ -61,6 +41,26 @@ except ImportError:
             for line in text.splitlines(True):
                 yield (prefix + line if predicate(line) else line)
         return ''.join(prefixed_lines())
+
+from fastjsonrpc.client import Proxy
+from fastjsonrpc.client import jsonrpc
+from twisted.internet import reactor as global_reactor
+from twisted.internet import defer
+from twisted.internet import task
+from twisted.internet import utils
+from twisted.python import log
+from twisted.trial import unittest
+from txrequests import Session
+
+from buildbot.test.util import dirs
+from buildbot.test.util.decorators import skipIf
+from buildbot.test.util.decorators import skipUnlessPlatformIs
+
+try:
+    from shutil import which
+except ImportError:
+    # Backport of shutil.which() from Python 3.3.
+    from shutilwhich import which
 
 
 def get_buildslave_executable():
