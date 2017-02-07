@@ -27,6 +27,8 @@ from twisted.internet import reactor
 from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
 
+from buildbot_worker.compat import unicode2bytes
+
 
 class FakeTransport(object):
     disconnecting = False
@@ -39,7 +41,7 @@ class WorkerTimeoutError(Exception):
 class TailProcess(protocol.ProcessProtocol):
 
     def outReceived(self, data):
-        self.lw.dataReceived(data)
+        self.lw.dataReceived(unicode2bytes(data))
 
     def errReceived(self, data):
         print("ERR: '%s'" % (data,))
@@ -48,7 +50,7 @@ class TailProcess(protocol.ProcessProtocol):
 class LogWatcher(LineOnlyReceiver):
     POLL_INTERVAL = 0.1
     TIMEOUT_DELAY = 10.0
-    delimiter = os.linesep
+    delimiter = unicode2bytes(os.linesep)
 
     def __init__(self, logfile):
         self.logfile = logfile
@@ -105,13 +107,13 @@ class LogWatcher(LineOnlyReceiver):
     def lineReceived(self, line):
         if not self.running:
             return
-        if "Log opened." in line:
+        if b"Log opened." in line:
             self.in_reconfig = True
-        if "loading configuration from" in line:
+        if b"loading configuration from" in line:
             self.in_reconfig = True
 
         if self.in_reconfig:
             print(line)
 
-        if "message from master: attached" in line:
+        if b"message from master: attached" in line:
             return self.finished("buildbot-worker")
