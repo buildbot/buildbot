@@ -34,7 +34,7 @@ describe 'previousnextlink', () ->
             force.getStartButton().click()
             builder.go()
             builder.waitNextBuildFinished(+lastbuild + 1)
-            builder.goBuild(lastbuild)
+            builder.goBuild(+lastbuild + 2)
             lastBuildURL = browser.getCurrentUrl()
             builder.getPreviousButton().click()
             expect(browser.getCurrentUrl()).not.toMatch(lastBuildURL)
