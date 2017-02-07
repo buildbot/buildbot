@@ -88,17 +88,6 @@ buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_env_list_subst
 buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_env_subst
 buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_prop_rendering
 buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_real_cmd
-buildbot.test.unit.test_steps_python.PyLint.test_error
-buildbot.test.unit.test_steps_python.PyLint.test_failure
-buildbot.test.unit.test_steps_python.PyLint.test_failure_zero_returncode
-buildbot.test.unit.test_steps_python.PyLint.test_regex_parseable
-buildbot.test.unit.test_steps_python.PyLint.test_regex_parseable_131
-buildbot.test.unit.test_steps_python.PyLint.test_regex_parseable_ids
-buildbot.test.unit.test_steps_python.PyLint.test_regex_text
-buildbot.test.unit.test_steps_python.PyLint.test_regex_text_0_24
-buildbot.test.unit.test_steps_python.PyLint.test_regex_text_131
-buildbot.test.unit.test_steps_python.PyLint.test_regex_text_ids
-buildbot.test.unit.test_steps_python.PyLint.test_regex_text_ids_0_24
 buildbot.test.unit.test_steps_source_svn.TestSvnUriCanonicalize.test_quote_funny_chars
 buildbot.test.unit.test_steps_transfer.TestStringDownload.testModeConfError
 buildbot.test.unit.test_steps_trigger.TestTrigger.test_set_of_sourceStamps

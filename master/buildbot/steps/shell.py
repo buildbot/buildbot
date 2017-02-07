@@ -357,7 +357,7 @@ class SetPropertyFromCommand(ShellCommand):
     def createSummary(self, log):
         if self.property_changes:
             props_set = ["%s: %r" % (k, v)
-                         for k, v in iteritems(self.property_changes)]
+                         for k, v in sorted(iteritems(self.property_changes))]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def describe(self, done=False):
