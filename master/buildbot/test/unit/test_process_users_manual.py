@@ -257,8 +257,9 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
                                                         ['x@y'], None))
 
         def check(result):
-            exp_format = 'user(s) found:\ngit: x <x@y>\nidentifier: x@y\n' \
-                         'bb_username: None\nuid: 1\n\n'
+            exp_format = ('user(s) found:\nbb_username: None\n'
+                         'git: x <x@y>\nidentifier: x@y\n'
+                         'uid: 1\n\n')
             self.assertEqual(result, exp_format)
         d.addCallback(check)
         return d

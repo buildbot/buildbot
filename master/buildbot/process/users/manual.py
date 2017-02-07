@@ -78,7 +78,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
             formatted_results += "user(s) found:\n"
             for user in results:
                 if user:
-                    for key in user:
+                    for key in sorted(user.keys()):
                         if key != 'bb_password':
                             formatted_results += "%s: %s\n" % (key, user[key])
                     formatted_results += "\n"
@@ -116,7 +116,6 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
         results = []
 
         # pylint: disable=too-many-nested-blocks
-
         if ids:
             for user in ids:
                 # get identifier, guaranteed to be in user from checks
