@@ -37,6 +37,7 @@ from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
+from buildbot.util import bytes2NativeString
 from buildbot.worker.base import Worker
 
 
@@ -97,7 +98,9 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
     @defer.inlineCallbacks
     def run(self):
         l = yield self.addLog('xx')
-        yield l.addStdout(u'\N{CENT SIGN}'.encode('latin-1'))
+        output_bytes = u'\N{CENT SIGN}'.encode('latin-1')
+        output_str = bytes2NativeString(output_bytes, encoding='latin-1')
+        yield l.addStdout(output_str)
         yield l.finish()
         defer.returnValue(results.SUCCESS)
 

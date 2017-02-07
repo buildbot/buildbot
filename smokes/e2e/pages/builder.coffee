@@ -35,11 +35,11 @@ class builderPage
         buildCountIncrement = () ->
             self.getLastSuccessBuildNumber().then (currentBuildCount) ->
                 return currentBuildCount == reference + 1
-        browser.wait(buildCountIncrement, 10000)
+        browser.wait(buildCountIncrement, 20000)
 
     waitGoToBuild: (expected_buildnumber) ->
         isInBuild = () ->
-            browser.getLocationAbsUrl().then (buildUrl) ->
+            browser.getCurrentUrl().then (buildUrl) ->
                 split = buildUrl.split("/")
                 builds_part = split[split.length-2]
                 number = +split[split.length-1]
@@ -48,7 +48,7 @@ class builderPage
                 if number != expected_buildnumber
                     return false
                 return true
-        browser.wait(isInBuild, 10000)
+        browser.wait(isInBuild, 20000)
 
     getStopButton: ->
         return element(By.buttonText('Stop'))
