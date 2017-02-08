@@ -6,7 +6,10 @@ exports.config = {
     ],
 
     capabilities: {
-        'browserName': 'chrome'
+        'browserName': 'chrome',
+        'chromeOptions': {
+            'args': ['--headless', '--disable-gpu', '--no-sandbox']
+        }
     },
 
     baseUrl: 'http://localhost:8010',
@@ -14,6 +17,6 @@ exports.config = {
     framework: 'jasmine',
 
     jasmineNodeOpts: {
-        defaultTimeoutInterval: 30000
+        defaultTimeoutInterval: 50000
     }
 };
