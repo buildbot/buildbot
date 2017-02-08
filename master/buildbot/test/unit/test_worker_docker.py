@@ -40,6 +40,7 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         master = fakemaster.make_master(testcase=self, wantData=True)
         worker.setServiceParent(master)
         self.successResultOf(master.startService())
+        self.addCleanup(master.stopService)
         return worker
 
     def setUp(self):
