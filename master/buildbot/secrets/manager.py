@@ -17,7 +17,6 @@ manage providers and handle secrets
 """
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import itervalues
 
 from buildbot.secrets.secret import SecretDetails
 from buildbot.util import service
@@ -40,10 +39,9 @@ class SecretManager(service.BuildbotService):
         secret_detail = None
         providers = self.master.config.secretsManagers
         for provider in providers:
-            value, props = provider.get(secret)
+            value = provider.get(secret)
             source_name = provider.__class__.__name__
-            secret_detail = SecretDetails(source_name, secret, value,
-                                          props)
+            secret_detail = SecretDetails(source_name, secret, value)
             if value is None:
                 continue
         return secret_detail

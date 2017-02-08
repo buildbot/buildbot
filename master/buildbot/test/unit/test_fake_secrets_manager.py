@@ -3,11 +3,10 @@ from __future__ import print_function
 
 from twisted.trial import unittest
 
-from buildbot.plugins import util
 from buildbot.secrets.manager import SecretManager
+from buildbot.secrets.provider.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.test.fake import fakemaster
-from buildbot.secrets.provider.base import SecretProviderBase
 
 
 class FakeSecretStorage(SecretProviderBase):
@@ -17,9 +16,9 @@ class FakeSecretStorage(SecretProviderBase):
 
     def get(self, key):
         if key in self.allsecrets:
-            return self.allsecrets[key], None
+            return self.allsecrets[key]
         else:
-            return None, None
+            return None
 
 
 class OtherFakeSecretStorage(FakeSecretStorage):
@@ -39,12 +38,14 @@ class TestSecretsManager(unittest.TestCase):
     def testGetManagerService(self):
         secret_service_manager = SecretManager()
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(
-            FakeSecretStorage({"foo": "bar",
-                               "other": "value"}).__class__.__name__, "foo",
-            "bar")
-        self.assertEqual(secret_service_manager.get(
-            "foo"), expectedSecretDetail)
+        expectedClassName = FakeSecretStorage({"foo": "bar",
+                                               "other": "value"}).__class__.__name__
+        expectedSecretDetail = SecretDetails(expectedClassName, "foo", "bar")
+        secret_result = secret_service_manager.get("foo")
+        self.assertEqual(secret_result, expectedSecretDetail)
+        self.assertEqual(secret_result.key, "foo")
+        self.assertEqual(secret_result.value, "bar")
+        self.assertEqual(secret_result.source, expectedClassName)
 
     def testGetNoDataManagerService(self):
         secret_service_manager = SecretManager()

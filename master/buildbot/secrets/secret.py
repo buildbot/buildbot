@@ -20,19 +20,14 @@ from __future__ import print_function
 class SecretDetails(object):
     """
     A SecretDetails object has secrets attributes:
-    - source: provider  to retrieve secret
+    - source: provider where the secret was retrieved
     - key: secret key identifier
     - value: secret value
-    - props: all other needed properties
     """
 
-    def __init__(self, source, key, value, props=None):
-        if props is None:
-            props = dict()
-
+    def __init__(self, source, key, value):
         self._source = source
         self._value = value
-        self._props = props
         self._key = key
 
     @property
@@ -55,13 +50,6 @@ class SecretDetails(object):
         secret value
         """
         return self._key
-
-    @property
-    def props(self):
-        """
-        possible extra properties
-        """
-        return self._props
 
     def __str__(self):
         return '{} {}: {!r}'.format(self._source, self._key, self.value)
