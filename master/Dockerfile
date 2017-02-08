@@ -9,12 +9,12 @@
 # Note that the UI and worker packages are the latest version published on pypi
 # This is to avoid pulling node inside this container
 
-FROM        alpine:3.4
+FROM        alpine:3.5
 MAINTAINER  Buildbot maintainers
 
 # Last build date - this can be updated whenever there are security updates so
 # that everything is rebuilt
-ENV         security_updates_as_of 2016-10-07
+ENV         security_updates_as_of 2017-02-08
 
 
 COPY . /usr/src/buildbot
