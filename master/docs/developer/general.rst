@@ -25,5 +25,6 @@ This section gives some general information about Buildbot development.
     br-claiming
     encodings
     metrics
+    secrets
     stats-service
     plugins-publish
