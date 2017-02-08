@@ -11,65 +11,54 @@ Release Notes
 .. towncrier release notes start
 
 Buildbot ``0.9.4`` ( ``2017-02-08`` )
-===================================================
+=====================================
+
+Database upgrade
+----------------
+
+A database upgrade is necessary for this release (see :bb:cmdline:`upgrade-master`).
 
 Bug fixes
 ---------
 
+- Like for ``buildbot start``, ``buildbot upgrade-master`` will now erase an old pidfile if the process is not live anymore instead of just failing.
+- Change properties 'value' changed from String(1024) to Text. Requires upgrade master. (:bug:`3197`)
+- When using REST API, it is now possible to filter and sort in descending order at the same time.
+- Fix issue with :bb:reporter:`HttpStatusPush` raising ``datetime is not JSON serializable`` error.
 - Fix issue with log viewer not properly rendering color codes.
-- Like for ``buildbot start``, ``buildbot upgrade-master`` will now erase an
-  old pidfile if the process is not live anymore instead of just failing.
-- Change properties 'value' changed from String(1024) to Text. Requires upgrade
-  master. (:bug:`3197`)
-- When using REST API it is now possible to filter and sort in descending order
-  at the same time.
-- Fix issue with :bb:reporter:`HttpStatusPush` raising datetime is not JSON
-  serializable error.
 - Fixed log viewer selection and copy-paste for Firefox (:bug:`3662`).
-- Fix issue with ``DelayedCalled`` already called, and worker missing
-  notification email never received.
-- :bb:cfg:`schedulers`. and :bb:cfg:`change_source` are now properly taking
-  configuration change in account with ``buildbot reconfig``.
-- ``setuptools`` is now explicitly marked as required. The dependency was
-  previously implicit.
-- :bb:cfg:`buildbotNetUsageData` now uses ``requests`` if available and will
-  default to HTTP if a bogus SSL implementation is found. It will also
-  correctly send information about the platform type.
+- Fix issue with ``DelayedCalled`` already called, and worker missing notification email never received.
+- :bb:cfg:`schedulers`. and :bb:cfg:`change_source` are now properly taking configuration change in account with ``buildbot reconfig``.
+- ``setuptools`` is now explicitly marked as required. The dependency was previously implicit.
+- :bb:cfg:`buildbotNetUsageData` now uses ``requests`` if available and will default to HTTP if a bogus SSL implementation is found.
+  It will also correctly send information about the platform type.
 
 Features
 --------
 
-- Builders page has been optimized and can now be displayed with 4 http
-  requests whatever is the builder count.
 - Buildbot now uses `JWT <https://en.wikipedia.org/wiki/JSON_Web_Token>`_ to
-  store its web UI Sessions. Sessions now persist upon buildbot restart.
-  Sessions are shared between masters. Session expiration time is configurable
-  with ``c['www']['cookie_expiration_time']`` see :bb:cfg:`www`.
-- Masters page now shows more information about a master (workers, builds,
-  activity timer)
-- Builder and Worker page build list now have the ``numbuilds=`` option which
-  allows to show more builds.
-- Workers page improvement: Shows which master the worker is connected to.
-  Shows correctly the list of builders that this master is configured on (not
-  the list of ``buildermaster`` which nobody cares about). Shows list of builds
-  per worker similar to the builders page. New worker details page displays the
-  list of builds built by this worker using database optimized query.
+  store its web UI Sessions.
+  Sessions now persist upon buildbot restart.
+  Sessions are shared between masters.
+  Session expiration time is configurable with ``c['www']['cookie_expiration_time']`` see :bb:cfg:`www`.
+- Builders page has been optimized and can now be displayed with 4 http requests whatever is the builder count (previously, there was one http request per builder).
+- Builder and Worker page build list now have the ``numbuilds=`` option which allows to show more builds.
+- Masters page now shows more information about a master (workers, builds, activity timer)
+- Workers page improvements:
 
-Misc
-----
-
-- absolute_import+print_function
-
+    - Shows which master the worker is connected to.
+    - Shows correctly the list of builders that this master is configured on (not the list of ``buildermaster`` which nobody cares about).
+    - Shows list of builds per worker similar to the builders page.
+    - New worker details page displays the list of builds built by this worker using database optimized query.
 
 
 Deprecations and Removals
 -------------------------
 
-- Some deprecated :ref:`Contrib-Scripts` were removed.
-- :py:data:`buildbot.www.hooks.googlecode` has been removed, since the Google
-  Code service has been shut down.
-- :py:data:`buildbot.util.json` has been deprecated in favor of the standard
-  library :py:mod:`json`.
+- Some deprecated broken :ref:`Contrib-Scripts` were removed.
+- :py:data:`buildbot.www.hooks.googlecode` has been removed, since the Google Code service has been shut down.
+- :py:data:`buildbot.util.json` has been deprecated in favor of the standard library :py:mod:`json`.
+  ``simplejson`` will not be used anymore if found in the virtualenv.
 
 
 Buildbot ``0.9.3`` ( ``2017-01-11`` )
