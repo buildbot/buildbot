@@ -1,1 +1,0 @@
-:py:data:`buildbot.util.json` has been deprecated in favor of the standard library :py:mod:`json`.
