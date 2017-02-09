@@ -122,6 +122,7 @@ class TestGNUAutoconf(TestBuildFactory):
     def test_init(self):
         # actual initialization is already done by setUp
         configurePresent = False
+        compilePresent = False
         checkPresent = False
         distcheckPresent = False
         for step in self.factory.steps:
@@ -130,6 +131,8 @@ class TestGNUAutoconf(TestBuildFactory):
             # the following checks are rather hairy and should be
             # rewritten less implementation dependent.
             try:
+                if step.buildStep().command == ['make', 'all']:
+                    compilePresent = True
                 if step.buildStep().command == ['make', 'check']:
                     checkPresent = True
                 if step.buildStep().command == ['make', 'distcheck']:
@@ -138,8 +141,23 @@ class TestGNUAutoconf(TestBuildFactory):
                 pass
 
         self.assertTrue(configurePresent)
+        self.assertTrue(compilePresent)
         self.assertTrue(checkPresent)
         self.assertTrue(distcheckPresent)
+
+    def test_init_none(self):
+        """Default steps can be uninitialized by setting None"""
+
+        self.factory = GNUAutoconf(source=BuildStep(), compile=None, test=None,
+                                   distcheck=None)
+        for step in self.factory.steps:
+            try:
+                cmd = step.buildStep().command
+                self.assertNotIn(cmd, [['make', 'all'], ['make', 'check'],
+                                 ['make', 'distcheck']],
+                                 "Build step %s should not be present." % cmd)
+            except(AttributeError, KeyError):
+                pass
 
     def test_init_reconf(self):
         # test reconf = True
