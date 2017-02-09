@@ -1,7 +1,3 @@
-from __future__ import absolute_import
-from __future__ import print_function
-
-
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -16,6 +12,10 @@ from __future__ import print_function
 # Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 #
 # Copyright Buildbot Team Members
+
+from __future__ import absolute_import
+from __future__ import print_function
+
 
 class SecretDetails(object):
     """
