@@ -28,7 +28,7 @@ Bug fixes
 - Fix issue with log viewer not properly rendering color codes.
 - Fixed log viewer selection and copy-paste for Firefox (:bug:`3662`).
 - Fix issue with ``DelayedCalled`` already called, and worker missing notification email never received.
-- :bb:cfg:`schedulers`. and :bb:cfg:`change_source` are now properly taking configuration change in account with ``buildbot reconfig``.
+- :bb:cfg:`schedulers` and :bb:cfg:`change_source` are now properly taking configuration change in account with ``buildbot reconfig``.
 - ``setuptools`` is now explicitly marked as required. The dependency was previously implicit.
 - :bb:cfg:`buildbotNetUsageData` now uses ``requests`` if available and will default to HTTP if a bogus SSL implementation is found.
   It will also correctly send information about the platform type.
