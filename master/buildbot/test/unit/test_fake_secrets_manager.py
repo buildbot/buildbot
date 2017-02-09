@@ -47,8 +47,8 @@ class TestSecretsManager(unittest.TestCase):
         self.assertEqual(secret_result.key, "foo")
         self.assertEqual(secret_result.value, "bar")
         self.assertEqual(secret_result.source, expectedClassName)
-        self.assertEqual(strExpectedSecretDetail, "FakeSecretStorage foo: 'bar'")
-
+        self.assertEqual(strExpectedSecretDetail,
+                         "FakeSecretStorage foo: 'bar'")
 
     def testGetNoDataManagerService(self):
         secret_service_manager = SecretManager()
