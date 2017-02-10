@@ -298,6 +298,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b'))
         content = yield res.content()
+        content = bytes2NativeString(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
@@ -309,6 +310,7 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
                     content_json=exp_content_json)
         res = yield self._http.post('/', json=dict(a='b', ts=dt))
         content = yield res.content()
+        content = bytes2NativeString(content)
         content = json.loads(content)
         self.assertEqual(content, exp_content_json)
 
