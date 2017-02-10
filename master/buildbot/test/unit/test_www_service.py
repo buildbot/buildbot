@@ -217,7 +217,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
 
         res = yield self.render_resource(rsrc, '')
-        self.assertIn('{"type": "file"}', res)
+        self.assertIn(b'{"type": "file"}', res)
 
         rsrc = self.svc.site.resource.getChildWithDefault(
             'change_hook', mock.Mock())
@@ -277,10 +277,10 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             def isSecure(self):
                 return False
         request = Request(FakeChannel(), False)
-        request.sitepath = ["bb"]
+        request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
-        name, value = request.cookies[0].split(";")[0].split("=")
+        name, value = request.cookies[0].split(b";")[0].split(b"=")
         decoded = jwt.decode(value, self.SECRET,
                              algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertEqual(decoded['user_info'], {'anonymous': True})
