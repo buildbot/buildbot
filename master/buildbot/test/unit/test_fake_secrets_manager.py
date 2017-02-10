@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.manager import SecretManager
@@ -35,14 +36,14 @@ class TestSecretsManager(unittest.TestCase):
         self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"})]
 
+    @defer.inlineCallbacks
     def testGetManagerService(self):
         secret_service_manager = SecretManager()
         SecretManager.master = self.master
-        expectedClassName = FakeSecretStorage({"foo": "bar",
-                                               "other": "value"}).__class__.__name__
+        expectedClassName = FakeSecretStorage.__name__
         expectedSecretDetail = SecretDetails(expectedClassName, "foo", "bar")
-        strExpectedSecretDetail = str(secret_service_manager.get("foo"))
-        secret_result = secret_service_manager.get("foo")
+        secret_result = yield secret_service_manager.get("foo")
+        strExpectedSecretDetail = str(secret_result)
         self.assertEqual(secret_result, expectedSecretDetail)
         self.assertEqual(secret_result.key, "foo")
         self.assertEqual(secret_result.value, "bar")
@@ -50,16 +51,16 @@ class TestSecretsManager(unittest.TestCase):
         self.assertEqual(strExpectedSecretDetail,
                          "FakeSecretStorage foo: 'bar'")
 
+    @defer.inlineCallbacks
     def testGetNoDataManagerService(self):
         secret_service_manager = SecretManager()
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(
-            FakeSecretStorage({"foo": "bar",
-                               "other": "value"}).__class__.__name__, "foo2",
-            None)
-        self.assertEqual(secret_service_manager.get(
-            "foo2"), expectedSecretDetail)
+        expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__, "foo2",
+                                             None)
+        secret_result = yield secret_service_manager.get("foo2")
+        self.assertEqual(secret_result, expectedSecretDetail)
 
+    @defer.inlineCallbacks
     def testGetDataMultipleManagerService(self):
         secret_service_manager = SecretManager()
         self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
@@ -69,13 +70,14 @@ class TestSecretsManager(unittest.TestCase):
                                                                      props={"property": "value_prop"})
                                               ]
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(
-            OtherFakeSecretStorage({"foo2": "bar",
-                                    "other2": "value"}).__class__.__name__, "foo2",
-            "bar")
-        self.assertEqual(secret_service_manager.get(
-            "foo2"), expectedSecretDetail)
+        expectedSecretDetail = SecretDetails(OtherFakeSecretStorage.__name__,
+                                             "foo2",
+                                             "bar")
+        secret_result = yield secret_service_manager.get(
+            "foo2")
+        self.assertEqual(secret_result, expectedSecretDetail)
 
+    @defer.inlineCallbacks
     def testGetDataMultipleManagerServiceNoDatas(self):
         secret_service_manager = SecretManager()
         self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
@@ -84,9 +86,8 @@ class TestSecretsManager(unittest.TestCase):
                                                                  "other2": "value"})
                                               ]
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(
-            FakeSecretStorage({"foo2": "bar",
-                               "other2": "value"}).__class__.__name__, "foo3",
-            None)
-        self.assertEqual(secret_service_manager.get(
-            "foo3"), expectedSecretDetail)
+        expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
+                                             "foo3",
+                                             None)
+        secret_result = yield secret_service_manager.get("foo3")
+        self.assertEqual(secret_result, expectedSecretDetail)

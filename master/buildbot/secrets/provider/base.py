@@ -18,6 +18,8 @@ secret provider interface
 from __future__ import absolute_import
 from __future__ import print_function
 
+import abc
+
 from buildbot.util.service import BuildbotService
 
 
@@ -25,7 +27,7 @@ class SecretProviderBase(BuildbotService):
     """
     ...
     """
-
+    @abc.abstractmethod
     def get(self, *args, **kwargs):
         """
         this should be an abstract method
