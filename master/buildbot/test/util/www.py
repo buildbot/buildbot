@@ -163,11 +163,11 @@ class WwwTestMixin(RequiresWwwMixin):
         if not request:
             request = self.make_request(path, method=method)
             if accept:
-                request.input_headers['accept'] = accept
+                request.input_headers[b'accept'] = accept
             if origin:
-                request.input_headers['origin'] = origin
+                request.input_headers[b'origin'] = origin
             if access_control_request_method:
-                request.input_headers['access-control-request-method'] = \
+                request.input_headers[b'access-control-request-method'] = \
                     access_control_request_method
             if extraHeaders is not None:
                 request.input_headers.update(extraHeaders)
@@ -213,10 +213,10 @@ class WwwTestMixin(RequiresWwwMixin):
             got['content'] = self.request.written
             exp['content'] = content
         if contentJson is not None:
-            got['contentJson'] = json.loads(self.request.written)
+            got['contentJson'] = json.loads(bytes2NativeString(self.request.written))
             exp['contentJson'] = contentJson
         if contentType is not None:
-            got['contentType'] = self.request.headers['content-type']
+            got['contentType'] = self.request.headers[b'content-type']
             exp['contentType'] = [contentType]
         if responseCode is not None:
             got['responseCode'] = str(self.request.responseCode)
