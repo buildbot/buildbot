@@ -108,24 +108,24 @@ class Boolean(TypeMixin, unittest.TestCase):
     good = [True, False]
     bad = [None, 0, 1]
     stringValues = [
-        ('on', True),
-        ('true', True),
-        ('yes', True),
-        ('1', True),
-        ('off', False),
-        ('false', False),
-        ('no', False),
-        ('0', False),
-        ('ON', True),
-        ('TRUE', True),
-        ('YES', True),
-        ('OFF', False),
-        ('FALSE', False),
-        ('NO', False),
+        (b'on', True),
+        (b'true', True),
+        (b'yes', True),
+        (b'1', True),
+        (b'off', False),
+        (b'false', False),
+        (b'no', False),
+        (b'0', False),
+        (b'ON', True),
+        (b'TRUE', True),
+        (b'YES', True),
+        (b'OFF', False),
+        (b'FALSE', False),
+        (b'NO', False),
     ]
     cmpResults = [
-        (False, 'no', 0),
-        (True, 'true', 0),
+        (False, b'no', 0),
+        (True, b'true', 0),
     ]
 
 

@@ -180,7 +180,7 @@ class WwwTestMixin(RequiresWwwMixin):
             request.finish()
         return request.deferred
 
-    def render_control_resource(self, rsrc, path='/', params={},
+    def render_control_resource(self, rsrc, path=b'/', params={},
                                 requestJson=None, action="notfound", id=None,
                                 content_type=b'application/json'):
         # pass *either* a request or postpath

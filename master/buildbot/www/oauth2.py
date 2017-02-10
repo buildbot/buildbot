@@ -45,8 +45,8 @@ class OAuth2LoginResource(auth.LoginResource):
 
     @defer.inlineCallbacks
     def renderLogin(self, request):
-        code = request.args.get("code", [""])[0]
-        token = request.args.get("token", [""])[0]
+        code = request.args.get(b"code", [""])[0]
+        token = request.args.get(b"token", [""])[0]
         if not token and not code:
             url = request.args.get("redirect", [None])[0]
             url = yield self.auth.getLoginURL(url)

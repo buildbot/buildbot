@@ -263,12 +263,12 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         rsrc.auth.verifyCode.reset_mock()
         res = yield self.render_resource(rsrc, b'/?code=code!')
         rsrc.auth.getLoginURL.assert_not_called()
-        rsrc.auth.verifyCode.assert_called_once_with("code!")
+        rsrc.auth.verifyCode.assert_called_once_with(b"code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': '://me'})
         res = yield self.render_resource(rsrc, b'/?token=token!')
         rsrc.auth.getLoginURL.assert_not_called()
-        rsrc.auth.acceptToken.assert_called_once_with("token!")
+        rsrc.auth.acceptToken.assert_called_once_with(b"token!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': '://me'})
 
@@ -350,7 +350,8 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             def render_GET(self, request):
                 info = request.getSession().user_info
                 reactor.callLater(0, d.callback, info)
-                return "<html><script>setTimeout(close,1000)</script><body>WORKED: %s</body></html>" % (info)
+                return (b"<html><script>setTimeout(close,1000)</script><body>WORKED: " +
+                        info + b"</body></html>")
 
         class MySite(Site):
 

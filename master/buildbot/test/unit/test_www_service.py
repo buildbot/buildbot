@@ -214,11 +214,13 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
 
         res = yield self.render_resource(rsrc, b'')
-        self.assertIn('{"type": "file"}', res)
+        self.assertIn(b'{"type": "file"}', res)
 
-        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(
+            'change_hook', mock.Mock())
         res = yield self.render_resource(rsrc, b'/change_hook/base')
-        # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
+        # as UnauthorizedResource is in private namespace, we cannot use
+        # assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))
 
 
@@ -269,10 +271,11 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             def isSecure(self):
                 return False
         request = Request(FakeChannel(), False)
-        request.sitepath = ["bb"]
+        request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
-        name, value = request.cookies[0].split(";")[0].split("=")
-        decoded = jwt.decode(value, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        name, value = request.cookies[0].split(b";")[0].split(b"=")
+        decoded = jwt.decode(value, self.SECRET,
+                             algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertEqual(decoded['user_info'], {'anonymous': True})
         self.assertIn('exp', decoded)
