@@ -58,10 +58,6 @@ buildbot.test.unit.test_steps_http.TestHTTPStep.test_404
 buildbot.test.unit.test_steps_http.TestHTTPStep.test_basic
 buildbot.test.unit.test_steps_http.TestHTTPStep.test_header
 buildbot.test.unit.test_steps_http.TestHTTPStep.test_params_renderable
-buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_env_list_subst
-buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_env_subst
-buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_prop_rendering
-buildbot.test.unit.test_steps_master.TestMasterShellCommand.test_real_cmd
 buildbot.test.unit.test_steps_source_svn.TestSvnUriCanonicalize.test_quote_funny_chars
 buildbot.test.unit.test_steps_transfer.TestStringDownload.testModeConfError
 buildbot.test.unit.test_steps_trigger.TestTrigger.test_set_of_sourceStamps
