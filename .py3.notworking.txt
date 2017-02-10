@@ -110,11 +110,3 @@ buildbot.test.unit.test_www_sse.EventResource.test_listen
 buildbot.test.unit.test_www_sse.EventResource.test_listen_add_then_close
 buildbot.test.unit.test_www_sse.EventResource.test_listen_add_then_remove
 buildbot.test.unit.test_www_sse.EventResource.test_simpleapi
-buildbot.test.unit.test_www_ws.WsResource.test_bad_cmd
-buildbot.test.unit.test_www_ws.WsResource.test_no_cmd
-buildbot.test.unit.test_www_ws.WsResource.test_no_id
-buildbot.test.unit.test_www_ws.WsResource.test_ping
-buildbot.test.unit.test_www_ws.WsResource.test_startConsuming
-buildbot.test.unit.test_www_ws.WsResource.test_startConsumingBadPath
-buildbot.test.unit.test_www_ws.WsResource.test_stopConsuming
-buildbot.test.unit.test_www_ws.WsResource.test_stopConsumingNotRegistered
