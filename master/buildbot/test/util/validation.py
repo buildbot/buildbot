@@ -25,6 +25,7 @@ import json
 import re
 
 from buildbot.util import UTC
+from buildbot.util import bytes2NativeString
 
 # Base class
 
@@ -376,7 +377,7 @@ dbdict['ssdict'] = DictValidator(
 message['builders'] = Selector()
 message['builders'].add(None,
                         MessageValidator(
-                            events=['started', 'stopped'],
+                            events=[b'started', b'stopped'],
                             messageValidator=DictValidator(
                                 builderid=IntValidator(),
                                 masterid=IntValidator(),
@@ -419,10 +420,10 @@ _buildset = dict(
     parent_buildid=NoneOk(IntValidator()),
     parent_relationship=NoneOk(StringValidator()),
 )
-_buildsetEvents = ['new', 'complete']
+_buildsetEvents = [b'new', b'complete']
 
 message['buildsets'] = Selector()
-message['buildsets'].add(lambda k: k[-1] == 'new',
+message['buildsets'].add(lambda k: k[-1] == b'new',
                          MessageValidator(
                              events=_buildsetEvents,
                              messageValidator=DictValidator(
@@ -462,7 +463,7 @@ dbdict['bsdict'] = DictValidator(
 message['buildrequests'] = Selector()
 message['buildrequests'].add(None,
                              MessageValidator(
-                                 events=['new', 'claimed', 'unclaimed'],
+                                 events=[b'new', b'claimed', b'unclaimed'],
                                  messageValidator=DictValidator(
                                      # TODO: probably wrong!
                                      brid=IntValidator(),
@@ -476,7 +477,7 @@ message['buildrequests'].add(None,
 message['changes'] = Selector()
 message['changes'].add(None,
                        MessageValidator(
-                           events=['new'],
+                           events=[b'new'],
                            messageValidator=DictValidator(
                                changeid=IntValidator(),
                                parent_changeids=ListValidator(IntValidator()),
@@ -547,7 +548,7 @@ _build = dict(
     state_string=StringValidator(),
     results=NoneOk(IntValidator()),
 )
-_buildEvents = ['new', 'complete']
+_buildEvents = [b'new', b'complete']
 
 message['builds'] = Selector()
 message['builds'].add(None,
@@ -592,7 +593,7 @@ _step = dict(
     urls=ListValidator(StringValidator()),
     hidden=BooleanValidator(),
 )
-_stepEvents = ['new', 'complete']
+_stepEvents = [b'new', b'complete']
 
 message['steps'] = Selector()
 message['steps'].add(None,
@@ -656,7 +657,7 @@ def verifyMessage(testcase, routingKey, message_):
     # the "type" of the message is identified by last path name
     # -1 being the event, and -2 the id.
 
-    validator = message[routingKey[-3]]
+    validator = message[bytes2NativeString(routingKey[-3])]
     _verify(testcase, validator, '',
             (routingKey, (routingKey, message_)))
 

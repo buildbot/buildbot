@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 from twisted.internet import defer
 
@@ -52,7 +53,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
 # routing key
 #        if self.verifyMessages:
 #            validation.verifyMessage(self.testcase, routingKey, data)
-        if any(not isinstance(k, str) for k in routingKey):
+        if any(not isinstance(k, (bytes, string_types)) for k in routingKey):
             raise AssertionError("%s is not all strings" % (routingKey,))
         self.productions.append((routingKey, data))
         # note - no consumers are called: IT'S A FAKE
@@ -69,7 +70,8 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
             raise AssertionError("no consumer found")
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        if any(not isinstance(k, str) and k is not None for k in filter):
+        if any(not isinstance(k, (bytes, string_types)) and
+               k is not None for k in filter):
             raise AssertionError("%s is not a filter" % (filter,))
         qref = FakeQueueRef()
         qref.qrefs = self.qrefs
