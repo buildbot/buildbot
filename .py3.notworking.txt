@@ -105,7 +105,3 @@ buildbot.test.unit.test_www_service.TestBuildbotSite.test_getSession_from_correc
 buildbot.test.unit.test_www_service.TestBuildbotSite.test_getSession_from_expired_jwt
 buildbot.test.unit.test_www_service.TestBuildbotSite.test_getSession_with_no_user_info
 buildbot.test.unit.test_www_service.TestBuildbotSite.test_updateSession
-buildbot.test.unit.test_www_sse.EventResource.test_listen
-buildbot.test.unit.test_www_sse.EventResource.test_listen_add_then_close
-buildbot.test.unit.test_www_sse.EventResource.test_listen_add_then_remove
-buildbot.test.unit.test_www_sse.EventResource.test_simpleapi
