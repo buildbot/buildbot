@@ -55,7 +55,6 @@ buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_invalid_
 buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_no_builders
 buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_no_properties
 buildbot.test.unit.test_scripts_base.TestLoadConfig.test_checkBasedir_pidfile_kill_error
-buildbot.test.unit.test_scripts_cleanupdb.TestCleanupDb.test_cleanup
 buildbot.test.unit.test_scripts_runner.TestCreateMasterOptions.test_db_invalid
 buildbot.test.unit.test_steps_http.TestHTTPStep.test_POST
 buildbot.test.unit.test_steps_http.TestHTTPStep.test_404
