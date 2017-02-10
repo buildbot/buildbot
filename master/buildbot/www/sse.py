@@ -25,7 +25,9 @@ from twisted.web import resource
 from twisted.web import server
 
 from buildbot.data.exceptions import InvalidPathError
+from buildbot.util import bytes2NativeString
 from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 
 
 class Consumer(object):
@@ -44,10 +46,12 @@ class Consumer(object):
 
     def onMessage(self, event, data):
         request = self.request
-        msg = dict(key=event, message=data)
-        request.write("event: " + "event" + "\n")
-        request.write("data: " + json.dumps(msg, default=toJson) + "\n")
-        request.write("\n")
+        key = [bytes2NativeString(e) for e in event]
+        msg = dict(key=key, message=data)
+        request.write(b"event: " + b"event" + b"\n")
+        request.write(
+            b"data: " + unicode2bytes(json.dumps(msg, default=toJson)) + b"\n")
+        request.write(b"\n")
 
     def registerQref(self, path, qref):
         self.qrefs[path] = qref
@@ -64,7 +68,7 @@ class EventResource(resource.Resource):
 
     def decodePath(self, path):
         for i, p in enumerate(path):
-            if p == '*':
+            if p == b'*':
                 path[i] = None
         return path
 
@@ -75,33 +79,33 @@ class EventResource(resource.Resource):
         return
 
     def render(self, request):
-        command = "listen"
+        command = b"listen"
         path = request.postpath
-        if path and path[-1] == '':
+        if path and path[-1] == b'':
             path = path[:-1]
 
-        if path and path[0] in ("listen", "add", "remove"):
+        if path and path[0] in (b"listen", b"add", b"remove"):
             command = path[0]
             path = path[1:]
 
-        if command == "listen":
-            cid = str(uuid.uuid4())
+        if command == b"listen":
+            cid = unicode2bytes(str(uuid.uuid4()))
             consumer = Consumer(request)
 
-        elif command == "add" or command == "remove":
+        elif command == b"add" or command == b"remove":
             if path:
                 cid = path[0]
                 path = path[1:]
                 if cid not in self.consumers:
-                    return self.finish(request, 400, "unknown uuid")
+                    return self.finish(request, 400, b"unknown uuid")
                 consumer = self.consumers[cid]
             else:
-                return self.finish(request, 400, "need uuid")
+                return self.finish(request, 400, b"need uuid")
 
-        pathref = "/".join(path)
+        pathref = b"/".join(path)
         path = self.decodePath(path)
 
-        if command == "add" or (command == "listen" and path):
+        if command == b"add" or (command == b"listen" and path):
             options = request.args
             for k in options:
                 if len(options[k]) == 1:
@@ -117,22 +121,22 @@ class EventResource(resource.Resource):
                     consumer.registerQref(pathref, qref)
                 d.addErrback(log.err, "while calling startConsuming")
             except NotImplementedError:
-                return self.finish(request, 404, "not implemented")
+                return self.finish(request, 404, b"not implemented")
             except InvalidPathError:
-                return self.finish(request, 404, "not implemented")
-        elif command == "remove":
+                return self.finish(request, 404, b"not implemented")
+        elif command == b"remove":
             try:
                 consumer.stopConsuming(pathref)
             except KeyError:
-                return self.finish(request, 404, "consumer is not listening to this event")
+                return self.finish(request, 404, b"consumer is not listening to this event")
 
-        if command == "listen":
+        if command == b"listen":
             self.consumers[cid] = consumer
-            request.setHeader("content-type", "text/event-stream")
-            request.write("")
-            request.write("event: handshake\n")
-            request.write("data: " + cid + "\n")
-            request.write("\n")
+            request.setHeader(b"content-type", b"text/event-stream")
+            request.write(b"")
+            request.write(b"event: handshake\n")
+            request.write(b"data: " + cid + b"\n")
+            request.write(b"\n")
             d = request.notifyFinish()
 
             @d.addBoth
@@ -142,5 +146,5 @@ class EventResource(resource.Resource):
 
             return server.NOT_DONE_YET
 
-        self.finish(request, 200, "ok")
+        self.finish(request, 200, b"ok")
         return

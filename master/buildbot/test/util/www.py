@@ -32,6 +32,8 @@ from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
+from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
 
@@ -46,20 +48,20 @@ class FakeSession(object):
 
 
 class FakeRequest(object):
-    written = ''
+    written = b''
     finished = False
     redirected_to = None
     rendered_resource = None
     failure = None
-    method = 'GET'
-    path = '/req.path'
+    method = b'GET'
+    path = b'/req.path'
     responseCode = 200
 
     def __init__(self, path=None):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-        x = path.split('?', 1)
+        x = path.split(b'?', 1)
         if len(x) == 1:
             self.path = path
             self.args = {}
@@ -68,7 +70,9 @@ class FakeRequest(object):
             self.path = path
             self.args = parse_qs(argstring, 1)
         self.uri = self.path
-        self.postpath = list(map(urlunquote, path[1:].split('/')))
+        parsedPath = [bytes2NativeString(p) for p in path[1:].split(b'/')]
+        parsedPath = [urlunquote(p) for p in parsedPath]
+        self.postpath = [unicode2bytes(p) for p in parsedPath]
 
         self.deferred = defer.Deferred()
 
@@ -147,13 +151,13 @@ class WwwTestMixin(RequiresWwwMixin):
         self.master.authz.setMaster(self.master)
         return master
 
-    def make_request(self, path=None, method='GET'):
+    def make_request(self, path=None, method=b'GET'):
         self.request = FakeRequest(path)
         self.request.session = self.master.session
         self.request.method = method
         return self.request
 
-    def render_resource(self, rsrc, path='/', accept=None, method='GET',
+    def render_resource(self, rsrc, path=b'/', accept=None, method=b'GET',
                         origin=None, access_control_request_method=None,
                         extraHeaders=None, request=None):
         if not request:
