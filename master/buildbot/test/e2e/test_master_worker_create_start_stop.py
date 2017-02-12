@@ -505,11 +505,6 @@ class DaemonMixin:
     BuildbotSlaveProcess = BuidlbotSlaveDeamonizedProcess
 
 
-# TODO: Current implementation uses the fact that Buildbot processes are being
-# daemonized, which is not the case on Windows.
-# Implementation that uses `--nodaemon` version of Buildbot services can
-# be used to run these tests on Windows.
-@skipUnlessPlatformIs('posix')
 class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
                   unittest.TestCase):
 
