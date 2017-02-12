@@ -913,29 +913,11 @@ class TestMasterWorkerSetup(E2ETestBase):
                 indent(worker_connection_re, "    "),
                 indent(log, "    ")))
 
+
+class ShellCommandTestMixin:
+
     @defer.inlineCallbacks
-    @skipIf(buildbot_worker_executable is None,
-            "buildbot-worker executable not found")
-    def test_shell_command_on_worker(self):
-        """Run simple ShellCommand on worker."""
-
-        # Create master.
-        master_dir = 'master-dir'
-        yield self._buildbot_create_master(master_dir)
-
-        # Write master configuration.
-        master_cfg = SHELL_COMMAND_TEST_CONFIG
-        self._write_master_config(master_dir, master_cfg)
-
-        # Create worker.
-        worker_dir = 'worker-dir'
-        yield self._buildbot_worker_create_worker(
-            worker_dir, 'example-worker', 'pass')
-
-        # Start master/worker.
-        yield self._buildbot_start(master_dir)
-        yield self._buildbot_worker_start(worker_dir)
-
+    def run_check(self):
         # Get builder ID.
         # TODO: maybe add endpoint to get builder by name?
         builders = yield self._get('builders')
@@ -971,140 +953,153 @@ class TestMasterWorkerSetup(E2ETestBase):
                 builderid=builder_id, buildnumber=buildnumber))
         self.assertIn("echo 'Test echo'", log_row)
 
-        # Stop master/worker.
-        yield self._buildbot_worker_stop(worker_dir)
-        yield self._buildbot_stop(master_dir)
+
+class ShellCommandOnWorkerNoDaemonTest(E2ETestBase, ShellCommandTestMixin):
+
+    @defer.inlineCallbacks
+    def check_shell_command_on_worker(
+            self,
+            master_executable=None,
+            worker_executable=None):
+        """Run simple ShellCommand on worker."""
+
+        yield self.setupEnvironment({
+            'masters': [
+                ('master-dir', SHELL_COMMAND_TEST_CONFIG, master_executable),
+            ],
+            'workers': [
+                ('worker-dir', 'example-worker', 'pass', worker_executable),
+            ],
+        })
+
+        yield self.run_check()
+
+    @defer.inlineCallbacks
+    @skipIf(buildbot_worker_executable is None,
+            "buildbot-worker executable not found")
+    def test_shell_command_on_worker(self):
+        yield self.check_shell_command_on_worker()
+
+
+@skipUnlessPlatformIs('posix')
+class ShellCommandOnWorkerDaemonTest(
+        ShellCommandOnWorkerNoDaemonTest, DaemonMixin):
+    pass
+
+
+class FileTransferTestMixin:
+
+    @defer.inlineCallbacks
+    def run_check(self, master_dir):
+        # Get builder ID.
+        # TODO: maybe add endpoint to get builder by name?
+        builders = yield self._get('builders')
+        self.assertEqual(len(builders['builders']), 1)
+        builder_id = builders['builders'][0]['builderid']
+
+        # Start force build.
+        # TODO: return result is not documented in RAML.
+        buildset_id, buildrequests_ids = yield self._call_rpc(
+            'forceschedulers/force', 'force', builderid=builder_id)
+
+        @defer.inlineCallbacks
+        def is_completed():
+            # Query buildset completion status.
+            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
+            defer.returnValue(buildsets['buildsets'][0]['complete'])
+
+        yield wait_for_completion(is_completed)
+
+        # TODO: Looks like there is no easy way to get build identifier that
+        # corresponds to buildrequest/buildset.
+        buildnumber = 1
+
+        # Get completed build info.
+        builds = yield self._get(
+            'builders/{builderid}/builds/{buildnumber}'.format(
+                builderid=builder_id, buildnumber=buildnumber))
+
+        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
+
+        master_contents = _read_dir_contents(os.path.join(master_dir, "dir"))
+        self.assertEqual(
+            master_contents,
+            {os.path.join(master_dir, 'dir', 'file1.txt'): 'filecontent',
+             os.path.join(master_dir, 'dir', 'file2.txt'): 'filecontent2',
+             os.path.join(master_dir, 'dir', 'file3.txt'): 'filecontent2'})
+
+
+class FileTransferOnWorkerNoDaemonTest(E2ETestBase, FileTransferTestMixin):
+
+    @defer.inlineCallbacks
+    def check_file_transfer_on_worker(
+            self,
+            master_executable=None,
+            worker_executable=None):
+        """Run file transfer between master/worker."""
+
+        master_dir = 'master-dir'
+
+        yield self.setupEnvironment({
+            'masters': [
+                (master_dir, FILE_UPLOAD_TEST_CONFIG, master_executable),
+            ],
+            'workers': [
+                ('worker-dir', 'example-worker', 'pass', worker_executable),
+            ],
+        })
+
+        yield self.run_check(master_dir)
 
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
     def test_file_transfer_on_worker(self):
-        """Run file transfer between master/worker."""
+        yield self.check_file_transfer_on_worker()
 
-        # Create master.
+
+@skipUnlessPlatformIs('posix')
+class FileTransferOnWorkerDaemonTest(
+        FileTransferOnWorkerNoDaemonTest, DaemonMixin):
+    pass
+
+
+class FileTransferOnSlaveNoDaemonTest(E2ETestBase, FileTransferTestMixin):
+
+    @defer.inlineCallbacks
+    def check_file_transfer_on_slave(
+            self,
+            master_executable=None,
+            slave_executable=None):
+        """Run file transfer between master/buildslave."""
+
         master_dir = 'master-dir'
-        yield self._buildbot_create_master(master_dir)
 
-        # Write master configuration.
-        master_cfg = FILE_UPLOAD_TEST_CONFIG
-        self._write_master_config(master_dir, master_cfg)
+        yield self.setupEnvironment({
+            'masters': [
+                (master_dir, FILE_UPLOAD_TEST_CONFIG, master_executable),
+            ],
+            'slaves': [
+                ('worker-dir', 'example-worker', 'pass', slave_executable),
+            ],
+        })
 
-        # Create worker.
-        worker_dir = 'worker-dir'
-        yield self._buildbot_worker_create_worker(
-            worker_dir, 'example-worker', 'pass')
-
-        # Start master/worker.
-        yield self._buildbot_start(master_dir)
-        yield self._buildbot_worker_start(worker_dir)
-
-        # Get builder ID.
-        # TODO: maybe add endpoint to get builder by name?
-        builders = yield self._get('builders')
-        self.assertEqual(len(builders['builders']), 1)
-        builder_id = builders['builders'][0]['builderid']
-
-        # Start force build.
-        # TODO: return result is not documented in RAML.
-        buildset_id, buildrequests_ids = yield self._call_rpc(
-            'forceschedulers/force', 'force', builderid=builder_id)
-
-        @defer.inlineCallbacks
-        def is_completed():
-            # Query buildset completion status.
-            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
-            defer.returnValue(buildsets['buildsets'][0]['complete'])
-
-        yield wait_for_completion(is_completed)
-
-        # TODO: Looks like there is no easy way to get build identifier that
-        # corresponds to buildrequest/buildset.
-        buildnumber = 1
-
-        # Get completed build info.
-        builds = yield self._get(
-            'builders/{builderid}/builds/{buildnumber}'.format(
-                builderid=builder_id, buildnumber=buildnumber))
-
-        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
-
-        master_contents = _read_dir_contents(os.path.join(master_dir, "dir"))
-        self.assertEqual(
-            master_contents,
-            {os.path.join(master_dir, 'dir', 'file1.txt'): 'filecontent',
-             os.path.join(master_dir, 'dir', 'file2.txt'): 'filecontent2',
-             os.path.join(master_dir, 'dir', 'file3.txt'): 'filecontent2'})
-
-        # Stop master/worker.
-        yield self._buildbot_worker_stop(worker_dir)
-        yield self._buildbot_stop(master_dir)
+        yield self.run_check(master_dir)
 
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
             "buildslave executable not found")
     def test_file_transfer_on_slave(self):
-        """Run file transfer between master/buildslave."""
-
-        # Create master.
-        master_dir = 'master-dir'
-        yield self._buildbot_create_master(master_dir)
-
-        # Write master configuration.
-        master_cfg = FILE_UPLOAD_TEST_CONFIG
-        self._write_master_config(master_dir, master_cfg)
-
-        # Create worker.
-        worker_dir = 'worker-dir'
-        yield self._buildslave_create_slave(
-            worker_dir, 'example-worker', 'pass')
-
-        # Start master/worker.
-        yield self._buildbot_start(master_dir)
-        yield self._buildslave_start(worker_dir)
-
-        # Get builder ID.
-        # TODO: maybe add endpoint to get builder by name?
-        builders = yield self._get('builders')
-        self.assertEqual(len(builders['builders']), 1)
-        builder_id = builders['builders'][0]['builderid']
-
-        # Start force build.
-        # TODO: return result is not documented in RAML.
-        buildset_id, buildrequests_ids = yield self._call_rpc(
-            'forceschedulers/force', 'force', builderid=builder_id)
-
-        @defer.inlineCallbacks
-        def is_completed():
-            # Query buildset completion status.
-            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
-            defer.returnValue(buildsets['buildsets'][0]['complete'])
-
-        yield wait_for_completion(is_completed)
-
-        # TODO: Looks like there is no easy way to get build identifier that
-        # corresponds to buildrequest/buildset.
-        buildnumber = 1
-
-        # Get completed build info.
-        builds = yield self._get(
-            'builders/{builderid}/builds/{buildnumber}'.format(
-                builderid=builder_id, buildnumber=buildnumber))
-
-        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
-
-        master_contents = _read_dir_contents(os.path.join(master_dir, "dir"))
-        self.assertEqual(
-            master_contents,
-            {os.path.join(master_dir, 'dir', 'file1.txt'): 'filecontent',
-             os.path.join(master_dir, 'dir', 'file2.txt'): 'filecontent2',
-             os.path.join(master_dir, 'dir', 'file3.txt'): 'filecontent2'})
-
-        # Stop master/worker.
-        yield self._buildslave_stop(worker_dir)
-        yield self._buildbot_stop(master_dir)
+        yield self.check_file_transfer_on_slave()
 
 
-class ShellCommandOnSlaveNoDaemonTest(E2ETestBase):
+@skipUnlessPlatformIs('posix')
+class FileTransferOnSlaveDaemonTest(
+        FileTransferOnSlaveNoDaemonTest, DaemonMixin):
+    pass
+
+
+class ShellCommandOnSlaveNoDaemonTest(E2ETestBase, ShellCommandTestMixin):
 
     @defer.inlineCallbacks
     def check_shell_command_on_slave(
@@ -1122,40 +1117,7 @@ class ShellCommandOnSlaveNoDaemonTest(E2ETestBase):
             ],
         })
 
-        # Get builder ID.
-        # TODO: maybe add endpoint to get builder by name?
-        builders = yield self._get('builders')
-        self.assertEqual(len(builders['builders']), 1)
-        builder_id = builders['builders'][0]['builderid']
-
-        # Start force build.
-        # TODO: return result is not documented in RAML.
-        buildset_id, buildrequests_ids = yield self._call_rpc(
-            'forceschedulers/force', 'force', builderid=builder_id)
-
-        @defer.inlineCallbacks
-        def is_completed():
-            # Query buildset completion status.
-            buildsets = yield self._get('buildsets/{0}'.format(buildset_id))
-            defer.returnValue(buildsets['buildsets'][0]['complete'])
-
-        yield wait_for_completion(is_completed)
-
-        # TODO: Looks like there is no easy way to get build identifier that
-        # corresponds to buildrequest/buildset.
-        buildnumber = 1
-
-        # Get completed build info.
-        builds = yield self._get(
-            'builders/{builderid}/builds/{buildnumber}'.format(
-                builderid=builder_id, buildnumber=buildnumber))
-
-        self.assertEqual(builds['builds'][0]['state_string'], 'finished')
-
-        log_row = yield self._get_raw(
-            'builders/{builderid}/builds/{buildnumber}/steps/0/logs/stdio/raw'.format(
-                builderid=builder_id, buildnumber=buildnumber))
-        self.assertIn("echo 'Test echo'", log_row)
+        yield self.run_check()
 
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
@@ -1165,7 +1127,7 @@ class ShellCommandOnSlaveNoDaemonTest(E2ETestBase):
 
 
 @skipUnlessPlatformIs('posix')
-class ShellCommandOnWorkerAndSlaveDaemonTest(
+class ShellCommandOnSlaveDaemonTest(
         ShellCommandOnSlaveNoDaemonTest, DaemonMixin):
     pass
 
