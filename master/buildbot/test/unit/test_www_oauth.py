@@ -75,56 +75,63 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getGoogleLoginURL(self):
         res = yield self.googleAuth.getLoginURL('http://redir')
-        exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
-               "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
-               "ogleapis.com%2Fauth%2Fuserinfo.profile&state=redirect%3Dhttp%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb"
-               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
+        exp = ("https://accounts.google.com/o/oauth2/auth?client_id=ggclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+"
+               "https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.googleAuth.getLoginURL(None)
-        exp = ("https://accounts.google.com/o/oauth2/auth?scope=https%3A%2F%2F"
-               "www.googleapis.com%2Fauth%2Fuserinfo.email+https%3A%2F%2Fwww.go"
-               "ogleapis.com%2Fauth%2Fuserinfo.profile&redirect_uri=h%3A%2Fa%2Fb"
-               "%2Fauth%2Flogin&response_type=code&client_id=ggclientID")
+        exp = ("https://accounts.google.com/o/oauth2/auth?client_id=ggclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.email+"
+               "https%3A%2F%2Fwww.googleapis.com%2Fauth%2Fuserinfo.profile")
+
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getGithubLoginURL(self):
         res = yield self.githubAuth.getLoginURL('http://redir')
-        exp = ("https://github.com/login/oauth/authorize?scope=user&state="
-               "redirect%3Dhttp%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb%2F"
-               "auth%2Flogin&response_type=code&client_id=ghclientID")
+        exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user&state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
-        exp = ("https://github.com/login/oauth/authorize?scope=user&redirect_uri="
-               "h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=ghclientID")
+        exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
+               "scope=user")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getGitLabLoginURL(self):
         res = yield self.gitlabAuth.getLoginURL('http://redir')
         exp = ("https://gitlab.test/oauth/authorize"
-               "?state=redirect%3Dhttp%253A%252F%252Fredir"
-               "&redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin"
-               "&response_type=code"
-               "&client_id=glclientID")
+               "?client_id=glclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&"
+               "response_type=code&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.gitlabAuth.getLoginURL(None)
         exp = ("https://gitlab.test/oauth/authorize"
-               "?redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin"
-               "&response_type=code"
-               "&client_id=glclientID")
+               "?client_id=glclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&"
+               "response_type=code")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
     def test_getBitbucketLoginURL(self):
         res = yield self.bitbucketAuth.getLoginURL('http://redir')
-        exp = ("https://bitbucket.org/site/oauth2/authorize?state=redirect%3D"
-               "http%253A%252F%252Fredir&redirect_uri=h%3A%2Fa%2Fb%2Fauth%2F"
-               "login&response_type=code&client_id=bbclientID")
+        exp = ("https://bitbucket.org/site/oauth2/authorize?"
+               "client_id=bbclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&"
+               "response_type=code&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.bitbucketAuth.getLoginURL(None)
-        exp = ("https://bitbucket.org/site/oauth2/authorize?redirect_uri=h%3A%2"
-               "Fa%2Fb%2Fauth%2Flogin&response_type=code&client_id=bbclientID")
+        exp = ("https://bitbucket.org/site/oauth2/authorize?"
+               "client_id=bbclientID&"
+               "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&"
+               "response_type=code")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks
