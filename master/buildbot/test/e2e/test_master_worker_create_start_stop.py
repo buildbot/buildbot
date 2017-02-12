@@ -362,13 +362,7 @@ class TestMasterWorkerSetup(dirs.DirsMixin, unittest.TestCase):
         command_str = " ".join(args)
         self._log("Running command: '{0}'".format(command_str))
 
-        executable, args = args[0], args[1:]
-
-        # Find executable in path.
-        executable_path = which(executable)
-        if executable_path is None:
-            raise RuntimeError(
-                "Can't find '{0}' in path.".format(executable))
+        executable_path, args = args[0], args[1:]
 
         stdout, stderr, exitcode = yield utils.getProcessOutputAndValue(
             executable_path, args)
