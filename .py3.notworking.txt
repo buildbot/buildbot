@@ -1,6 +1,4 @@
 buildbot.test.integration.test_URLs.UrlForBuildMaster.test_url
-buildbot.test.integration.test_latent.Tests.test_failed_ping_get_requeued
-buildbot.test.integration.test_latent.Tests.test_failed_sendBuilderList_get_requeued
 buildbot.test.integration.test_trigger.TriggeringMaster.test_trigger
 buildbot.test.integration.test_try_client.Schedulers.test_jobdir_no_wait
 buildbot.test.integration.test_try_client.Schedulers.test_jobdir_wait
