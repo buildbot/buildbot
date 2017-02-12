@@ -14,6 +14,7 @@
 # Copyright Buildbot Team Members
 
 from __future__ import absolute_import
+from __future__ import division
 from __future__ import print_function
 from future.utils import iteritems
 
@@ -350,7 +351,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return hexlify(os.urandom(SESSION_SECRET_LENGTH / 8))
+            return hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8)))
 
         session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
         self.site.setSessionSecret(session_secret)
