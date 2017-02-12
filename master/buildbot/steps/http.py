@@ -66,7 +66,7 @@ class HTTPStep(BuildStep):
     name = 'HTTPStep'
     description = 'Requesting'
     descriptionDone = 'Requested'
-    requestsParams = ["params", "data", "headers",
+    requestsParams = ["params", "data", "json", "headers",
                       "cookies", "files", "auth",
                       "timeout", "allow_redirects", "proxies",
                       "hooks", "stream", "verify", "cert"]

@@ -2830,7 +2830,9 @@ The parameters are the following:
     Dictionary of headers to send.
 
 ``other params``
-    Any other keywords supported by the ``requests`` api can be passed to this step
+    Any other keywords supported by the ``requests``
+    `api <http://docs.python-requests.org/en/master/api/#main-interface>`_
+    can be passed to this step.
 
     .. note::
 
