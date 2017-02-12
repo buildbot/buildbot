@@ -53,10 +53,6 @@ buildbot.test.unit.test_worker_transition.AttributeMixin.test_attribute_error
 buildbot.test.unit.test_www_auth.RemoteUserAuth.test_maybeAutoLogin_mismatched_value
 buildbot.test.unit.test_www_auth.RemoteUserAuth.test_maybeAutoLogin_no_header
 buildbot.test.unit.test_www_config.IndexResource.test_render
-buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getBitbucketLoginURL
-buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getGitLabLoginURL
-buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getGithubLoginURL
-buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getGoogleLoginURL
 buildbot.test.unit.test_www_rest.V2RootResource_REST.test_api_collection
 buildbot.test.unit.test_www_rest.V2RootResource_REST.test_api_collection_fields
 buildbot.test.unit.test_www_rest.V2RootResource_REST.test_api_collection_filter_and_order
