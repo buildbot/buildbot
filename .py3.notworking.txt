@@ -66,8 +66,6 @@ buildbot.test.unit.test_worker_ec2.TestEC2LatentWorker.test_start_instance_volum
 buildbot.test.unit.test_worker_transition.AttributeMixin.test_attribute_error
 buildbot.test.unit.test_www_auth.RemoteUserAuth.test_maybeAutoLogin_mismatched_value
 buildbot.test.unit.test_www_auth.RemoteUserAuth.test_maybeAutoLogin_no_header
-buildbot.test.unit.test_www_avatar.AvatarResource.test_custom_not_found
-buildbot.test.unit.test_www_avatar.AvatarResource.test_gravatar
 buildbot.test.unit.test_www_config.IndexResource.test_render
 buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getBitbucketLoginURL
 buildbot.test.unit.test_www_oauth.OAuth2Auth.test_getGitLabLoginURL
