@@ -161,6 +161,11 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           'username': 'bar',
                           'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
+        res = yield self.githubAuth.acceptToken("TOK3N")
+        self.assertEqual({'email': 'bar@foo',
+                          'username': 'bar',
+                          'groups': ["hello", "grp"],
+                          'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
     def test_GitlabVerifyCode(self):
