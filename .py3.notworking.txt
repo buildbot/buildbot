@@ -7,7 +7,6 @@ buildbot.test.integration.test_try_client.Schedulers.test_jobdir_wait
 buildbot.test.integration.test_try_client.Schedulers.test_userpass_list_builders
 buildbot.test.integration.test_try_client.Schedulers.test_userpass_no_wait
 buildbot.test.integration.test_try_client.Schedulers.test_userpass_wait
-buildbot.test.integration.test_upgrade.UpgradeTestV090b4.test_upgrade
 buildbot.test.integration.test_www.Www.test_masters
 buildbot.test.unit.test_buildbot_net_usage_data.Tests.test_basic
 buildbot.test.unit.test_buildbot_net_usage_data.Tests.test_custom
