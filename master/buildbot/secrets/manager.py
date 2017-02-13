@@ -43,5 +43,5 @@ class SecretManager(service.BuildbotService):
         for provider in providers:
             value = yield provider.get(secret)
             source_name = provider.__class__.__name__
-            if value:
+            if value is not None:
                 defer.returnValue(SecretDetails(source_name, secret, value))

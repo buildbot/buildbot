@@ -5,7 +5,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.manager import SecretManager
-from buildbot.secrets.provider.base import SecretProviderBase
+from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.test.fake import fakemaster
 
@@ -73,6 +73,22 @@ class TestSecretsManager(unittest.TestCase):
                                              "bar")
         secret_result = yield secret_service_manager.get(
             "foo2")
+        self.assertEqual(secret_result, expectedSecretDetail)
+
+    @defer.inlineCallbacks
+    def testGetDataMultipleManagerValues(self):
+        secret_service_manager = SecretManager()
+        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+                                                                 "other": ""}),
+                                              OtherFakeSecretStorage({"foo2": "bar2",
+                                                                      "other": ""},
+                                                                     props={"property": "value_prop"})
+                                              ]
+        SecretManager.master = self.master
+        expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
+                                             "other",
+                                             "")
+        secret_result = yield secret_service_manager.get("other")
         self.assertEqual(secret_result, expectedSecretDetail)
 
     @defer.inlineCallbacks
