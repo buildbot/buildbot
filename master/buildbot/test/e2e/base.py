@@ -246,7 +246,7 @@ def check_log_for_marks(logfile, fail_marks, started_marks):
 
     for started_mark in started_marks:
         if started_mark in log_contents:
-            log.debug("Found started mark {!r}".format(started_mark))
+            log.debug("Found start mark {!r}".format(started_mark))
             return 'started'
 
 
