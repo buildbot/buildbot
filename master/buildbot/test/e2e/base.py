@@ -211,8 +211,16 @@ class EverythingGetter(protocol.ProcessProtocol):
         self.deferred = deferred
         self.outBuf = BytesIO()
         self.errBuf = BytesIO()
-        self.outReceived = self.outBuf.write
+        self.outReceived = self.on_out_received
         self.errReceived = self.errBuf.write
+
+    def on_out_received(self, data):
+        log.debug("stdout:\n{0}".format(indent(data.encode("utf-8"), "    ")))
+        self.outBuf.write(data)
+
+    def on_err_received(self, data):
+        log.debug("stderr:\n{0}".format(indent(data.encode("utf-8"), "    ")))
+        self.errBuf.write(data)
 
     def processEnded(self, reason):
         out = self.outBuf.getvalue()
