@@ -46,12 +46,16 @@ class OAuth2LoginResource(auth.LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         code = request.args.get("code", [""])[0]
-        if not code:
+        token = request.args.get("token", [""])[0]
+        if not token and not code:
             url = request.args.get("redirect", [None])[0]
             url = yield self.auth.getLoginURL(url)
             raise resource.Redirect(url)
         else:
-            details = yield self.auth.verifyCode(code)
+            if not token:
+                details = yield self.auth.verifyCode(code)
+            else:
+                details = yield self.auth.acceptToken(token)
             if self.auth.userInfoProvider is not None:
                 infos = yield self.auth.userInfoProvider.getUserInfo(details['username'])
                 details.update(infos)
@@ -119,6 +123,14 @@ class OAuth2Auth(auth.AuthBase):
     def get(self, session, path):
         ret = session.get(self.resourceEndpoint + path)
         return ret.json()
+
+    # If the user wants to authenticate directly with an access token they
+    # already have, go ahead and just directly accept an access_token from them.
+    def acceptToken(self, token):
+        def thd():
+            session = self.createSessionFromToken({'access_token': token})
+            return self.getUserInfoFromOAuthClient(session)
+        return threads.deferToThread(thd)
 
     # based on https://github.com/maraujop/requests-oauth
     # from Miguel Araujo, augmented to support header based clientSecret
