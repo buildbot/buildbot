@@ -55,10 +55,8 @@ class TestSecretsManager(unittest.TestCase):
     def testGetNoDataManagerService(self):
         secret_service_manager = SecretManager()
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__, "foo2",
-                                             None)
         secret_result = yield secret_service_manager.get("foo2")
-        self.assertEqual(secret_result, expectedSecretDetail)
+        self.assertEqual(secret_result, None)
 
     @defer.inlineCallbacks
     def testGetDataMultipleManagerService(self):
@@ -86,8 +84,5 @@ class TestSecretsManager(unittest.TestCase):
                                                                  "other2": "value"})
                                               ]
         SecretManager.master = self.master
-        expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
-                                             "foo3",
-                                             None)
         secret_result = yield secret_service_manager.get("foo3")
-        self.assertEqual(secret_result, expectedSecretDetail)
+        self.assertEqual(secret_result, None)
