@@ -256,7 +256,7 @@ class IBuildbotProcess(Interface):
         pass
 
     @defer.inlineCallbacks
-    def stop(self, workdir):
+    def stop(self, workdir, force=False):
         pass
 
 
@@ -276,7 +276,7 @@ class BuidlbotDeamonizedProcessBase(object):
         defer.returnValue((stdout, stderr))
 
     @defer.inlineCallbacks
-    def stop(self):
+    def stop(self, force=False):
         assert self._started
         stdout, stderr = yield run_command(
             buildbot_worker_executable, 'stop', self._workdir)
@@ -284,43 +284,46 @@ class BuidlbotDeamonizedProcessBase(object):
         defer.returnValue((stdout, stderr))
 
 
-class BuidlbotMasterDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+class BuildbotMasterDeamonizedProcess(BuidlbotDeamonizedProcessBase):
     @defer.inlineCallbacks
     def start(self):
-        stdout, _ = yield super(BuidlbotMasterDeamonizedProcess, self).start()
+        stdout, _ = yield super(BuildbotMasterDeamonizedProcess, self).start()
         assert (
             "The buildmaster appears to have (re)started correctly" in stdout)
 
     @defer.inlineCallbacks
-    def stop(self):
-        stdout, _ = yield super(BuidlbotMasterDeamonizedProcess, self).stop()
+    def stop(self, force=False):
+        stdout, _ = yield super(
+            BuildbotMasterDeamonizedProcess, self).stop(force)
         assert re.match(r"buildbot process \d+ is dead", stdout)
 
 
-class BuidlbotWorkerDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+class BuildbotWorkerDeamonizedProcess(BuidlbotDeamonizedProcessBase):
     @defer.inlineCallbacks
     def start(self):
-        stdout, _ = yield super(BuidlbotWorkerDeamonizedProcess, self).start()
+        stdout, _ = yield super(BuildbotWorkerDeamonizedProcess, self).start()
         assert (
             "The buildbot-worker appears to have (re)started correctly" in
             stdout)
 
     @defer.inlineCallbacks
-    def stop(self):
-        stdout, _ = yield super(BuidlbotWorkerDeamonizedProcess, self).stop()
+    def stop(self, force=False):
+        stdout, _ = yield super(
+            BuildbotWorkerDeamonizedProcess, self).stop(force)
         assert re.match(r"worker process \d+ is dead", stdout)
 
 
-class BuidlbotSlaveDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+class BuildbotSlaveDeamonizedProcess(BuidlbotDeamonizedProcessBase):
     @defer.inlineCallbacks
     def start(self):
-        stdout, _ = yield super(BuidlbotSlaveDeamonizedProcess, self).start()
+        stdout, _ = yield super(BuildbotSlaveDeamonizedProcess, self).start()
         assert (
             "The buildslave appears to have (re)started correctly" in stdout)
 
     @defer.inlineCallbacks
-    def stop(self):
-        stdout, _ = yield super(BuidlbotSlaveDeamonizedProcess, self).stop()
+    def stop(self, force=False):
+        stdout, _ = yield super(
+            BuildbotSlaveDeamonizedProcess, self).stop(force)
         assert re.match(r"buildslave process \d+ is dead", stdout)
 
 
@@ -432,21 +435,24 @@ class BuidlbotNotDeamonizedProcessBase(object):
         self._started = True
 
     @defer.inlineCallbacks
-    def stop(self):
+    def stop(self, force=False):
         assert self._started
 
-        self._process_transport.transport.signalProcess('TERM')
+        if force:
+            self._process_transport.transport.signalProcess('KILL')
+        else:
+            self._process_transport.transport.signalProcess('TERM')
 
-        stdout, stderr, exitcode = yield self._process_deferred
+            stdout, stderr, exitcode = yield self._process_deferred
 
-        assert exitcode == 0, "Exited with code {!r}".format(exitcode)
+            assert exitcode == 0, "Exited with code {!r}".format(exitcode)
 
         self._started = False
         self._process_deferred = None
         self._process_transport = None
 
 
-class BuidlbotMasterNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
+class BuildbotMasterNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
 
     def __init__(self, executable, workdir, reactor=None):
         # Based on buildbot/scripts/logwatcher.py
@@ -462,11 +468,11 @@ class BuidlbotMasterNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
             "BuildMaster is running",
         ]
 
-        super(BuidlbotMasterNotDeamonizedProcess, self).__init__(
+        super(BuildbotMasterNotDeamonizedProcess, self).__init__(
             executable, workdir, fail_marks, started_marks, reactor=reactor)
 
 
-class BuidlbotWorkerNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
+class BuildbotWorkerNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
 
     def __init__(self, executable, workdir, reactor=None):
         fail_marks = [
@@ -476,11 +482,11 @@ class BuidlbotWorkerNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
             "Connecting to",
         ]
 
-        super(BuidlbotWorkerNotDeamonizedProcess, self).__init__(
+        super(BuildbotWorkerNotDeamonizedProcess, self).__init__(
             executable, workdir, fail_marks, started_marks, reactor=reactor)
 
 
-class BuidlbotSlaveNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
+class BuildbotSlaveNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
 
     def __init__(self, executable, workdir, reactor=None):
         fail_marks = [
@@ -490,19 +496,20 @@ class BuidlbotSlaveNotDeamonizedProcess(BuidlbotNotDeamonizedProcessBase):
             "Connecting to",
         ]
 
-        super(BuidlbotSlaveNotDeamonizedProcess, self).__init__(
+        super(BuildbotSlaveNotDeamonizedProcess, self).__init__(
             executable, workdir, fail_marks, started_marks, reactor=reactor)
 
 
 class NoDaemonMixin:
-    BuildbotMasterProcess = BuidlbotMasterNotDeamonizedProcess
-    BuildbotWorkerProcess = BuidlbotWorkerNotDeamonizedProcess
-    BuildbotSlaveProcess = BuidlbotSlaveNotDeamonizedProcess
+    BuildbotMasterProcess = BuildbotMasterNotDeamonizedProcess
+    BuildbotWorkerProcess = BuildbotWorkerNotDeamonizedProcess
+    BuildbotSlaveProcess = BuildbotSlaveNotDeamonizedProcess
+
 
 class DaemonMixin:
-    BuildbotMasterProcess = BuidlbotMasterDeamonizedProcess
-    BuildbotWorkerProcess = BuidlbotWorkerDeamonizedProcess
-    BuildbotSlaveProcess = BuidlbotSlaveDeamonizedProcess
+    BuildbotMasterProcess = BuildbotMasterDeamonizedProcess
+    BuildbotWorkerProcess = BuildbotWorkerDeamonizedProcess
+    BuildbotSlaveProcess = BuildbotSlaveDeamonizedProcess
 
 
 class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
@@ -544,17 +551,12 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
     def tearDown(self):
         self.session.close()
 
+        still_running = (
+            self.running_master or self.running_workers or self.running_slaves)
+
         # Note: self._passed is an Twisted's implementation detail, but there
         # is no other simple way to get test pass/fail status.
-        ex = None
-        if self._passed:
-            try:
-                yield self._graceful_stop()
-            except Exception as ex:
-                log.debug(
-                    "Failed to gracefully stop running services.")
-
-        if not self._passed or ex is not None:
+        if not self._passed or still_running:
             log.debug(
                 "Trying to stop possibly running services")
             yield self._force_stop()
@@ -574,9 +576,10 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
 
             os.chdir(self._origcwd)
 
-            if ex is not None:
-                # Re-raise exception occurred during graceful shutdown.
-                raise
+            if still_running:
+                raise RuntimeError(
+                    "One of the started processes not stopped. "
+                    "Did you forgot to call teardownEnvironment()?")
 
         else:
             os.chdir(self._origcwd)
@@ -585,7 +588,7 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
             yield self.tearDownDirs()
 
     @defer.inlineCallbacks
-    def _graceful_stop(self):
+    def teardownEnvironment(self):
         for worker_dir in list(self.running_workers.keys()):
             yield self.running_workers[worker_dir].stop()
             del self.running_workers[worker_dir]
@@ -604,7 +607,7 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
 
         for worker in self.running_workers.values():
             try:
-                yield worker.stop()
+                yield worker.stop(force=True)
             except Exception:
                 # Ignore errors.
                 pass
@@ -612,7 +615,7 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
 
         for slave in self.running_slaves.values():
             try:
-                yield slave.stop()
+                yield slave.stop(force=True)
             except Exception:
                 # Ignore errors.
                 pass
@@ -620,7 +623,7 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
 
         if self.running_master is not None:
             try:
-                yield self.running_master.stop()
+                yield self.running_master.stop(force=True)
                 self.running_master = None
             except Exception:
                 # Ignore errors.
@@ -969,6 +972,8 @@ class ShellCommandOnWorkerNoDaemonTest(E2ETestBase, ShellCommandTestMixin):
 
         yield self.run_check()
 
+        yield self.teardownEnvironment()
+
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
@@ -1046,6 +1051,8 @@ class FileTransferOnWorkerNoDaemonTest(E2ETestBase, FileTransferTestMixin):
 
         yield self.run_check(master_dir)
 
+        yield self.teardownEnvironment()
+
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
             "buildbot-worker executable not found")
@@ -1081,6 +1088,8 @@ class FileTransferOnSlaveNoDaemonTest(E2ETestBase, FileTransferTestMixin):
 
         yield self.run_check(master_dir)
 
+        yield self.teardownEnvironment()
+
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
             "buildslave executable not found")
@@ -1113,6 +1122,8 @@ class ShellCommandOnSlaveNoDaemonTest(E2ETestBase, ShellCommandTestMixin):
         })
 
         yield self.run_check()
+
+        yield self.teardownEnvironment()
 
     @defer.inlineCallbacks
     @skipIf(buildslave_executable is None,
@@ -1219,6 +1230,8 @@ class ShellCommandOnWorkerAndSlaveNoDaemonTest(E2ETestBase):
             'steps/0/logs/stdio/raw'.format(
                 builderid=slave_builder_id, buildnumber=buildnumber))
         self.assertIn("echo 'Test slave'", log_row)
+
+        yield self.teardownEnvironment()
 
     @defer.inlineCallbacks
     @skipIf(buildbot_worker_executable is None,
