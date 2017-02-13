@@ -25,7 +25,7 @@ class RevlinkMatch(object):
     def __init__(self, repo_urls, revlink):
         if isinstance(repo_urls, str) or isinstance(repo_urls, text_type):
             repo_urls = [repo_urls]
-        self.repo_urls = map(re.compile, repo_urls)
+        self.repo_urls = [re.compile(url) for url in repo_urls]
         self.revlink = revlink
 
     def __call__(self, rev, repo):
