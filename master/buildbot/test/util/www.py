@@ -46,7 +46,7 @@ class FakeSession(object):
 
 
 class FakeRequest(object):
-    written = ''
+    written = b''
     finished = False
     redirected_to = None
     rendered_resource = None

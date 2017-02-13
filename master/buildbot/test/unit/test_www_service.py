@@ -99,14 +99,16 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         return d
 
     def test_reconfigService_expiration_time(self):
-        new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
+        new_config = self.makeConfig(
+            port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
         d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):
             self.assertNotEqual(self.svc.site, None)
             self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
+            self.assertEqual(service.BuildbotSession.expDelay,
+                             datetime.timedelta(minutes=1))
         return d
 
     def test_reconfigService_port_changes(self):
@@ -191,7 +193,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
 
-        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(
+            'change_hook', mock.Mock())
         path = '/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
         self.master.addChange = mock.Mock()
@@ -214,11 +217,13 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
 
         res = yield self.render_resource(rsrc, '')
-        self.assertIn('{"type": "file"}', res)
+        self.assertIn(b'{"type": "file"}', res)
 
-        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(
+            'change_hook', mock.Mock())
         res = yield self.render_resource(rsrc, '/change_hook/base')
-        # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
+        # as UnauthorizedResource is in private namespace, we cannot use
+        # assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))
 
 
@@ -239,7 +244,8 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_getSession_from_correct_jwt(self):
         payload = {'user_info': {'some': 'payload'}}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         session = self.site.getSession(uid)
         self.assertEqual(session.user_info, {'some': 'payload'})
 
@@ -248,12 +254,14 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertRaises(KeyError, self.site.getSession, uid)
 
     def test_getSession_with_no_user_info(self):
         payload = {'foo': 'bar'}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertRaises(KeyError, self.site.getSession, uid)
 
     def test_makeSession(self):
@@ -269,10 +277,11 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             def isSecure(self):
                 return False
         request = Request(FakeChannel(), False)
-        request.sitepath = ["bb"]
+        request.sitepath = [b"bb"]
         session.updateSession(request)
         self.assertEqual(len(request.cookies), 1)
-        name, value = request.cookies[0].split(";")[0].split("=")
-        decoded = jwt.decode(value, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        name, value = request.cookies[0].split(b";")[0].split(b"=")
+        decoded = jwt.decode(value, self.SECRET,
+                             algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertEqual(decoded['user_info'], {'anonymous': True})
         self.assertIn('exp', decoded)
