@@ -19,6 +19,7 @@ buildbot.test.unit.test_db_pool.Basic.test_persistence_across_invocations
 buildbot.test.unit.test_db_pool.BasicWithDebug.test_do
 buildbot.test.unit.test_db_pool.BasicWithDebug.test_do_error
 buildbot.test.unit.test_db_pool.BasicWithDebug.test_do_exception
+buildbot.test.unit.test_pbmanager.TestPBManager.test_register_unregister
 buildbot.test.unit.test_process_buildstep.TestBuildStep.testcheckWorkerHasCommandTooOld
 buildbot.test.unit.test_process_users_manual.TestCommandlineUserManagerPerspective.test_perspective_commandline_get_format
 buildbot.test.unit.test_reporter_github.TestGitHubStatusPush.test_basic
