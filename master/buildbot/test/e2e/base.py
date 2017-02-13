@@ -23,14 +23,15 @@ from io import BytesIO
 
 from fastjsonrpc.client import Proxy
 from fastjsonrpc.client import jsonrpc
+from txrequests import Session
+
+from twisted.internet import reactor as global_reactor
 from twisted.internet import defer
 from twisted.internet import protocol
-from twisted.internet import reactor as global_reactor
 from twisted.internet import task
 from twisted.internet import utils
 from twisted.python import log as twisted_python_log
 from twisted.trial import unittest
-from txrequests import Session
 from zope.interface import Interface
 from zope.interface import implementer
 
@@ -123,6 +124,7 @@ def run_command(*args):
 
 
 class IBuildbotProcess(Interface):
+
     @defer.inlineCallbacks
     def start(self, workdir):
         pass
@@ -134,6 +136,7 @@ class IBuildbotProcess(Interface):
 
 @implementer(IBuildbotProcess)
 class BuidlbotDeamonizedProcessBase(object):
+
     def __init__(self, executable, workdir):
         self._executable = executable
         self._started = False
@@ -157,6 +160,7 @@ class BuidlbotDeamonizedProcessBase(object):
 
 
 class BuildbotMasterDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+
     @defer.inlineCallbacks
     def start(self):
         stdout, _ = yield super(BuildbotMasterDeamonizedProcess, self).start()
@@ -171,6 +175,7 @@ class BuildbotMasterDeamonizedProcess(BuidlbotDeamonizedProcessBase):
 
 
 class BuildbotWorkerDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+
     @defer.inlineCallbacks
     def start(self):
         stdout, _ = yield super(BuildbotWorkerDeamonizedProcess, self).start()
@@ -186,6 +191,7 @@ class BuildbotWorkerDeamonizedProcess(BuidlbotDeamonizedProcessBase):
 
 
 class BuildbotSlaveDeamonizedProcess(BuidlbotDeamonizedProcessBase):
+
     @defer.inlineCallbacks
     def start(self):
         stdout, _ = yield super(BuildbotSlaveDeamonizedProcess, self).start()
