@@ -454,7 +454,8 @@ class NestedParameter(BaseParameter):
     def getSpec(self):
         ret = BaseParameter.getSpec(self)
         # pylint: disable=not-an-iterable
-        ret['fields'] = [field.getSpec() for field in self.fields]
+        ret['fields'] = sorted([field.getSpec() for field in self.fields],
+                               key=lambda x: x['name'])
         return ret
 
 

@@ -25,6 +25,7 @@ import json
 import re
 
 from buildbot import util
+from buildbot.util import bytes2NativeString
 
 
 class Type(object):
@@ -252,7 +253,7 @@ class SourcedProperties(Type):
             if not isinstance(propsrc, text_type):
                 yield "%s[%s] source %r is not unicode" % (name, k, propsrc)
             try:
-                json.loads(propval)
+                json.loads(bytes2NativeString(propval))
             except ValueError:
                 yield "%s[%r] value is not JSON-able" % (name, k)
 

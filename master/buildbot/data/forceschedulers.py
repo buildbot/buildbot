@@ -31,7 +31,8 @@ def forceScheduler2Data(sched):
                name=text_type(sched.name),
                button_name=text_type(sched.buttonName),
                label=text_type(sched.label),
-               builder_names=map(text_type, sched.builderNames))
+               builder_names=[text_type(name)
+                              for name in sched.builderNames])
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 

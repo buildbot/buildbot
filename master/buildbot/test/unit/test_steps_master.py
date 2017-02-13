@@ -73,7 +73,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
     def test_real_cmd(self):
-        cmd = [sys.executable, '-c', 'print "hello"']
+        cmd = [sys.executable, '-c', 'print("hello")']
         self.setupStep(
             master.MasterShellCommand(command=cmd))
         if runtime.platformType == 'win32':
@@ -130,7 +130,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_env_subst(self):
-        cmd = [sys.executable, '-c', 'import os; print os.environ["HELLO"]']
+        cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         self.setupStep(
             master.MasterShellCommand(command=cmd,
@@ -150,7 +150,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
         return d
 
     def test_env_list_subst(self):
-        cmd = [sys.executable, '-c', 'import os; print os.environ["HELLO"]']
+        cmd = [sys.executable, '-c', 'import os; print(os.environ["HELLO"])']
         os.environ['WORLD'] = 'hello'
         os.environ['LIST'] = 'world'
         self.setupStep(
@@ -173,7 +173,7 @@ class TestMasterShellCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def test_prop_rendering(self):
         cmd = [sys.executable, '-c', WithProperties(
-            'import os; print "%s"; print os.environ[\"BUILD\"]',
+            'import os; print("%s"); print(os.environ[\"BUILD\"])',
             'project')]
         self.setupStep(
             master.MasterShellCommand(command=cmd,

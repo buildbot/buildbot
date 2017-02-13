@@ -32,6 +32,7 @@ from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
 
+
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:
 #     from buildbot.db import pool
@@ -145,8 +146,8 @@ class DBThreadPool(object):
 
     def _stop(self):
         self._stop_evt = None
+        threads.deferToThreadPool(self.reactor, self._pool, self.engine.dispose)
         self._pool.stop()
-        self.engine.dispose()
         self.running = False
 
     def shutdown(self):
