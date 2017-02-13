@@ -454,7 +454,8 @@ class E2ETestBase(dirs.DirsMixin, NoDaemonMixin, LoggingMixin,
 
             os.chdir(self._origcwd)
 
-            if still_running:
+            if still_running and self._passed:
+                # Fail test if not all processes gracefully terminated.
                 raise RuntimeError(
                     "One of the started processes not stopped. "
                     "Did you forgot to call teardownEnvironment()?")
