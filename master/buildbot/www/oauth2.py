@@ -108,7 +108,8 @@ class OAuth2Auth(auth.AuthBase):
         if redirect_url is not None:
             oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
-        return defer.succeed("%s?%s" % (self.authUri, urlencode(oauth_params)))
+        sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
+        return defer.succeed("%s?%s" % (self.authUri, urlencode(sorted_oauth_params)))
 
     def createSessionFromToken(self, token):
         s = requests.Session()
