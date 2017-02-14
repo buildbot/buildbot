@@ -21,7 +21,7 @@ from __future__ import print_function
 import os
 
 from buildbot import config
-from buildbot.secrets.provider.base import SecretProviderBase
+from buildbot.secrets.providers.base import SecretProviderBase
 
 
 class SecretInAFile(SecretProviderBase):
