@@ -161,6 +161,23 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           'username': 'bar',
                           'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
+    @defer.inlineCallbacks
+    def test_GithubAcceptToken(self):
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.githubAuth.get = mock.Mock(side_effect=[
+            dict(  # /user
+                login="bar",
+                name="foo bar",
+                email="buzz@bar"),
+            [  # /user/emails
+                {'email': 'buzz@bar', 'verified': True, 'primary': False},
+                {'email': 'bar@foo', 'verified': True, 'primary': True}],
+            [  # /user/orgs
+                dict(login="hello"),
+                dict(login="grp"),
+            ]])
         res = yield self.githubAuth.acceptToken("TOK3N")
         self.assertEqual({'email': 'bar@foo',
                           'username': 'bar',
@@ -223,6 +240,8 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
             getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
             verifyCode = mock.Mock(
                 side_effect=lambda code: defer.succeed({"username": "bar"}))
+            acceptToken = mock.Mock(
+                side_effect=lambda token: defer.succeed({"username": "bar"}))
             userInfoProvider = None
 
         rsrc = self.githubAuth.getLoginResource()
@@ -238,6 +257,12 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         rsrc.auth.verifyCode.assert_called_once_with("code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': '://me'})
+        res = yield self.render_resource(rsrc, '/?token=token!')
+        rsrc.auth.getLoginURL.assert_not_called()
+        rsrc.auth.acceptToken.assert_called_once_with("token!")
+        self.assertEqual(self.master.session.user_info, {'username': 'bar'})
+        self.assertEqual(res, {'redirected': '://me'})
+
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
