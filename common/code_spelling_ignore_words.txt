@@ -415,6 +415,7 @@ login
 logname
 logout
 logrotate
+logwatcher
 lookahead
 lookup
 lookups
