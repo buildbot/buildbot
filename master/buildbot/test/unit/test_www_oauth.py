@@ -161,6 +161,7 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           'username': 'bar',
                           'groups': ["hello", "grp"],
                           'full_name': 'foo bar'}, res)
+
     @defer.inlineCallbacks
     def test_GithubAcceptToken(self):
         requests.get.side_effect = []
