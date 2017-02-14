@@ -534,9 +534,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
         # make sure appropriate exception is raised
         step = buildstep.BuildStep()
-        self.assertRaisesRegexp(WorkerTooOldError,
-                                "worker is too old, does not know about foo",
-                                step.checkWorkerHasCommand, "foo")
+        self.assertRaisesRegex(WorkerTooOldError,
+                               "worker is too old, does not know about foo",
+                               step.checkWorkerHasCommand, "foo")
 
     @defer.inlineCallbacks
     def testRunRaisesException(self):
