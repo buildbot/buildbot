@@ -1,9 +1,6 @@
 Utility scripts, things contributed by users but not strictly a part of
 buildbot:
 
-buildbot_json.py: Utility classes and standalone script to process data from
-                  /json status.
-
 fakechange.py: connect to a running bb and submit a fake change to trigger
                builders
 
@@ -40,10 +37,6 @@ viewcvspoll.py: a standalone script which loops every 60 seconds and polls a
                 over PB to a remote buildmaster's PBChangeSource. Contributed
                 by Stephen Kennedy.
 
-css/*.css: alternative HTML stylesheets to make the Waterfall display look
-           prettier. Copy them somewhere, then pass the filename to the
-           css= argument of the Waterfall() constructor.
-
 zsh/_buildbot: zsh tab-completion file for 'buildbot' command. Put it in one
                of the directories appearing in $fpath to enable tab-completion
                in zsh.
@@ -52,12 +45,3 @@ bash/buildbot: bash tab-completion file for 'buildbot' command. Source this
                file to enable completions in your bash session. This is
                typically accomplished by placing the file into the
                appropriate 'bash_completion.d' directory.
-
-SimpleConfig.py: an example of how to configure buildbot using a declarative
-                 json file plus one buildshim script per project
-
-api_proxy.py: a simple flask application to help web ui development
-              it will proxy the api request to a production buildbot instance
-              This helps the ui developer to test dashboards with real data 
-              please pip install flask requests on top of the usual buildbot
-              virtualenv to make it work
