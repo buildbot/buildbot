@@ -300,7 +300,7 @@ class BuidlbotNotDeamonizedProcessBase(object):
             if result:
                 return True
 
-            # There is no easy crossplatform name to follow file contents,
+            # There is no easy cross-platform name to follow file contents,
             # do polling.
             found_mark = check_log_for_marks(
                 self._logfile, self._fail_marks, self._started_marks)
