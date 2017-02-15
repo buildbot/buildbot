@@ -239,7 +239,7 @@ def ascii2unicode(x, errors='strict'):
     return bytes2unicode(x, encoding='ascii', errors=errors)
 
 
-def bytes2NativeString(x, encoding='utf-8'):
+def bytes2NativeString(x, encoding='utf-8', errors='strict'):
     """
     Convert C{bytes} to a native C{str}.
 
@@ -258,7 +258,29 @@ def bytes2NativeString(x, encoding='utf-8'):
     if isinstance(x, bytes) and type("") != type(b""):
         # On Python 3 and higher, type("") != type(b"")
         # so we need to decode() to return a native string.
-        return x.decode(encoding)
+        return x.decode(encoding, errors)
+    return x
+
+
+def unicode2NativeString(x, encoding='utf-8', errors='strict'):
+    """
+    Convert C{unicode} to a native C{str}.
+
+    On Python 3 and higher, the unicode type is gone,
+    replaced by str.   In this case, do nothing
+    and just return the native string.
+
+    On Python 2 and lower, unicode and str are separate types.
+    In this case, encode() to return the native string.
+
+    @param x: a string of type C{unicode}
+    @param encoding: an optional codec, default: 'utf-8'
+    @return: a string of type C{str}
+    """
+    if isinstance(x, text_type) and type(u"") != type(""):
+        # On Python 2 and lower, type(u"") != type("")
+        # so we need to encode() to return a native string.
+        return x.encode(encoding, errors)
     return x
 
 
