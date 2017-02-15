@@ -18,8 +18,6 @@ from __future__ import print_function
 
 import os
 import stat
-from tempfile import mkdtemp
-from tempfile import mkstemp
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -50,8 +48,8 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.tmp_dir = self.createTempDir("temp")
         filetmp, self.filepath = self.createFileTemp(self.tmp_dir,
-                                                "tempfile.txt",
-                                                text="key value")
+                                                     "tempfile.txt",
+                                                     text="key value")
         os.chmod(self.filepath, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
