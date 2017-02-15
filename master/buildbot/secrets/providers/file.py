@@ -30,20 +30,50 @@ class SecretInAFile(SecretProviderBase):
     """
     name = "SecretInAFile"
 
-    def checkConfig(self, name, dirname):
-        if dirname is None:
-            config.error("directory name could not be empty")
+    def checkFileIsReadOnly(self, dirname, secretfile):
+        filepath = os.path.join(dirname, secretfile)
+        if not os.access(filepath, os.R_OK) or os.access(filepath, os.W_OK):
+            config.error("the file %s is not read-only for user" %
+                         (secretfile))
 
-    def reconfigService(self, name, dirname):
+    def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffix=None):
+        if not os.access(dirname, os.F_OK):
+            config.error("directory %s does not exists" % dirname)
+        for secretfile in os.listdir(dirname):
+            if suffix and secretfile.endswith(suffix):
+                self.checkFileIsReadOnly(dirname, secretfile)
+            elif not suffix:
+                self.checkFileIsReadOnly(dirname, secretfile)
+
+    def loadSecrets(self, dirname, suffix=None):
+        secrets = {}
+        for secretfile in os.listdir(dirname):
+            secretvalue = None
+            if suffix and secretfile.endswith(suffix):
+                with open(os.path.join(dirname, secretfile)) as source:
+                    secretvalue = source.read()
+            elif not suffix:
+                with open(os.path.join(dirname, secretfile)) as source:
+                    secretvalue = source.read()
+            secrets.update({secretfile: secretvalue})
+        return secrets
+
+    def checkConfig(self, dirname, suffix=None):
         self._dirname = dirname
+        self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffix=suffix)
+        self.secrets = self.loadSecrets(self._dirname, suffix=suffix)
+
+    def reconfigService(self, dirname, suffix=None):
+        self._dirname = dirname
+        self.secrets = {}
+        self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffix=suffix)
+        self.secrets = self.loadSecrets(self._dirname, suffix=suffix)
 
     def get(self, entry):
         """
         get the value from the file identified by 'entry'
         """
-        filename = os.path.join(self._dirname, entry)
-        assert os.path.isfile(filename), \
-            'File {} does not exist'.format(filename)
-        with open(filename) as source:
-            secret = source.read().strip()
-        return secret
+        if entry in self.secrets.keys():
+            return self.secrets[entry]
+        else:
+            return None
