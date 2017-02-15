@@ -269,7 +269,10 @@ class TestEC2LatentWorker(unittest.TestCase):
         # moto does not currently map volumes properly.  below ensures
         # that my conversion code properly composes it, including
         # delete_on_termination default.
-        self.assertEqual(block_device_map_res, bs.block_device_map)
+        self.assertEqual(sorted(block_device_map_res,
+                                key=lambda x: x['DeviceName']),
+                         sorted(bs.block_device_map,
+                                key=lambda x: x['DeviceName']))
 
     @mock_ec2
     def test_start_instance_volumes(self):
