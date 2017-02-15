@@ -116,7 +116,11 @@ class HTTPStep(BuildStep):
                       (self.method, self.url))
         if self.params:
             log.addHeader('Parameters:\n')
-            for k, v in iteritems(requestkwargs.get("params", {})):
+            params = requestkwargs.get("params", {})
+            if params:
+                params = sorted(iteritems(params), key=lambda x: x[0])
+                requestkwargs['params'] = params
+            for k, v in params:
                 log.addHeader('\t%s: %s\n' % (k, v))
         data = requestkwargs.get("data", None)
         if data:
