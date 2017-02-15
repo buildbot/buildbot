@@ -264,7 +264,6 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
         self.assertEqual(res, {'redirected': '://me'})
 
-
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
                                                            'name': 'GitHub', 'oauth2': True})
