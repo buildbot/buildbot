@@ -31,8 +31,8 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
-from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
+from buildbot.util import unicode2NativeString
 
 HOSTED_BASE_URL = 'https://api.github.com'
 
@@ -145,22 +145,14 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
             try:
-                repo_user = repoOwner.encode('utf-8')
-                repo_user = bytes2NativeString(repo_user, encoding='utf-8')
-                repo_name = repoName.encode('utf-8')
-                repo_name = bytes2NativeString(repo_name, encoding='utf-8')
-                sha = sha.encode('utf-8')
-                sha = bytes2NativeString(sha, encoding='utf-8')
-                state = state.encode('utf-8')
-                state = bytes2NativeString(state, encoding='utf-8')
-                target_url = build['url'].encode('utf-8')
-                target_url = bytes2NativeString(target_url, encoding='utf-8')
-                context = context.encode('utf-8')
-                context = bytes2NativeString(context, encoding='utf-8')
-                issue = issue.encode('utf-8')
-                issue = bytes2NativeString(issue, encoding='utf-8')
-                description = description.encode('utf-8')
-                description = bytes2NativeString(description, encoding='utf-8')
+                repo_user = unicode2NativeString(repoOwner)
+                repo_name = unicode2NativeString(repoName)
+                sha = unicode2NativeString(sha)
+                state = unicode2NativeString(state)
+                target_url = unicode2NativeString(build['url'])
+                context = unicode2NativeString(context)
+                issue = unicode2NativeString(issue)
+                description = unicode2NativeString(description)
                 yield self.createStatus(
                     repo_user=repo_user,
                     repo_name=repo_name,
