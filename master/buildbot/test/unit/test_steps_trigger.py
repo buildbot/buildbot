@@ -385,8 +385,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS)
         self.expectTriggeredWith(
             a=(False,
-               [{'codebase': 'cb2', 'revision': 34567},
-                {'codebase': 'cb1', 'revision': 23456}],
+               [{'codebase': 'cb1', 'revision': 23456},
+                {'codebase': 'cb2', 'revision': 34567}],
                {}))
         return self.runStep()
 
@@ -481,7 +481,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        sourceStamps=[ss1, ss2]))
         self.expectOutcome(result=SUCCESS)
-        self.expectTriggeredWith(b=(False, [ss2, ss1], {}))
+        self.expectTriggeredWith(b=(False, [ss1, ss2], {}))
         return self.runStep()
 
     def test_set_of_sourceStamps_override_build(self):
@@ -496,7 +496,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.setupStep(trigger.Trigger(schedulerNames=['b'],
                                        sourceStamps=[ss1, ss2]), sourcestampsInBuild=[ss3, ss4])
         self.expectOutcome(result=SUCCESS)
-        self.expectTriggeredWith(b=(False, [ss2, ss1], {}))
+        self.expectTriggeredWith(b=(False, [ss1, ss2], {}))
         return self.runStep()
 
     def test_sourceStamp_prop(self):
