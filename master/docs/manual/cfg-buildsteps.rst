@@ -2134,6 +2134,8 @@ The ``url=`` argument allows you to specify an url that will be displayed in the
 The title of the url will be the name of the item transferred (directory for :class:`DirectoryUpload` or file for :class:`FileUpload`).
 This allows the user to add a link to the uploaded item if that one is uploaded to an accessible place.
 
+For :bb:step:`FileUpload`, the ``urlText=`` argument allows you to specify the url title that will be displayed in the web UI.
+
 .. bb:step:: DirectoryUpload
 
 Transfering Directories
