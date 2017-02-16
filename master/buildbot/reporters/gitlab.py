@@ -31,8 +31,8 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
-from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
+from buildbot.util import unicode2NativeString
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -131,8 +131,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         # retrieve project id via cache
         self.project_ids
         project_full_name = "%s%%2F%s" % (repoOwner, repoName)
-        project_full_name = project_full_name.encode("utf-8")
-        project_full_name = bytes2NativeString(project_full_name)
+        project_full_name = unicode2NativeString(project_full_name)
 
         if project_full_name not in self.project_ids:
             proj = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
@@ -143,18 +142,12 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
             try:
-                branch = branch.encode('utf-8')
-                branch = bytes2NativeString(branch, encoding='utf-8')
-                sha = sha.encode('utf-8')
-                sha = bytes2NativeString(sha, encoding='utf-8')
-                state = state.encode('utf-8')
-                state = bytes2NativeString(state, encoding='utf-8')
-                target_url = build['url'].encode('utf-8')
-                target_url = bytes2NativeString(target_url, encoding='utf-8')
-                context = context.encode('utf-8')
-                context = bytes2NativeString(context, encoding='utf-8')
-                description = description.encode('utf-8')
-                description = bytes2NativeString(description, encoding='utf-8')
+                branch = unicode2NativeString(branch)
+                sha = unicode2NativeString(sha)
+                state = unicode2NativeString(state)
+                target_url = unicode2NativeString(build['url'])
+                context = unicode2NativeString(context)
+                description = unicode2NativeString(description)
                 res = yield self.createStatus(
                     project_id=proj_id,
                     branch=branch,
