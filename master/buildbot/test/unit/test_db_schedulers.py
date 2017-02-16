@@ -48,6 +48,41 @@ class Tests(interfaces.InterfaceTests):
 
     # tests
 
+    def test_signature_enable(self):
+        @self.assertArgSpecMatches(self.db.schedulers.enable)
+        def enable(self, schedulerid, v):
+            pass
+
+    @defer.inlineCallbacks
+    def test_enable(self):
+        yield self.insertTestData([self.scheduler24, self.master13,
+                                   self.scheduler24master])
+        sch = yield self.db.schedulers.getScheduler(24)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
+        self.assertEqual(sch, dict(
+            id=24,
+            name='schname',
+            enabled=True,
+            masterid=13))
+
+        yield self.db.schedulers.enable(24, False)
+        sch = yield self.db.schedulers.getScheduler(24)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
+        self.assertEqual(sch, dict(
+            id=24,
+            name='schname',
+            enabled=False,
+            masterid=13))
+
+        yield self.db.schedulers.enable(24, True)
+        sch = yield self.db.schedulers.getScheduler(24)
+        validation.verifyDbDict(self, 'schedulerdict', sch)
+        self.assertEqual(sch, dict(
+            id=24,
+            name='schname',
+            enabled=True,
+            masterid=13))
+
     def test_signature_classifyChanges(self):
         @self.assertArgSpecMatches(self.db.schedulers.classifyChanges)
         def classifyChanges(self, schedulerid, classifications):
@@ -219,6 +254,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sch, dict(
             id=24,
             name='schname',
+            enabled=True,
             masterid=None))
 
     @defer.inlineCallbacks
@@ -235,6 +271,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sch, dict(
             id=24,
             name='schname',
+            enabled=True,
             masterid=13))
 
     @defer.inlineCallbacks
@@ -246,6 +283,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(sch, dict(
             id=25,
             name='schname2',
+            enabled=True,
             masterid=14))  # row exists, but marked inactive
 
     def test_signature_getSchedulers(self):
@@ -267,8 +305,8 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
         self.assertEqual(sorted(schlist, key=schKey), sorted([
-            dict(id=24, name='schname', masterid=13),
-            dict(id=25, name='schname2', masterid=None),
+            dict(id=24, name='schname', enabled=True, masterid=13),
+            dict(id=25, name='schname2', enabled=True, masterid=None),
         ], key=schKey))
 
     @defer.inlineCallbacks
@@ -281,7 +319,7 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
-            dict(id=24, name='schname', masterid=13),
+            dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
 
     @defer.inlineCallbacks
@@ -294,7 +332,7 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
-            dict(id=24, name='schname', masterid=13),
+            dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
 
     @defer.inlineCallbacks
@@ -308,7 +346,7 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
-            dict(id=24, name='schname', masterid=13),
+            dict(id=24, name='schname', enabled=True, masterid=13),
         ]))
 
         schlist = yield self.db.schedulers.getSchedulers(
@@ -327,7 +365,7 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'schedulerdict', sch)
          for sch in schlist]
         self.assertEqual(sorted(schlist), sorted([
-            dict(id=25, name='schname2', masterid=None),
+            dict(id=25, name='schname2', enabled=True, masterid=None),
         ]))
 
     @defer.inlineCallbacks

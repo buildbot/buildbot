@@ -49,6 +49,9 @@ class Dependent(base.BaseScheduler):
     def activate(self):
         yield base.BaseScheduler.deactivate(self)
 
+        if not self.enabled:
+            return
+
         self._buildset_new_consumer = yield self.master.mq.startConsuming(
             self._buildset_new_cb,
             ('buildsets', None, 'new'))
@@ -65,6 +68,9 @@ class Dependent(base.BaseScheduler):
     def deactivate(self):
         # the base deactivate will unsubscribe from new changes
         yield base.BaseScheduler.deactivate(self)
+
+        if not self.enabled:
+            return
 
         if self._buildset_new_consumer:
             self._buildset_new_consumer.stopConsuming()

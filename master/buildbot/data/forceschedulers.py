@@ -32,7 +32,8 @@ def forceScheduler2Data(sched):
                button_name=text_type(sched.buttonName),
                label=text_type(sched.label),
                builder_names=[text_type(name)
-                              for name in sched.builderNames])
+                              for name in sched.builderNames],
+               enabled=sched.enabled)
     ret["all_fields"] = [field.getSpec() for field in sched.all_fields]
     return ret
 
@@ -105,5 +106,6 @@ class ForceScheduler(base.ResourceType):
         button_name = types.String()
         label = types.String()
         builder_names = types.List(of=types.Identifier(50))
+        enabled = types.Boolean()
         all_fields = types.List(of=types.JsonObject())
     entityType = EntityType(name)

@@ -473,6 +473,8 @@ class Model(base.DBConnectorComponent):
         # of that name used for a unique index
         sa.Column('name', sa.Text, nullable=False),
         sa.Column('name_hash', sa.String(40), nullable=False),
+        sa.Column('enabled', sa.SmallInteger,
+                  server_default=sa.DefaultClause("1")),
     )
 
     # This links schedulers to the master where they are running.  A scheduler

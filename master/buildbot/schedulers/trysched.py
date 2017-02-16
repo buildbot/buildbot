@@ -105,6 +105,9 @@ class Try_Jobdir(TryBase):
     def activate(self):
         yield TryBase.activate(self)
 
+        if not self.enabled:
+            return
+
         # set the watcher's basedir now that we have a master
         jobdir = os.path.join(self.master.basedir, self.jobdir)
         self.watcher.setBasedir(jobdir)
@@ -119,6 +122,10 @@ class Try_Jobdir(TryBase):
     @defer.inlineCallbacks
     def deactivate(self):
         yield TryBase.deactivate(self)
+
+        if not self.enabled:
+            return
+
         # bridge the activate/deactivate to a startService/stopService on the
         # child service
         self.watcher.stopService()
@@ -436,6 +443,9 @@ class Try_Userpass(TryBase):
     def activate(self):
         yield TryBase.activate(self)
 
+        if not self.enabled:
+            return
+
         # register each user/passwd with the pbmanager
         def factory(mind, username):
             return Try_Userpass_Perspective(self, username)
@@ -447,5 +457,9 @@ class Try_Userpass(TryBase):
     @defer.inlineCallbacks
     def deactivate(self):
         yield TryBase.deactivate(self)
+
+        if not self.enabled:
+            return
+
         yield defer.gatherResults(
             [reg.unregister() for reg in self.registrations])

@@ -1,0 +1,1 @@
+Schedulers can now be toggled on and off from the UI. Useful for temporarily disabling periodic timers.

@@ -118,7 +118,8 @@ expected_default = {
     'builder_names': [u'builder'],
     'button_name': u'defaultforce',
     'label': u'defaultforce',
-    'name': u'defaultforce'}
+    'name': u'defaultforce',
+    'enabled': True}
 
 
 class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):

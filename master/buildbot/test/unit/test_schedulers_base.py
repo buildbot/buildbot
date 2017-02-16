@@ -120,6 +120,16 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         else:
             self.fail("didn't assert")
 
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler()
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
     def do_test_change_consumption(self, kwargs, expected_result):
         # (expected_result should be True (important), False (unimportant), or
         # None (ignore the change))
@@ -158,9 +168,10 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.startConsumingChanges(**kwargs)
 
         def test(_):
-            # check that it registered a callback
-            self.assertEqual(len(self.mq.qrefs), 1)
-            qref = self.mq.qrefs[0]
+            # check that it registered callbacks
+            self.assertEqual(len(self.mq.qrefs), 2)
+
+            qref = self.mq.qrefs[1]
             self.assertEqual(qref.filter, ('changes', None, 'new'))
 
             # invoke the callback with the change, and check the result

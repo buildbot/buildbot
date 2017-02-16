@@ -361,6 +361,7 @@ class Scheduler(Row):
         id=None,
         name='schname',
         name_hash=None,
+        enabled=1,
     )
 
     id_column = 'id'
@@ -1002,6 +1003,7 @@ class FakeSchedulersComponent(FakeDBComponent):
         self.scheduler_masters = {}
         self.states = {}
         self.classifications = {}
+        self.enabled = {}
 
     def insertTestData(self, rows):
         for row in rows:
@@ -1010,6 +1012,7 @@ class FakeSchedulersComponent(FakeDBComponent):
                 cls[row.changeid] = row.important
             if isinstance(row, Scheduler):
                 self.schedulers[row.id] = row.name
+                self.enabled[row.id] = True
             if isinstance(row, SchedulerMaster):
                 self.scheduler_masters[row.schedulerid] = row.masterid
 
@@ -1076,6 +1079,7 @@ class FakeSchedulersComponent(FakeDBComponent):
             rv = dict(
                 id=schedulerid,
                 name=self.schedulers[schedulerid],
+                enabled=self.enabled.get(schedulerid, True),
                 masterid=None)
             # only set masterid if the relevant scheduler master exists and
             # is active
@@ -1139,6 +1143,11 @@ class FakeSchedulersComponent(FakeDBComponent):
     def assertSchedulerMaster(self, schedulerid, masterid):
         self.t.assertEqual(self.scheduler_masters.get(schedulerid),
                            masterid)
+
+    def enable(self, schedulerid, v):
+        assert schedulerid in self.schedulers
+        self.enabled[schedulerid] = v
+        return defer.succeed((('control', 'schedulers', schedulerid, 'enable'), {'enabled': v}))
 
 
 class FakeSourceStampsComponent(FakeDBComponent):

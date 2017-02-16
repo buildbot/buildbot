@@ -90,23 +90,61 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
 
         # internal variables
         self._change_consumer = None
+        self._enable_consumer = None
         self._change_consumption_lock = defer.DeferredLock()
+
+        self.enabled = True
 
     def reconfigService(self, *args, **kwargs):
         raise NotImplementedError()
 
     # activity handling
-
+    @defer.inlineCallbacks
     def activate(self):
-        return defer.succeed(None)
+        if not self.enabled:
+            yield defer.returnValue(None)
+            return
 
+        # even if we aren't called via _activityPoll(), at this point we
+        # need to ensure the service id is set correctly
+        if self.serviceid is None:
+            self.serviceid = yield self._getServiceId()
+            assert self.serviceid is not None
+
+        schedulerData = yield self._getScheduler(self.serviceid)
+
+        if schedulerData:
+            self.enabled = schedulerData['enabled']
+
+        if not self._enable_consumer:
+            yield self.startConsumingEnableEvents()
+
+    def _enabledCallback(self, key, msg):
+        if msg['enabled']:
+            self.enabled = True
+            d = self.activate()
+        else:
+            d = self.deactivate()
+
+            def fn(x):
+                self.enabled = False
+
+            d.addCallback(fn)
+        return d
+
+    @defer.inlineCallbacks
     def deactivate(self):
-        return defer.maybeDeferred(self._stopConsumingChanges)
+        if not self.enabled:
+            return
+        yield defer.maybeDeferred(self._stopConsumingChanges)
 
     # service handling
 
     def _getServiceId(self):
         return self.master.data.updates.findSchedulerId(self.name)
+
+    def _getScheduler(self, sid):
+        return self.master.db.schedulers.getScheduler(sid)
 
     def _claimService(self):
         return self.master.data.updates.trySetSchedulerMaster(self.serviceid,
@@ -138,6 +176,13 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             ('changes', None, 'new'))
 
     @defer.inlineCallbacks
+    def startConsumingEnableEvents(self):
+        assert not self._enable_consumer
+        self._enable_consumer = yield self.master.mq.startConsuming(
+            self._enabledCallback,
+            ('schedulers', str(self.serviceid), 'updated'))
+
+    @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,
                         onlyImportant):
 
@@ -157,6 +202,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
                     'not processed by scheduler %(name)s',
                     codebase=change.codebase, name=self.name)
             return
+
         if fileIsImportant:
             try:
                 important = fileIsImportant(change)

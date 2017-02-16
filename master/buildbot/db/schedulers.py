@@ -33,6 +33,13 @@ class SchedulerAlreadyClaimedError(Exception):
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    def enable(self, schedulerid, v):
+        def thd(conn):
+            tbl = self.db.model.schedulers
+            q = tbl.update(whereclause=(tbl.c.id == schedulerid))
+            conn.execute(q, enabled=int(v))
+        return self.db.pool.do(thd)
+
     def classifyChanges(self, schedulerid, classifications):
         def thd(conn):
             tbl = self.db.model.scheduler_changes
@@ -184,11 +191,11 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 elif active is not None:
                     wc = (sch_mst_tbl.c.masterid == NULL)
 
-            q = sa.select([sch_tbl.c.id, sch_tbl.c.name,
+            q = sa.select([sch_tbl.c.id, sch_tbl.c.name, sch_tbl.c.enabled,
                            sch_mst_tbl.c.masterid],
                           from_obj=join, whereclause=wc)
 
-            return [dict(id=row.id, name=row.name,
+            return [dict(id=row.id, name=row.name, enabled=bool(row.enabled),
                          masterid=row.masterid)
                     for row in conn.execute(q).fetchall()]
         return self.db.pool.do(thd)

@@ -83,6 +83,10 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     def activate(self):
         yield base.BaseScheduler.activate(self)
 
+        if not self.enabled:
+            yield defer.returnValue(None)
+            return
+
         # no need to lock this
         # nothing else can run before the service is started
         self.actuateOk = True
@@ -103,6 +107,10 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     @defer.inlineCallbacks
     def deactivate(self):
         yield base.BaseScheduler.deactivate(self)
+
+        if not self.enabled:
+            yield defer.returnValue(None)
+            return
 
         # shut down any pending actuation, and ensure that we wait for any
         # current actuation to complete by acquiring the lock.  This ensures
@@ -135,6 +143,12 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
     @defer.inlineCallbacks
     def startBuild(self):
+        if not self.enabled:
+            log.msg(format='ignoring build from %(name)s because scheduler '
+                           'has been disabled by the user',
+                    name=self.name)
+            return
+
         # use the collected changes to start a build
         scheds = self.master.db.schedulers
         classifications = yield scheds.getChangeClassifications(self.objectid)
@@ -355,6 +369,10 @@ class NightlyTriggerable(NightlyBase):
     @defer.inlineCallbacks
     def activate(self):
         yield NightlyBase.activate(self)
+
+        if not self.enabled:
+            return
+
         lastTrigger = yield self.getState('lastTrigger', None)
         self._lastTrigger = None
         if lastTrigger:
@@ -412,6 +430,12 @@ class NightlyTriggerable(NightlyBase):
 
     @defer.inlineCallbacks
     def startBuild(self):
+        if not self.enabled:
+            log.msg(format='ignoring build from %(name)s because scheduler '
+                           'has been disabled by the user',
+                    name=self.name)
+            return
+
         if self._lastTrigger is None:
             return
 

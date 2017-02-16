@@ -288,6 +288,32 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         yield sched.deactivate()
 
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler(self.Subclass)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
+    @defer.inlineCallbacks
+    def test_disabled_activate(self):
+        sched = self.makeScheduler(self.Subclass)
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.activate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_deactivate(self):
+        sched = self.makeScheduler(self.Subclass)
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.deactivate()
+        self.assertEqual(r, None)
+
 
 class SingleBranchScheduler(CommonStuffMixin,
                             scheduler.SchedulerMixin, unittest.TestCase):

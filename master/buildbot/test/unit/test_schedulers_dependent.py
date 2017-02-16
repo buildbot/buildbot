@@ -202,3 +202,29 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
 
         # and check that it wrote the correct value back to the state
         self.db.state.assertState(OBJECTID, upstream_bsids=[11, 13])
+
+    @defer.inlineCallbacks
+    def test_enabled_callback(self):
+        sched = self.makeScheduler()
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+        expectedValue = not sched.enabled
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, expectedValue)
+
+    @defer.inlineCallbacks
+    def test_disabled_activate(self):
+        sched = self.makeScheduler()
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.activate()
+        self.assertEqual(r, None)
+
+    @defer.inlineCallbacks
+    def test_disabled_deactivate(self):
+        sched = self.makeScheduler()
+        yield sched._enabledCallback(None, {'enabled': not sched.enabled})
+        self.assertEqual(sched.enabled, False)
+        r = yield sched.deactivate()
+        self.assertEqual(r, None)
