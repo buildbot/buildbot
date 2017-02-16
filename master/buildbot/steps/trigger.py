@@ -159,7 +159,8 @@ class Trigger(BuildStep):
                 codebase = ss.get('codebase', '')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
-            return list(itervalues(ss_for_trigger))
+            trigger_values = [ss_for_trigger[k] for k in sorted(ss_for_trigger.keys())]
+            return trigger_values
 
         if self.alwaysUseLatest:
             return []
@@ -177,7 +178,8 @@ class Trigger(BuildStep):
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        return list(itervalues(ss_for_trigger))
+        trigger_values = [ss_for_trigger[k] for k in sorted(ss_for_trigger.keys())]
+        return trigger_values
 
     def getAllGotRevisions(self):
         all_got_revisions = self.getProperty('got_revision', {})
