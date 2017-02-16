@@ -153,7 +153,7 @@ class TestContactChannel(unittest.TestCase):
         yield self.do_test_command('notify', args="invalid arg", exp_UsageError=True)
         yield self.do_test_command('notify', args="on")
         self.assertEqual(
-            self.sent, ["The following events are being notified: ['started', 'finished']"])
+            self.sent, ["The following events are being notified: ['finished', 'started']"])
         yield self.do_test_command('notify', args="off")
         self.assertEqual(
             self.sent, ['The following events are being notified: []'])
