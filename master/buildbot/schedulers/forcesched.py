@@ -755,7 +755,7 @@ class ForceScheduler(base.BaseScheduler):
             else:
                 builderNames = self.builderNames
         else:
-            builderNames = list(
+            builderNames = sorted(
                 set(builderNames).intersection(self.builderNames))
         defer.returnValue(builderNames)
 
