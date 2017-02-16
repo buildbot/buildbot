@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import re
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -45,9 +47,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                         context=None, baseURL=None, verbose=False, **kwargs):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
-        self.context = context or Interpolate('buildbot/%(prop:buildername)s')
-        self.startDescription = startDescription or 'Build started.'
-        self.endDescription = endDescription or 'Build done.'
+        self.setDefaults(context, startDescription, endDescription)
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
         if baseURL.endswith('/'):
@@ -60,15 +60,23 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             })
         self.verbose = verbose
 
+    def setDefaults(self, context, startDescription, endDescription):
+        self.context = context or Interpolate('buildbot/%(prop:buildername)s')
+        self.startDescription = startDescription or 'Build started.'
+        self.endDescription = endDescription or 'Build done.'
+
     def createStatus(self,
                      repo_user, repo_name, sha, state, target_url=None,
-                     description=None, context=None):
+                     context=None, issue=None, description=None):
         """
+        :param repo_user: GitHub user or organization
+        :param repo_name: Name of the repository
         :param sha: Full sha to create the status for.
         :param state: one of the following 'pending', 'success', 'error'
                       or 'failure'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
+        :param context: Build context
         :return: A deferred with the result from GitHub.
 
         This code comes from txgithub by @tomprince.
@@ -105,9 +113,11 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 CANCELLED: 'error'
             }.get(build['results'], 'error')
             description = yield props.render(self.endDescription)
-        else:
+        elif self.startDescription:
             state = 'pending'
             description = yield props.render(self.startDescription)
+        else:
+            return
 
         context = yield props.render(self.context)
 
@@ -117,6 +127,13 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             return
 
         project = sourcestamps[0]['project']
+
+        branch = props['branch']
+        m = re.search(r"refs/pull/([0-9]*)/merge", branch)
+        if m:
+            issue = m.group(1)
+        else:
+            issue = None
 
         if project:
             repoOwner, repoName = project.split('/')
@@ -140,6 +157,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 target_url = bytes2NativeString(target_url, encoding='utf-8')
                 context = context.encode('utf-8')
                 context = bytes2NativeString(context, encoding='utf-8')
+                issue = issue.encode('utf-8')
+                issue = bytes2NativeString(issue, encoding='utf-8')
                 description = description.encode('utf-8')
                 description = bytes2NativeString(description, encoding='utf-8')
                 yield self.createStatus(
@@ -149,16 +168,49 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     state=state,
                     target_url=target_url,
                     context=context,
+                    issue=issue,
                     description=description
                 )
                 if self.verbose:
                     log.msg(
-                        'Status "{state}" sent for '
-                        '{repoOwner}/{repoName} at {sha}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName, sha=sha))
+                        'Updated status with "{state}" for'
+                        '{repoOwner}/{repoName} at {sha}, issue {issue}.'.format(
+                            state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
             except Exception as e:
                 log.err(
                     e,
-                    'Fail to send status "{state}" for '
-                    '{repoOwner}/{repoName} at {sha}'.format(
-                        state=state, repoOwner=repoOwner, repoName=repoName, sha=sha))
+                    'Failed to update "{state}" for '
+                    '{repoOwner}/{repoName} at {sha}, issue {issue}'.format(
+                        state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
+
+
+class GitHubCommentPush(GitHubStatusPush):
+    name = "GitHubCommentPush"
+    neededDetails = dict(wantProperties=True)
+
+    def setDefaults(self, context, startDescription, endDescription):
+        self.context = ''
+        self.startDescription = startDescription
+        self.endDescription = endDescription or 'Build done.'
+
+    def createStatus(self,
+                     repo_user, repo_name, sha, state, target_url=None,
+                     context=None, issue=None, description=None):
+        """
+        :param repo_user: GitHub user or organization
+        :param repo_name: Name of the repository
+        :param issue: Pull request number
+        :param state: one of the following 'pending', 'success', 'error'
+                      or 'failure'.
+        :param description: Short description of the status.
+        :return: A deferred with the result from GitHub.
+
+        This code comes from txgithub by @tomprince.
+        txgithub is based on twisted's webclient agent, which is much less reliable and featureful
+        as txrequest (support for proxy, connection pool, keep alive, retry, etc)
+        """
+        payload = {'body': description}
+
+        return self._http.post(
+            '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
+            json=payload)
