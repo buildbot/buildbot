@@ -51,7 +51,8 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         def spawnProcess(pp, executable, args, environ):
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
             newfile = os.path.join(self.jobdir, 'new', 'testy')
-            open(tmpfile, "w").write(pp.job)
+            with open(tmpfile, "w") as f:
+                f.write(pp.job)
             os.rename(tmpfile, newfile)
             log.msg("wrote jobfile %s" % newfile)
             # get the scheduler to poll this directory now
@@ -123,12 +124,12 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_no_wait(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
+            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
             'username': 'u',
-            'passwd': 'p',
+            'passwd': b'p',
         })
         self.assertEqual(self.output, [
             "using 'pb' connect method",
@@ -143,12 +144,12 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_wait(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
+            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'master': '127.0.0.1:%s' % self.serverPort,
             'username': 'u',
-            'passwd': 'p',
+            'passwd': b'p',
             'wait': True,
         })
         self.assertEqual(self.output, [
@@ -167,13 +168,13 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
     @defer.inlineCallbacks
     def test_userpass_list_builders(self):
         yield self.startMaster(
-            trysched.Try_Userpass('try', ['a'], 0, [('u', 'p')]))
+            trysched.Try_Userpass('try', ['a'], 0, [('u', b'p')]))
         yield self.runClient({
             'connect': 'pb',
             'get-builder-names': True,
             'master': '127.0.0.1:%s' % self.serverPort,
             'username': 'u',
-            'passwd': 'p',
+            'passwd': b'p',
         })
         self.assertEqual(self.output, [
             "using 'pb' connect method",
@@ -191,7 +192,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'connect': 'ssh',
             'master': '127.0.0.1',
             'username': 'u',
-            'passwd': 'p',
+            'passwd': b'p',
             'builders': 'a',  # appears to be required for ssh
         })
         self.assertEqual(self.output, [
@@ -212,7 +213,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'wait': True,
             'host': '127.0.0.1',
             'username': 'u',
-            'passwd': 'p',
+            'passwd': b'p',
             'builders': 'a',  # appears to be required for ssh
         })
         self.assertEqual(self.output, [
