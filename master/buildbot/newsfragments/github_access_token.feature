@@ -1,0 +1,1 @@
+:py:class: `~buildbot.util.OAuth2LoginResource` now supports the `token` URL parameter.  If a user wants to authenticate through OAuth2 with a pre-generated token (such as the `access_token` provided by GitHub) it can be passed to `/auth/login` as the `token` URL parameter and the user will be authenticated to buildbot with those credentials.
