@@ -182,6 +182,28 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(srctimestamp[1], desttimestamp[1])
         return d
 
+    def testDescriptionDone(self):
+        self.setupStep(
+            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file",
+                descriptionDone="Test File Uploaded"))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                workersrc=__file__, workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(remotetransfer.FileWriter)))
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0)
+
+        self.expectOutcome(
+            result=SUCCESS,
+            state_string="Test File Uploaded")
+
+        d = self.runStep()
+        return d
+
     def testURL(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file"))
@@ -206,6 +228,32 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         def checkURL(_):
             self.step.addURL.assert_called_once_with(
                 os.path.basename(self.destfile), "http://server/file")
+        return d
+
+    def testURLText(self):
+        self.setupStep(
+            transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file", urlText="testfile"))
+
+        self.step.addURL = Mock()
+
+        self.expectCommands(
+            Expect('uploadFile', dict(
+                workersrc=__file__, workdir='wkdir',
+                blocksize=16384, maxsize=None, keepstamp=False,
+                writer=ExpectRemoteRef(remotetransfer.FileWriter)))
+            + Expect.behavior(uploadString("Hello world!"))
+            + 0)
+
+        self.expectOutcome(
+            result=SUCCESS,
+            state_string="uploading %s" % os.path.basename(__file__))
+
+        d = self.runStep()
+
+        @d.addCallback
+        def checkURL(_):
+            self.step.addURL.assert_called_once_with(
+                "testfile", "http://server/file")
         return d
 
     def testFailure(self):
@@ -925,7 +973,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
     # check that ConfigErrors is raised on invalid 'mode' argument
 
     def testModeConfError(self):
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             config.ConfigErrors,
             "StringDownload step's mode must be an integer or None,"
             " got 'not-a-number'",

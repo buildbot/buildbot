@@ -25,6 +25,7 @@ from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.github import HOSTED_BASE_URL
+from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
@@ -49,9 +50,13 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
                 'Authorization': 'token XXYYZZ',
                 'User-Agent': 'Buildbot'
             })
-        self.sp = sp = GitHubStatusPush('XXYYZZ')
+        sp = self.setService()
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
+
+    def setService(self):
+        self.sp = GitHubStatusPush('XXYYZZ')
+        return self.sp
 
     def tearDown(self):
         return self.master.stopService()
@@ -85,6 +90,59 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'description': 'Build done.', 'context': 'buildbot/Builder0'})
 
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def setupBuildResultsMin(self, buildResults):
+        self.insertTestData([buildResults], buildResults, insertSS=False)
+        build = yield self.master.data.get(("builds", 20))
+        defer.returnValue(build)
+
+    @defer.inlineCallbacks
+    def test_empty(self):
+        build = yield self.setupBuildResultsMin(SUCCESS)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+
+class TestGitHubCommentPush(TestGitHubStatusPush):
+
+    def setService(self):
+        self.sp = GitHubCommentPush('XXYYZZ')
+        return self.sp
+
+    @defer.inlineCallbacks
+    def test_basic(self):
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/34/comments',
+            json={'body': 'Build done.'})
+        self._http.expect(
+            'post',
+            '/repos/buildbot/buildbot/issues/34/comments',
+            json={'body': 'Build done.'})
+
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_empty(self):
+        build = yield self.setupBuildResultsMin(SUCCESS)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
         build['complete'] = True

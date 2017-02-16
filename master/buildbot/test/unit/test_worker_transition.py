@@ -334,7 +334,7 @@ class AttributeMixin(unittest.TestCase):
 
         c = C()
 
-        self.assertRaisesRegexp(
+        self.assertRaisesRegex(
             AttributeError,
             "'C' object has no attribute 'abc'",
             lambda: c.abc)

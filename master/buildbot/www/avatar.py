@@ -48,7 +48,9 @@ class AvatarGravatar(AvatarBase):
         gravatar_url += emailHash.hexdigest() + "?"
         if self.default != "url":
             defaultAvatarUrl = self.default
-        gravatar_url += urlencode({'s': str(size), 'd': defaultAvatarUrl})
+        url = {'d': defaultAvatarUrl, 's': str(size)}
+        sorted_url = sorted(url.items(), key=lambda x: x[0])
+        gravatar_url += urlencode(sorted_url)
         raise resource.Redirect(gravatar_url)
 
 

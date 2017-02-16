@@ -68,16 +68,16 @@ class TestPBManager(unittest.TestCase):
         # dynamically allocated port number which is buried out of reach;
         # however, we can try the requestAvatar and requestAvatarId methods.
 
-        d = disp.requestAvatarId(credentials.UsernamePassword('boris', 'pass'))
+        d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
 
         def check_avatarid(username):
-            self.assertEqual(username, 'boris')
+            self.assertEqual(username, b'boris')
         d.addCallback(check_avatarid)
         d.addCallback(lambda _:
-                      disp.requestAvatar('boris', mock.Mock(), pb.IPerspective))
+                      disp.requestAvatar(b'boris', mock.Mock(), pb.IPerspective))
 
-        def check_avatar(xxx_todo_changeme):
-            (iface, persp, detach_fn) = xxx_todo_changeme
+        def check_avatar(avatar):
+            (iface, persp, detach_fn) = avatar
             self.assertTrue(persp.is_my_persp)
             self.assertIn('boris', self.connections)
         d.addCallback(check_avatar)

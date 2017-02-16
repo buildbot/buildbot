@@ -26,6 +26,7 @@ from twisted.python import log
 
 from buildbot.db import base
 from buildbot.util import epoch2datetime
+from buildbot.util import unicode2bytes
 
 
 class SsDict(dict):
@@ -59,10 +60,11 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         def thd(conn):
             patchid = None
             if patch_body:
+                patch_body_bytes = unicode2bytes(patch_body)
                 ins = self.db.model.patches.insert()
                 r = conn.execute(ins, dict(
                     patchlevel=patch_level,
-                    patch_base64=base64.b64encode(patch_body),
+                    patch_base64=base64.b64encode(patch_body_bytes),
                     patch_author=patch_author,
                     patch_comment=patch_comment,
                     subdir=patch_subdir))

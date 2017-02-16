@@ -35,10 +35,11 @@ class ReporterTestMixin(object):
         'revision': TEST_REVISION,
         'event.change.id': TEST_CHANGE_ID,
         'event.change.project': TEST_PROJECT,
+        'branch': 'refs/pull/34/merge',
     }
     THING_URL = 'http://thing.example.com'
 
-    def insertTestData(self, buildResults, finalResult):
+    def insertTestData(self, buildResults, finalResult, insertSS=True):
         self.db = self.master.db
         self.db.insertTestData([
             fakedb.Master(id=92),
@@ -46,15 +47,20 @@ class ReporterTestMixin(object):
             fakedb.Builder(id=79, name='Builder0'),
             fakedb.Builder(id=80, name='Builder1'),
             fakedb.Buildset(id=98, results=finalResult, reason="testReason1"),
-            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234,
-                               project=self.TEST_PROJECT,
-                               revision=self.TEST_REVISION,
-                               repository=self.TEST_REPO),
             fakedb.Change(changeid=13, branch=u'master', revision=u'9283', author='me@foo',
                           repository=self.TEST_REPO, codebase=u'cbgerrit',
                           project=u'world-domination', sourcestampid=234),
         ])
+
+        if insertSS:
+            self.db.insertTestData([
+                fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
+                fakedb.SourceStamp(id=234,
+                                   project=self.TEST_PROJECT,
+                                   revision=self.TEST_REVISION,
+                                   repository=self.TEST_REPO)
+            ])
+
         for i, results in enumerate(buildResults):
             self.db.insertTestData([
                 fakedb.BuildRequest(

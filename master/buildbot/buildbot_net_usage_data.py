@@ -43,9 +43,26 @@ PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 
 
 def get_distro():
-    for distro in ('linux_distribution', 'mac_ver', 'win32_ver', 'java_ver'):
-        if hasattr(platform, distro):
-            return "{}:{}".format(distro, getattr(platform, distro)())
+    try:
+        from distro import linux_distribution
+    except ImportError:
+        linux_distribution = None
+
+    system = platform.system()
+    if system == "Linux":
+        dist = linux_distribution()
+        return "{}:{}".format(dist[0], dist[1])
+    elif system == "Windows":
+        dist = platform.win32_ver()
+        return "{}:{}".format(dist[0], dist[1])
+    elif system == "Java":
+        dist = platform.java_ver()
+        return "{}:{}".format(dist[0], dist[1])
+    elif system == "Darwin":
+        dist = platform.mac_ver()
+        return "{}".format(dist[0])
+    else:
+        return ":".join(platform.uname()[0:1])
 
 
 def getName(obj):

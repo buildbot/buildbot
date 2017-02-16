@@ -1,0 +1,1 @@
+Fix :py:class:`~buildbot.steps.http.HTTPStep` to accept ``json`` as keyword argument.
