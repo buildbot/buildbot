@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.builtins import range
 
 from twisted.internet import defer
 
@@ -203,7 +204,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.assertIsInstance(sourcestamps, list)
 
         def sourceStampKey(sourceStamp):
-            return tuple(sourceStamp.values())
+            return tuple(sorted(sourceStamp.values()))
 
         sourcestamps = sorted(sourcestamps, key=sourceStampKey)
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
