@@ -204,7 +204,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         self.assertIsInstance(sourcestamps, list)
 
         def sourceStampKey(sourceStamp):
-            return tuple(sourceStamp.values())
+            return tuple(sorted(sourceStamp.values()))
 
         sourcestamps = sorted(sourcestamps, key=sourceStampKey)
         self.addBuildsetCalls.append(('addBuildsetForSourceStampsWithDefaults',
