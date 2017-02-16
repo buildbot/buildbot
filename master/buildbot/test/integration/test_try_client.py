@@ -51,7 +51,8 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
         def spawnProcess(pp, executable, args, environ):
             tmpfile = os.path.join(self.jobdir, 'tmp', 'testy')
             newfile = os.path.join(self.jobdir, 'new', 'testy')
-            open(tmpfile, "w").write(pp.job)
+            with open(tmpfile, "w") as f:
+                f.write(pp.job)
             os.rename(tmpfile, newfile)
             log.msg("wrote jobfile %s" % newfile)
             # get the scheduler to poll this directory now
