@@ -1,10 +1,5 @@
 buildbot.test.integration.test_URLs.UrlForBuildMaster.test_url
 buildbot.test.integration.test_trigger.TriggeringMaster.test_trigger
-buildbot.test.integration.test_try_client.Schedulers.test_jobdir_no_wait
-buildbot.test.integration.test_try_client.Schedulers.test_jobdir_wait
-buildbot.test.integration.test_try_client.Schedulers.test_userpass_list_builders
-buildbot.test.integration.test_try_client.Schedulers.test_userpass_no_wait
-buildbot.test.integration.test_try_client.Schedulers.test_userpass_wait
 buildbot.test.integration.test_www.Www.test_masters
 buildbot.test.unit.test_data_properties.Properties.test_setBuildProperties
 buildbot.test.unit.test_process_users_manual.TestCommandlineUserManagerPerspective.test_perspective_commandline_get_format
