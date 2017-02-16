@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
+import stat
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
@@ -32,48 +33,50 @@ class SecretInAFile(SecretProviderBase):
 
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)
-        if not os.access(filepath, os.R_OK) or os.access(filepath, os.W_OK):
-            config.error("the file %s is not read-only for user" %
+        obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
+        if obs_stat not in [stat.S_IRWXU, stat.S_IRUSR]:
+            config.error("the file %s is not user readable only" %
                          (secretfile))
 
-    def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffix=None):
+    def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffixes):
         if not os.access(dirname, os.F_OK):
             config.error("directory %s does not exists" % dirname)
         for secretfile in os.listdir(dirname):
-            if suffix and secretfile.endswith(suffix):
-                self.checkFileIsReadOnly(dirname, secretfile)
-            elif not suffix:
-                self.checkFileIsReadOnly(dirname, secretfile)
+            for suffix in suffixes:
+                if secretfile.endswith(suffix):
+                    self.checkFileIsReadOnly(dirname, secretfile)
 
-    def loadSecrets(self, dirname, suffix=None):
+    def loadSecrets(self, dirname, suffixes):
         secrets = {}
         for secretfile in os.listdir(dirname):
             secretvalue = None
-            if suffix and secretfile.endswith(suffix):
-                with open(os.path.join(dirname, secretfile)) as source:
-                    secretvalue = source.read()
-            elif not suffix:
-                with open(os.path.join(dirname, secretfile)) as source:
-                    secretvalue = source.read()
-            secrets.update({secretfile: secretvalue})
+            for suffix in suffixes:
+                if secretfile.endswith(suffix):
+                    with open(os.path.join(dirname, secretfile)) as source:
+                        secretvalue = source.read()
+                    if suffix:
+                        secrets.update(
+                            {secretfile.rstrip(suffix): secretvalue})
+                    else:
+                        secrets.update({secretfile: secretvalue})
         return secrets
 
-    def checkConfig(self, dirname, suffix=None):
+    def checkConfig(self, dirname, suffixes=None):
         self._dirname = dirname
-        self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffix=suffix)
-        self.secrets = self.loadSecrets(self._dirname, suffix=suffix)
+        if suffixes is None:
+            suffixes = [""]
+        self.checkSecretDirectoryIsAvailableAndReadable(dirname,
+                                                        suffixes=suffixes)
 
-    def reconfigService(self, dirname, suffix=None):
+    def reconfigService(self, dirname, suffixes=None):
         self._dirname = dirname
         self.secrets = {}
-        self.checkSecretDirectoryIsAvailableAndReadable(dirname, suffix=suffix)
-        self.secrets = self.loadSecrets(self._dirname, suffix=suffix)
+        if suffixes is None:
+            suffixes = [""]
+        self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes)
 
     def get(self, entry):
         """
         get the value from the file identified by 'entry'
         """
-        if entry in self.secrets.keys():
-            return self.secrets[entry]
-        else:
-            return None
+        return self.secrets.get(entry)

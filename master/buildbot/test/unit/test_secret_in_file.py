@@ -20,6 +20,7 @@ import os
 import stat
 
 from twisted.internet import defer
+from twisted.python.filepath import FilePath
 from twisted.trial import unittest
 
 from buildbot.secrets.providers.file import SecretInAFile
@@ -29,11 +30,9 @@ from buildbot.test.util.config import ConfigErrorsMixin
 class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
 
     def createTempDir(self, dirname):
-        tempdir = self.mktemp()
-        basedir = os.path.dirname(tempdir)
-        tempdir = os.path.join(basedir, "temp")
-        os.mkdir(tempdir)
-        return tempdir
+        tempdir = FilePath(self.mktemp())
+        tempdir.createDirectory()
+        return tempdir.path
 
     def createFileTemp(self, tempdir, filename, text=None):
         file_path = os.path.join(tempdir, filename)
@@ -41,7 +40,6 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         with open(file_path, 'w') as filetmp:
             if text:
                 filetmp.write(text)
-            filetmp.close()
         return filetmp, file_path
 
     @defer.inlineCallbacks
@@ -50,13 +48,12 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         filetmp, self.filepath = self.createFileTemp(self.tmp_dir,
                                                      "tempfile.txt",
                                                      text="key value")
-        os.chmod(self.filepath, stat.S_IRUSR | stat.S_IRGRP | stat.S_IROTH)
+        os.chmod(self.filepath, stat.S_IRWXU)
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
-        os.remove(self.filepath)
         yield self.srvfile.stopService()
 
     def testCheckConfigSecretInAFileService(self):
@@ -66,8 +63,8 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     def testCheckConfigErrorSecretInAFileService(self):
         file_path_not_readable, filepath = self.createFileTemp(self.tmp_dir,
                                                                "tempfile2.txt")
-        os.chmod(filepath, stat.S_IWRITE)
-        expctd_msg_error = "the file tempfile2.txt is not read-only for user"
+        os.chmod(filepath, stat.S_IRGRP)
+        expctd_msg_error = "the file tempfile2.txt is not user readable only"
         self.assertRaisesConfigError(expctd_msg_error,
                                      lambda: self.srvfile.checkConfig(self.tmp_dir))
         os.remove(filepath)
@@ -80,11 +77,11 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         file_not_suffix, filepath2 = self.createFileTemp(self.tmp_dir,
                                                          "tempfile2.txt",
                                                          text="some text")
-        os.chmod(filepath, stat.S_IREAD)
-        os.chmod(filepath2, stat.S_IREAD)
-        yield self.srvfile.reconfigService(self.tmp_dir, suffix=".ini")
-        self.assertEqual(self.srvfile.get("tempfile2.ini"), "test suffix")
-        self.assertEqual(self.srvfile.get("tempfile2.txt"), None)
+        os.chmod(filepath, stat.S_IRWXU)
+        os.chmod(filepath2, stat.S_IRWXU)
+        yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".ini"])
+        self.assertEqual(self.srvfile.get("tempfile2"), "test suffix")
+        self.assertEqual(self.srvfile.get("tempfile3"), None)
         os.remove(filepath)
         os.remove(filepath2)
 
@@ -97,6 +94,12 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
 
     def testGetSecretInFile(self):
         value = self.srvfile.get("tempfile.txt")
+        self.assertEqual(value, "key value")
+
+    @defer.inlineCallbacks
+    def testGetSecretInFileSuffixes(self):
+        yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".txt"])
+        value = self.srvfile.get("tempfile")
         self.assertEqual(value, "key value")
 
     def testGetSecretInFileNotFound(self):
