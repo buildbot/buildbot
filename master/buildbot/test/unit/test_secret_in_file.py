@@ -35,11 +35,12 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         return tempdir.path
 
     def createFileTemp(self, tempdir, filename, text=None):
+        if text is None:
+            text = ""
         file_path = os.path.join(tempdir, filename)
         filetmp = open(file_path, 'w')
         with open(file_path, 'w') as filetmp:
-            if text:
-                filetmp.write(text)
+            filetmp.write(text)
         return filetmp, file_path
 
     @defer.inlineCallbacks
@@ -64,7 +65,9 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         file_path_not_readable, filepath = self.createFileTemp(self.tmp_dir,
                                                                "tempfile2.txt")
         os.chmod(filepath, stat.S_IRGRP)
-        expctd_msg_error = "the file tempfile2.txt is not user readable only"
+        expctd_msg_error = "Permissions 040 on file tempfile2.txt are too " \
+                           "open. It is required that your secret files are" \
+                           " NOT accessible by others!"
         self.assertRaisesConfigError(expctd_msg_error,
                                      lambda: self.srvfile.checkConfig(self.tmp_dir))
         os.remove(filepath)

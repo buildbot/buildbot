@@ -34,9 +34,11 @@ class SecretInAFile(SecretProviderBase):
     def checkFileIsReadOnly(self, dirname, secretfile):
         filepath = os.path.join(dirname, secretfile)
         obs_stat = stat.S_IMODE(os.stat(filepath).st_mode)
-        if obs_stat not in [stat.S_IRWXU, stat.S_IRUSR]:
-            config.error("the file %s is not user readable only" %
-                         (secretfile))
+        if (obs_stat & 0o77) != 0:
+            config.error("Permissions %s on file %s are too open."
+                         " It is required that your secret files are NOT"
+                         " accessible by others!" % (oct(obs_stat),
+                                                     secretfile))
 
     def checkSecretDirectoryIsAvailableAndReadable(self, dirname, suffixes):
         if not os.access(dirname, os.F_OK):
@@ -55,10 +57,8 @@ class SecretInAFile(SecretProviderBase):
                     with open(os.path.join(dirname, secretfile)) as source:
                         secretvalue = source.read()
                     if suffix:
-                        secrets.update(
-                            {secretfile.rstrip(suffix): secretvalue})
-                    else:
-                        secrets.update({secretfile: secretvalue})
+                        secretfile = secretfile[:-len(suffix)]
+                    secrets[secretfile] = secretvalue
         return secrets
 
     def checkConfig(self, dirname, suffixes=None):
