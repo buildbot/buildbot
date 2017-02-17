@@ -99,8 +99,9 @@ class MarathonLatentWorker(DockerBaseWorker):
         res_json = yield res.json()
         if res.code != 201:
             raise LatentWorkerFailedToSubstantiate(
-                "Unable to create Marathon app: {} {}: {}".format(
-                    self.getApplicationId(), res.code, res_json['message']))
+                "Unable to create Marathon app: {} {}: {} {}".format(
+                    self.getApplicationId(), res.code, res_json['message'],
+                    res_json))
         self.instance = res_json
         defer.returnValue(True)
 
@@ -114,7 +115,8 @@ class MarathonLatentWorker(DockerBaseWorker):
             res_json = yield res.json()
             # the error is not documented :-(
             log.warn(
-                "Unable to delete Marathon app: {id} {code}: {message}",
+                "Unable to delete Marathon app: {id} {code}: {message} {details}",
                 id=self.getApplicationId(),
                 code=res.code,
-                message=res_json.get('message'))
+                message=res_json.get('message'),
+                details=res_json)
