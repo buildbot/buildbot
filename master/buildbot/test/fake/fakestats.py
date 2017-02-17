@@ -21,6 +21,7 @@ from buildbot.statistics import stats_service
 from buildbot.statistics.storage_backends.base import StatsStorageBase
 from buildbot.status.master import Status as status_service
 
+
 class FakeStatsStorageService(StatsStorageBase):
 
     """
