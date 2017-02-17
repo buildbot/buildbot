@@ -184,7 +184,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         # global
         self.title = 'Buildbot'
         self.titleURL = 'http://buildbot.net'
-        self.buildbotURL = 'http://localhost:8080/'
+        self.buildbotURL = 'http://localhost:8010/'
         self.buildbotURLAliases = []
         self.changeHorizon = None
         self.logHorizon = None
