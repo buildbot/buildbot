@@ -94,12 +94,13 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
         res = yield self.githubAuth.getLoginURL('http://redir')
         exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
                "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
-               "scope=user&state=redirect%3Dhttp%253A%252F%252Fredir")
+               "scope=user%3Aemail+read%3Aorg&"
+               "state=redirect%3Dhttp%253A%252F%252Fredir")
         self.assertEqual(res, exp)
         res = yield self.githubAuth.getLoginURL(None)
         exp = ("https://github.com/login/oauth/authorize?client_id=ghclientID&"
                "redirect_uri=h%3A%2Fa%2Fb%2Fauth%2Flogin&response_type=code&"
-               "scope=user")
+               "scope=user%3Aemail+read%3Aorg")
         self.assertEqual(res, exp)
 
     @defer.inlineCallbacks

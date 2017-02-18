@@ -193,7 +193,7 @@ class GitHubAuth(OAuth2Auth):
     name = "GitHub"
     faIcon = "fa-github"
     authUri = 'https://github.com/login/oauth/authorize'
-    authUriAdditionalParams = {'scope': 'user'}
+    authUriAdditionalParams = {'scope': 'user:email read:org'}
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
