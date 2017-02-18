@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.moves.urllib.parse import quote as urlquote
 from future.moves.urllib.parse import unquote as urlunquote
 from future.moves.urllib.parse import urlparse
 from future.moves.urllib.parse import urlunparse
@@ -28,6 +27,7 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
+from buildbot.compat import urlquote
 from buildbot.config import ConfigErrors
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
@@ -35,7 +35,6 @@ from buildbot.steps.source.base import Source
 
 
 class SVN(Source):
-
     """I perform Subversion checkout/update operations."""
 
     name = 'svn'
@@ -426,7 +425,6 @@ class SVN(Source):
         default_port = {'http': '80',
                         'https': '443',
                         'svn': '3690'}
-
         relative_schemes = ['http', 'https', 'svn']
         quote = lambda uri: urlquote(uri, "!$&'()*+,-./:=@_~")
 
@@ -455,8 +453,7 @@ class SVN(Source):
                 if last_path == path:
                     break
                 last_path = path
-
-        path = quote(urlunquote(path))
+        path = urlquote(urlunquote(path))
         canonical_uri = urlunparse(
             (scheme, authority, path, parameters, query, fragment))
         if canonical_uri == '/':
