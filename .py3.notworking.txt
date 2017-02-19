@@ -8,8 +8,4 @@ buildbot.test.unit.test_schedulers_dependent.Dependent.test_related_buildset_WAR
 buildbot.test.unit.test_schedulers_dependent.Dependent.test_unrelated_buildset
 buildbot.test.unit.test_schedulers_triggerable.Triggerable.test_trigger
 buildbot.test.unit.test_schedulers_triggerable.Triggerable.test_trigger_overlapping
-buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5
-buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_invalid_json
-buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_no_builders
-buildbot.test.unit.test_schedulers_trysched.Try_Jobdir.test_parseJob_v5_no_properties
 buildbot.test.unit.test_www_config.IndexResource.test_render
