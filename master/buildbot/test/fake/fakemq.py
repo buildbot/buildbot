@@ -53,6 +53,9 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
 # routing key
 #        if self.verifyMessages:
 #            validation.verifyMessage(self.testcase, routingKey, data)
+
+        # TODO: the key to a mq should be changed so that it is unicode
+        # (text_type).
         if any(not isinstance(k, (bytes, string_types)) for k in routingKey):
             raise AssertionError("%s is not all strings" % (routingKey,))
         self.productions.append((routingKey, data))
