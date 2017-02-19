@@ -32,7 +32,6 @@ from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
 
-
 # set this to True for *very* verbose query debugging output; this can
 # be monkey-patched from master.cfg, too:
 #     from buildbot.db import pool
@@ -146,7 +145,8 @@ class DBThreadPool(object):
 
     def _stop(self):
         self._stop_evt = None
-        threads.deferToThreadPool(self.reactor, self._pool, self.engine.dispose)
+        threads.deferToThreadPool(
+            self.reactor, self._pool, self.engine.dispose)
         self._pool.stop()
         self.running = False
 
@@ -201,7 +201,8 @@ class DBThreadPool(object):
                     # and re-try
                     log.err(e, 'retrying {} after sql error {}'.format(callable, e))
                     continue
-                # AlreadyClaimedError are normal especially in a multimaster configuration
+                # AlreadyClaimedError are normal especially in a multimaster
+                # configuration
                 except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError):
                     raise
                 except Exception as e:

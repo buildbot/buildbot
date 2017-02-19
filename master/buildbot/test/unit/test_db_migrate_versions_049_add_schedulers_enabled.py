@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import sqlalchemy as sa
+
 from twisted.trial import unittest
 
 from buildbot.test.util import migration
@@ -42,7 +43,8 @@ class Migration(migration.MigrateTestMixin, unittest.TestCase):
             # name for this scheduler, as given in the configuration, plus a hash
             # of that name used for a unique index
             sa.Column('name', sa.Text, nullable=False),
-            sa.Column('name_hash', sa.String(40), nullable=False, server_default='')
+            sa.Column('name_hash', sa.String(40),
+                      nullable=False, server_default='')
         )
 
         schedulers.create()
