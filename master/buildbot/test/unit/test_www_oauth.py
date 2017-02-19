@@ -359,10 +359,10 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
                 session = self.sessions[uid] = self.sessionFactory(self, uid)
                 return session
         root = Resource()
-        root.putChild("", HomePage())
+        root.putChild(b"", HomePage())
         auth = Resource()
-        root.putChild('auth', auth)
-        auth.putChild('login', self.auth.getLoginResource())
+        root.putChild(b'auth', auth)
+        auth.putChild(b'login', self.auth.getLoginResource())
         site = MySite(root)
         l = reactor.listenTCP(5000, site)
 

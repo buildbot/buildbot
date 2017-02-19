@@ -33,6 +33,8 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import www
+from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 from buildbot.www import service as wwwservice
 from buildbot.www import auth
 from buildbot.www import authz
@@ -54,7 +56,7 @@ class BodyReader(protocol.Protocol):
 
     def connectionLost(self, reason):
         if reason.check(client.ResponseDone):
-            self.finishedDeferred.callback(''.join(self.body))
+            self.finishedDeferred.callback(b''.join(self.body))
         else:
             self.finishedDeferred.errback(reason)
 
@@ -103,6 +105,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         # the config.  The second reconfig isn't really required, but doesn't
         # hurt.
         self.url = 'http://127.0.0.1:%d/' % master.www.getPortnum()
+        self.url = unicode2bytes(self.url)
         master.config.buildbotURL = self.url
         yield master.www.reconfigServiceWithBuildbotConfig(master.config)
 
@@ -126,7 +129,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def apiGet(self, url, expect200=True):
-        pg = yield self.agent.request('GET', url)
+        pg = yield self.agent.request(b'GET', url)
 
         # this is kind of obscene, but protocols are like that
         d = defer.Deferred()
@@ -139,10 +142,10 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         if expect200 and pg.code != 200:
             self.fail("did not get 200 response for '%s'" % (url,))
 
-        defer.returnValue(json.loads(body))
+        defer.returnValue(json.loads(bytes2NativeString(body)))
 
     def link(self, suffix):
-        return self.url + 'api/v2/' + suffix
+        return self.url + b'api/v2/' + suffix
 
     # tests
 
@@ -159,7 +162,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                           active=1, last_active=OTHERTIME),
         ])
 
-        res = yield self.apiGet(self.link('masters'))
+        res = yield self.apiGet(self.link(b'masters'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',
@@ -171,7 +174,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
                 'total': 2,
             }})
 
-        res = yield self.apiGet(self.link('masters/7'))
+        res = yield self.apiGet(self.link(b'masters/7'))
         self.assertEqual(res, {
             'masters': [
                 {'active': False, 'masterid': 7, 'name': 'some:master',

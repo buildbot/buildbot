@@ -277,23 +277,23 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     "configured" % (plugin_name,))
 
         # /
-        root.putChild('', wwwconfig.IndexResource(
+        root.putChild(b'', wwwconfig.IndexResource(
             self.master, self.apps.get('base').static_dir))
 
         # /auth
-        root.putChild('auth', auth.AuthRootResource(self.master))
+        root.putChild(b'auth', auth.AuthRootResource(self.master))
 
         # /avatar
-        root.putChild('avatar', avatar.AvatarResource(self.master))
+        root.putChild(b'avatar', avatar.AvatarResource(self.master))
 
         # /api
-        root.putChild('api', rest.RestRootResource(self.master))
+        root.putChild(b'api', rest.RestRootResource(self.master))
 
         # /ws
-        root.putChild('ws', ws.WsResource(self.master))
+        root.putChild(b'ws', ws.WsResource(self.master))
 
         # /sse
-        root.putChild('sse', sse.EventResource(self.master))
+        root.putChild(b'sse', sse.EventResource(self.master))
 
         # /change_hook
         resource_obj = change_hook.ChangeHookResource(master=self.master)
@@ -303,7 +303,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if change_hook_auth is not None:
             resource_obj = self.setupProtectedResource(
                 resource_obj, change_hook_auth)
-        root.putChild("change_hook", resource_obj)
+        root.putChild(b"change_hook", resource_obj)
 
         self.root = root
 

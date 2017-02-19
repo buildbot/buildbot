@@ -57,12 +57,12 @@ class AvatarGravatar(AvatarBase):
 class AvatarResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
-    defaultAvatarUrl = "img/nobody.png"
+    defaultAvatarUrl = b"img/nobody.png"
 
     def reconfigResource(self, new_config):
         self.avatarMethods = new_config.www.get('avatar_methods', [])
         self.defaultAvatarFullUrl = urljoin(
-            new_config.buildbotURL, self.defaultAvatarUrl)
+            unicode2bytes(new_config.buildbotURL), unicode2bytes(self.defaultAvatarUrl))
         self.cache = {}
         # ensure the avatarMethods is a iterable
         if isinstance(self.avatarMethods, AvatarBase):

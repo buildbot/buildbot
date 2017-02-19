@@ -32,7 +32,10 @@ from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
+from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
 
@@ -54,12 +57,13 @@ class ContentTypeParser(object):
         self.typeheader = contenttype
 
     def gettype(self):
-        mimetype, options = cgi.parse_header(self.typeheader)
+        mimetype, options = cgi.parse_header(
+            bytes2NativeString(self.typeheader))
         return mimetype
 
 
-URL_ENCODED = "application/x-www-form-urlencoded"
-JSON_ENCODED = "application/json"
+URL_ENCODED = b"application/x-www-form-urlencoded"
+JSON_ENCODED = b"application/json"
 
 
 class RestRootResource(resource.Resource):
@@ -79,17 +83,20 @@ class RestRootResource(resource.Resource):
             if version < min_vers:
                 continue
             child = klass(master)
-            self.putChild('v%d' % (version,), child)
+            child_path = 'v{}'.format(version)
+            child_path = unicode2bytes(child_path)
+            self.putChild(child_path, child)
             if version == latest:
-                self.putChild('latest', child)
+                self.putChild(b'latest', child)
 
     def render(self, request):
-        request.setHeader("content-type", JSON_ENCODED)
+        request.setHeader(b"content-type", JSON_ENCODED)
         min_vers = self.master.config.www.get('rest_minimum_version', 0)
         api_versions = dict(('v%d' % v, '%sapi/v%d' % (self.base_url, v))
                             for v in self.version_classes
                             if v > min_vers)
-        return json.dumps(dict(api_versions=api_versions))
+        data = json.dumps(dict(api_versions=api_versions))
+        return unicode2bytes(data)
 
 
 JSONRPC_CODES = dict(parse_error=-32700,
@@ -121,35 +128,42 @@ class V2RootResource(resource.Resource):
 
     def getEndpoint(self, request):
         # note that trailing slashes are not allowed
-        return self.master.data.getEndpoint(tuple(request.postpath))
+        request_postpath = [bytes2NativeString(p) for p in request.postpath]
+        return self.master.data.getEndpoint(tuple(request_postpath))
 
     @contextmanager
     def handleErrors(self, writeError):
         try:
             yield
         except exceptions.InvalidPathError as e:
-            writeError(e.args[0] or "invalid path", errcode=404,
+            msg = unicode2bytes(e.args[0])
+            writeError(msg or b"invalid path", errcode=404,
                        jsonrpccode=JSONRPC_CODES['invalid_request'])
             return
         except exceptions.InvalidControlException as e:
-            writeError(str(e) or "invalid control action", errcode=501,
+            msg = unicode2bytes(str(e))
+            writeError(msg or b"invalid control action", errcode=501,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadRequest as e:
-            writeError(e.args[0] or "invalid request", errcode=400,
+            msg = unicode2bytes(e.args[0])
+            writeError(msg or b"invalid request", errcode=400,
                        jsonrpccode=JSONRPC_CODES["method_not_found"])
             return
         except BadJsonRpc2 as e:
-            writeError(e.message, errcode=400, jsonrpccode=e.jsonrpccode)
+            msg = unicode2bytes(e.message)
+            writeError(msg, errcode=400, jsonrpccode=e.jsonrpccode)
             return
         except Forbidden as e:
             # There is nothing in jsonrc spec about forbidden error, so pick
             # invalid request
+            msg = unicode2bytes(e.message)
             writeError(
-                e.message, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
+                msg, errcode=403, jsonrpccode=JSONRPC_CODES["invalid_request"])
             return
         except Exception as e:
             log.err(_why='while handling API request')
+            msg = unicode2bytes(repr(e))
             writeError(repr(e), errcode=500,
                        jsonrpccode=JSONRPC_CODES["internal_error"])
             return
@@ -160,7 +174,7 @@ class V2RootResource(resource.Resource):
         # Verify the content-type.  Browsers are easily convinced to send
         # POST data to arbitrary URLs via 'form' elements, but they won't
         # use the application/json content-type.
-        if ContentTypeParser(request.getHeader('content-type')).gettype() != JSON_ENCODED:
+        if ContentTypeParser(request.getHeader(b'content-type')).gettype() != "application/json":
             raise BadJsonRpc2('Invalid content-type (use application/json)',
                               JSONRPC_CODES["invalid_request"])
 
@@ -200,13 +214,16 @@ class V2RootResource(resource.Resource):
 
         def writeError(msg, errcode=399,
                        jsonrpccode=JSONRPC_CODES["internal_error"]):
+            msg = bytes2NativeString(msg)
             if self.debug:
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
-            request.setHeader('content-type', JSON_ENCODED)
+            request.setHeader(b'content-type', JSON_ENCODED)
             if "error" not in jsonRpcReply:  # already filled in by caller
                 jsonRpcReply['error'] = dict(code=jsonrpccode, message=msg)
-            request.write(json.dumps(jsonRpcReply))
+            data = json.dumps(jsonRpcReply)
+            data = unicode2bytes(data)
+            request.write(data)
 
         with self.handleErrors(writeError):
             method, id, params = self.decodeJsonRPC2(request)
@@ -227,11 +244,12 @@ class V2RootResource(resource.Resource):
             data = json.dumps(jsonRpcReply, default=toJson,
                               sort_keys=True, separators=(',', ':'))
 
-            request.setHeader('content-type', JSON_ENCODED)
-            if request.method == "HEAD":
-                request.setHeader("content-length", len(data))
-                request.write('')
+            request.setHeader(b'content-type', JSON_ENCODED)
+            if request.method == b"HEAD":
+                request.setHeader(b"content-length", len(data))
+                request.write(b'')
             else:
+                data = unicode2bytes(data)
                 request.write(data)
 
     # JSONAPI support
@@ -239,54 +257,63 @@ class V2RootResource(resource.Resource):
         reqArgs = request.args
 
         def checkFields(fields, negOk=False):
-            for k in fields:
+            for field in fields:
+                k = bytes2NativeString(field)
                 if k[0] == '-' and negOk:
                     k = k[1:]
                 if k not in entityType.fieldNames:
-                    raise BadRequest("no such field %r" % (k,))
+                    raise BadRequest("no such field '{}'".format(k))
 
         entityType = endpoint.rtype.entityType
         limit = offset = order = fields = None
         filters, properties = [], []
         for arg in reqArgs:
-            if arg == 'order':
-                order = reqArgs[arg]
+            argStr = bytes2NativeString(arg)
+            if arg == b'order':
+                order = tuple([bytes2NativeString(o) for o in reqArgs[arg]])
                 checkFields(order, True)
                 continue
-            elif arg == 'field':
+            elif arg == b'field':
                 fields = reqArgs[arg]
                 checkFields(fields, False)
                 continue
-            elif arg == 'limit':
+            elif arg == b'limit':
                 try:
                     limit = int(reqArgs[arg][0])
                 except Exception:
                     raise BadRequest('invalid limit')
                 continue
-            elif arg == 'offset':
+            elif arg == b'offset':
                 try:
                     offset = int(reqArgs[arg][0])
                 except Exception:
                     raise BadRequest('invalid offset')
                 continue
-            elif arg == 'property':
+            elif arg == b'property':
                 try:
-                    props = [v.decode('utf-8') for v in reqArgs[arg]]
+                    props = []
+                    for v in reqArgs[arg]:
+                        if not isinstance(v, (bytes, text_type)):
+                            raise TypeError(
+                                "Invalid type {} for {}".format(type(v), v))
+                        props.append(bytes2unicode(v))
                 except Exception:
-                    raise BadRequest('invalid property value for %s' % arg)
+                    raise BadRequest(
+                        'invalid property value for {}'.format(arg))
                 properties.append(resultspec.Property(arg, 'eq', props))
                 continue
-            elif arg in entityType.fieldNames:
-                field = entityType.fields[arg]
+            elif argStr in entityType.fieldNames:
+                field = entityType.fields[argStr]
                 try:
                     values = [field.valueFromString(v) for v in reqArgs[arg]]
                 except Exception:
-                    raise BadRequest('invalid filter value for %s' % arg)
+                    raise BadRequest(
+                        'invalid filter value for {}'.format(argStr))
 
-                filters.append(resultspec.Filter(arg, 'eq', values))
+                filters.append(resultspec.Filter(argStr, 'eq', values))
                 continue
-            elif '__' in arg:
-                field, op = arg.rsplit('__', 1)
+            elif '__' in argStr:
+                field, op = argStr.rsplit('__', 1)
                 args = reqArgs[arg]
                 operators = (resultspec.Filter.singular_operators
                              if len(args) == 1
@@ -297,13 +324,16 @@ class V2RootResource(resource.Resource):
                         values = [fieldType.valueFromString(v)
                                   for v in reqArgs[arg]]
                     except Exception:
-                        raise BadRequest('invalid filter value for %s' % arg)
+                        raise BadRequest(
+                            'invalid filter value for {}'.format(argStr))
                     filters.append(resultspec.Filter(field, op, values))
                     continue
-            raise BadRequest("unrecognized query parameter '%s'" % (arg,))
+            raise BadRequest(
+                "unrecognized query parameter '{}'".format(argStr))
 
         # if ordering or filtering is on a field that's not in fields, bail out
         if fields:
+            fields = [bytes2NativeString(f) for f in fields]
             fieldsSet = set(fields)
             if order and set([o.lstrip('-') for o in order]) - fieldsSet:
                 raise BadRequest("cannot order on un-selected fields")
@@ -323,10 +353,10 @@ class V2RootResource(resource.Resource):
         return rspec
 
     def encodeRaw(self, data, request):
-        request.setHeader("content-type",
-                          data['mime-type'].encode() + '; charset=utf-8')
-        request.setHeader("content-disposition",
-                          'attachment; filename=' + data['filename'].encode())
+        request.setHeader(b"content-type",
+                          data['mime-type'].encode() + b'; charset=utf-8')
+        request.setHeader(b"content-disposition",
+                          b'attachment; filename=' + data['filename'].encode())
         request.write(data['raw'].encode('utf-8'))
         return
 
@@ -336,8 +366,11 @@ class V2RootResource(resource.Resource):
             if self.debug:
                 log.msg("REST error: %s" % (msg,))
             request.setResponseCode(errcode)
-            request.setHeader('content-type', 'text/plain; charset=utf-8')
-            request.write(json.dumps(dict(error=msg)))
+            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
+            msg = bytes2NativeString(msg)
+            data = json.dumps(dict(error=msg))
+            data = unicode2bytes(data)
+            request.write(data)
 
         with self.handleErrors(writeError):
             yield self.master.www.assertUserAllowed(request, tuple(request.postpath), request.method, {})
@@ -347,9 +380,11 @@ class V2RootResource(resource.Resource):
             rspec = self.decodeResultSpec(request, ep)
             data = yield ep.get(rspec, kwargs)
             if data is None:
-                writeError(("not found while getting from %s with "
-                            "arguments %s and %s") % (repr(ep), repr(rspec),
-                                                      str(kwargs)), errcode=404)
+                msg = ("not found while getting from {} with "
+                       "arguments {} and {}").format(repr(ep), repr(rspec),
+                                                     str(kwargs))
+                msg = unicode2bytes(msg)
+                writeError(msg, errcode=404)
                 return
 
             if ep.isRaw:
@@ -385,22 +420,23 @@ class V2RootResource(resource.Resource):
             # accepts text/html or text/plain, the JSON will be rendered in a
             # readable, multiline format.
 
-            if 'application/json' in (request.getHeader('accept') or ''):
+            if b'application/json' in (request.getHeader(b'accept') or b''):
                 compact = True
-                request.setHeader("content-type",
-                                  'application/json; charset=utf-8')
+                request.setHeader(b"content-type",
+                                  b'application/json; charset=utf-8')
             else:
                 compact = False
-                request.setHeader("content-type",
-                                  'text/plain; charset=utf-8')
+                request.setHeader(b"content-type",
+                                  b'text/plain; charset=utf-8')
 
             # set up caching
             if self.cache_seconds:
                 now = datetime.datetime.utcnow()
                 expires = now + datetime.timedelta(seconds=self.cache_seconds)
-                request.setHeader("Expires",
-                                  expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
-                request.setHeader("Pragma", "no-cache")
+                expiresBytes = unicode2bytes(
+                    expires.strftime("%a, %d %b %Y %H:%M:%S GMT"))
+                request.setHeader(b"Expires", expiresBytes)
+                request.setHeader(b"Pragma", b"no-cache")
 
             # filter out blanks if necessary and render the data
             if compact:
@@ -410,20 +446,22 @@ class V2RootResource(resource.Resource):
                 data = json.dumps(data, default=toJson,
                                   sort_keys=True, indent=2)
 
-            if request.method == "HEAD":
-                request.setHeader("content-length", len(data))
+            if request.method == b"HEAD":
+                request.setHeader(b"content-length", len(data))
             else:
+                data = unicode2bytes(data)
                 request.write(data)
 
     def reconfigResource(self, new_config):
         # buildbotURL may contain reverse proxy path, Origin header is just
         # scheme + host + port
-        buildbotURL = urlparse(new_config.buildbotURL)
-        origin_self = buildbotURL.scheme + "://" + buildbotURL.netloc
+        buildbotURL = urlparse(unicode2bytes(new_config.buildbotURL))
+        origin_self = buildbotURL.scheme + b"://" + buildbotURL.netloc
         # pre-translate the origin entries in the config
-        self.origins = [re.compile(fnmatch.translate(o.lower()))
-                        for o in new_config.www.get('allowed_origins',
-                                                    [origin_self])]
+        self.origins = []
+        for o in new_config.www.get('allowed_origins', [origin_self]):
+            origin = bytes2NativeString(o).lower()
+            self.origins.append(re.compile(fnmatch.translate(origin)))
 
         # and copy some other flags
         self.debug = new_config.www.get('debug')
@@ -431,15 +469,20 @@ class V2RootResource(resource.Resource):
 
     def render(self, request):
         def writeError(msg, errcode=400):
+            msg = bytes2NativeString(msg)
             if self.debug:
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
-            request.setHeader('content-type', 'text/plain; charset=utf-8')
-            if request.method == 'POST':
+            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
+            if request.method == b'POST':
                 # jsonRPC callers want the error message in error.message
-                request.write(json.dumps(dict(error=dict(message=msg))))
+                data = json.dumps(dict(error=dict(message=msg)))
+                data = unicode2bytes(data)
+                request.write(data)
             else:
-                request.write(json.dumps(dict(error=msg)))
+                data = json.dumps(dict(error=msg))
+                data = unicode2bytes(data)
+                request.write(data)
             request.finish()
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 
@@ -450,17 +493,17 @@ class V2RootResource(resource.Resource):
         origins = self.origins
         if origins is not None:
             isPreflight = False
-            reqOrigin = request.getHeader('origin')
+            reqOrigin = request.getHeader(b'origin')
             if reqOrigin:
                 err = None
                 reqOrigin = reqOrigin.lower()
-                if not any(o.match(reqOrigin) for o in self.origins):
+                if not any(o.match(bytes2NativeString(reqOrigin)) for o in self.origins):
                     err = "invalid origin"
-                elif request.method == 'OPTIONS':
+                elif request.method == b'OPTIONS':
                     preflightMethod = request.getHeader(
-                        'access-control-request-method')
-                    if preflightMethod not in ('GET', 'POST', 'HEAD'):
-                        err = 'invalid method'
+                        b'access-control-request-method')
+                    if preflightMethod not in (b'GET', b'POST', b'HEAD'):
+                        err = b'invalid method'
                     isPreflight = True
                 if err:
                     raise Error(400, err)
@@ -469,22 +512,22 @@ class V2RootResource(resource.Resource):
                 # Content-Type header is included here because CORS considers
                 # content types other than form data and text/plain to not be
                 # simple.
-                request.setHeader("access-control-allow-origin", reqOrigin)
-                request.setHeader("access-control-allow-headers",
-                                  "Content-Type")
-                request.setHeader("access-control-max-age", '3600')
+                request.setHeader(b"access-control-allow-origin", reqOrigin)
+                request.setHeader(b"access-control-allow-headers",
+                                  b"Content-Type")
+                request.setHeader(b"access-control-max-age", b'3600')
 
                 # if this was a preflight request, we're done
                 if isPreflight:
-                    defer.returnValue("")
+                    defer.returnValue(b"")
 
         # based on the method, this is either JSONRPC or REST
-        if request.method == 'POST':
+        if request.method == b'POST':
             res = yield self.renderJsonRpc(request)
-        elif request.method in ('GET', 'HEAD'):
+        elif request.method in (b'GET', b'HEAD'):
             res = yield self.renderRest(request)
         else:
-            raise Error(400, "invalid HTTP method")
+            raise Error(400, b"invalid HTTP method")
 
         defer.returnValue(res)
 
