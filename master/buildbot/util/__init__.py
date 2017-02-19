@@ -398,14 +398,14 @@ def in_reactor(f):
 
 def string2boolean(str):
     return {
-        'on': True,
-        'true': True,
-        'yes': True,
-        '1': True,
-        'off': False,
-        'false': False,
-        'no': False,
-        '0': False,
+        b'on': True,
+        b'true': True,
+        b'yes': True,
+        b'1': True,
+        b'off': False,
+        b'false': False,
+        b'no': False,
+        b'0': False,
     }[str.lower()]
 
 
