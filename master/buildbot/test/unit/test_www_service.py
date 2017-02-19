@@ -192,7 +192,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(ep.dialects, {'base': True})
 
         rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
-        path = '/change_hook/base'
+        path = b'/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
         self.master.addChange = mock.Mock()
         yield self.render_resource(rsrc, path, request=request)
@@ -213,11 +213,11 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
         rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
 
-        res = yield self.render_resource(rsrc, '')
+        res = yield self.render_resource(rsrc, b'')
         self.assertIn('{"type": "file"}', res)
 
         rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
-        res = yield self.render_resource(rsrc, '/change_hook/base')
+        res = yield self.render_resource(rsrc, b'/change_hook/base')
         # as UnauthorizedResource is in private namespace, we cannot use assertIsInstance :-(
         self.assertIn('UnauthorizedResource', repr(res))
 

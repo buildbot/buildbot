@@ -33,7 +33,7 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
-        res = yield self.render_resource(rsrc, '/')
+        res = yield self.render_resource(rsrc, b'/')
         self.assertEqual(
             res, dict(redirected=avatar.AvatarResource.defaultAvatarUrl))
 
@@ -44,7 +44,7 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
-        res = yield self.render_resource(rsrc, '/?email=foo')
+        res = yield self.render_resource(rsrc, b'/?email=foo')
         self.assertEqual(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
                                    'def654fccc4a4d8?d=retro&s=32'))
 
@@ -60,7 +60,7 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
-        res = yield self.render_resource(rsrc, '/?email=foo')
+        res = yield self.render_resource(rsrc, b'/?email=foo')
         self.assertEqual(res, "foo32http://a/b/img/nobody.png")
 
     @defer.inlineCallbacks
@@ -76,6 +76,6 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = avatar.AvatarResource(master)
         rsrc.reconfigResource(master.config)
 
-        res = yield self.render_resource(rsrc, '/?email=foo')
+        res = yield self.render_resource(rsrc, b'/?email=foo')
         self.assertEqual(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
                          'def654fccc4a4d8?d=retro&s=32'))

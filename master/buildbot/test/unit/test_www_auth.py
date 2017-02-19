@@ -174,7 +174,7 @@ class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
         self.rsrc.renderLogin = mock.Mock(
             spec=self.rsrc.renderLogin, return_value=defer.succeed('hi'))
 
-        yield self.render_resource(self.rsrc, '/auth/login')
+        yield self.render_resource(self.rsrc, b'/auth/login')
         self.rsrc.renderLogin.assert_called_with(mock.ANY)
 
 
@@ -196,7 +196,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
 
         self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
 
-        res = yield self.render_resource(self.rsrc, '/auth/login')
+        res = yield self.render_resource(self.rsrc, b'/auth/login')
         self.assertEqual(res, "")
         self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
@@ -213,6 +213,6 @@ class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_render(self):
         self.master.session.expire = mock.Mock()
-        res = yield self.render_resource(self.rsrc, '/auth/logout')
+        res = yield self.render_resource(self.rsrc, b'/auth/logout')
         self.assertEqual(res, "")
         self.master.session.expire.assert_called_with()
