@@ -38,6 +38,7 @@ from buildbot.db import buildrequests
 from buildbot.db import changesources
 from buildbot.db import schedulers
 from buildbot.test.util import validation
+from buildbot.util import bytes2NativeString
 from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -1655,7 +1656,7 @@ class FakeStateComponent(FakeDBComponent):
 
     def atomicCreateState(self, objectid, name, thd_create_callback):
         value = thd_create_callback()
-        self.states[objectid][name] = json.dumps(value)
+        self.states[objectid][name] = json.dumps(bytes2NativeString(value))
         return defer.succeed(value)
 
     # fake methods

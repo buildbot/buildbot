@@ -195,7 +195,8 @@ class Try_Jobdir(TryBase):
             postprocess_parsed_job()
         elif ver == "5":
             try:
-                parsed_job = json.loads(p.strings[0])
+                data = bytes2NativeString(p.strings[0])
+                parsed_job = json.loads(data)
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
             postprocess_parsed_job()

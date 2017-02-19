@@ -33,6 +33,8 @@ from twisted.web.error import Error
 from buildbot.data import exceptions
 from buildbot.data import resultspec
 from buildbot.util import toJson
+from buildbot.util import bytes2unicode
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 from buildbot.www.authz import Forbidden
 
@@ -271,7 +273,7 @@ class V2RootResource(resource.Resource):
                 continue
             elif arg == 'property':
                 try:
-                    props = [v.decode('utf-8') for v in reqArgs[arg]]
+                    props = [bytes2unicode(v, 'utf-8') for v in reqArgs[arg]]
                 except Exception:
                     raise BadRequest('invalid property value for %s' % arg)
                 properties.append(resultspec.Property(arg, 'eq', props))
@@ -336,8 +338,10 @@ class V2RootResource(resource.Resource):
             if self.debug:
                 log.msg("REST error: %s" % (msg,))
             request.setResponseCode(errcode)
-            request.setHeader('content-type', 'text/plain; charset=utf-8')
-            request.write(json.dumps(dict(error=msg)))
+            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
+            output = json.dumps(dict(error=msg))
+            output = unicode2bytes(output)
+            request.write(output)
 
         with self.handleErrors(writeError):
             yield self.master.www.assertUserAllowed(request, tuple(request.postpath), request.method, {})
@@ -434,12 +438,16 @@ class V2RootResource(resource.Resource):
             if self.debug:
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
-            request.setHeader('content-type', 'text/plain; charset=utf-8')
-            if request.method == 'POST':
+            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
+            if request.method == b'POST':
                 # jsonRPC callers want the error message in error.message
-                request.write(json.dumps(dict(error=dict(message=msg))))
+                output = json.dumps(dict(error=dict(message=msg)))
+                output = unicode2bytes(output)
+                request.write(output)
             else:
-                request.write(json.dumps(dict(error=msg)))
+                output = json.dumps(dict(error=msg))
+                output = unicode2bytes(output)
+                request.write(output)
             request.finish()
         return self.asyncRenderHelper(request, self.asyncRender, writeError)
 
@@ -479,9 +487,9 @@ class V2RootResource(resource.Resource):
                     defer.returnValue("")
 
         # based on the method, this is either JSONRPC or REST
-        if request.method == 'POST':
+        if request.method == b'POST':
             res = yield self.renderJsonRpc(request)
-        elif request.method in ('GET', 'HEAD'):
+        elif request.method in (b'GET', b'HEAD'):
             res = yield self.renderRest(request)
         else:
             raise Error(400, "invalid HTTP method")
