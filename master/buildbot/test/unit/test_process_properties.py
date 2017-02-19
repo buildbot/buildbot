@@ -1332,6 +1332,15 @@ class Renderer(unittest.TestCase):
         d.addCallback(self.assertEqual, 'xXx')
         return d
 
+    def test_renderer_repr(self):
+        @renderer
+        def myrend(p):
+            pass
+        self.assertIn('renderer(', repr(myrend))
+        # py3 and py2 do not have the same way of repr functions
+        # but they always contain the name of function
+        self.assertIn('myrend', repr(myrend))
+
 
 class Compare(unittest.TestCase):
 

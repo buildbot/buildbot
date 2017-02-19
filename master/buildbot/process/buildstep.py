@@ -257,12 +257,13 @@ class BuildStepStatus(object):
 @implementer(interfaces.IBuildStep)
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin,
-                WorkerAPICompatMixin):
+                WorkerAPICompatMixin,
+                util.ComparableMixin):
 
     alwaysRun = False
     doStepIf = True
     hideStepIf = False
-
+    compare_attrs = ("_factory",)
     # properties set on a build step are, by nature, always runtime properties
     set_runtime_properties = True
 
@@ -359,6 +360,13 @@ class BuildStep(results.ResultComputingConfigMixin,
         self = object.__new__(klass)
         self._factory = _BuildStepFactory(klass, *args, **kwargs)
         return self
+
+    def __str__(self):
+        args = [repr(x) for x in self._factory.args]
+        args.extend([str(k) + "=" + repr(v) for k, v in self._factory.kwargs.items()])
+        return "{}({})".format(
+            self.__class__.__name__, ", ".join(args))
+    __repr__ = __str__
 
     def setBuild(self, build):
         self.build = build
@@ -894,7 +902,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.descriptionSuffix:
             desc += self.descriptionSuffix
         return desc
-
 
 components.registerAdapter(
     BuildStep._getStepFactory,
