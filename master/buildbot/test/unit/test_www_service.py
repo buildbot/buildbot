@@ -149,7 +149,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault('api', req),
+        self.assertIsInstance(root.getChildWithDefault(b'api', req),
                               rest.RestRootResource)
 
     def test_setupSiteWithProtectedHook(self):
@@ -165,7 +165,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        self.assertIsInstance(root.getChildWithDefault('change_hook', req),
+        self.assertIsInstance(root.getChildWithDefault(b'change_hook', req),
                               HTTPAuthSessionWrapper)
 
     @defer.inlineCallbacks
@@ -179,7 +179,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # root
         root = site.resource
         req = mock.Mock()
-        ep = root.getChildWithDefault('change_hook', req)
+        ep = root.getChildWithDefault(b'change_hook', req)
         self.assertIsInstance(ep,
                               change_hook.ChangeHookResource)
 
@@ -191,7 +191,7 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
 
-        rsrc = self.svc.site.resource.getChildWithDefault('change_hook', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
         path = b'/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
         self.master.addChange = mock.Mock()
@@ -211,13 +211,13 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.svc.setupSite(new_config)
 
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
-        rsrc = self.svc.site.resource.getChildWithDefault('', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(b'', mock.Mock())
 
         res = yield self.render_resource(rsrc, b'')
         self.assertIn(b'{"type": "file"}', res)
 
         rsrc = self.svc.site.resource.getChildWithDefault(
-            'change_hook', mock.Mock())
+            b'change_hook', mock.Mock())
         res = yield self.render_resource(rsrc, b'/change_hook/base')
         # as UnauthorizedResource is in private namespace, we cannot use
         # assertIsInstance :-(
