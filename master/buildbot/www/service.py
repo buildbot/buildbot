@@ -145,6 +145,7 @@ class BuildbotSite(server.Site):
         self.session_secret = None
 
     def _openLogFile(self, path):
+        self._nativeize = True
         return LogFile.fromFullPath(
             path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
 
