@@ -26,6 +26,7 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.test.util import www
+from buildbot.util import bytes2NativeString
 from buildbot.www import auth
 from buildbot.www import config
 
@@ -38,7 +39,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         _auth.maybeAutoLogin = mock.Mock()
 
         custom_versions = [
-            ('test compoent', '0.1.2'), ('test component 2', '0.2.1')]
+            ['test compoent', '0.1.2'], ['test component 2', '0.2.1']]
 
         master = self.make_master(
             url='h:/a/b/', auth=_auth, versions=custom_versions)
@@ -49,27 +50,31 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         rsrc.jinja.get_template = lambda x: template
         template.render = lambda configjson, config, custom_templates: configjson
 
-        vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
+        vjson = [list(v)
+                 for v in rsrc.getEnvironmentVersions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/')
+        res = json.loads(bytes2NativeString(res))
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
-        exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
-        exp = exp % vjson
+        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
+            "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
         self.assertEqual(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, b'/')
-        exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
-        exp = exp % vjson
+        res = json.loads(bytes2NativeString(res))
+        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {"name": "NoAuth"},
+               "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
         self.assertEqual(res, exp)
 
         master = self.make_master(
             url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, b'/')
-        exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
-        exp = exp % vjson
-        self.assertIn(res, exp)
+        res = json.loads(bytes2NativeString(res))
+        exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
+            "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
+        self.assertEqual(res, exp)
 
     def test_parseCustomTemplateDir(self):
         exp = {'views/builds.html': json.dumps('<div>\n</div>')}
