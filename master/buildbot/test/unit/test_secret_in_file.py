@@ -34,9 +34,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         tempdir.createDirectory()
         return tempdir.path
 
-    def createFileTemp(self, tempdir, filename, text=None):
-        if text is None:
-            text = ""
+    def createFileTemp(self, tempdir, filename, text=""):
         file_path = os.path.join(tempdir, filename)
         filetmp = open(file_path, 'w')
         with open(file_path, 'w') as filetmp:
@@ -56,6 +54,11 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.srvfile.stopService()
+        # windows requires to close all existing open temp files not closed by
+        # open method
+        for tempfile in os.listdir(self.tmp_dir):
+            with open(os.path.join(self.tmp_dir, tempfile), 'w') as filetmp:
+                filetmp.close()
 
     def testCheckConfigSecretInAFileService(self):
         self.assertEqual(self.srvfile.name, "SecretInAFile")
