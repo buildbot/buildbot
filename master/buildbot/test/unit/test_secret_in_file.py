@@ -67,7 +67,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         file_path_not_readable, filepath = self.createFileTemp(self.tmp_dir,
                                                                "tempfile2.txt")
         os.chmod(filepath, stat.S_IRGRP)
-        expctd_msg_error = "Permissions 040 on file tempfile2.txt are too " \
+        expctd_msg_error = " on file tempfile2.txt are too " \
                            "open. It is required that your secret files are" \
                            " NOT accessible by others!"
         self.assertRaisesConfigError(expctd_msg_error,
