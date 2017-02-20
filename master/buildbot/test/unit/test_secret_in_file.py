@@ -36,7 +36,6 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
 
     def createFileTemp(self, tempdir, filename, text=""):
         file_path = os.path.join(tempdir, filename)
-        filetmp = open(file_path, 'w')
         with open(file_path, 'w') as filetmp:
             filetmp.write(text)
         return filetmp, file_path
