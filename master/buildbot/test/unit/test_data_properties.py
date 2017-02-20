@@ -137,7 +137,8 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
         props = processProperties.fromDict(
             dict(a=(1, 't'), b=(['abc', 9], 't')))
         yield self.rtype.setBuildProperties(1234, props)
-        self.master.db.builds.setBuildProperty.assert_has_calls([
+        setBuildPropertiesCalls = sorted(self.master.db.builds.setBuildProperty.mock_calls)
+        self.assertEqual(setBuildPropertiesCalls, [
             mock.call(1234, u'a', 1, u't'),
             mock.call(1234, u'b', ['abc', 9], u't')])
         self.master.mq.assertProductions([
