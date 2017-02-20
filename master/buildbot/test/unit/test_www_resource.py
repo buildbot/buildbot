@@ -30,12 +30,12 @@ class ResourceSubclass(resource.Resource):
 class Resource(www.WwwTestMixin, unittest.TestCase):
 
     def test_base_url(self):
-        master = self.make_master(url='h:/a/b/')
+        master = self.make_master(url=b'h:/a/b/')
         rsrc = resource.Resource(master)
-        self.assertEqual(rsrc.base_url, 'h:/a/b/')
+        self.assertEqual(rsrc.base_url, b'h:/a/b/')
 
     def test_reconfigResource_registration(self):
-        master = self.make_master(url='h:/a/b/')
+        master = self.make_master(url=b'h:/a/b/')
         rsrc = ResourceSubclass(master)
         master.www.resourceNeedsReconfigs.assert_called_with(rsrc)
 
@@ -43,7 +43,7 @@ class Resource(www.WwwTestMixin, unittest.TestCase):
 class RedirectResource(www.WwwTestMixin, unittest.TestCase):
 
     def test_redirect(self):
-        master = self.make_master(url='h:/a/b/')
-        rsrc = resource.RedirectResource(master, 'foo')
-        self.render_resource(rsrc, '/')
-        self.assertEqual(self.request.redirected_to, 'h:/a/b/foo')
+        master = self.make_master(url=b'h:/a/b/')
+        rsrc = resource.RedirectResource(master, b'foo')
+        self.render_resource(rsrc, b'/')
+        self.assertEqual(self.request.redirected_to, b'h:/a/b/foo')

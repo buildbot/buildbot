@@ -32,6 +32,8 @@ from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
+from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
 
@@ -46,20 +48,20 @@ class FakeSession(object):
 
 
 class FakeRequest(object):
-    written = ''
+    written = b''
     finished = False
     redirected_to = None
     rendered_resource = None
     failure = None
-    method = 'GET'
-    path = '/req.path'
+    method = b'GET'
+    path = b'/req.path'
     responseCode = 200
 
     def __init__(self, path=None):
         self.headers = {}
         self.input_headers = {}
         self.prepath = []
-        x = path.split('?', 1)
+        x = path.split(b'?', 1)
         if len(x) == 1:
             self.path = path
             self.args = {}
@@ -68,7 +70,10 @@ class FakeRequest(object):
             self.path = path
             self.args = parse_qs(argstring, 1)
         self.uri = self.path
-        self.postpath = list(map(urlunquote, path[1:].split('/')))
+        self.postpath = []
+        for p in path[1:].split(b'/'):
+            path = urlunquote(bytes2NativeString(p))
+            self.postpath.append(unicode2bytes(path))
 
         self.deferred = defer.Deferred()
 
@@ -147,23 +152,23 @@ class WwwTestMixin(RequiresWwwMixin):
         self.master.authz.setMaster(self.master)
         return master
 
-    def make_request(self, path=None, method='GET'):
+    def make_request(self, path=None, method=b'GET'):
         self.request = FakeRequest(path)
         self.request.session = self.master.session
         self.request.method = method
         return self.request
 
-    def render_resource(self, rsrc, path='/', accept=None, method='GET',
+    def render_resource(self, rsrc, path=b'/', accept=None, method=b'GET',
                         origin=None, access_control_request_method=None,
                         extraHeaders=None, request=None):
         if not request:
             request = self.make_request(path, method=method)
             if accept:
-                request.input_headers['accept'] = accept
+                request.input_headers[b'accept'] = accept
             if origin:
-                request.input_headers['origin'] = origin
+                request.input_headers[b'origin'] = origin
             if access_control_request_method:
-                request.input_headers['access-control-request-method'] = \
+                request.input_headers[b'access-control-request-method'] = \
                     access_control_request_method
             if extraHeaders is not None:
                 request.input_headers.update(extraHeaders)
@@ -175,16 +180,16 @@ class WwwTestMixin(RequiresWwwMixin):
             request.finish()
         return request.deferred
 
-    def render_control_resource(self, rsrc, path='/', params={},
+    def render_control_resource(self, rsrc, path=b'/', params={},
                                 requestJson=None, action="notfound", id=None,
-                                content_type='application/json'):
+                                content_type=b'application/json'):
         # pass *either* a request or postpath
         id = id or self.UUID
         request = self.make_request(path)
-        request.method = "POST"
+        request.method = b"POST"
         request.content = NativeStringIO(requestJson or json.dumps(
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
-        request.input_headers = {'content-type': content_type}
+        request.input_headers = {b'content-type': content_type}
         rv = rsrc.render(request)
         if rv != server.NOT_DONE_YET:
             d = defer.succeed(rv)
@@ -193,7 +198,7 @@ class WwwTestMixin(RequiresWwwMixin):
 
         @d.addCallback
         def check(_json):
-            res = json.loads(_json)
+            res = json.loads(bytes2NativeString(_json))
             self.assertIn("jsonrpc", res)
             self.assertEqual(res["jsonrpc"], "2.0")
             if not requestJson:
@@ -209,10 +214,10 @@ class WwwTestMixin(RequiresWwwMixin):
             got['content'] = self.request.written
             exp['content'] = content
         if contentJson is not None:
-            got['contentJson'] = json.loads(self.request.written)
+            got['contentJson'] = json.loads(bytes2NativeString(self.request.written))
             exp['contentJson'] = contentJson
         if contentType is not None:
-            got['contentType'] = self.request.headers['content-type']
+            got['contentType'] = self.request.headers[b'content-type']
             exp['contentType'] = [contentType]
         if responseCode is not None:
             got['responseCode'] = str(self.request.responseCode)

@@ -311,26 +311,26 @@ class StringToBoolean(unittest.TestCase):
 
     def test_it(self):
         stringValues = [
-            ('on', True),
-            ('true', True),
-            ('yes', True),
-            ('1', True),
-            ('off', False),
-            ('false', False),
-            ('no', False),
-            ('0', False),
-            ('ON', True),
-            ('TRUE', True),
-            ('YES', True),
-            ('OFF', False),
-            ('FALSE', False),
-            ('NO', False),
+            (b'on', True),
+            (b'true', True),
+            (b'yes', True),
+            (b'1', True),
+            (b'off', False),
+            (b'false', False),
+            (b'no', False),
+            (b'0', False),
+            (b'ON', True),
+            (b'TRUE', True),
+            (b'YES', True),
+            (b'OFF', False),
+            (b'FALSE', False),
+            (b'NO', False),
         ]
         for s, b in stringValues:
             self.assertEqual(util.string2boolean(s), b, repr(s))
 
     def test_ascii(self):
-        rv = util.ascii2unicode('abcd')
+        rv = util.ascii2unicode(b'abcd')
         self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):

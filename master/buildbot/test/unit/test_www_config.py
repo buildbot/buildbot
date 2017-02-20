@@ -51,14 +51,14 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
         vjson = json.dumps(rsrc.getEnvironmentVersions() + custom_versions)
 
-        res = yield self.render_resource(rsrc, '/')
+        res = yield self.render_resource(rsrc, b'/')
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
         exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         exp = exp % vjson
         self.assertEqual(res, exp)
 
         master.session.user_info = dict(name="me", email="me@me.org")
-        res = yield self.render_resource(rsrc, '/')
+        res = yield self.render_resource(rsrc, b'/')
         exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         exp = exp % vjson
         self.assertEqual(res, exp)
@@ -66,7 +66,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
         master = self.make_master(
             url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
-        res = yield self.render_resource(rsrc, '/')
+        res = yield self.render_resource(rsrc, b'/')
         exp = '{"authz": {}, "titleURL": "http://buildbot.net", "versions": %s, "title": "Buildbot", "auth": {"name": "NoAuth"}, "user": {"anonymous": true}, "buildbotURL": "h:/a/b/", "multiMaster": false, "port": null}'
         exp = exp % vjson
         self.assertIn(res, exp)

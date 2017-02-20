@@ -38,6 +38,7 @@ from twisted.web import server
 from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 from buildbot.www import config as wwwconfig
 from buildbot.www import auth
@@ -145,6 +146,7 @@ class BuildbotSite(server.Site):
         self.session_secret = None
 
     def _openLogFile(self, path):
+        self._nativeize = True
         return LogFile.fromFullPath(
             path, rotateLength=self.rotateLength, maxRotatedFiles=self.maxRotatedFiles)
 
@@ -277,23 +279,23 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     "configured" % (plugin_name,))
 
         # /
-        root.putChild('', wwwconfig.IndexResource(
+        root.putChild(b'', wwwconfig.IndexResource(
             self.master, self.apps.get('base').static_dir))
 
         # /auth
-        root.putChild('auth', auth.AuthRootResource(self.master))
+        root.putChild(b'auth', auth.AuthRootResource(self.master))
 
         # /avatar
-        root.putChild('avatar', avatar.AvatarResource(self.master))
+        root.putChild(b'avatar', avatar.AvatarResource(self.master))
 
         # /api
-        root.putChild('api', rest.RestRootResource(self.master))
+        root.putChild(b'api', rest.RestRootResource(self.master))
 
         # /ws
-        root.putChild('ws', ws.WsResource(self.master))
+        root.putChild(b'ws', ws.WsResource(self.master))
 
         # /sse
-        root.putChild('sse', sse.EventResource(self.master))
+        root.putChild(b'sse', sse.EventResource(self.master))
 
         # /change_hook
         resource_obj = change_hook.ChangeHookResource(master=self.master)
@@ -303,7 +305,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if change_hook_auth is not None:
             resource_obj = self.setupProtectedResource(
                 resource_obj, change_hook_auth)
-        root.putChild("change_hook", resource_obj)
+        root.putChild(b"change_hook", resource_obj)
 
         self.root = root
 
@@ -351,7 +353,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8)))
+            return bytes2NativeString(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
         session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
         self.site.setSessionSecret(session_secret)

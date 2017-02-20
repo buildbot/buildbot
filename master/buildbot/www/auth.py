@@ -38,9 +38,9 @@ class AuthRootResource(resource.Resource):
 
     def getChild(self, path, request):
         # return dynamically generated resources
-        if path == 'login':
+        if path == b'login':
             return self.master.www.auth.getLoginResource()
-        elif path == 'logout':
+        elif path == b'logout':
             return self.master.www.auth.getLogoutResource()
         return resource.Resource.getChild(self, path, request)
 
@@ -196,4 +196,4 @@ class LogoutResource(resource.Resource):
         session = request.getSession()
         session.expire()
         session.updateSession(request)
-        return ""
+        return b''

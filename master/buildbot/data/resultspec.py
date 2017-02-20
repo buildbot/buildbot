@@ -173,9 +173,10 @@ class ResultSpec(object):
         self.fieldMapping = {}
 
     def __repr__(self):
-        return "ResultSpec(**" + repr(dict(filters=self.filters, fields=self.fields,
-                                           properties=self.properties,
-                                           order=self.order, limit=self.limit, offset=self.offset)) + ")"
+        return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
+                "'order': {}, 'limit': {}, 'offset': {}").format(
+                self.filters, self.fields, self.properties, self.order,
+                self.limit, self.offset) + "})"
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:

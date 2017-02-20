@@ -22,6 +22,8 @@ from twisted.web import resource
 from twisted.web import server
 from twisted.web.error import Error
 
+from buildbot.util import unicode2bytes
+
 
 class Redirect(Error):
 
@@ -56,7 +58,7 @@ class Resource(resource.Resource):
     def asyncRenderHelper(self, request, _callable, writeError=None):
         def writeErrorDefault(msg, errcode=400):
             request.setResponseCode(errcode)
-            request.setHeader('content-type', 'text/plain; charset=utf-8')
+            request.setHeader(b'content-type', b'text/plain; charset=utf-8')
             request.write(msg)
             request.finish()
         if writeError is None:
@@ -88,13 +90,14 @@ class Resource(resource.Resource):
         def failHttpError(f):
             f.trap(Error)
             e = f.value
-            writeError(e.message, errcode=int(e.status))
+            message = unicode2bytes(e.message)
+            writeError(message, errcode=int(e.status))
 
         @d.addErrback
         def fail(f):
             log.err(f, 'While rendering resource:')
             try:
-                writeError('internal error - see logs', errcode=500)
+                writeError(b'internal error - see logs', errcode=500)
             except Exception:
                 try:
                     request.finish()

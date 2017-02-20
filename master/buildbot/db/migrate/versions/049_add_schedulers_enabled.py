@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import sqlalchemy as sa
+
 from buildbot.util import sautils
 
 
@@ -24,5 +25,6 @@ def upgrade(migrate_engine):
     metadata = sa.MetaData()
     metadata.bind = migrate_engine
     schedulers_table = sautils.Table('schedulers', metadata, autoload=True)
-    enabled = sa.Column('enabled', sa.SmallInteger, nullable=False, server_default="1")
+    enabled = sa.Column('enabled', sa.SmallInteger,
+                        nullable=False, server_default="1")
     enabled.create(schedulers_table)

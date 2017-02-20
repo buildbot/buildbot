@@ -48,13 +48,13 @@ class AuthRootResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     def test_getChild_login(self):
         glr = mock.Mock(name='glr')
         self.master.www.auth.getLoginResource = glr
-        child = self.rsrc.getChild('login', mock.Mock(name='req'))
+        child = self.rsrc.getChild(b'login', mock.Mock(name='req'))
         self.assertIdentical(child, glr())
 
     def test_getChild_logout(self):
         glr = mock.Mock(name='glr')
         self.master.www.auth.getLogoutResource = glr
-        child = self.rsrc.getChild('logout', mock.Mock(name='req'))
+        child = self.rsrc.getChild(b'logout', mock.Mock(name='req'))
         self.assertIdentical(child, glr())
 
 
@@ -64,7 +64,7 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
         self.auth = auth.AuthBase()
         self.master = self.make_master(url='h:/a/b/')
         self.auth.master = self.master
-        self.req = self.make_request('/')
+        self.req = self.make_request(b'/')
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
@@ -106,7 +106,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
     def setUp(self):
         self.auth = auth.RemoteUserAuth(header='HDR')
         self.make_master()
-        self.request = self.make_request('/')
+        self.request = self.make_request(b'/')
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
@@ -172,9 +172,9 @@ class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
         self.setUpAuthResource()
         self.rsrc = auth.LoginResource(self.master)
         self.rsrc.renderLogin = mock.Mock(
-            spec=self.rsrc.renderLogin, return_value=defer.succeed('hi'))
+            spec=self.rsrc.renderLogin, return_value=defer.succeed(b'hi'))
 
-        yield self.render_resource(self.rsrc, '/auth/login')
+        yield self.render_resource(self.rsrc, b'/auth/login')
         self.rsrc.renderLogin.assert_called_with(mock.ANY)
 
 
@@ -196,8 +196,8 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
 
         self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
 
-        res = yield self.render_resource(self.rsrc, '/auth/login')
-        self.assertEqual(res, "")
+        res = yield self.render_resource(self.rsrc, b'/auth/login')
+        self.assertEqual(res, b'')
         self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
         self.assertEqual(self.master.session.user_info,
@@ -213,6 +213,6 @@ class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_render(self):
         self.master.session.expire = mock.Mock()
-        res = yield self.render_resource(self.rsrc, '/auth/logout')
-        self.assertEqual(res, "")
+        res = yield self.render_resource(self.rsrc, b'/auth/logout')
+        self.assertEqual(res, b'')
         self.master.session.expire.assert_called_with()
