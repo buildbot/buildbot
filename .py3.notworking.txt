@@ -1,6 +1,5 @@
 buildbot.test.integration.test_URLs.UrlForBuildMaster.test_url
 buildbot.test.integration.test_trigger.TriggeringMaster.test_trigger
-buildbot.test.unit.test_data_properties.Properties.test_setBuildProperties
 buildbot.test.unit.test_reporters_words.TestContactChannel.test_command_watch_builder0_get_notifications
 buildbot.test.unit.test_schedulers_dependent.Dependent.test_related_buildset_FAILURE
 buildbot.test.unit.test_schedulers_dependent.Dependent.test_related_buildset_SUCCESS
