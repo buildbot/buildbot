@@ -56,7 +56,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None, pollAtLaunch=False,
-                 buildPushesWithNoCommits=False):
+                 buildPushesWithNoCommits=False, only_tags=False):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -72,12 +72,17 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if project is None:
             project = ''
 
+        if only_tags and (branch or branches):
+            config.error("GitPoller: can't specify only_tags and branch/branches")
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
         elif branch:
             branches = [branch]
         elif not branches:
-            branches = ['master']
+            if only_tags:
+                branches = lambda ref: ref.startswith('refs/tags/')
+            else:
+                branches = ['master']
 
         self.repourl = repourl
         self.branches = branches

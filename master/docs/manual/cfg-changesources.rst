@@ -775,6 +775,9 @@ It accepts the following arguments:
     If this is a relative path, it will be interpreted relative to the master's basedir.
     Multiple Git pollers can share the same directory.
 
+``only_tags``
+    Determines if the GitPoller should poll for new tags in the git repository.
+
 A configuration for the Git poller might look like this:
 
 .. code-block:: python
