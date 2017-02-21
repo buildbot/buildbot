@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from twisted.internet import defer
+from twisted.python import runtime
 
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
@@ -36,7 +37,12 @@ class UrlForBuildMaster(RunMasterBase):
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
-        self.assertIn("['echo', 'http://localhost:8080/#builders/1/builds/1']",
+        if runtime.platformType == 'win32':
+            command = u"echo http://localhost:8080/#builders/1/builds/1"
+        else:
+            command = u"echo 'http://localhost:8080/#builders/1/builds/1'"
+
+        self.assertIn(command,
                       build['steps'][0]['logs'][0]['contents']['content'])
 
 
