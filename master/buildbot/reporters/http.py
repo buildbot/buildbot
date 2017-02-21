@@ -55,11 +55,11 @@ class HttpStatusPushBase(service.BuildbotService):
         startConsuming = self.master.mq.startConsuming
         self._buildCompleteConsumer = yield startConsuming(
             self.buildFinished,
-            ('builds', None, 'finished'))
+            (b'builds', None, b'finished'))
 
         self._buildStartedConsumer = yield startConsuming(
             self.buildStarted,
-            ('builds', None, 'new'))
+            (b'builds', None, b'new'))
 
     def stopService(self):
         self._buildCompleteConsumer.stopConsuming()

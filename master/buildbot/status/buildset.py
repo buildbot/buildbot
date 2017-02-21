@@ -87,7 +87,7 @@ class BuildSetSummaryNotifierMixin:
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self._buildsetComplete,
-            ('buildsets', None, 'complete'))
+            (b'buildsets', None, b'complete'))
 
     def summaryUnsubscribe(self):
         if self._buildsetCompleteConsumer is not None:

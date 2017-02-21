@@ -27,6 +27,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.mq import base
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 from buildbot.util import toJson
 
@@ -47,9 +48,10 @@ class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
         def ifNone(v, default):
             return default if v is None else v
         # replace None values by "" in routing key
-        routingKey = [ifNone(key, "") for key in routingKey]
+        routingKey = [ifNone(key, b"") for key in routingKey]
         # then join them with "dot", and add the prefix
-        return cls.NAMESPACE + "." + ".".join(routingKey)
+        return cls.NAMESPACE + "." + ".".join([bytes2NativeString(k)
+                                               for k in routingKey])
 
     @classmethod
     def routingKeyFromMessageTopic(cls, topic):

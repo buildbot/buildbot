@@ -85,7 +85,7 @@ class StatsService(service.BuildbotService):
         buildid: The buildid of the current Build.
         """
         build_data = yield self.master.data.get(('builds', buildid))
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
 
         msg = {
             'data_name': data_name,

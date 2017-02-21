@@ -113,7 +113,7 @@ class WampMQ(unittest.TestCase):
     @defer.inlineCallbacks
     def test_startConsuming_basic(self):
         self.master.wamp.subscribe = mock.Mock()
-        yield self.mq.startConsuming(None, ('a', 'b'))
+        yield self.mq.startConsuming(None, (b'a', b'b'))
         options = ComparableSubscribeOptions(details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
             mock.ANY, u'org.buildbot.mq.a.b', options=options)
@@ -121,7 +121,7 @@ class WampMQ(unittest.TestCase):
     @defer.inlineCallbacks
     def test_startConsuming_wildcard(self):
         self.master.wamp.subscribe = mock.Mock()
-        yield self.mq.startConsuming(None, ('a', None))
+        yield self.mq.startConsuming(None, (b'a', None))
         options = ComparableSubscribeOptions(
             match=u"wildcard", details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
@@ -130,9 +130,9 @@ class WampMQ(unittest.TestCase):
     @defer.inlineCallbacks
     def test_forward_data(self):
         callback = mock.Mock()
-        yield self.mq.startConsuming(callback, ('a', 'b'))
+        yield self.mq.startConsuming(callback, (b'a', b'b'))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        yield self.mq._produce((b'a', b'b'), u'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
@@ -141,9 +141,9 @@ class WampMQ(unittest.TestCase):
     @defer.inlineCallbacks
     def test_forward_data_wildcard(self):
         callback = mock.Mock()
-        yield self.mq.startConsuming(callback, ('a', None))
+        yield self.mq.startConsuming(callback, (b'a', None))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        yield self.mq._produce((b'a', b'b'), u'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
@@ -191,9 +191,9 @@ class WampMQReal(unittest.TestCase):
     def test_forward_data(self):
         d = defer.Deferred()
         callback = mock.Mock(side_effect=lambda *a, **kw: d.callback(None))
-        yield self.mq.startConsuming(callback, ('a', 'b'))
+        yield self.mq.startConsuming(callback, (b'a', b'b'))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        yield self.mq._produce((b'a', b'b'), u'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         yield d
@@ -203,9 +203,9 @@ class WampMQReal(unittest.TestCase):
     def test_forward_data_wildcard(self):
         d = defer.Deferred()
         callback = mock.Mock(side_effect=lambda *a, **kw: d.callback(None))
-        yield self.mq.startConsuming(callback, ('a', None))
+        yield self.mq.startConsuming(callback, (b'a', None))
         # _produce returns a deferred
-        yield self.mq._produce(('a', 'b'), 'foo')
+        yield self.mq._produce((b'a', b'b'), u'foo')
         # calling produce should eventually call the callback with decoding of
         # topic
         yield d

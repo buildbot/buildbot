@@ -124,8 +124,8 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
             buildid = dbdict['id']
-        self.master.mq.produce(("control", "builds",
-                                str(buildid), 'stop'),
+        self.master.mq.produce((b"control", b"builds",
+                                unicode2bytes(str(buildid)), b'stop'),
                                dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
 
     @defer.inlineCallbacks
