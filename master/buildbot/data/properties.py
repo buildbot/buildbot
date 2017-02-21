@@ -21,6 +21,7 @@ from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util import unicode2bytes
 
 
 class BuildsetPropertiesEndpoint(base.Endpoint):
@@ -59,7 +60,7 @@ class Properties(base.ResourceType):
         # (this is a dictionary collection)
         # We only send the new properties, and count on the client to merge the resulting properties dict
         # We are good, as there is no way to delete a property.
-        routingKey = ('builds', str(buildid), "properties", "update")
+        routingKey = (b'builds', unicode2bytes(str(buildid)), b"properties", b"update")
         newprops = self.sanitizeMessage(newprops)
         return self.master.mq.produce(routingKey, newprops)
 

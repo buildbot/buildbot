@@ -228,13 +228,13 @@ class MailNotifier(service.BuildbotService):
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self.buildsetComplete,
-            ('buildsets', None, 'complete'))
+            (b'buildsets', None, b'complete'))
         self._buildCompleteConsumer = yield startConsuming(
             self.buildComplete,
-            ('builds', None, 'finished'))
+            (b'builds', None, b'finished'))
         self._workerMissingConsumer = yield startConsuming(
             self.workerMissing,
-            ('worker', None, 'missing'))
+            (b'worker', None, b'missing'))
 
     @defer.inlineCallbacks
     def stopService(self):

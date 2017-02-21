@@ -121,7 +121,7 @@ class TriggeringMaster(RunMasterBase):
     def runTest(self, newBuildCallback, flushErrors=False):
         newConsumer = yield self.master.mq.startConsuming(
             newBuildCallback,
-            ('builds', None, 'new'))
+            (b'builds', None, b'new'))
         build = yield self.doForceBuild(wantSteps=True,
                                         useChange=self.change,
                                         wantLogs=True)

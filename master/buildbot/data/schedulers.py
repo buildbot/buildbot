@@ -22,6 +22,7 @@ from buildbot.data import base
 from buildbot.data import masters
 from buildbot.data import types
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
+from buildbot.util import unicode2bytes
 
 
 class Db2DataMixin(object):
@@ -106,14 +107,16 @@ class Scheduler(base.ResourceType):
 
     @defer.inlineCallbacks
     def generateEvent(self, schedulerid, event):
-        scheduler = yield self.master.data.get(('schedulers', str(schedulerid)))
+        scheduler = yield self.master.data.get(('schedulers',
+                                                unicode2bytes(
+                                                    str(schedulerid))))
         self.produceEvent(scheduler, event)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def schedulerEnable(self, schedulerid, v):
         yield self.master.db.schedulers.enable(schedulerid, v)
-        yield self.generateEvent(schedulerid, 'updated')
+        yield self.generateEvent(schedulerid, b'updated')
         defer.returnValue(None)
 
     @base.updateMethod

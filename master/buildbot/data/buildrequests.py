@@ -25,6 +25,7 @@ from buildbot.db.buildrequests import AlreadyClaimedError
 from buildbot.db.buildrequests import NotClaimedError
 from buildbot.process import results
 from buildbot.process.results import RETRY
+from buildbot.util import unicode2bytes
 
 
 class Db2DataMixin(object):
@@ -101,7 +102,9 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             # about those.
             mqKwargs = {'reason': kwargs.get('reason', 'no reason')}
             for b in builds:
-                self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
+                self.master.mq.produce((b"control", b"builds",
+                                        unicode2bytes(str(b['buildid'])),
+                                        b"stop"),
                                        mqKwargs)
             defer.returnValue(None)
 
@@ -180,7 +183,8 @@ class BuildRequest(base.ResourceType):
     def generateEvent(self, brids, event):
         for brid in brids:
             # get the build and munge the result for the notification
-            br = yield self.master.data.get(('buildrequests', str(brid)))
+            br = yield self.master.data.get(('buildrequests',
+                                             unicode2bytes(str(brid))))
             self.produceEvent(br, event)
 
     @defer.inlineCallbacks
@@ -202,7 +206,7 @@ class BuildRequest(base.ResourceType):
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.claimBuildRequests,
-                                        event="claimed",
+                                        event=b"claimed",
                                         claimed_at=claimed_at,
                                         _reactor=_reactor)
 
@@ -210,7 +214,7 @@ class BuildRequest(base.ResourceType):
     def reclaimBuildRequests(self, brids, _reactor=reactor):
         return self.callDbBuildRequests(brids,
                                         self.master.db.buildrequests.reclaimBuildRequests,
-                                        event="update",
+                                        event=b"update",
                                         _reactor=_reactor)
 
     @base.updateMethod
@@ -218,7 +222,7 @@ class BuildRequest(base.ResourceType):
     def unclaimBuildRequests(self, brids):
         if brids:
             yield self.master.db.buildrequests.unclaimBuildRequests(brids)
-            yield self.generateEvent(brids, "unclaimed")
+            yield self.generateEvent(brids, b"unclaimed")
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -239,7 +243,7 @@ class BuildRequest(base.ResourceType):
             # because one of the buildrequests has been claimed by another
             # master
             defer.returnValue(False)
-        yield self.generateEvent(brids, "complete")
+        yield self.generateEvent(brids, b"complete")
 
         # check for completed buildsets -- one call for each build request with
         # a unique bsid

@@ -107,7 +107,7 @@ class Master(base.ResourceType):
         if activated:
             self.produceEvent(
                 dict(masterid=masterid, name=name, active=True),
-                'started')
+                b'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -184,4 +184,4 @@ class Master(base.ResourceType):
 
         self.produceEvent(
             dict(masterid=masterid, name=name, active=False),
-            'stopped')
+            b'stopped')

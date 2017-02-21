@@ -109,7 +109,7 @@ class Tests(SynchronousTestCase):
         started_builds = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, build: started_builds.append(build),
-            ('builds', None, 'new')))
+            (b'builds', None, b'new')))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(
@@ -165,7 +165,7 @@ class Tests(SynchronousTestCase):
         started_builds = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, build: started_builds.append(build),
-            ('builds', None, 'new')))
+            (b'builds', None, b'new')))
 
         # Trigger a buildrequest
         bsid, brids = self.successResultOf(

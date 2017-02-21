@@ -31,6 +31,7 @@ from buildbot.reporters import words
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.util import datetime2epoch
+from buildbot.util import unicode2bytes
 
 
 class TestContactChannel(unittest.TestCase):
@@ -521,8 +522,8 @@ class TestContactChannel(unittest.TestCase):
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
-                "Build builder1 #6 is complete: Success [] - "
-                "http://localhost:8080/#builders/23/builds/6", self.sent)
+            "Build builder1 #6 is complete: Success [] - "
+            "http://localhost:8080/#builders/23/builds/6", self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch_builder1(self):
@@ -538,7 +539,8 @@ class TestContactChannel(unittest.TestCase):
     def sendBuildFinishedMessage(self, buildid, results=0):
         self.master.db.builds.finishBuild(buildid=buildid, results=SUCCESS)
         build = yield self.master.db.builds.getBuild(buildid)
-        self.master.mq.callConsumer(('builds', str(buildid), 'complete'),
+        self.master.mq.callConsumer((b'builds', unicode2bytes(str(buildid)),
+                                     b'complete'),
                                     dict(
                                         buildid=buildid,
                                         number=build['number'],

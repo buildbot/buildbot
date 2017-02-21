@@ -42,6 +42,7 @@ from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -260,9 +261,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 workerid=worker.workerid)
 
         self.stopBuildConsumer = yield self.master.mq.startConsuming(self.controlStopBuild,
-                                                                     ("control", "builds",
-                                                                      str(self.buildid),
-                                                                      "stop"))
+                                                                     (b"control", b"builds",
+                                                                      unicode2bytes(str(self.buildid)),
+                                                                      b"stop"))
         self.setupOwnProperties()
 
         # then narrow WorkerLocks down to the right worker
@@ -649,7 +650,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def waitUntilFinished(self):
         return self.master.mq.waitUntilEvent(
-            ('builds', str(self.buildid), 'finished'),
+            (b'builds', unicode2bytes(str(self.buildid)), b'finished'),
             lambda: self.finished)
 
     # IBuildControl

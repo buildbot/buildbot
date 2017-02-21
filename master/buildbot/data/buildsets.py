@@ -160,7 +160,7 @@ class Buildset(base.ResourceType):
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
-        brResource.generateEvent(list(itervalues(brids)), 'new')
+        brResource.generateEvent(list(itervalues(brids)), b'new')
 
         # and the buildset itself
         msg = dict(
@@ -174,7 +174,7 @@ class Buildset(base.ResourceType):
             scheduler=scheduler,
             sourcestamps=sourcestamps)
         # TODO: properties=properties)
-        self.produceEvent(msg, "new")
+        self.produceEvent(msg, b"new")
 
         log.msg("added buildset %d to database" % bsid)
 
@@ -242,4 +242,4 @@ class Buildset(base.ResourceType):
             complete_at=complete_at,
             results=cumulative_results)
         # TODO: properties=properties)
-        self.produceEvent(msg, "complete")
+        self.produceEvent(msg, b"complete")

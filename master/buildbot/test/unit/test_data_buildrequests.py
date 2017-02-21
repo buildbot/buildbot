@@ -300,10 +300,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             'buildsetid': 8822,
         }
         self.assertEqual(sorted(self.master.mq.productions), sorted([
-            (('buildrequests', '44', 'claimed'), msg),
-            (('builders', '123', 'buildrequests', '44', 'claimed'), msg),
-            (('buildsets', '8822', 'builders', '123',
-              'buildrequests', '44', 'claimed'), msg),
+            ((b'buildrequests', b'44', b'claimed'), msg),
+            ((b'builders', b'123', b'buildrequests', b'44', b'claimed'), msg),
+            ((b'buildsets', b'8822', b'builders', b'123',
+              b'buildrequests', b'44', b'claimed'), msg),
         ]))
 
     @defer.inlineCallbacks
@@ -392,10 +392,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             'buildsetid': 8822,
         }
         self.assertEqual(sorted(self.master.mq.productions), sorted([
-            (('buildrequests', '44', 'update'), msg),
-            (('builders', '123', 'buildrequests', '44', 'update'), msg),
-            (('buildsets', '8822', 'builders', '123',
-              'buildrequests', '44', 'update'), msg),
+            ((b'buildrequests', b'44', b'update'), msg),
+            ((b'builders', b'123', b'buildrequests', b'44', b'update'), msg),
+            ((b'buildsets', b'8822', b'builders', b'123',
+              b'buildrequests', b'44', b'update'), msg),
         ]))
 
     @defer.inlineCallbacks
@@ -480,10 +480,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             'buildsetid': 8822,
         }
         self.assertEqual(sorted(self.master.mq.productions), sorted([
-            (('buildrequests', '44', 'unclaimed'), msg),
-            (('builders', '123', 'buildrequests', '44', 'unclaimed'), msg),
-            (('buildsets', '8822', 'builders', '123',
-              'buildrequests', '44', 'unclaimed'), msg),
+            ((b'buildrequests', b'44', b'unclaimed'), msg),
+            ((b'builders', b'123', b'buildrequests', b'44', b'unclaimed'), msg),
+            ((b'buildsets', b'8822', b'builders', b'123',
+              b'buildrequests', b'44', b'unclaimed'), msg),
         ]))
 
     @defer.inlineCallbacks

@@ -73,7 +73,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
             raise AssertionError("no consumer found")
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        if any(not isinstance(k, (bytes, string_types)) and
+        if any(not isinstance(k, bytes) and
                k is not None for k in filter):
             raise AssertionError("%s is not a filter" % (filter,))
         qref = FakeQueueRef()

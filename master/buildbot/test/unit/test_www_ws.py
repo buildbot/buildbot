@@ -68,7 +68,7 @@ class WsResource(www.WwwTestMixin, unittest.TestCase):
         self.assert_called_with_json(self.proto.sendMessage,
             {"msg": "OK", "code": 200, "_id": 1})
         self.master.mq.verifyMessages = False
-        self.master.mq.callConsumer(("builds", "1", "new"), {"buildid": 1})
+        self.master.mq.callConsumer((b"builds", b"1", b"new"), {"buildid": 1})
         self.assert_called_with_json(self.proto.sendMessage,
             {"k": "builds/1/new", "m": {"buildid": 1}})
 

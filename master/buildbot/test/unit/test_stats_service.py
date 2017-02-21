@@ -191,7 +191,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
     def setUp(self):
         TestStatsServicesBase.setUp(self)
         self.routingKey = (
-            "builders", self.BUILDER_IDS[0], "builds", 1, "finished")
+            b"builders", self.BUILDER_IDS[0], b"builds", 1, b"finished")
         self.master.mq.verifyMessages = False
         self.patch(threads, 'deferToThread', self.identity)
 
@@ -443,7 +443,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
         yield self.stats_service.yieldMetricsValue('test', {'test': 'test'}, 1)
 
         build_data = yield self.stats_service.master.data.get(('builds', 1))
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
 
         msg = {
             'data_name': 'test',
@@ -467,7 +467,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'build_data': build_data
         }
 
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
         self.assertEqual([(
             {'test': 'test'},
@@ -488,7 +488,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'build_data': build_data
         }
 
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
         self.assertEqual([(
             {'test': 'test'},
@@ -511,7 +511,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'build_data': build_data
         }
 
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
         self.master.mq.callConsumer(routingKey, msg)
         self.assertEqual([(
             {'test': 'test'},
@@ -534,6 +534,6 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'build_data': build_data
         }
 
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
         cap = self.fake_storage_service.captures[0]
         self.assertFailure(cap.consume(routingKey, msg), CaptureCallbackError)

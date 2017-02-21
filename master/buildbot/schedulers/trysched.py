@@ -31,6 +31,7 @@ from buildbot.schedulers import base
 from buildbot.util import ascii2unicode
 from buildbot.util import bytes2NativeString
 from buildbot.util import netstrings
+from buildbot.util import unicode2bytes
 from buildbot.util.maildir import MaildirService
 
 
@@ -300,7 +301,7 @@ class RemoteBuildRequest(pb.Referenceable):
                                              self.master, msg, self.builderName),
                                          self.builderName)
         self.consumer = yield self.master.mq.startConsuming(
-            gotBuild, ('builders', str(builderId), 'builds', None, None))
+            gotBuild, (b'builders', unicode2bytes(str(builderId)), b'builds', None, None))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
@@ -342,7 +343,7 @@ class RemoteBuild(pb.Referenceable):
                                              self.builderName, self, msg['name'], None, msg['results'])
         self.consumer = yield self.master.mq.startConsuming(
             stepChanged,
-            ('builds', str(self.builddict['buildid']), 'steps', None, None))
+            (b'builds', unicode2bytes(str(self.builddict['buildid'])), b'steps', None, None))
         subscriber.notifyOnDisconnect(lambda _:
                                       self.remote_unsubscribe(subscriber))
 
@@ -361,7 +362,7 @@ class RemoteBuild(pb.Referenceable):
                 d.callback(None)
         consumer = yield self.master.mq.startConsuming(
             buildEvent,
-            ('builds', str(self.builddict['buildid']), None))
+            (b'builds', unicode2bytes(str(self.builddict['buildid'])), None))
 
         yield d  # wait for event
         consumer.stopConsuming()

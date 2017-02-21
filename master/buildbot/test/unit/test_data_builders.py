@@ -180,7 +180,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=1, masterids=[13],
                                   name='somebuilder', description=None, tags=[]),
                          ]))
-        self.master.mq.assertProductions([(('builders', '1', 'started'),
+        self.master.mq.assertProductions([((b'builders', b'1', b'started'),
                                            {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'})])
 
         # add another
@@ -196,7 +196,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=2, masterids=[13],
                                   name='another', description=None, tags=[]),
                          ], key=builderKey))
-        self.master.mq.assertProductions([(('builders', '2', 'started'),
+        self.master.mq.assertProductions([((b'builders', b'2', b'started'),
                                            {'builderid': 2, 'masterid': 13, 'name': u'another'})])
 
         # add one for another master
@@ -208,7 +208,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                              dict(id=2, masterids=[13, 14],
                                   name='another', description=None, tags=[]),
                          ], key=builderKey))
-        self.master.mq.assertProductions([(('builders', '2', 'started'),
+        self.master.mq.assertProductions([((b'builders', b'2', b'started'),
                                            {'builderid': 2, 'masterid': 14, 'name': u'another'})])
 
         # remove both for the first master
@@ -221,9 +221,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                                  id=2, masterids=[14], name='another', description=None, tags=[]),
                          ], key=builderKey))
         self.master.mq.assertProductions([
-            (('builders', '1', 'stopped'),
+            ((b'builders', b'1', b'stopped'),
              {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'}),
-            (('builders', '2', 'stopped'),
+            ((b'builders', b'2', b'stopped'),
              {'builderid': 2, 'masterid': 13, 'name': u'another'}),
         ])
 

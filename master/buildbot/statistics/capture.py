@@ -69,7 +69,7 @@ class CapturePropertyBase(Capture):
     def __init__(self, property_name, callback=None, regex=False):
         self._property_name = property_name
         self._regex = regex
-        routingKey = ("builders", None, "builds", None, "finished")
+        routingKey = (b"builders", None, b"builds", None, b"finished")
 
         def default_callback(props, property_name):
             # index: 0 - prop_value, 1 - prop_source
@@ -156,7 +156,7 @@ class CaptureBuildTimes(Capture):
 
     def __init__(self, builder_name, callback, time_type):
         self._builder_name = builder_name
-        routingKey = ("builders", None, "builds", None, "finished")
+        routingKey = (b"builders", None, b"builds", None, b"finished")
         self._time_type = time_type
         Capture.__init__(self, routingKey, callback)
 
@@ -336,7 +336,7 @@ class CaptureDataBase(Capture):
         # this is the routing key which is used to register consumers on to mq layer
         # this following key created in StatsService.yieldMetricsValue and used
         # here
-        routingKey = ("stats-yieldMetricsValue", "stats-yield-data")
+        routingKey = (b"stats-yieldMetricsValue", b"stats-yield-data")
         Capture.__init__(self, routingKey, callback)
 
     @defer.inlineCallbacks

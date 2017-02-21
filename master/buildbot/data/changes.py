@@ -30,6 +30,7 @@ from buildbot.process import metrics
 from buildbot.process.users import users
 from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
+from buildbot.util import unicode2bytes
 
 
 class FixerMixin(object):
@@ -146,7 +147,8 @@ class Change(base.ResourceType):
             uid = None
 
         if not revlink and revision and repository and callable(self.master.config.revlink):
-            # generate revlink from revision and repository using the configured callable
+            # generate revlink from revision and repository using the
+            # configured callable
             revlink = self.master.config.revlink(revision, repository) or u''
 
         if callable(category):
@@ -199,9 +201,9 @@ class Change(base.ResourceType):
             _reactor=_reactor)
 
         # get the change and munge the result for the notification
-        change = yield self.master.data.get(('changes', str(changeid)))
+        change = yield self.master.data.get(('changes', unicode2bytes(str(changeid))))
         change = copy.deepcopy(change)
-        self.produceEvent(change, 'new')
+        self.produceEvent(change, b'new')
 
         # log, being careful to handle funny characters
         msg = u"added change with revision %s to database" % (revision,)

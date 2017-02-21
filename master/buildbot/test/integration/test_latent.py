@@ -153,7 +153,7 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
@@ -193,7 +193,7 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
 
         # The worker fails to substantiate.
         controller.start_instance(
@@ -236,7 +236,7 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
         # The worker fails to substantiate.
         controller.start_instance(
             Failure(TestException("substantiation failed")))
@@ -299,7 +299,7 @@ class Tests(SynchronousTestCase):
         finished_builds = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, build: finished_builds.append(build),
-            ('builds', None, 'finished')))
+            (b'builds', None, b'finished')))
 
         # Trigger a buildrequest
         bsid, brids = self.createBuildrequest(master, builder_ids)
@@ -343,7 +343,7 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
 
         # We never start the worker, rather timeout it.
         master.reactor.advance(controller.worker.missing_timeout)
@@ -385,11 +385,11 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
         logs = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, log: logs.append(log),
-            ('logs', None, 'new')))
+            (b'logs', None, b'new')))
 
         # The worker succeed to substantiate
         def remote_setBuilderList(self, dirs):
@@ -450,11 +450,11 @@ class Tests(SynchronousTestCase):
         unclaimed_build_requests = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            (b'buildrequests', None, b'unclaimed')))
         logs = []
         self.successResultOf(master.mq.startConsuming(
             lambda key, log: logs.append(log),
-            ('logs', None, 'new')))
+            (b'logs', None, b'new')))
 
         # The worker succeed to substantiate
         def remote_print(self, msg):

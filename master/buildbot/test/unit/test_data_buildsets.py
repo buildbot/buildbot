@@ -31,6 +31,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import interfaces as util_interfaces
 from buildbot.test.util import endpoint
 from buildbot.util import epoch2datetime
+from buildbot.util import unicode2bytes
 
 A_TIMESTAMP = 1341700729
 A_TIMESTAMP_EPOCH = epoch2datetime(A_TIMESTAMP)
@@ -210,20 +211,20 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def _buildRequestMessage1(self, brid, bsid, builderid):
         return (
-            ('buildsets', str(bsid),
-             'builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
+            (b'buildsets', unicode2bytes(str(bsid)),
+             b'builders', unicode2bytes(str(builderid)),
+             b'buildrequests', unicode2bytes(str(brid)), b'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildRequestMessage2(self, brid, bsid, builderid):
         return (
-            ('buildrequests', str(brid), 'new'),
+            (b'buildrequests', unicode2bytes(str(brid)), b'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildRequestMessage3(self, brid, bsid, builderid):
         return (
-            ('builders', str(builderid),
-             'buildrequests', str(brid), 'new'),
+            (b'builders', unicode2bytes(str(builderid)),
+             b'buildrequests', unicode2bytes(str(brid)), b'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildsetMessage(self, bsid, external_idstring=u'extid',
@@ -231,7 +232,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                          submitted_at=A_TIMESTAMP):
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildsets', str(bsid), 'new'),
+            (b'buildsets', unicode2bytes(str(bsid)), b'new'),
             dict(bsid=bsid, complete=False, complete_at=None,
                  external_idstring=external_idstring, reason=reason,
                  results=None, scheduler=scheduler,
@@ -243,7 +244,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                                  reason=u'because', results=0, sourcestampids=[234]):
         ssmap = {234: self.SS234_DATA}
         return (
-            ('buildsets', str(bsid), 'complete'),
+            (b'buildsets', unicode2bytes(str(bsid)), b'complete'),
             dict(bsid=bsid, complete=True, complete_at=complete_at,
                  external_idstring=external_idstring, reason=reason,
                  results=results, submitted_at=submitted_at,

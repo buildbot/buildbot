@@ -26,6 +26,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 from buildbot.util import epoch2datetime
+from buildbot.util import unicode2bytes
 
 TIME1 = 2001111
 TIME2 = 2002222
@@ -182,8 +183,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'hidden': False,
         }
         self.master.mq.assertProductions([
-            (('builds', '10', 'steps', str(stepid), 'new'), msgBody),
-            (('steps', str(stepid), 'new'), msgBody),
+            ((b'builds', b'10', b'steps', unicode2bytes(str(stepid)), b'new'), msgBody),
+            ((b'steps', unicode2bytes(str(stepid)), b'new'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(stepid)
         self.assertEqual(step, {
@@ -215,6 +216,7 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_startStep(self):
+        self.maxDiff = None
         self.patch(reactor, 'seconds', lambda: TIME1)
         yield self.master.db.steps.addStep(buildid=10, name=u'ten',
                                            state_string=u'pending')
@@ -234,8 +236,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'hidden': False,
         }
         self.master.mq.assertProductions([
-            (('builds', '10', 'steps', str(100), 'started'), msgBody),
-            (('steps', str(100), 'started'), msgBody),
+            ((b'builds', b'10', b'steps', b'100', b'started'), msgBody),
+            ((b'steps', b'100', b'started'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {
@@ -278,8 +280,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'hidden': False,
         }
         self.master.mq.assertProductions([
-            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
-            (('steps', str(100), 'updated'), msgBody),
+            ((b'builds', b'10', b'steps', b'100', b'updated'), msgBody),
+            ((b'steps', b'100', b'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {
@@ -326,8 +328,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'hidden': False,
         }
         self.master.mq.assertProductions([
-            (('builds', '10', 'steps', str(100), 'finished'), msgBody),
-            (('steps', str(100), 'finished'), msgBody),
+            ((b'builds', b'10', b'steps', b'100', b'finished'), msgBody),
+            ((b'steps', b'100', b'finished'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {
@@ -370,8 +372,8 @@ class Step(interfaces.InterfaceTests, unittest.TestCase):
             'hidden': False,
         }
         self.master.mq.assertProductions([
-            (('builds', '10', 'steps', str(100), 'updated'), msgBody),
-            (('steps', str(100), 'updated'), msgBody),
+            ((b'builds', b'10', b'steps', b'100', b'updated'), msgBody),
+            ((b'steps', b'100', b'updated'), msgBody),
         ])
         step = yield self.master.db.steps.getStep(100)
         self.assertEqual(step, {

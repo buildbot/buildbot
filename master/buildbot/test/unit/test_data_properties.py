@@ -141,7 +141,7 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
             mock.call(1234, u'a', 1, u't'),
             mock.call(1234, u'b', ['abc', 9], u't')])
         self.master.mq.assertProductions([
-            (('builds', '1234', 'properties', 'update'),
+            ((b'builds', b'1234', b'properties', b'update'),
              {u'a': (1, u't'), u'b': (['abc', 9], u't')}),
         ])
         # sync without changes: no db write
@@ -159,5 +159,5 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
         self.master.db.builds.setBuildProperty.assert_called_with(
             1234, u'b', 2, u'step')
         self.master.mq.assertProductions([
-            (('builds', '1234', 'properties', 'update'), {u'b': (2, u'step')})
+            ((b'builds', b'1234', b'properties', b'update'), {u'b': (2, u'step')})
         ])

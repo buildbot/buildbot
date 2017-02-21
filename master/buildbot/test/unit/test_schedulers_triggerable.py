@@ -29,6 +29,7 @@ from buildbot.schedulers import triggerable
 from buildbot.test.fake import fakedb
 from buildbot.test.util import interfaces
 from buildbot.test.util import scheduler
+from buildbot.util import unicode2bytes
 
 
 class TriggerableInterfaceTest(unittest.TestCase, interfaces.InterfaceTests):
@@ -138,7 +139,9 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
             )
 
     def sendCompletionMessage(self, bsid, results=3):
-        self.master.mq.callConsumer(('buildsets', str(bsid), 'complete'),
+        self.master.mq.callConsumer((b'buildsets',
+                                     unicode2bytes(str(bsid)),
+                                     b'complete'),
                                     dict(
                                         bsid=bsid,
                                         submitted_at=100,
@@ -210,7 +213,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # not fired yet
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildsets', None, 'complete',)])
+            [(b'buildsets', None, b'complete',)])
         self.assertFalse(self.fired)
 
         # pretend a non-matching buildset is complete
@@ -219,7 +222,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # scheduler should not have reacted
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildsets', None, 'complete',)])
+            [(b'buildsets', None, b'complete',)])
         self.assertFalse(self.fired)
 
         # pretend the matching buildset is complete
@@ -276,7 +279,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         # check that the scheduler has subscribed to buildset changes
         self.assertEqual(
             [q.filter for q in sched.master.mq.qrefs],
-            [('buildsets', None, 'complete',)])
+            [(b'buildsets', None, b'complete',)])
 
         # let a few buildsets complete
         self.sendCompletionMessage(29, results=3)

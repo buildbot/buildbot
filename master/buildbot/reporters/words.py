@@ -43,6 +43,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import utils
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 # Used in command_HELLO and it's test. 'Hi' in 100 languages.
 
@@ -374,9 +375,9 @@ class Contact(service.AsyncService):
         def buildFinished(key, msg):
             return self.buildFinished(msg)
 
-        for e, f in (("new", buildStarted),             # BuilderStarted
-                     ("finished", buildFinished)):      # BuilderFinished
-            handle = yield startConsuming(f, ('builders', None, 'builds', None, e))
+        for e, f in ((b"new", buildStarted),             # BuilderStarted
+                     (b"finished", buildFinished)):      # BuilderFinished
+            handle = yield startConsuming(f, (b'builders', None, b'builds', None, e))
             self.subscribed.append(handle)
 
     def unsubscribe_from_build_events(self):
@@ -476,14 +477,14 @@ class Contact(service.AsyncService):
             return
 
         def watchForCompleteEvent(key, msg):
-            if key[-1] == 'complete':
+            if key[-1] == b'complete':
                 return self.watchedBuildFinished(msg)
 
         for build in builds:
             startConsuming = self.master.mq.startConsuming
             handle = yield startConsuming(
                 watchForCompleteEvent,
-                ('builds', str(build['buildid']), None))
+                (b'builds', unicode2bytes(str(build['buildid'])), None))
             self.build_subscriptions.append((build['buildid'], handle))
 
             if self.useRevisions:
@@ -567,7 +568,7 @@ class Contact(service.AsyncService):
         # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
         #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
         r += " - %s" % utils.getURLForBuild(
-                        self.master, builder['builderid'], buildNumber)
+            self.master, builder['builderid'], buildNumber)
         self.send(r)
 
     results_descriptions = {
@@ -632,7 +633,7 @@ class Contact(service.AsyncService):
                                      results[1], self.useColors)
 
         r += " - %s" % utils.getURLForBuild(
-                self.master, builder['builderid'], buildnum)
+            self.master, builder['builderid'], buildnum)
 
         self.send(r)
 

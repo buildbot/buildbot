@@ -24,6 +24,7 @@ import re
 from twisted.internet import defer
 
 from buildbot.data import exceptions
+from buildbot.util import unicode2bytes
 
 
 class ResourceType(object):
@@ -70,7 +71,8 @@ class ResourceType(object):
             msg = self.sanitizeMessage(msg)
             for path in self.eventPaths:
                 path = path.format(**msg)
-                routingKey = tuple(path.split("/")) + (event,)
+                path = unicode2bytes(path)
+                routingKey = tuple(path.split(b"/")) + (event,)
                 self.master.mq.produce(routingKey, msg)
 
 

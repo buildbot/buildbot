@@ -22,6 +22,7 @@ from twisted.internet import defer
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.data.resultspec import ResultSpec
+from buildbot.util import unicode2bytes
 
 
 class Db2DataMixin(object):
@@ -123,8 +124,8 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
             buildid = dbdict['id']
-        self.master.mq.produce(("control", "builds",
-                                str(buildid), 'stop'),
+        self.master.mq.produce((b"control", b"builds",
+                                unicode2bytes(str(buildid)), b'stop'),
                                dict(reason=kwargs.get('reason', args.get('reason', 'no reason'))))
 
     @defer.inlineCallbacks
@@ -207,7 +208,8 @@ class Build(base.ResourceType):
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('builds', str(_id)))
+        build = yield self.master.data.get(('builds',
+                                            unicode2bytes(str(_id))))
         self.produceEvent(build, event)
 
     @base.updateMethod
@@ -223,14 +225,14 @@ class Build(base.ResourceType):
 
     @base.updateMethod
     def generateNewBuildEvent(self, buildid):
-        return self.generateEvent(buildid, "new")
+        return self.generateEvent(buildid, b"new")
 
     @base.updateMethod
     @defer.inlineCallbacks
     def setBuildStateString(self, buildid, state_string):
         res = yield self.master.db.builds.setBuildStateString(
             buildid=buildid, state_string=state_string)
-        yield self.generateEvent(buildid, "update")
+        yield self.generateEvent(buildid, b"update")
         defer.returnValue(res)
 
     @base.updateMethod
@@ -238,5 +240,5 @@ class Build(base.ResourceType):
     def finishBuild(self, buildid, results):
         res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
-        yield self.generateEvent(buildid, "finished")
+        yield self.generateEvent(buildid, b"finished")
         defer.returnValue(res)
