@@ -102,7 +102,9 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             # about those.
             mqKwargs = {'reason': kwargs.get('reason', 'no reason')}
             for b in builds:
-                self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
+                self.master.mq.produce((b"control", b"builds",
+                                        unicode2bytes(str(b['buildid'])),
+                                        b"stop"),
                                        mqKwargs)
             defer.returnValue(None)
 

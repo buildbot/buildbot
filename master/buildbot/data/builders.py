@@ -20,6 +20,7 @@ from twisted.internet import defer
 
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.util import unicode2bytes
 
 
 class BuilderEndpoint(base.Endpoint):
@@ -112,7 +113,9 @@ class Builder(base.ResourceType):
                 builderid = bldr['id']
                 yield self.master.db.builders.removeBuilderMaster(
                     masterid=masterid, builderid=builderid)
-                self.master.mq.produce(('builders', str(builderid), 'stopped'),
+                self.master.mq.produce((b'builders',
+                                        unicode2bytes(str(builderid)),
+                                        b'stopped'),
                                        dict(builderid=builderid, masterid=masterid,
                                             name=bldr['name']))
             else:
@@ -123,7 +126,9 @@ class Builder(base.ResourceType):
             builderid = yield self.master.db.builders.findBuilderId(name)
             yield self.master.db.builders.addBuilderMaster(
                 masterid=masterid, builderid=builderid)
-            self.master.mq.produce(('builders', str(builderid), 'started'),
+            self.master.mq.produce((b'builders',
+                                    unicode2bytes(str(builderid)),
+                                    b'started'),
                                    dict(builderid=builderid, masterid=masterid, name=name))
 
     @defer.inlineCallbacks
