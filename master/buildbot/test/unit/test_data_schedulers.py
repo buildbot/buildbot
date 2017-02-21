@@ -183,7 +183,7 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
         ])
         yield self.rtype.schedulerEnable(13, False)
         self.master.mq.assertProductions(
-            [(('schedulers', '13', 'updated'),
+            [((b'schedulers', b'13', b'updated'),
               {'enabled': False,
                'master': {'active': False,
                           'last_active': fakedb._mkdt(SOMETIME),
@@ -193,7 +193,7 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
                'schedulerid': 13})])
         yield self.rtype.schedulerEnable(13, True)
         self.master.mq.assertProductions(
-            [(('schedulers', '13', 'updated'),
+            [((b'schedulers', b'13', b'updated'),
               {'enabled': True,
                'master': {'active': False,
                           'last_active': fakedb._mkdt(SOMETIME),

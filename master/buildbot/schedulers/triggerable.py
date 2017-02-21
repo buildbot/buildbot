@@ -109,7 +109,7 @@ class Triggerable(base.BaseScheduler):
             startConsuming = self.master.mq.startConsuming
             self._buildset_complete_consumer = yield startConsuming(
                 self._buildset_complete_cb,
-                ('buildsets', None, 'complete'))
+                (b'buildsets', None, b'complete'))
         elif not self._waiters and self._buildset_complete_consumer:
             self._buildset_complete_consumer.stopConsuming()
             self._buildset_complete_consumer = None

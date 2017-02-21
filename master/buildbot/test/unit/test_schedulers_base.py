@@ -172,7 +172,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             self.assertEqual(len(self.mq.qrefs), 2)
 
             qref = self.mq.qrefs[1]
-            self.assertEqual(qref.filter, ('changes', None, 'new'))
+            self.assertEqual(qref.filter, (b'changes', None, b'new'))
 
             # invoke the callback with the change, and check the result
             qref.callback('change.12934.new', msg)

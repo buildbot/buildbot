@@ -174,10 +174,10 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         startConsuming = self.master.mq.startConsuming
         self.buildrequest_consumer_new = yield startConsuming(
             buildRequestAdded,
-            ('buildrequests', None, "new"))
+            (b'buildrequests', None, b"new"))
         self.buildrequest_consumer_unclaimed = yield startConsuming(
             buildRequestAdded,
-            ('buildrequests', None, 'unclaimed'))
+            (b'buildrequests', None, b'unclaimed'))
         yield service.AsyncMultiService.startService(self)
 
     @defer.inlineCallbacks

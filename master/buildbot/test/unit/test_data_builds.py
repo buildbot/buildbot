@@ -272,10 +272,10 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
 
         return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, workerid=20,
-                                  exp_events=[(('builders', '10', 'builds', '1', 'new'), self.new_build_event),
-                                              (('builds', '100', 'new'),
+                                  exp_events=[((b'builders', b'10', b'builds', b'1', b'new'), self.new_build_event),
+                                              ((b'builds', b'100', b'new'),
                                                self.new_build_event),
-                                              (('workers', '20', 'builds', '100', 'new'), self.new_build_event)])
+                                              ((b'workers', b'20', b'builds', b'100', b'new'), self.new_build_event)])
 
     def test_signature_setBuildStateString(self):
         @self.assertArgSpecMatches(

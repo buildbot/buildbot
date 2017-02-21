@@ -48,7 +48,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_signature_stopConsuming(self):
-        cons = yield self.mq.startConsuming(lambda: None, ('a',))
+        cons = yield self.mq.startConsuming(lambda: None, (b'a',))
 
         @self.assertArgSpecMatches(cons.stopConsuming)
         def stopConsuming(self):
@@ -78,16 +78,16 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
     @defer.inlineCallbacks
     def test_stopConsuming(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
-        self.mq.produce(('abc',), dict(x=1))
+        qref = yield self.mq.startConsuming(cb, (b'abc',))
+        self.mq.produce((b'abc',), dict(x=1))
         qref.stopConsuming()
-        self.mq.produce(('abc',), dict(x=1))
-        cb.assert_called_once_with(('abc',), dict(x=1))
+        self.mq.produce((b'abc',), dict(x=1))
+        cb.assert_called_once_with((b'abc',), dict(x=1))
 
     @defer.inlineCallbacks
     def test_stopConsuming_twice(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, (b'abc',))
         qref.stopConsuming()
         qref.stopConsuming()
         # ..nothing bad happens
@@ -95,15 +95,15 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
     @defer.inlineCallbacks
     def test_non_persistent(self):
         cb = mock.Mock()
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, (b'abc',))
 
         cb2 = mock.Mock()
-        qref2 = yield self.mq.startConsuming(cb2, ('abc',))
+        qref2 = yield self.mq.startConsuming(cb2, (b'abc',))
 
         qref.stopConsuming()
-        self.mq.produce(('abc',), '{}')
+        self.mq.produce((b'abc',), b'{}')
 
-        qref = yield self.mq.startConsuming(cb, ('abc',))
+        qref = yield self.mq.startConsuming(cb, (b'abc',))
         qref.stopConsuming()
         qref2.stopConsuming()
 
@@ -114,24 +114,24 @@ class RealTests(tuplematching.TupleMatchingMixin, Tests):
     def test_persistent(self):
         cb = mock.Mock()
 
-        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = yield self.mq.startConsuming(cb, (b'abc',), persistent_name='ABC')
         qref.stopConsuming()
 
-        self.mq.produce(('abc',), '{}')
+        self.mq.produce((b'abc',), b'{}')
 
-        qref = yield self.mq.startConsuming(cb, ('abc',), persistent_name='ABC')
+        qref = yield self.mq.startConsuming(cb, (b'abc',), persistent_name='ABC')
         qref.stopConsuming()
 
         self.assertTrue(cb.called)
 
     @defer.inlineCallbacks
     def test_waitUntilEvent_check_false(self):
-        d = self.mq.waitUntilEvent(('abc',), lambda: False)
+        d = self.mq.waitUntilEvent((b'abc',), lambda: False)
         self.assertEqual(d.called, False)
-        self.mq.produce(('abc',), dict(x=1))
+        self.mq.produce((b'abc',), dict(x=1))
         self.assertEqual(d.called, True)
         res = yield d
-        self.assertEqual(res, (('abc',), dict(x=1)))
+        self.assertEqual(res, ((b'abc',), dict(x=1)))
     timeout = 3  # those tests should not run long
 
 

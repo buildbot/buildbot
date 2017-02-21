@@ -61,9 +61,9 @@ class ResourceType(unittest.TestCase):
         master.mq.verifyMessages = False  # since this is a pretend message
         inst = cls(master)
         inst.produceEvent(dict(fooid=10, barid='20'),  # note integer vs. string
-                          'tested')
+                          b'tested')
         master.mq.assertProductions([
-            (('foo', '10', 'bar', '20', 'tested'), dict(fooid=10, barid='20'))
+            ((b'foo', b'10', b'bar', b'20', b'tested'), dict(fooid=10, barid='20'))
         ])
 
     def test_compilePatterns(self):

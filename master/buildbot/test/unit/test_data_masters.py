@@ -182,7 +182,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(60)))
         self.assertEqual(self.master.mq.productions, [
-            (('masters', '13', 'started'),
+            ((b'masters', b'13', b'started'),
              dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
@@ -196,7 +196,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(120)))
         self.assertEqual(self.master.mq.productions, [
-            (('masters', '13', 'started'),
+            ((b'masters', b'13', b'started'),
              dict(masterid=13, name='myname', active=True)),
         ])
         self.master.mq.productions = []
@@ -321,6 +321,6 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         updates.finishBuild.assert_called_with(buildid=13, results=RETRY)
 
         self.assertEqual(self.master.mq.productions, [
-            (('masters', '14', 'stopped'),
+            ((b'masters', b'14', b'stopped'),
              dict(masterid=14, name='other', active=False)),
         ])

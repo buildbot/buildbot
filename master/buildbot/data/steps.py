@@ -132,32 +132,32 @@ class Step(base.ResourceType):
     def addStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
             buildid=buildid, name=name, state_string=u'pending')
-        yield self.generateEvent(stepid, 'new')
+        yield self.generateEvent(stepid, b'new')
         defer.returnValue((stepid, num, name))
 
     @base.updateMethod
     @defer.inlineCallbacks
     def startStep(self, stepid):
         yield self.master.db.steps.startStep(stepid=stepid)
-        yield self.generateEvent(stepid, 'started')
+        yield self.generateEvent(stepid, b'started')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def setStepStateString(self, stepid, state_string):
         yield self.master.db.steps.setStepStateString(
             stepid=stepid, state_string=state_string)
-        yield self.generateEvent(stepid, 'updated')
+        yield self.generateEvent(stepid, b'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def addStepURL(self, stepid, name, url):
         yield self.master.db.steps.addURL(
             stepid=stepid, name=name, url=url)
-        yield self.generateEvent(stepid, 'updated')
+        yield self.generateEvent(stepid, b'updated')
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishStep(self, stepid, results, hidden):
         yield self.master.db.steps.finishStep(
             stepid=stepid, results=results, hidden=hidden)
-        yield self.generateEvent(stepid, 'finished')
+        yield self.generateEvent(stepid, b'finished')

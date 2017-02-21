@@ -21,6 +21,7 @@ from twisted.internet import defer
 from buildbot.data import base
 from buildbot.data import types
 from buildbot.util import identifiers
+from buildbot.util import unicode2bytes
 
 
 class EndpointMixin(object):
@@ -116,7 +117,7 @@ class Log(base.ResourceType):
     @defer.inlineCallbacks
     def generateEvent(self, _id, event):
         # get the build and munge the result for the notification
-        build = yield self.master.data.get(('logs', str(_id)))
+        build = yield self.master.data.get(('logs', unicode2bytes(str(_id))))
         self.produceEvent(build, event)
 
     @base.updateMethod
@@ -130,21 +131,21 @@ class Log(base.ResourceType):
             except KeyError:
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue
-            self.generateEvent(logid, "new")
+            self.generateEvent(logid, b"new")
             defer.returnValue(logid)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def appendLog(self, logid, content):
         res = yield self.master.db.logs.appendLog(logid=logid, content=content)
-        self.generateEvent(logid, "append")
+        self.generateEvent(logid, b"append")
         defer.returnValue(res)
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishLog(self, logid):
         res = yield self.master.db.logs.finishLog(logid=logid)
-        self.generateEvent(logid, "finished")
+        self.generateEvent(logid, b"finished")
         defer.returnValue(res)
 
     @base.updateMethod

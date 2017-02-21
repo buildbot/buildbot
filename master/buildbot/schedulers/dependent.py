@@ -54,12 +54,12 @@ class Dependent(base.BaseScheduler):
 
         self._buildset_new_consumer = yield self.master.mq.startConsuming(
             self._buildset_new_cb,
-            ('buildsets', None, 'new'))
+            (b'buildsets', None, b'new'))
         # TODO: refactor to subscribe only to interesting buildsets, and
         # subscribe to them directly, via the data API
         self._buildset_complete_consumer = yield self.master.mq.startConsuming(
             self._buildset_complete_cb,
-            ('buildsets', None, 'complete'))
+            (b'buildsets', None, b'complete'))
 
         # check for any buildsets completed before we started
         yield self._checkCompletedBuildsets(None, )

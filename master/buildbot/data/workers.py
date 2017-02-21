@@ -128,7 +128,7 @@ class Worker(base.ResourceType):
             masterid=masterid,
             workerinfo=workerinfo)
         bs = yield self.master.data.get(('workers', workerid))
-        self.produceEvent(bs, 'connected')
+        self.produceEvent(bs, b'connected')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -137,7 +137,7 @@ class Worker(base.ResourceType):
             workerid=workerid,
             masterid=masterid)
         bs = yield self.master.data.get(('workers', workerid))
-        self.produceEvent(bs, 'disconnected')
+        self.produceEvent(bs, b'disconnected')
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -145,7 +145,7 @@ class Worker(base.ResourceType):
         bs = yield self.master.data.get(('workers', workerid))
         bs['last_connection'] = last_connection
         bs['notify'] = notify
-        self.produceEvent(bs, 'missing')
+        self.produceEvent(bs, b'missing')
 
     @base.updateMethod
     def deconfigureAllWorkersForMaster(self, masterid):

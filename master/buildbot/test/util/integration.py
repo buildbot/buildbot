@@ -171,11 +171,11 @@ class RunMasterBase(unittest.TestCase):
 
         newConsumer = yield self.master.mq.startConsuming(
             newCallback,
-            ('buildrequests', None, 'new'))
+            (b'buildrequests', None, b'new'))
 
         finishedConsumer = yield self.master.mq.startConsuming(
             finishedCallback,
-            ('buildrequests', None, 'complete'))
+            (b'buildrequests', None, b'complete'))
 
         if useChange is False:
             # use data api to force a build
@@ -189,7 +189,8 @@ class RunMasterBase(unittest.TestCase):
         builds = yield self.master.data.get(
             ('builds',),
             filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])
-        # if the build has been retried, there will be several matching builds. We return the last build
+        # if the build has been retried, there will be several matching builds.
+        # We return the last build
         build = builds[-1]
         finishedConsumer.stopConsuming()
         yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)

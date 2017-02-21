@@ -27,6 +27,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.changes import changes
 from buildbot.process.properties import Properties
+from buildbot.util import unicode2bytes
 from buildbot.util.service import ClusteredBuildbotService
 from buildbot.util.state import StateMixin
 
@@ -173,14 +174,14 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         self._change_consumer = yield self.master.mq.startConsuming(
             lambda k, m: self._changeCallback(k, m, fileIsImportant,
                                               change_filter, onlyImportant),
-            ('changes', None, 'new'))
+            (b'changes', None, b'new'))
 
     @defer.inlineCallbacks
     def startConsumingEnableEvents(self):
         assert not self._enable_consumer
         self._enable_consumer = yield self.master.mq.startConsuming(
             self._enabledCallback,
-            ('schedulers', str(self.serviceid), 'updated'))
+            (b'schedulers', unicode2bytes(str(self.serviceid)), b'updated'))
 
     @defer.inlineCallbacks
     def _changeCallback(self, key, msg, fileIsImportant, change_filter,
