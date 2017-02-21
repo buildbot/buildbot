@@ -26,7 +26,9 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 
 
 class WsProtocol(WebSocketServerProtocol):
@@ -69,7 +71,7 @@ class WsProtocol(WebSocketServerProtocol):
 
     def parsePath(self, path):
         path = path.split("/")
-        return tuple([str(p) if p != "*" else None for p in path])
+        return tuple([unicode2bytes(str(p)) if p != "*" else None for p in path])
 
     def isPath(self, path):
         if not isinstance(path, string_types):
@@ -89,7 +91,8 @@ class WsProtocol(WebSocketServerProtocol):
 
         def callback(key, message):
             # protocol is deliberately concise in size
-            return self.sendJsonMessage(k="/".join(key), m=message)
+            return self.sendJsonMessage(k="/".join([bytes2NativeString(k)
+                                                    for k in key]), m=message)
 
         qref = yield self.master.mq.startConsuming(callback, self.parsePath(path))
 
