@@ -46,7 +46,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         filetmp, self.filepath = self.createFileTemp(self.tmp_dir,
                                                      "tempfile.txt",
                                                      text="key value")
-        os.chmod(self.filepath, stat.S_IRWXU)
+        os.chmod(self.filepath, 0o700)
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
 
