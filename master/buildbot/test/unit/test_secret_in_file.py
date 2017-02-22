@@ -64,6 +64,8 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(self.srvfile._dirname, self.tmp_dir)
 
     def testCheckConfigErrorSecretInAFileService(self):
+        if not os.name == "posix":
+            return
         file_path_not_readable, filepath = self.createFileTemp(self.tmp_dir,
                                                                "tempfile2.txt")
         os.chmod(filepath, stat.S_IRGRP)
