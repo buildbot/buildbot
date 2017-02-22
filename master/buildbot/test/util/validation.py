@@ -82,6 +82,11 @@ class BinaryValidator(InstanceValidator):
     name = 'bytestring'
 
 
+class StrValidator(InstanceValidator):
+    types = (str,)
+    name = 'str'
+
+
 class DateTimeValidator(Validator):
     types = (datetime.datetime,)
     name = 'datetime'
@@ -258,10 +263,10 @@ class PatchValidator(Validator):
 
 class MessageValidator(Validator):
 
-    routingKeyValidator = TupleValidator(BinaryValidator())
+    routingKeyValidator = TupleValidator(StrValidator())
 
     def __init__(self, events, messageValidator):
-        self.events = set(events)
+        self.events = [bytes2NativeString(e) for e in set(events)]
         self.messageValidator = messageValidator
 
     def validate(self, name, routingKey_message):
@@ -423,7 +428,7 @@ _buildset = dict(
 _buildsetEvents = [b'new', b'complete']
 
 message['buildsets'] = Selector()
-message['buildsets'].add(lambda k: k[-1] == b'new',
+message['buildsets'].add(lambda k: k[-1] == 'new',
                          MessageValidator(
                              events=_buildsetEvents,
                              messageValidator=DictValidator(

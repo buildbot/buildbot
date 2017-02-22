@@ -115,7 +115,7 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
 
     def assertReceivesChangeNewMessage(self, request):
         self.master.mq.callConsumer(
-            (b"changes", b"500", b"new"), test_data_changes.Change.changeEvent)
+            ("changes", "500", "new"), test_data_changes.Change.changeEvent)
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
         msg = json.loads(bytes2NativeString(kw[b"data"]))

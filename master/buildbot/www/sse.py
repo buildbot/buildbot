@@ -114,7 +114,7 @@ class EventResource(resource.Resource):
             try:
                 d = self.master.mq.startConsuming(
                     consumer.onMessage,
-                    tuple(path))
+                    tuple([bytes2NativeString(p) for p in path]))
 
                 @d.addCallback
                 def register(qref):
