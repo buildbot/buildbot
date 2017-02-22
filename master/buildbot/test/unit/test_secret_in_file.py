@@ -34,10 +34,11 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         tempdir.createDirectory()
         return tempdir.path
 
-    def createFileTemp(self, tempdir, filename, text=""):
+    def createFileTemp(self, tempdir, filename, text="", chmodRights=0o700):
         file_path = os.path.join(tempdir, filename)
         with open(file_path, 'w') as filetmp:
             filetmp.write(text)
+            os.chmod(file_path, chmodRights)
         return filetmp, file_path
 
     @defer.inlineCallbacks
@@ -46,29 +47,23 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         filetmp, self.filepath = self.createFileTemp(self.tmp_dir,
                                                      "tempfile.txt",
                                                      text="key value")
-        os.chmod(self.filepath, 0o700)
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
 
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.srvfile.stopService()
-        # windows requires to close all existing open temp files not closed by
-        # open method
-        for tempfile in os.listdir(self.tmp_dir):
-            with open(os.path.join(self.tmp_dir, tempfile), 'w') as filetmp:
-                filetmp.close()
 
     def testCheckConfigSecretInAFileService(self):
         self.assertEqual(self.srvfile.name, "SecretInAFile")
         self.assertEqual(self.srvfile._dirname, self.tmp_dir)
 
     def testCheckConfigErrorSecretInAFileService(self):
-        if not os.name == "posix":
-            return
+        if os.name != "posix":
+            self.skipTest("Permission checks only works on posix systems")
         file_path_not_readable, filepath = self.createFileTemp(self.tmp_dir,
-                                                               "tempfile2.txt")
-        os.chmod(filepath, stat.S_IRGRP)
+                                                               "tempfile2.txt",
+                                                               chmodRights=stat.S_IRGRP)
         expctd_msg_error = " on file tempfile2.txt are too " \
                            "open. It is required that your secret files are" \
                            " NOT accessible by others!"
@@ -80,12 +75,12 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     def testCheckConfigfileExtension(self):
         file_suffix, filepath = self.createFileTemp(self.tmp_dir,
                                                     "tempfile2.ini",
-                                                    text="test suffix")
+                                                    text="test suffix",
+                                                    chmodRights=stat.S_IRWXU)
         file_not_suffix, filepath2 = self.createFileTemp(self.tmp_dir,
                                                          "tempfile2.txt",
-                                                         text="some text")
-        os.chmod(filepath, stat.S_IRWXU)
-        os.chmod(filepath2, stat.S_IRWXU)
+                                                         text="some text",
+                                                         chmodRights=stat.S_IRWXU)
         yield self.srvfile.reconfigService(self.tmp_dir, suffixes=[".ini"])
         self.assertEqual(self.srvfile.get("tempfile2"), "test suffix")
         self.assertEqual(self.srvfile.get("tempfile3"), None)
