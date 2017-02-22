@@ -170,7 +170,7 @@ class VerifyDict(unittest.TestCase):
                 xid=validation.IntValidator(),
                 yid=validation.IntValidator())),
             good=[
-                ((b'thing', b'1', b'2', b'started'),
+                (('thing', '1', '2', 'started'),
                  {'xid': 1, 'yid': 2, 'a': True}),
         ], bad=[
                 # routingKey is not a tuple
