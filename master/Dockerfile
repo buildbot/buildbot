@@ -25,6 +25,7 @@ RUN \
     echo @testing http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
     echo @edge http://nl.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
     apk add --no-cache \
+        git \
         python \
         py-pip \
         py-psycopg2 \
