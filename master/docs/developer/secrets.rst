@@ -1,10 +1,11 @@
 .. _secrets:
 
+=======
 Secrets
--------
+=======
 
 SecretDetails
-`````````````
+=============
 
 A secret is identified by a couple (key, value).
 
@@ -23,7 +24,8 @@ Each parameter value could be returned by a function (source(), value(), key()).
 ``Secrets`` returned by the secrets manager are stored in a ``SecretDetails`` object.
 
 Secrets manager
-```````````````
+===============
+
 The secret manager is a Buildbot service, providing a get method API to retrieve a secret value.
 
 .. code-block:: python
@@ -39,3 +41,19 @@ The manager calls the get method of the configured provider and returns a ``Secr
   c['secretsProviders'] = [SecretsProviderOne(params), SecretsProviderTwo(params)]
 
 If more than one provider is defined in the configuration, the manager returns the first value found.
+
+Secrets providers
+=================
+
+The secrets providers are implementing the specific getters, related to the storage chosen.
+
+File provider
+`````````````
+
+.. code-block:: python
+
+    c['secretsManagers'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+
+In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
+File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
+The provider SecretInFile allows Buildbot to read secrets in the secret directory.
