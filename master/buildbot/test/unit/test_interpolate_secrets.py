@@ -5,7 +5,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
-from buildbot.secrets.provider.base import SecretProviderBase
+from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake.fakebuild import FakeBuild
