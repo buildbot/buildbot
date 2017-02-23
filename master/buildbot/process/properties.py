@@ -431,6 +431,7 @@ class _SecretRenderer(object):
         secret_detail = credsservice.get(self.secret_name)
         return secret_detail.value
 
+
 class _SecretIndexer(object):
 
     def __contains__(self, password):
@@ -776,7 +777,7 @@ class _Renderer(util.ComparableMixin, object):
         return d
 
     def __repr__(self):
-        return 'renderer(%r)' % (self.getRenderingFor,)
+        return 'renderer(%r)' % (self.fn,)
 
 
 def renderer(fn):

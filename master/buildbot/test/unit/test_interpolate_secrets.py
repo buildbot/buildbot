@@ -1,12 +1,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.config import MasterConfig
 from buildbot.process.properties import Interpolate
 from buildbot.secrets.provider.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
@@ -53,6 +50,7 @@ class FakeServiceManager(object):
 
     def __getitem__(self, dictionary):
         return FakeService(self.dictionary)
+
 
 class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
 
