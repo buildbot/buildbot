@@ -40,6 +40,7 @@ from zope.interface import implementer
 from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2NativeString
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 from buildbot.www import config as wwwconfig
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -272,7 +273,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 raise RuntimeError(
                     "could not find plugin %s; is it installed?" % (key,))
             self.apps.get(key).setMaster(self.master)
-            root.putChild(key, self.apps.get(key).resource)
+            root.putChild(unicode2bytes(key), self.apps.get(key).resource)
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
         for plugin_name in set(self.apps.names) - known_plugins:
             log.msg("NOTE: www plugin %r is installed but not "

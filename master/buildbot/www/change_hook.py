@@ -28,6 +28,7 @@ from twisted.python import log
 from twisted.python.reflect import namedModule
 from twisted.web import server
 
+from buildbot.util import bytes2NativeString
 from buildbot.www import resource
 
 
@@ -118,7 +119,7 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', request.uri)
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)
@@ -153,5 +154,6 @@ class ChangeHookResource(resource.Resource):
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         for chdict in changes:
+            print(chdict)
             change = yield self.master.addChange(src=src, **chdict)
             log.msg("injected change %s" % change)

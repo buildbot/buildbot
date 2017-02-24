@@ -27,6 +27,8 @@ from twisted.internet import reactor
 from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
 
+from buildbot.util import unicode2bytes
+
 
 class FakeTransport:
     disconnecting = False
@@ -56,7 +58,7 @@ class TailProcess(protocol.ProcessProtocol):
 class LogWatcher(LineOnlyReceiver):
     POLL_INTERVAL = 0.1
     TIMEOUT_DELAY = 10.0
-    delimiter = os.linesep
+    delimiter = unicode2bytes(os.linesep)
 
     def __init__(self, logfile):
         self.logfile = logfile
@@ -121,9 +123,9 @@ class LogWatcher(LineOnlyReceiver):
     def lineReceived(self, line):
         if not self.running:
             return
-        if "Log opened." in line:
+        if b"Log opened." in line:
             self.in_reconfig = True
-        if "beginning configuration update" in line:
+        if b"beginning configuration update" in line:
             self.in_reconfig = True
 
         if self.in_reconfig:
@@ -131,22 +133,22 @@ class LogWatcher(LineOnlyReceiver):
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
-        PROGRESS_TEXT = ['Starting BuildMaster', 'Loading configuration from',
-                         'added builder', 'adding scheduler', 'Loading builder', 'Starting factory']
+        PROGRESS_TEXT = [b'Starting BuildMaster', b'Loading configuration from',
+                         b'added builder', b'adding scheduler', b'Loading builder', b'Starting factory']
         for progressText in PROGRESS_TEXT:
             if progressText in line:
                 self.timer = None
                 break
 
-        if "message from master: attached" in line:
+        if b"message from master: attached" in line:
             return self.finished("worker")
-        if "reconfig aborted" in line or 'reconfig partially applied' in line:
+        if b"reconfig aborted" in line or b'reconfig partially applied' in line:
             return self.finished(Failure(ReconfigError()))
-        if "Server Shut Down" in line:
+        if b"Server Shut Down" in line:
             return self.finished(Failure(ReconfigError()))
-        if "configuration update complete" in line:
+        if b"configuration update complete" in line:
             return self.finished("buildmaster")
-        if "BuildMaster is running" in line:
+        if b"BuildMaster is running" in line:
             return self.finished("buildmaster")
-        if "BuildMaster startup failed" in line:
+        if b"BuildMaster startup failed" in line:
             return self.finished(Failure(BuildmasterStartupError()))
