@@ -29,15 +29,15 @@ from buildbot.test.util.integration import RunMasterBase
 expectedOutput = """\
 *** BUILD 1 *** ==> finished (success)
     *** STEP shell *** ==> 'echo hello' (success)
-        log:stdio (%(loglines)s)
+        log:stdio ({loglines})
     *** STEP trigger *** ==> triggered trigsched (success)
        url:trigsched #2 (http://localhost:8080/#buildrequests/2)
        url:success: build #1 (http://localhost:8080/#builders/2/builds/1)
     *** STEP shell_1 *** ==> 'echo world' (success)
-        log:stdio (%(loglines)s)
+        log:stdio ({loglines})
 *** BUILD 2 *** ==> finished (success)
     *** STEP shell *** ==> 'echo ola' (success)
-        log:stdio (%(loglines)s)
+        log:stdio ({loglines})
 """
 
 
@@ -66,8 +66,8 @@ class TriggeringMaster(RunMasterBase):
         # depending on the environment the number of lines is different between
         # test hosts
         loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
-        self.assertEqual(dump.getvalue(), expectedOutput %
-                         dict(loglines=loglines))
+        self.assertEqual(dump.getvalue(),
+                         expectedOutput.format(loglines=loglines))
 
 
 # master configuration
