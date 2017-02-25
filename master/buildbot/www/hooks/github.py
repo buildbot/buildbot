@@ -25,6 +25,7 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 
 try:
@@ -34,9 +35,9 @@ except ImportError:
     import simplejson as json
 
 
-_HEADER_CT = 'Content-Type'
-_HEADER_EVENT = 'X-GitHub-Event'
-_HEADER_SIGNATURE = 'X-Hub-Signature'
+_HEADER_CT = b'Content-Type'
+_HEADER_EVENT = b'X-GitHub-Event'
+_HEADER_SIGNATURE = b'X-Hub-Signature'
 
 
 class GitHubEventHandler(object):
@@ -65,8 +66,10 @@ class GitHubEventHandler(object):
 
     def _get_payload(self, request):
         content = request.content.read()
+        content = bytes2NativeString(content)
 
         signature = request.getHeader(_HEADER_SIGNATURE)
+        signature = bytes2NativeString(signature)
 
         if not signature and self._strict:
             raise ValueError('Request has no required signature')
@@ -75,10 +78,10 @@ class GitHubEventHandler(object):
             try:
                 hash_type, hexdigest = signature.split('=')
             except ValueError:
-                raise ValueError('Wrong signature format: %r' % (signature,))
+                raise ValueError('Wrong signature format: {}'.format(signature))
 
             if hash_type != 'sha1':
-                raise ValueError('Unknown hash type: %s' % (hash_type,))
+                raise ValueError('Unknown hash type: {}'.format(hash_type))
 
             mac = hmac.new(unicode2bytes(self._secret),
                            msg=unicode2bytes(content),
@@ -89,6 +92,7 @@ class GitHubEventHandler(object):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(_HEADER_CT)
+        content_type = bytes2NativeString(content_type)
 
         if content_type == 'application/json':
             payload = json.loads(content)

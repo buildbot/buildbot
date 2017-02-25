@@ -572,10 +572,10 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
     def test_unknown_hash(self):
         bad_hash_type = b'blah'
         self.request = _prepare_request('push', gitJsonPayload, headers={
-            _HEADER_SIGNATURE: '%s=doesnotmatter' % (bad_hash_type,)
+            _HEADER_SIGNATURE: bad_hash_type + b'=doesnotmatter'
         })
         yield self.request.test_render(self.changeHook)
-        expected = b'Unknown hash type: %r' % (bad_hash_type,)
+        expected = b'Unknown hash type: ' + bad_hash_type
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -602,12 +602,12 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_wrong_signature_format(self):
-        bad_signature = 'hash=value=something'
+        bad_signature = b'hash=value=something'
         self.request = _prepare_request('push', gitJsonPayload, headers={
             _HEADER_SIGNATURE: bad_signature
         })
         yield self.request.test_render(self.changeHook)
-        expected = b'Wrong signature format: %r' % (bad_signature,)
+        expected = b'Wrong signature format: ' + bad_signature
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
