@@ -1,1 +1,0 @@
-buildbot.test.integration.test_trigger.TriggeringMaster.test_trigger
