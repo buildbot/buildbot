@@ -575,9 +575,10 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
             _HEADER_SIGNATURE: '%s=doesnotmatter' % (bad_hash_type,)
         })
         yield self.request.test_render(self.changeHook)
-        expected = b'Unknown hash type: %r' % (bad_hash_type,)
+        expected = b'Unknown hash type: '
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
-        self.assertEqual(self.request.written, expected)
+        self.assertIn(expected, self.request.written)
+        self.assertIn(bad_hash_type, self.request.written)
 
     @defer.inlineCallbacks
     def test_signature_nok(self):
