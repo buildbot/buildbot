@@ -55,12 +55,14 @@ class GitHubEventHandler(object):
         payload = self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
-        log.msg("X-GitHub-Event: %r" % (event_type,), logLevel=logging.DEBUG)
+        event_type = bytes2NativeString(event_type)
+        log.msg("X-GitHub-Event: {}".format(
+            event_type), logLevel=logging.DEBUG)
 
-        handler = getattr(self, 'handle_%s' % event_type, None)
+        handler = getattr(self, 'handle_{}'.format(event_type), None)
 
         if handler is None:
-            raise ValueError('Unknown event: %r' % (event_type,))
+            raise ValueError('Unknown event: {}'.format(event_type))
 
         return handler(payload)
 
@@ -78,7 +80,8 @@ class GitHubEventHandler(object):
             try:
                 hash_type, hexdigest = signature.split('=')
             except ValueError:
-                raise ValueError('Wrong signature format: {}'.format(signature))
+                raise ValueError(
+                    'Wrong signature format: {}'.format(signature))
 
             if hash_type != 'sha1':
                 raise ValueError('Unknown hash type: {}'.format(hash_type))
@@ -99,9 +102,9 @@ class GitHubEventHandler(object):
         elif content_type == 'application/x-www-form-urlencoded':
             payload = json.loads(request.args['payload'][0])
         else:
-            raise ValueError('Unknown content type: %r' % (content_type,))
+            raise ValueError('Unknown content type: {}'.format(content_type))
 
-        log.msg("Payload: %r" % payload, logLevel=logging.DEBUG)
+        log.msg("Payload: {}".format(payload), logLevel=logging.DEBUG)
 
         return payload
 
@@ -120,21 +123,22 @@ class GitHubEventHandler(object):
 
         changes = self._process_change(payload, user, repo, repo_url, project)
 
-        log.msg("Received %d changes from github" % len(changes))
+        log.msg("Received {} changes from github".format(len(changes)))
 
         return changes, 'git'
 
     def handle_pull_request(self, payload):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/%d/merge' % (number,)
+        refname = 'refs/pull/{}/merge'.format(number)
         commits = payload['pull_request']['commits']
 
-        log.msg('Processing GitHub PR #%d' % number, logLevel=logging.DEBUG)
+        log.msg('Processing GitHub PR #{}'.format(number),
+                logLevel=logging.DEBUG)
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
-            log.msg("GitHub PR #%d %s, ignoring" % (number, action))
+            log.msg("GitHub PR #{} {}, ignoring".format(number, action))
             return changes, 'git'
 
         change = {
@@ -147,8 +151,8 @@ class GitHubEventHandler(object):
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],
-            'comments': 'GitHub Pull Request #%d (%d commit%s)' % (
-                number, commits, 's' if commits != 1 else ''),
+            'comments': 'GitHub Pull Request #{} ({} commit{})'.format(
+                number, commits, 's' if commits != 1 else '')
         }
 
         if callable(self._codebase):
@@ -158,7 +162,7 @@ class GitHubEventHandler(object):
 
         changes.append(change)
 
-        log.msg("Received %d changes from GitHub PR #%d" % (
+        log.msg("Received {} changes from GitHub PR #{}".format(
             len(changes), number))
         return changes, 'git'
 
@@ -177,12 +181,12 @@ class GitHubEventHandler(object):
         # We only care about regular heads, i.e. branches
         match = re.match(r"^refs/heads/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `%s': Not a branch" % refname)
+            log.msg("Ignoring refname `{}': Not a branch".format(refname))
             return changes
 
         branch = match.group(1)
         if payload.get('deleted'):
-            log.msg("Branch `%s' deleted, ignoring" % branch)
+            log.msg("Branch `{}' deleted, ignoring".format(branch))
             return changes
 
         for commit in payload['commits']:
@@ -192,11 +196,11 @@ class GitHubEventHandler(object):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: %s" % commit['id'][:8])
+            log.msg("New revision: {}".format(commit['id'][:8]))
 
             change = {
-                'author': '%s <%s>' % (commit['author']['name'],
-                                       commit['author']['email']),
+                'author': '{} <{}>'.format(commit['author']['name'],
+                                           commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
