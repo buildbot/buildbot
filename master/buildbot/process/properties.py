@@ -426,10 +426,15 @@ class _SecretRenderer(object):
     def __init__(self, secret_name):
         self.secret_name = secret_name
 
+    @defer.inlineCallbacks
     def getRenderingFor(self, build):
+        servicenames = [service.name for service in build.getBuild().master.services]
+        if not "secrets" in servicenames:
+            defer.returnValue(None)
         credsservice = build.getBuild().master.namedServices['secrets']
-        secret_detail = credsservice.get(self.secret_name)
-        return secret_detail.value
+        secret_detail = yield credsservice.get(self.secret_name)
+        if secret_detail is not None:
+            defer.returnValue(secret_detail.value)
 
 
 class _SecretIndexer(object):
@@ -538,7 +543,6 @@ class Interpolate(util.ComparableMixin, object):
 
         # Report in proper place with typical stack trace...
         _on_property_usage(prop, stacklevel=4)
-
         return _thePropertyDict, prop, repl
 
     @staticmethod
@@ -547,7 +551,7 @@ class Interpolate(util.ComparableMixin, object):
             secret, repl = arg.split(":", 1)
         except ValueError:
             secret, repl = arg, None
-        return _SecretIndexer(), secret.decode('utf8'), repl
+        return _SecretIndexer(), secret, repl
 
     @staticmethod
     def _parse_src(arg):
@@ -777,7 +781,7 @@ class _Renderer(util.ComparableMixin, object):
         return d
 
     def __repr__(self):
-        return 'renderer(%r)' % (self.fn,)
+        return 'renderer(%r)' % (self.getRenderingFor,)
 
 
 def renderer(fn):

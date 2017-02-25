@@ -5,21 +5,9 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.manager import SecretManager
-from buildbot.secrets.providers.base import SecretProviderBase
 from buildbot.secrets.secret import SecretDetails
 from buildbot.test.fake import fakemaster
-
-
-class FakeSecretStorage(SecretProviderBase):
-
-    def __init__(self, allsecretsInADict):
-        self.allsecrets = allsecretsInADict
-
-    def get(self, key):
-        if key in self.allsecrets:
-            return self.allsecrets[key]
-        else:
-            return None
+from buildbot.test.fake.secrets import FakeSecretStorage
 
 
 class OtherFakeSecretStorage(FakeSecretStorage):
