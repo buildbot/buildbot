@@ -26,18 +26,18 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
 
-expectedOutput = """\
-*** BUILD 1 *** ==> finished (success)
-    *** STEP shell *** ==> 'echo hello' (success)
-        log:stdio ({loglines})
-    *** STEP trigger *** ==> triggered trigsched (success)
-       url:trigsched #2 (http://localhost:8080/#buildrequests/2)
-       url:success: build #1 (http://localhost:8080/#builders/2/builds/1)
-    *** STEP shell_1 *** ==> 'echo world' (success)
-        log:stdio ({loglines})
-*** BUILD 2 *** ==> finished (success)
-    *** STEP shell *** ==> 'echo ola' (success)
-        log:stdio ({loglines})
+expectedOutputRegex = \
+r"""\*\*\* BUILD 1 \*\*\* ==> finished \(success\)
+    \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
+        log:stdio \({loglines}\)
+    \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)
+       url:trigsched #2 \(http://localhost:8080/#buildrequests/2\)
+       url:success: build #1 \(http://localhost:8080/#builders/2/builds/1\)
+    \*\*\* STEP shell_1 \*\*\* ==> 'echo world' \(success\)
+        log:stdio \({loglines}\)
+\*\*\* BUILD 2 \*\*\* ==> finished \(success\)
+    \*\*\* STEP shell \*\*\* ==> 'echo ola' \(success\)
+        log:stdio \({loglines}\)
 """
 
 
@@ -66,8 +66,8 @@ class TriggeringMaster(RunMasterBase):
         # depending on the environment the number of lines is different between
         # test hosts
         loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
-        self.assertEqual(dump.getvalue(),
-                         expectedOutput.format(loglines=loglines))
+        self.assertRegex(dump.getvalue(),
+                         expectedOutputRegex.format(loglines=loglines))
 
 
 # master configuration
