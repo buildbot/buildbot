@@ -38,10 +38,8 @@ def _prepare_request(payload, headers=None):
 
 
 class TestChangeHookConfiguredWithBase(unittest.TestCase):
-
     def setUp(self):
         self.changeHook = _prepare_base_change_hook()
-
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):
