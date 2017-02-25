@@ -20,6 +20,8 @@ import pkg_resources
 
 from twisted.web import static
 
+from buildbot.util import bytes2NativeString
+
 
 class Application(object):
 
@@ -27,6 +29,7 @@ class Application(object):
         self.description = description
         self.version = pkg_resources.resource_string(
             modulename, "/VERSION").strip()
+        self.version = bytes2NativeString(self.version)
         self.static_dir = pkg_resources.resource_filename(
             modulename, "/static")
         self.resource = static.File(self.static_dir)
