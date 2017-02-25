@@ -12,7 +12,8 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 
 Python: https://www.python.org
 
-  Both Buildbot master and Buildbot worker require Python-2.6, although Python-2.7 is recommended.
+  Buildbot master requires Python-2.7.
+  Buildbot worker require Python-2.6, although Python-2.7 is recommended.
 
   .. note::
 
@@ -88,4 +89,4 @@ Python-Dateutil: http://labix.org/python-dateutil
 
 Autobahn:
 
-  The master requires Autobahn version 0.16.0 or higher with Python 2.7 and 0.10.2 through 0.13.0 with Python 2.6.
+  The master requires Autobahn version 0.16.0 or higher with Python 2.7.
