@@ -101,8 +101,9 @@ install:
                   mysqlclient \
                   psycopg2 \
                   pg8000 \
-                  codecov \
-                  buildbot_www
+                  codecov
+      # install buildbot_www from pip in order to run the www tests
+      pip install buildbot_www
 
       if [ $TESTS = lint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
