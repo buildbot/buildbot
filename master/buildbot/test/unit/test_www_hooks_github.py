@@ -321,7 +321,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         bad_event = 'whatever'
         self.request = _prepare_request(bad_event, gitJsonPayload)
         yield self.request.test_render(self.changeHook)
-        expected = 'Unknown event: %r' % (bad_event,)
+        expected = b'Unknown event: %r' % (bad_event,)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -332,7 +332,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             _HEADER_CT: bad_content_type
         })
         yield self.request.test_render(self.changeHook)
-        expected = 'Unknown content type: %r' % (bad_content_type,)
+        expected = b'Unknown content type: %r' % (bad_content_type,)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -456,9 +456,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         yield self.request.test_render(self.changeHook)
         if PY3:
-            expected = "Expecting value: line 1 column 1 (char 0)"
+            expected = b"Expecting value: line 1 column 1 (char 0)"
         else:
-            expected = "No JSON object could be decoded"
+            expected = b"No JSON object could be decoded"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)
@@ -467,7 +467,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_no_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = "no changes found"
+        expected = b"no changes found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -481,7 +481,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_non_branch_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = "no changes found"
+        expected = b"no changes found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -570,12 +570,12 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_unknown_hash(self):
-        bad_hash_type = 'blah'
+        bad_hash_type = b'blah'
         self.request = _prepare_request('push', gitJsonPayload, headers={
             _HEADER_SIGNATURE: '%s=doesnotmatter' % (bad_hash_type,)
         })
         yield self.request.test_render(self.changeHook)
-        expected = 'Unknown hash type: %s' % (bad_hash_type,)
+        expected = b'Unknown hash type: %r' % (bad_hash_type,)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -586,7 +586,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
             _HEADER_SIGNATURE: bad_signature
         })
         yield self.request.test_render(self.changeHook)
-        expected = 'Hash mismatch'
+        expected = b'Hash mismatch'
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -596,7 +596,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(strict=True)
         self.request = _prepare_request('push', gitJsonPayload)
         yield self.request.test_render(self.changeHook)
-        expected = 'Strict mode is requested while no secret is provided'
+        expected = b'Strict mode is requested while no secret is provided'
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -607,7 +607,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
             _HEADER_SIGNATURE: bad_signature
         })
         yield self.request.test_render(self.changeHook)
-        expected = 'Wrong signature format: %r' % (bad_signature,)
+        expected = b'Wrong signature format: %r' % (bad_signature,)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -615,7 +615,7 @@ class TestChangeHookConfiguredWithStrict(unittest.TestCase):
     def test_signature_missing(self):
         self.request = _prepare_request('push', gitJsonPayload)
         yield self.request.test_render(self.changeHook)
-        expected = 'Request has no required signature'
+        expected = b'Request has no required signature'
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
