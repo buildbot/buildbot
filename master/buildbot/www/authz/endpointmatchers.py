@@ -104,6 +104,17 @@ class AnyEndpointMatcher(EndpointMatcherBase):
         return defer.succeed(Match(self.master))
 
 
+class AnyControlEndpointMatcher(EndpointMatcherBase):
+
+    def __init__(self, **kwargs):
+        EndpointMatcherBase.__init__(self, **kwargs)
+
+    def match(self, ep, action="get", options=None):
+        if action != "get":
+            return defer.succeed(Match(self.master))
+        return defer.succeed(None)
+
+
 class StopBuildEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, builder=None, **kwargs):
@@ -176,6 +187,12 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
     def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
         build = yield epobject.get({}, epdict)
         defer.returnValue(Match(self.master, build=build))
+
+
+class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
+
+    def match_SchedulerEndpoint_enable(self, epobject, epdict, options):
+        return defer.succeed(Match(self.master))
 
 #####
 # not yet implemented
