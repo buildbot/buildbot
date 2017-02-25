@@ -429,7 +429,7 @@ class _SecretRenderer(object):
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
         servicenames = [service.name for service in build.getBuild().master.services]
-        if not "secrets" in servicenames:
+        if "secrets" not in servicenames:
             defer.returnValue(None)
         credsservice = build.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
