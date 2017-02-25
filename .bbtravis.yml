@@ -91,7 +91,6 @@ install:
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js -o $TESTS = py3 ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -99,9 +98,6 @@ install:
                   psycopg2 \
                   pg8000 \
                   codecov
-      fi
-
-      if [ $TESTS = trial_worker ]; then pip install -e 'worker[test]'; fi
 
       if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = py3 ]; then pip install buildbot_www; fi
 
