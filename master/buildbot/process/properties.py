@@ -781,7 +781,7 @@ class _Renderer(util.ComparableMixin, object):
         return d
 
     def __repr__(self):
-        return 'renderer(%r)' % (self.getRenderingFor,)
+        return 'renderer(%r)' % (self.fn,)
 
 
 def renderer(fn):
