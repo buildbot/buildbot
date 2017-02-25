@@ -97,9 +97,8 @@ install:
                   mysqlclient \
                   psycopg2 \
                   pg8000 \
-                  codecov
-
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = py3 ]; then pip install buildbot_www; fi
+                  codecov \
+                  buildbot_www
 
       if [ $TESTS = lint ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
