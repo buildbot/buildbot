@@ -112,7 +112,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
-            expected = "Error processing changes."
+            expected = b"Error processing changes."
             self.assertEqual(len(self.changeHook.master.addedChanges), 0)
             self.assertEqual(self.request.written, expected)
             self.request.setResponseCode.assert_called_with(500, expected)

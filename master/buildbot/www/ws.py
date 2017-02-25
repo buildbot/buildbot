@@ -26,6 +26,7 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import toJson
 
 
@@ -45,7 +46,7 @@ class WsProtocol(WebSocketServerProtocol):
             log.msg("FRAME %s" % frame)
         # parse the incoming request
 
-        frame = json.loads(frame)
+        frame = json.loads(bytes2NativeString(frame))
         _id = frame.get("_id")
         if _id is None:
             return self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)

@@ -191,7 +191,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
-        self.assertEqual(request.written, 'no changes found')
+        self.assertEqual(request.written, b'no changes found')
 
     @inlineCallbacks
     def testMercurialWithChange(self):
@@ -237,7 +237,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         yield request.test_render(self.change_hook)
 
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
-        self.assertEqual(request.written, 'no changes found')
+        self.assertEqual(request.written, b'no changes found')
 
     @inlineCallbacks
     def testWithNoJson(self):
@@ -247,9 +247,9 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
-        self.assertEqual(request.written, 'Error processing changes.')
+        self.assertEqual(request.written, b'Error processing changes.')
         request.setResponseCode.assert_called_with(
-            500, 'Error processing changes.')
+            500, b'Error processing changes.')
         self.assertEqual(len(self.flushLoggedErrors()), 1)
 
     @inlineCallbacks

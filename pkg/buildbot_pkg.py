@@ -21,6 +21,7 @@ from __future__ import print_function
 import distutils.cmd
 import os
 import subprocess
+import sys
 from distutils.version import LooseVersion
 
 import setuptools.command.build_py
@@ -42,7 +43,10 @@ os.listdir = listdir
 def check_output(cmd):
     """Version of check_output which does not throw error"""
     popen = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE)
-    return popen.communicate()[0].strip()
+    out = popen.communicate()[0].strip()
+    if not isinstance(out, str):
+        out = out.decode(sys.stdout.encoding)
+    return out
 
 
 def getVersion(init_file):
@@ -73,7 +77,9 @@ def getVersion(init_file):
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            v = VERSION_MATCH.search(out.decode('utf-8'))
+            if not isinstance(out, str):
+                out = out.decode(sys.stdout.encoding)
+            v = VERSION_MATCH.search(out)
             if v is not None:
                 return v.group(1)
     except OSError:

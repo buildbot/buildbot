@@ -179,7 +179,7 @@ class V2RootResource(resource.Resource):
                               JSONRPC_CODES["invalid_request"])
 
         try:
-            data = json.loads(request.content.read())
+            data = json.loads(bytes2NativeString(request.content.read()))
         except Exception as e:
             raise BadJsonRpc2("JSON parse error: %s" % (str(e),),
                               JSONRPC_CODES["parse_error"])

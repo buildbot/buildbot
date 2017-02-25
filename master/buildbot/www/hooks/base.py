@@ -44,36 +44,35 @@ def getChanges(request, options=None):
             return value
 
     args = request.args
-
     # first, convert files, links and properties
     files = None
-    if args.get('files'):
-        files = json.loads(args.get('files')[0])
+    if args.get(b'files'):
+        files = json.loads(args.get(b'files')[0])
     else:
         files = []
 
     properties = None
-    if args.get('properties'):
-        properties = json.loads(args.get('properties')[0])
+    if args.get(b'properties'):
+        properties = json.loads(args.get(b'properties')[0])
     else:
         properties = {}
 
-    revision = firstOrNothing(args.get('revision'))
-    when = firstOrNothing(args.get('when'))
+    revision = firstOrNothing(args.get(b'revision'))
+    when = firstOrNothing(args.get(b'when'))
     if when is not None:
         when = float(when)
-    author = firstOrNothing(args.get('author'))
+    author = firstOrNothing(args.get(b'author'))
     if not author:
-        author = firstOrNothing(args.get('who'))
-    comments = firstOrNothing(args.get('comments'))
+        author = firstOrNothing(args.get(b'who'))
+    comments = firstOrNothing(args.get(b'comments'))
     if isinstance(comments, bytes):
         comments = comments.decode('utf-8')
-    branch = firstOrNothing(args.get('branch'))
-    category = firstOrNothing(args.get('category'))
-    revlink = firstOrNothing(args.get('revlink'))
-    repository = firstOrNothing(args.get('repository'))
-    project = firstOrNothing(args.get('project'))
-    codebase = firstOrNothing(args.get('codebase'))
+    branch = firstOrNothing(args.get(b'branch'))
+    category = firstOrNothing(args.get(b'category'))
+    revlink = firstOrNothing(args.get(b'revlink'))
+    repository = firstOrNothing(args.get(b'repository'))
+    project = firstOrNothing(args.get(b'project'))
+    codebase = firstOrNothing(args.get(b'codebase'))
 
     chdict = dict(author=author, files=files, comments=comments,
                   revision=revision, when=when,
