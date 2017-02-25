@@ -102,11 +102,14 @@ class RmdirRecursive(unittest.TestCase):
 
         # fill it with some files
         os.mkdir(os.path.join(self.target))
-        open(os.path.join(self.target, "a"), "w")
+        with open(os.path.join(self.target, "a"), "w"):
+            pass
         os.mkdir(os.path.join(self.target, "d"))
-        open(os.path.join(self.target, "d", "a"), "w")
+        with open(os.path.join(self.target, "d", "a"), "w"):
+            pass
         os.mkdir(os.path.join(self.target, "d", "d"))
-        open(os.path.join(self.target, "d", "d", "a"), "w")
+        with open(os.path.join(self.target, "d", "d", "a"), "w"):
+            pass
 
     def tearDown(self):
         try:
@@ -127,7 +130,8 @@ class RmdirRecursive(unittest.TestCase):
         if runtime.platformType == 'win32':
             raise unittest.SkipTest("no symlinks on this platform")
         os.mkdir("noperms")
-        open("noperms/x", "w")
+        with open("noperms/x", "w"):
+            pass
         os.chmod("noperms/x", 0)
         try:
             os.symlink("../noperms", os.path.join(self.target, "link"))

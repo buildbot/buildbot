@@ -122,7 +122,8 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         self.datafile = os.path.join(self.datadir, 'data')
         # note: use of 'wb' here ensures newlines aren't translated on the
         # upload
-        open(self.datafile, mode="wb").write(b"this is some data\n" * 10)
+        with open(self.datafile, mode="wb") as f:
+            f.write(b"this is some data\n" * 10)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -297,9 +298,10 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
         if os.path.exists(self.datadir):
             shutil.rmtree(self.datadir)
         os.makedirs(self.datadir)
-        open(os.path.join(self.datadir, "aa"), mode="wb").write(b"lots of a" * 100)
-        open(os.path.join(self.datadir, "bb"), mode="wb").write(
-            b"and a little b" * 17)
+        with open(os.path.join(self.datadir, "aa"), mode="wb") as f:
+            f.write(b"lots of a" * 100)
+        with open(os.path.join(self.datadir, "bb"), mode="wb") as f:
+            f.write(b"and a little b" * 17)
 
     def tearDown(self):
         self.tearDownCommand()
@@ -505,7 +507,9 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
-            self.assertEqual(open(datafile, mode="rb").read(), test_data[:50])
+            with open(datafile, mode="rb") as f:
+                data = f.read()
+            self.assertEqual(data, test_data[:50])
         d.addCallback(check)
         return d
 

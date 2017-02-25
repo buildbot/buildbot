@@ -512,7 +512,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
                 return
             if os.path.exists(pidfile):
                 try:
-                    pid = int(open(pidfile).read())
+                    with open(pidfile) as f:
+                        pid = int(f.read())
                 except (IOError, TypeError, ValueError):
                     pid = None
 
@@ -814,7 +815,8 @@ class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
 
     def test_statFile_exists(self):
         rp = self.makeRP()
-        open('statfile.log', 'w').write('hi')
+        with open('statfile.log', 'w') as f:
+            f.write('hi')
         lf = runprocess.LogFileWatcher(rp, 'test', 'statfile.log', False)
         st = lf.statFile()
         self.assertEqual(

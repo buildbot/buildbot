@@ -176,7 +176,8 @@ class TestMakeDirectory(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.MakeDirectory, dict(
             dir='test-file',
         ), True)
-        open(os.path.join(self.basedir, 'test-file'), "w")
+        with open(os.path.join(self.basedir, 'test-file'), "w"):
+            pass
         d = self.run_command()
 
         def check(_):
@@ -228,7 +229,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.StatFile, dict(
             file='test-file',
         ), True)
-        open(os.path.join(self.basedir, 'test-file'), "w")
+        with open(os.path.join(self.basedir, 'test-file'), "w"):
+            pass
 
         d = self.run_command()
 
@@ -248,7 +250,8 @@ class TestStatFile(CommandTestMixin, unittest.TestCase):
             workdir='wd'
         ), True)
         os.mkdir(os.path.join(self.basedir, 'wd'))
-        open(os.path.join(self.basedir, 'wd', 'test-file'), "w")
+        with open(os.path.join(self.basedir, 'wd', 'test-file'), "w"):
+            pass
 
         d = self.run_command()
 
@@ -304,7 +307,8 @@ class TestGlobPath(CommandTestMixin, unittest.TestCase):
         self.make_command(fs.GlobPath, dict(
             path='t*-file',
         ), True)
-        open(os.path.join(self.basedir, 'test-file'), "w")
+        with open(os.path.join(self.basedir, 'test-file'), "w"):
+            pass
 
         d = self.run_command()
 
@@ -344,8 +348,10 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
             dir='workdir',
         ), True)
         workdir = os.path.join(self.basedir, 'workdir')
-        open(os.path.join(workdir, 'file1'), "w")
-        open(os.path.join(workdir, 'file2'), "w")
+        with open(os.path.join(workdir, 'file1'), "w"):
+            pass
+        with open(os.path.join(workdir, 'file2'), "w"):
+            pass
 
         d = self.run_command()
 
