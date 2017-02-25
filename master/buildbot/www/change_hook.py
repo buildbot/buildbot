@@ -29,6 +29,7 @@ from twisted.python.reflect import namedModule
 from twisted.web import server
 
 from buildbot.util import bytes2NativeString
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -78,11 +79,11 @@ class ChangeHookResource(resource.Resource):
         try:
             changes, src = self.getChanges(request)
         except ValueError as val_err:
-            request.setResponseCode(400, val_err.args[0])
-            return val_err.args[0]
+            request.setResponseCode(400, unicode2bytes(val_err.args[0]))
+            return unicode2bytes(val_err.args[0])
         except Exception as e:
             log.err(e, "processing changes from web hook")
-            msg = "Error processing changes."
+            msg = b"Error processing changes."
             request.setResponseCode(500, msg)
             return msg
 
@@ -90,7 +91,7 @@ class ChangeHookResource(resource.Resource):
 
         if not changes:
             log.msg("No changes found")
-            return "no changes found"
+            return b"no changes found"
         d = self.submitChanges(changes, request, src)
 
         def ok(_):

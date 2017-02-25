@@ -44,7 +44,7 @@ class FakeRequest(Mock):
     arguments to self.addedChanges.
     """
 
-    written = ''
+    written = b''
     finished = False
     redirected_to = None
     failure = None
@@ -93,7 +93,9 @@ class FakeRequest(Mock):
             self.write(result)
             self.finish()
             return self.deferred
+        elif isinstance(result, str):
+            raise ValueError("%r should return bytes, not string: %r" % (resource.render, result))
         elif result is server.NOT_DONE_YET:
             return self.deferred
         else:
-            raise ValueError("Unexpected return value: %r" % (result,))
+            raise ValueError("Unexpected return value: %r" % (result))
