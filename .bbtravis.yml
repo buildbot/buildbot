@@ -13,6 +13,8 @@ env:
   matrix:
   # lint, docs and coverage first as they're more likely to find issues
   - TWISTED=latest SQLALCHEMY=latest TESTS=lint
+  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+  - TWISTED=latest SQLALCHEMY=latest TESTS=isort
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
@@ -75,6 +77,8 @@ matrix:
     # python 3 tests
     - python: "3.5"
       env: TWISTED=trunk SQLALCHEMY=latest TESTS=py3
+    - python: "3.5"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
 
 # Dependencies installation commands
 install:
@@ -91,7 +95,6 @@ install:
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js -o $TESTS = py3 ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -99,13 +102,10 @@ install:
                   psycopg2 \
                   pg8000 \
                   codecov
-      fi
+      # install buildbot_www from pip in order to run the www tests
+      pip install buildbot_www
 
-      if [ $TESTS = trial_worker ]; then pip install -e 'worker[test]'; fi
-
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = py3 ]; then pip install buildbot_www; fi
-
-      if [ $TESTS = lint ]; then pip install -e './master[docs,test]'; fi
+      if [ $TESTS = lint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
       if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
 
@@ -157,11 +157,11 @@ script:
     cmd: make pylint
 
   - title: flake8
-    condition: TESTS == "lint"
+    condition: TESTS == "flake8"
     cmd: make flake8
 
   - title: isort
-    condition: TESTS == "lint"
+    condition: TESTS == "isort"
     cmd: isort --check -df `git ls-files |grep '.py$'`
 
   # Build documentation

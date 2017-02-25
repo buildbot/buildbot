@@ -21,8 +21,6 @@ python:
   - "2.7"
 
 env:
-  # lint, docs and coverage first as they're more likely to find issues
-  - TWISTED=latest SQLALCHEMY=latest TESTS=lint
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
@@ -82,7 +80,7 @@ install:
   # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = lint -o $TESTS = js ]; then
+      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = js ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
@@ -102,7 +100,6 @@ install:
 
   - "pip install -e worker future"
 
-  - "if [ $TESTS = lint -o $TESTS = flake8 ]; then pip install 'flake8~=2.6.0' ; fi"
   # Install sphinx so that pylint will be able to import it
   - "if [ $TESTS = lint ]; then  pip install sphinx ; fi"
   # Install docs dependencies for running the tests
@@ -132,10 +129,6 @@ script:
   # run tests under coverage for latest only (it's slower..)
   - "if [ $TESTS = coverage ]; then coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test ; fi"
 
-  # Run additional tests in their separate job
-  - "if [ $TESTS = lint ]; then make pylint ; fi"
-  - "if [ $TESTS = lint -o $TESTS = flake8 ]; then make flake8; fi"
-  - "if [ $TESTS = lint ]; then isort --check -df `git ls-files |grep '.py$'` ; fi"
   # Build documentation
   - "if [ $TESTS = docs ]; then make docs ; fi"
   # Run spell checker on documentation
