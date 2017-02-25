@@ -13,6 +13,8 @@ env:
   matrix:
   # lint, docs and coverage first as they're more likely to find issues
   - TWISTED=latest SQLALCHEMY=latest TESTS=lint
+  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+  - TWISTED=latest SQLALCHEMY=latest TESTS=isort
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
@@ -100,7 +102,7 @@ install:
                   codecov \
                   buildbot_www
 
-      if [ $TESTS = lint ]; then pip install -e './master[docs,test]'; fi
+      if [ $TESTS = lint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
       if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
 
@@ -152,11 +154,11 @@ script:
     cmd: make pylint
 
   - title: flake8
-    condition: TESTS == "lint"
+    condition: TESTS == "flake8"
     cmd: make flake8
 
   - title: isort
-    condition: TESTS == "lint"
+    condition: TESTS == "isort"
     cmd: isort --check -df `git ls-files |grep '.py$'`
 
   # Build documentation
