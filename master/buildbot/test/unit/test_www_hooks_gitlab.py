@@ -150,7 +150,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         def check_changes(r):
             self.assertEqual(len(self.changeHook.master.addedChanges), 0)
-            self.assertIn("Error loading JSON:", self.request.written)
+            self.assertIn(b"Error loading JSON:", self.request.written)
             self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
         d.addCallback(check_changes)
