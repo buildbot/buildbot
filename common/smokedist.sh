@@ -6,7 +6,11 @@ for suffix in whl tar.gz
 do
     VE=sandbox.$suffix
     rm -rf $VE
-    virtualenv $VE
+    if [ -z "$python" ]; then
+        virtualenv $VE
+    else
+        virtualenv --python python$python $VE
+    fi
     . $VE/bin/activate
     pip install -U pip
     pip install  mock
