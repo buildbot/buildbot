@@ -76,7 +76,7 @@ matrix:
     #  env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
     - python: "3.5"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=py3
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
       env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
 
@@ -146,10 +146,6 @@ script:
   - title: coverage tests
     condition: TESTS == "coverage"
     cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
-
-  - title: py3 tests
-    condition: TESTS == "py3"
-    cmd: python common/run_py3_working_tests.py
 
   # Run additional tests in their separate job
   - title: pylint
