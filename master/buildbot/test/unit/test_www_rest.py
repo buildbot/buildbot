@@ -258,8 +258,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         # if order is not significant, sort so the comparison works
         if not orderSignificant:
             if 'content' in got and typeName in got['content']:
-                got['content'][typeName].sort(key=lambda x: list(x.values()))
-            exp['content'][typeName].sort(key=lambda x: list(x.values()))
+                got['content'][typeName].sort(key=lambda x: sorted(x.items()))
+            exp['content'][typeName].sort(key=lambda x: sorted(x.items()))
         if 'meta' in got['content'] and 'links' in got['content']['meta']:
             got['content']['meta']['links'].sort(
                 key=lambda l: (l['rel'], l['href']))
