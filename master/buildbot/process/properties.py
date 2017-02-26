@@ -680,7 +680,6 @@ class Interpolate(util.ComparableMixin, object):
 
     def getRenderingFor(self, build):
         props = build.getProperties()
-        self.build = build
         if self.args:
             d = props.render(self.args)
             d.addCallback(lambda args:
