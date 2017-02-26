@@ -99,26 +99,50 @@ class V2RootResource(www.WwwTestMixin, unittest.TestCase):
         yield self.render_resource(self.rsrc, b'/', method=b'PATCH')
         self.assertSimpleError('invalid HTTP method', 400)
 
+    def do_check_origin_regexp(self, goods, bads):
+        self.assertEqual(len(self.rsrc.origins), 1)
+        regexp = self.rsrc.origins[0]
+        for good in goods:
+            self.assertTrue(
+                regexp.match(good),
+                "{} should match default origin({}), but its not".format(
+                    good, regexp.pattern
+                ))
+        for bad in bads:
+            self.assertFalse(
+                regexp.match(bad),
+                "{} should not match default origin({}), but it is".format(
+                    bad, regexp.pattern
+                ))
+
     def test_default_origin(self):
         self.master.config.buildbotURL = 'http://server/path/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual(
-            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
+        self.do_check_origin_regexp(
+            ["http://server"],
+            ["http://otherserver", "http://otherserver:909"],
+        )
 
         self.master.config.buildbotURL = 'http://server/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual(
-            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\Z(?ms)'])
+        self.do_check_origin_regexp(
+            ["http://server"],
+            ["http://otherserver", "http://otherserver:909"],
+        )
 
         self.master.config.buildbotURL = 'http://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual(
-            [r.pattern for r in self.rsrc.origins], [r'http\:\/\/server\:8080\Z(?ms)'])
+        self.do_check_origin_regexp(
+            ["http://server:8080"],
+            ["http://otherserver", "http://server:909"],
+        )
 
         self.master.config.buildbotURL = 'https://server:8080/'
         self.rsrc.reconfigResource(self.master.config)
-        self.assertEqual(
-            [r.pattern for r in self.rsrc.origins], [r'https\:\/\/server\:8080\Z(?ms)'])
+        self.do_check_origin_regexp(
+            ["https://server:8080"],
+            ["http://server:8080", "https://otherserver:8080"],
+        )
 
 
 class V2RootResource_CORS(www.WwwTestMixin, unittest.TestCase):
