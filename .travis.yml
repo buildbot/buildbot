@@ -21,52 +21,13 @@ python:
   - "2.7"
 
 env:
-  # Configuration when SQLite database is persistent between running tests
-  # (by default in other tests in-memory SQLite database is used which is
-  # recreated for each test).
-  # Helps to detect issues with incorrect database setup/cleanup in tests.
-  # Configuration that runs tests with real MySQL database
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+  # we now use travis only for real database testing
+  # travis containers do have much more optimized db installations
+
+  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
-
-  # Test different versions of SQLAlchemy
-  - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
-
-  # Configuration to run `python setup.py test` to check this test runner.
-  # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
-
-cache:
-  directories:
-    - $HOME/.cache/pip
-    - www/base/node_modules
-    - www/codeparameter/node_modules
-    - www/console_view/node_modules
-    - www/waterfall_view/node_modules
-    - www/nestedexample/node_modules
-    - www/base/libs
-    - www/codeparameter/libs
-    - www/console_view/libs
-    - www/waterfall_view/libs
-    - www/nestedexample/libs
-
-matrix:
-  fast_finish: true
-  include:
-    # Specify SQLALCHEMY=latest to avoid errors installing.
-    - python: "3.5"
-      env: TWISTED=trunk TESTS=flake8 SQLALCHEMY=latest
-
-    # Tests of buildbot-worker on python 2.6
-    - python: "2.6"
-      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
-    # python 3 tests
-    - python: "3.5"
-      env: TWISTED=trunk TESTS=trial SQLALCHEMY=latest
-
+  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
+  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
 # Dependencies installation commands
 install:
@@ -80,38 +41,13 @@ install:
   # Install mysqlclient for tests that uses real MySQL
   # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
   - |
-      if [ $TESTS = trial -o $TESTS = coverage -o $TESTS = js ]; then
       pip install -e pkg \
                   -e 'master[tls,test]' \
                   -e 'worker[test]' \
                   mysqlclient \
                   psycopg2 \
-                  pg8000
-      fi
-
-  - |
-      if [ $TESTS = trial_worker ]; then
-      pip install -e 'worker[test]'
-      fi
-
-  # install buildbot_www from pip in order to run the www tests
-  - "if [ $TESTS = trial -o $TESTS = coverage ]; then pip install --pre buildbot_www ; fi"
-
-
-  - "pip install -e worker future"
-
-  # Install sphinx so that pylint will be able to import it
-  - "if [ $TESTS = lint ]; then  pip install sphinx ; fi"
-  # Install docs dependencies for running the tests
-  # until towncrier toml is released, we need to fetch from git :-/
-  - "if [ $TESTS = docs ]; then  pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier' ; fi"
-
-  # Check that Twisted is not installed during previous steps on setuppy_test configuration.
-  # In setuppy_test all dependencies should be installed by setuptools during tests.
-  - "if [ $TESTS = setuppy_test ]; then ! (pip list | grep Twisted) ; fi"
-  # Automatic installation of autobahn during `setup.py test` fails due to:
-  # https://github.com/pypa/setuptools/issues/500
-  - "if [ $TESTS = setuppy_test ]; then pip install autobahn Twisted ; fi"
+                  pg8000 \
+                  buildbot_www
 
 before_script:
   # create real MySQL database for tests
@@ -121,23 +57,9 @@ before_script:
 
 # Tests running commands
 script:
-  # make frontend_install_tests takes 17 min, so we only do it post submit
-  - "if [ $TESTS = js -a ${TRAVIS_PULL_REQUEST} = false ]; then make frontend ; fi"
-  - "if [ $TESTS = js -a ${TRAVIS_PULL_REQUEST} = false ]; then make frontend_install_tests ; fi"
-  - "if [ $TESTS = trial ]; then trial  --reporter=text --rterrors buildbot.test buildbot_worker.test; fi"
-  - "if [ $TESTS = trial_worker ]; then trial  --reporter=text --rterrors buildbot_worker.test; fi"
-  # run tests under coverage for latest only (it's slower..)
+  # run real db tests under coverage to have several merging coverage report
+  # https://github.com/codecov/support/wiki/Merging-Reports
   - "if [ $TESTS = coverage ]; then coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test ; fi"
-
-  # Build documentation
-  - "if [ $TESTS = docs ]; then make docs ; fi"
-  # Run spell checker on documentation
-  - "if [ $TESTS = docs ]; then make -C master/docs SPHINXOPTS=-W spelling ; fi"
-  # Runs Sphinx' external link checker only on post submit build (it is too unstable)
-  - "if [ $TESTS = docs -a ${TRAVIS_PULL_REQUEST} = false ]; then make -C master/docs SPHINXOPTS=-q linkcheck; fi"
-
-  - "if [ $TESTS = setuppy_test ]; then (cd master; python setup.py test) ; fi"
-  - "if [ $TESTS = setuppy_test ]; then (cd worker; python setup.py test) ; fi"
 
 
 notifications:
@@ -156,6 +78,5 @@ branches:
   only:
     - master
     - eight
-    - buildbot-0.9.0
 git:
   depth: 300
