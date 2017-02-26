@@ -48,4 +48,11 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
 
 
 def patch():
-    unittest.TestCase.assertRaisesRegexp = _assertRaisesRegexp
+    hasAssertRaisesRegexp = getattr(unittest.TestCase, "assertRaisesRegexp", None)
+    hasAssertRaisesRegex = getattr(unittest.TestCase, "assertRaisesRegex", None)
+    if not hasAssertRaisesRegexp:
+        # Python 2.6
+        unittest.TestCase.assertRaisesRegexp = _assertRaisesRegexp
+    if not hasAssertRaisesRegex:
+        # Python 2.6 and Python 2.7
+        unittest.TestCase.assertRaisesRegex = unittest.TestCase.assertRaisesRegexp

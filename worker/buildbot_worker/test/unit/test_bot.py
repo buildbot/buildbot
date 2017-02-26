@@ -80,9 +80,12 @@ class TestBot(unittest.TestCase):
     def test_getWorkerInfo(self):
         infodir = os.path.join(self.basedir, "info")
         os.makedirs(infodir)
-        open(os.path.join(infodir, "admin"), "w").write("testy!")
-        open(os.path.join(infodir, "foo"), "w").write("bar")
-        open(os.path.join(infodir, "environ"), "w").write("something else")
+        with open(os.path.join(infodir, "admin"), "w") as f:
+            f.write("testy!")
+        with open(os.path.join(infodir, "foo"), "w") as f:
+            f.write("bar")
+        with open(os.path.join(infodir, "environ"), "w") as f:
+            f.write("something else")
 
         d = self.bot.callRemote("getWorkerInfo")
 

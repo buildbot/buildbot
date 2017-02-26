@@ -65,7 +65,7 @@ matrix:
       env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
     # python 3 tests
     - python: "3.5"
-      env: TWISTED=latest TESTS=trial_worker SQLALCHEMY=latest
+      env: TWISTED=trunk TESTS=trial SQLALCHEMY=latest
 
 
 # Dependencies installation commands
