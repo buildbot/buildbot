@@ -164,6 +164,7 @@ config
 Config
 configs
 Configs
+configurability
 contrib
 Contrib
 coolproject
@@ -606,7 +607,7 @@ recomended
 reconf
 reconfig
 reconfigService
-Reconfigurability
+reconfigurability
 refactored
 refactoring
 Refactoring
