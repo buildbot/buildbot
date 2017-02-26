@@ -3,7 +3,6 @@
 language: python
 
 # Available Python versions:
-# http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
 python:
   - "2.7"
 
@@ -11,8 +10,8 @@ env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
   matrix:
-  # lint, docs and coverage first as they're more likely to find issues
-  - TWISTED=latest SQLALCHEMY=latest TESTS=lint
+  # pylint, docs and coverage first as they're more likely to find issues
+  - TWISTED=latest SQLALCHEMY=latest TESTS=pylint
   - TWISTED=latest SQLALCHEMY=latest TESTS=flake8
   - TWISTED=latest SQLALCHEMY=latest TESTS=isort
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
@@ -25,6 +24,7 @@ env:
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
@@ -32,7 +32,12 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
   # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+
+  # innodb tests takes 20min probably because of docker aufs.
+  # travis images provides much faster innodb so we keep these test there until we implement ramfs based
+  # mysql installation
+  # - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+
   # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
   # psycopg2 uses Peer Authentication which is configured in the dockerfile, while pg8000 use md5 auth with dummy password
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest
@@ -42,38 +47,21 @@ env:
   - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
   - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
 
-  # Configuration to run `python setup.py test` to check this test runner.
-  # - TWISTED=latest SQLALCHEMY=latest TESTS=setuppy_test
-
   # Tests for the worker on old versions of twisted.
   - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker
   - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker
   - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker
   - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker
 
-cache:
-  directories:
-    - $HOME/.cache/pip
-    - www/base/node_modules
-    - www/codeparameter/node_modules
-    - www/console_view/node_modules
-    - www/waterfall_view/node_modules
-    - www/nestedexample/node_modules
-    - www/base/libs
-    - www/codeparameter/libs
-    - www/console_view/libs
-    - www/waterfall_view/libs
-    - www/nestedexample/libs
-
 matrix:
   fast_finish: true
   include:
     # Tests of buildbot-worker on python 2.6
-    # Specify SQLALCHEMY=latest to avoid errors installing.
-    #- python: "2.6"
-    #  env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
-    #- python: "2.6"
-    #  env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
+    - python: "2.6"
+      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
+    - python: "2.6"
+      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
+
     # python 3 tests
     - python: "3.5"
       env: TWISTED=trunk SQLALCHEMY=latest TESTS=coverage
@@ -81,6 +69,9 @@ matrix:
       env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
+
+    - python: "3.6"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=py3next
 
 # Dependencies installation commands
 install:
@@ -107,12 +98,9 @@ install:
       # install buildbot_www from pip in order to run the www tests
       pip install buildbot_www
 
-      if [ $TESTS = lint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
+      if [ $TESTS = pylint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
       # until towncrier toml is released, we need to fetch from git :-/
       if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
-
-      if [ $TESTS = setuppy_test ]; then ! (pip list | grep Twisted); fi
-      if [ $TESTS = setuppy_test ]; then pip install autobahn Twisted; fi
 
 before_script:
   # create real database for tests
@@ -149,9 +137,14 @@ script:
     condition: TESTS == "coverage"
     cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
 
+  # blacklisting testrunner for new version of py3
+  - title: py3 tests
+    condition: TESTS == "py3next"
+    cmd: python common/run_py3_working_tests.py
+
   # Run additional tests in their separate job
   - title: pylint
-    condition: TESTS == "lint"
+    condition: TESTS == "pylint"
     cmd: make pylint
 
   - title: flake8
