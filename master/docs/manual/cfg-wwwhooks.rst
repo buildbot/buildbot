@@ -21,7 +21,7 @@ An example www configuration line which enables change_hook and two DIALECTS:
 
 Within the www config dictionary arguments, the ``change_hook`` key enables/disables the module and ``change_hook_dialects`` whitelists DIALECTs where the keys are the module names and the values are optional arguments which will be passed to the hooks.
 
-The :src:`master/contrib/post_build_request.py` script allows for the submission of an arbitrary change request.
+The :contrib-src:`master/contrib/post_build_request.py` script allows for the submission of an arbitrary change request.
 Run :command:`post_build_request.py --help` for more information.
 The ``base`` dialect must be enabled for this to work.
 
@@ -86,7 +86,7 @@ GitHub hook
 
 .. note::
 
-   There is a standalone HTTP server available for receiving GitHub notifications as well: :src:`master/contrib/github_buildbot.py`.
+   There is a standalone HTTP server available for receiving GitHub notifications as well: :contrib-src:`master/contrib/github_buildbot.py`.
    This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 The GitHub hook has the following parameters:
@@ -184,7 +184,7 @@ When this is setup you should add a `POST` service pointing to ``/change_hook/bi
 For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point BitBucket to ``http://builds.example.com/change_hook/bitbucket``.
 To specify a project associated to the repository, append ``?project=name`` to the URL.
 
-Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :src:`master/contrib/bitbucket_buildbot.py`.
+Note that there is a standalone HTTP server available for receiving BitBucket notifications, as well: :contrib-src:`master/contrib/bitbucket_buildbot.py`.
 This script may be useful in cases where you cannot expose the WebStatus for public consumption.
 
 .. warning::

@@ -120,9 +120,9 @@ Reuse same image for different workers
 
 Previous simple example hardcodes the worker name into the dockerfile, which will not work if you want to share your docker image between workers.
 
-You can find in buildbot source code in :src:`master/contrib/docker` one example configurations:
+You can find in buildbot source code in :contrib-src:`master/contrib/docker` one example configurations:
 
-:src:`pythonnode_worker <master/contrib/docker/pythonnode_worker/>`
+:contrib-src:`pythonnode_worker <master/contrib/docker/pythonnode_worker/>`
     a worker with Python and node installed, which demonstrate how to reuse the base worker to create variations of build environments.
     It is based on the official ``buildbot/buildbot-worker`` image.
 

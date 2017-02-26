@@ -158,6 +158,7 @@ extlinks = {
     # "pretty" reference that looks like relative path in Buildbot source tree
     # by default.
     'src': ('https://github.com/buildbot/buildbot/blob/master/%s', ''),
+    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/blob/master/%s', ''),
 }
 
 # Sphinx' link checker.
