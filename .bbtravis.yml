@@ -81,6 +81,8 @@ matrix:
       env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
+    - python: "3.6"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
 
 # Dependencies installation commands
 install:
