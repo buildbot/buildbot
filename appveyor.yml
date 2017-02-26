@@ -24,9 +24,21 @@ install:
   - "%PYTHON%\\python.exe -m pip install -e pkg"
   - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
   - "%PYTHON%\\python.exe -m pip install -e worker"
+
+  # Install prebuilt WWW packages, it's not easy to build them.
+  - "%PYTHON%\\python.exe -m pip install wheel"
+  - "%PYTHON%\\python.exe -m pip install buildbot-www"
+  # install deprecated buildbot-slave in order to test backward compatibility
+  - "%PYTHON%\\python.exe -m pip install buildbot-slave"
+
   - "%PYTHON%\\python.exe -m pip list"
 
 build: false
+
+before_test:
+  # Add Scripts directory to path, so that "buildbot" and "buildbot-worker"
+  # commands will be available.
+  - cmd: SET "PATH=%PATH%;%PYTHON%\Scripts"
 
 test_script:
   - "%PYTHON%\\python.exe -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"

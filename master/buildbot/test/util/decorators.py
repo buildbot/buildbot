@@ -19,6 +19,7 @@ Various decorators for test cases
 from __future__ import absolute_import
 from __future__ import print_function
 
+import functools
 import os
 import sys
 
@@ -65,3 +66,41 @@ def skipIfPythonVersionIsLess(min_version_info):
             test.skip = "requires Python >= {0}".format(min_version_info)
         return test
     return closure
+
+
+def skipUnlessInstalled(module_name, error_message=None):
+    if error_message is None:
+        error_message = (
+            "module '{0}' is not available, "
+            "install appropriate package").format(module_name)
+
+    def closure(test):
+        try:
+            __import__(module_name)
+        except ImportError:
+            test.skip = error_message
+        return test
+    return closure
+
+
+def skipIf(condition, error_message):
+    def closure(test):
+        if condition:
+            test.skip = error_message
+        return test
+    return closure
+
+
+def memoize(func):
+    """Decorator that caches function call result"""
+
+    cache = []
+
+    @functools.wraps(func)
+    def wrapper():
+        if not cache:
+            cache.append(func())
+
+        return cache[0]
+
+    return wrapper

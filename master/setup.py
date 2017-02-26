@@ -461,6 +461,8 @@ test_deps = [
     'txgithub',
     'ramlfications',
     'mock>=2.0.0',
+    'shutilwhich',
+    'fastjsonrpc',
 ]
 if sys.platform != 'win32':
     test_deps += [
