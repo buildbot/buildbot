@@ -276,7 +276,7 @@ For example:
     c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
 Configuration of CVS and :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>`
-##########################################################################################
+##################################################################################################
 
 CVS must be configured to invoke the :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script when files are checked in.
 This is done via the CVS loginfo configuration file.
