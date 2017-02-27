@@ -20,6 +20,8 @@ import base64
 import copy
 import sys
 
+from email import charset
+
 from mock import Mock
 
 from twisted.internet import defer
@@ -40,6 +42,7 @@ from buildbot.reporters.mail import MailNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import bytes2unicode
 from buildbot.util import ssl
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
@@ -132,12 +135,37 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
                          repr(m.as_string()))
 
     def test_createEmail_message_content_transfer_encoding_7bit(self):
+        # buildbot.reporters.mail.ENCODING is 'utf8'
+        # On Python 3, the body_encoding for 'utf8' is base64.
+        # On Python 2, the body_encoding for 'utf8' is None.
+        # If the body_encoding is None, the email package
+        # will try to deduce the 'Content-Transfer-Encoding'
+        # by calling email.encoders.encode_7or8bit().
+        # If the foo.encode('ascii') works on the body, it
+        # is assumed '7bit'.  If it fails, it is assumed '8bit'.
+        input_charset = charset.Charset(mail.ENCODING)
+        if input_charset.body_encoding == charset.BASE64:
+            expEncoding = 'base64'
+        elif input_charset.body_encoding is None:
+            expEncoding = '7bit'
         return self.do_test_createEmail_cte(u"old fashioned ascii",
-                                            '7bit' if py_27 else 'base64')
+                                            expEncoding)
 
     def test_createEmail_message_content_transfer_encoding_8bit(self):
+        # buildbot.reporters.mail.ENCODING is 'utf8'
+        # On Python 3, the body_encoding for 'utf8' is base64.
+        # On Python 2, the body_encoding for 'utf8' is None.
+        # If the body_encoding is None, the email package
+        # will try to deduce the 'Content-Transfer-Encoding'
+        # by calling email.encoders.encode_7or8bit().
+        # If the foo.encode('ascii') works on the body, it
+        input_charset = charset.Charset(mail.ENCODING)
+        if input_charset.body_encoding == charset.BASE64:
+            expEncoding = 'base64'
+        elif input_charset.body_encoding is None:
+            expEncoding = '8bit'
         return self.do_test_createEmail_cte(u"\U0001F4A7",
-                                            '8bit' if py_27 else 'base64')
+                                            expEncoding)
 
     @defer.inlineCallbacks
     def test_createEmail_message_without_patch_and_log_contains_unicode(self):
@@ -201,7 +229,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             if "base64" not in s:
                 self.assertIn("Unicode log", s)
             else:  # b64encode and remove '=' padding (hence [:-1])
-                self.assertIn(base64.b64encode("Unicode log")[:-1], s)
+                logStr = bytes2unicode(base64.b64encode(b"Unicode log")[:-1])
+                self.assertIn(logStr, s)
 
             self.assertIn(
                 'Content-Disposition: attachment; filename="fakestep.stdio"', s)
@@ -483,7 +512,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # make sure the patch are sent
         self.assertEqual(mn.createEmail.call_args[0][5],
                          [{'author': u'him@foo',
-                           'body': 'hello, world',
+                           'body': b'hello, world',
                            'comment': u'foo',
                            'level': 3,
                            'patchid': 99,
@@ -517,7 +546,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         recipients = yield mn.findInterrestedUsersEmails(['Big Bob <bob@mayhem.net>', 'narrator'])
         m = {'To': None, 'CC': None}
         all_recipients = mn.processRecipients(recipients, m)
-        self.assertEqual(all_recipients, exp_called_with)
+        self.assertEqual(sorted(all_recipients), sorted(exp_called_with))
         self.assertEqual(m['To'], exp_TO)
         self.assertEqual(m['CC'], exp_CC)
 
@@ -587,9 +616,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mail = mn.sendMessage.call_args[0][0]
         recipients = mn.sendMessage.call_args[0][1]
         self.assertEqual(recipients, ['workeradmin@example.org'])
-        text = mail.get_payload()
+        # On Python 3, the body_encoding for 'utf8' is base64,
+        # so we need to decode the payload.
+        text = mail.get_payload(decode=True)
         self.assertIn(
-            "has noticed that the worker named myworker went away", text)
+            b"has noticed that the worker named myworker went away", text)
 
     @defer.inlineCallbacks
     def do_test_sendMessage(self, **mnKwargs):

@@ -23,6 +23,8 @@ from twisted.internet import defer
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.test.util.integration import RunMasterBase
+from buildbot.util import bytes2unicode
+from buildbot.util import unicode2bytes
 
 
 # This integration test creates a master and worker environment,
@@ -64,7 +66,9 @@ class MailMaster(RunMasterBase):
         if "base64" not in mail:
             self.assertIn(text, mail)
         else:  # b64encode and remove '=' padding (hence [:-1])
-            self.assertIn(base64.b64encode(text).rstrip("="), mail)
+            encodedBytes = base64.b64encode(unicode2bytes(text)).rstrip(b"=")
+            encodedText = bytes2unicode(encodedBytes)
+            self.assertIn(encodedText, mail)
 
     @defer.inlineCallbacks
     def test_notifiy_for_build(self):
