@@ -15,7 +15,7 @@ Yes:
 .. code-block:: python
 
     from __future__ import print_function
-    from builtins import basestring
+    from builtins import str
 
 No:
 
