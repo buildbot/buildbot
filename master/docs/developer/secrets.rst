@@ -4,6 +4,12 @@
 Secrets
 =======
 
+.. warning::
+
+    This documentation is about a feature that is in development, and is not yet completely implemented.
+    Don't expect it to work until this warning is removed.
+
+
 SecretDetails
 =============
 
