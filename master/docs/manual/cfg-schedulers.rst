@@ -303,7 +303,7 @@ AnyBranchScheduler
 
 This scheduler uses a tree-stable-timer like the default one, but uses a separate timer for each branch.
 
-If ``treeStableTimer`` is not set, then this scheduler is indistinguishable from bb:sched:``SingleBranchScheduler``.
+If ``treeStableTimer`` is not set, then this scheduler is indistinguishable from :bb:sched:`SingleBranchScheduler`.
 If ``treeStableTimer`` is set, then a build is triggered for each set of Changes which arrive within the configured time, and match the filters.
 
 The arguments to this scheduler are:
