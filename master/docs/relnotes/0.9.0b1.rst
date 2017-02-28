@@ -406,7 +406,7 @@ Changes for Developers
 
 * The ``preStartConsumingChanges`` and ``startTimedSchedulerService`` hooks have been removed.
 
-* The triggerable schedulers` ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
+* The triggerable schedulers' ``trigger`` method now requires a list of sourcestamps, rather than a dictionary.
 
 * The :py:class:`~buildbot.sourcestamp.SourceStamp` class is no longer used.
   It remains in the codebase to support loading data from pickles on upgrade, but should not be used in running code.
@@ -421,7 +421,7 @@ Changes for Developers
 
 * The ``buildbot.misc.SerializedInvocation`` class has been removed; use :py:func:`buildbot.util.debounce.method` instead.
 
-* The ``progress`` attributes of both :py:class:`buildbot.process.buildstep.BuildStep`` and :py:class:`buildbot.process.build.Build` have been removed.
+* The ``progress`` attributes of both :py:class:`buildbot.process.buildstep.BuildStep` and :py:class:`buildbot.process.build.Build` have been removed.
   Subclasses should only be accessing the progress-tracking mechanics via the :py:meth:`buildbot.process.buildstep.BuildStep.setProgress` method.
 
 Slave
