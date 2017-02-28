@@ -300,7 +300,7 @@ cd to the CVSROOT directory and edit the file loginfo, adding a line like:
 
 The above example you put the :src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script under /cvsroot/CVSROOT.
 It can be anywhere.
-Run the script with --help to see all the options.
+Run the script with ``--help`` to see all the options.
 At the very least, the options ``-e`` (email) and ``-P`` (project) should be specified.
 The line must end with ``%{sVv}``.
 This is expanded to the files that were modified.
