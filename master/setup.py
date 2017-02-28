@@ -383,7 +383,7 @@ setup_args = {
                 'RolesFromEmails', 'RolesFromGroups', 'RolesFromOwner', 'RolesFromUsername']),
             ('buildbot.www.authz.endpointmatchers', [
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
-                'RebuildBuildEndpointMatcher']),
+                'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher', 'EnableSchedulerEndpointMatcher']),
         ])
     ]), {
         'console_scripts': [

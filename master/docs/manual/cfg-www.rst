@@ -605,28 +605,43 @@ In this case, you can look at the source code for detailed examples on how to wr
 
     :param role: The role which grants access to any endpoint.
 
-    AnyEndpointMatcher grants all rights to a people with given role (usually "admins")
+    AnyEndpointMatcher grants all rights to people with given role (usually "admins")
+
+.. py:class:: buildbot.www.authz.endpointmatchers.AnyControlEndpointMatcher(role)
+
+    :param role: The role which grants access to any control endpoint.
+
+    AnyControlEndpointMatcher grants control rights to people with given role (usually "admins")
+    This endpoint matcher is matches current and future control endpoints.
+    You need to add this in the end of your configuration to make sure it is future proof.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.ForceBuildEndpointMatcher(builder, role)
 
     :param builder: name of the builder.
     :param role: The role needed to get access to such endpoints.
 
-    ForceBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+    ForceBuildEndpointMatcher grants right to force builds.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.StopBuildEndpointMatcher(builder, role)
 
     :param builder: name of the builder.
     :param role: The role needed to get access to such endpoints.
 
-    StopBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+    StopBuildEndpointMatcher grants rights to stop builds.
 
 .. py:class:: buildbot.www.authz.endpointmatchers.RebuildBuildEndpointMatcher(builder, role)
 
     :param builder: name of the builder.
     :param role: The role needed to get access to such endpoints.
 
-    RebuildBuildEndpointMatcher grants all rights to a people with given role (usually "admins")
+    RebuildBuildEndpointMatcher grants rights to rebuild builds.
+
+.. py:class:: buildbot.www.authz.endpointmatchers.EnableSchedulerEndpointMatcher(builder, role)
+
+    :param builder: name of the builder.
+    :param role: The role needed to get access to such endpoints.
+
+    EnableSchedulerEndpointMatcher grants rights to enable and disable schedulers via the UI.
 
 Role matchers
 +++++++++++++
@@ -689,16 +704,14 @@ You can grant roles from groups information provided by the Auth plugins, or if 
 Example Configs
 +++++++++++++++
 
-Simple config which allows admin people to run everything:
+Simple config which allows admin people to control everything, but allow anonymous to look at build results:
 
 .. code-block:: python
 
     from buildbot.plugins import *
     authz = util.Authz(
       allowRules=[
-        util.StopBuildEndpointMatcher(role="admins"),
-        util.ForceBuildEndpointMatcher(role="admins"),
-        util.RebuildBuildEndpointMatcher(role="admins")
+        util.AnyControlEndpointMatcher(role="admins"),
       ],
       roleMatchers=[
         util.RolesFromEmails(admins=["my@email.com"])
@@ -730,6 +743,8 @@ More complex config with separation per branch:
             util.ForceBuildEndpointMatcher(builder="merge", role="*-mergers"),
             # *-releasers groups can start "release" builds
             util.ForceBuildEndpointMatcher(builder="release", role="*-releasers"),
+            # if future Buildbot implement new control, we are safe with this last rule
+            util.AnyControlEndpointMatcher(role="admins")
         ],
         roleMatchers=[
             RolesFromGroups(groupPrefix="buildbot-"),
@@ -741,14 +756,14 @@ More complex config with separation per branch:
     )
     c['www']['authz'] = authz
 
-Using GitHub authentication and allowing access to all endpoints for users in the "BuildBot" organization:
+Using GitHub authentication and allowing access to control endpoints for users in the "BuildBot" organization:
 
 .. code-block:: python
 
     from buildbot.plugins import *
     authz = util.Authz(
       allowRules=[
-        util.AnyEndpointMatcher(role="BuildBot", defaultDeny=True)
+        util.AnyControlEndpointMatcher(role="BuildBot")
       ],
       roleMatchers=[
         util.RolesFromGroups()

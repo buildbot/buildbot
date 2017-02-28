@@ -1,0 +1,1 @@
+Added :py:class:`AnyControlEndpointMatcher` and :py:class:`EnableSchedulerEndpointMatcher` for better configurability of the access control. If you have access control to your Buildbot, it is recommended you add :py:class:`AnyControlEndpointMatcher` at the end of your access control configuration.

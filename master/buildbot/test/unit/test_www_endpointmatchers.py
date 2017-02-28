@@ -25,13 +25,6 @@ from buildbot.test.util import www
 from buildbot.www.authz import endpointmatchers
 
 
-# AnyEndpointMatcher
-# ForceBuildEndpointMatcher
-# BranchEndpointMatcher
-# ViewBuildsEndpointMatcher
-# StopBuildEndpointMatcher
-
-
 class EndpointBase(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
@@ -81,6 +74,22 @@ class AnyEndpointMatcher(EndpointBase):
         self.assertMatch(ret)
 
 
+class AnyControlEndpointMatcher(EndpointBase):
+
+    def makeMatcher(self):
+        return endpointmatchers.AnyControlEndpointMatcher(role="foo")
+
+    @defer.inlineCallbacks
+    def test_get(self):
+        ret = yield self.matcher.match(("foo", "bar"))
+        self.assertNotMatch(ret)
+
+    @defer.inlineCallbacks
+    def test_other_action(self):
+        ret = yield self.matcher.match(("foo", "bar"), action="foo")
+        self.assertMatch(ret)
+
+
 class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 
     def makeMatcher(self):
@@ -89,7 +98,8 @@ class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     @defer.inlineCallbacks
     def test_build(self):
         ret = yield self.matcher.match(("builds", "15"))
-        self.assertNotMatch(ret)
+        self.assertMatch(ret)
+    test_build.skip = "ViewBuildsEndpointMatcher is not implemented yet"
 
 
 class StopBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
@@ -150,4 +160,20 @@ class ForceBuildEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
     def test_forcesched_nobuilder(self):
         self.matcher.builder = None
         ret = yield self.matcher.match(("forceschedulers", "sched1"), "force")
+        self.assertMatch(ret)
+
+
+class EnableSchedulerEndpointMatcher(EndpointBase, ValidEndpointMixin):
+
+    def makeMatcher(self):
+        return endpointmatchers.EnableSchedulerEndpointMatcher(role="agent")
+
+    @defer.inlineCallbacks
+    def test_build(self):
+        ret = yield self.matcher.match(("builds", "15"), "stop")
+        self.assertNotMatch(ret)
+
+    @defer.inlineCallbacks
+    def test_scheduler_enable(self):
+        ret = yield self.matcher.match(("schedulers", "15"), "enable")
         self.assertMatch(ret)
