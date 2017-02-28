@@ -307,7 +307,7 @@ This is expanded to the files that were modified.
 
 Additional entries can be added to support more modules.
 
-See :command:`buildbot_cvs_mail.py --help`` for more information on the available options.
+See :command:`buildbot_cvs_mail.py --help` for more information on the available options.
 
 .. bb:chsrc:: SVNCommitEmailMaildirSource
 
