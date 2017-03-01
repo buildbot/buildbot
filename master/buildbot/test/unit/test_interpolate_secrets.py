@@ -35,11 +35,11 @@ class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
         rendered = yield self.build.render(command)
         self.assertEqual(rendered, "echo bar")
 
-    @defer.inlineCallbacks
     def test_secret_not_found(self):
         command = Interpolate("echo %(secrets:fuo)s")
-        rendered = yield self.build.render(command)
-        self.assertEqual(rendered, "echo ")
+        self.assertFailure(self.build.render(command), defer.FirstError)
+        self.flushLoggedErrors(defer.FirstError)
+        self.flushLoggedErrors(KeyError)
 
 
 class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
@@ -48,8 +48,8 @@ class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
         self.master = fakemaster.make_master()
         self.build = FakeBuildWithMaster(self.master)
 
-    @defer.inlineCallbacks
     def test_secret(self):
-        command = Interpolate("echo %(secrets:foo)s")
-        rendered = yield self.build.render(command)
-        self.assertEqual(rendered, "echo ")
+        command = Interpolate("echo %(secrets:fuo)s")
+        self.assertFailure(self.build.render(command), defer.FirstError)
+        self.flushLoggedErrors(defer.FirstError)
+        self.flushLoggedErrors(KeyError)

@@ -382,9 +382,8 @@ class _Lookup(util.ComparableMixin, object):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
-        value = build.render(self.value)
-        index = build.render(self.index)
-        value, index = yield defer.gatherResults([value, index])
+        value = yield build.render(self.value)
+        index = yield build.render(self.index)
         if index not in value:
             rv = yield build.render(self.default)
         else:
@@ -428,13 +427,14 @@ class _SecretRenderer(object):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
-        servicenames = [service.name for service in build.getBuild().master.services]
-        if "secrets" not in servicenames:
-            defer.returnValue(None)
+        secretsSrv = build.getBuild().master.namedServices.get("secrets")
+        if not secretsSrv:
+            raise KeyError("secrets service not found")
         credsservice = build.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
-        if secret_detail is not None:
-            defer.returnValue(secret_detail.value)
+        if secret_detail is None:
+            raise KeyError("secret value for key %s is None" % self.secret_name)
+        defer.returnValue(secret_detail.value)
 
 
 class _SecretIndexer(object):
