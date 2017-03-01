@@ -382,8 +382,9 @@ class _Lookup(util.ComparableMixin, object):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
-        value = yield build.render(self.value)
-        index = yield build.render(self.index)
+        value = build.render(self.value)
+        index = build.render(self.index)
+        value, index = yield defer.gatherResults([value, index])
         if index not in value:
             rv = yield build.render(self.default)
         else:
