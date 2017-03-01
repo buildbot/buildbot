@@ -429,11 +429,14 @@ class _SecretRenderer(object):
     def getRenderingFor(self, build):
         secretsSrv = build.getBuild().master.namedServices.get("secrets")
         if not secretsSrv:
-            raise KeyError("secrets service not found")
+            error_message = "secrets service not started, need to configure" \
+                            " SecretManager in c['services'] to use 'secrets'" \
+                            "in Interpolate"
+            raise KeyError(error_message)
         credsservice = build.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
-            raise KeyError("secret value for key %s is None" % self.secret_name)
+            raise KeyError("secret key %s is not found in any provider" % self.secret_name)
         defer.returnValue(secret_detail.value)
 
 
