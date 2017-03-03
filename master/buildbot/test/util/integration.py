@@ -239,7 +239,7 @@ class RunMasterBase(unittest.TestCase):
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:
             if expectedLog in step['state_string']:
-                return True
+                defer.returnValue(True)
 
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: %s *********" %
