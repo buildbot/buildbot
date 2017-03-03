@@ -23,7 +23,7 @@ class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"})]
         self.secretsrv = SecretManager()
         self.secretsrv.setServiceParent(self.master)

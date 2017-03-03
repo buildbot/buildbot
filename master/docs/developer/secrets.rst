@@ -58,7 +58,7 @@ File provider
 
 .. code-block:: python
 
-    c['secretsManagers'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
 
 In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
 File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.

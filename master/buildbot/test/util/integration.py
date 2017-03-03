@@ -149,6 +149,9 @@ class RunMasterBase(unittest.TestCase):
                 raise self.failureException(dump.getvalue())
         self.addCleanup(dump)
 
+    def reconfigMaster(self, config_dict):
+        self.master.reconfig()
+
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,
                      wantLogs=False, useChange=False):
@@ -230,6 +233,13 @@ class RunMasterBase(unittest.TestCase):
                       (log['name'], log['num_lines']), file=out)
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
+
+    @defer.inlineCallbacks
+    def checkBuildStepLogExist(self, build, expectedLog):
+        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        for step in build['steps']:
+            if expectedLog in step['state_string']:
+                return True
 
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: %s *********" %

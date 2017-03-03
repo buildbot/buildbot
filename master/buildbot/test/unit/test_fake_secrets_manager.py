@@ -21,7 +21,7 @@ class TestSecretsManager(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"})]
 
     @defer.inlineCallbacks
@@ -49,7 +49,7 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerService(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"}),
                                               OtherFakeSecretStorage({"foo2": "bar",
                                                                       "other2": "value"},
@@ -66,7 +66,7 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerValues(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": ""}),
                                               OtherFakeSecretStorage({"foo2": "bar2",
                                                                       "other": ""},
@@ -82,7 +82,7 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerServiceNoDatas(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"}),
                                               FakeSecretStorage({"foo2": "bar",
                                                                  "other2": "value"})
