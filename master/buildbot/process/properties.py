@@ -163,7 +163,7 @@ class Properties(util.ComparableMixin):
         return defer.maybeDeferred(renderable.getRenderingFor, self)
 
 
-class PropertiesMixin:
+class PropertiesMixin(object):
 
     """
     A mixin to add L{IProperties} methods to a class which does not implement
@@ -421,6 +421,36 @@ _thePropertyDict = _PropertyDict()
 
 
 @implementer(IRenderable)
+class _SecretRenderer(object):
+
+    def __init__(self, secret_name):
+        self.secret_name = secret_name
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, build):
+        secretsSrv = build.getBuild().master.namedServices.get("secrets")
+        if not secretsSrv:
+            error_message = "secrets service not started, need to configure" \
+                            " SecretManager in c['services'] to use 'secrets'" \
+                            "in Interpolate"
+            raise KeyError(error_message)
+        credsservice = build.getBuild().master.namedServices['secrets']
+        secret_detail = yield credsservice.get(self.secret_name)
+        if secret_detail is None:
+            raise KeyError("secret key %s is not found in any provider" % self.secret_name)
+        defer.returnValue(secret_detail.value)
+
+
+class _SecretIndexer(object):
+
+    def __contains__(self, password):
+        return True
+
+    def __getitem__(self, password):
+        return _SecretRenderer(password)
+
+
+@implementer(IRenderable)
 class _SourceStampDict(util.ComparableMixin, object):
 
     compare_attrs = ('codebase',)
@@ -517,8 +547,15 @@ class Interpolate(util.ComparableMixin, object):
 
         # Report in proper place with typical stack trace...
         _on_property_usage(prop, stacklevel=4)
-
         return _thePropertyDict, prop, repl
+
+    @staticmethod
+    def _parse_secrets(arg):
+        try:
+            secret, repl = arg.split(":", 1)
+        except ValueError:
+            secret, repl = arg, None
+        return _SecretIndexer(), secret, repl
 
     @staticmethod
     def _parse_src(arg):
@@ -645,8 +682,8 @@ class Interpolate(util.ComparableMixin, object):
                     config.error(
                         "invalid Interpolate default type '%s'" % repl[0])
 
-    def getRenderingFor(self, props):
-        props = props.getProperties()
+    def getRenderingFor(self, build):
+        props = build.getProperties()
         if self.args:
             d = props.render(self.args)
             d.addCallback(lambda args:
