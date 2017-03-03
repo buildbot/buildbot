@@ -47,4 +47,4 @@ RUN \
     rm -r /root/.cache
 
 WORKDIR /var/lib/buildbot
-CMD ["dumb-init", "/usr/src/buildbot/contrib/docker/master/start_buildbot.sh"]
+CMD ["dumb-init", "/usr/src/buildbot/docker/start_buildbot.sh"]
