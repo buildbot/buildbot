@@ -44,12 +44,10 @@ class TestOpenStackWorker(unittest.TestCase):
         **os_auth)
 
     def setUp(self):
-        self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
-        self.patch(openstack, "nce", None)
         self.patch(openstack, "client", None)
         self.assertRaises(config.ConfigErrors,
                           openstack.OpenStackLatentWorker, 'bot', 'pass',

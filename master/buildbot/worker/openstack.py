@@ -30,13 +30,11 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker import AbstractLatentWorker
 
 try:
-    import novaclient.exceptions as nce
     from novaclient import client
     from novaclient.exceptions import NotFound
-    _hush_pyflakes = [nce, client]
+    _hush_pyflakes = [client]
 except ImportError:
     NotFound = Exception
-    nce = None
     client = None
 
 
@@ -66,7 +64,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  client_version='1.1',
                  **kwargs):
 
-        if not client or not nce:
+        if not client:
             config.error("The python module 'novaclient' is needed  "
                          "to use a OpenStackLatentWorker. "
                          "Please install 'python-novaclient' package.")
