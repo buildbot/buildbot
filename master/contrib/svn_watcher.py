@@ -46,7 +46,7 @@ def sendchange_cmd(master, revisionData):
         "sendchange",
         "--master=%s" % master,
         "--revision=%s" % revisionData['revision'],
-        "--username=%s" % revisionData['author'],
+        "--who=%s" % revisionData['author'],
         "--comments=%s" % revisionData['comments'],
         "--vc=%s" % 'svn',
     ]

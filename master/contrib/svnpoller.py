@@ -85,7 +85,7 @@ if lastrevision != revision:
 
     # comments = codecs.encodings.unicode_escape.encode(comments)
     cmd = "buildbot sendchange --master=" + buildmaster + " --branch=trunk \
---revision=\"" + revision + "\" --username=\"" + author + "\" --vc=\"svn\" \
+--revision=\"" + revision + "\" --who=\"" + author + "\" --vc=\"svn\" \
 --comments=\"" + comments + "\" " + " ".join(paths)
 
     # print cmd
