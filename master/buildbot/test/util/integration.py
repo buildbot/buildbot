@@ -149,9 +149,6 @@ class RunMasterBase(unittest.TestCase):
                 raise self.failureException(dump.getvalue())
         self.addCleanup(dump)
 
-    def reconfigMaster(self, config_dict):
-        self.master.reconfig()
-
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,
                      wantLogs=False, useChange=False):

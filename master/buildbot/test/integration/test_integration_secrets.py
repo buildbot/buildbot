@@ -34,11 +34,14 @@ class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_secretReconfig(self):
-        yield self.setupConfig(masterConfig())
-        self.reconfigMaster(masterConfig())
+        c = masterConfig()
+        yield self.setupConfig(c)
+        c['secretsProviders'] = [FakeSecretStorage(
+            {"foo": "different_value", "something": "more"})]
+        yield self.master.reconfig()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo bar")
+        res = yield self.checkBuildStepLogExist(build, "echo different_value")
         self.assertTrue(res)
 
 
@@ -51,8 +54,8 @@ def masterConfig():
 
     c['schedulers'] = [
         schedulers.ForceScheduler(
-        name="force",
-        builderNames=["testy"])]
+            name="force",
+            builderNames=["testy"])]
 
     c['secretsProviders'] = [FakeSecretStorage(
         {"foo": "bar", "something": "more"})]

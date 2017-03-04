@@ -590,7 +590,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 self.metrics = metrics
 
     def load_secrets(self, filename, config_dict):
-        # we don't try to validate metrics keys
         if 'secretsProviders' in config_dict:
             secretsProviders = config_dict["secretsProviders"]
             if not isinstance(secretsProviders, list):
