@@ -453,7 +453,8 @@ setup_args['install_requires'] = [
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
     'PyJWT',
-    'distro'
+    'distro',
+    'hvac'
 ]
 
 # Unit test dependencies.
