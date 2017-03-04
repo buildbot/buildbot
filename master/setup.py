@@ -176,6 +176,7 @@ setup_args = {
         "buildbot.reporters",
         "buildbot.schedulers",
         "buildbot.scripts",
+        "buildbot.secrets",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
         "buildbot.status",
