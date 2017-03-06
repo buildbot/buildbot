@@ -1,0 +1,1 @@
+Include :py:class:`~buildbot.steps.package.rpm.rpmlint.RpmLint` step in steps plugins.
