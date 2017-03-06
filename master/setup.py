@@ -255,6 +255,7 @@ setup_args = {
         ]),
         ('buildbot.steps', [
             ('buildbot.process.buildstep', ['BuildStep']),
+            ('buildbot.steps.cmake', ['CMake']),
             ('buildbot.steps.cppcheck', ['Cppcheck']),
             ('buildbot.steps.http', [
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
@@ -282,9 +283,6 @@ setup_args = {
                 'Configure', 'WarningCountingShellCommand', 'Compile',
                 'Test', 'PerlModuleTest']),
             ('buildbot.steps.shellsequence', ['ShellSequence']),
-            ('buildbot.steps.worker', [
-                'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
-                'RemoveDirectory', 'MakeDirectory']),
             ('buildbot.steps.source.bzr', ['Bzr']),
             ('buildbot.steps.source.cvs', ['CVS']),
             ('buildbot.steps.source.darcs', ['Darcs']),
@@ -302,11 +300,13 @@ setup_args = {
                 'FileDownload', 'StringDownload', 'JSONStringDownload',
                 'JSONPropertiesDownload']),
             ('buildbot.steps.trigger', ['Trigger']),
-            ('buildbot.steps.cmake', ['CMake']),
             ('buildbot.steps.vstudio', [
                 'VC6', 'VC7', 'VS2003', 'VC8', 'VS2005', 'VCExpress9', 'VC9',
                 'VS2008', 'VC10', 'VS2010', 'VC11', 'VS2012', 'VC12', 'VS2013',
-                'VC14', 'VS2015', 'MsBuild4', 'MsBuild', 'MsBuild12', 'MsBuild14'])
+                'VC14', 'VS2015', 'MsBuild4', 'MsBuild', 'MsBuild12', 'MsBuild14']),
+            ('buildbot.steps.worker', [
+                'SetPropertiesFromEnv', 'FileExists', 'CopyDirectory',
+                'RemoveDirectory', 'MakeDirectory']),
         ]),
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
