@@ -21,7 +21,7 @@ class TestSecretsManager(unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"})]
 
     @defer.inlineCallbacks
@@ -49,12 +49,10 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerService(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
-                                                                 "other": "value"}),
-                                              OtherFakeSecretStorage({"foo2": "bar",
-                                                                      "other2": "value"},
-                                                                     props={"property": "value_prop"})
-                                              ]
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
+                                                                  "other": "value"}),
+                                               OtherFakeSecretStorage({"foo2": "bar",
+                                                                       "other2": "value"})]
         SecretManager.master = self.master
         expectedSecretDetail = SecretDetails(OtherFakeSecretStorage.__name__,
                                              "foo2",
@@ -66,12 +64,10 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerValues(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": ""}),
-                                              OtherFakeSecretStorage({"foo2": "bar2",
-                                                                      "other": ""},
-                                                                     props={"property": "value_prop"})
-                                              ]
+                                               OtherFakeSecretStorage({"foo2": "bar2", "other": ""})
+                                               ]
         SecretManager.master = self.master
         expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
                                              "other",
@@ -82,11 +78,11 @@ class TestSecretsManager(unittest.TestCase):
     @defer.inlineCallbacks
     def testGetDataMultipleManagerServiceNoDatas(self):
         secret_service_manager = SecretManager()
-        self.master.config.secretsManagers = [FakeSecretStorage({"foo": "bar",
+        self.master.config.secretsProviders = [FakeSecretStorage({"foo": "bar",
                                                                  "other": "value"}),
-                                              FakeSecretStorage({"foo2": "bar",
+                                               FakeSecretStorage({"foo2": "bar",
                                                                  "other2": "value"})
-                                              ]
+                                               ]
         SecretManager.master = self.master
         secret_result = yield secret_service_manager.get("foo3")
         self.assertEqual(secret_result, None)

@@ -231,6 +231,13 @@ class RunMasterBase(unittest.TestCase):
                 if step['results'] != SUCCESS or withLogs:
                     self.printLog(log, out)
 
+    @defer.inlineCallbacks
+    def checkBuildStepLogExist(self, build, expectedLog):
+        yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
+        for step in build['steps']:
+            if expectedLog in step['state_string']:
+                defer.returnValue(True)
+
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: %s *********" %
               (log['name'],), file=out)

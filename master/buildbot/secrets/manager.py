@@ -39,7 +39,7 @@ class SecretManager(service.BuildbotService):
         @type: string
         @return type: SecretDetails
         """
-        providers = self.master.config.secretsManagers
+        providers = self.master.config.secretsProviders
         for provider in providers:
             value = yield provider.get(secret)
             source_name = provider.__class__.__name__

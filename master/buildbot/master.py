@@ -50,6 +50,7 @@ from buildbot.process.botmaster import BotMaster
 from buildbot.process.builder import BuilderControl
 from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
+from buildbot.secrets.manager import SecretManager
 from buildbot.status.master import Status
 from buildbot.util import ascii2unicode
 from buildbot.util import check_functional_environment
@@ -192,6 +193,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
         self.status = Status()
         self.status.setServiceParent(self)
+
+        self.secrets_manager = SecretManager()
+        self.secrets_manager.setServiceParent(self)
 
         self.service_manager = service.BuildbotServiceManager()
         self.service_manager.setServiceParent(self)

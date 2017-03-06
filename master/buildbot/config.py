@@ -233,6 +233,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             Changes=10,
         )
         self.schedulers = {}
+        self.secretsProviders = []
         self.builders = []
         self.workers = []
         self._registerOldWorkerAttr("workers")
@@ -284,6 +285,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "schedulers",
         "services",
         "status",
+        "secretsProviders",
         "title",
         "titleURL",
         "user_managers",
@@ -339,6 +341,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             config.load_db(filename, config_dict)
             config.load_mq(filename, config_dict)
             config.load_metrics(filename, config_dict)
+            config.load_secrets(filename, config_dict)
             config.load_caches(filename, config_dict)
             config.load_schedulers(filename, config_dict)
             config.load_builders(filename, config_dict)
@@ -585,6 +588,14 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 error("c['metrics'] must be a dictionary")
             else:
                 self.metrics = metrics
+
+    def load_secrets(self, filename, config_dict):
+        if 'secretsProviders' in config_dict:
+            secretsProviders = config_dict["secretsProviders"]
+            if not isinstance(secretsProviders, list):
+                error("c['secretsProviders'] must be a list")
+            else:
+                self.secretsProviders = secretsProviders
 
     def load_caches(self, filename, config_dict):
         explicit = False
