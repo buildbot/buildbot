@@ -1,7 +1,7 @@
 .container
   .row(ng-if="config.buildbotURL != baseurl")
       .alert.alert-danger Warning: 
-          | c['BuildbotURL'] is misconfigured to
+          | c['buildbotURL'] is misconfigured to
           pre {{config.buildbotURL}}
           | Should be:
           pre {{baseurl}}
