@@ -593,7 +593,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         if 'secretsProviders' in config_dict:
             secretsProviders = config_dict["secretsProviders"]
             if not isinstance(secretsProviders, list):
-                error("c['secretsProviders'] must be a dictionary")
+                error("c['secretsProviders'] must be a list")
             else:
                 self.secretsProviders = secretsProviders
 
