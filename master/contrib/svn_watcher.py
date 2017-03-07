@@ -34,11 +34,21 @@ from xml.parsers.expat import ExpatError
 if sys.platform == 'win32':
     import win32pipe
 
-
 def getoutput(cmd):
-    p = subprocess.Popen(cmd, stdout=subprocess.PIPE)
-    return p.stdout.read()
-
+    if sys.platform == 'win32':
+        f = win32pipe.popen(cmd)
+        stdout = ''.join(f.readlines())
+        f.close()
+    else:
+        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+        p.wait()
+        stdout = p.stdout.read()
+        if p.returncode != 0:
+            print('WARNING: "%s" returned status code: %s' % (' '.join(cmd), p.returncode))
+            if stdout is not None:
+                print(stdout)
+            sys.exit(1)
+    return stdout
 
 def sendchange_cmd(master, revisionData):
     cmd = [
@@ -117,12 +127,8 @@ def checkChanges(repo, master, oldRevision=-1):
     if opts.verbose:
         print("Getting last revision of repository: " + repo)
 
-    if sys.platform == 'win32':
-        f = win32pipe.popen(cmd)
-        xml1 = ''.join(f.readlines())
-        f.close()
-    else:
-        xml1 = getoutput(cmd)
+    xml1 = getoutput(cmd)
+    pretty_time = time.strftime("%F %T ")
 
     if opts.verbose:
         print("XML\n-----------\n" + xml1 + "\n\n")
@@ -136,17 +142,13 @@ def checkChanges(repo, master, oldRevision=-1):
     if revisionData['revision'] != oldRevision:
 
         cmd = sendchange_cmd(master, revisionData)
+        status = getoutput(cmd)
 
-        if sys.platform == 'win32':
-            f = win32pipe.popen(cmd)
-            pretty_time = time.strftime("%H.%M.%S ")
-            print("%s Revision %s: %s" % (pretty_time, revisionData['revision'],
-                                          ''.join(f.readlines())))
-            f.close()
-        else:
-            xml1 = getoutput(cmd)
+        print("%s Revision %s: %s" % (pretty_time, revisionData['revision'],
+                                      status))
+
     else:
-        pretty_time = time.strftime("%H.%M.%S ")
+
         print("%s nothing has changed since revision %s" % (pretty_time,
                                                             revisionData['revision']))
 
