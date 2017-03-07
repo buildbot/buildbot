@@ -149,6 +149,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         # note that these are order-dependent.  If you get the order wrong,
         # you'll know it, as the master will fail to start.
 
+        self.secrets_manager = SecretManager()
+        self.secrets_manager.setServiceParent(self)
+
         self.metrics = metrics.MetricLogObserver()
         self.metrics.setServiceParent(self)
 

@@ -19,39 +19,48 @@ vault based providers
 from __future__ import absolute_import
 from __future__ import print_function
 
-import hvac
+from twisted.internet import defer
 
 from buildbot import config
 from buildbot.secrets.providers.base import SecretProviderBase
+from buildbot.util import httpclientservice
 
 
-class SecretInVault(SecretProviderBase):
+class HashiCorpVaultSecretProvider(SecretProviderBase):
     """
     basic provider where each secret is stored in Vault
     """
+
     name = 'SecretInVault'
 
-    def checkConfig(self, vaultServer=None, vaultToken=None):
+    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None):
         if not isinstance(vaultServer, str):
             config.error("vaultServer must be a string while it is %s" % (type(vaultServer,)))
         if not isinstance(vaultToken, str):
             config.error("vaultToken must be a string while it is %s" % (type(vaultToken,)))
-        self.vaultServer = vaultServer
-        self.token = vaultToken
-        self.client = hvac.Client(url=vaultServer, token=vaultToken)
 
-    def reconfigService(self, vaultServer=None, vaultToken=None):
+    @defer.inlineCallbacks
+    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None):
+        if secretsmount is None:
+            self.secretsmount = "secret"
+        else:
+            self.secretsmount = secretsmount
         self.vaultServer = vaultServer
-        self.token = vaultToken
-        self.client = hvac.Client(url=vaultServer, token=vaultToken)
+        self.vaultToken = vaultToken
+        if vaultServer.endswith('/'):
+            vaultServer = vaultServer[:-1]
+        self._http = yield httpclientservice.HTTPClientService.getService(
+            self.master, self.vaultServer, headers={'X-Vault-Token': self.vaultToken})
 
+    @defer.inlineCallbacks
     def get(self, entry):
         """
         get the value from vault secret backend
         """
-        secret = self.client.read('secret/' + entry)
-        if 'data' not in secret.keys():
-            return None
-        if "value" not in secret["data"].keys():
-            return None
-        return secret["data"]["value"]
+        path = self.secretsmount + '/' + entry
+        proj = yield self._http.get('/v1/{0}'.format(path))
+        code = yield proj.code
+        if code != 200:
+            config.error("%s unable to get key %s" % (code, entry))
+        json = yield proj.json()
+        defer.returnValue(json.get('data', {}).get('value'))

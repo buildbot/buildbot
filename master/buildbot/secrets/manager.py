@@ -24,11 +24,12 @@ from buildbot.secrets.secret import SecretDetails
 from buildbot.util import service
 
 
-class SecretManager(service.BuildbotService):
+class SecretManager(service.BuildbotServiceManager):
     """
     Secret manager
     """
     name = 'secrets'
+    config_attr = "secretsProviders"
 
     @defer.inlineCallbacks
     def get(self, secret, *args, **kwargs):
@@ -39,8 +40,7 @@ class SecretManager(service.BuildbotService):
         @type: string
         @return type: SecretDetails
         """
-        providers = self.master.config.secretsProviders
-        for provider in providers:
+        for provider in self.services:
             value = yield provider.get(secret)
             source_name = provider.__class__.__name__
             if value is not None:

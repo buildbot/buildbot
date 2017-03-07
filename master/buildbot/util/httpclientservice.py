@@ -61,6 +61,7 @@ class TxRequestsResponseWrapper(object):
 
     @property
     def code(self):
+        print("DEBUG: self._res.status_code:", self._res.status_code)
         return self._res.status_code
 
 

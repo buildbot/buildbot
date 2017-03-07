@@ -21,54 +21,58 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.secrets.providers.vault import SecretInVault
+from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
+from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 
 
-class FakeVaultClient(object):
+class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
 
-    def __init__(self, fakeValues=None, vaultServer=None, vaultToken=None):
-        self.vaultServer = vaultServer
-        self.vaultToken = vaultToken
-        self.fakeValues = fakeValues
-
-    def get(self, key):
-        return self.fakeValues[key]
-
-
-class TestSecretInVault(ConfigErrorsMixin, unittest.TestCase):
-
-    @defer.inlineCallbacks
     def setUp(self):
-        self.srvcVault = SecretInVault(vaultServer="serveraddr",
-                                       vaultToken="someToken")
-        yield self.srvcVault.startService()
+        self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
+                                                      vaultToken="someToken")
+        self.master = fakemaster.make_master(testcase=self, wantData=True)
+        self._http = self.successResultOf(
+            fakehttpclientservice.HTTPClientService.getFakeService(
+                self.master, self, 'http://vaultServer', headers={'X-Vault-Token': "someToken"}))
+        self.srvcVault.setServiceParent(self.master)
+        self.successResultOf(self.master.startService())
 
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.srvcVault.stopService()
 
-    def checkGetVaultValue(self, fakeVaultValues, key, expectedValue):
-        self.srvcVault.client.read = mock.Mock(return_value=fakeVaultValues)
-        value = self.srvcVault.get(key)
-        self.assertEqual(value, expectedValue)
+    @defer.inlineCallbacks
+    def testGetValue(self):
+        self._http.expect(method='get', ep='/v1/secret/value', params=None,
+         data=None, json=None, code=200,
+         content_json={"data": {"value": "value1"}})
+        value = yield self.srvcVault.get("value")
+        self.assertEqual(value, "value1")
 
-    def testGetFile(self):
-        fakeReadValue = {"data": {"value": "value1"}}
-        self.checkGetVaultValue(fakeReadValue, "value", "value1")
+    @defer.inlineCallbacks
+    def testGetValueNotFound(self):
+        self._http.expect(method='get', ep='/v1/secret/valueNotFound', params=None,
+         data=None, json=None, code=200,
+         content_json={"data": {"valueNotFound": "value1"}})
+        value = yield self.srvcVault.get("valueNotFound")
+        self.assertEqual(value, None)
 
-    def testGetFileDataNotFound(self):
-        fakeReadValue = {"data2": {"value": "value1"}}
-        self.checkGetVaultValue(fakeReadValue, "value", None)
-
-    def testGetFileValueNotFound(self):
-        fakeReadValue = {"data": {"no_value": "value1"}}
-        self.checkGetVaultValue(fakeReadValue, "value", None)
+    @defer.inlineCallbacks
+    def testGetError(self):
+        self._http.expect(method='get', ep='/v1/secret/valueNotFound', params=None,
+         data=None, json=None, code=201,
+         content_json={"data": {"valueNotFound": "value1"}})
+        try:
+            yield self.srvcVault.get("valueNotFound")
+        except Exception as e:
+            self.assertEqual(str(e), "201 unable to get key valueNotFound")
 
     def testCheckConfigSecretInVaultService(self):
         self.assertEqual(self.srvcVault.name, "SecretInVault")
-        self.assertEqual(self.srvcVault.vaultServer, "serveraddr")
-        self.assertEqual(self.srvcVault.token, "someToken")
+        self.assertEqual(self.srvcVault.vaultServer, "http://vaultServer")
+        self.assertEqual(self.srvcVault.vaultToken, "someToken")
 
     def testCheckConfigErrorSecretInVaultService(self):
         self.assertRaisesConfigError("vaultServer must be a string while it is",
@@ -80,7 +84,10 @@ class TestSecretInVault(ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def testReconfigSecretInVaultService(self):
+        self._http = self.successResultOf(
+            fakehttpclientservice.HTTPClientService.getFakeService(
+                self.master, self, 'serveraddr', headers={'X-Vault-Token': "someToken"}))
         yield self.srvcVault.reconfigService(vaultServer="serveraddr",
                                              vaultToken="someToken")
         self.assertEqual(self.srvcVault.vaultServer, "serveraddr")
-        self.assertEqual(self.srvcVault.token, "someToken")
+        self.assertEqual(self.srvcVault.vaultToken, "someToken")
