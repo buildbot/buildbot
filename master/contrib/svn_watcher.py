@@ -62,6 +62,10 @@ def sendchange_cmd(master, revisionData):
     ]
     if opts.category:
         cmd.append("--category=%s" % opts.category)
+    if opts.branch:
+        cmd.append("--branch=%s" % opts.branch)
+    if opts.auth:
+        cmd.append("--auth=%s" % opts.auth)
     for path in revisionData['paths']:
         cmd.append(path)
 
@@ -113,14 +117,26 @@ def parseChangeXML(raw_xml):
     # grab the appropriate file paths that changed.
     pathlist = log_entry.getElementsByTagName("paths")[0]
     paths = []
+    if opts.branch:
+        branchtoken =  "/" + opts.branch.strip("/") + "/"
     for path in pathlist.getElementsByTagName("path"):
-        paths.append("".join([t.data for t in path.childNodes]))
+        filename = "".join([t.data for t in path.childNodes])
+        if opts.branch:
+            filename = filename.split(branchtoken, 1)[1]
+        paths.append(filename)
     data['paths'] = paths
 
     return data
 
 
+# FIXME: instead of just picking the last svn change each $interval minutes,
+# we should be querying the svn server for all the changes between our
+# last check and now, and notify the buildmaster about all of them.
+# This is an example of a svn query we could do to get allo those changes:
+# svn log --xml --non-interactive -r ${lastrevchecked}:HEAD https://repo.url/branch
+
 def checkChanges(repo, master, oldRevision=-1):
+
     cmd = ["svn", "log", "--non-interactive", "--xml", "--verbose",
            "--limit=1", repo]
 
@@ -175,6 +191,16 @@ def build_parser():
     )
 
     parser.add_option(
+        "-b", "--branch", dest="branch", action="store", default=None,
+        help="Watch only changes for this branch and send the branch info.",
+    )
+
+    parser.add_option(
+        "-a", "--auth", dest="auth", action="store", default=None,
+        help="Authentication token - username:password.",
+    )
+
+    parser.add_option(
         "", "--watch", dest="watch", action="store_true", default=False,
         help="Automatically check the repo url every 10 minutes.",
     )
@@ -211,6 +237,9 @@ if __name__ == '__main__':
     # grab what we need
     repo_url = args[0]
     bbmaster = args[1]
+
+    if opts.branch:
+        repo_url = repo_url.rstrip("/") + "/" + opts.branch.lstrip("/")
 
     # if watch is specified, run until stopped
     if opts.watch or opts.interval:
