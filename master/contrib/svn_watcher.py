@@ -14,12 +14,6 @@
 # repository to watch.
 
 
-# 15.03.06 by John Pye
-# 29.03.06 by Niklaus Giger, added support to run under windows,
-# added invocation option
-# 22.03.10 by Johnnie Pittman, added support for category and interval
-# options.
-
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
