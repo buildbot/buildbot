@@ -30,12 +30,16 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker import AbstractLatentWorker
 
 try:
+    from keystoneauth1 import loading
+    from keystoneauth1 import session
     from novaclient import client
     from novaclient.exceptions import NotFound
     _hush_pyflakes = [client]
 except ImportError:
     NotFound = Exception
     client = None
+    loading = None
+    session = None
 
 
 ACTIVE = 'ACTIVE'
@@ -68,6 +72,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             config.error("The python module 'novaclient' is needed  "
                          "to use a OpenStackLatentWorker. "
                          "Please install 'python-novaclient' package.")
+        if not loading or not session:
+            config.error("The python module 'keystoneauth1' is needed "
+                         "to use a OpenStackLatentWorker. "
+                         "Please install the 'keystoneauth1' package.")
 
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
@@ -76,9 +84,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
 
         self.flavor = flavor
         self.client_version = client_version
-        self.novaclient = client.Client(client_version, os_username,
-                                        os_password, os_tenant_name,
-                                        os_auth_url)
+        if client:
+            self.novaclient = self._constructClient(
+                client_version, os_username, os_password, os_tenant_name,
+                os_auth_url)
 
         if block_devices is not None:
             self.block_devices = [
@@ -88,6 +97,16 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.image = image
         self.meta = meta
         self.nova_args = nova_args if nova_args is not None else {}
+
+    @staticmethod
+    def _constructClient(client_version, username, password, project_name,
+                         auth_url):
+        """Return a novaclient from the given args."""
+        loader = loading.get_plugin_loader('password')
+        auth = loader.load_from_options(auth_url=auth_url, username=username,
+                                        password=password, project_name=project_name)
+        sess = session.Session(auth=auth)
+        return client.Client(client_version, session=sess)
 
     def _parseBlockDevice(self, block_device):
         """
