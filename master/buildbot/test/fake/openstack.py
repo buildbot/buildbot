@@ -35,7 +35,7 @@ TEST_UUIDS = {
 # Parts used from novaclient
 class Client():
 
-    def __init__(self, version, username, password, tenant_name, auth_url):
+    def __init__(self, version, session):
         self.images = ItemManager()
         self.images._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
         self.volumes = ItemManager()
@@ -142,3 +142,31 @@ class Instance():
 
 class NotFound(Exception):
     pass
+
+
+# Parts used from keystoneauth1.
+
+
+def get_plugin_loader(plugin_type):
+    return PasswordLoader()
+
+
+class PasswordLoader():
+
+    def load_from_options(self, **kwargs):
+        return PasswordAuth(**kwargs)
+
+
+class PasswordAuth():
+
+    def __init__(self, auth_url, password, project_name, username):
+        self.auth_url = auth_url
+        self.password = password
+        self.project_name = project_name
+        self.username = username
+
+
+class Session():
+
+    def __init__(self, auth):
+        self.auth = auth

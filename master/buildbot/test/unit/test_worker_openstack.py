@@ -45,10 +45,18 @@ class TestOpenStackWorker(unittest.TestCase):
 
     def setUp(self):
         self.patch(openstack, "client", novaclient)
+        self.patch(openstack, "loading", novaclient)
+        self.patch(openstack, "session", novaclient)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
         self.patch(openstack, "client", None)
+        self.assertRaises(config.ConfigErrors,
+                          openstack.OpenStackLatentWorker, 'bot', 'pass',
+                          **self.bs_image_args)
+
+    def test_constructor_nokeystoneauth(self):
+        self.patch(openstack, "loading", None)
         self.assertRaises(config.ConfigErrors,
                           openstack.OpenStackLatentWorker, 'bot', 'pass',
                           **self.bs_image_args)
