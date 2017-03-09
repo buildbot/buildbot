@@ -286,6 +286,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 numchunks += 1
             rows.close()
 
+            if totlength == 0:
+                # empty log
+                return 0
+
             if todo_numchunks > 1 or (force and todo_numchunks):
                 # last chunk group
                 todo_gather_list.append((todo_first_line, todo_last_line))

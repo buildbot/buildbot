@@ -517,6 +517,11 @@ class RealTests(Tests):
     def test_addLogLines_huge_log_lots_snowmans(self):
         return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'\N{SNOWMAN}\n' * 50)
 
+    @defer.inlineCallbacks
+    def test_compressEmptyLog(self):
+        yield self.db.logs.compressLog(201)
+        logdict = yield self.db.logs.getLog(201)
+        self.assertEqual(logdict, None)
 
 class TestFakeDB(unittest.TestCase, Tests):
 
