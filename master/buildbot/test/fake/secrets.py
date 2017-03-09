@@ -6,8 +6,11 @@ from buildbot.secrets.providers.base import SecretProviderBase
 
 class FakeSecretStorage(SecretProviderBase):
 
-    def __init__(self, allsecretsInADict):
-        self.allsecrets = allsecretsInADict
+    name = "SecretsInFake"
+
+    def reconfigService(self, secretdict={}):
+        print("DEBUG allsecretsInADict reconfig:", secretdict)
+        self.allsecrets = secretdict
 
     def get(self, key):
         if key in self.allsecrets:
