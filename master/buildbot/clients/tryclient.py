@@ -685,7 +685,7 @@ class Try(pb.Referenceable):
         self.outstanding = []
 
         # self.results holds the list of build results. It holds a tuple of
-        # (result, text)
+        # (result, text, buildnumber)
         self.results = {}
 
         # self.currentStep holds the name of the Step that each build is
@@ -701,7 +701,7 @@ class Try(pb.Referenceable):
             self.buildRequests[n] = br
             self.builds[n] = None
             self.outstanding.append(n)
-            self.results[n] = [None, None]
+            self.results[n] = [None, None, None]
             self.currentStep[n] = None
             self.ETA[n] = None
             # get new Builds for this buildrequest. We follow each one until
@@ -747,11 +747,17 @@ class Try(pb.Referenceable):
     def _build_finished_2(self, results, bs, builderName):
         self.results[builderName][0] = results
         d = bs.callRemote("getText")
-        d.addCallback(self._build_finished_3, builderName)
+        d.addCallback(self._build_finished_3, bs, builderName)
         return d
 
-    def _build_finished_3(self, text, builderName):
+    def _build_finished_3(self, text, bs, builderName):
         self.results[builderName][1] = text
+        d = bs.callRemote("getNumber")
+        d.addCallback(self._build_finished_4, builderName)
+        return d
+
+    def _build_finished_4(self, number, builderName):
+        self.results[builderName][2] = number
 
         self.outstanding.remove(builderName)
         if not self.outstanding:
@@ -764,10 +770,12 @@ class Try(pb.Referenceable):
             for n in names:
                 if n not in self.outstanding:
                     # the build is finished, and we have results
-                    code, text = self.results[n]
+                    code, text, number = self.results[n]
                     t = builder.Results[code]
                     if text:
                         t += " (%s)" % " ".join(text)
+                    if number:
+                        t += " [build %s]" % number
                 elif self.builds[n]:
                     t = self.currentStep[n] or "building"
                     if self.ETA[n]:
@@ -788,10 +796,12 @@ class Try(pb.Referenceable):
         names = sorted(self.buildRequests.keys())
         happy = True
         for n in names:
-            code, text = self.results[n]
+            code, text, number = self.results[n]
             t = "%s: %s" % (n, builder.Results[code])
             if text:
                 t += " (%s)" % " ".join(text)
+            if number:
+                t += " [build %s]" % number
             output(t)
             if code != builder.SUCCESS:
                 happy = False
