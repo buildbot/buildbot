@@ -35,7 +35,7 @@ TEST_UUIDS = {
 # Parts used from novaclient
 class Client():
 
-    def __init__(self, version, username, password, tenant_name, auth_url):
+    def __init__(self, version, session):
         self.images = ItemManager()
         self.images._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
         self.volumes = ItemManager()
@@ -93,7 +93,8 @@ class Snapshot(Item):
 class Servers():
     fail_to_get = False
     fail_to_start = False
-    gets_until_active = 2
+    gets_until_active = 3
+    gets_until_disappears = 1
     instances = {}
 
     def create(self, *boot_args, **boot_kwargs):
@@ -103,8 +104,10 @@ class Servers():
         return instance
 
     def get(self, instance_id):
-        if not self.fail_to_get and instance_id in self.instances:
-            inst = self.instances[instance_id]
+        if instance_id not in self.instances:
+            raise NotFound
+        inst = self.instances[instance_id]
+        if not self.fail_to_get or inst.gets < self.gets_until_disappears:
             if not inst.status.startswith('BUILD'):
                 return inst
             inst.gets += 1
@@ -142,3 +145,31 @@ class Instance():
 
 class NotFound(Exception):
     pass
+
+
+# Parts used from keystoneauth1.
+
+
+def get_plugin_loader(plugin_type):
+    return PasswordLoader()
+
+
+class PasswordLoader():
+
+    def load_from_options(self, **kwargs):
+        return PasswordAuth(**kwargs)
+
+
+class PasswordAuth():
+
+    def __init__(self, auth_url, password, project_name, username):
+        self.auth_url = auth_url
+        self.password = password
+        self.project_name = project_name
+        self.username = username
+
+
+class Session():
+
+    def __init__(self, auth):
+        self.auth = auth

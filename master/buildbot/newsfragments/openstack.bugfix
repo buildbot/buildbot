@@ -1,0 +1,1 @@
+Updated :py:class:`~buildbot.workers.openstack.OpenStackLatentWorker` to use keystoneauth1 so it will support latest python-novaclient packages.

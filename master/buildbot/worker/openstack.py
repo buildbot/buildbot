@@ -30,14 +30,16 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.worker import AbstractLatentWorker
 
 try:
-    import novaclient.exceptions as nce
+    from keystoneauth1 import loading
+    from keystoneauth1 import session
     from novaclient import client
     from novaclient.exceptions import NotFound
-    _hush_pyflakes = [nce, client]
+    _hush_pyflakes = [client]
 except ImportError:
     NotFound = Exception
-    nce = None
     client = None
+    loading = None
+    session = None
 
 
 ACTIVE = 'ACTIVE'
@@ -63,13 +65,17 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  # Have a nova_args parameter to allow passing things directly
                  # to novaclient.
                  nova_args=None,
-                 client_version='1.1',
+                 client_version='2',
                  **kwargs):
 
-        if not client or not nce:
+        if not client:
             config.error("The python module 'novaclient' is needed  "
                          "to use a OpenStackLatentWorker. "
                          "Please install 'python-novaclient' package.")
+        if not loading or not session:
+            config.error("The python module 'keystoneauth1' is needed "
+                         "to use a OpenStackLatentWorker. "
+                         "Please install the 'keystoneauth1' package.")
 
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
@@ -78,9 +84,10 @@ class OpenStackLatentWorker(AbstractLatentWorker):
 
         self.flavor = flavor
         self.client_version = client_version
-        self.novaclient = client.Client(client_version, os_username,
-                                        os_password, os_tenant_name,
-                                        os_auth_url)
+        if client:
+            self.novaclient = self._constructClient(
+                client_version, os_username, os_password, os_tenant_name,
+                os_auth_url)
 
         if block_devices is not None:
             self.block_devices = [
@@ -90,6 +97,16 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.image = image
         self.meta = meta
         self.nova_args = nova_args if nova_args is not None else {}
+
+    @staticmethod
+    def _constructClient(client_version, username, password, project_name,
+                         auth_url):
+        """Return a novaclient from the given args."""
+        loader = loading.get_plugin_loader('password')
+        auth = loader.load_from_options(auth_url=auth_url, username=username,
+                                        password=password, project_name=project_name)
+        sess = session.Session(auth=auth)
+        return client.Client(client_version, session=sess)
 
     def _parseBlockDevice(self, block_device):
         """
@@ -191,14 +208,25 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             block_device_mapping_v2=block_devices,
             **self.nova_args)
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
+        # There is an issue when using sessions that the status is not
+        # available on the first try. Trying again will work fine. Fetch the
+        # instance to avoid that.
+        try:
+            instance = self.novaclient.servers.get(instance.id)
+        except NotFound:
+            log.msg('{class_name} {name} instance {instance.id} '
+                    '({instance.name}) never found',
+                    class_name=self.__class__.__name__, name=self.workername,
+                    instance=instance)
+            raise LatentWorkerFailedToSubstantiate(
+                instance.id, BUILD)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
                 (self.__class__.__name__, self.workername, instance.id,
                  image_uuid))
         duration = 0
         interval = self._poll_resolution
-        inst = instance
-        while inst.status.startswith(BUILD):
+        while instance.status.startswith(BUILD):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
@@ -206,14 +234,14 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                         (self.__class__.__name__, self.workername, duration // 60,
                          instance.id))
             try:
-                inst = self.novaclient.servers.get(instance.id)
+                instance = self.novaclient.servers.get(instance.id)
             except NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
                 raise LatentWorkerFailedToSubstantiate(
                     instance.id, instance.status)
-        if inst.status == ACTIVE:
+        if instance.status == ACTIVE:
             minutes = duration // 60
             seconds = duration % 60
             log.msg('%s %s instance %s (%s) started '
@@ -223,7 +251,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
-            self.failed_to_start(instance.id, inst.status)
+            self.failed_to_start(instance.id, instance.status)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
@@ -236,18 +264,16 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self._stop_instance(instance, fast)
 
     def _stop_instance(self, instance, fast):
-        # When the update method does work, replace the lines like below with
-        # instance.update().
         try:
-            inst = self.novaclient.servers.get(instance.id)
+            instance = self.novaclient.servers.get(instance.id)
         except NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %
                     (self.__class__.__name__, self.workername, instance.id,
                      instance.name))
             return
-        if inst.status not in (DELETED, UNKNOWN):
-            inst.delete()
+        if instance.status not in (DELETED, UNKNOWN):
+            instance.delete()
             log.msg('%s %s terminating instance %s (%s)' %
                     (self.__class__.__name__, self.workername, instance.id,
                      instance.name))

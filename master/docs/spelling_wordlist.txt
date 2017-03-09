@@ -386,6 +386,7 @@ Keepalive
 keepalives
 kerberos
 Kerberos
+keystoneauth
 KiB
 kibibytes
 kwargs

@@ -106,12 +106,15 @@ These are the same details set in either environment variables or passed as opti
 ``nova_args``
     (optional)
     A dict that will be appended to the arguments when creating a VM.
-    Buildbot uses the OpenStack Nova version 1.1 API by default (see client_version).
+    Buildbot uses the OpenStack Nova version 2 API by default (see client_version).
 
 ``client_version``
     (optional)
-    Nova client version to use. Defaults to 1.1 (deprecated). Use 2 or 2.minor for
-    version 2 API.
+    A string containing the Nova client version to use.
+    Defaults to ``2``.
+    Supports using ``2.X``, where X is a micro-version.
+    Use ``1.1`` for the previous, deprecated, version.
+    If using ``1.1``, note that an older version of novaclient will be needed so it won't switch to using ``2``.
 
 Here is the simplest example of configuring an OpenStack latent worker.
 

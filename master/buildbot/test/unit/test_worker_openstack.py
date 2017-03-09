@@ -44,13 +44,19 @@ class TestOpenStackWorker(unittest.TestCase):
         **os_auth)
 
     def setUp(self):
-        self.patch(openstack, "nce", novaclient)
         self.patch(openstack, "client", novaclient)
+        self.patch(openstack, "loading", novaclient)
+        self.patch(openstack, "session", novaclient)
         self.build = Properties(image=novaclient.TEST_UUIDS['image'])
 
     def test_constructor_nonova(self):
-        self.patch(openstack, "nce", None)
         self.patch(openstack, "client", None)
+        self.assertRaises(config.ConfigErrors,
+                          openstack.OpenStackLatentWorker, 'bot', 'pass',
+                          **self.bs_image_args)
+
+    def test_constructor_nokeystoneauth(self):
+        self.patch(openstack, "loading", None)
         self.assertRaises(config.ConfigErrors,
                           openstack.OpenStackLatentWorker, 'bot', 'pass',
                           **self.bs_image_args)
@@ -179,6 +185,16 @@ class TestOpenStackWorker(unittest.TestCase):
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
         self.assertFailure(bs.start_instance(self.build), ValueError)
+
+    @defer.inlineCallbacks
+    def test_start_instance_first_fetch_fail(self):
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
+        bs._poll_resolution = 0
+        self.patch(novaclient.Servers, 'fail_to_get', True)
+        self.patch(novaclient.Servers, 'gets_until_disappears', 0)
+        yield self.assertFailure(bs.start_instance(self.build),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
