@@ -523,6 +523,7 @@ class RealTests(Tests):
         logdict = yield self.db.logs.getLog(201)
         self.assertEqual(logdict, None)
 
+
 class TestFakeDB(unittest.TestCase, Tests):
 
     def setUp(self):
