@@ -214,8 +214,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  image_uuid))
         duration = 0
         interval = self._poll_resolution
-        inst = instance
-        while inst.status.startswith(BUILD):
+        while instance.status.startswith(BUILD):
             time.sleep(interval)
             duration += interval
             if duration % 60 == 0:
@@ -223,14 +222,14 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                         (self.__class__.__name__, self.workername, duration // 60,
                          instance.id))
             try:
-                inst = self.novaclient.servers.get(instance.id)
+                instance = self.novaclient.servers.get(instance.id)
             except NotFound:
                 log.msg('%s %s instance %s (%s) went missing' %
                         (self.__class__.__name__, self.workername,
                          instance.id, instance.name))
                 raise LatentWorkerFailedToSubstantiate(
                     instance.id, instance.status)
-        if inst.status == ACTIVE:
+        if instance.status == ACTIVE:
             minutes = duration // 60
             seconds = duration % 60
             log.msg('%s %s instance %s (%s) started '
@@ -240,7 +239,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             return [instance.id, image_uuid,
                     '%02d:%02d:%02d' % (minutes // 60, minutes % 60, seconds)]
         else:
-            self.failed_to_start(instance.id, inst.status)
+            self.failed_to_start(instance.id, instance.status)
 
     def stop_instance(self, fast=False):
         if self.instance is None:
@@ -253,18 +252,16 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self._stop_instance(instance, fast)
 
     def _stop_instance(self, instance, fast):
-        # When the update method does work, replace the lines like below with
-        # instance.update().
         try:
-            inst = self.novaclient.servers.get(instance.id)
+            instance = self.novaclient.servers.get(instance.id)
         except NotFound:
             # If can't find the instance, then it's already gone.
             log.msg('%s %s instance %s (%s) already terminated' %
                     (self.__class__.__name__, self.workername, instance.id,
                      instance.name))
             return
-        if inst.status not in (DELETED, UNKNOWN):
-            inst.delete()
+        if instance.status not in (DELETED, UNKNOWN):
+            instance.delete()
             log.msg('%s %s terminating instance %s (%s)' %
                     (self.__class__.__name__, self.workername, instance.id,
                      instance.name))
