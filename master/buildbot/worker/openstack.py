@@ -208,6 +208,18 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             block_device_mapping_v2=block_devices,
             **self.nova_args)
         instance = self.novaclient.servers.create(*boot_args, **boot_kwargs)
+        # There is an issue when using sessions that the status is not
+        # available on the first try. Trying again will work fine. Fetch the
+        # instance to avoid that.
+        try:
+            instance = self.novaclient.servers.get(instance.id)
+        except NotFound:
+            log.msg('{class_name} {name} instance {instance.id} '
+                    '({instance.name}) never found',
+                    class_name=self.__class__.__name__, name=self.workername,
+                    instance=instance)
+            raise LatentWorkerFailedToSubstantiate(
+                instance.id, BUILD)
         self.instance = instance
         log.msg('%s %s starting instance %s (image %s)' %
                 (self.__class__.__name__, self.workername, instance.id,
