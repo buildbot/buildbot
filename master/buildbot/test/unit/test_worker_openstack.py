@@ -187,6 +187,16 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertFailure(bs.start_instance(self.build), ValueError)
 
     @defer.inlineCallbacks
+    def test_start_instance_first_fetch_fail(self):
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', **self.bs_image_args)
+        bs._poll_resolution = 0
+        self.patch(novaclient.Servers, 'fail_to_get', True)
+        self.patch(novaclient.Servers, 'gets_until_disappears', 0)
+        yield self.assertFailure(bs.start_instance(self.build),
+                                 interfaces.LatentWorkerFailedToSubstantiate)
+
+    @defer.inlineCallbacks
     def test_start_instance_fail_to_find(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
