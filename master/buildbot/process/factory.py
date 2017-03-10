@@ -86,24 +86,29 @@ class BuildFactory(util.ComparableMixin):
 # BuildFactory subclasses for common build tools
 
 
+class _DefaultCommand(object):
+    # Used to indicate a default command to the step.
+    pass
+
+
 class GNUAutoconf(BuildFactory):
 
     def __init__(self, source, configure="./configure",
                  configureEnv=None,
                  configureFlags=None,
                  reconf=None,
-                 compile=None,
-                 test=None,
-                 distcheck=None):
+                 compile=_DefaultCommand,
+                 test=_DefaultCommand,
+                 distcheck=_DefaultCommand):
         if configureEnv is None:
             configureEnv = {}
         if configureFlags is None:
             configureFlags = []
-        if compile is None:
+        if compile is _DefaultCommand:
             compile = ["make", "all"]
-        if test is None:
+        if test is _DefaultCommand:
             test = ["make", "check"]
-        if distcheck is None:
+        if distcheck is _DefaultCommand:
             distcheck = ["make", "distcheck"]
 
         BuildFactory.__init__(self, [source])
