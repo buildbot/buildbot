@@ -233,6 +233,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             Changes=10,
         )
         self.schedulers = {}
+        self.secretsProviders = []
         self.builders = []
         self.workers = []
         self._registerOldWorkerAttr("workers")

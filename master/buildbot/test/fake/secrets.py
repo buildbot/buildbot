@@ -9,7 +9,6 @@ class FakeSecretStorage(SecretProviderBase):
     name = "SecretsInFake"
 
     def reconfigService(self, secretdict={}):
-        print("DEBUG allsecretsInADict reconfig:", secretdict)
         self.allsecrets = secretdict
 
     def get(self, key):

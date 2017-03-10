@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -46,28 +44,25 @@ class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def testGetValue(self):
         self._http.expect(method='get', ep='/v1/secret/value', params=None,
-         data=None, json=None, code=200,
-         content_json={"data": {"value": "value1"}})
+                          data=None, json=None, code=200,
+                          content_json={"data": {"value": "value1"}})
         value = yield self.srvcVault.get("value")
         self.assertEqual(value, "value1")
 
     @defer.inlineCallbacks
     def testGetValueNotFound(self):
-        self._http.expect(method='get', ep='/v1/secret/valueNotFound', params=None,
-         data=None, json=None, code=200,
-         content_json={"data": {"valueNotFound": "value1"}})
-        value = yield self.srvcVault.get("valueNotFound")
+        self._http.expect(method='get', ep='/v1/secret/value', params=None,
+                          data=None, json=None, code=200,
+                          content_json={"data": {"valueNotFound": "value1"}})
+        value = yield self.srvcVault.get("value")
         self.assertEqual(value, None)
 
     @defer.inlineCallbacks
     def testGetError(self):
         self._http.expect(method='get', ep='/v1/secret/valueNotFound', params=None,
-         data=None, json=None, code=201,
-         content_json={"data": {"valueNotFound": "value1"}})
-        try:
-            yield self.srvcVault.get("valueNotFound")
-        except Exception as e:
-            self.assertEqual(str(e), "201 unable to get key valueNotFound")
+                          data=None, json=None, code=404,
+                          content_json={"data": {"valueNotFound": "value1"}})
+        yield self.assertFailure(self.srvcVault.get("valueNotFound"), KeyError)
 
     def testCheckConfigSecretInVaultService(self):
         self.assertEqual(self.srvcVault.name, "SecretInVault")

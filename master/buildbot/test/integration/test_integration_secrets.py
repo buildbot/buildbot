@@ -18,7 +18,6 @@ from __future__ import print_function
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
-from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.integration import RunMasterBase
 
@@ -26,29 +25,19 @@ from buildbot.test.util.integration import RunMasterBase
 class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
-    def test_secret1(self):
+    def test_secret(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-
-    @defer.inlineCallbacks
-    def test_secret(self):
-        try:
-            yield self.setupConfig(masterConfig())
-            print("Setup config pass")
-        except Exception as e:
-            print("Exception occurs", str(e))
-        # build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        # self.assertEqual(build['buildid'], 1)
-        # res = yield self.checkBuildStepLogExist(build, "echo bar")
-        # self.assertTrue(res)
+        res = yield self.checkBuildStepLogExist(build, "echo bar")
+        self.assertTrue(res)
 
     @defer.inlineCallbacks
     def test_secretReconfig(self):
         c = masterConfig()
         yield self.setupConfig(c)
         c['secretsProviders'] = [FakeSecretStorage(
-            {"foo": "different_value", "something": "more"})]
+            secretdict={"foo": "different_value", "something": "more"})]
         yield self.master.reconfig()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
@@ -68,9 +57,8 @@ def masterConfig():
             name="force",
             builderNames=["testy"])]
 
-    # c['secretsProviders'] = [FakeSecretStorage(
-    #     {"foo": "bar", "something": "more"})]
-    c['secretsProviders'] = [FakeSecretStorage(secretdict={"foo": "bar", "something": "more"})]
+    c['secretsProviders'] = [FakeSecretStorage(
+        secretdict={"foo": "bar", "something": "more"})]
     f = BuildFactory()
     f.addStep(steps.ShellCommand(command=Interpolate('echo %(secrets:foo)s')))
 

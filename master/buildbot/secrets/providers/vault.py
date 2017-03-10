@@ -61,6 +61,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         proj = yield self._http.get('/v1/{0}'.format(path))
         code = yield proj.code
         if code != 200:
-            config.error("%s unable to get key %s" % (code, entry))
+            raise KeyError("The key %s does not exist in Vault provider: request"
+                           " return code:%d." % (entry, code))
         json = yield proj.json()
-        defer.returnValue(json.get('data', {}).get('value'))
+        defer.returnValue(json.get('data', {}).get(entry))
