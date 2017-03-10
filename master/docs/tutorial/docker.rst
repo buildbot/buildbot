@@ -47,7 +47,7 @@ Building and running Buildbot
 .. code-block:: bash
 
   # Download Buildbot Dockerfile.
-  wget https://raw.github.com/buildbot/buildbot/master/master/contrib/Dockerfile
+  wget raw.githubusercontent.com/buildbot/buildbot/eight/master/contrib/Dockerfile
 
   # Build the Buildbot container (it will take a few minutes to download packages)
   docker build -t buildbot - < Dockerfile
