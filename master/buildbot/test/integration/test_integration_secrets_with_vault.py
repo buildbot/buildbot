@@ -29,26 +29,20 @@ from buildbot.test.util.integration import RunMasterBase
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
 # To be run, the test use a Vault server instance.
-# To easily run a Vault instance find the dockerfile dedictaed to Vault.
-# command: docker-compose up
-# Note the Vault docker image address and port.
-# connect to the docker instance:
+# To easily run a Vault instance use the docker image.
+# command: docker run vault
+# A dev instance will be launched.
+# Note the Vault docker image address, port and token.
+# Connect to the docker instance:
 # command: docker exec -i -t ``docker_vault_image_name`` /bin/sh
 # All the following commands will be done in the docker instance shell.
 # Export the server address:
-# command: export VAULT_SERVER = "http://vaultServeraddress:port"
-# Then init Vault:
-# command: vault init
-# the command return 5 unseal keys and a Vault root token, please note them,
-# they won't be given twice!
-# Export the server address:
-# command: export VAULT_TOKEN = "vault_token"
-# Once initialized, unseal vault:
-# command: vault unseal
-# The command has to be done 3 times, 3 of the 5 unseal keys will be necessary.
-# When Vault is ready, "unealed", you can add a new key/password.
+# command: export VAULT_SERVER = 'http://vaultServeraddress:port'
 # By default Vault stores password in the "secret" mount. Add a password:
-# command: vault write secret/userp value=your_password
+# command: vault write secret/userp value=word
+# In the Buildbot environment, export BBTEST_VAULTURL and BBTEST_VAULTTOKEN
+# command: export BBTEST_VAULTURL='http://vaultServeraddress:port'
+# command: export BBTEST_VAULTTOKEN='vault token'
 
 class SecretsConfig(RunMasterBase):
 
