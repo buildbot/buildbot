@@ -30,7 +30,7 @@ install:
 build: false
 
 test_script:
-  - "%PYTHON%\\Scripts\\coverage.exe run --rcfile=.coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "%PYTHON%\\Scripts\\coverage.exe run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_success:
   - "%PYTHON%\\Scripts\\codecov.exe"
