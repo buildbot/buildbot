@@ -115,6 +115,15 @@ def masterGlobConfig():
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
+    from buildbot.steps.worker import CompositeStepMixin
+
+    class CustomStep(steps.BuildStep, CompositeStepMixin):
+        @defer.inlineCallbacks
+        def run(self):
+            content = yield self.getFileContentFromWorker(
+                "dir/file1.txt", abandonOnFailure=True)
+            assert content == "filecontent"
+            defer.returnValue(SUCCESS)
 
     c['schedulers'] = [
         schedulers.ForceScheduler(
@@ -132,6 +141,7 @@ def masterGlobConfig():
             workersrcs=["dir/file*.txt", "dir/not*.txt", "dir/only?.txt"],
             masterdest="dest/",
             glob=True))
+    f.addStep(CustomStep())
     c['builders'] = [
         BuilderConfig(
             name="testy", workernames=["local1"], factory=f)
