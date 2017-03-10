@@ -30,10 +30,10 @@ install:
 build: false
 
 test_script:
-  - "%PYTHON%\\coverage.exe run --rcfile=.coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "%PYTHON%\\Scripts\\coverage.exe run --rcfile=.coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_success:
-  - "%PYTHON%\\codecov.exe"
+  - "%PYTHON%\\Scripts\\codecov.exe"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
