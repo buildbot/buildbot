@@ -426,7 +426,10 @@ if 'a' in version or 'b' in version:
         if LooseVersion(pip_dist.version) < LooseVersion('1.4'):
             raise RuntimeError(VERSION_MSG)
 
-twisted_ver = ">= 14.0.1"
+if sys.version_info[0] >= 3:
+    twisted_ver = ">= 17.1.0"
+else:
+    twisted_ver = ">= 14.0.1"
 autobahn_ver = ">= 0.16.0"
 txaio_ver = ">= 2.2.2"
 
