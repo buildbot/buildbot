@@ -67,3 +67,13 @@ class TestFileWriter(unittest.TestCase):
         mockedMakedirs.assert_called_once_with(absdir)
         mockedMkstemp.assert_called_once_with(dir=absdir)
         mockedFdopen.assert_called_once_with(7, 'wb')
+
+
+class TestStringFileWriter(unittest.TestCase):
+
+    def testBasic(self):
+        sfw = remotetransfer.StringFileWriter()
+        # StringFileWriter takes bytes or native string and outputs native strings
+        sfw.remote_write(b'bytes')
+        sfw.remote_write(' or str')
+        self.assertEqual(sfw.buffer, 'bytes or str')
