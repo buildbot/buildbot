@@ -18,13 +18,13 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import text_type
 
+import html  # py2: via future
 import time
 
 from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
-import html  # py2: via future
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
