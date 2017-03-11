@@ -20,16 +20,20 @@ install:
   - "curl -O https://www.sqlite.org/2016/sqlite-dll-win32-x86-3110000.zip"
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
-  
+
   - "%PYTHON%\\python.exe -m pip install -e pkg"
   - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
   - "%PYTHON%\\python.exe -m pip install -e worker"
+  - "%PYTHON%\\python.exe -m pip install coverage codecov"
   - "%PYTHON%\\python.exe -m pip list"
 
 build: false
 
 test_script:
-  - "%PYTHON%\\python.exe -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "%PYTHON%\\Scripts\\coverage.exe run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+
+on_success:
+  - "%PYTHON%\\Scripts\\codecov.exe"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
