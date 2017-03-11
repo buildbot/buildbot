@@ -22,9 +22,9 @@ import time
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.web import html
 from zope.interface import implementer
 
+import html  # py2: via future
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
