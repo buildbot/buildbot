@@ -88,8 +88,9 @@ setup_args = {
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
-        # 'Programming Language :: Python :: 3',
-        # 'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.5'
+        'Programming Language :: Python :: 3.6'
     ],
 
     'packages': [
@@ -125,6 +126,12 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
+if sys.version_info[0] >= 3:
+    twisted_ver = ">= 17.1.0"
+else:
+    twisted_ver = ">= 10.2.0"
+
+
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
@@ -133,7 +140,7 @@ except ImportError:
     pass
 else:
     setup_args['install_requires'] = [
-        'twisted >= 10.2.0',
+        'twisted ' + twisted_ver,
         'future',
     ]
 
