@@ -100,16 +100,18 @@ class GerritChangeSourceBase(base.ChangeSource):
             return defer.succeed(None)
 
         if not(isinstance(event, dict) and "type" in event):
-            msg = "no type in event %s"
-            log.msg(msg % line)
+            if self.debug:
+                msg = "no type in event %s"
+                log.msg(msg % line)
             return defer.succeed(None)
 
         return self.eventReceived(event)
 
     def eventReceived(self, event):
         if not (event['type'] in self.handled_events):
-            msg = "the event type '%s' is not setup to handle"
-            log.msg(msg % event['type'])
+            if self.debug:
+                msg = "the event type '%s' is not setup to handle"
+                log.msg(msg % event['type'])
             return defer.succeed(None)
 
         # flatten the event dictionary, for easy access with WithProperties
