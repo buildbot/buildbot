@@ -517,6 +517,29 @@ class RealTests(Tests):
     def test_addLogLines_huge_log_lots_snowmans(self):
         return self.do_addLogLines_huge_log(NUM_CHUNKS=3000, chunk=u'\N{SNOWMAN}\n' * 50)
 
+    @defer.inlineCallbacks
+    def test_compressLog_non_existing_log(self):
+        yield self.db.logs.compressLog(201)
+        logdict = yield self.db.logs.getLog(201)
+        self.assertEqual(logdict, None)
+
+    @defer.inlineCallbacks
+    def test_compressLog_empty_log(self):
+        yield self.insertTestData(self.backgroundData + [
+            fakedb.Log(id=201, stepid=101, name=u'stdio', slug=u'stdio',
+                       complete=1, num_lines=0, type=u's'),
+        ])
+        yield self.db.logs.compressLog(201)
+        logdict = yield self.db.logs.getLog(201)
+        self.assertEqual(logdict, {
+            'stepid': 101,
+            'num_lines': 0,
+            'name': u'stdio',
+            'id': 201,
+            'type': u's',
+            'slug': u'stdio',
+            'complete': True})
+
 
 class TestFakeDB(unittest.TestCase, Tests):
 
