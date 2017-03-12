@@ -40,9 +40,8 @@ test_script:
   - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_success:
-  - "coverage combine"
-  - "codecov-publish: coverage xml -o coverage.xml -i"
-  - "codecov.exe"
+  - "coverage xml --rcfile=common/coveragerc -o coverage.xml -i"
+  - "codecov"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.
