@@ -10,6 +10,7 @@ environment:
     - PYTHON: "C:\\Python36"
 
 install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
   - "%PYTHON%\\python.exe -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "%PYTHON%\\python.exe -m pip install pypiwin32"
