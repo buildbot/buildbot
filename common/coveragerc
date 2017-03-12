@@ -15,7 +15,6 @@ exclude_lines =
     # Don't complain if non-runnable code isn't run:
     if 0:
     if __name__ == .__main__.:
-    if runtime.platformType  == 'win32'
 
     # 'pass' generally means 'this won't be called'
     ^ *pass *$
