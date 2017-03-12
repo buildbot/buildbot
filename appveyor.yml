@@ -6,10 +6,17 @@ environment:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
     - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python35"
+    - PYTHON: "C:\\Python36"
 
 install:
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+  - "python -c \"import sys; print(sys.prefix)\""
+  - "python -c \"import sys; print(sys.exec_prefix)\""
+  - "python -c \"import sys; print(sys.executable)\""
+  - "python -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
-  - "%PYTHON%\\python.exe -m pip install pypiwin32"
+  - "python -m pip install pypiwin32"
 
   # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
   # install third-party SQLite.
@@ -21,19 +28,20 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
 
-  - "%PYTHON%\\python.exe -m pip install -e pkg"
-  - "%PYTHON%\\python.exe -m pip install -e master[tls,test]"
-  - "%PYTHON%\\python.exe -m pip install -e worker"
-  - "%PYTHON%\\python.exe -m pip install coverage codecov"
-  - "%PYTHON%\\python.exe -m pip list"
+  - "python -m pip install -e pkg"
+  - "python -m pip install -e master[tls,test]"
+  - "python -m pip install -e worker"
+  - "python -m pip install coverage codecov"
+  - "python -m pip list"
 
 build: false
 
 test_script:
-  - "%PYTHON%\\Scripts\\coverage.exe run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
 
 on_success:
-  - "%PYTHON%\\Scripts\\codecov.exe"
+  - "coverage xml --rcfile=common/coveragerc -o coverage.xml -i"
+  - "codecov"
 
 on_failure:
   # Store _trial_temp directory as artifact on build failure.

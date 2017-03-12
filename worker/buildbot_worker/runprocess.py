@@ -53,11 +53,12 @@ if runtime.platformType == 'posix':
     from twisted.internet.process import Process
 
 
-def win32_batch_quote(cmd_list):
+def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
     # Quote cmd_list to a string that is suitable for inclusion in a
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
     def escape_arg(arg):
+        arg = bytes2NativeString(arg, unicode_encoding)
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
@@ -67,7 +68,7 @@ def win32_batch_quote(cmd_list):
     return ' '.join(map(escape_arg, cmd_list))
 
 
-def shell_quote(cmd_list, unicode_encoding='utf8'):
+def shell_quote(cmd_list, unicode_encoding='utf-8'):
     # attempt to quote cmd_list such that a shell will properly re-interpret
     # it.  The pipes module is only available on UNIX; also, the quote
     # function is undocumented (although it looks like it will be documented
@@ -80,7 +81,7 @@ def shell_quote(cmd_list, unicode_encoding='utf8'):
     cmd_list = bytes2NativeString(cmd_list, unicode_encoding)
 
     if runtime.platformType == 'win32':
-        return win32_batch_quote(cmd_list)
+        return win32_batch_quote(cmd_list, unicode_encoding)
     else:
         import pipes
 
@@ -481,7 +482,8 @@ class RunProcess(object):
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
             if runtime.platformType == 'win32' and not \
-                    (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
+               (bytes2NativeString(self.command[0]).lower().endswith(".exe")
+               and os.path.isabs(self.command[0])):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
@@ -603,11 +605,12 @@ class RunProcess(object):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
 
-        tf = NamedTemporaryFile(dir='.', suffix=".bat", delete=False)
+        tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
+                                delete=False)
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
-        if isinstance(self.command, string_types):
-            tf.write(self.command)
+        if isinstance(self.command, (string_types, bytes)):
+            tf.write(bytes2NativeString(self.command))
         else:
             tf.write(win32_batch_quote(self.command))
         tf.close()

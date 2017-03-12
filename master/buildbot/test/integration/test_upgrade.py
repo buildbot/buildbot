@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import locale
 import os
 import shutil
 import sqlite3
@@ -213,6 +214,15 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
     use_real_db = True
 
     def test_emptydb_modelmatches(self):
+        os_encoding = locale.getpreferredencoding()
+        try:
+            u'\N{SNOWMAN}'.encode(os_encoding)
+        except UnicodeEncodeError:
+            # Default encoding of Windows console is 'cp1252'
+            # which cannot encode the snowman.
+            raise(unittest.SkipTest("Cannot encode weird unicode "
+                "on this platform with {}".format(os_encoding)))
+
         d = self.db.model.upgrade()
         d.addCallback(lambda r: self.assertModelMatches())
         return d
