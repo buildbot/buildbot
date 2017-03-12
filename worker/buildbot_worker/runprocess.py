@@ -481,7 +481,8 @@ class RunProcess(object):
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
             if runtime.platformType == 'win32' and not \
-                    (self.command[0].lower().endswith(".exe") and os.path.isabs(self.command[0])):
+               (bytes2NativeString(self.command[0]).lower().endswith(".exe")
+               and os.path.isabs(self.command[0])):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
