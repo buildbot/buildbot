@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import datetime
+import locale
 
 from twisted.python import log
 from twisted.trial import unittest
@@ -84,6 +85,15 @@ class VerifyDict(unittest.TestCase):
         ])
 
     def test_IdentifierValidator(self):
+        os_encoding = locale.getpreferredencoding()
+        try:
+            u'\N{SNOWMAN}'.encode(os_encoding)
+        except UnicodeEncodeError:
+            # Default encoding of Windows console is 'cp1252'
+            # which cannot encode the snowman.
+            raise(unittest.SkipTest("Cannot encode weird unicode "
+                "on this platform with {}".format(os_encoding)))
+
         self.doValidationTest(validation.IdentifierValidator(50),
                               good=[
                                   u"linux", u"Linux", u"abc123", u"a" * 50,
