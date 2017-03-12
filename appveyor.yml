@@ -6,8 +6,11 @@ environment:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
     - PYTHON: "C:\\Python27"
+    - PYTHON: "C:\\Python35"
+    - PYTHON: "C:\\Python36"
 
 install:
+  - "%PYTHON%\\python.exe -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "%PYTHON%\\python.exe -m pip install pypiwin32"
 
