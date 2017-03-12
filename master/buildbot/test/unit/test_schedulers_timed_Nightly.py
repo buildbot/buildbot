@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import datetime
 import time
 
 import mock
@@ -32,6 +33,12 @@ from buildbot.test.util import scheduler
 
 
 class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
+
+    try:
+        datetime.datetime.fromtimestamp(1)
+    except OSError:
+        skip = ("Python 3.6 bug on Windows: "
+                "https://bugs.python.org/issue29097")
 
     OBJECTID = 132
     SCHEDULERID = 32

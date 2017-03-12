@@ -73,6 +73,12 @@ class TestHumanReadableDelta(unittest.TestCase):
         """
         It will return a human readable time difference.
         """
+        try:
+            datetime.datetime.fromtimestamp(1)
+        except OSError:
+            raise unittest.SkipTest(
+                "Python 3.6 bug on Windows: "
+                "https://bugs.python.org/issue29097")
         result = util.human_readable_delta(1, 1)
         self.assertEqual('super fast', result)
 
