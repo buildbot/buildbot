@@ -126,3 +126,9 @@ warnings.filterwarnings('ignore', "'U' mode is deprecated", DeprecationWarning)
 # sqlalchemy.migrate is calling inspect.getargspec()
 # https://bugs.launchpad.net/sqlalchemy-migrate/+bug/1662472
 warnings.filterwarnings('ignore', r"inspect.getargspec\(\) is deprecated")
+
+# twisted.python.filepath and trial are using bytes file paths when
+# the "native" file path (Unicode) should be used on Windows.
+warnings.filterwarnings('ignore',
+                        "The Windows bytes API has been "
+                        "deprecated, use Unicode filenames instead")
