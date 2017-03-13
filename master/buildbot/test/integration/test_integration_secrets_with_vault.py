@@ -39,7 +39,7 @@ from buildbot.test.util.integration import RunMasterBase
 # Export the server address:
 # command: export VAULT_SERVER = 'http://vaultServeraddress:port'
 # By default Vault stores password in the "secret" mount. Add a password:
-# command: vault write ``secret/userp`` value=word
+# command: vault write secret/key value=word
 # In the Buildbot environment, export BBTEST_VAULTURL and BBTEST_VAULTTOKEN
 # command: export BBTEST_VAULTURL='http://vaultServeraddress:port'
 # command: export BBTEST_VAULTTOKEN='vault token'
@@ -78,7 +78,7 @@ def masterConfig():
     )]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:userp)s')]))
+    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:key)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",
