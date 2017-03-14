@@ -448,7 +448,7 @@ class RealTests(Tests):
     @defer.inlineCallbacks
     def test_lz4_compress_big_chunk(self):
         try:
-            import lz4
+            import lz4  # noqa pylint: disable=unused-import
         except ImportError:
             raise unittest.SkipTest("lz4 not installed, skip the test")
 
@@ -471,7 +471,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': lz4.dumps(line),
+            'content': logs.dumps_lz4(line),
             'compressed': 3})
 
     @defer.inlineCallbacks
