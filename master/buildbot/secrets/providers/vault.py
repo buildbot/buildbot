@@ -64,4 +64,4 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
             raise KeyError("The key %s does not exist in Vault provider: request"
                            " return code:%d." % (entry, code))
         json = yield proj.json()
-        defer.returnValue(json.get('data', {}).get(entry))
+        defer.returnValue(json.get(u'data', {}).get('value'))

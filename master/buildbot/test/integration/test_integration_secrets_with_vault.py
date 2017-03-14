@@ -16,7 +16,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
-import subprocess
 from unittest.case import SkipTest
 
 from twisted.internet import defer
@@ -33,29 +32,19 @@ from buildbot.test.util.integration import RunMasterBase
 class SecretsConfig(RunMasterBase):
 
     def setUp(self):
-        proc = subprocess.Popen(["docker run --cap-add=IPC_LOCK -e "
-                                 "'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken' -e"
-                                 " 'VAULT_DEV_LISTEN_ADDRESS=127.0.0.1:8200'"
-                                 " --name=vault_for_buildbot -p 8200:8200 vault"],
-                                stdout=subprocess.PIPE,
-                                shell=True)
-        (out, err) = proc.communicate()
-        if err is None:
-            os.system("export BBTEST_VAULTTOKEN=my_vaulttoken")
-        docker_commands = "docker exec vault_for_buildbot /bin/sh -c "\
-                          "\"export VAULT_ADDR='http://localhost:8200'; "\
-                          "vault write secret/key value=word\""
-        os.system(docker_commands)
-        if "BBTEST_VAULTTOKEN" not in os.environ:
+        rv = os.system("docker run -d -e SKIP_SETCAP=yes -e "
+                       "'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken' -e 'VAULT_TOKEN=my_vaulttoken'"
+                       " --name=vault_for_buildbot -p 8200:8200 vault")
+
+        if rv != 0:
             raise SkipTest(
-                "Vault integration tests only run when environment variable "
-                " BBTEST_VAULTTOKEN is set with a valid token to Vault server")
+                "Vault integration need docker environment to be setup")
+
+        os.system("docker exec vault_for_buildbot "
+                  "vault write -address 'http://localhost:8200' secret/key value=word")
 
     def tearDown(self):
-        image_list = subprocess.check_output("docker ps", shell=True)
-        if "vault_for_buildbot" in image_list.decode():
-            os.system("docker stop vault_for_buildbot")
-            os.system("docker rm vault_for_buildbot")
+        os.system("docker rm -f vault_for_buildbot")
 
     @defer.inlineCallbacks
     def test_secret(self):
@@ -76,7 +65,7 @@ def masterConfig():
             builderNames=["testy"])]
 
     c['secretsProviders'] = [HashiCorpVaultSecretProvider(
-        vaultToken=os.environ.get("BBTEST_VAULTTOKEN"),
+        vaultToken='my_vaulttoken',
         vaultServer="http://localhost:8200"
     )]
 
