@@ -1,1 +1,1 @@
-:py:class: `~buildbot.www.hooks.github.GitHubEventHandler` now process git tag push events
+:py:class: `~buildbot.status.web.hooks.github.GitHubEventHandler` now process git tag push events
