@@ -932,18 +932,153 @@ For more information on the available commands, see :doc:`../developer/master-wo
     Step Progress
     BuildStepFailed
 
-Writing New Status Plugins
---------------------------
+Writing Dashboards with Flask_ or Bottle_
+-----------------------------------------
 
-Each status plugin is an object which provides the :class:`twisted.application.service.IService` interface, which creates a tree of Services with the buildmaster at the top [not strictly true].
-The status plugins are all children of an object which implements :class:`buildbot.interfaces.IStatus`, the main status object.
-From this object, the plugin can retrieve anything it wants about current and past builds.
-It can also subscribe to hear about new and upcoming builds.
+Buildbot Nine UI is written in Javascript.
+This allows it to be reactive and real time, but comes at a price of a fair complexity.
+Sometimes, you just need a dashboard displaying your build results in your own weird manner but learning AngularJS for that is just too much.
 
-Status plugins which only react to human queries (like the Waterfall display) never need to subscribe to anything: they are idle until someone asks a question, then wake up and extract the information they need to answer it, then they go back to sleep.
-Plugins which need to act spontaneously when builds complete (like the :class:`MailNotifier` plugin) need to subscribe to hear about new builds.
+There is a Buildbot plugin which allows to write a server side generated dashboard, and integrate it in the UI.
 
-If the status plugin needs to run network services (like the HTTP server used by the Waterfall plugin), they can be attached as Service children of the plugin itself, using the :class:`IServiceCollection` interface.
+.. code-block:: python
+
+    # This needs buildbot and buildbot_www >= 0.9.5
+    pip install buildbot_wsgi_dashboards flask
+
+- This plugin can use any WSGI compatible web framework, Flask_ is a very common one, Bottle_ is another popular option.
+
+- The application needs to implement a ``/index.html`` route, which will render the html code representing the dashboard.
+
+- The application framework runs in a thread outside of Twisted.
+  No need to worry about Twisted and asynchronous code.
+  You can use python-requests_ or any library from the python ecosystem to access other servers.
+
+- You could use Http in order to access Buildbot :ref:`REST_API`, but you can also use the :ref:`Data_API`, via the provided synchronous wrapper.
+
+    .. py:method:: buildbot_api.dataGet(path, filters=None, fields=None, order=None, limit=None, offset=None):
+
+        :param tuple path: A tuple of path elements representing the API path to fetch.
+            Numbers can be passed as strings or integers.
+        :param filters: result spec filters
+        :param fields: result spec fields
+        :param order: result spec order
+        :param limit: result spec limit
+        :param offset: result spec offset
+        :raises: :py:exc:`~buildbot.data.exceptions.InvalidPathError`
+        :returns: a resource or list, or None
+
+        This is a blocking wrapper to master.data.get as described in :ref:`Data_API`.
+        The available paths are described in the :ref:`REST_API`, as well as the nature of return values depending on the kind of data that is fetched.
+        Path can be either the REST path e.g. ``"builders/2/builds/4"`` or tuple e.g. ``("builders", 2, "builds", 4)``.
+        The latter form being more convenient if some path parts are coming from variables.
+        The :ref:`Data_API` and :ref:`REST_API` are functionally equivalent except:
+
+        - :ref:`Data_API` does not have HTTP connection overhead.
+        - :ref:`Data_API` does not enforce authorization rules.
+
+        ``buildbot_api.dataGet`` is accessible via the WSGI application object passed to ``wsgi_dashboards`` plugin (as per the example).
+
+- That html code output of the server runs inside AngularJS application.
+
+  - It will use the CSS of the AngularJS application (including the Bootstrap_ css base).
+  - It can use some of the AngularJS directives defined by buildbot UI (currently only buildsummary is usable).
+  - It has full access to the application JS context.
+
+Here is an example of code that you can use in your master.cg to create a simple dashboard:
+
+.. code-block:: python
+
+    from flask import Flask, render_template
+
+    mydashboardapp = Flask('test', root_path=os.path.dirname(__file__))
+    # this allows to work on the template without having to restart buildbot
+    mydashboardapp.config['TEMPLATES_AUTO_RELOAD'] = True
+    @mydashboardapp.route("/index.html")
+    def main():
+        # This code fetches build data from the data api, and give it to the template
+        builders = mydashboardapp.buildbot_api.dataGet("/builders")
+
+        builds = mydashboardapp.buildbot_api.dataGet("/builds", limit=20)
+
+        # properties are actually not used in the template example, but this is how you get more properties
+        for build in builds:
+            build['properties'] = mydashboardapp.buildbot_api.dataGet(("builds", build['buildid'], "properties"))
+
+        # mydashboard.html is a template inside the template directory
+        return render_template('mydashboard.html', builders=builders, builds=builds)
+
+    # Here we assume c['www']['plugins'] has already be created earlier.
+    # Please see the web server documentation to understand how to configure the other parts.
+    c['www']['plugins']['wsgi_dashboards'] = [ # This is a list of dashboards, you can create several
+        {
+            'name': 'mydashboard',  # as used in URLs
+            'caption': 'My Dashboard', # Title displayed in the UI'
+            'app': mydashboardapp,
+            'order': 5, # priority of the dashboard in the let menu (lower is higher in the menu)
+            'icon': 'area-chart' # available icon list can be found at http://fontawesome.io/icons/
+        }
+    ]
+
+Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``
+
+This template is a standard Jinja_ template which is the default templating engine of Flask_.
+
+.. code-block:: html
+
+    <div class="container">
+        <table class="table">
+            <tr>
+                {% for builder in builders %}
+                <th>
+                    {{builder.name}}
+                </th>
+                {% endfor %}
+            </tr>
+            {% for build in builds %}
+            <tr>
+                {% for builder in builders %}
+                <th>
+                    {% if build.builderid == builder.builderid %}
+                    <a class="badge-status badge results_{{build.results_text|upper}}" href="#/builders/{{build.builderid}}/builds/{{build.number}}">
+                       {{build.number}}
+                   </a>
+                   {% endif %}
+                </th>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+You can use the buildsummary directive by replacing the following code in the previous template:
+
+.. code-block:: html
+
+    <a class="badge-status badge results_{{build.results_text|upper}}" href="#/builders/{{build.builderid}}/builds/{{build.number}}">
+       {{build.number}}
+
+by:
+
+.. code-block:: html
+
+    <buildsummary buildid="{{build.buildid}}" condensed="1"/>
+
+The buildsummary directive is very powerful and will display steps, sub-builds, logs, urls.
+If you need something lighter, there is the build sticker directive:
+
+.. code-block:: html
+
+    <buildsticker buildid="{{build.buildid}}"/>
+
+Note that those two directives will make additional http requests from the browser in order to fetch the necessary data they need to be rendered.
+
+.. _Flask: http://flask.pocoo.org/
+.. _Bottle: https://bottlepy.org/docs/dev/
+.. _Bootstrap: http://getbootstrap.com/css/
+.. _Jinja: http://jinja.pocoo.org/
+.. _python-requests: http://docs.python-requests.org/en/master/
+
 
 A Somewhat Whimsical Example (or "It's now customized, how do I deploy it?")
 ----------------------------------------------------------------------------

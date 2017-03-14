@@ -1,1 +1,1 @@
-angular.module("app").constant("config", {title:"foo"})
+angular.module("buildbot_config", []).constant("config", {title:"foo"})
