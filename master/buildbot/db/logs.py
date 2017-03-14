@@ -25,6 +25,23 @@ from twisted.python import log
 
 from buildbot.db import base
 
+try:
+    # lz4 > 0.9.0
+    from lz4.block import compress as dumps_lz4
+    from lz4.block import decompress as read_lz4
+except:
+    try:
+        # lz4 < 0.9.0
+        from lz4 import dumps as dumps_lz4
+        from lz4 import loads as read_lz4
+    except:  # nocoverage
+        # config.py actually forbid this code path
+        def dumps_lz4(data):
+            return data
+
+        def read_lz4(data):
+            return data
+
 
 def dumps_gzip(data):
     import zlib
@@ -34,16 +51,6 @@ def dumps_gzip(data):
 def read_gzip(data):
     import zlib
     return zlib.decompress(data)
-
-
-def dumps_lz4(data):
-    import lz4
-    return lz4.dumps(data)
-
-
-def read_lz4(data):
-    import lz4
-    return lz4.loads(data)
 
 
 def dumps_bz2(data):
