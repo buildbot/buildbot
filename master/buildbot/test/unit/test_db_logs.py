@@ -471,7 +471,7 @@ class RealTests(Tests):
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': lz4.dumps(line),
+            'content': logs.dumps_lz4(line),
             'compressed': 3})
 
     @defer.inlineCallbacks
