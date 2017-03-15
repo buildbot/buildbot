@@ -939,7 +939,7 @@ Writing Dashboards with Flask_ or Bottle_
 
 Buildbot Nine UI is written in Javascript.
 This allows it to be reactive and real time, but comes at a price of a fair complexity.
-Sometimes, you just need a dashboard displaying your build results in your own weird manner but learning AngularJS for that is just too much.
+Sometimes, you need a dashboard displaying your build results in your own manner but learning AngularJS for that is just too much.
 
 There is a Buildbot plugin which allows to write a server side generated dashboard, and integrate it in the UI.
 
@@ -956,7 +956,7 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
   No need to worry about Twisted and asynchronous code.
   You can use python-requests_ or any library from the python ecosystem to access other servers.
 
-- You could use Http in order to access Buildbot :ref:`REST_API`, but you can also use the :ref:`Data_API`, via the provided synchronous wrapper.
+- You could use HTTP in order to access Buildbot :ref:`REST_API`, but you can also use the :ref:`Data_API`, via the provided synchronous wrapper.
 
     .. py:method:: buildbot_api.dataGet(path, filters=None, fields=None, order=None, limit=None, offset=None):
 
@@ -983,18 +983,21 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
 
 - That html code output of the server runs inside AngularJS application.
 
-  - It will use the CSS of the AngularJS application (including the Bootstrap_ css base).
-  - It can use some of the AngularJS directives defined by buildbot UI (currently only buildsummary is usable).
+  - It will use the CSS of the AngularJS application (including the Bootstrap_ CSS base).
+  - It can use some of the AngularJS directives defined by Buildbot UI (currently only buildsummary is usable).
   - It has full access to the application JS context.
 
-Here is an example of code that you can use in your master.cg to create a simple dashboard:
+Here is an example of code that you can use in your master.cfg to create a simple dashboard:
+
+
+.. Following code is tested in smokes/master.cfg. Please do not make modification here without modifying also that master.cfg!
 
 .. code-block:: python
 
     from flask import Flask, render_template
 
     mydashboardapp = Flask('test', root_path=os.path.dirname(__file__))
-    # this allows to work on the template without having to restart buildbot
+    # this allows to work on the template without having to restart Buildbot
     mydashboardapp.config['TEMPLATES_AUTO_RELOAD'] = True
     @mydashboardapp.route("/index.html")
     def main():
@@ -1022,7 +1025,7 @@ Here is an example of code that you can use in your master.cg to create a simple
         }
     ]
 
-Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``
+Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``.
 
 This template is a standard Jinja_ template which is the default templating engine of Flask_.
 
@@ -1073,7 +1076,7 @@ If you need something lighter, there is the build sticker directive:
 
     <buildsticker buildid="{{build.buildid}}"/>
 
-Note that those two directives will make additional http requests from the browser in order to fetch the necessary data they need to be rendered.
+Note that those two directives will make additional HTTP requests from the browser in order to fetch the necessary data they need to be rendered.
 
 .. _Flask: http://flask.pocoo.org/
 .. _Bottle: https://bottlepy.org/docs/dev/

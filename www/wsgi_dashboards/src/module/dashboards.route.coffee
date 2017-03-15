@@ -8,7 +8,7 @@ class State extends Config
             caption ?= _.capitalize(name)
             dashboard.order ?= 5
             # Configuration
-            console.log glMenuServiceProvider.addGroup
+            glMenuServiceProvider.addGroup
                 name: name
                 caption: caption
                 icon: dashboard.icon
@@ -24,7 +24,6 @@ class State extends Config
                 name: name
                 url: "/#{name}"
                 data: cfg
-            console.log cfg
             $stateProvider.state(state)
 
 class WsgiDashboards extends Controller
