@@ -51,6 +51,8 @@ class SecretsConfig(RunMasterBase):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
+        res = yield self.checkBuildStepLogExist(build, "echo word")
+        self.assertTrue(res)
 
 
 def masterConfig():
