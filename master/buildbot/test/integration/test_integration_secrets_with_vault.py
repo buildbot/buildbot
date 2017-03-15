@@ -15,52 +15,64 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
+from unittest.case import SkipTest
+
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
-from buildbot.test.fake.secrets import FakeSecretStorage
+from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
+from buildbot.steps.shell import ShellCommand
 from buildbot.test.util.integration import RunMasterBase
 
 
+# This integration test creates a master and worker environment,
+# with one builders and a shellcommand step
+
 class SecretsConfig(RunMasterBase):
+
+    def setUp(self):
+        rv = os.system("docker run -d -e SKIP_SETCAP=yes -e "
+                       "'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken' -e 'VAULT_TOKEN=my_vaulttoken'"
+                       " --name=vault_for_buildbot -p 8200:8200 vault")
+
+        if rv != 0:
+            raise SkipTest(
+                "Vault integration need docker environment to be setup")
+
+        os.system("docker exec vault_for_buildbot "
+                  "vault write -address 'http://localhost:8200' secret/key value=word")
+
+    def tearDown(self):
+        os.system("docker rm -f vault_for_buildbot")
 
     @defer.inlineCallbacks
     def test_secret(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo bar")
-        self.assertTrue(res)
-
-    @defer.inlineCallbacks
-    def test_secretReconfig(self):
-        c = masterConfig()
-        yield self.setupConfig(c)
-        c['secretsProviders'] = [FakeSecretStorage(
-            secretdict={"foo": "different_value", "something": "more"})]
-        yield self.master.reconfig()
-        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
-        self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo different_value")
+        res = yield self.checkBuildStepLogExist(build, "echo word")
         self.assertTrue(res)
 
 
-# master configuration
 def masterConfig():
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers, steps
+    from buildbot.plugins import schedulers
 
     c['schedulers'] = [
         schedulers.ForceScheduler(
             name="force",
             builderNames=["testy"])]
 
-    c['secretsProviders'] = [FakeSecretStorage(
-        secretdict={"foo": "bar", "something": "more"})]
+    c['secretsProviders'] = [HashiCorpVaultSecretProvider(
+        vaultToken='my_vaulttoken',
+        vaultServer="http://localhost:8200"
+    )]
+
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command=Interpolate('echo %(secrets:foo)s')))
+    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:key)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",

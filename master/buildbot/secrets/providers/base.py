@@ -25,8 +25,9 @@ from buildbot.util.service import BuildbotService
 
 class SecretProviderBase(BuildbotService):
     """
-    ...
+        Secret provider base
     """
+
     @abc.abstractmethod
     def get(self, *args, **kwargs):
         """
