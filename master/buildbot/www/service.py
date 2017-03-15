@@ -23,6 +23,8 @@ import datetime
 import os
 from binascii import hexlify
 
+import jwt
+
 from twisted.application import strports
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
@@ -35,7 +37,6 @@ from twisted.web import resource
 from twisted.web import server
 from zope.interface import implementer
 
-import jwt
 from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2NativeString
 from buildbot.util import service
