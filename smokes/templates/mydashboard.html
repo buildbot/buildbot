@@ -1,0 +1,26 @@
+<div class="container">
+    <table class="table">
+        <tr>
+            {% for builder in builders %}
+            <th>
+                {{builder.name}}
+            </th>
+            {% endfor %}
+        </tr>
+        {% for build in builds %}
+        <tr>
+            {% for builder in builders %}
+            <th>
+                {% if build.builderid == builder.builderid %}
+                <a class="badge-status badge results_{{build.results_text|upper}}" href="#/builders/{{build.builderid}}/builds/{{build.number}}">
+                   {{build.number}}
+               </a>
+               <buildsummary buildid="{{build.buildid}}" condensed="1"/>
+               <buildsticker buildid="{{build.buildid}}"/>
+               {% endif %}
+            </th>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
