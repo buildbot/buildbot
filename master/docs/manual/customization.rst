@@ -1020,7 +1020,7 @@ Here is an example of code that you can use in your master.cfg to create a simpl
             'name': 'mydashboard',  # as used in URLs
             'caption': 'My Dashboard', # Title displayed in the UI'
             'app': mydashboardapp,
-            'order': 5, # priority of the dashboard in the let menu (lower is higher in the menu)
+            'order': 5, # priority of the dashboard in the left menu (lower is higher in the menu)
             'icon': 'area-chart' # available icon list can be found at http://fontawesome.io/icons/
         }
     ]
