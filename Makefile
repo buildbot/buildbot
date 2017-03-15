@@ -31,7 +31,7 @@ flake8:
 frontend:
 	$(PIP) install -e pkg
 	$(PIP) install mock
-	for i in base codeparameter console_view waterfall_view nestedexample; do $(PIP) install -e www/$$i || exit 1; done
+	for i in base wsgi_dashboards codeparameter console_view waterfall_view nestedexample; do $(PIP) install -e www/$$i || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests:

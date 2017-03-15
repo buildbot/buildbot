@@ -932,6 +932,8 @@ For more information on the available commands, see :doc:`../developer/master-wo
     Step Progress
     BuildStepFailed
 
+.. _buildbot_wsgi_dashboards:
+
 Writing Dashboards with Flask_ or Bottle_
 -----------------------------------------
 
