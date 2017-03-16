@@ -825,7 +825,7 @@ Currently, only `InfluxDB`_ is supported as a storage backend.
 .. bb:cfg:: secretsProviders
 
 ``secretsProviders``
-~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 see :ref:`secretManagement` for details on secret concepts.
 
@@ -842,7 +842,7 @@ See :ref:`secretManagement` to configure an available secret storage provider.
 .. bb:cfg:: buildbotNetUsageData
 
 BuildbotNetUsageData
-~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~
 
 Since buildbot 0.9.0, buildbot has a simple feature which sends usage analysis info to buildbot.net.
 This is very important for buildbot developers to understand how the community is using the tools.
