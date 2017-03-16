@@ -17,7 +17,7 @@ Secrets founded are stored in a ``secretDetails``.
 Secrets manager
 ---------------
 
-The manager is a Buildbot service.
+The manager is a Buildbot service manager.
 
 .. code-block:: python
 
