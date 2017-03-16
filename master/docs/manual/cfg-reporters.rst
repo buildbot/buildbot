@@ -816,10 +816,10 @@ GitHubStatusPush
     from buildbot.plugins import reporters, util
 
     context = Interpolate("buildbot/%(prop:buildername)s")
-    gs = status.GitHubStatusPush(token='githubAPIToken',
-                                 context=context,
-                                 startDescription='Build started.',
-                                 endDescription='Build done.')
+    gs = reporters.GitHubStatusPush(token='githubAPIToken',
+                                    context=context,
+                                    startDescription='Build started.',
+                                    endDescription='Build done.')
     factory = util.BuildFactory()
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
@@ -861,9 +861,9 @@ GitHubCommentPush
 
     from buildbot.plugins import reporters, util
 
-    gc = status.GitHubCommentPush(token='githubAPIToken',
-                                  startDescription='Build started.',
-                                  endDescription='Build done.')
+    gc = reporters.GitHubCommentPush(token='githubAPIToken',
+                                     startDescription='Build started.',
+                                     endDescription='Build done.')
     factory = util.BuildFactory()
     buildbot_bbtools = util.BuilderConfig(
         name='builder-name',
