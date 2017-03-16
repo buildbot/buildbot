@@ -984,10 +984,14 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
 - That html code output of the server runs inside AngularJS application.
 
   - It will use the CSS of the AngularJS application (including the Bootstrap_ CSS base).
+    You can use custom stylesheet with a standard ``style`` tag within your html.
+    Custom CSS will be shared to the whole Buildbot application once your dashboard is loaded.
+    So you should make sure your custom CSS rules only apply to your dashboard (e.g. by having a specific class for your dashboard's main div)
+
   - It can use some of the AngularJS directives defined by Buildbot UI (currently only buildsummary is usable).
   - It has full access to the application JS context.
 
-Here is an example of code that you can use in your master.cfg to create a simple dashboard:
+Here is an example of code that you can use in your ``master.cfg`` to create a simple dashboard:
 
 
 
