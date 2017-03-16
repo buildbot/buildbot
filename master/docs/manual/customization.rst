@@ -990,93 +990,18 @@ There is a Buildbot plugin which allows to write a server side generated dashboa
 Here is an example of code that you can use in your master.cfg to create a simple dashboard:
 
 
-.. Following code is tested in smokes/master.cfg. Please do not make modification here without modifying also that master.cfg!
 
-.. code-block:: python
+.. literalinclude:: mydashboard.py
+   :language: python
 
-    from flask import Flask, render_template
-
-    mydashboardapp = Flask('test', root_path=os.path.dirname(__file__))
-    # this allows to work on the template without having to restart Buildbot
-    mydashboardapp.config['TEMPLATES_AUTO_RELOAD'] = True
-    @mydashboardapp.route("/index.html")
-    def main():
-        # This code fetches build data from the data api, and give it to the template
-        builders = mydashboardapp.buildbot_api.dataGet("/builders")
-
-        builds = mydashboardapp.buildbot_api.dataGet("/builds", limit=20)
-
-        # properties are actually not used in the template example, but this is how you get more properties
-        for build in builds:
-            build['properties'] = mydashboardapp.buildbot_api.dataGet(("builds", build['buildid'], "properties"))
-
-        # mydashboard.html is a template inside the template directory
-        return render_template('mydashboard.html', builders=builders, builds=builds)
-
-    # Here we assume c['www']['plugins'] has already be created earlier.
-    # Please see the web server documentation to understand how to configure the other parts.
-    c['www']['plugins']['wsgi_dashboards'] = [ # This is a list of dashboards, you can create several
-        {
-            'name': 'mydashboard',  # as used in URLs
-            'caption': 'My Dashboard', # Title displayed in the UI'
-            'app': mydashboardapp,
-            'order': 5, # priority of the dashboard in the left menu (lower is higher in the menu)
-            'icon': 'area-chart' # available icon list can be found at http://fontawesome.io/icons/
-        }
-    ]
 
 Then you need a ``templates/mydashboard.html`` file near your ``master.cfg``.
 
 This template is a standard Jinja_ template which is the default templating engine of Flask_.
 
-.. code-block:: html
+.. literalinclude:: mydashboard.html
+   :language: html
 
-    <div class="container">
-        <table class="table">
-            <tr>
-                {% for builder in builders %}
-                <th>
-                    {{builder.name}}
-                </th>
-                {% endfor %}
-            </tr>
-            {% for build in builds %}
-            <tr>
-                {% for builder in builders %}
-                <th>
-                    {% if build.builderid == builder.builderid %}
-                    <a class="badge-status badge results_{{build.results_text|upper}}" href="#/builders/{{build.builderid}}/builds/{{build.number}}">
-                       {{build.number}}
-                   </a>
-                   {% endif %}
-                </th>
-                {% endfor %}
-            </tr>
-            {% endfor %}
-        </table>
-    </div>
-
-You can use the buildsummary directive by replacing the following code in the previous template:
-
-.. code-block:: html
-
-    <a class="badge-status badge results_{{build.results_text|upper}}" href="#/builders/{{build.builderid}}/builds/{{build.number}}">
-       {{build.number}}
-
-by:
-
-.. code-block:: html
-
-    <buildsummary buildid="{{build.buildid}}" condensed="1"/>
-
-The buildsummary directive is very powerful and will display steps, sub-builds, logs, urls.
-If you need something lighter, there is the build sticker directive:
-
-.. code-block:: html
-
-    <buildsticker buildid="{{build.buildid}}"/>
-
-Note that those two directives will make additional HTTP requests from the browser in order to fetch the necessary data they need to be rendered.
 
 .. _Flask: http://flask.pocoo.org/
 .. _Bottle: https://bottlepy.org/docs/dev/
