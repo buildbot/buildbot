@@ -13,7 +13,7 @@ do
     fi
     . $VE/bin/activate
     pip install -U pip
-    pip install  mock
+    pip install  mock requests flask
     pip install dist/buildbot-0*.$suffix
     pip install dist/buildbot?pkg*.$suffix
     pip install dist/*.$suffix
