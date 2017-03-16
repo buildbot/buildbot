@@ -92,7 +92,7 @@ Here is a simple tutorial to install the minimal Vault for use with Buildbot.
 Use Docker to install Vault
 ```````````````````````````
 
-A Docker is avaliable to help users installing Vault.
+A Docker is available to help users installing Vault.
 Without argument the command launch a docker vault developer instance, easy to use and test the functions.
 The developer version is already initialized and unsealed.
 To launch a Vault server please refer to the VaultDocker_ documentation:
