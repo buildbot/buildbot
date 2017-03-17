@@ -10,8 +10,19 @@ Secrets
 
       def __init__(self, source, key, value):
 
-A ``secretDetails`` is a python object initialized with a provider name, a key, a value and properties if needed.
-Each parameter is an object property that should be returned the value.
+A ``secretDetails`` is a python object initialized with a provider name, a key and a value.
+Each parameter is an object property.
+
+.. code-block:: python
+
+  secretdetail = SecretDetails("SourceProvider", "myKey", "myValue")
+  print(secretdetail.source)
+  "SourceProvider"
+  print(secretdetail.key)
+  "myKey"
+  print(secretdetail.value)
+  "myValue"
+
 Secrets founded are stored in a ``secretDetails``.
 
 Secrets manager
