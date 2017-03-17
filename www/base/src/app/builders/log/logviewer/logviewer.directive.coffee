@@ -25,6 +25,8 @@ class Logviewer extends Directive
 
             lines:
                 get: (index, count) ->
+                    if count == 0
+                        return $q.when([])
                     log = self.scope.log
                     if index < 0
                         count += index
