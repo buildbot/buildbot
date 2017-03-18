@@ -40,6 +40,8 @@ class Logpreview extends Directive
                             offset = @log.num_lines - @settings.maxlines.value
                             limit = @settings.maxlines.value
 
+                    if limit == 0
+                        return
 
                     # this acts as a marker of the last loaded element
                     # note that several elements can be loading at the same time

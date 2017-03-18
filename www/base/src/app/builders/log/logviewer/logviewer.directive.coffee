@@ -25,19 +25,18 @@ class Logviewer extends Directive
 
             lines:
                 get: (index, count) ->
-                    if count == 0
-                        return $q.when([])
                     log = self.scope.log
                     if index < 0
                         count += index
                         index = 0
+                    if count == 0
+                        return $q.when([])
                     self.requests ?= {}
                     requestId = "#{index}_#{count}"
                     if not self.requests[requestId]?
                         self.requests[requestId] = $q (resolve) ->
                             restService.get("logs/#{log.logid}/contents", offset:index, limit:count).then (content) ->
                                 content = content.logchunks
-                            # log.getContents(offset:index, limit:count).then (content) ->
                                 ret = []
                                 if content.length == 0
                                     resolve(ret)
