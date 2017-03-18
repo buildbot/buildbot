@@ -49,7 +49,7 @@ clean:
 	-rm -rf $(BUILDDIR)/*
 
 towncrier:
-	cd ../../; towncrier --draft |grep  'No significant changes.' || yes n | towncrier
+	cd ../../; command -v towncrier >/dev/null 2>&1 && towncrier --draft |grep  'No significant changes.' || yes n | towncrier
 
 html: conf.py towncrier
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(BUILDDIR)/html
