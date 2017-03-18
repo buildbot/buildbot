@@ -1,0 +1,11 @@
+{
+    "name": "buildbot-wsgi-dashboards",
+    "engines": {
+        "node": ">=0.10.20",
+        "npm": ">=1.4.10"
+    },
+    "dependencies": {
+        "guanlecoja": "~0.8.0",
+        "gulp": "3.9.0"
+    }
+}

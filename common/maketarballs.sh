@@ -4,7 +4,7 @@ rm -rf dist
 mkdir dist
 pip install mock wheel
 set -e
-for pkg in pkg master worker www/base www/console_view www/waterfall_view
+for pkg in pkg master worker www/base www/console_view www/waterfall_view www/wsgi_dashboards
 do
   pip install -e ${pkg}
   (

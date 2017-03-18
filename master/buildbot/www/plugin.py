@@ -37,6 +37,9 @@ class Application(object):
     def setMaster(self, master):
         self.master = master
 
+    def setConfiguration(self, config):
+        self.config = config
+
     def __repr__(self):
         return ("www.plugin.Application(version=%(version)s, "
                 "description=%(description)s, "

@@ -21,7 +21,7 @@ html.no-js(xmlns:ng='http://angularjs.org', xmlns:app='ignored', ng-app="app")
       | angular.module('app').requires.push('{{app}}')
     | {% endfor %}
     script
-      | angular.module("app").constant("config", {{configjson|safe}})
+      | angular.module("buildbot_config", []).constant("config", {{configjson|safe}})
     | {% if custom_templates %}
     script
       | angular.module("app").run(function ($templateCache) {

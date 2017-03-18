@@ -3,7 +3,7 @@ class Buildsticker extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {build: '=?', builder: '=?'}
+            scope: {build: '=?', builder: '=?', buildid: '=?'}
             templateUrl: 'views/buildsticker.html'
             controller: '_buildstickerController'
         }
@@ -16,6 +16,11 @@ class _buildsticker extends Controller('common')
         _.mixin($scope, resultsService)
 
         data = dataService.open().closeOnDestroy($scope)
+        $scope.$watch "buildid", (buildid) ->
+            if not buildid? then return
+            data.getBuilds(buildid).onNew = (build) ->
+                $scope.build = build
+
         $scope.$watch 'build', (build) ->
-            if not $scope.builder
+            if not $scope.builder and build?.builderid?
                 $scope.builder = buildersService.getBuilder(build.builderid)

@@ -44,6 +44,8 @@ class forceDialog extends Controller
                     .then (res) ->
                         modal.modal.close(res.result)
                     ,   (err) ->
+                        if err is null
+                            return
                         if err.error.code == -32602
                             for k, v of err.error.message
                                 fields_ref[k].errors = v
