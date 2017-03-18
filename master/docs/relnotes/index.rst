@@ -118,7 +118,6 @@ Features
     - Shows list of builds per worker similar to the builders page.
     - New worker details page displays the list of builds built by this worker using database optimized query.
 
-
 Deprecations and Removals
 -------------------------
 
