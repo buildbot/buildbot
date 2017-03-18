@@ -10,8 +10,8 @@ Requirements
 
 Buildbot steps might need secrets to execute their actions.
 Secrets are used to execute commands or to create authenticated network connections.
-Secrets may be a ssh key, a password, or a file content like a wgetrc file or a public ssh key.
-To preserve confidentiality the secrets values must not be logged in the twisted logs or steps logs.
+Secrets may be a SSH key, a password, or a file content like a wgetrc file or a public SSH key.
+To preserve confidentiality, the secrets values must not be printed or logged in the twisted or steps logs.
 Secrets must not be stored in the Buildbot configuration (master.cfg), as the source code is usually shared in SCM like git.
 
 How to use Buildbot Secret Management
@@ -30,12 +30,13 @@ Buildbot implements several providers for secrets retrieval:
 
 Secrets providers are configured if needed in the master configuration.
 Multiple providers can be configured at once.
-The secret manager is a Buildbot service. The secret manager returns the specific provider results related to the providers registered in the configuration.
+The secret manager is a Buildbot service.
+The secret manager returns the specific provider results related to the providers registered in the configuration.
 
 How to use secrets in Buildbot
 ------------------------------
 
-The following example shows a basic usage of secrets in buildbot
+The following example shows a basic usage of secrets in Buildbot.
 
 .. code-block:: python
 
@@ -45,7 +46,7 @@ The following example shows a basic usage of secrets in buildbot
 
     # then in a buildfactory:
 
-    #  use a secret on a shell command via Interpolate
+    # use a secret on a shell command via Interpolate
     f1.addStep(ShellCommand(Interpolate("wget -u user -p %{secrets:userpassword}s %{prop:urltofetch}s")))
 
 Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
@@ -74,12 +75,13 @@ SecretInVault
                             vaultServer="http://localhost:8200"
     )]
 
-Vault secures, stores, and tightly controls access to secrets. Vault presents an unified API to access multiple backends.
+Vault secures, stores, and tightly controls access to secrets.
+Vault presents an unified API to access multiple backends.
 To be authenticated in Vault, Buildbot need to send a token to the vault server.
 The token is generated when the Vault instance is initialized for the first time.
 
 
-In the master configuration the Vault provider is instantiated trough the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
+In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
@@ -92,8 +94,8 @@ Here is a simple tutorial to install the minimal Vault for use with Buildbot.
 Use Docker to install Vault
 ```````````````````````````
 
-A Docker is available to help users installing Vault.
-Without argument the command launch a docker vault developer instance, easy to use and test the functions.
+A Docker image is available to help users installing Vault.
+Without any arguments, the command launches a Docker Vault developer instance, easy to use and test the functions.
 The developer version is already initialized and unsealed.
 To launch a Vault server please refer to the VaultDocker_ documentation:
 
@@ -108,7 +110,7 @@ In a shell:
 Starting the vault instance
 ```````````````````````````
 
-Once the docker image is created, launch a shell terminal on the docker image:
+Once the Docker image is created, launch a shell terminal on the Docker image:
 
 .. code-block:: shell
 
@@ -120,8 +122,8 @@ Then, export the environment variable VAULT_ADDR needed to init Vault.
 
       export VAULT_ADDR='vault.server.adress'
 
-Writing a secrets
-`````````````````
+Writing secrets
+```````````````
 
 By default Vault is initialized with a mount named secret.
 To add a new secret:

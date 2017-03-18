@@ -23,7 +23,8 @@ Each parameter is an object property.
   print(secretdetail.value)
   "myValue"
 
-Secrets founded are stored in a ``secretDetails``.
+A Secret is defined by a key associated to a value, returned from a provider.
+Secrets returned by providers are stored in a ``secretDetails`` object.
 
 Secrets manager
 ---------------
@@ -35,8 +36,8 @@ The manager is a Buildbot service manager.
     secretsService = self.master.namedServices['secrets']
     secretDetailsList = secretsService.get(self.secrets)
 
-The service execute a get method.
-Depending on the kind of storage chosen and declared in the configuration, the manager get the selected provider and return a list of ``secretDetails``.
+The service executes a get method.
+Depending on the kind of storage chosen and declared in the configuration, the manager gets the selected provider and returns a list of ``secretDetails``.
 
 Secrets providers
 -----------------
@@ -52,7 +53,7 @@ File provider
 
 In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
 File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
-The provider SecretInFile allows Buildbot read secrets in the secret directory.
+The provider SecretInFile providers allows Buildbot to read secrets in the secret directory.
 
 Vault provider
 ``````````````
@@ -63,12 +64,12 @@ Vault provider
                                                 vaultServer="http://localhost:8200"
                                                 )]
 
-In the master configuration the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
-Vault secrets provider access to Vault asking the key wanted by Buildbot and returns the contained text value.
-The provider SecretInVAult allows Buildbot read secrets in Vault.
+In the master configuration, the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
+Vault secrets provider access the Vault backend asking the key wanted by Buildbot and returns the contained text value.
+The SecretInVAult provider allows Buildbot to read secrets in the Vault.
 
 Secret Obfuscation
 ``````````````````
 
-Secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using the :class:`Obfuscated`.
-The class Obfuscated changes the password characters in ``####`` characters in the logs.
+Secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using :class:`Obfuscated`.
+The class Obfuscated replaces secret string value by ``####`` characters when the secret value is logged.
