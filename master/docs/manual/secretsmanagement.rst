@@ -76,7 +76,7 @@ SecretInVault
     )]
 
 Vault secures, stores, and tightly controls access to secrets.
-Vault presents an unified API to access multiple backends.
+Vault presents a unified API to access multiple backends.
 To be authenticated in Vault, Buildbot need to send a token to the vault server.
 The token is generated when the Vault instance is initialized for the first time.
 

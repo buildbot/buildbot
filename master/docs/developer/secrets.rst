@@ -53,7 +53,7 @@ File provider
 
 In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
 File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
-The provider SecretInFile providers allows Buildbot to read secrets in the secret directory.
+SecretInFile provider allows Buildbot to read secrets in the secret directory.
 
 Vault provider
 ``````````````
@@ -65,8 +65,8 @@ Vault provider
                                                 )]
 
 In the master configuration, the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
-Vault secrets provider access the Vault backend asking the key wanted by Buildbot and returns the contained text value.
-The SecretInVAult provider allows Buildbot to read secrets in the Vault.
+Vault secrets provider accesses the Vault backend asking the key wanted by Buildbot and returns the contained text value.
+SecretInVAult provider allows Buildbot to read secrets in the Vault.
 
 Secret Obfuscation
 ``````````````````
