@@ -1,1 +1,0 @@
-Fix issue with db being closed by wrong thread

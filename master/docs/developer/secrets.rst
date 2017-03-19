@@ -1,55 +1,46 @@
-.. _secrets:
-
-=======
 Secrets
-=======
-
-.. warning::
-
-    This documentation is about a feature that is in development, and is not yet completely implemented.
-    Don't expect it to work until this warning is removed.
-
-
-SecretDetails
-=============
-
-A secret is identified by a couple (key, value).
+-------
 
 .. code-block:: python
 
   class SecretDetails(object):
+      """
+      ...
+      """
 
-      def __init__(self, provider, key, value, props=None):
+      def __init__(self, source, key, value):
 
-A ``secretDetails`` is a python object initialized with the following parameters:
-- name of provider where secret has been retrieved,
-- key identifier
-- value returned by the provider API
+A ``secretDetails`` is a python object initialized with a provider name, a key and a value.
+Each parameter is an object property.
 
-Each parameter value could be returned by a function (source(), value(), key()).
-``Secrets`` returned by the secrets manager are stored in a ``SecretDetails`` object.
+.. code-block:: python
+
+  secretdetail = SecretDetails("SourceProvider", "myKey", "myValue")
+  print(secretdetail.source)
+  "SourceProvider"
+  print(secretdetail.key)
+  "myKey"
+  print(secretdetail.value)
+  "myValue"
+
+A Secret is defined by a key associated to a value, returned from a provider.
+Secrets returned by providers are stored in a ``secretDetails`` object.
 
 Secrets manager
-===============
+---------------
 
-The secret manager is a Buildbot service, providing a get method API to retrieve a secret value.
+The manager is a Buildbot service manager.
 
 .. code-block:: python
 
     secretsService = self.master.namedServices['secrets']
-    secretDetails = secretsService.get(secret)
+    secretDetailsList = secretsService.get(self.secrets)
 
-The get API take the secret key as parameters and read the configuration to obtains the list of configured providers.
-The manager calls the get method of the configured provider and returns a ``SecretDetails`` if the call succeed.
-
-.. code-block:: python
-
-  c['secretsProviders'] = [SecretsProviderOne(params), SecretsProviderTwo(params)]
-
-If more than one provider is defined in the configuration, the manager returns the first value found.
+The service executes a get method.
+Depending on the kind of storage chosen and declared in the configuration, the manager gets the selected provider and returns a list of ``secretDetails``.
 
 Secrets providers
-=================
+-----------------
 
 The secrets providers are implementing the specific getters, related to the storage chosen.
 
@@ -62,4 +53,23 @@ File provider
 
 In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
 File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
-The provider SecretInFile allows Buildbot to read secrets in the secret directory.
+SecretInFile provider allows Buildbot to read secrets in the secret directory.
+
+Vault provider
+``````````````
+
+.. code-block:: python
+
+    c['secretsProviders'] = [util.SecretInVault(vaultToken=open('VAULT_TOKEN').read(),
+                                                vaultServer="http://localhost:8200"
+                                                )]
+
+In the master configuration, the provider is instantiated through a Buildbot service secret manager with the Vault token and the Vault server address.
+Vault secrets provider accesses the Vault backend asking the key wanted by Buildbot and returns the contained text value.
+SecretInVAult provider allows Buildbot to read secrets in the Vault.
+
+Secret Obfuscation
+``````````````````
+
+Secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using :class:`Obfuscated`.
+The class Obfuscated replaces secret string value by ``####`` characters when the secret value is logged.

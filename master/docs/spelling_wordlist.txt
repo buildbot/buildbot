@@ -9,6 +9,7 @@ Allura
 analyse
 angularjs
 angularJS
+ansible
 apache
 api
 apis
@@ -647,6 +648,7 @@ Robocopy
 rootlink
 routingkeys
 rpmlint
+rsa
 rss
 rtype
 runtests
@@ -855,6 +857,7 @@ webhook
 webserver
 websocket
 websvn
+wgetrc
 Whent
 whereclause
 whitelists

@@ -10,6 +10,73 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.5`` ( ``2017-03-18`` )
+===================================================
+
+Bug fixes
+---------
+
+- Fix issue with compressing empty log
+- Fix issue with db being closed by wrong thread
+- Fix issue with buildbot_worker not closing file handles when using the
+  transfer steps
+- Fix issue with buildbot requesting too many permissions from GitHub's OAuth
+- Fix :py:class:`~buildbot.steps.http.HTTPStep` to accept ``json`` as keyword
+  argument.
+- Updated :py:class:`~buildbot.workers.openstack.OpenStackLatentWorker` to use
+  keystoneauth1 so it will support latest python-novaclient packages.
+- Include :py:class:`~buildbot.steps.package.rpm.rpmlint.RpmLint` step in steps
+  plugins.
+
+Core Features
+-------------
+
+- Experimental support for Python 3.5 and 3.6.
+  Note that complete support depends on fixes to be released in Twisted 17.2.0.
+- New experimental :ref:`secretManagement` framework, which allows to securely declare secrets, reusable in your steps.
+- New :ref:`buildbot_wsgi_dashboards` plugin, which allows to write custom
+  dashboard with traditional server side web frameworks.
+- Added :py:class:`AnyControlEndpointMatcher` and
+  :py:class:`EnableSchedulerEndpointMatcher` for better configurability of the
+  access control. If you have access control to your Buildbot, it is
+  recommended you add :py:class:`AnyControlEndpointMatcher` at the end of your
+  access control configuration.
+
+- Schedulers can now be toggled on and off from the UI. Useful for temporarily
+  disabling periodic timers.
+
+Components Features
+-------------------
+
+- :py:class:`~buildbot.steps.transfer.FileUpload` now supports setting the url
+  title text that is visible in the web UI. :py:class:`~buildbot.steps.transfer.FileUpload` now supports custom `description` and
+  `descriptionDone` text.
+- :py:class:`~buildbot.worker.ec2.EC2LatentWorker` now provides instance id as
+  the `instance` property enabling use of the AWS toolkit.
+- Add GitHub pull request Poller to list of available changesources.
+- :py:class:`~buildbot.util.OAuth2LoginResource` now supports the `token` URL
+  parameter. If a user wants to authenticate through OAuth2 with a pre-
+  generated token (such as the `access_token` provided by GitHub) it can be
+  passed to `/auth/login` as the `token` URL parameter and the user will be
+  authenticated to buildbot with those credentials.
+- New reporter :py:class:`~buildbot.reporters.github.GitHubCommentPush` can
+  comment on GitHub PRs
+- :py:class:`~buildbot.changes.GitPoller` now supports polling tags in a git
+  repository.
+- :py:class:`~buildbot.steps.transfer.MultipleFilUpload` now supports the
+  `glob` parameter. If `glob` is set to `True` all `workersrcs` parameters will
+  be run through `glob` and the result will be uploaded to `masterdest`
+- Changed :py:class:`~buildbot.workers.openstack.OpenStackLatentWorker` to
+  default to v2 of the Nova API. The novaclient package has had a deprecation
+  warning about v1.1 and would use v2 anyway.
+
+Deprecations and Removals
+-------------------------
+
+- ``master/contrib`` and ``worker/contrib`` directories have been moved to
+  their own repository at https://github.com/buildbot/buildbot-contrib/
+
+
 Buildbot ``0.9.4`` ( ``2017-02-08`` )
 =====================================
 
@@ -50,7 +117,6 @@ Features
     - Shows correctly the list of builders that this master is configured on (not the list of ``buildermaster`` which nobody cares about).
     - Shows list of builds per worker similar to the builders page.
     - New worker details page displays the list of builds built by this worker using database optimized query.
-
 
 Deprecations and Removals
 -------------------------
