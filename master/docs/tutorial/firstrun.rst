@@ -63,10 +63,6 @@ We will also use a separate directory to demonstrate the distinction between a m
   virtualenv --no-site-packages sandbox
   source sandbox/bin/activate
 
-.. note:: *Python 3*
-
-    Python 3 support is work in progress, if your default interpreter is Python 3, then you must pass the ``--python=python2`` option to ``virtualenv``.
-
 Now that we are ready, we need to install buildbot:
 
 .. code-block:: bash
