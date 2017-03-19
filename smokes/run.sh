@@ -27,6 +27,7 @@ else
     ./node_modules/protractor/bin/webdriver-manager update
     ./node_modules/protractor/bin/protractor protractor.conf.js
 fi
+set +e
 buildbot stop workdir
 buildbot-worker stop workdir/worker
 rm -rf workdir
