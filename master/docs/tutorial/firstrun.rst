@@ -60,8 +60,21 @@ We will also use a separate directory to demonstrate the distinction between a m
   cd tmp
   mkdir buildbot
   cd buildbot
+
+On Python 2:
+
+.. code-block:: bash
+
   virtualenv --no-site-packages sandbox
   source sandbox/bin/activate
+
+On Python 3:
+
+.. code-block:: bash
+
+  python3 -m venv sandbox
+  source sandbox/bin/activate
+
 
 Now that we are ready, we need to install buildbot:
 
@@ -118,7 +131,19 @@ It would however be completely ok to do this on another computer - as long as th
   cd
   mkdir tmp/bb-worker
   cd tmp/bb-worker
+
+On Python 2:
+
+.. code-block:: bash
+
   virtualenv --no-site-packages sandbox
+  source sandbox/bin/activate
+
+On Python 3:
+
+.. code-block:: bash
+
+  python3 -m venv sandbox
   source sandbox/bin/activate
 
 Install the ``buildbot-worker`` command:
