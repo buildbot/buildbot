@@ -1098,6 +1098,20 @@ class TestShellMixin(steps.BuildStepMixin,
                          'NOTE: worker does not allow master to specify interruptSignal\n')
 
     @defer.inlineCallbacks
+    def test_example_new_worker(self):
+        self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
+                       worker_version={'*': "3.0"}, wantDefaultWorkdir=False)
+        self.expectCommands(
+            ExpectShell(workdir='build', usePTY=False, command=['./cleanup.sh'])
+            # note missing parameters
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        yield self.runStep()
+        self.assertEqual(self.step.getLog('stdio').header,
+                         u'')
+
+    @defer.inlineCallbacks
     def test_description(self):
         self.setupStep(SimpleShellCommand(
             command=['foo', properties.Property('bar', 'BAR')]), wantDefaultWorkdir=False)
