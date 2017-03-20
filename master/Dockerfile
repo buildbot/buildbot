@@ -39,6 +39,7 @@ RUN \
         dumb-init@edge\
         py-jinja2 \
         tar \
+        tzdata \
         curl && \
 # install pip dependencies
     pip install --upgrade pip setuptools && \
