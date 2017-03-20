@@ -199,7 +199,7 @@ class CreateWorkerOptions(MakerBase):
             raise usage.UsageError("log-count parameter needs to be a number"
                                    " or None")
 
-        if not re.match(r'^\d+$', self['umask']) and \
+        if not re.match(r'^(0o)?\d+$', self['umask']) and \
                 self['umask'] != 'None':
             raise usage.UsageError("umask parameter needs to be a number"
                                    " or None")
