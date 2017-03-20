@@ -133,7 +133,7 @@ def basicData(master):
         'plugins': plugins_uses,
         'db': master.config.db['db_url'].split("://")[0],
         'mq': master.config.mq['type'],
-        'www_plugins': master.config.www['plugins'].keys()
+        'www_plugins': list(master.config.www['plugins'].keys())
     }
 
 
