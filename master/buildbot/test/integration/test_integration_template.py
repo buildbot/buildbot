@@ -22,14 +22,14 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 # This integration test creates a master and worker environment,
-# with one builders and a shellcommand step
+# with one builder and a shellcommand step
 # meant to be a template for integration steps
 class ShellMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
-
+        # if you don't need change, you can just remove this change, and useChange parameter
         change = dict(branch="master",
                       files=["foo.c"],
                       author="me@foo.com",
@@ -51,6 +51,9 @@ def masterConfig():
     c['schedulers'] = [
         schedulers.AnyBranchScheduler(
             name="sched",
+            builderNames=["testy"]),
+        schedulers.ForceScheduler(
+            name="force",
             builderNames=["testy"])]
 
     f = BuildFactory()

@@ -23,8 +23,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 
 # This integration test creates a master and worker environment,
-# with one builders and a shellcommand step
-# meant to be a template for integration steps
+# with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
 
     @skipUnlessPlatformIs('posix')
