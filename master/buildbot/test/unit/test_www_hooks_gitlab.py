@@ -167,7 +167,6 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change.get("project"), project)
         self.assertEqual(change.get("codebase"), codebase)
 
-
     # Test 'base' hook with attributes. We should get a json string representing
     # a Change object as a dictionary. All values show be set.
     @defer.inlineCallbacks
