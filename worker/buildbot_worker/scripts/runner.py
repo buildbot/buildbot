@@ -166,7 +166,7 @@ class CreateWorkerOptions(MakerBase):
             port = int(port)
         except ValueError:
             raise usage.UsageError("invalid master port '%s', "
-                                   "needs to be an number" % port)
+                                   "needs to be a number" % port)
 
         return master, port
 
@@ -191,22 +191,22 @@ class CreateWorkerOptions(MakerBase):
             try:
                 self[argument] = int(self[argument])
             except ValueError:
-                raise usage.UsageError("%s parameter needs to be an number"
+                raise usage.UsageError("%s parameter needs to be a number"
                                        % argument)
 
         if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be an number"
+            raise usage.UsageError("log-count parameter needs to be a number"
                                    " or None")
 
         if not re.match(r'^\d+$', self['umask']) and \
                 self['umask'] != 'None':
-            raise usage.UsageError("umask parameter needs to be an number"
+            raise usage.UsageError("umask parameter needs to be a number"
                                    " or None")
 
         if not re.match(r'^\d+$', self['numcpus']) and \
                 self['numcpus'] != 'None':
-            raise usage.UsageError("numcpus parameter needs to be an number"
+            raise usage.UsageError("numcpus parameter needs to be a number"
                                    " or None")
 
         if self['allow-shutdown'] not in [None, 'signal', 'file']:

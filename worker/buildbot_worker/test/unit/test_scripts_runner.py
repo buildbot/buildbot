@@ -205,32 +205,32 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
 
     def test_inv_keepalive(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "keepalive parameter needs to be an number",
+                               "keepalive parameter needs to be a number",
                                self.parse, "--keepalive=X", *self.req_args)
 
     def test_inv_maxdelay(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "maxdelay parameter needs to be an number",
+                               "maxdelay parameter needs to be a number",
                                self.parse, "--maxdelay=X", *self.req_args)
 
     def test_inv_log_size(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "log-size parameter needs to be an number",
+                               "log-size parameter needs to be a number",
                                self.parse, "--log-size=X", *self.req_args)
 
     def test_inv_log_count(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "log-count parameter needs to be an number or None",
+                               "log-count parameter needs to be a number or None",
                                self.parse, "--log-count=X", *self.req_args)
 
     def test_inv_numcpus(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "numcpus parameter needs to be an number or None",
+                               "numcpus parameter needs to be a number or None",
                                self.parse, "--numcpus=X", *self.req_args)
 
     def test_inv_umask(self):
         self.assertRaisesRegex(usage.UsageError,
-                               "umask parameter needs to be an number or None",
+                               "umask parameter needs to be a number or None",
                                self.parse, "--umask=X", *self.req_args)
 
     def test_inv_allow_shutdown(self):
@@ -276,7 +276,7 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         opts = runner.CreateWorkerOptions()
         self.assertRaisesRegex(usage.UsageError,
                                "invalid master port 'apple', "
-                               "needs to be an number",
+                               "needs to be a number",
                                opts.validateMasterArgument, "host:apple")
 
     def test_validateMasterArgument_ok(self):
