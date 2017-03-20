@@ -113,7 +113,7 @@ class CreateWorkerOptions(MakerBase):
          "Interval at which keepalives should be sent (in seconds)"],
         ["umask", None, "None",
          "controls permissions of generated files. "
-         "Use --umask=022 to be world-readable"],
+         "Use --umask=0o22 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
         ["numcpus", None, "None",

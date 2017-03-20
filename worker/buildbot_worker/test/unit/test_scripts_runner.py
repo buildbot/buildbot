@@ -179,14 +179,14 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         self.patch(runner.MakerBase, "postOptions", mock.Mock())
 
         opts = self.parse("--force", "--relocatable", "--no-logrotate",
-                          "--keepalive=4", "--umask=022",
+                          "--keepalive=4", "--umask=0o22",
                           "--maxdelay=3", "--numcpus=4", "--log-size=2", "--log-count=1",
                           "--allow-shutdown=file", *self.req_args)
         self.assertOptions(opts,
                            {"force": True,
                             "relocatable": True,
                             "no-logrotate": True,
-                            "umask": "022",
+                            "umask": "0o22",
                             "maxdelay": 3,
                             "numcpus": "4",
                             "log-size": 2,
