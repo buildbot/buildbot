@@ -242,7 +242,11 @@ The GitLab hook is as simple as GitHub one and it also takes no options.
 ::
 
     c['www'] = dict(...,
-        change_hook_dialects={ 'gitlab' : True }
+        change_hook_dialects={
+            'gitlab' : {
+                'secret': '...',
+            },
+        },
     )
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
@@ -259,8 +263,10 @@ These parameters will be passed along to the scheduler.
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from your GitLab server, potentially causing the buildmaster to run arbitrary code.
 
-To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
-Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitlab``.
+To protect URL against unauthorized access you should either
+
+  * set secret token in the configuration above, then set it in the GitLab service hook declaration, or
+  * use the :ref:`Change-Hooks-Auth` option. Then, create a GitLab service hook (see ``https://your.gitlab.server/help/web_hooks``) with a WebHook URL like ``https://user:password@builds.example.com/bbot/change_hook/gitlab``.
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 

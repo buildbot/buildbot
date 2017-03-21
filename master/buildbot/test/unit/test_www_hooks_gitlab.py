@@ -26,6 +26,7 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
@@ -218,3 +219,33 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         d.addCallback(check_changes)
         return d
+
+
+class TestChangeHookConfiguredWithSecret(unittest.TestCase):
+
+    _SECRET = 'thesecret'
+
+    def setUp(self):
+        self.changeHook = change_hook.ChangeHookResource(
+            dialects={'gitlab': {'secret': self._SECRET}},
+            master=fakeMasterForHooks())
+
+    @defer.inlineCallbacks
+    def test_missing_secret(self):
+        self.request = FakeRequest(content=gitJsonPayloadTag)
+        self.request.uri = "/change_hook/gitlab"
+        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.method = "POST"
+        yield self.request.test_render(self.changeHook)
+        expected = b'Invalid secret'
+        self.assertEqual(self.request.written, expected)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    @defer.inlineCallbacks
+    def test_valid_secret(self):
+        self.request = FakeRequest(content=gitJsonPayload)
+        self.request.received_headers[_HEADER_GITLAB_TOKEN] = self._SECRET
+        self.request.uri = "/change_hook/gitlab"
+        self.request.method = "POST"
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
