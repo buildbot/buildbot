@@ -71,7 +71,7 @@ matrix:
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
 
     - python: "3.6"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=py3next
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
 
 # Dependencies installation commands
 install:
