@@ -22,16 +22,6 @@ class _changeRow extends Controller
         $scope.$on 'showAllInfo', (event, value) =>
             @infoIsCollapsed = value
 
-        $scope.$watch 'width', (@width) =>
-        $scope.$watch 'cellWidth', (@cellWidth) =>
-        $scope.$watch 'change', (@change) =>
-            if @change
-                if angular.isString(@change.repository)
-                    @createLink()
-
-    createLink: ->
-        repository = @change.repository.replace('.git', '')
-        @change.link = "#{repository}/commit/#{@change.revision}"
 
     selectBuild: (build) ->
         modal = @$uibModal.open
@@ -40,10 +30,6 @@ class _changeRow extends Controller
             windowClass: 'modal-small'
             resolve:
                 selectedBuild: -> build
-
-    createFileLink: (file) ->
-        repository = @change.repository.replace('.git', '')
-        return "#{repository}/blob/#{@change.revision}/#{file}"
 
     toggleInfo: ->
         @infoIsCollapsed = !@infoIsCollapsed
