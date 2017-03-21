@@ -903,6 +903,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             desc += self.descriptionSuffix
         return desc
 
+
 components.registerAdapter(
     BuildStep._getStepFactory,
     BuildStep, interfaces.IBuildStepFactory)

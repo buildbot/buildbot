@@ -68,6 +68,49 @@ gitJsonPayload = """
   "total_commits_count": 2
 }
 """
+gitJsonPayloadTag = """
+{
+  "object_kind": "tag_push",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "82b3d5ae55f7080f1e6022629cdb57bfae7cccc7",
+  "ref": "refs/tags/v1.0.0",
+  "checkout_sha": "82b3d5ae55f7080f1e6022629cdb57bfae7cccc7",
+  "user_id": 1,
+  "user_name": "John Smith",
+  "repository":{
+    "name": "Example",
+    "url": "git@localhost:diaspora.git",
+    "description": "",
+    "homepage": "http://example.com/jsmith/example",
+    "git_http_url":"http://example.com/jsmith/example.git",
+    "git_ssh_url":"git@example.com:jsmith/example.git",
+    "visibility_level":0
+  },
+   "commits": [
+     {
+       "id": "b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327",
+       "message": "Update Catalan translation to e38cb41.",
+       "timestamp": "2011-12-12T14:27:31+02:00",
+       "url": "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327",
+       "author": {
+         "name": "Jordi Mallach",
+         "email": "jordi@softcatala.org"
+       }
+     },
+     {
+       "id": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+       "message": "fixed readme",
+       "timestamp": "2012-01-03T23:36:29+02:00",
+       "url": "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
+       "author": {
+         "name": "GitLab dev user",
+         "email": "gitlabdev@dv6700.(none)"
+       }
+     }
+   ],
+   "total_commits_count": 2
+}
+"""
 
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
@@ -76,7 +119,18 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'gitlab': True}, master=fakeMasterForHooks())
 
-    def check_changes(self, r, project='', codebase=None):
+    def check_changes_tag_event(self, r, project='', codebase=None):
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        change = self.changeHook.master.addedChanges[0]
+
+        self.assertEqual(change["repository"], "git@localhost:diaspora.git")
+        self.assertEqual(
+            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            1323692851
+        )
+        self.assertEqual(change["branch"], "v1.0.0")
+
+    def check_changes_push_event(self, r, project='', codebase=None):
         self.assertEqual(len(self.changeHook.master.addedChanges), 2)
         change = self.changeHook.master.addedChanges[0]
 
@@ -122,7 +176,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.uri = "/change_hook/gitlab"
         self.request.method = "POST"
         res = yield self.request.test_render(self.changeHook)
-        self.check_changes(res)
+        self.check_changes_push_event(res)
 
     @defer.inlineCallbacks
     def testGitWithChange_WithProjectToo(self):
@@ -131,7 +185,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.args = {'project': ['MyProject']}
         self.request.method = "POST"
         res = yield self.request.test_render(self.changeHook)
-        self.check_changes(res, project="MyProject")
+        self.check_changes_push_event(res, project="MyProject")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithCodebaseToo(self):
@@ -140,7 +194,16 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.args = {'codebase': ['MyCodebase']}
         self.request.method = "POST"
         res = yield self.request.test_render(self.changeHook)
-        self.check_changes(res, codebase="MyCodebase")
+        self.check_changes_push_event(res, codebase="MyCodebase")
+
+    @defer.inlineCallbacks
+    def testGitWithChange_WithPushTag(self):
+        self.request = FakeRequest(content=gitJsonPayloadTag)
+        self.request.uri = "/change_hook/gitlab"
+        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.method = "POST"
+        res = yield self.request.test_render(self.changeHook)
+        self.check_changes_tag_event(res, codebase="MyCodebase")
 
     def testGitWithNoJson(self):
         self.request = FakeRequest()

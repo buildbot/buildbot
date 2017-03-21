@@ -178,13 +178,13 @@ class GitHubEventHandler(object):
         changes = []
         refname = payload['ref']
 
-        # We only care about regular heads, i.e. branches
-        match = re.match(r"^refs/heads/(.+)$", refname)
+        # We only care about regular heads or tags
+        match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
             log.msg("Ignoring refname `{}': Not a branch".format(refname))
             return changes
 
-        branch = match.group(1)
+        branch = match.group(2)
         if payload.get('deleted'):
             log.msg("Branch `{}' deleted, ignoring".format(branch))
             return changes

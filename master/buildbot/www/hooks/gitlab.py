@@ -36,13 +36,13 @@ def _process_change(payload, user, repo, repo_url, project, codebase=None):
     changes = []
     refname = payload['ref']
 
-    # We only care about regular heads, i.e. branches
-    match = re.match(r"^refs/heads/(.+)$", refname)
+    # We only care about regular heads or tags
+    match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
     if not match:
         log.msg("Ignoring refname `%s': Not a branch" % refname)
         return changes
 
-    branch = match.group(1)
+    branch = match.group(2)
     if payload.get('deleted'):
         log.msg("Branch `%s' deleted, ignoring" % branch)
         return changes
