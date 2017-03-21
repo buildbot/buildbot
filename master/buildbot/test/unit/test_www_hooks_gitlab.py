@@ -112,6 +112,7 @@ gitJsonPayloadTag = """
 }
 """
 
+
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
