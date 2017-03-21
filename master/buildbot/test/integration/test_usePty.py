@@ -18,46 +18,51 @@ from __future__ import print_function
 
 from twisted.internet import defer
 
+from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
 
 # This integration test creates a master and worker environment,
-# with one builder and a shellcommand step
-# meant to be a template for integration steps
+# with one builder and a shellcommand step, which use usePTY
 class ShellMaster(RunMasterBase):
 
+    @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
-    def test_shell(self):
-        yield self.setupConfig(masterConfig())
-        # if you don't need change, you can just remove this change, and useChange parameter
-        change = dict(branch="master",
-                      files=["foo.c"],
-                      author="me@foo.com",
-                      comments="good stuff",
-                      revision="HEAD",
-                      project="none"
-                      )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+    def test_usePTY(self):
+        yield self.setupConfig(masterConfig(usePTY=True))
+
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
+        res = yield self.checkBuildStepLogExist(build, "in a terminal", onlyStdout=True)
+        self.assertTrue(res)
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_NOusePTY(self):
+        yield self.setupConfig(masterConfig(usePTY=False))
+
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['buildid'], 1)
+        res = yield self.checkBuildStepLogExist(build, "not a terminal", onlyStdout=True)
+        self.assertTrue(res)
 
 
 # master configuration
-def masterConfig():
+def masterConfig(usePTY):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import steps, schedulers
 
     c['schedulers'] = [
-        schedulers.AnyBranchScheduler(
-            name="sched",
-            builderNames=["testy"]),
         schedulers.ForceScheduler(
             name="force",
             builderNames=["testy"])]
 
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command='echo hello'))
+    f.addStep(steps.ShellCommand(
+        command='if [ -t 1 ] ; then echo in a terminal; else echo "not a terminal"; fi',
+        usePTY=usePTY))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],

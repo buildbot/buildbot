@@ -232,11 +232,16 @@ class RunMasterBase(unittest.TestCase):
                     self.printLog(log, out)
 
     @defer.inlineCallbacks
-    def checkBuildStepLogExist(self, build, expectedLog):
+    def checkBuildStepLogExist(self, build, expectedLog, onlyStdout=False):
         yield self.enrichBuild(build, wantSteps=True, wantProperties=True, wantLogs=True)
         for step in build['steps']:
-            if expectedLog in step['state_string']:
-                defer.returnValue(True)
+            for log in step['logs']:
+                for line in log['contents']['content'].splitlines():
+                    if onlyStdout and line[0] != 'o':
+                        continue
+                    if expectedLog in line:
+                        defer.returnValue(True)
+        defer.returnValue(False)
 
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: %s *********" %

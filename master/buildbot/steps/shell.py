@@ -248,7 +248,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check for the usePTY flag
         if 'usePTY' in kwargs and kwargs['usePTY'] is not None:
-            if self.workerVersionIsOlderThan("svn", "2.7"):
+            if self.workerVersionIsOlderThan("shell", "2.7"):
                 warnings.append(
                     "NOTE: worker does not allow master to override usePTY\n")
                 del kwargs['usePTY']
