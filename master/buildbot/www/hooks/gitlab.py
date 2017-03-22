@@ -24,6 +24,9 @@ from dateutil.parser import parse as dateparse
 from twisted.python import log
 
 
+_HEADER_GITLAB_TOKEN = b'X-Gitlab-Token'
+
+
 def _process_change(payload, user, repo, repo_url, project, codebase=None):
     """
     Consumes the JSON as a python object and actually starts the build.
@@ -90,6 +93,11 @@ def getChanges(request, options=None):
         request
             the http request object
     """
+    expected_secret = isinstance(options, dict) and options.get('secret')
+    if expected_secret:
+        received_secret = request.getHeader(_HEADER_GITLAB_TOKEN)
+        if received_secret != expected_secret:
+            raise ValueError("Invalid secret")
     try:
         payload = json.load(request.content)
     except Exception as e:
