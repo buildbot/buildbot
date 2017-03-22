@@ -15,6 +15,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
+
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
@@ -30,6 +32,8 @@ class SecretsConfig(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "echo <foo>")
+        if os.name == "posix":
+            res &= yield self.checkBuildStepLogExist(build, "The password was there")
         self.assertTrue(res)
         # at this point, build contains all the log and steps info that is in the db
         # we check that our secret is not in there!
@@ -50,6 +54,7 @@ class SecretsConfig(RunMasterBase):
         # we check that our secret is not in there!
         self.assertNotIn("different_value", repr(build))
 
+
 # master configuration
 def masterConfig():
     c = {}
@@ -65,8 +70,12 @@ def masterConfig():
     c['secretsProviders'] = [FakeSecretStorage(
         secretdict={"foo": "bar", "something": "more"})]
     f = BuildFactory()
-    f.addStep(steps.ShellCommand(command=Interpolate('echo %(secrets:foo)s')))
-
+    if os.name == "posix":
+        f.addStep(steps.ShellCommand(command=Interpolate(
+            'echo %(secrets:foo)s | sed "s/bar/The password was there/"')))
+    else:
+        f.addStep(steps.ShellCommand(command=Interpolate(
+            'echo %(secrets:foo)s')))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],
