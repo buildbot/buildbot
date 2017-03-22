@@ -220,6 +220,7 @@ The available classes are described here:
 
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
+    :param serverURL: The server URL if this is a GitHub Enterprise server.
 
     This class implements an authentication with GitHub_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
@@ -236,6 +237,14 @@ The available classes are described here:
         c['www'] = {
             # ...
             'auth': util.GitHubAuth("clientid", "clientsecret"),
+        }
+
+    Example for Enterprise GitHub::
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.GitHubAuth("clientid", "clientsecret", "https://git.corp.mycompany.com"),
         }
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
