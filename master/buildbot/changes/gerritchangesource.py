@@ -32,6 +32,8 @@ from buildbot.changes.filter import ChangeFilter
 from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
 
+from buildbot.process.results import CANCELLED
+
 
 class GerritChangeFilter(ChangeFilter):
 
@@ -194,6 +196,17 @@ class GerritChangeSourceBase(base.ChangeSource):
             files=[u"unknown"],
             category=event["type"],
             properties=properties))
+    
+    def eventReceived_change_abandoned(self, properties, event):
+        for builder in self.master.botmaster.getBuilders():
+            for build in list(builder.building):
+                cid = build.getProperties().getProperty('event.change.id')
+                if cid is not None:
+                    if ( cid == event["change"]["id"] ):
+                        results = CANCELLED
+                        build.stopBuild("Raise Event : "+ event["type"],results)
+
+        return defer.succeed(None)
 
 
 class GerritChangeSource(GerritChangeSourceBase):
