@@ -65,6 +65,7 @@ class Properties(util.ComparableMixin):
         # persisted if a build is rebuilt
         self.runtime = set()
         self.build = None  # will be set by the Build when starting
+        self._used_secrets = {}
         if kwargs:
             self.update(kwargs, "TEST")
 
@@ -161,6 +162,20 @@ class Properties(util.ComparableMixin):
     def render(self, value):
         renderable = IRenderable(value)
         return defer.maybeDeferred(renderable.getRenderingFor, self)
+
+    # as the secrets are used in the renderable, they can pretty much arrive anywhere
+    # in the log of state strings
+    # so we have the renderable record here which secrets are used that we must remove
+    def useSecret(self, secret_value, secret_name):
+        self._used_secrets[secret_value] = "<" + secret_name + ">"
+
+    # This method shall then be called to remove secrets from any text that could be logged somewhere
+    # and that could contain secrets
+    def cleanupTextFromSecrets(self, text):
+        # Better be correct and inefficient than efficient and wrong
+        for k, v in self._used_secrets.items():
+            text = text.replace(k, v)
+        return text
 
 
 class PropertiesMixin(object):
@@ -427,17 +442,18 @@ class _SecretRenderer(object):
         self.secret_name = secret_name
 
     @defer.inlineCallbacks
-    def getRenderingFor(self, build):
-        secretsSrv = build.getBuild().master.namedServices.get("secrets")
+    def getRenderingFor(self, properties):
+        secretsSrv = properties.getBuild().master.namedServices.get("secrets")
         if not secretsSrv:
             error_message = "secrets service not started, need to configure" \
                             " SecretManager in c['services'] to use 'secrets'" \
                             "in Interpolate"
             raise KeyError(error_message)
-        credsservice = build.getBuild().master.namedServices['secrets']
+        credsservice = properties.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secret_name)
+        properties.useSecret(secret_detail.value, self.secret_name)
         defer.returnValue(secret_detail.value)
 
 

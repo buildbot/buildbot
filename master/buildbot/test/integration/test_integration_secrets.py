@@ -29,8 +29,11 @@ class SecretsConfig(RunMasterBase):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo bar")
+        res = yield self.checkBuildStepLogExist(build, "echo <foo>")
         self.assertTrue(res)
+        # at this point, build contains all the log and steps info that is in the db
+        # we check that our secret is not in there!
+        self.assertNotIn("bar", repr(build))
 
     @defer.inlineCallbacks
     def test_secretReconfig(self):
@@ -41,9 +44,11 @@ class SecretsConfig(RunMasterBase):
         yield self.master.reconfig()
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo different_value")
+        res = yield self.checkBuildStepLogExist(build, "echo <foo>")
         self.assertTrue(res)
-
+        # at this point, build contains all the log and steps info that is in the db
+        # we check that our secret is not in there!
+        self.assertNotIn("different_value", repr(build))
 
 # master configuration
 def masterConfig():
