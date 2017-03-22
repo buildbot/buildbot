@@ -469,6 +469,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
         if self.stepid is not None:
+            stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
             yield self.master.data.updates.setStepStateString(self.stepid,
                                                               stepResult)
 
