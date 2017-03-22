@@ -35,12 +35,12 @@ external tools, so the values are fixed.
 
 .. py:data:: RETRY
 
-    Value: 4; color: purple; a run that should be retried, usually due to a
+    Value: 5; color: purple; a run that should be retried, usually due to a
     worker disconnection.
 
 .. py:data:: CANCELLED
 
-    Value: 5; color: pink; a run that was cancelled by the user.
+    Value: 6; color: pink; a run that was cancelled by the user.
 
 .. py:data:: Results
 
