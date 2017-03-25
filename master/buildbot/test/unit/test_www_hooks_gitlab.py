@@ -26,6 +26,7 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
 
@@ -219,6 +220,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         d.addCallback(check_changes)
         return d
+
+    @defer.inlineCallbacks
+    def test_event_property(self):
+        self.request = FakeRequest(content=gitJsonPayload)
+        self.request.received_headers[_HEADER_EVENT] = "Push Hook"
+        self.request.uri = "/change_hook/gitlab"
+        self.request.method = "POST"
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change["properties"]["event"], "Push Hook")
 
 
 class TestChangeHookConfiguredWithSecret(unittest.TestCase):
