@@ -15,8 +15,10 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 from datetime import datetime
+from fnmatch import fnmatch
 
 from twisted.internet import defer
 
@@ -39,8 +41,24 @@ link_urls = {
 }
 
 
+class PullRequestMixin(object):
+    def extractProperties(self, pr_info):
+        def flatten(properties, base, info_dict):
+            for k, v in iteritems(info_dict):
+                name = ".".join([base, k])
+                if isinstance(v, dict):
+                    flatten(properties, name, v)
+                elif any([fnmatch(name, expr)
+                          for expr in self.github_property_whitelist]):
+                    properties[name] = v
+
+        properties = {}
+        flatten(properties, "github", pr_info)
+        return properties
+
+
 class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
-                              StateMixin):
+                              StateMixin, PullRequestMixin):
     compare_attrs = ("owner", "repo", "token", "branches", "pollInterval",
                      "category", "project", "pollAtLaunch", "name")
     db_class_name = 'GitHubPullrequestPoller'
@@ -62,6 +80,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     token=None,
                     magic_link=False,
                     repository_type="https",
+                    github_property_whitelist=None,
                     **kwargs):
         if repository_type not in ["https", "svn", "git", "ssh"]:
             config.error(
@@ -83,6 +102,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         pollAtLaunch=False,
                         magic_link=False,
                         repository_type="https",
+                        github_property_whitelist=None,
                         **kwargs):
         yield base.ReconfigurablePollingChangeSource.reconfigService(
             self, name=self.name, **kwargs)
@@ -104,10 +124,14 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         self.repo = repo
         self.branches = branches
         self.project = project
+        self.github_property_whitelist = github_property_whitelist
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
         self.repository_type = link_urls[repository_type]
         self.magic_link = magic_link
+
+        if github_property_whitelist is None:
+            self.github_property_whitelist = []
 
         if callable(pullrequest_filter):
             self.pullrequest_filter = pullrequest_filter
@@ -122,6 +146,13 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         return "GitHubPullrequestPoller watching the "\
             "GitHub repository %s/%s" % (
                 self.owner, self.repo)
+
+    @defer.inlineCallbacks
+    def _getPullInformation(self, pull_number):
+        result = yield self._http.get('/'.join(
+        ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
+        my_json = yield result.json()
+        defer.returnValue(my_json)
 
     @defer.inlineCallbacks
     def _getPulls(self):
@@ -189,6 +220,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
             current = yield self._getCurrentRev(prnumber)
             if not current or current[0:12] != revision[0:12]:
                 # Access title, repo, html link, and comments
+                pr = yield self._getPullInformation(prnumber)
                 title = pr['title']
                 if self.magic_link:
                     branch = 'refs/pull/{:d}/merge'.format(prnumber)
@@ -223,6 +255,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 if email is not None and email is not "null":
                     author += " <" + str(email) + ">"
 
+                properties = self.extractProperties(pr)
+
                 # emit the change
                 yield self.master.data.updates.addChange(
                     author=ascii2unicode(author),
@@ -236,6 +270,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     project=self.project,
                     repository=ascii2unicode(repo),
                     files=files,
+                    properties=properties,
                     src=u'git')
 
     @defer.inlineCallbacks
