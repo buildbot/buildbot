@@ -237,8 +237,6 @@ You can restrict which pollers the webhook has access to using the ``allowed`` o
 GitLab hook
 +++++++++++
 
-The GitLab hook is as simple as GitHub one and it also takes no options.
-
 ::
 
     c['www'] = dict(...,
@@ -248,6 +246,12 @@ The GitLab hook is as simple as GitHub one and it also takes no options.
             },
         },
     )
+
+
+The GitLab hook has the following parameters:
+
+``secret`` (default `None`)
+    Secret token to use to validate payloads.
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/gitlab`` relative to the root of the web status.
 For example, it the grid URL is ``http://builds.example.com/bbot/grid``, then point GitLab to ``http://builds.example.com/change_hook/gitlab``.
