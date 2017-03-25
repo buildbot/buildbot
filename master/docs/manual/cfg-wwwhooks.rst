@@ -92,7 +92,7 @@ GitHub hook
 The GitHub hook has the following parameters:
 
 ``secret`` (default `None`)
-    Secret token to use to validate payloads
+    Secret token to use to validate payloads.
 ``strict`` (default `False`)
     If the hook must be strict regarding valid payloads.
     If the value is `False` (default), the signature will only be checked if a secret is specified and a signature was supplied with the payload.
@@ -115,7 +115,7 @@ The GitHub hook has the following parameters:
                 # Do some magic here
                 return [], 'git'
 
-The simples way to use GitHub hook is as follows:
+The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
 
@@ -173,7 +173,7 @@ Patches are welcome to implement: https://developer.github.com/webhooks/securing
 BitBucket hook
 ++++++++++++++
 
-The BitBucket hook is as simple as GitHub one and it also takes no options.
+The BitBucket hook is as simple as GitHub one and it takes no options.
 
 .. code-block:: python
 
