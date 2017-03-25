@@ -448,6 +448,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["revlink"],
                          "http://github.com/defunkt/github/commit/"
                          "de8251ff97ee194a289832576287d6f8ad74e3d0")
+        self.assertEqual(change["properties"]["event"], "push")
 
     def test_git_with_change_encoded(self):
         self._check_git_with_change([gitJsonPayload])
@@ -569,6 +570,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
+        self.assertEqual(change["properties"]["event"], "pull_request")
 
     def test_git_with_pull_encoded(self):
         self._check_git_with_pull([gitJsonPayloadPullRequest])
