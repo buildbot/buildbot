@@ -23,11 +23,14 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
 
+_HEADER_EVENT = b'X-Gitlab-Event'
 _HEADER_GITLAB_TOKEN = b'X-Gitlab-Token'
 
 
-def _process_change(payload, user, repo, repo_url, project, codebase=None):
+def _process_change(payload, user, repo, repo_url, project, event,
+                    codebase=None):
     """
     Consumes the JSON as a python object and actually starts the build.
 
@@ -74,7 +77,10 @@ def _process_change(payload, user, repo, repo_url, project, codebase=None):
             'branch': branch,
             'revlink': commit['url'],
             'repository': repo_url,
-            'project': project
+            'project': project,
+            'properties': {
+                'event': event,
+            },
         }
 
         if codebase is not None:
@@ -102,6 +108,8 @@ def getChanges(request, options=None):
         payload = json.load(request.content)
     except Exception as e:
         raise ValueError("Error loading JSON: " + str(e))
+    event_type = request.getHeader(_HEADER_EVENT)
+    event_type = bytes2NativeString(event_type)
     user = payload['user_name']
     repo = payload['repository']['name']
     repo_url = payload['repository']['url']
@@ -112,6 +120,6 @@ def getChanges(request, options=None):
     # This field is unused:
     # private = payload['repository']['private']
     changes = _process_change(
-        payload, user, repo, repo_url, project, codebase=codebase)
+        payload, user, repo, repo_url, project, event_type, codebase=codebase)
     log.msg("Received %s changes from gitlab" % len(changes))
     return (changes, 'git')
