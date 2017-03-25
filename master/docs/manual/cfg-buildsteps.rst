@@ -2344,6 +2344,15 @@ LogRenderable
 This build step takes content which can be renderable and logs it in a pretty-printed format.
 It can be useful for debugging properties during a build.
 
+.. bb:step:: Assert
+
+Assert
+++++++
+
+.. py:class:: buildbot.steps.master.Assert
+
+This build step takes a Renderable or constant passed in as first argument. It will test if the expression evaluates to ``True`` and succeed the step or fail the step otherwise.
+
 .. index:: Properties; from steps
 
 .. _Setting-Properties:
