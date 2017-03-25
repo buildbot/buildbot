@@ -418,6 +418,133 @@ The default ``ctx`` for the missing worker email is made of:
 
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
 
+
+.. bb:reporter:: Pushover
+
+.. index:: Pushover
+
+Pushover Notifications
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.pushover.PushoverNotifier
+
+Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
+
+To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and API token.
+
+The following simple example will send an email upon the completion of each build.
+The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaces with proper ones obtained from the Pushover website for your application.
+
+::
+
+    from buildbot.plugins import reporters
+    pn = reporters.PushoverNotifier(user_key="1234", api_token='abcd')
+    c['services'].append(pn)
+
+
+``PushoverNotifier`` supports ``messageFormatter`` parameter, which allows to customize the notification text. Contrary to the mail notifier, HTML is not supported in its template.
+
+This reporter requires python-pushover_ package to work.
+
+The following parameters are accepted by this class:
+
+``user_key``
+    The user key from the Pushover website. It is used to identify the notification receipent.
+
+``api_token``
+    API token for a custom application from the Pushover website.
+
+``subject``
+    (string).
+    A string to be used as the subject line of the message.
+    ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
+
+``mode``
+    Mode is a list of strings; however there are two strings which can be used as shortcuts instead of the full lists.
+    The possible shortcuts are:
+
+    ``all``
+        Always send mail about builds.
+        Equivalent to (``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``).
+
+    ``warnings``
+        Equivalent to (``warnings``, ``failing``).
+
+    (list of strings).
+    A combination of:
+
+    ``cancelled``
+        Send mail about builds which were cancelled.
+
+    ``change``
+        Send mail about builds which change status.
+
+    ``failing``
+        Send mail about builds which fail.
+
+    ``passing``
+        Send mail about builds which succeed.
+
+    ``problem``
+        Send mail about a build which failed when the previous build has passed.
+
+    ``warnings``
+        Send mail about builds which generate warnings.
+
+    ``exception``
+        Send mail about builds which generate exceptions.
+
+    Defaults to (``failing``, ``passing``, ``warnings``).
+
+``builders``
+    (list of strings).
+    A list of builder names for which mail should be sent.
+    Defaults to ``None`` (send mail for all builds).
+    Use either builders or tags, but not both.
+
+``tags``
+    (list of strings).
+    A list of tag names to serve status information for.
+    Defaults to ``None`` (all tags).
+    Use either builders or tags, but not both.
+
+``schedulers``
+    (list of strings).
+    A list of scheduler names to serve status information for.
+    Defaults to ``None`` (all schedulers).
+
+``branches``
+    (list of strings).
+    A list of branch names to serve status information for.
+    Defaults to ``None`` (all branches).
+
+``buildSetSummary``
+    (boolean).
+    If ``True``, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.
+    Defaults to ``False``.
+
+``messageFormatter``
+    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
+
+``priorities``
+    Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
+
+``other_args``
+    Other ``send_message`` arguments. They are described in the ``python-pushover`` documentation.
+
+..
+   ``messageFormatterMissingWorker``
+       This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
+       This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+       Templates can either be given inline (as string), or read from the filesystem.
+
+.. _Pushover: https://pushover.net/
+
+.. _python-pushover: https://pypi.python.org/pypi/python-pushover/
+
+
 .. bb:reporter:: IRC
 
 .. index:: IRC

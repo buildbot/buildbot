@@ -315,6 +315,7 @@ setup_args = {
         ]),
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
+            ('buildbot.reporters.pushover', ['PushoverNotifier']),
             ('buildbot.reporters.message', ['MessageFormatter']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
             ('buildbot.reporters.gerrit_verify_status',
