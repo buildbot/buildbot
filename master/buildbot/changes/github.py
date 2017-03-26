@@ -105,6 +105,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         self.branches = branches
         self.project = project
         self.pollInterval = pollInterval
+        self.pollAtLaunch = pollAtLaunch
         self.repository_type = link_urls[repository_type]
         self.magic_link = magic_link
 
@@ -219,7 +220,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         failures[0].raiseException()
                 [files, email] = [r[1] for r in results]
 
-                if email is not None or email is not "null":
+                if email is not None and email is not "null":
                     author += " <" + str(email) + ">"
 
                 # emit the change

@@ -77,6 +77,14 @@ gitJsonUserPage = """
   "email": "defunkt@defunkt.null"
 }
 """
+
+gitJsonUserPage_missingEmail = """
+{
+  "login": "defunkt",
+  "email": null
+}"""
+
+
 _CT_ENCODED = 'application/x-www-form-urlencoded'
 _CT_JSON = 'application/json'
 
@@ -277,4 +285,34 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['branch'], 'refs/pull/4242/merge')
         self.assertEqual(change['repository'],
                          'https://github.com/buildbot/buildbot.git')
+        self.assertEqual(change['files'], ['README.md'])
+
+    @defer.inlineCallbacks
+    def test_AuthormissingEmail(self):
+        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls',
+            content_json=json.loads(gitJsonPayloadPullRequest))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
+        self._http.expect(
+            method='get',
+            ep='/users/defunkt',
+            content_json=json.loads(gitJsonUserPage_missingEmail))
+        yield self.startChangeSource()
+        yield self.changesource.poll()
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['author'], 'defunkt')
+        self.assertEqual(change['revision'],
+                         '4c9a7f03e04e551a5e012064b581577f949dd3a4')
+        self.assertEqual(change['revlink'],
+                         'https://github.com/buildbot/buildbot/pull/4242')
+        self.assertEqual(change['branch'], 'defunkt/change')
+        self.assertEqual(change['repository'],
+                         'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
