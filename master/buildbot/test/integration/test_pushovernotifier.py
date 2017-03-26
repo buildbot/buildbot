@@ -18,45 +18,28 @@ from __future__ import print_function
 
 import sys
 
-from types import ModuleType
-
 from twisted.internet import defer
 
-
-class Client(object):
-    deferred = None
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-    def send_message(self, message, **kwargs):
-        result = {'self': self, 'message': message}
-        result.update(kwargs)
-        # call deferred to know when the notification has been set
-        if Client.deferred is not None:
-            Client.deferred.callback(result)
-
-        return result
-
-pushover = ModuleType('pushover')
-pushover.Client = Client
-sys.modules['pushover'] = pushover
-
+from buildbot.test.util.integration import RunMasterBase
 
 from buildbot.reporters.pushover import PushoverNotifier
-from buildbot.test.util.integration import RunMasterBase
+from buildbot.plugins import reporters
 
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
 class PushoverMaster(RunMasterBase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.notificationDeferred = defer.Deferred()
-        Client.deferred = self.notificationDeferred
+        self.notification = defer.Deferred()
+        def sendMessage(_, params):
+            self.notification.callback(params)
+        self.patch(PushoverNotifier, "sendMessage", sendMessage)
+        yield self.setupConfig(masterConfig())
 
     @defer.inlineCallbacks
-    def doTest(self):
-
+    def doTest(self, what):
         change = dict(branch="master",
                       files=["foo.c"],
                       author="author@foo.com",
@@ -65,25 +48,26 @@ class PushoverMaster(RunMasterBase):
                       project="none"
                       )
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        params = yield self.notification
         self.assertEqual(build['buildid'], 1)
-        n = yield self.notificationDeferred
-        self.assertEqual(n['self'].args[0], "1234")
-        self.assertEqual(n['self'].kwargs['api_token'], "abcd")
-        self.assertIn('message', n)
-        self.assertIn('title', n)
+        self.assertEqual(params, {'title': "Buildbot success in Buildbot on {}".format(what),
+                                  'message': u"This is a message."})
 
     @defer.inlineCallbacks
     def test_notifiy_for_build(self):
-        yield self.setupConfig(masterConfig())
-        yield self.doTest()
+        self.master.config.services = [
+            reporters.PushoverNotifier('1234', 'abcd', mode="all", 
+                messageFormatter=reporters.MessageFormatter(template='This is a message.'))]
+        yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
+        yield self.doTest('testy')
 
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
-        yield self.setupConfig(masterConfig())
         self.master.config.services = [
-            PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True)]
+            reporters.PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True, 
+                messageFormatter=reporters.MessageFormatter(template='This is a message.'))]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        yield self.doTest()
+        yield self.doTest('whole buildset')
 
 # master configuration
 
@@ -92,7 +76,7 @@ def masterConfig():
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import steps, schedulers, reporters
+    from buildbot.plugins import steps, schedulers
     c['schedulers'] = [
         schedulers.AnyBranchScheduler(
             name="sched",
@@ -104,5 +88,4 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       factory=f)]
-    c['services'] = [reporters.PushoverNotifier('1234', 'abcd', mode="all")]
     return c

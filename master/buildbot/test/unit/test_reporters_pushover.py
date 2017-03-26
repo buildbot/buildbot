@@ -21,22 +21,6 @@ import copy
 import sys
 
 from mock import Mock
-from types import ModuleType
-
-
-class Client(object):
-    def __init__(self, *args, **kwargs):
-        self.args = args
-        self.kwargs = kwargs
-    def send_message(self, message, **kwargs):
-        result = {'self': self, 'message': message}
-        result.update(kwargs)
-        return result
-
-pushover = ModuleType('pushover')
-pushover.Client = Client
-sys.modules['pushover'] = pushover
-
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -53,6 +37,7 @@ from buildbot.reporters import utils
 from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
@@ -66,6 +51,8 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
+        self._http = self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://api.pushover.net'))
 
     @defer.inlineCallbacks
     def setupBuildResults(self, results, wantPreviousBuild=False):
@@ -130,12 +117,16 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_SendMessage(self):
-        pn = yield self.setupPushoverNotifier(user_key="1234", api_token="abcd", other_args={'sound': "silent"})
-        n = yield pn.sendMessage(message="Test")
-        self.assertEqual(n['self'].args[0], "1234")
-        self.assertEqual(n['self'].kwargs['api_token'], "abcd")
-        self.assertEqual(n['message'], "Test")
-        self.assertEqual(n['sound'], "silent")
+        pn = yield self.setupPushoverNotifier(user_key="1234", api_token="abcd",
+                                              other_params={'sound': "silent"})
+        self._http.expect("post", "/1/messages.json",
+                          params={'user': "1234", 'token': "abcd",
+                                  'sound': "silent", 'message': "Test"},
+                          content_json={'status': 1, 'request': '98765'})
+        n = yield pn.sendMessage({'message': "Test"})
+        j = yield n.json()
+        self.assertEqual(j['status'], 1)
+        self.assertEqual(j['request'], '98765')
 
     def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
         self.assertRaises(config.ConfigErrors,
@@ -161,7 +152,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
                                   dict(bsid=98))
 
         pn.buildMessage.assert_called_with(
-            "(whole buildset)",
+            "whole buildset",
             builds, SUCCESS)
         self.assertEqual(pn.buildMessage.call_count, 1)
 
@@ -378,21 +369,21 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
             ('change',), 'mybldr', build['buildset'], build, self.master,
             None, [u'me@foo'])
 
-        pn.sendMessage.assert_called_with(message='body', title='subject', priority=1)
+        pn.sendMessage.assert_called_with(dict(message='body', title='subject', priority=1))
         self.assertEqual(pn.sendMessage.call_count, 1)
 
-    @defer.inlineCallbacks
-    def x_test_workerMissingSendMessage(self):
+    #@defer.inlineCallbacks
+    #def test_workerMissingSendMessage(self):
 
-        pn = yield self.setupPushoverNotifier('1234', 'abcd', priorities={'worker_missing': 2})
+        #pn = yield self.setupPushoverNotifier('1234', 'abcd', priorities={'worker_missing': 2})
 
-        pn.sendMessage = Mock()
-        yield pn.workerMissing('worker.98.complete',
-                               dict(name='myworker',
-                                    workerinfo=dict(admin="myadmin"),
-                                    last_connection="yesterday"))
+        #pn.sendMessage = Mock()
+        #yield pn.workerMissing('worker.98.complete',
+                               #dict(name='myworker',
+                                    #workerinfo=dict(admin="myadmin"),
+                                    #last_connection="yesterday"))
 
-        message = pn.sendMessage.call_args[0]['message']
-        priority = pn.sendMessage.call_args[0]['priority']
-        self.assertEqual(priority, 2)
-        self.assertIn("has noticed that the worker named myworker went away", message)
+        #message = pn.sendMessage.call_args[0]['message']
+        #priority = pn.sendMessage.call_args[0]['priority']
+        #self.assertEqual(priority, 2)
+        #self.assertIn("has noticed that the worker named myworker went away", message)

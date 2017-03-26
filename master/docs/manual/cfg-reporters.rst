@@ -444,8 +444,6 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
 
 ``PushoverNotifier`` supports ``messageFormatter`` parameter, which allows to customize the notification text. Contrary to the mail notifier, HTML is not supported in its template.
 
-This reporter requires python-pushover_ package to work.
-
 The following parameters are accepted by this class:
 
 ``user_key``
@@ -531,8 +529,8 @@ The following parameters are accepted by this class:
 ``priorities``
     Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
 
-``other_args``
-    Other ``send_message`` arguments. They are described in the ``python-pushover`` documentation.
+``other_params``
+    Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
 
 ..
    ``messageFormatterMissingWorker``
@@ -541,8 +539,6 @@ The following parameters are accepted by this class:
        Templates can either be given inline (as string), or read from the filesystem.
 
 .. _Pushover: https://pushover.net/
-
-.. _python-pushover: https://pypi.python.org/pypi/python-pushover/
 
 
 .. bb:reporter:: IRC
