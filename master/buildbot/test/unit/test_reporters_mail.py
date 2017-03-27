@@ -19,7 +19,6 @@ from __future__ import print_function
 import base64
 import copy
 import sys
-
 from email import charset
 
 from mock import Mock
