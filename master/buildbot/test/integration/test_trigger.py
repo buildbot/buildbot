@@ -22,12 +22,11 @@ from twisted.internet import defer
 
 from buildbot.test.util.integration import RunMasterBase
 
-
 # This integration test creates a master and worker environment,
 # with two builders and a trigger step linking them
 
 expectedOutputRegex = \
-r"""\*\*\* BUILD 1 \*\*\* ==> finished \(success\)
+    r"""\*\*\* BUILD 1 \*\*\* ==> finished \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
     \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)

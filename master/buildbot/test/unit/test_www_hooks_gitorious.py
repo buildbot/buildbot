@@ -76,8 +76,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange(self):
         changeDict = {"payload": [gitJsonPayload]}
         self.request = FakeRequest(changeDict)
-        self.request.uri = "/change_hook/gitorious"
-        self.request.method = "POST"
+        self.request.uri = b"/change_hook/gitorious"
+        self.request.method = b"POST"
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -107,8 +107,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def testGitWithNoJson(self):
         self.request = FakeRequest()
-        self.request.uri = "/change_hook/gitorious"
-        self.request.method = "GET"
+        self.request.uri = b"/change_hook/gitorious"
+        self.request.method = b"GET"
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
