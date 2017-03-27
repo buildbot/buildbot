@@ -170,6 +170,41 @@ class GitHubEventHandler(object):
             len(changes), number))
         return changes, 'git'
 
+    def get_changes(self, category, payload):
+        if category == 'tag':
+            branch = payload['ref']
+        elif category == 'release':
+            branch = payload['release']['tag_name']
+        else:
+            return
+        changes = []
+        change = {
+            'when_timestamp': dateparse(payload['repository']['created_at']),
+            'repository': payload['repository']['html_url'],
+            'project': payload['repository']['full_name'],
+            'branch': branch, 'revision': branch,
+            'category': category,
+            'author': payload['sender']['login'],
+            'comments': 'Created %s' % branch,
+            'properties': {
+                'event': category,
+            },
+        }
+        if category == 'release':
+
+            change['comments'] = 'Release created %s' % \
+                payload['release']['name']
+
+        changes.append(change)
+
+        return changes
+
+    def handle_release(self, payload):
+        return self.get_changes('release', payload), 'git'
+
+    def handle_create(self, payload):
+        return self.get_changes(payload['ref_type'], payload), 'git'
+
     def _process_change(self, payload, user, repo, repo_url, project, event):
         """
         Consumes the JSON as a python object and actually starts the build.
