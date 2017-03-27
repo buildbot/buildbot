@@ -25,15 +25,17 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.process.results import CANCELLED, EXCEPTION, \
-                                     FAILURE, SUCCESS, WARNINGS
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter \
-                                        as DefaultMessageFormatter
+from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.util import service, httpclientservice
-
+from buildbot.util import httpclientservice
+from buildbot.util import service
 
 ENCODING = 'utf8'
 
@@ -65,7 +67,7 @@ class PushoverNotifier(service.BuildbotService):
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     name=None, schedulers=None, branches=None,
                     priorities=None, otherParams=None,
-                    watchedWorkers = [], messageFormatterMissingWorker=None):
+                    watchedWorkers=None, messageFormatterMissingWorker=None):
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
@@ -112,7 +114,7 @@ class PushoverNotifier(service.BuildbotService):
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         name=None, schedulers=None, branches=None,
                         priorities=None, otherParams=None,
-                        watchedWorkers = [], messageFormatterMissingWorker=None
+                        watchedWorkers=None, messageFormatterMissingWorker=None
                        ):
 
         self.user_key = user_key
@@ -144,7 +146,7 @@ class PushoverNotifier(service.BuildbotService):
         else:
             self.priorities = priorities
         if watchedWorkers is None:
-            self.watchedWorkers = {}
+            self.watchedWorkers = []
         else:
             self.watchedWorkers = watchedWorkers
         if otherParams is None:

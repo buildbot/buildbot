@@ -35,9 +35,9 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import utils
 from buildbot.reporters.pushover import PushoverNotifier
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
