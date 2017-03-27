@@ -386,8 +386,8 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 
     request = FakeRequest()
 
-    request.uri = "/change_hook/github"
-    request.method = "GET"
+    request.uri = b"/change_hook/github"
+    request.method = b"GET"
     request.received_headers = {
         _HEADER_EVENT: event
     }
