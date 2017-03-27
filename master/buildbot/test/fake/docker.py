@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+version = "1.10.6"
+
 
 class Client(object):
     latest = None
@@ -24,6 +26,7 @@ class Client(object):
         Client.latest = self
         self.call_args_create_container = []
         self.call_args_create_host_config = []
+        self.called_class_name = None
         self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
         self._containers = {}
 
@@ -61,6 +64,7 @@ class Client(object):
 
     def create_container(self, image, *args, **kwargs):
         self.call_args_create_container.append(kwargs)
+        self.called_class_name = self.__class__.__name__
         name = kwargs.get('name', None)
         if 'buggy' in image:
             raise Exception('we could not create this container')
@@ -82,6 +86,7 @@ class Client(object):
 
     def remove_container(self, id, **kwargs):
         del self._containers[id]
+
 
 class APIClient(Client):
     pass
