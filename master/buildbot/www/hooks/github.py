@@ -25,6 +25,7 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
+from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 
@@ -40,12 +41,15 @@ _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 
-class GitHubEventHandler(object):
+class GitHubEventHandler(PullRequestMixin):
 
-    def __init__(self, secret, strict, codebase=None):
+    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
+        self.github_property_whitelist = github_property_whitelist
+        if github_property_whitelist is None:
+            self.github_property_whitelist = []
 
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
@@ -133,6 +137,8 @@ class GitHubEventHandler(object):
         number = payload['number']
         refname = 'refs/pull/{}/merge'.format(number)
         commits = payload['pull_request']['commits']
+        title = payload['pull_request']['title']
+        comments = payload['pull_request']['body']
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
@@ -141,6 +147,9 @@ class GitHubEventHandler(object):
         if action not in ('opened', 'reopened', 'synchronize'):
             log.msg("GitHub PR #{} {}, ignoring".format(number, action))
             return changes, 'git'
+
+        properties = self.extractProperties(payload['pull_request'])
+        properties.update({'event': event})
 
         change = {
             'revision': payload['pull_request']['head']['sha'],
@@ -152,11 +161,9 @@ class GitHubEventHandler(object):
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],
-            'comments': 'GitHub Pull Request #{} ({} commit{})'.format(
-                number, commits, 's' if commits != 1 else ''),
-            'properties': {
-                'event': event,
-            },
+            'comments': 'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
+                number, commits, 's' if commits != 1 else '', title, comments),
+            'properties': properties,
         }
 
         if callable(self._codebase):
@@ -244,5 +251,6 @@ def getChanges(request, options=None):
 
     handler = klass(options.get('secret', None),
                     options.get('strict', False),
-                    options.get('codebase', None))
+                    options.get('codebase', None),
+                    options.get('github_property_whitelist', None))
     return handler.process(request)

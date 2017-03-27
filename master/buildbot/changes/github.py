@@ -60,7 +60,7 @@ class PullRequestMixin(object):
 class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                               StateMixin, PullRequestMixin):
     compare_attrs = ("owner", "repo", "token", "branches", "pollInterval",
-                     "category", "project", "pollAtLaunch", "name")
+                     "category", "pollAtLaunch", "name")
     db_class_name = 'GitHubPullrequestPoller'
 
     def __init__(self, owner, repo, **kwargs):
@@ -73,9 +73,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     owner,
                     repo,
                     branches=None,
-                    category=None,
+                    category='pull',
                     baseURL=None,
-                    project='',
                     pullrequest_filter=True,
                     token=None,
                     magic_link=False,
@@ -96,7 +95,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         pollInterval=10 * 60,
                         category=None,
                         baseURL=None,
-                        project='',
                         pullrequest_filter=True,
                         token=None,
                         pollAtLaunch=False,
@@ -123,7 +121,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         self.owner = owner
         self.repo = repo
         self.branches = branches
-        self.project = project
         self.github_property_whitelist = github_property_whitelist
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
@@ -140,7 +137,6 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
         self.category = category if callable(category) else ascii2unicode(
             category)
-        self.project = ascii2unicode(project)
 
     def describe(self):
         return "GitHubPullrequestPoller watching the "\
@@ -150,7 +146,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):
         result = yield self._http.get('/'.join(
-        ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
+            ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
         my_json = yield result.json()
         defer.returnValue(my_json)
 
@@ -236,6 +232,8 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                 yield self._setCurrentRev(prnumber, revision)
 
                 author = pr['user']['login']
+                project = pr['base']['repo']['full_name']
+                commits = pr['commits']
 
                 dl = defer.DeferredList(
                     [self._getFiles(prnumber), self._getEmail(author)],
@@ -262,12 +260,13 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     author=ascii2unicode(author),
                     revision=ascii2unicode(revision),
                     revlink=ascii2unicode(revlink),
-                    comments=u'pull-request #%d: %s\n%s\n%s' %
-                    (prnumber, title, revlink, comments),
+                    comments=u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
+                    format(prnumber, commits, 's'
+                           if commits > 0 else '', title, comments),
                     when_timestamp=datetime2epoch(updated),
                     branch=ascii2unicode(branch),
                     category=self.category,
-                    project=self.project,
+                    project=project,
                     repository=ascii2unicode(repo),
                     files=files,
                     properties=properties,

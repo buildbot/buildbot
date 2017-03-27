@@ -67,6 +67,7 @@ gitJsonPayloadSinglePullrequest = """
     }
   },
   "merged": false,
+  "commits": 42,
   "mergeable": true,
   "mergeable_state": "clean",
   "merged_by": null
