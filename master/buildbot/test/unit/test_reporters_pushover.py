@@ -387,4 +387,4 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         message = pn.sendMessage.call_args[0][0]['message']
         priority = pn.sendMessage.call_args[0][0]['priority']
         self.assertEqual(priority, 2)
-        self.assertIn("has noticed that the worker named myworker went away", message)
+        self.assertIn(b"has noticed that the worker named myworker went away", message)
