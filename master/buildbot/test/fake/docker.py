@@ -82,3 +82,6 @@ class Client(object):
 
     def remove_container(self, id, **kwargs):
         del self._containers[id]
+
+class APIClient(Client):
+    pass

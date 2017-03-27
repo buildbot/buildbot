@@ -201,7 +201,10 @@ class DockerLatentWorker(DockerBaseWorker):
         return False
 
     def _thd_start_instance(self, image, dockerfile, volumes):
-        docker_client = client.Client(**self.client_args)
+        if docker.version[0] == '1':
+            docker_client = client.Client(**self.client_args)
+        else:
+            docker_client = client.APIClient(**self.client_args)
         # cleanup the old instances
         instances = docker_client.containers(
             all=1,
@@ -277,7 +280,10 @@ class DockerLatentWorker(DockerBaseWorker):
         return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
     def _thd_stop_instance(self, instance, fast):
-        docker_client = client.Client(**self.client_args)
+        if docker.version[0] == '1':
+            docker_client = client.Client(**self.client_args)
+        else:
+            docker_client = client.APIClient(**self.client_args)
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
         if not fast:
