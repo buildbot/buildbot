@@ -529,14 +529,16 @@ The following parameters are accepted by this class:
 ``priorities``
     Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
 
-``other_params``
+``otherParams``
     Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
 
-..
-   ``messageFormatterMissingWorker``
-       This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
-       This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
-       Templates can either be given inline (as string), or read from the filesystem.
+``watchedWorkers``
+    This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
+    
+``messageFormatterMissingWorker``
+    This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
+    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
+    Templates can either be given inline (as string), or read from the filesystem.
 
 .. _Pushover: https://pushover.net/
 

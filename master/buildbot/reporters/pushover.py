@@ -64,7 +64,8 @@ class PushoverNotifier(service.BuildbotService):
                     buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     name=None, schedulers=None, branches=None,
-                    priorities=None, other_params=None):
+                    priorities=None, otherParams=None,
+                    watchedWorkers = [], messageFormatterMissingWorker=None):
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
@@ -88,8 +89,8 @@ class PushoverNotifier(service.BuildbotService):
             if branches is not None:
                 self.name += "_branches_" + "+".join(branches)
 
-        if other_params is not None and set(other_params.keys()) - VALID_PARAMS:
-            config.error("other_params can be only 'sound', 'callback', 'timestamp', "
+        if otherParams is not None and set(otherParams.keys()) - VALID_PARAMS:
+            config.error("otherParams can be only 'sound', 'callback', 'timestamp', "
                          "'url', 'url_title', 'device', "
                          "'retry', 'expire', or 'html'")
 
@@ -110,8 +111,8 @@ class PushoverNotifier(service.BuildbotService):
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         name=None, schedulers=None, branches=None,
-                        priorities=None, other_params=None,
-                        #messageFormatterMissingWorker=None
+                        priorities=None, otherParams=None,
+                        watchedWorkers = [], messageFormatterMissingWorker=None
                        ):
 
         self.user_key = user_key
@@ -123,20 +124,33 @@ class PushoverNotifier(service.BuildbotService):
         self.branches = branches
         self.subject = subject
         if messageFormatter is None:
-            messageFormatter = DefaultMessageFormatter()
+            messageFormatter = DefaultMessageFormatter(template_type='html',
+                template='The Buildbot has detected a <a href="{{ build_url }}">'
+                         '{{ status_detected }}</a> of <i>{{ buildername }}</i> '
+                         'while building {{ projects }} on {{ workername }}.'
+            )
         self.messageFormatter = messageFormatter
-        #if messageFormatterMissingWorker is None:
-            #messageFormatterMissingWorker = MessageFormatterMissingWorker()
-        #self.messageFormatterMissingWorker = messageFormatterMissingWorker
+        if messageFormatterMissingWorker is None:
+            messageFormatterMissingWorker = MessageFormatterMissingWorker(
+                template="The Buildbot working for '{{buildbot_title}}' "
+                         "has noticed that the worker named {{worker.name}} "
+                         "went away.\n\n"
+                         "It last disconnected at {{worker.last_connection}}."
+                )
+        self.messageFormatterMissingWorker = messageFormatterMissingWorker
         self.buildSetSummary = buildSetSummary
         if priorities is None:
             self.priorities = {}
         else:
             self.priorities = priorities
-        if other_params is None:
-            self.other_params = {}
+        if watchedWorkers is None:
+            self.watchedWorkers = {}
         else:
-            self.other_params = other_params
+            self.watchedWorkers = watchedWorkers
+        if otherParams is None:
+            self.otherParams = {}
+        else:
+            self.otherParams = otherParams
         self._buildset_complete_consumer = None
         self.watched = []
 
@@ -153,9 +167,9 @@ class PushoverNotifier(service.BuildbotService):
         self._buildCompleteConsumer = yield startConsuming(
             self.buildComplete,
             ('builds', None, 'finished'))
-        #self._workerMissingConsumer = yield startConsuming(
-            #self.workerMissing,
-            #('worker', None, 'missing'))
+        self._workerMissingConsumer = yield startConsuming(
+            self.workerMissing,
+            ('worker', None, 'missing'))
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -166,9 +180,9 @@ class PushoverNotifier(service.BuildbotService):
         if self._buildCompleteConsumer is not None:
             yield self._buildCompleteConsumer.stopConsuming()
             self._buildCompleteConsumer = None
-        #if self._workerMissingConsumer is not None:
-            #yield self._workerMissingConsumer.stopConsuming()
-            #self._workerMissingConsumer = None
+        if self._workerMissingConsumer is not None:
+            yield self._workerMissingConsumer.stopConsuming()
+            self._workerMissingConsumer = None
 
     def wantPreviousBuild(self):
         return "change" in self.mode or "problem" in self.mode
@@ -290,24 +304,25 @@ class PushoverNotifier(service.BuildbotService):
     def sendMessage(self, params):
         twlog.msg("sending pushover notification")
         params.update(dict(user=self.user_key, token=self.api_token))
-        params.update(self.other_params)
+        params.update(self.otherParams)
         return self._http.post('/1/messages.json', params=params)
 
-    #@defer.inlineCallbacks
-    #def workerMissing(self, key, worker):
-        #if not worker['notify']:
-            #return
-        #msgdict = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
-        #text = msgdict['body'].encode(ENCODING)
-        #if 'subject' in msgdict:
-            #title = msgdict['subject']
-        #else:
-            #title = "Buildbot worker {name} missing".format(**worker)
-        #assert msgdict['type'] in ('plain', 'html'), \
-            #"'%s' message type must be 'plain' or 'html'." % msgdict['type']
-        #if msgdict['type'] == 'html':
-            #msg['html'] = 1
-        #msg['message'] += msgdict['body']
-        #priority = self.priorities.get('worker_missing', 0)
+    @defer.inlineCallbacks
+    def workerMissing(self, key, worker):
+        if worker['name'] not in self.watchedWorkers:
+            return
+        msg = {'message': ""}
+        msgdict = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
+        text = msgdict['body'].encode(ENCODING)
+        if 'subject' in msgdict:
+            title = msgdict['subject']
+        else:
+            title = "Buildbot worker {name} missing".format(**worker)
+        assert msgdict['type'] in ('plain', 'html'), \
+            "'%s' message type must be 'plain' or 'html'." % msgdict['type']
+        if msgdict['type'] == 'html':
+            msg['html'] = 1
+        msg['message'] += msgdict['body']
+        priority = self.priorities.get('worker_missing', 0)
        
-        #yield self.sendMessage(message=text, title=title, priority=priority)
+        self.sendMessage({'message': text, 'title': title, 'priority': priority})

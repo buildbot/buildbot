@@ -118,7 +118,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_SendMessage(self):
         pn = yield self.setupPushoverNotifier(user_key="1234", api_token="abcd",
-                                              other_params={'sound': "silent"})
+                                              otherParams={'sound': "silent"})
         self._http.expect("post", "/1/messages.json",
                           params={'user': "1234", 'token': "abcd",
                                   'sound': "silent", 'message': "Test"},
@@ -372,18 +372,19 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn.sendMessage.assert_called_with(dict(message='body', title='subject', priority=1))
         self.assertEqual(pn.sendMessage.call_count, 1)
 
-    #@defer.inlineCallbacks
-    #def test_workerMissingSendMessage(self):
+    @defer.inlineCallbacks
+    def test_workerMissingSendMessage(self):
 
-        #pn = yield self.setupPushoverNotifier('1234', 'abcd', priorities={'worker_missing': 2})
+        pn = yield self.setupPushoverNotifier('1234', 'abcd', priorities={'worker_missing': 2},
+                                              watchedWorkers=['myworker'])
 
-        #pn.sendMessage = Mock()
-        #yield pn.workerMissing('worker.98.complete',
-                               #dict(name='myworker',
-                                    #workerinfo=dict(admin="myadmin"),
-                                    #last_connection="yesterday"))
+        pn.sendMessage = Mock()
+        yield pn.workerMissing('worker.98.complete',
+                               dict(name='myworker',
+                                    workerinfo=dict(admin="myadmin"),
+                                    last_connection="yesterday"))
 
-        #message = pn.sendMessage.call_args[0]['message']
-        #priority = pn.sendMessage.call_args[0]['priority']
-        #self.assertEqual(priority, 2)
-        #self.assertIn("has noticed that the worker named myworker went away", message)
+        message = pn.sendMessage.call_args[0][0]['message']
+        priority = pn.sendMessage.call_args[0][0]['priority']
+        self.assertEqual(priority, 2)
+        self.assertIn("has noticed that the worker named myworker went away", message)
