@@ -203,7 +203,7 @@ class GitHubEventHandler(object):
             log.msg("New revision: {}".format(commit['id'][:8]))
 
             change = {
-                'author': '{} <{}>'.format(commit['author']['name'],
+                'author': u'{} <{}>'.format(commit['author']['name'],
                                            commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
