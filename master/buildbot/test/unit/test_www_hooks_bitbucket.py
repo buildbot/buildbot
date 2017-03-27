@@ -25,6 +25,7 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
 
 gitJsonPayload = """{
@@ -152,6 +153,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         change_dict = {'payload': [gitJsonPayload]}
 
         request = FakeRequest(change_dict)
+        request.received_headers[_HEADER_EVENT] = "repo:push"
         request.uri = '/change_hook/bitbucket'
         request.method = 'POST'
 
@@ -179,6 +181,9 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
             'https://bitbucket.org/marcus/project-x/commits/'
             '620ade18607ac42d872b568bb92acaa9a28620e9'
         )
+        self.assertEqual(
+            commit['properties']['event'],
+            'repo:push')
 
     @inlineCallbacks
     def testGitWithNoCommitsPayload(self):
@@ -198,6 +203,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
         change_dict = {'payload': [mercurialJsonPayload]}
 
         request = FakeRequest(change_dict)
+        request.received_headers[_HEADER_EVENT] = "repo:push"
         request.uri = '/change_hook/bitbucket'
         request.method = 'POST'
 
@@ -225,6 +231,9 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
             'https://bitbucket.org/marcus/project-x/commits/'
             '620ade18607ac42d872b568bb92acaa9a28620e9'
         )
+        self.assertEqual(
+            commit['properties']['event'],
+            'repo:push')
 
     @inlineCallbacks
     def testMercurialWithNoCommitsPayload(self):

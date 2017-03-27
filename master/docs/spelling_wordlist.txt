@@ -299,6 +299,7 @@ getProperties
 getRecipients
 getters
 GiB
+GitHub
 github
 Gitlab
 Gitorious
