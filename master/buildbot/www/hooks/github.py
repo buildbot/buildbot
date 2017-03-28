@@ -171,12 +171,12 @@ class GitHubEventHandler(object):
         return changes, 'git'
 
     def get_changes(self, category, payload):
-        if category == 'tag':
+        if category == 'create':
             branch = payload['ref']
         elif category == 'release':
             branch = payload['release']['tag_name']
-        else:
-            return
+
+        log.msg("Processing %s #%s" % (category, branch))
         changes = []
         change = {
             'when_timestamp': dateparse(payload['repository']['created_at']),
@@ -194,16 +194,19 @@ class GitHubEventHandler(object):
 
             change['comments'] = 'Release created %s' % \
                 payload['release']['name']
-
+        if callable(self._codebase):
+            change['codebase'] = self._codebase(payload)
+        elif self._codebase is not None:
+            change['codebase'] = self._codebase
         changes.append(change)
 
         return changes
 
-    def handle_release(self, payload):
-        return self.get_changes('release', payload), 'git'
+    def handle_release(self, payload, event):
+        return self.get_changes(event, payload), 'git'
 
-    def handle_create(self, payload):
-        return self.get_changes(payload['ref_type'], payload), 'git'
+    def handle_create(self, payload, event):
+        return self.get_changes(event, payload), 'git'
 
     def _process_change(self, payload, user, repo, repo_url, project, event):
         """
@@ -239,7 +242,7 @@ class GitHubEventHandler(object):
 
             change = {
                 'author': u'{} <{}>'.format(commit['author']['name'],
-                                           commit['author']['email']),
+                                            commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],

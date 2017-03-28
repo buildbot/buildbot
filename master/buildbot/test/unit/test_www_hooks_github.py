@@ -370,6 +370,57 @@ gitJsonPayloadEmpty = """
 }
 """
 
+PayloadRelease = """
+{
+  "action": "published",
+  "release": {
+    "tag_name": "v0.0.2",
+    "target_commitish": "master",
+    "name": "v0.0.2rc",
+    "author": {
+      "login": "user"
+      }
+    },
+  "repository": {
+    "id": 72079124,
+    "created_at": "2016-10-27T06:44:31Z",
+    "name": "test",
+    "full_name": "user/test",
+    "html_url": "https://github.com/user/test",
+    "owner": {
+      "email": "fred@flinstone.org",
+      "name": "defunkt"
+    }
+    },
+  "sender":{
+    "login": "sadasdf"
+    }
+}
+"""
+PayloadCreate = """
+{
+  "ref": "v0.0.2",
+  "ref_type": "tag",
+  "master_branch": "master",
+  "description": null,
+  "pusher_type": "user",
+  "repository": {
+    "id": 72079124,
+    "name": "test",
+    "full_name": "user/test",
+    "html_url": "https://github.com/user/test",
+    "created_at": "2016-10-27T06:44:31Z",
+    "owner": {
+      "email": "fred@flinstone.org",
+      "name": "defunkt"
+    }
+    },
+  "sender": {
+  "login": "user"
+  }
+}
+"""
+
 _CT_ENCODED = 'application/x-www-form-urlencoded'
 _CT_JSON = 'application/json'
 
@@ -645,6 +696,55 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def test_git_with_pull_json(self):
         self._check_git_with_pull(gitJsonPayloadPullRequest)
+
+
+class TestChangeHookConfiguredWithReleaseCreated(unittest.TestCase):
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(strict=False)
+
+    @defer.inlineCallbacks
+    def _check_git_with_release(self, payload):
+        self.request = _prepare_request('release', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change['revision'], 'v0.0.2')
+        self.assertEqual(change['branch'], 'v0.0.2')
+        self.assertEqual(change['comments'], 'Release created v0.0.2rc')
+        self.assertEqual(change['repository'], 'https://github.com/'
+                         'user/test')
+        self.assertEqual(change['project'], 'user/test')
+
+    def test_git_with_release_encoded(self):
+        self._check_git_with_release([PayloadRelease])
+
+    def test_git_with_release_json(self):
+        self._check_git_with_release(PayloadRelease)
+
+
+class TestChangeHookConfiguredWithTagCreated(unittest.TestCase):
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(strict=False)
+
+    @defer.inlineCallbacks
+    def _check_git_with_tag(self, payload):
+        self.request = _prepare_request('create', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change['revision'], 'v0.0.2')
+        self.assertEqual(change['branch'], 'v0.0.2')
+        self.assertEqual(change['category'], 'create')
+        self.assertEqual(change['comments'], 'Created v0.0.2')
+        self.assertEqual(change['repository'], 'https://github.com/'
+                         'user/test')
+        self.assertEqual(change['project'], 'user/test')
+
+    def test_git_with_tag_encoded(self):
+        self._check_git_with_tag([PayloadCreate])
+
+    def test_git_with_tag_json(self):
+        self._check_git_with_tag(PayloadCreate)
 
 
 class TestChangeHookConfiguredWithStrict(unittest.TestCase):

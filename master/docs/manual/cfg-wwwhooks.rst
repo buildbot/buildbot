@@ -150,7 +150,7 @@ The parameters are:
                 ...))
 
 :guilabel:`Which events would you like to trigger this webhook?`
-    Leave the default -- ``Just the push [tag]  events`` -- other kind of events are not currently supported.
+    Leave the default -- ``Just the push [tag], create, release,  events`` -- other kind of events are not currently supported.
 
 And then press the ``Add Webhook`` button.
 
