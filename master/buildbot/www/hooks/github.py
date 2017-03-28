@@ -176,7 +176,8 @@ class GitHubEventHandler(object):
         elif category == 'release':
             branch = payload['release']['tag_name']
 
-        log.msg("Processing %s #%s" % (category, branch))
+        log.msg('Processing {0},{1}'.format(category, branch),
+                logLevel=logging.DEBUG)
         changes = []
         change = {
             'when_timestamp': dateparse(payload['repository']['created_at']),
