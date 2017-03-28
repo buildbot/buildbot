@@ -25,11 +25,13 @@ from __future__ import print_function
 import glob
 import os
 import pkg_resources
+import platform
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.version import LooseVersion
 
+from setuptools import version as setuptools_version
 from setuptools import setup
 
 from buildbot import version
@@ -453,8 +455,13 @@ setup_args['install_requires'] = [
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
     'PyJWT',
-    'distro;platform_system==="Linux"'
 ]
+
+# based on https://discourse.numenta.org/t/setup-py-error-invalid-environment-marker/1298/4
+if LooseVersion(setuptools_version.__version__) >= LooseVersion("20.2.2"):
+    setup_args['install_requires'].append('distro;platform_system==="Linux')
+elif platform.system() == 'Linux':
+    setup_args['install_requires'].append('distro')
 
 # Unit test dependencies.
 test_deps = [
