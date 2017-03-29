@@ -37,6 +37,7 @@ try:
     from docker.errors import NotFound
     _hush_pyflakes = [docker, client]
 except ImportError:
+    docker = None
     client = None
 
 
@@ -180,6 +181,13 @@ class DockerLatentWorker(DockerBaseWorker):
             binds[bind] = {'bind': volume, 'ro': ro}
         return volume_list, binds
 
+    def _getDockerClient(self):
+        if docker.version[0] == '1':
+            docker_client = client.Client(**self.client_args)
+        else:
+            docker_client = client.APIClient(**self.client_args)
+        return docker_client
+
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
@@ -201,7 +209,7 @@ class DockerLatentWorker(DockerBaseWorker):
         return False
 
     def _thd_start_instance(self, image, dockerfile, volumes):
-        docker_client = client.Client(**self.client_args)
+        docker_client = self._getDockerClient()
         # cleanup the old instances
         instances = docker_client.containers(
             all=1,
@@ -277,7 +285,7 @@ class DockerLatentWorker(DockerBaseWorker):
         return threads.deferToThread(self._thd_stop_instance, instance, fast)
 
     def _thd_stop_instance(self, instance, fast):
-        docker_client = client.Client(**self.client_args)
+        docker_client = self._getDockerClient()
         log.msg('Stopping container %s...' % instance['Id'][:6])
         docker_client.stop(instance['Id'])
         if not fast:

@@ -36,6 +36,7 @@ from buildbot.worker import docker as dockerworker
 class TestDockerLatentWorker(unittest.SynchronousTestCase):
 
     def setupWorker(self, *args, **kwargs):
+        self.patch(dockerworker, 'docker', docker)
         worker = dockerworker.DockerLatentWorker(*args, **kwargs)
         master = fakemaster.make_master(testcase=self, wantData=True)
         worker.setServiceParent(master)
@@ -85,6 +86,24 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         self.assertEqual(bs.client_args, {'base_url': 'tcp://1234:2375'})
         self.assertEqual(bs.image, 'worker')
         self.assertEqual(bs.command, [])
+
+    def test_contruction_minimal_docker_py(self):
+        docker.version = "1.10.6"
+        bs = self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        client = docker.APIClient.latest
+        self.assertEqual(client.called_class_name, "Client")
+        client = docker.Client.latest
+        self.assertNotEqual(client.called_class_name, "APIClient")
+
+    def test_contruction_minimal_docker(self):
+        docker.version = "2.0.0"
+        bs = self.setupWorker('bot', 'pass', 'tcp://1234:2375', 'worker')
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        client = docker.Client.latest
+        self.assertEqual(client.called_class_name, "APIClient")
+        client = docker.APIClient.latest
+        self.assertNotEqual(client.called_class_name, "Client")
 
     def test_constructor_nopassword(self):
         # when no password, it is created automatically
