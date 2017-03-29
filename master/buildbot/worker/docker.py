@@ -117,9 +117,10 @@ class DockerLatentWorker(DockerBaseWorker):
 
     def checkConfig(self, name, password, docker_host, image=None, command=None,
                     volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                    masterFQDN=None, hostconfig=None, **kwargs):
+                    masterFQDN=None, hostconfig=None, custom_context=False, **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
+        DockerBaseWorker.checkConfig(
+            self, name, password, image, masterFQDN, **kwargs)
 
         if not client:
             config.error("The python module 'docker-py>=1.4' is needed to use a"
@@ -145,7 +146,7 @@ class DockerLatentWorker(DockerBaseWorker):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, docker_host, image=None, command=None,
                         volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                        masterFQDN=None, hostconfig=None, **kwargs):
+                        masterFQDN=None, hostconfig=None, custom_context=False, **kwargs):
 
         yield DockerBaseWorker.reconfigService(self, name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
@@ -153,6 +154,7 @@ class DockerLatentWorker(DockerBaseWorker):
 
         self.command = command or []
         self.dockerfile = dockerfile
+        self.custom_context = custom_context
         self.hostconfig = hostconfig or {}
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
@@ -160,6 +162,14 @@ class DockerLatentWorker(DockerBaseWorker):
             self.client_args['version'] = version
         if tls is not None:
             self.client_args['tls'] = tls
+
+        if dockerfile:
+            m = hashlib.md5()
+            m.update(dockerfile)
+            self.docker_sig = m.hexdigest()
+            if self.image is None:
+                self.image = '{0}_{1}_bb'.format(
+                    self.workername, self.docker_sig)
 
     def _thd_parse_volumes(self, volumes):
         volume_list = []
@@ -216,24 +226,46 @@ class DockerLatentWorker(DockerBaseWorker):
             filters=dict(name=self.getContainerName()))
         for instance in instances:
             try:
-                docker_client.remove_container(instance['Id'], v=True, force=True)
+                docker_client.remove_container(
+                    instance['Id'], v=True, force=True
+                    )
             except NotFound:
                 pass  # that's a race condition
 
-        found = False
-        if image is not None:
-            found = self._image_exists(docker_client, image)
-        else:
-            image = '%s_%s_image' % (self.workername, id(self))
+        dockerfile_changed = False
+        if dockerfile:
+            # check to see if the sig changed
+            # get current sig
+            m = hashlib.md5()
+            m.update(dockerfile)
+            docker_id = m.hexdigest()
+            dockerfile_changed = self.docker_sig != docker_id
+            # we need to define an image value
+            # given that is not defined.
+            if image is None:
+                image = '{0}_{1}_bb'.format(self.workername, docker_id)
+
+        found = self._image_exists(docker_client, image)
+
         if (not found) and (dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
                     image)
-            for line in docker_client.build(fileobj=BytesIO(dockerfile.encode('utf-8')),
-                                            tag=image):
-                for streamline in _handle_stream_line(line):
-                    log.msg(streamline)
 
-        if (not self._image_exists(docker_client, image)):
+            if self.custom_context:
+                for line in docker_client.build(fileobj=BytesIO(dockerfile),
+                                                dockerfile='./DockerFile.out',
+                                                custom_context=True,
+                                                encoding='gzip',
+                                                tag=image):
+                    for streamline in _handle_stream_line(line):
+                        log.msg(streamline)
+            else:
+                for line in docker_client.build(fileobj=BytesIO(dockerfile.encode('utf-8')),
+                                                tag=image):
+                    for streamline in _handle_stream_line(line):
+                        log.msg(streamline)
+
+        if not self._image_exists(docker_client, image):
             log.msg("Image '%s' not found" % image)
             raise LatentWorkerFailedToSubstantiate(
                 'Image "%s" not found on docker host.' % image
