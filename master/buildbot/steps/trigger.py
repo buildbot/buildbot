@@ -50,6 +50,7 @@ class Trigger(BuildStep):
 
     def __init__(self, schedulerNames=None, sourceStamp=None, sourceStamps=None,
                  updateSourceStamp=None, alwaysUseLatest=False,
+                 startNext=False,
                  waitForFinish=False, set_properties=None,
                  copy_properties=None, parent_relationship="Triggered from",
                  unimportantSchedulerNames=None, **kwargs):
@@ -86,6 +87,7 @@ class Trigger(BuildStep):
             self.updateSourceStamp = not (alwaysUseLatest or self.sourceStamps)
         self.alwaysUseLatest = alwaysUseLatest
         self.waitForFinish = waitForFinish
+        self.startNext = startNext
 
         if set_properties is None:
             set_properties = {}
@@ -226,6 +228,10 @@ class Trigger(BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
+        # startNext and waitForFinish should be both true for this case
+        if self.startNext and self.waitForFinish and self.build.steps:
+            self.build.startNextStep()
+
         schedulers_and_props = yield self.getSchedulersAndProperties()
 
         schedulers_and_props_list = []
