@@ -154,6 +154,14 @@ The parameters are:
 
 And then press the ``Add Webhook`` button.
 
+.. note::
+
+   Create and Release events does not reflect a strict code change, but still is a useful event to start a build on.
+
+   Even though tag and release does not associate with real change it contains a change set. This change set has branch and revision properties with tag name as value.
+
+   These values can be utilized in buildsteps using interpolations, util.Interpolate("%(prop:branch)s") and util.Interpolate("%(prop:revision)s").
+
 .. warning::
 
     The incoming HTTP requests for this hook are not authenticated by default.

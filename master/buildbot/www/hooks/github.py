@@ -27,6 +27,7 @@ from twisted.python import log
 
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 
 try:
     import json
@@ -170,20 +171,21 @@ class GitHubEventHandler(object):
             len(changes), number))
         return changes, 'git'
 
-    def get_changes(self, category, payload):
+    def _get_changes_for_misc_event(self, category, payload):
+        log = Logger()
         if category == 'create':
             branch = payload['ref']
         elif category == 'release':
             branch = payload['release']['tag_name']
 
-        log.msg('Processing {0},{1}'.format(category, branch),
-                logLevel=logging.DEBUG)
+        log.debug('Processing {0},{1}'.format(category, branch))
         changes = []
         change = {
             'when_timestamp': dateparse(payload['repository']['created_at']),
             'repository': payload['repository']['html_url'],
             'project': payload['repository']['full_name'],
-            'branch': branch, 'revision': branch,
+            'branch': branch,
+            'revision': branch,
             'category': category,
             'author': payload['sender']['login'],
             'comments': 'Created %s' % branch,
@@ -204,10 +206,10 @@ class GitHubEventHandler(object):
         return changes
 
     def handle_release(self, payload, event):
-        return self.get_changes(event, payload), 'git'
+        return self._get_changes_for_misc_event(event, payload), 'git'
 
     def handle_create(self, payload, event):
-        return self.get_changes(event, payload), 'git'
+        return self._get_changes_for_misc_event(event, payload), 'git'
 
     def _process_change(self, payload, user, repo, repo_url, project, event):
         """
