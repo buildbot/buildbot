@@ -89,10 +89,13 @@ class Authz(object):
                     if owner is not None:
                         roles.update(
                             self.getOwnerRolesFromUser(userDetails, owner))
-                if rule.role not in roles:
-                    if rule.defaultDeny:
-                        raise Forbidden(
-                            "you need to have role '%s'" % (rule.role,))
-                elif not rule.defaultDeny:
-                    defer.returnValue(None)
+                for role in roles:
+                    if self.match(role, rule.role):
+                        defer.returnValue(None)
+
+                if not rule.defaultDeny:
+                    continue   # check next suitable rule if not denied
+                else:
+                    raise Forbidden(
+                        "you need to have role '%s'" % (rule.role,))
         defer.returnValue(None)
