@@ -1,9 +1,13 @@
 .console
-    .load-indicator(ng-show='c.loading')
+    .load-indicator(ng-hide='c.builds.$resolved && c.changes.$resolved && c.buildrequests.$resolved && c.buildsets.$resolved')
         .spinner
             i.fa.fa-circle-o-notch.fa-spin.fa-2x
             p loading
-    .header
+    div(ng-show="c.changes.$resolved && c.changes.length==0")
+        p No changes. Console view needs changesource to be setup, and 
+            a(href="#changes") changes 
+            | to be in the system.
+    .header(ng-hide="c.changes.length==0")
         .header-content(ng-style='{width: c.width}')
             .col-15
                 .buttons
