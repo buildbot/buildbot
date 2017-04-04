@@ -5,7 +5,7 @@ class DataQuery extends Factory
                 @query = query
                 @filters = {}
                 for fieldAndOperator, value of query
-                    if ['field', 'limit', 'offset', 'order'].indexOf(fieldAndOperator) < 0
+                    if ['field', 'limit', 'offset', 'order', 'property'].indexOf(fieldAndOperator) < 0
                         if ['on', 'true', 'yes'].indexOf(value) > -1 then value = true
                         else if ['off', 'false', 'no'].indexOf(value) > -1 then value = false
                         @filters[fieldAndOperator] = value
