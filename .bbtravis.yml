@@ -83,7 +83,6 @@ install:
       # pip installs
       set -e
       if [ $TWISTED = trunk ]; then
-          pip install git+https://github.com/glyph/automat
           pip install git+https://github.com/twisted/twisted
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi

@@ -49,7 +49,7 @@ class BBRefTargetDirective(Directive):
     domain = 'bb'
 
     def run(self):
-        env = self.state.document.settings.env
+        self.env = env = self.state.document.settings.env
         # normalize whitespace in fullname like XRefRole does
         fullname = ws_re.sub(' ', self.arguments[0].strip())
         targetname = '%s-%s' % (self.ref_type, fullname)
