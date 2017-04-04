@@ -51,6 +51,7 @@ def main():
     return render_template('mydashboard.html', builders=builders, builds=builds,
                            graph_data=graph_data)
 
+
 # Here we assume c['www']['plugins'] has already be created earlier.
 # Please see the web server documentation to understand how to configure
 # the other parts.
