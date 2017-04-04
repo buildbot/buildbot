@@ -148,7 +148,8 @@ intersphinx_mapping = {
 extlinks = {
     'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
     'issue': ('https://github.com/buildbot/buildbot/issue/%s', 'issue # '),
-    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),  # deprecated. Use issue instead, and point to GH
+    # deprecated. Use issue instead, and point to Github
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
     # Renders as link with whole url, e.g.
     #   :src-link:`master`
     # renders as
