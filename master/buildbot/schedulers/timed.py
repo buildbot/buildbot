@@ -102,7 +102,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
                                              change_filter=self.change_filter,
                                              onlyImportant=self.onlyImportant)
         else:
-            yield self.master.db.schedulers.flushChangeClassifications(self.objectid)
+            yield self.master.db.schedulers.flushChangeClassifications(self.serviceid)
 
     @defer.inlineCallbacks
     def deactivate(self):
@@ -134,7 +134,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
             return defer.succeed(None)  # don't care about this change
 
         d = self.master.db.schedulers.classifyChanges(
-            self.objectid, {change.number: important})
+            self.serviceid, {change.number: important})
 
         if self.createAbsoluteSourceStamps:
             d.addCallback(lambda _: self.recordChange(change))
@@ -151,7 +151,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
         # use the collected changes to start a build
         scheds = self.master.db.schedulers
-        classifications = yield scheds.getChangeClassifications(self.objectid)
+        classifications = yield scheds.getChangeClassifications(self.serviceid)
 
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
@@ -167,7 +167,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
             max_changeid = changeids[-1]  # (changeids are sorted)
             yield self.addBuildsetForChanges(reason=self.reason,
                                              changeids=changeids)
-            yield scheds.flushChangeClassifications(self.objectid,
+            yield scheds.flushChangeClassifications(self.serviceid,
                                                     less_than=max_changeid + 1)
         else:
             # There are no changes, but onlyIfChanged is False, so start

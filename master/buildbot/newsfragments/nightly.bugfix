@@ -1,0 +1,1 @@
+Fix issue with :bb:sched::`Nightly` change classification raising foreign key exceptions (:issue:`3021`)
