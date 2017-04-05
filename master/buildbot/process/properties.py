@@ -713,6 +713,29 @@ class Interpolate(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
+class _ComparisonRenderer(util.ComparableMixin, object):
+    """
+    An instance of this class renders a comparison given by a comparator
+    function with v1 and v2
+
+    """
+
+    compare_attrs = ('fn',)
+
+    def __init__(self, v1, v2, cstr, comparator):
+        self.v1, self.v2, self.comparator, self.cstr = v1, v2, comparator, cstr
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, props):
+        v1 = yield props.render(self.v1)
+        v2 = yield props.render(self.v2)
+        defer.returnValue(self.comparator(v1, v2))
+
+    def __repr__(self):
+        return '%r %r %r' % (self.v1, self.cstr, self.v2)
+
+
+@implementer(IRenderable)
 class Property(util.ComparableMixin):
 
     """
@@ -735,6 +758,27 @@ class Property(util.ComparableMixin):
 
         # Report on parent frame.
         _on_property_usage(key, stacklevel=1)
+
+    def __eq__(self, other):
+        return _ComparisonRenderer(self, other, "==", lambda v1, v2: v1 == v2)
+
+    def __ne__(self, other):
+        return _ComparisonRenderer(self, other, "!=", lambda v1, v2: v1 != v2)
+
+    def __lt__(self, other):
+        return _ComparisonRenderer(self, other, "<", lambda v1, v2: v1 < v2)
+
+    def __le__(self, other):
+        return _ComparisonRenderer(self, other, "<=", lambda v1, v2: v1 <= v2)
+
+    def __gt__(self, other):
+        return _ComparisonRenderer(self, other, ">", lambda v1, v2: v1 > v2)
+
+    def __ge__(self, other):
+        return _ComparisonRenderer(self, other, ">=", lambda v1, v2: v1 >= v2)
+
+    def __repr__(self):
+        return "Property({0})".format(self.key)
 
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:
