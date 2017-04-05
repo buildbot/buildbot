@@ -105,7 +105,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         ])
 
     def setAllowRules(self, allow_rules):
-        # we should add links to autz and master instances in each new rule
+        # we should add links to authz and master instances in each new rule
         for r in allow_rules:
             r.setAuthz(self.authz)
 
@@ -152,7 +152,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
     def test_fnmatchPatternRoleCheck(self):
         # set defaultDeny to True so action is denied if no match
         allow_rules = [
-                        AnyEndpointMatcher(role="[a,b]dmin?", defaultDeny=True)
+                        AnyEndpointMatcher(role="[a,b]dmin?")
         ]
 
         self.setAllowRules(allow_rules)
@@ -172,7 +172,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.authz.match = authz.reStrMatcher
         # set defaultDeny to True so action is denied if no match
         allow_rules = [
-            AnyEndpointMatcher(role="(admin|agent)s", defaultDeny=True),
+            AnyEndpointMatcher(role="(admin|agent)s"),
         ]
 
         self.setAllowRules(allow_rules)
@@ -199,7 +199,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.setAllowRules(allow_rules)
 
         # check if action is denied and last check was exact against not-exist3
-        with self.assertRaisesRegexp(authz.Forbidden, '.*not-exists3.*'):
+        with self.assertRaisesRegex(authz.Forbidden, '.*not-exists3.*'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
 
     @defer.inlineCallbacks
@@ -214,5 +214,5 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.setAllowRules(allow_rules)
 
         # check if action is denied and last check was exact against not-exist3
-        with self.assertRaisesRegexp(authz.Forbidden, '.*not-exists1.*'):
+        with self.assertRaisesRegex(authz.Forbidden, '.*not-exists1.*'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
