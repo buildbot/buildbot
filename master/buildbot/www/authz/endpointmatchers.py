@@ -109,8 +109,8 @@ class AnyControlEndpointMatcher(EndpointMatcherBase):
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
 
-    def match(self, ep, action="get", options=None):
-        if action != "get":
+    def match(self, ep, action="", options=None):
+        if action != "GET":
             return defer.succeed(Match(self.master))
         return defer.succeed(None)
 
