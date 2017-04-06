@@ -22,6 +22,7 @@ import inspect
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
+from buildbot.util import bytes2NativeString
 
 
 class EndpointMatcherBase(object):
@@ -109,8 +110,8 @@ class AnyControlEndpointMatcher(EndpointMatcherBase):
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
 
-    def match(self, ep, action="get", options=None):
-        if action != "get":
+    def match(self, ep, action="", options=None):
+        if bytes2NativeString(action).lower() != "get":
             return defer.succeed(Match(self.master))
         return defer.succeed(None)
 
