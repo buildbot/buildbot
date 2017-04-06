@@ -17,6 +17,7 @@ class Collection extends Factory
                 @_new = []
                 @_updated = []
                 @_byId = {}
+                @$resolved = false
                 try
                     # try to get the wrapper class
                     className = dataUtilsService.className(@restPath)
@@ -60,6 +61,7 @@ class Collection extends Factory
                 return socketService.unsubscribe(@socketPath, this)
 
             initial: (data) ->
+                @$resolved = true
                 # put items one by one if not already in the array
                 # if they are that means they come from an update event
                 # the event is always considered the latest data
@@ -68,7 +70,7 @@ class Collection extends Factory
                     if not @hasOwnProperty(i[@id])
                         @put(i)
                 @recomputeQuery()
-                @sendEvents()
+                @sendEvents(initial:true)
 
             from: (data) ->
                 # put items one by one
@@ -109,7 +111,7 @@ class Collection extends Factory
             recomputeQuery: ->
                 @queryExecutor.computeQuery(this)
 
-            sendEvents: ->
+            sendEvents: (opts)->
                 # send the events asynchronously
                 _new = @_new
                 _updated = @_updated
@@ -129,6 +131,6 @@ class Collection extends Factory
                             @onUpdate(i)
                             changed = true
 
-                    if changed
+                    if changed or opts?.initial
                         @onChange(this)
                 , 0
