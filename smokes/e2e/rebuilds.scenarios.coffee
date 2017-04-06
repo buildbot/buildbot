@@ -10,16 +10,18 @@ builderPage = require('./pages/builder.coffee')
 describe 'rebuilds', () ->
     force = null
     builder = null
+    home = null
 
     beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
-        builder.goDefault()
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
 
     afterEach () ->
-        new homePage().waitAllBuildsFinished()
+        home.logOut()
 
-    it 'should navigate to a dedicated build and to use the rebuild button', () ->
+    xit 'should navigate to a dedicated build and to use the rebuild button', () ->
         builder.go()
         builder.getLastSuccessBuildNumber().then (lastbuild) ->
             builder.goForce()
@@ -28,5 +30,6 @@ describe 'rebuilds', () ->
             builder.waitNextBuildFinished(lastbuild)
             builder.goBuild(lastbuild)
             browser.getCurrentUrl().then (buildUrl) ->
+                browser.sleep(4000)
                 builder.getRebuildButton().click()
                 builder.waitGoToBuild(lastbuild+2)

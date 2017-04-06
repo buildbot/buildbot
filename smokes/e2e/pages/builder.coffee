@@ -37,7 +37,7 @@ class BuilderPage extends BasePage
         buildCountIncrement = () ->
             self.getLastSuccessBuildNumber().then (currentBuildCount) ->
                 return currentBuildCount == reference + 1
-        browser.wait(buildCountIncrement, 20000)
+        browser.wait(buildCountIncrement, 40000)
 
     waitGoToBuild: (expected_buildnumber) ->
         isInBuild = () ->
@@ -50,7 +50,7 @@ class BuilderPage extends BasePage
                 if number != expected_buildnumber
                     return false
                 return true
-        browser.wait(isInBuild, 20000)
+        browser.wait(isInBuild, 30000)
 
     getStopButton: ->
         return element(By.buttonText('Stop'))

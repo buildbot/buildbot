@@ -11,6 +11,7 @@ describe 'home page', () ->
     builder = null
     home = null
 
+
     beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
@@ -22,11 +23,11 @@ describe 'home page', () ->
 
     it 'should go to the home page and check the different builder', () ->
         builderName = {
-            "0" : "runtests"
+            "4" : "runtests"
         }
         builder.go()
         builder.goForce()
         force.getStartButton().click()
         home.go()
         panel0 = home.getPanel(0)
-        expect(panel0.getText()).toContain(builderName[0])
+        expect(panel0.getText()).toContain(builderName[4])

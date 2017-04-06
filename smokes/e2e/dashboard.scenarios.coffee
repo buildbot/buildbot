@@ -20,7 +20,9 @@ describe 'dashboard page', () ->
         force =  new forcePage()
         dashboard = new dashboardPage()
         home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
         builder.goDefault()
+
 
     afterEach (done) ->
         browser.manage().logs().get('browser').then (browserLog) ->

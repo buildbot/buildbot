@@ -8,14 +8,17 @@ builderPage = require('./pages/builder.coffee')
 describe 'force and cancel', () ->
     force = null
     builder = null
+    home = null
 
     beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
-        builder.goDefault()
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
 
     afterEach () ->
         new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     it 'should create a build', () ->
         builder.go()
@@ -36,7 +39,6 @@ describe 'force and cancel', () ->
         builder.go()
         builder.goForce()
         force.setReason("New Test Reason")
-        force.setYourName("FaceLess User")
         force.setProjectName("BBOT9")
         force.setBranchName("Gerrit Branch")
         force.setRepo("http//name.com")

@@ -5,12 +5,16 @@ homePage = require('./pages/home.coffee')
 describe 'change hook', () ->
     builder = null
     console = null
-    beforeEach(() ->
-        builder = new builderPage('runtests1', 'force')
+    home = null
+
+    beforeEach () ->
+        builder = new builderPage('runtests0')
         console = new consolePage()
-    )
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
+
     afterEach () ->
-        new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     it 'should create a build', () ->
         builder.go()

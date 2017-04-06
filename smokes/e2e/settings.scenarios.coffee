@@ -5,18 +5,24 @@
 builderPage = require('./pages/builder.coffee')
 waterfallPage = require('./pages/waterfall.coffee')
 settingsPage = require('./pages/settings.coffee')
+homePage = require('./pages/home.coffee')
 
 describe('', () ->
     builder = null
     waterfall = null
     settings = null
+    home = null
 
     beforeEach(() ->
         builder = new builderPage('runtests', 'force')
         waterfall = new waterfallPage('runtests')
         settings =  new settingsPage('runtests')
-        builder.goDefault()
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
     )
+
+    afterEach () ->
+        home.logOut()
 
     scallingVar = '10'
     describe 'manage settings', () ->

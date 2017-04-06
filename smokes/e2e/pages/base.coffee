@@ -17,17 +17,19 @@ class BasePage
                     element.getSize().then (s)->
                         console.log 'not clickable', s, l
                 false
+    expectLogged: (logged) ->
+        anonymousButton = element(By.cssContainingText('.dropdown', 'Anonymous'))
+        expect(anonymousButton.isDisplayed()).toBe(!logged)
 
     logOut: ->
-        element.all(By.css('.avatar img')).click()
-        element.all(By.linkText('Logout')).click()
-        anonymousButton = element(By.css('.dropdown'))
-        expect(anonymousButton.getText()).toContain("Anonymous")
+        element(By.css('.avatar img')).click()
+        element(By.linkText('Logout')).click()
+        @expectLogged(false)
 
     loginUser: (user, password) ->
         browser.get("http://#{user}:#{password}@localhost:8010/auth/login")
-        anonymousButton = element(By.css('.dropdown'))
-        expect(anonymousButton.getText()).not.toContain("Anonymous")
+        anonymousButton = element(By.cssContainingText('.dropdown', 'Anonymous'))
+        @expectLogged(true)
 
 
 module.exports = BasePage

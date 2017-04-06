@@ -12,15 +12,18 @@ describe 'waterfall', () ->
     force = null
     builder = null
     waterfall = null
+    home = null
 
     beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
+        home = new homePage()
         waterfall = new waterfallPage('runtests')
-        builder.goDefault()
+        home.loginUser("homer@email.com", "doh!")
 
     afterEach () ->
         new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     it 'should navigate to the waterfall, check one builder and hyperlink', () ->
         waterfall.go()
