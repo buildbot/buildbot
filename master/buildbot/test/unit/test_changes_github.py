@@ -184,6 +184,13 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.changesource.setServiceParent(self.master)
         yield self.attachChangeSource(self.changesource)
 
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
+
     @defer.inlineCallbacks
     def test_describe(self):
         yield self.newChangeSource('defunkt', 'defunkt')
@@ -239,7 +246,8 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
-        self.assertDictContainsSubset(_GH_PARSED_PROPS, change['properties'])
+
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
                          "Update the README with new information\n"
@@ -297,7 +305,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
-        self.assertDictContainsSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
                          "Update the README with new information\n"
@@ -380,7 +388,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/buildbot/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
-        self.assertDictContainsSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
                          "Update the README with new information\n"
@@ -420,7 +428,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
-        self.assertDictContainsSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
         self.assertEqual(change["comments"],
                          "GitHub Pull Request #4242 (42 commits)\n"
                          "Update the README with new information\n"

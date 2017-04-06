@@ -436,6 +436,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def setUp(self):
         self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
 
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
+
     @defer.inlineCallbacks
     def test_unknown_event(self):
         bad_event = b'whatever'
@@ -655,7 +662,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
-        self.assertDictContainsSubset(gitPRproperties, change["properties"])
+        self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
         self._check_git_with_pull([gitJsonPayloadPullRequest])
