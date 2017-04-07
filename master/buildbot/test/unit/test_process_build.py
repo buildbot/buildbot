@@ -118,6 +118,9 @@ class FakeBuilder:
     def buildFinished(self, build, workerforbuilder):
         pass
 
+    def getBuilderIdForName(self, name):
+        return defer.succeed(83)
+
 
 @implementer(interfaces.IBuildStepFactory)
 class FakeStepFactory(object):
