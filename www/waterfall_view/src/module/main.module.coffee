@@ -104,12 +104,12 @@ class Waterfall extends Controller
 
             @$window.onkeydown = (e) =>
                 # +
-                if e.keyIdentifier is 'U+002B'
+                if e.key is '+'
                     e.preventDefault()
                     @incrementScaleFactor()
                     @render()
                 # -
-                if e.keyIdentifier is 'U+002D'
+                if e.key is '-'
                     e.preventDefault()
                     @decrementScaleFactor()
                     @render()
