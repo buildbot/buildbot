@@ -2546,6 +2546,8 @@ Hyperlinks are added to the build detail web pages for each triggered build.
 
         The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
 
+.. _Dynamic-Trigger:
+
 Dynamic Trigger
 +++++++++++++++
 

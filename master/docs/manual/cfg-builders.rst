@@ -180,7 +180,7 @@ Such a function can be provided to the BuilderConfig as follows::
 Virtual Builders
 ~~~~~~~~~~~~~~~~
 
-:ref:`_Dynamic-Trigger` is a technic which allows to trigger the same builder, with different parameters.
+:ref:`Dynamic-Trigger` is a technic which allows to trigger the same builder, with different parameters.
 This technic is used by frameworks which store the build config along side the source code like Buildbot_travis_.
 The drawback of this technic is that it is difficult to extract statistics for similar builds.
 The standard dashboards are not working well due to the fact that all the builds are on the same builder.
@@ -192,8 +192,10 @@ The original builder and worker configuration is still used for all other build 
 
 The virtual builder metadata is configured with the following properties:
 
-``virtual_builder_name``: The name of the virtual builder.
-``virtual_builder_description``: The description of the virtual builder.
-``virtual_builder_tags``: The tags for the virtual builder.
+* ``virtual_builder_name``: The name of the virtual builder.
+
+* ``virtual_builder_description``: The description of the virtual builder.
+
+* ``virtual_builder_tags``: The tags for the virtual builder.
 
 .. _Buildbot_travis: https://github.com/buildbot/buildbot_travis
