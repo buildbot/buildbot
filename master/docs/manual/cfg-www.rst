@@ -744,7 +744,7 @@ More complex config with separation per branch:
             # defaultDeny=False: if user does not have the admin role, we continue parsing rules
             util.AnyEndpointMatcher(role="admins", defaultDeny=False),
 
-            StopBuildEndpointMatcher(role="owner"),
+            util.StopBuildEndpointMatcher(role="owner"),
 
             # *-try groups can start "try" builds
             util.ForceBuildEndpointMatcher(builder="try", role="*-try"),
