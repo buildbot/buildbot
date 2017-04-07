@@ -88,15 +88,15 @@ class Waterfall extends Controller
             angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
-            loadingMore = false
+            @loadingMore = false
             @builds.onChange = @builders.onChange = @renderNewData
 
 
             # Lazy load builds on scroll
             containerParent = @container.node().parentNode
             onScroll = =>
-                if not loadingMore and @getHeight() - containerParent.scrollTop < 1000
-                    loadingMore = true
+                if not @loadingMore and @getHeight() - containerParent.scrollTop < 1000
+                    @loadingMore = true
                     @loadMore()
 
             # Bind scroll event listener
@@ -138,8 +138,8 @@ class Waterfall extends Controller
         @buildLimit = @builds.length + @c.limit
         builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
         builds.onChange = (builds) =>
-            @$scope.builds.close()  # force close the old collection's auto-update
-            @$scope.builds = builds
+            @builds.close()  # force close the old collection's auto-update
+            @builds = builds
             # renders the new data
             builds.onChange = @renderNewData
             builds.onChange()
@@ -502,7 +502,7 @@ class Waterfall extends Controller
         @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
         @dataProcessorService.addStatus(@builders)
         @render()
-        loadingMore = false
+        @loadingMore = false
 
     ###
     # Render the waterfall view
