@@ -87,7 +87,7 @@ install:
       fi
       # some of our deps depends of this, and setuptools has a known bug of not being capable of installing
       # correctly the install_deps :-/ https://github.com/pypa/setuptools_scm/issues/164
-      pip install -U pbr setuptools_scm==1.15.0
+      pip install -U pbr  git+https://github.com/pypa/setuptools_scm
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
       pip install -e pkg \
