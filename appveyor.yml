@@ -19,7 +19,7 @@ install:
   - "python -m pip install pypiwin32"
   # some of our deps depends of this, and setuptools has a known bug of not being capable of installing
   # correctly the install_deps :-/ https://github.com/pypa/setuptools_scm/issues/164
-  - python -m pip install -U pbr setuptools_scm
+  - python -m pip install -U pbr setuptools_scm==1.15.0
 
   # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
   # install third-party SQLite.
