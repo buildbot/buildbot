@@ -181,7 +181,7 @@ class SetProperty(BuildStep):
     name = 'SetProperty'
     description = ['Setting']
     descriptionDone = ['Set']
-    renderables = ['value']
+    renderables = ['property', 'value']
 
     def __init__(self, property, value, **kwargs):
         BuildStep.__init__(self, **kwargs)
