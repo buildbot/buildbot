@@ -1,4 +1,4 @@
-.console
+.console.no-select
     .load-indicator(ng-hide='c.builds.$resolved && c.changes.$resolved && c.buildrequests.$resolved && c.buildsets.$resolved')
         .spinner
             i.fa.fa-circle-o-notch.fa-spin.fa-2x
@@ -7,19 +7,46 @@
         p No changes. Console view needs changesource to be setup, and 
             a(href="#changes") changes 
             | to be in the system.
-    .header(ng-hide="c.changes.length==0")
-        .header-content(ng-style='{width: c.width}')
-            .col-15
-                .buttons
-                    i.fa.fa-plus-circle(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
-                    i.fa.fa-minus-circle(ng-click='c.closeAll()' uib-tooltip='Close information for all changes' uib-tooltip-placement='right')
-                .search-field
-                    input(type='text' name='search' ng-model='search' placeholder='search')
-            .col-85
-                builders-header(builders='c.builders' width='c.width' cell-width='c.cellWidth')
-    .content
-        .change-rows(ng-style='{width: c.width}')
-            change-row(ng-repeat="change in c.changes | filter: search | orderBy: ['changeid'] track by change.changeid"
-                       change='change'
-                       width='c.width'
-                       cell-width='c.cellWidth')
+
+    table.table.table-striped.table-bordered(ng-hide="c.changes.length==0" ng-class="{'table-fixedwidth': c.isBigTable()}")
+        tr.first-row
+            td.row-header(ng-style="{'width': c.getRowHeaderWidth()}")
+                i.fa.fa-plus-circle.pull-right(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
+                i.fa.fa-minus-circle.pull-right(ng-click='c.closeAll()' uib-tooltip='Close information for all changes' uib-tooltip-placement='right')
+            td.column(ng-repeat="builder in c.builders | orderBy: 'name' track by builder.builderid")
+                a.builder(
+                          ng-href='#/builders/{{ builder.builderid }}'
+                          ng-bind='builder.name')
+        tr(ng-repeat="change in c.filtered_changes | orderBy: ['-changeid'] track by change.changeid")
+            td
+                .change-avatar
+                    img(ng-src="avatar?email={{change.author_email}}")
+                i.fa.fa-chevron-circle-right(ng-click='c.toggleInfo(change)' ng-class="{'fa-rotate-90': c.infoIsExpanded(change)}")
+                span(uib-tooltip='{{ change.comments }}' uib-tooltip-placement='top')
+                    a(ng-if='change.author_email'
+                      ng-href='mailto: {{change.author_email}}'
+                      target='_blank')
+                      |  {{ change.author_name }}
+                    span(ng-if='!change.author_email')  {{ change.author }}
+                div(ng-show='c.infoIsExpanded(change)')
+                    // Comment
+                    .info
+                        i.fa.fa-comment-o
+                        pre {{ change.comments }}
+                    // Link to the change
+                    .info
+                        i.fa.fa-link
+                        pre
+                            a(ng-href='{{ change.revlink }}' target='_blank') {{ change.revision | limitTo: 10 }}
+                    // Changed files
+                    .info
+                        i.fa.fa-file-o
+                        p(ng-repeat='file in change.files')
+                            | {{ file }}
+            td.column(ng-repeat="builder in change.builders | orderBy: ['name'] track by builder.builderid"
+                      title="{{builder.name}}")
+                a(ng-repeat="build in builder.builds | orderBy: ['started_at']")
+                    span.badge-status(ng-if='build.buildid'
+                                  ng-class="c.results2class(build, 'pulse')"
+                                  ng-click='c.selectBuild(build)')
+                        | {{ build.number }}

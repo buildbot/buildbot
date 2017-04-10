@@ -1,18 +1,30 @@
 beforeEach ->
-    # Mocked module dependencies
-    angular.module 'common', []
-    angular.module 'ui.bootstrap', []
-    angular.module 'ngAnimate', []
+    module ($provide) ->
+        $provide.service '$uibModal', -> open: ->
+        null
+    module ($provide) ->
+        $provide.service 'resultsService', -> results2class: ->
+        null
 
+    # Mock bbSettingsProvider
+    module ($provide) ->
+        $provide.provider 'bbSettingsService', class
+            group = {}
+            addSettingsGroup: (g) -> g.items.map (i) ->
+                if i.name is 'lazy_limit_waterfall'
+                    i.default_value = 2
+                group[i.name] = value: i.default_value
+            $get: ->
+                getSettingsGroup: ->
+                    return group
+                save: ->
+        null
     module 'console_view'
 
 describe 'Console view', ->
     $state = null
-
-    injected = ($injector) ->
+    beforeEach inject ($injector) ->
         $state = $injector.get('$state')
-
-    beforeEach(inject(injected))
 
     it 'should register a new state with the correct configuration', ->
         name = 'console'
@@ -132,8 +144,8 @@ describe 'Console view controller', ->
         $rootScope.$digest()
         expect(scope.c.builds).toBeDefined()
         expect(scope.c.builds.length).toBe(builds.length)
-        expect(scope.c.builders).toBeDefined()
-        expect(scope.c.builders.length).toBe(builders.length)
+        expect(scope.c.all_builders).toBeDefined()
+        expect(scope.c.all_builders.length).toBe(builders.length)
         expect(scope.c.changes).toBeDefined()
         expect(scope.c.changes.length).toBe(changes.length)
         expect(scope.c.buildrequests).toBeDefined()

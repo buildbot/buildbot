@@ -6,7 +6,7 @@ describe 'change hook', () ->
     builder = null
     console = null
     beforeEach(() ->
-        builder = new builderPage('runtest', 'force')
+        builder = new builderPage('runtests9', 'force')
         console = new consolePage()
     )
     afterEach () ->
