@@ -216,9 +216,14 @@ class Trigger(BuildStep):
 
             if was_cb:  # errors were already logged in worstStatus
                 for builderid, br in iteritems(brids):
-                    builderDict = yield self.master.data.get(("builders", builderid))
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
+                    builderDict = yield self.master.data.get(("builders", builderid))
                     for build in builds:
+                        # When virtual builders are used, the builderid used for triggering
+                        # is not the same as the one that the build actually got
+                        if build['builderid'] != builderid:
+                            builderid = build['builderid']
+                            builderDict = yield self.master.data.get(("builders", builderid))
                         num = build['number']
                         url = self.master.status.getURLForBuild(builderid, num)
                         yield self.addURL("%s: %s #%d" % (statusToString(build["results"]),
