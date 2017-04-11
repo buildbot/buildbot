@@ -1049,6 +1049,10 @@ The :bb:chsrc:`GerritChangeSource` accepts the following arguments:
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
 
+``gerritprojects``
+    gerrit project which events should be handled (optional).
+    By default events of any project are configured to be handled.
+
 By default this class adds a change to the Buildbot system for each of the following events:
 
 ``patchset-created``
@@ -1219,6 +1223,10 @@ The :bb:chsrc:`GerritEventLogPoller` accepts the following arguments:
 ``debug``
     Print Gerrit event in the log (default `False`).
     This allows to debug event content, but will eventually fill your logs with useless Gerrit event logs.
+
+``gerritprojects``
+    gerrit project which events should be handled (optional).
+    By default events of any project are configured to be handled.
 
 The same customization can be done as :bb:chsrc:`GerritChangeSource` for handling special events.
 

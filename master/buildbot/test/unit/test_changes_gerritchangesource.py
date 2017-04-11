@@ -199,6 +199,60 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             self.assertEqual(len(self.master.data.updates.changesAdded), 0)
         return d
 
+    def test_gerritprojects_filter_set(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user',
+            handled_events=["change-merged", "patchset-created"],
+            gerritprojects=['pr', 'pr/subpr'])
+
+        s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            change=dict(
+                branch="br",
+                project="pr",
+                number="4321",
+                owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                url="http://buildbot.net",
+                subject="fix 1234"
+            ),
+            patchSet=dict(revision="abcdef", number="12")
+            )))
+
+        # Received event of project that should not be handled. Should ignore it.
+        s.lineReceived(json.dumps(dict(
+            type="patchset-created",
+            change=dict(
+                branch="br",
+                 project="pr2",
+                 number="123",
+                 owner=dict(name="Roy", email="roy@example.com"),
+                 url="http://buildbot.net",
+                 subject="Fix bug#23"
+            ),
+            patchSet=dict(revision="abcdef", number="2")
+            )))
+
+        d = s.lineReceived(json.dumps(dict(type="change-merged",
+                change=dict(
+                    branch="br",
+                    project="pr/subpr",
+                    number="4321",
+                    owner=dict(name="Chuck", email="chuck@norris.com"),
+                    url="http://buildbot.net",
+                    subject="fix 1234",
+                ),
+                patchSet=dict(revision="abcdefj", number="13")
+                )))
+
+        @d.addCallback
+        def check(_):
+            self.assertEqual(len(self.master.data.updates.changesAdded), 2)
+            c = self.master.data.updates.changesAdded[0]
+            self.assertEqual(c["project"], "pr")
+            c = self.master.data.updates.changesAdded[1]
+            self.assertEqual(c["project"], "pr/subpr")
+        return d
+
     def test_custom_handler(self):
         s = self.newChangeSource(
             'somehost', 'some_choosy_user',
