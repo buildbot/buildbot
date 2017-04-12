@@ -213,21 +213,21 @@ class Trigger(BuildStep):
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, brids = results
-
+            builderNames = {}
             if was_cb:  # errors were already logged in worstStatus
                 for builderid, br in iteritems(brids):
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
-                    builderDict = yield self.master.data.get(("builders", builderid))
                     for build in builds:
+                        builderid = build['builderid']
                         # When virtual builders are used, the builderid used for triggering
                         # is not the same as the one that the build actually got
-                        if build['builderid'] != builderid:
-                            builderid = build['builderid']
+                        if builderid not in builderNames:
                             builderDict = yield self.master.data.get(("builders", builderid))
+                            builderNames[builderid] = builderDict["name"]
                         num = build['number']
                         url = self.master.status.getURLForBuild(builderid, num)
                         yield self.addURL("%s: %s #%d" % (statusToString(build["results"]),
-                                                          builderDict["name"], num), url)
+                                                          builderNames[builderid], num), url)
 
     @defer.inlineCallbacks
     def run(self):

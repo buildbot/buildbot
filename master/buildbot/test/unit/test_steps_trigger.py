@@ -139,11 +139,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             return fakedb.BuildRequest(
                 id=brid, buildsetid=BRID_TO_BSID(brid), builderid=builderid)
 
-        def make_fake_build(brid):
+        def make_fake_build(brid, builderid):
             return fakedb.Build(
                 buildrequestid=brid, id=BRID_TO_BID(brid),
                 number=BRID_TO_BUILD_NUMBER(brid), masterid=9,
-                workerid=13)
+                workerid=13, builderid=builderid)
 
         m.db.insertTestData([
             fakedb.Builder(id=77, name='A'),
@@ -159,10 +159,12 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
             make_fake_br(22, 78),
             fakedb.BuildRequest(id=33, buildsetid=2033, builderid=79),
             fakedb.BuildRequest(id=44, buildsetid=2033, builderid=80),
-            make_fake_build(11),
-            make_fake_build(22),
-            make_fake_build(33),
-            make_fake_build(44),
+            make_fake_build(11, builderid=77),
+            make_fake_build(22, builderid=78),
+            make_fake_build(33, builderid=79),
+            # builderid is 79 on purpose, changed, from the one of the buildrequest
+            # to test the case of the virtual
+            make_fake_build(44, builderid=79),
         ])
 
         def getAllSourceStamps():
@@ -218,7 +220,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         reactor.callLater(0, d.callback, None)
         yield d
 
-    def expectTriggeredWith(self, a=None, b=None, c=None):
+    def expectTriggeredWith(self, a=None, b=None, c=None, d=None):
         self.exp_a_trigger = a
         if a is not None:
             self.expectTriggeredLinks('a_br')
@@ -253,6 +255,11 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         if 'afailed' in args:
             self.exp_added_urls.append(
                 ('failure: A #4011', 'baseurl/#builders/77/builds/4011'))
+        if 'c' in args:
+            self.exp_added_urls.append(
+                ('success: C1 #4033', 'baseurl/#builders/79/builds/4033'))
+            self.exp_added_urls.append(
+                ('success: C1 #4044', 'baseurl/#builders/79/builds/4044'))
 
     # tests
     def test_no_schedulerNames(self):
@@ -554,6 +561,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredLinks('a')  # b doesn't return a brid
         yield self.runStep()
         self.assertEqual(len(self.step.addCompleteLog.call_args_list), 1)
+
+    def test_virtual_builder(self):
+        self.setupStep(trigger.Trigger(schedulerNames=['c'],
+                                       waitForFinish=True))
+        self.expectOutcome(result=SUCCESS, state_string='triggered c')
+        self.expectTriggeredWith(
+            c=(True, [], {}))
+        self.expectTriggeredLinks('c')
+        return self.runStep()
 
     def test_set_properties(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'],
