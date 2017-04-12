@@ -346,6 +346,21 @@ gitJsonPayloadPullRequest = """
 }
 """
 
+gitPRproperties = {
+    'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
+    'github.state': 'open',
+    'github.base.repo.full_name': 'defunkt/github',
+    'github.number': 50,
+    'github.base.ref': 'master',
+    'github.base.sha': '69a8b72e2d3d955075d47f03d902929dcaf74034',
+    'github.head.repo.full_name': 'defunkt/github',
+    'github.merged_at': None,
+    'github.head.ref': 'changes',
+    'github.closed_at': None,
+    'github.title': 'Update the README with new information',
+    'event': 'pull_request'
+}
+
 gitJsonPayloadEmpty = """
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
@@ -419,7 +434,14 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
-        self.changeHook = _prepare_github_change_hook(strict=False)
+        self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
+
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
 
     @defer.inlineCallbacks
     def test_unknown_event(self):
@@ -634,11 +656,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["revision"],
                          '05c588ba8cd510ecbe112d020f215facb17817a7')
         self.assertEqual(change["comments"],
-                         "GitHub Pull Request #50 (1 commit)")
+                         "GitHub Pull Request #50 (1 commit)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
-        self.assertEqual(change["properties"]["event"], "pull_request")
+        self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
         self._check_git_with_pull([gitJsonPayloadPullRequest])

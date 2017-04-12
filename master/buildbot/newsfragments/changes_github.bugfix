@@ -1,0 +1,1 @@
+``pollAtLaunch`` of the :bb:chsrc:`GitHubPullrequestPoller` now works as expected. Also the author email won't be displayed as None
