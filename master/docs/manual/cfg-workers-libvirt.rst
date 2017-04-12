@@ -18,7 +18,7 @@ It is LGPL and comes with a stable C API, and Python bindings.
 This means we know have an API which when tied to buildbot allows us to have workers that run under Xen, QEMU, KVM, LXC, OpenVZ, User Mode Linux, VirtualBox and VMWare.
 
 The libvirt code in Buildbot was developed against libvirt 0.7.5 on Ubuntu Lucid.
-It is used with KVM to test Python code on Karmic VM's, but obviously isn't limited to that.
+It is used with KVM to test Python code on VMs, but obviously isn't limited to that.
 Each build is run on a new VM, images are temporary and thrown away after each build.
 
 This document will guide you through setup of a libvirt latent worker:
@@ -32,8 +32,6 @@ Setting up libvirt
 
 We won't show you how to set up libvirt as it is quite different on each platform, but there are a few things you should keep in mind.
 
-* If you are running on Ubuntu, your master should run Lucid.
-  Libvirt and apparmor are buggy on Karmic.
 * If you are using the system libvirt, your buildbot master user will need to be in the libvirtd group.
 * If you are using KVM, your buildbot master user will need to be in the KVM group.
 * You need to think carefully about your virtual network *first*.
