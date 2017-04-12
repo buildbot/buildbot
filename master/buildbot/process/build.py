@@ -72,7 +72,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                         collects our status
     """
 
-    VIRTUAL_BUILDERNAME_PROP = "virtual_buildername"
+    VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
     VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
     VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"

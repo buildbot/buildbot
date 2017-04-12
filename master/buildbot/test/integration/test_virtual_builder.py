@@ -57,7 +57,7 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       properties={
-                          'virtual_buildername': 'virtual_testy',
+                          'virtual_builder_name': 'virtual_testy',
                           'virtual_builder_description': 'I am a virtual builder',
                           'virtual_builder_tags': ['virtual'],
                       },
