@@ -278,9 +278,9 @@ class TestBuild(unittest.TestCase):
         workerforbuilder1 = Mock()
         workerforbuilder2 = Mock()
 
-        l = WorkerLock('lock')
-        counting_access = l.access('counting')
-        real_lock = b.builder.botmaster.getLockByID(l)
+        lock = WorkerLock('lock')
+        counting_access = lock.access('counting')
+        real_lock = b.builder.botmaster.getLockByID(lock)
 
         # no locks, so both these pass (call twice to verify there's no
         # state/memory)
@@ -344,11 +344,11 @@ class TestBuild(unittest.TestCase):
     def testBuildLocksAcquired(self):
         b = self.build
 
-        l = WorkerLock('lock')
+        lock = WorkerLock('lock')
         claimCount = [0]
-        lock_access = l.access('counting')
-        l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l) \
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(lock) \
             .getLock(self.workerforbuilder.worker)
 
         def claim(owner, access):
@@ -387,9 +387,9 @@ class TestBuild(unittest.TestCase):
         eWorker.prepare = cWorker.prepare = lambda _: True
         eWorker.ping = cWorker.ping = lambda: True
 
-        l = WorkerLock('lock', 2)
+        lock = WorkerLock('lock', 2)
         claimLog = []
-        realLock = self.master.botmaster.getLockByID(l).getLock(self.worker)
+        realLock = self.master.botmaster.getLockByID(lock).getLock(self.worker)
 
         def claim(owner, access):
             claimLog.append(owner)
@@ -397,11 +397,11 @@ class TestBuild(unittest.TestCase):
         realLock.oldClaim = realLock.claim
         realLock.claim = claim
 
-        eBuild.setLocks([l.access('exclusive')])
-        cBuild.setLocks([l.access('counting')])
+        eBuild.setLocks([lock.access('exclusive')])
+        cBuild.setLocks([lock.access('counting')])
 
         fakeBuild = Mock()
-        fakeBuildAccess = l.access('counting')
+        fakeBuildAccess = lock.access('counting')
         realLock.claim(fakeBuild, fakeBuildAccess)
 
         step = Mock()
@@ -427,11 +427,11 @@ class TestBuild(unittest.TestCase):
     def testBuildWaitingForLocks(self):
         b = self.build
 
-        l = WorkerLock('lock')
+        lock = WorkerLock('lock')
         claimCount = [0]
-        lock_access = l.access('counting')
-        l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l) \
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(lock) \
             .getLock(self.workerforbuilder.worker)
 
         def claim(owner, access):
@@ -446,7 +446,7 @@ class TestBuild(unittest.TestCase):
         step.startStep.return_value = SUCCESS
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), l.access('counting'))
+        real_lock.claim(Mock(), lock.access('counting'))
 
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
@@ -459,10 +459,10 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForLocks(self):
         b = self.build
 
-        l = WorkerLock('lock')
-        lock_access = l.access('counting')
-        l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l) \
+        lock = WorkerLock('lock')
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(lock) \
             .getLock(self.workerforbuilder.worker)
         b.setLocks([lock_access])
 
@@ -472,7 +472,7 @@ class TestBuild(unittest.TestCase):
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), l.access('counting'))
+        real_lock.claim(Mock(), lock.access('counting'))
 
         def acquireLocks(res=None):
             retval = Build.acquireLocks(b, res)
@@ -491,10 +491,10 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForLocks_lostRemote(self):
         b = self.build
 
-        l = WorkerLock('lock')
-        lock_access = l.access('counting')
-        l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l) \
+        lock = WorkerLock('lock')
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(lock) \
             .getLock(self.workerforbuilder.worker)
         b.setLocks([lock_access])
 
@@ -504,7 +504,7 @@ class TestBuild(unittest.TestCase):
         step.alwaysRun = False
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), l.access('counting'))
+        real_lock.claim(Mock(), lock.access('counting'))
 
         def acquireLocks(res=None):
             retval = Build.acquireLocks(b, res)
@@ -526,16 +526,16 @@ class TestBuild(unittest.TestCase):
     def testStopBuildWaitingForStepLocks(self):
         b = self.build
 
-        l = WorkerLock('lock')
-        lock_access = l.access('counting')
-        l.access = lambda mode: lock_access
-        real_lock = b.builder.botmaster.getLockByID(l) \
+        lock = WorkerLock('lock')
+        lock_access = lock.access('counting')
+        lock.access = lambda mode: lock_access
+        real_lock = b.builder.botmaster.getLockByID(lock) \
             .getLock(self.workerforbuilder.worker)
 
         step = LoggingBuildStep(locks=[lock_access])
         b.setStepFactories([FakeStepFactory(step)])
 
-        real_lock.claim(Mock(), l.access('counting'))
+        real_lock.claim(Mock(), lock.access('counting'))
 
         gotLocks = [False]
 
@@ -1125,7 +1125,6 @@ class TestBuildProperties(unittest.TestCase):
         @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
             pass
-
         import posixpath
 
         r = FakeRequest()
