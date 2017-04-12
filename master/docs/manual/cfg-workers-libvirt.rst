@@ -36,7 +36,7 @@ We won't show you how to set up libvirt as it is quite different on each platfor
 * If you are using KVM, your buildbot master user will need to be in the KVM group.
 * You need to think carefully about your virtual network *first*.
   Will NAT be enough?
-  What IP will my VM's need to connect to for connecting to the master?
+  What IP will my VMs need to connect to for connecting to the master?
 
 Configuring your base image
 ---------------------------
