@@ -1341,7 +1341,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         row = self.buildsets[bsid]
         return defer.succeed(self._row2dict(row))
 
-    def getBuildsets(self, complete=None):
+    def getBuildsets(self, complete=None, resultSpec=None):
         rv = []
         for bs in itervalues(self.buildsets):
             if complete is not None:
@@ -1351,6 +1351,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     rv.append(self._row2dict(bs))
             else:
                 rv.append(self._row2dict(bs))
+        if resultSpec is not None:
+            rv = self.applyResultSpec(rv, resultSpec)
         return defer.succeed(rv)
 
     @defer.inlineCallbacks

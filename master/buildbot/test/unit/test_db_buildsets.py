@@ -70,7 +70,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getBuildsets(self):
         @self.assertArgSpecMatches(self.db.buildsets.getBuildsets)
-        def getBuildsets(self, complete=None):
+        def getBuildsets(self, complete=None, resultSpec=None):
             pass
 
     def test_signature_getRecentBuildsets(self):
