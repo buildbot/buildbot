@@ -10,24 +10,27 @@
 
     table.table.table-striped.table-bordered(ng-hide="c.changes.length==0" ng-class="{'table-fixedwidth': c.isBigTable()}")
         tr.first-row
-            td.row-header(ng-style="{'width': c.getRowHeaderWidth()}")
-                i.fa.fa-plus-circle.pull-right(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
-                i.fa.fa-minus-circle.pull-right(ng-click='c.closeAll()' uib-tooltip='Close information for all changes' uib-tooltip-placement='right')
-            td.column(ng-repeat="builder in c.builders | orderBy: 'name' track by builder.builderid")
-                a.builder(
-                          ng-href='#/builders/{{ builder.builderid }}'
-                          ng-bind='builder.name')
+            th.row-header(ng-style="{'width': c.getRowHeaderWidth()}")
+                i.fa.fa-plus-circle.pull-left(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
+                i.fa.fa-minus-circle.pull-left(ng-click='c.closeAll()' uib-tooltip='Close information for all changes' uib-tooltip-placement='right')
+            th.column(ng-repeat="builder in c.builders")
+                span.builder(ng-style="{'margin-top': c.getColHeaderHeight()}")
+                    a(ng-href='#/builders/{{ builder.builderid }}'
+                      ng-bind='builder.name')
+        tr.tag_row(ng-repeat="tag_line in c.tag_lines")
+            td.row-header
+            td(ng-repeat="tag in tag_line" colspan="{{tag.colspan}}")
+                span(uib-tooltip='{{ tag.tag }}' ng-style='{width: tag.colspan*50}') {{tag.tag}}
         tr(ng-repeat="change in c.filtered_changes | orderBy: ['-changeid'] track by change.changeid")
             td
-                .change-avatar
-                    img(ng-src="avatar?email={{change.author_email}}")
-                i.fa.fa-chevron-circle-right(ng-click='c.toggleInfo(change)' ng-class="{'fa-rotate-90': c.infoIsExpanded(change)}")
-                span(uib-tooltip='{{ change.comments }}' uib-tooltip-placement='top')
+                .change-avatar(uib-tooltip='{{ change.author }}')
                     a(ng-if='change.author_email'
                       ng-href='mailto: {{change.author_email}}'
                       target='_blank')
-                      |  {{ change.author_name }}
-                    span(ng-if='!change.author_email')  {{ change.author }}
+                      img(ng-src="avatar?email={{change.author_email}}")
+                    img(ng-if='!change.author_email' ng-src="avatar?email={{change.author_email}}" de)
+                span(ng-click='c.toggleInfo(change)' uib-tooltip='{{ change.comments }}' uib-tooltip-placement='top') {{ change.subject }}&nbsp;
+                    i.fa.fa-chevron-circle-right(ng-class="{'fa-rotate-90': c.infoIsExpanded(change)}")
                 div(ng-show='c.infoIsExpanded(change)')
                     // Comment
                     .info
@@ -43,9 +46,9 @@
                         i.fa.fa-file-o
                         p(ng-repeat='file in change.files')
                             | {{ file }}
-            td.column(ng-repeat="builder in change.builders | orderBy: ['name'] track by builder.builderid"
+            td.column(ng-repeat="builder in change.builders"
                       title="{{builder.name}}")
-                a(ng-repeat="build in builder.builds | orderBy: ['started_at']")
+                a(ng-repeat="build in builder.builds | orderBy: ['number']")
                     span.badge-status(ng-if='build.buildid'
                                   ng-class="c.results2class(build, 'pulse')"
                                   ng-click='c.selectBuild(build)')

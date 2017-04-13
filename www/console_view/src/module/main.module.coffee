@@ -55,7 +55,8 @@ class State extends Config
             ]
 
 class Console extends Controller
-    constructor: (@$scope, $q, @$window, dataService, bbSettingsService, resultsService, @$uibModal) ->
+    constructor: (@$scope, $q, @$window, dataService, bbSettingsService, resultsService,
+        @$uibModal, @$timeout) ->
         angular.extend this, resultsService
         settings = bbSettingsService.getSettingsGroup('Console')
         @buildLimit = settings.buildLimit.value
@@ -64,11 +65,21 @@ class Console extends Controller
         @_infoIsExpanded = {}
         @$scope.all_builders = @all_builders = @dataAccessor.getBuilders()
         @$scope.builders = @builders = []
+        if Intl?
+            collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'})
+            @strcompare = collator.compare
+        else
+            @strcompare = (a, b) ->
+                if a < b
+                    return -1
+                if a == b
+                    return 0
+                return 1
 
         @$scope.builds = @builds = @dataAccessor.getBuilds
             property: ["got_revision"]
             limit: @buildLimit
-            order: '-complete_at'
+            order: '-started_at'
         @changes = @dataAccessor.getChanges({limit: @changeLimit, order: '-changeid'})
         @buildrequests = @dataAccessor.getBuildrequests({limit: @buildLimit, order: '-submitted_at'})
         @buildsets = @dataAccessor.getBuildsets({limit: @buildLimit, order: '-submitted_at'})
@@ -80,24 +91,16 @@ class Console extends Controller
         if @builds.length == 0 or @all_builders.length == 0 or @changes.length == 0 or
                 @buildsets.length == 0 or @buildrequests == 0
             return
+        if not @onchange_debounce?
+            @onchange_debounce = @$timeout(@_onChange, 500)
 
+    _onChange: =>
+        @onchange_debounce = undefined
         # we only display builders who actually have builds
         for build in @builds
             @all_builders.get(build.builderid).hasBuild = true
 
-        @builders = []
-        for builder in @all_builders
-            if builder.hasBuild
-                @builders.push(builder)
-        @$scope.builders = @builders
-        if Intl?
-            collator = new Intl.Collator(undefined, {numeric: true, sensitivity: 'base'})
-            compare = collator.compare
-        else
-            compare = (a, b) ->
-                return a < b ? -1 : a > b;
-        @builders.sort (a, b) -> compare(a.name, b.name)
-
+        @sortBuildersByTags(@all_builders)
 
         @changesBySSID = {}
         for change in @changes
@@ -110,10 +113,136 @@ class Console extends Controller
 
         @filtered_changes = []
         for ssid, change of @changesBySSID
+            if change.comments
+                change.subject = change.comments.split("\n")[0]
             for builder in change.builders
-                if builder.builds.length>0
+                if builder.builds.length > 0
                     @filtered_changes.push(change)
                     break
+    ###
+    # Sort builders by tags
+    # Buildbot eight has the category option, but it was only limited to one category per builder,
+    # which make it easy to sort by category
+    # Here, we have multiple tags per builder, we need to try to group builders with same tags together
+    # The algorithm is rather twisted. It is a first try at the concept of grouping builders by tags..
+    ###
+
+    sortBuildersByTags: (all_builders) ->
+        # first we only want builders with builds
+        builders_with_builds = []
+        builderids_with_builds = ""
+        for builder in all_builders
+            if builder.hasBuild
+                builders_with_builds.push(builder)
+                builderids_with_builds += "." + builder.builderid
+
+        if builderids_with_builds == @last_builderids_with_builds
+            # dont recalculate if it hasn't changed!
+            return
+        # we call recursive function, which finds non-overlapping groups
+        tag_line = @_sortBuildersByTags(builders_with_builds)
+        # we get a tree of builders grouped by tags
+        # we now need to flatten the tree, in order to build several lines of tags
+        # (each line is representing a depth in the tag tree)
+        # we walk the tree left to right and build the list of builders in the tree order, and the tag_lines
+        # in the tree, there are groups of remaining builders, which could not be grouped together,
+        # those have the empty tag ''
+        tag_lines = []
+
+        sorted_builders = []
+        set_tag_line = (depth, tag, colspan) ->
+            # we build the tag lines by using a sparse array
+            _tag_line = tag_lines[depth]
+            if not _tag_line?
+                # initialize the sparse array
+                _tag_line = tag_lines[depth] = []
+            else
+                # if we were already initialized, look at the last tag if this is the same
+                # we merge the two entries
+                last_tag = _tag_line[_tag_line.length - 1]
+                if last_tag.tag == tag
+                    last_tag.colspan += colspan
+                    return
+            _tag_line.push(tag: tag, colspan: colspan)
+        self = @
+        # recursive tree walking
+        walk_tree = (tag, depth) ->
+            set_tag_line(depth, tag.tag, tag.builders.length)
+            if not tag.tag_line? or tag.tag_line.length == 0
+                # this is the leaf of the tree, sort by buildername, and add them to the
+                # list of sorted builders
+                tag.builders.sort (a, b) -> self.strcompare(a.name, b.name)
+                sorted_builders = sorted_builders.concat(tag.builders)
+                for i in [1..100]  # set the remaining depth of the tree to the same colspan
+                                   # (we hardcode the maximum depth for now :/ )
+                    set_tag_line(depth + i, '', tag.builders.length)
+                return
+            for _tag in tag.tag_line
+                walk_tree(_tag, depth + 1)
+
+        for tag in tag_line
+            walk_tree(tag, 0)
+
+        @builders = sorted_builders
+        @tag_lines = []
+        # make a new array to avoid it to be sparse, and to remove lines filled with null tags
+        for tag_line in tag_lines
+            if not (tag_line.length == 1 and tag_line[0].tag == "")
+                @tag_lines.push(tag_line)
+        @last_builderids_with_builds = builderids_with_builds
+    ###
+    # recursive function which sorts the builders by tags
+    # call recursively with groups of builders smaller and smaller
+    ###
+    _sortBuildersByTags: (all_builders) ->
+
+        # first find out how many builders there is by tags in that group
+        builders_by_tags = {}
+        for builder in all_builders
+            if builder.tags?
+                for tag in builder.tags
+                    if not builders_by_tags[tag]?
+                        builders_by_tags[tag] = []
+                    builders_by_tags[tag].push(builder)
+        tags = []
+        for tag, builders of builders_by_tags
+            # we dont want the tags that are on all the builders
+            if builders.length < all_builders.length
+                tags.push(tag: tag, builders: builders)
+
+        # sort the tags to first look at tags with the larger number of builders
+        # @FIXME maybe this is not the best method to find the best groups
+        tags.sort (a, b) -> b.builders.length - a.builders.length
+
+        tag_line = []
+        chosen_builderids = {}
+        # pick the tags one by one, by making sure we make non-overalaping groups
+        for tag in tags
+            excluded = false
+            for builder in tag.builders
+                if chosen_builderids.hasOwnProperty(builder.builderid)
+                    excluded = true
+                    break
+            if not excluded
+                for builder in tag.builders
+                    chosen_builderids[builder.builderid] = tag.tag
+                tag_line.push(tag)
+
+        # some builders do not have tags, we put them in another group
+        remaining_builders = []
+        for builder in all_builders
+            if not chosen_builderids.hasOwnProperty(builder.builderid)
+                remaining_builders.push(builder)
+
+        if remaining_builders.length
+            tag_line.push(tag: "", builders: remaining_builders)
+
+        # if there is more than one tag in this line, we need to recurse
+        if tag_line.length > 1
+            for tag in tag_line
+                tag.tag_line = @_sortBuildersByTags(tag.builders)
+        return tag_line
+
     ###
     # fill a change with a list of builders
     ###
@@ -121,7 +250,7 @@ class Console extends Controller
         change.builders = []
         change.buildersById = {}
         for builder in @builders
-            builder = builderid:builder.builderid, name:builder.name, builds: []
+            builder = builderid: builder.builderid, name: builder.name, builds: []
             change.builders.push(builder)
             change.buildersById[builder.builderid] = builder
     ###
@@ -132,6 +261,8 @@ class Console extends Controller
         if not buildrequest?
             return
         buildset = @buildsets.get(buildrequest.buildsetid)
+        if not buildset?
+            return
         if  buildset? and buildset.sourcestamps?
             for sourcestamp in buildset.sourcestamps
                 change = @changesBySSID[sourcestamp.ssid]
@@ -148,7 +279,12 @@ class Console extends Controller
     makeFakeChange: (codebase, revision) =>
         change = @changesBySSID[revision]
         if not change?
-            change = codebase: codebase, revision: revision, changeid: revision, author: "unknown author for " + revision
+            change =
+                codebase: codebase
+                revision: revision
+                changeid: revision
+                author: "unknown author for " + revision
+                comment: revision
             @changesBySSID[revision] = change
             @populateChange(change)
         return change
@@ -175,6 +311,15 @@ class Console extends Controller
             return 400  # magic value enough to hold 78 characters lines
         else
             return 200
+    ###
+    # Calculate col header (aka first row) height
+    # It depends on the length of the longest builder
+    ###
+    getColHeaderHeight: ->
+        max_buildername = 0
+        for builder in @builders
+            max_buildername = Math.max(builder.name.length, max_buildername)
+        return Math.max(100, max_buildername * 3)
 
     ###
     #
@@ -216,7 +361,7 @@ class Console extends Controller
     # toggle display of additional info for that change
     #
     ###
-    toggleInfo: (change)->
+    toggleInfo: (change) ->
         @_infoIsExpanded[change.changeid] = !@_infoIsExpanded[change.changeid]
     infoIsExpanded: (change) ->
         return @_infoIsExpanded[change.changeid]

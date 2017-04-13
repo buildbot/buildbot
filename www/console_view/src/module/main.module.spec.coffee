@@ -142,6 +142,7 @@ describe 'Console view controller', ->
     it 'should bind the builds, builders, changes, buildrequests and buildsets to scope', ->
         createController()
         $rootScope.$digest()
+        $timeout.flush()
         expect(scope.c.builds).toBeDefined()
         expect(scope.c.builds.length).toBe(builds.length)
         expect(scope.c.all_builders).toBeDefined()
@@ -156,6 +157,8 @@ describe 'Console view controller', ->
     it 'should match the builds with the change', ->
         createController()
         $timeout.flush()
+        $rootScope.$digest()
+        $timeout.flush()
         expect(scope.c.changes[0]).toBeDefined()
         expect(scope.c.changes[0].builders).toBeDefined()
         builders = scope.c.changes[0].builders
@@ -163,3 +166,12 @@ describe 'Console view controller', ->
         expect(builders[1].builds[0].buildid).toBe(2)
         expect(builders[2].builds[0].buildid).toBe(4)
         expect(builders[3].builds[0].buildid).toBe(3)
+
+    xit 'should match sort the builders by tag groups', ->
+        createController()
+        _builders = FIXTURES['builders.fixture.json'].builders
+        for builder in _builders
+            builder.hasBuild = true
+        scope.c.sortBuildersByTags(_builders)
+        expect(_builders.length).toBe(scope.c.builders.length)
+        expect(scope.c.tag_lines.length).toEqual(5)
