@@ -72,6 +72,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                         collects our status
     """
 
+    VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
+    VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
+    VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
     build_status = None
     reason = "changes"
@@ -98,6 +101,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.terminate = False
 
         self._acquiringLock = None
+        self._builderid = None
         # overall results, may downgrade after each step
         self.results = SUCCESS
         self.properties = properties.Properties()
@@ -238,6 +242,27 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks
+    def getBuilderId(self):
+        if self._builderid is None:
+            if self.hasProperty(self.VIRTUAL_BUILDERNAME_PROP):
+                self._builderid = yield self.builder.getBuilderIdForName(
+                    self.getProperty(self.VIRTUAL_BUILDERNAME_PROP))
+                description = self.getProperty(
+                    self.VIRTUAL_BUILDERDESCRIPTION_PROP,
+                    self.builder.config.description)
+                tags = self.getProperty(
+                    self.VIRTUAL_BUILDERTAGS_PROP,
+                    self.builder.config.tags)
+
+                self.master.data.updates.updateBuilderInfo(self._builderid,
+                                                           description,
+                                                           tags)
+
+            else:
+                self._builderid = yield self.builder.getBuilderId()
+        defer.returnValue(self._builderid)
+
+    @defer.inlineCallbacks
     def startBuild(self, build_status, workerforbuilder):
         """This method sets up the build, then starts it by invoking the
         first Step. It returns a Deferred which will fire when the build
@@ -251,11 +276,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
-        # then we just assign the bulid to the first buildrequest
+        # then we just assign the build to the first buildrequest
         brid = self.requests[0].id
+        builderid = yield self.getBuilderId()
         self.buildid, self.number = \
             yield self.master.data.updates.addBuild(
-                builderid=(yield self.builder.getBuilderId()),
+                builderid=builderid,
                 buildrequestid=brid,
                 workerid=worker.workerid)
 
