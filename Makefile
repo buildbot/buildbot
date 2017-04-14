@@ -62,7 +62,7 @@ docker-buildbot-master-ubuntu:
 
 .venv:
 		virtualenv .venv
-		.venv/bin/pip install -U pip
+		.venv/bin/pip install -U pip setuptools
 		.venv/bin/pip install -e pkg \
 			-e 'master[tls,test,docs]' \
 			-e 'worker[test]' \
