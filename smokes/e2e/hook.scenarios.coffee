@@ -6,13 +6,13 @@ describe 'change hook', () ->
     builder = null
     console = null
     beforeEach(() ->
-        builder = new builderPage('runtest', 'force')
+        builder = new builderPage('runtests1', 'force')
         console = new consolePage()
     )
     afterEach () ->
         new homePage().waitAllBuildsFinished()
 
-    it 'should create a build', () ->
+    xit 'should create a build', () ->
         builder.go()
         builder.getLastSuccessBuildNumber().then (lastbuild) ->
             browser.executeAsyncScript (done)->
