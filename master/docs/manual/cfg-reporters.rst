@@ -978,7 +978,7 @@ GitLabStatusPush
 
     from buildbot.plugins import reporters
 
-    gl = reporters.GitLabStatusPush('private-token', context='continuous-integration/buildbot', baseUrl='https://git.yourcompany.com')
+    gl = reporters.GitLabStatusPush('private-token', context='continuous-integration/buildbot', baseURL='https://git.yourcompany.com')
     c['services'].append(gl)
 
 :class:`GitLabStatusPush` publishes build status using `GitLab Commit Status API <http://doc.gitlab.com/ce/api/commits.html#commit-status>`_.
