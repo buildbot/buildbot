@@ -644,7 +644,7 @@ class ForceScheduler(base.BaseScheduler):
             config.error("ForceScheduler name must be an identifier: %r" %
                          name)
 
-        if not self.checkIfListOfType(builderNames, str):
+        if not self.checkIfListOfType(builderNames, string_types):
             config.error("ForceScheduler '%s': builderNames must be a list of strings: %r" %
                          (name, builderNames))
 
