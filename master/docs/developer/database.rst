@@ -120,7 +120,7 @@ buildrequests
         :param repository: the repository associated with the sourcestamps originating the requests
         :param branch: the branch associated with the sourcestamps originating the requests
         :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
-        If possible, the db layer can optimize the SQL query using this information.
+            If possible, the db layer can optimize the SQL query using this information.
         :returns: list of brdicts, via Deferred
 
         Get a list of build requests matching the given characteristics.
@@ -284,7 +284,7 @@ builds
         :param integer buildrequestid: buildrequest to get builds for
         :param boolean complete: if not None, filters results based on completeness
         :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
-        If possible, the db layer can optimize the SQL query using this information.
+            If possible, the db layer can optimize the SQL query using this information.
         :returns: list of build dictionaries as above, via Deferred
 
         Get a list of builds, in the format described above.
@@ -634,7 +634,7 @@ buildsets
             return only incomplete buildsets; if ``None`` or omitted, return all
             buildsets
         :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
-        If possible, the db layer can optimize the SQL query using this information.
+            If possible, the db layer can optimize the SQL query using this information.
 
         :returns: list of bsdicts, via Deferred
 
