@@ -17,6 +17,8 @@ import os
 import re
 import sys
 
+from buildbot.test.util.decorators import skip_if_no_python
+
 from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
@@ -137,6 +139,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
             log.msg("got output:\n" + output)
             raise
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_from_cvs1_11(self):
         # Simulate CVS 1.11
         d = getProcessOutputAndValueWithInput(sys.executable,
@@ -147,6 +150,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d.addCallback(self.assertOutputOk, golden_1_11_regex)
         return d
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_from_cvs1_12(self):
         # Simulate CVS 1.12, with --path option
         d = getProcessOutputAndValueWithInput(sys.executable,
@@ -158,6 +162,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d.addCallback(self.assertOutputOk, golden_1_12_regex)
         return d
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_no_args_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path])
 
@@ -167,6 +172,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_without_email_opt_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
                                                             '--cvsroot=\"ext:example.com:/cvsroot\"',
@@ -180,6 +186,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_without_cvsroot_opt_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
                                                             '--complete-garbage-opt=gomi',
@@ -194,6 +201,7 @@ class TestBuildbotCvsMail(unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @skip_if_no_python
     def test_buildbot_cvs_mail_with_unknown_opt_exits_with_error(self):
         d = utils.getProcessOutputAndValue(sys.executable, [self.buildbot_cvs_mail_path,
                                                             '--email=buildbot@example.com', '-P', 'test', '--path',
