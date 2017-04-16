@@ -496,12 +496,13 @@ class BuildRequestDistributor(service.Service):
 
             # get the actual builder object
             bldr = self.botmaster.builders.get(bldr_name)
-            try:
-                if bldr:
-                    yield self._maybeStartBuildsOnBuilder(bldr)
-            except Exception:
-                log.err(Failure(),
-                        "from maybeStartBuild for builder '%s'" % (bldr_name,))
+            if bldr:
+                d = self._maybeStartBuildsOnBuilder(bldr)
+                self._pendingMSBOCalls.append(d)
+                d.addErrback(
+                    log.err,
+                    "from maybeStartBuild for builder '%s'" % (bldr_name,))
+                d.addCallback(lambda _, d=d: self._pendingMSBOCalls.remove(d))
 
             self.activity_lock.release()
 

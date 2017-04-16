@@ -317,11 +317,19 @@ class BotMaster(config.ReconfigurableServiceMixin, service.MultiService):
         """
         Call this when something suggests that a particular slave may now be
         available to start a build.
+        We delay this for 10 seconds, so that if multiple slaves start at the same
+        time, builds will be distributed between them.
 
         @param slave_name: the name of the slave
         """
-        builders = self.getBuildersForSlave(slave_name)
-        self.brd.maybeStartBuildsOn([b.name for b in builders])
+        def do_start():
+            log.msg(format="Really starting builds on %(slave_name)s",
+                    slave_name=slave_name)
+            builders = self.getBuildersForSlave(slave_name)
+            self.brd.maybeStartBuildsOn([b.name for b in builders])
+        log.msg(format="Waiting to start builds on %(slave_name)s",
+                slave_name=slave_name)
+        reactor.callLater(10, do_start)
 
     def maybeStartBuildsForAllBuilders(self):
         """
