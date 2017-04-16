@@ -18,14 +18,27 @@
 
 <div class="column">
 
-{% if authz.advertiseAction('view', request) %}
 <ul>
   {% set item_class=cycler('alt', '') %}
   
-  <li class="{{ item_class.next() }}">The <a href="waterfall">Waterfall Display</a> will give you a
-  time-oriented summary of recent buildbot activity. <a href="waterfall/help">Waterfall Help.</a></li>
+  <li class="{{ item_class.next() }}">the Waterfall Display
+(
+    {% for b in waterfall_branches %}
+    <a href="waterfall?branch={{b}}" {% if b in important_branches %} style='background-color:cyan' {% endif %}>{{b}}</a>, 
+    {% endfor %}
+<a href="waterfall">all</a>
+)
+will give you a time-oriented summary of recent buildbot activity.</li>
 
-  <li class="{{ item_class.next() }}">The <a href="grid">Grid Display</a> will give you a
+  <li class="{{ item_class.next() }}">the Grid Display
+(
+    {% for b in grid_branches %}
+    <a href="grid?branch={{b}}" {% if b in important_branches %} style='background-color:cyan' {% endif %}>{{b}}</a>, 
+    {% endfor %}
+<a href="grid">all</a>
+)
+
+will give you a
   developer-oriented summary of recent buildbot activity.</li>
 
   <li class="{{ item_class.next() }}">The <a href="tgrid">Transposed Grid Display</a> presents
@@ -37,14 +50,78 @@
   <li class="{{ item_class.next() }}">The <a href="builders">Builders</a> and their most recent builds are
   here.</li>
 
+  <li>The <a href="one_box_per_builder">Latest Build</a> for each builder is
+  here.</li>
+
   <li class="{{ item_class.next() }}"><a href="one_line_per_build">Recent Builds</a> are summarized here, one
   per line.</li>
 
   <li class="{{ item_class.next() }}"><a href="buildslaves">Buildslave</a> information</li>
   <li class="{{ item_class.next() }}"><a href="changes">Changesource</a> information.</li>
+  <li><a href="reports/cross_reference">Cross Reference</a> allows to search
+  for test failures in previous test runs.</li>
 
   <li class="{{ item_class.next() }}"><a href="about">About</a> this Buildbot</li>
 </ul>
+
+<hr>
+<p>
+<form method=GET action="grid">
+Grid display by category and branch:
+<br> <input type=checkbox name=category value=main checked> Main stable builders
+<br> <input type=checkbox name=category value=package checked> Builders for package testing
+<br> <input type=checkbox name=category value=experimental> Experimental builders with unresolved failures/problems
+<br> <input type=checkbox name=category value=new> New builders not yet working
+<br>
+Branch:
+<select NAME="branch">
+    {% for b in grid_branches %}
+    <option value="{{ b }}">{{ b }}
+    {% endfor %}
+</select>
+<input type=hidden name=width value="8">
+<input type=submit value="Show grid">
+</form>
+</p>
+
+<hr>
+<p>
+<form method=GET action="tgrid">
+Transposed grid display by category and branch:
+<br> <input type=checkbox name=category value=main checked> Main stable builders
+<br> <input type=checkbox name=category value=package checked> Builders for package testing
+<br> <input type=checkbox name=category value=experimental> Experimental builders with unresolved failures/problems
+<br> <input type=checkbox name=category value=new> New builders not yet working
+<br>
+Branch:
+<select NAME="branch">
+    {% for b in grid_branches %}
+    <option value="{{ b }}">{{ b }}
+    {% endfor %}
+</select>
+<input type=hidden name=length value="10">
+<input type=submit value="Show transposed grid">
+</form>
+</p>
+
+<hr>
+<p>
+<form method=GET action="waterfall">
+Waterfall display by category and branch:
+<br> <input type=checkbox name=category value=main checked> Main stable builders
+<br> <input type=checkbox name=category value=package checked> Builders for package testing
+<br> <input type=checkbox name=category value=experimental> Experimental builders with unresolved failures/problems
+<br> <input type=checkbox name=category value=new> New builders not yet working
+<br>
+Branch:
+<select NAME="branch">
+    {% for b in waterfall_branches %}
+    <option value="{{ b }}">{{ b }}
+    {% endfor %}
+</select>
+<input type=submit value="Show waterfall">
+</form>
+</p>
 
 {%- if authz.advertiseAction('cleanShutdown', request) -%}
 {%- if shutting_down -%}
@@ -54,9 +131,7 @@ Master is shutting down<br/>
 {{ forms.clean_shutdown(shutdown_url, authz) }}
 {%- endif -%}
 {%- endif -%}
-{% endif %}
 
-<p><i>This and other pages can be overridden and customized.</i></p>
 
 </div>
 

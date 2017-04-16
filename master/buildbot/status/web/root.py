@@ -28,6 +28,15 @@ class RootPage(HtmlResource):
     def content(self, request, cxt):
         status = self.getStatus(request)
 
+        repos = ['git://github.com/MariaDB/server', 'git@github.com:mariadb-corporation/MariaDBEnterprise.git']
+        cmds = ['git ls-remote --heads ' + repo + ' | grep -v "\^" | sed s/".*refs\/heads\/"//g' for repo in repos]
+        all_branches = os.popen(" && ".join(cmds), 'r', 1).readlines()
+
+        cxt['waterfall_branches'] = all_branches
+        cxt['grid_branches'] = all_branches
+        cxt['important_branches'] = ["5.5", "10.0", "5.5e", "10.0e"]
+
+
         res = yield self.getAuthz(request).actionAllowed("cleanShutdown",
                                                          request)
 
