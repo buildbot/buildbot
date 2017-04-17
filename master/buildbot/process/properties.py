@@ -131,6 +131,7 @@ class Properties(util.ComparableMixin):
     def hasProperty(self, name):
         return name in self.properties
 
+    get = getProperty
     has_key = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
