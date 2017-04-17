@@ -21,8 +21,8 @@ urllib2 supports http_proxy already urllib2 is blocking and thus everything is d
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.moves.urllib import request as urllib_request
 from future.moves.urllib import error as urllib_error
+from future.moves.urllib import request as urllib_request
 
 import hashlib
 import inspect
