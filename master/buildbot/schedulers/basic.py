@@ -27,6 +27,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot import util
 from buildbot.changes import changes
+from buildbot.process.properties import Properties
 from buildbot.changes.filter import ChangeFilter
 from buildbot.schedulers import base
 from buildbot.schedulers import dependent
@@ -134,8 +135,14 @@ class BaseBasicScheduler(base.BaseScheduler):
             # unimportant changes
             if not important:
                 return defer.succeed(None)
+
+            properties = change.properties
+            if(type(properties) == dict):
+                properties = Properties.fromDict(properties)
+
             # otherwise, we'll build it right away
             return self.addBuildsetForChanges(reason=self.reason,
+                                              properties=properties,
                                               changeids=[change.number])
 
         timer_name = self.getTimerNameForChange(change)
