@@ -23,6 +23,7 @@ from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
 from buildbot.steps.source import Source
 from twisted.internet import defer
+from twisted.internet import reactor
 from twisted.python import log
 from types import StringType
 
@@ -141,7 +142,7 @@ class P4(Source):
         yield self._createClientSpec()
 
         # Then p4 sync #none
-        yield self._dovccmd(['sync', '#none'])
+        yield self._sync(['#none'])
 
         # Then remove directory.
         yield self.runRmdir(self.workdir)
@@ -150,11 +151,11 @@ class P4(Source):
         if self.revision:
             if debug_logging:
                 log.msg("P4: full() sync command based on :base:%s changeset:%d", self._getP4BaseForLog(), int(self.revision))
-            yield self._dovccmd(['sync', '%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))], collectStdout=True)
+            yield self._sync(['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
         else:
             if debug_logging:
                 log.msg("P4: full() sync command based on :base:%s no revision", self._getP4BaseForLog())
-            yield self._dovccmd(['sync'], collectStdout=True)
+            yield self._sync([])
 
         if debug_logging:
             log.msg("P4: full() sync done.")
@@ -168,14 +169,36 @@ class P4(Source):
         yield self._createClientSpec()
 
         # and plan to do a checkout
-        command = ['sync', ]
-
+        args = []
         if self.revision:
-            command.extend(['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
+            args.extend(['%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))])
 
         if debug_logging:
-            log.msg("P4:incremental() command:%s revision:%s", command, self.revision)
-        yield self._dovccmd(command)
+            log.msg("P4:incremental() args:%s revision:%s", args, self.revision)
+        yield self._sync(args)
+
+    def _sync(self, args):
+        abandonOnFailure = (self.retry[1] <= 0) if self.retry else True
+        d = self._dovccmd(['sync'] + args,
+                          abandonOnFailure=abandonOnFailure)
+
+        def _retry(res):
+            if self.stopped or res == 0:
+                return res
+            delay, repeats = self.retry
+            if repeats > 0:
+                log.msg("Sync failed, trying %d more times after %d seconds"
+                        % (repeats, delay))
+                self.retry = (delay, repeats - 1)
+                df = defer.Deferred()
+                df.addCallback(lambda _: self._sync(args))
+                reactor.callLater(delay, df.callback, None)
+                return df
+            return res
+
+        if self.retry:
+            d.addCallback(_retry)
+        return d
 
     def finish(self, res):
         d = defer.succeed(res)
@@ -217,7 +240,7 @@ class P4(Source):
         command = [c.encode('utf-8') for c in command]
         return command
 
-    def _dovccmd(self, command, collectStdout=False, initialStdin=None):
+    def _dovccmd(self, command, collectStdout=False, initialStdin=None, abandonOnFailure=True):
         command = self._buildVCCommand(command)
 
         if debug_logging:
@@ -236,7 +259,7 @@ class P4(Source):
         d = self.runCommand(cmd)
 
         def evaluateCommand(cmd):
-            if cmd.rc != 0:
+            if cmd.rc != 0 and abandonOnFailure:
                 if debug_logging:
                     log.msg("P4:_dovccmd():Source step failed while running command %s" % cmd)
                 raise buildstep.BuildStepFailed()
