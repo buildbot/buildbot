@@ -270,6 +270,8 @@ class BuildStep(object, properties.PropertiesMixin):
             self.finished = nope
             self.failed = nope
 
+        self.locks = yield self.build.render(self.locks)
+
         # convert all locks into their real form
         self.locks = [(self.build.builder.botmaster.getLockFromLockAccess(access), access)
                       for access in self.locks]

@@ -81,6 +81,7 @@ class FakeBuilderStatus(object):
     def __init__(self, master=None, buildername="Builder"):
         if master:
             self.master = master
+            self.botmaster = master.botmaster
             self.basedir = os.path.join(master.basedir, 'bldr')
         self.lastBuildStatus = None
         self._tags = None
