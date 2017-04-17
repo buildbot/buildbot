@@ -62,6 +62,122 @@ git_describe_flags = [
 ]
 
 
+class GitMirrorRepo(object):
+"""
+Example:
+    git_mirror = GitMirrorRepo("my-repo", workdir, {
+        'repourl': 'http://whereever/project.git',
+        'origin':  'origin',    # required
+        'alwaysUpdate': False,  # default True
+        'fetchTags': True,      # default False
+    })
+    
+    #...
+    steps.append(Git(mirrorRepo=git_mirror, ...))
+"""
+
+    def __init__(self, name, workdir=None, repo_config=None, lock=None):
+        if not repo_config:
+            bbconfig.error("GitMirrorRepo: must provide a 'repo_config' dict")
+
+        if not lock:
+            # Access to the mirror should be exclusive on each slave.
+            # Git probably could handle concurrent accesses, but we might
+            # clobber the mirror repo if we think it's corrupt. The only
+            # way to protect that kind of thing is to make this all exclusive.
+            # Besides, making this one step exclusive should not be a big deal.
+            lock = SlaveLock("%s-GitMirrorRepo" % name, maxCount=1)
+        
+        self.name = name
+        self.workdir = workdir
+        self.repo_config = repo_config
+        self.lock = lock
+
+    def getLocks(self):
+        return [self.lock]
+
+    @defer.inlineCallbacks
+    def _checkRemoteUrl(self, dovccmd, repo, git_config):
+        remote     = repo['origin']
+        remote_url = repo['repourl']
+
+        actual_url = git_config.get('remote.%s.url' % remote)
+
+        # Already good?
+        if actual_url==remote_url:
+            return
+
+        # If it's set, remove it; this will also remove any remote-tracking branches.
+        if actual_url:
+            command = ['remote', 'remove', remote]
+            yield dovccmd(command, abandonOnFailure=False)
+
+        # Add it back.
+        command = ['remote', 'add', remote, remote_url]
+        yield dovccmd(command, abandonOnFailure=False)
+
+    @defer.inlineCallbacks
+    def _checkRemoteTagOption(self, dovccmd, repo, git_config):
+        remote_tags = repo.get('fetchTags')
+
+        # Figure out what we expect it to be.
+        if remote_tags is None:
+            expect_tags = None
+        elif not remote_tags:
+            expect_tags = "--no-tags"
+        else:
+            expect_tags = "--tags"
+
+        remote_tags_key = 'remote.%s.url' % remote
+        if expect_tags==git_config.get(remote_tags_key):
+            return
+
+        if not expect_tags:
+            command = ['config', '--unset', remote_tags_key]
+            yield dovccmd(command, abandonOnFailure=False)
+        else:
+            command = ['config', remote_tags_key, expect_tags]
+            yield dovccmd(command, abandonOnFailure=False)
+
+    @defer.inlineCallbacks
+    def doCheckMirrorConfig(self, dovccmd):
+        """ Ensure the mirror's config is right. """
+
+        # Easiest to get the full config all at once.
+        git_config = yield dovccmd(['config', '--list', '-z'],
+                         abandonOnFailure=False, collectStdout=True)
+
+        # Entries are delimited by the NUL character.
+        # Each entry looks like "key\nvalue".
+        git_config = dict(
+            s.split('\n',1)
+            for s in git_config.split('\0')
+            if s
+        )
+
+        for repo in self.repo_config:
+            yield self._checkRemoteUrl(dovccmd, repo, git_config)
+            yield self._checkRemoteTagOption(dovccmd, repo, git_config)
+
+    @defer.inlineCallbacks
+    def needsClobber(self, dovccmd):
+        command = ['rev-parse', '--is-bare-repository']
+        result = yield dovccmd(command, abandonOnFailure=False, collectStdout=True)
+        if not result or result!='true':
+            defer.returnValue(True)
+        defer.returnValue(False)
+
+    @defer.inlineCallbacks
+    def doFetch(self, dovccmd):
+        remotes = [r['origin'] for r in self.repo_config]
+        if len(remotes)==1:
+            command = ['fetch', remotes[0]]
+        else:
+            command = ['fetch', '--multiple'] + remotes
+
+        yield dovccmd(command, abandonOnFailure=True)
+
+
 class Git(Source):
 
     """ Class for Git with all the smarts """
@@ -69,8 +185,10 @@ class Git(Source):
     renderables = ["repourl", "reference", "branch", "codebase", "mode", "method", "origin"]
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
-                 reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
-                 clobberOnFailure=False, getDescription=False, config=None, origin=None, **kwargs):
+                 reference=None, submodules=False, mirrorRepo=None,
+                 shallow=False, progress=False, retryFetch=False,
+                 clobberOnFailure=False, getDescription=False, config=None, origin=None, 
+                 **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -94,6 +212,10 @@ class Git(Source):
         @type reference: string
         @param reference: If available use a reference repo.
                           Uses `--reference` in git command. Refer `git clone --help`
+
+        @type mirrorRepo: GitMirrorRepo
+        @param mirrorRepo:    TODO
+
         @type  progress: boolean
         @param progress: Pass the --progress option when fetching. This
                          can solve long fetches getting killed due to
@@ -117,6 +239,19 @@ class Git(Source):
         if not getDescription and not isinstance(getDescription, dict):
             getDescription = False
 
+        if mirrorRepo:
+            # The mirrorRepo has a lock to guard shared access.
+            locks = kwargs.get('locks') or []
+            locks.extend(mirrorRepo.getLocks())
+            kwargs['locks'] = locks
+
+            # TODO: We should figure a kind way to do this.
+            mode = 'full'
+            method = 'fresh'
+            repourl = 'bogus_value'
+            origin = 'origin'
+            reference = 'TODO'
+
         self.branch = branch
         self.method = method
         self.prog = progress
@@ -133,6 +268,8 @@ class Git(Source):
         self.supportsSubmoduleForce = True
         self.srcdir = 'source'
         self.origin = origin
+        self.mirrorRepo = mirrorRepo
+
         Source.__init__(self, **kwargs)
 
         if not self.repourl:
@@ -148,6 +285,7 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
+
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
         self.revision = revision
@@ -161,6 +299,9 @@ class Git(Source):
                 raise BuildSlaveTooOldError("git is not installed on slave")
             return RC_SUCCESS
         d.addCallback(checkInstall)
+
+        if self.mirrorRepo:
+            d.addCallback(lambda _: self.mirror())
 
         d.addCallback(lambda _: self.sourcedirIsPatched())
 
@@ -222,6 +363,31 @@ class Git(Source):
 
         yield self._syncSubmodule(None)
         yield self._updateSubmodule(None)
+
+    @defer.inlineCallbacks
+    def mirror(self):
+        mirror_workdir = self.mirrorRepo.workdir
+        repo_workdir = self.workdir
+        
+        # Replace the 'workdir' so the dovccmd operates in the mirror directory.
+        self.workdir = mirror_workdir
+
+        # Check if the mirror directory is a valid bare repo.
+        clobber = yield self.mirrorRepo.needsClobber(dovccmd=self._dovccmd)
+        if clobber:
+            self._doClobber()
+            yield self._dovccmd(['init', '--bare'])
+
+        # Make sure the mirror config is current and usable.
+        yield self.mirrorRepo.doCheckMirrorConfig(dovccmd=self._dovccmd)
+
+        # Update the mirror repo.
+        yield self.mirrorRepo.doFetch(dovccmd=self._dovccmd)
+
+        # Put the workdir back so we operate on our local version of it.
+        self.workdir = repo_workdir
+
+        yield self.full()
 
     def clean(self):
         command = ['clean', '-f', '-f', '-d']
@@ -356,7 +522,7 @@ class Git(Source):
         return d
 
     @defer.inlineCallbacks
-    def _fetch(self, _):
+    def _fetch(self, _=None):
         fetch_required = True
 
         # If the revision already exists in the repo, we dont need to fetch.
