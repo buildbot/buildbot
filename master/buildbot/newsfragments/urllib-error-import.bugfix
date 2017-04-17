@@ -1,0 +1,3 @@
+Make future.moves.urllib.error.URLError available in buildbot_net_usage_data
+module.  Fixes an exception found in buildbot_net_usage_data._sendWithUrlib
+when running through the tutorial using Python 3.
