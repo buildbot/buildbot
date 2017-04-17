@@ -79,7 +79,7 @@ def formatInterval(eta):
 
 class ComparableMixin:
 
-    compare_attrs = []
+    compare_attrs = ()
 
     class _None:
         pass

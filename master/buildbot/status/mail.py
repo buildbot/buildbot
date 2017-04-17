@@ -73,7 +73,7 @@ LOG_ENCODING = 'utf-8'
 
 class Domain(util.ComparableMixin):
     implements(interfaces.IEmailLookup)
-    compare_attrs = ["domain"]
+    compare_attrs = ("domain")
 
     def __init__(self, domain):
         assert "@" not in domain
@@ -234,10 +234,10 @@ class MailNotifier(base.StatusReceiverMultiService, buildset.BuildSetSummaryNoti
 
     implements(interfaces.IEmailSender)
 
-    compare_attrs = ["extraRecipients", "lookup", "fromaddr", "mode",
+    compare_attrs = ("extraRecipients", "lookup", "fromaddr", "mode",
                      "tags", "builders", "addLogs", "relayhost",
                      "subject", "sendToInterestedUsers", "customMesg",
-                     "messageFormatter", "extraHeaders"]
+                     "messageFormatter", "extraHeaders")
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings", "exception")
 

@@ -56,10 +56,10 @@ class TinderboxMailNotifier(mail.MailNotifier):
     """
     implements(interfaces.IEmailSender)
 
-    compare_attrs = ["extraRecipients", "fromaddr", "tags", "builders",
+    compare_attrs = ("extraRecipients", "fromaddr", "tags", "builders",
                      "addLogs", "relayhost", "subject", "binaryURL", "tree",
                      "logCompression", "errorparser", "columnName",
-                     "useChangeTime"]
+                     "useChangeTime")
 
     def __init__(self, fromaddr, tree, extraRecipients,
                  tags=None, builders=None, relayhost="localhost",

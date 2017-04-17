@@ -22,13 +22,13 @@ from buildbot import util
 class ComparableMixin(unittest.TestCase):
 
     class Foo(util.ComparableMixin):
-        compare_attrs = ["a", "b"]
+        compare_attrs = ("a", "b")
 
         def __init__(self, a, b, c):
             self.a, self.b, self.c = a, b, c
 
     class Bar(Foo, util.ComparableMixin):
-        compare_attrs = ["b", "c"]
+        compare_attrs = ("b", "c")
 
     def setUp(self):
         self.f123 = self.Foo(1, 2, 3)
@@ -66,7 +66,7 @@ class ComparableMixin(unittest.TestCase):
         # setting compare_attrs as an instance method doesn't
         # affect the outcome of the comparison
         another_f123 = self.Foo(1, 2, 3)
-        another_f123.compare_attrs = ["b", "a"]
+        another_f123.compare_attrs = ("b", "a")
         self.assertEqual(self.f123, another_f123)
 
     def test_ne_importantDifferences(self):

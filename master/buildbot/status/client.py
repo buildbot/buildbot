@@ -595,7 +595,7 @@ class PBListener(base.StatusReceiverMultiService):
 
     """I am a listener for PB-based status clients."""
 
-    compare_attrs = ["port", "cred"]
+    compare_attrs = ("port", "cred")
     implements(portal.IRealm)
 
     def __init__(self, port, user="statusClient", passwd="clientpw"):

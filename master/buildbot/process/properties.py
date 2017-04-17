@@ -316,7 +316,8 @@ _notHasKey = object()  # Marker object for _Lookup(..., hasKey=...) default
 class _Lookup(util.ComparableMixin, object):
     implements(IRenderable)
 
-    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
+    compare_attrs = ('value', 'index', 'default', 'defaultWhenFalse',
+                     'hasKey', 'elideNoneAs')
 
     def __init__(self, value, index, default=None,
                  defaultWhenFalse=True, hasKey=_notHasKey,

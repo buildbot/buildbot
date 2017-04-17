@@ -96,8 +96,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
     """This source will poll a perforce repository for changes and submit
     them to the change master."""
 
-    compare_attrs = ["p4port", "p4user", "p4passwd", "p4base",
-                     "p4bin", "pollInterval", "pollAtLaunch"]
+    compare_attrs = ("p4port", "p4user", "p4passwd", "p4base",
+                     "p4bin", "pollInterval", "pollAtLaunch")
 
     env_vars = ["P4CLIENT", "P4PORT", "P4PASSWD", "P4USER",
                 "P4CHARSET", "PATH"]

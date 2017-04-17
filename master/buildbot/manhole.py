@@ -201,7 +201,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
     username and password authorize access. You are encouraged to use the
     encrypted ssh-based manhole classes instead."""
 
-    compare_attrs = ["port", "username", "password"]
+    compare_attrs = ("port", "username", "password")
 
     def __init__(self, port, username, password):
         """
@@ -231,7 +231,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
     username and password to authorize access.
     """
 
-    compare_attrs = ["port", "username", "password"]
+    compare_attrs = ("port", "username", "password")
 
     def __init__(self, port, username, password):
         """
@@ -264,7 +264,7 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
     keys in our authorized_keys file. It is created with the name of a file
     that contains the public keys that we will accept."""
 
-    compare_attrs = ["port", "keyfile"]
+    compare_attrs = ("port", "keyfile")
 
     def __init__(self, port, keyfile):
         """
@@ -295,7 +295,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
     """This Manhole accepts ssh connections, but uses an arbitrary
     user-supplied 'checker' object to perform authentication."""
 
-    compare_attrs = ["port", "checker"]
+    compare_attrs = ("port", "checker")
 
     def __init__(self, port, checker):
         """
