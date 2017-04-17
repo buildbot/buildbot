@@ -174,32 +174,19 @@ class Darcs(Source):
         return d
 
     def _checkout(self):
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self.runRmdir(self.workdir)
 
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._clone(abandonOnFailure)
 
-        d = self._clone(abandonOnFailure)
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir))
-                df.addCallback(lambda _: self._checkout())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
-
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+        return self.doWithRetry(action, 'checkout')
 
     def finish(self, res):
         d = defer.succeed(res)

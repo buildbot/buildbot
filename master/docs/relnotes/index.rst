@@ -36,6 +36,10 @@ Deprecations, Removals, and Non-Compatible Changes
 Changes for Developers
 ~~~~~~~~~~~~~~~~~~~~~~
 
+* :class:`~buildbot.steps.source.base.Source` now has a ``doWithRetry`` method to help make it easier
+  to retry actions in a source step (using the Source.retry parameter). The various derived source
+  classes (eg, Svn and Git) have been adjusted to use that.
+
 Slave
 -----
 

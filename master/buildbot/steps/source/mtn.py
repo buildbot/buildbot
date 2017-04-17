@@ -255,32 +255,20 @@ class Monotone(Source):
         return d
 
     def _retryClone(self):
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self.runRmdir(self.workdir)
+                yield self.runRmdir(self.databasename)
 
-        d = self._clone(abandonOnFailure)
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._clone(abandonOnFailure)
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir))
-                df.addCallback(lambda _: self.runRmdir(self.databasename))
-                df.addCallback(lambda _: self._retryClone())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+        return self.doWithRetry(action, 'checkout')
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _=None):

@@ -16,12 +16,14 @@
 
 import StringIO
 
+from buildbot import util
 from buildbot.process import buildstep
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
 from buildbot.steps.slave import CompositeStepMixin
 from buildbot.steps.transfer import _FileReader
+from twisted.internet import defer
 from twisted.python import log
 
 
@@ -240,6 +242,33 @@ class Source(LoggingBuildStep, CompositeStepMixin):
     def sourcedirIsPatched(self):
         d = self.pathExists(self.build.path_module.join(self.workdir, '.buildbot-patched'))
         return d
+
+    @defer.inlineCallbacks
+    def doWithRetry(self, action, actionName):
+        if not self.retry:
+            delay, totalTries = None, 0
+        else:
+            delay, totalTries = self.retry
+            if not totalTries > 0:
+                totalTries = 0
+
+        tryCount = 0
+        while True:
+            try:
+                tryAgain, res = yield action(tryCount, totalTries)
+            except buildstep.BuildStepFailed:
+                tryAgain, res = True, -1
+
+            if tryCount>=totalTries or not tryAgain or self.stopped:
+                break
+
+            log.msg("Action '%s' failed, trying %d more times after %d seconds"
+                    % (actionName, totalTries-tryCount, delay))
+            
+            yield util.asyncSleep(delay)
+            tryCount += 1
+
+        defer.returnValue(res)
 
     def start(self):
         if self.notReally:

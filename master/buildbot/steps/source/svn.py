@@ -216,6 +216,7 @@ class SVN(Source):
 
     def _dovccmd(self, command, collectStdout=False, collectStderr=False, abandonOnFailure=True):
         assert command, "No command specified"
+        command = list(command)
         command.extend(['--non-interactive', '--no-auth-cache'])
         if self.username:
             command.extend(['--username', self.username])
@@ -458,27 +459,17 @@ class SVN(Source):
         checkout_cmd = ['checkout', self.repourl, '.']
         if self.revision:
             checkout_cmd.extend(["--revision", str(self.revision)])
-        if self.retry:
-            abandonOnFailure = (self.retry[1] <= 0)
-        else:
-            abandonOnFailure = True
-        d = self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
 
-        def _retry(res):
-            if self.stopped or res == 0:
-                return res
-            delay, repeats = self.retry
-            if repeats > 0:
-                log.msg("Checkout failed, trying %d more times after %d seconds"
-                        % (repeats, delay))
-                self.retry = (delay, repeats - 1)
-                df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir))
-                df.addCallback(lambda _: self._checkout())
-                reactor.callLater(delay, df.callback, None)
-                return df
-            return res
+        @defer.inlineCallbacks
+        def action(tryCount, totalTries):
+            # Clean up after a prior attempt.
+            if tryCount:
+                yield self.runRmdir(self.workdir)
 
-        if self.retry:
-            d.addCallback(_retry)
-        return d
+            abandonOnFailure = (tryCount >= totalTries)
+            res = yield self._dovccmd(checkout_cmd, abandonOnFailure=abandonOnFailure)
+
+            needRetry = res != 0
+            defer.returnValue((needRetry, res))
+
+        return self.doWithRetry(action, 'checkout')
