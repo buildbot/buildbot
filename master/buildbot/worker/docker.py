@@ -262,7 +262,7 @@ class DockerLatentWorker(DockerBaseWorker):
         log.msg('Container created, Id: %s...' % (shortid,))
         instance['image'] = image
         self.instance = instance
-        docker_client.start(instance)
+        docker_client.start(instance, network_mode=self.networking_config)
         log.msg('Container started')
         if self.followStartupLogs:
             logs = docker_client.attach(
