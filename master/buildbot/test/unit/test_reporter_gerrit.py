@@ -19,7 +19,6 @@ from future.builtins import range
 
 import warnings
 
-from mock import ANY
 from mock import Mock
 from mock import call
 
@@ -451,14 +450,14 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
         yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
-            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env={'PATH': ANY})
+            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env=None)
         gsp.processVersion("2.6", lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
-             '--project project', "--message 'bla'", '--label Verified=1', 'revision'], env={'PATH': ANY})
+             '--project project', "--message 'bla'", '--label Verified=1', 'revision'], env=None)
 
         # <=2.5 uses other syntax
         gsp.processVersion("2.4", lambda: None)
@@ -467,7 +466,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
-             "--message 'bla'", '--verified 1', 'revision'], env={'PATH': ANY})
+             "--message 'bla'", '--verified 1', 'revision'], env=None)
 
         # now test the notify argument, even though _gerrit_notify
         # is private, work around that
@@ -479,7 +478,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
              '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'],
-            env={'PATH': ANY})
+            env=None)
 
         # gerrit versions <= 2.5 uses other syntax
         gsp.processVersion('2.4', lambda: None)
@@ -489,4 +488,4 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
              "--message 'bla'", '--verified 1', 'revision'],
-            env={'PATH': ANY})
+            env=None)

@@ -19,7 +19,6 @@ from future.utils import iteritems
 
 import datetime
 import json
-import os
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -314,8 +313,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             args = args + ['-i', self.identity_file]
         self.process = reactor.spawnProcess(
             self.LocalPP(self), "ssh",
-            ["ssh"] + args + ["gerrit", "stream-events"],
-            env={'PATH': os.environ.get('PATH', '')})
+            ["ssh"] + args + ["gerrit", "stream-events"], env=None)
 
     def activate(self):
         self.wantProcess = True
