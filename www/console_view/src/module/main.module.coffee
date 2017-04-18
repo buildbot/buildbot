@@ -51,7 +51,7 @@ class State extends Config
                 type: 'integer'
                 name: 'changeLimit'
                 caption: 'Number of changes to fetch'
-                default_value: 10
+                default_value: 30
             ]
 
 class Console extends Controller
@@ -92,7 +92,7 @@ class Console extends Controller
                 @buildsets.length == 0 or @buildrequests == 0
             return
         if not @onchange_debounce?
-            @onchange_debounce = @$timeout(@_onChange, 500)
+            @onchange_debounce = @$timeout(@_onChange, 100)
 
     _onChange: =>
         @onchange_debounce = undefined
