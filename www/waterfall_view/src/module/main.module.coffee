@@ -158,11 +158,12 @@ class Waterfall extends Controller
                 .attr('transform', "translate(#{@c.margin.left}, #{@c.margin.top})")
                 .attr('class', 'chart')
 
+        height = @getHeaderHeight()
+        @waterfall.select(".header").style("height", height)
         @header = @header.append('svg')
             .append('g')
-                .attr('transform', "translate(#{@c.margin.left}, #{@getHeaderHeight()})")
+                .attr('transform', "translate(#{@c.margin.left}, #{height})")
                 .attr('class', 'header')
-
     ###
     # Get the container width
     ###
@@ -204,6 +205,9 @@ class Waterfall extends Controller
         if height < parseInt @waterfall.style('height').replace('px', ''), 10
             @loadMore()
         @container.style('height', "#{height}px")
+        height = @getHeaderHeight()
+        @waterfall.select("div.header").style("height", height + "px")
+        @header.attr('transform', "translate(#{@c.margin.left}, #{height})")
 
     ###
     # Returns content width
@@ -222,7 +226,11 @@ class Waterfall extends Controller
     ###
     # Returns headers height
     ###
-    getHeaderHeight: -> parseInt @header.style('height').replace('px', ''), 10
+    getHeaderHeight: ->
+        max_buildername = 0
+        for builder in @builders
+            max_buildername = Math.max(builder.name.length, max_buildername)
+        return Math.max(100, max_buildername * 3)
 
     ###
     # Returns the result string of a builder, build or step
@@ -275,7 +283,7 @@ class Waterfall extends Controller
         # Rotate text
         xAxisSelect.selectAll('text')
             .style('text-anchor', 'start')
-            .attr('transform', 'translate(0, -5) rotate(-60)')
+            .attr('transform', 'translate(0, -5) rotate(-25)')
             .attr('dy', '.75em')
             .each(link)
 
