@@ -158,9 +158,7 @@ class Schedulers(RunMasterBase, www.RequiresWwwMixin):
             'Delivering job; comment= None',
             'job has been delivered',
             'All Builds Complete',
-            # XXX should be something like "build successful one two", but
-            # currently just drawn from the build status strings
-            'a: success (finished)',
+            'a: success (build successful)',
         ])
         buildsets = yield self.master.db.buildsets.getBuildsets()
         self.assertEqual(len(buildsets), 1)

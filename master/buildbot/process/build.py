@@ -42,6 +42,7 @@ from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -511,15 +512,17 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         defer.returnValue(results)
 
+    @defer.inlineCallbacks
     def _stepDone(self, results, step):
         self.currentStep = None
         if self.finished:
             return  # build was interrupted, don't keep building
-        terminate = self.stepDone(results, step)  # interpret/merge results
+        terminate = yield self.stepDone(results, step)  # interpret/merge results
         if terminate:
             self.terminate = True
-        return self.startNextStep()
+        yield self.startNextStep()
 
+    @defer.inlineCallbacks
     def stepDone(self, results, step):
         """This method is called when the BuildStep completes. It is passed a
         status object from the BuildStep and is responsible for merging the
@@ -530,16 +533,21 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
-        log.msg(" step '%s' complete: %s" % (step.name, statusToString(results)))
+        summary = yield step.getResultSummary()
+        if 'build' in summary:
+            text = [summary['build']]
+        log.msg(" step '%s' complete: %s (%s)" % (step.name, statusToString(results), text))
         if text:
             self.text.extend(text)
+            self.master.data.updates.setBuildStateString(self.buildid,
+                                                         bytes2unicode(" ".join(self.text)))
         self.results, terminate = computeResultAndTermination(step, results,
                                                               self.results)
         if not self.conn:
             # force the results to retry if the connection was lost
             self.results = RETRY
             terminate = True
-        return terminate
+        defer.returnValue(terminate)
 
     def lostRemote(self, conn=None):
         # the worker went away. There are several possible reasons for this,
@@ -641,7 +649,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             metrics.MetricCountEvent.log('active_builds', -1)
 
             yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                               u'finished')
+                                                               bytes2unicode(" ".join(text)))
             yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
             # mark the build as finished

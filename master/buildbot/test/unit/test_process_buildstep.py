@@ -524,7 +524,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st = buildstep.BuildStep()
         st.results = FAILURE
         st.description = 'fooing'
-        self.checkSummary(st.getResultSummary(), u'fooing (failure)')
+        self.checkSummary(st.getResultSummary(), u'fooing (failure)', u'fooing (failure)')
 
     # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.

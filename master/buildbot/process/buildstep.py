@@ -442,8 +442,9 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         if self.results != SUCCESS:
             stepsumm += u' (%s)' % Results[self.results]
-
-        return {u'step': stepsumm}
+            return {u'step': stepsumm, u'build': stepsumm}
+        else:
+            return {u'step': stepsumm}
 
     @debounce.method(wait=1)
     @defer.inlineCallbacks
