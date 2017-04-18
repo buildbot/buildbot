@@ -58,6 +58,7 @@ class P4(Source):
                  p4client_spec_options='allwrite rmdir',
                  p4extra_args=None,
                  p4bin='p4',
+                 p4branch_is_a_stream=False,
                  use_tickets=False,
                  **kwargs):
         self.method = method
@@ -75,6 +76,7 @@ class P4(Source):
         self.p4client = p4client
         self.p4client_spec_options = p4client_spec_options
         self.p4extra_args = p4extra_args
+        self.p4branch_is_a_stream = p4branch_is_a_stream
         self.use_tickets = use_tickets
 
         Source.__init__(self, **kwargs)
@@ -278,6 +280,8 @@ class P4(Source):
         client_spec += "Client: %s\n\n" % self.p4client
         client_spec += "Owner: %s\n\n" % self.p4user
         client_spec += "Description:\n\tCreated by %s\n\n" % self.p4user
+        if self.p4branch_is_a_stream:
+            client_spec += 'Stream:\t%s/%s\n' % (self.p4base, self.p4branch)
         client_spec += "Root:\t%s\n\n" % self.build.path_module.normpath(
             self.build.path_module.join(builddir, self.workdir)
         )
