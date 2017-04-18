@@ -133,7 +133,8 @@ class Tests(unittest.TestCase):
         self.assertEqual(len(open_url), 1)
         self.assertEqual(open_url[0].request.args,
                          ('https://events.buildbot.net/events/phone_home',
-                          '{"foo": "bar"}', {'Content-Length': 14, 'Content-Type': 'application/json'}))
+                          b'{"foo": "bar"}',
+                          {'Content-Length': 14, 'Content-Type': 'application/json'}))
 
     def test_real(self):
         if "TEST_BUILDBOTNET_USAGEDATA" not in os.environ:

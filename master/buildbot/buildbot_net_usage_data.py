@@ -21,7 +21,7 @@ urllib2 supports http_proxy already urllib2 is blocking and thus everything is d
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.moves import urllib
+from future.moves.urllib import error as urllib_error
 from future.moves.urllib import request as urllib_request
 
 import hashlib
@@ -167,7 +167,7 @@ def computeUsageData(master):
 
 
 def _sendWithUrlib(url, data):
-    data = json.dumps(data)
+    data = json.dumps(data).encode()
     clen = len(data)
     req = urllib_request.Request(url, data, {
         'Content-Type': 'application/json',
@@ -175,7 +175,7 @@ def _sendWithUrlib(url, data):
     })
     try:
         f = urllib_request.urlopen(req)
-    except urllib.error.URLError:
+    except urllib_error.URLError:
         return None
     res = f.read()
     f.close()
