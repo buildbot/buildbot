@@ -525,12 +525,13 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 bc = self.createBuildChooser(bldr, self.master)
                 continue
 
-            buildStarted = yield bldr.maybeStartBuild(worker, breqs)
-            if not buildStarted:
-                yield self.master.data.updates.unclaimBuildRequests(brids)
+            d = bldr.maybeStartBuild(worker, breqs)
+            @d.addCallback
+            def isItStarted(buildStarted):
                 # try starting builds again.  If we still have a working worker,
                 # then this may re-claim the same buildrequests
-                self.botmaster.maybeStartBuildsForBuilder(self.name)
+                # unclaim buildrequest should send mq, and then retrigger the brd
+                return self.master.data.updates.unclaimBuildRequests(brids)
 
     def createBuildChooser(self, bldr, master):
         # just instantiate the build chooser requested
