@@ -1,1 +1,1 @@
-Gerrit Chage Source and Reporter now use the system PATH variable to find the ssh binary.
+Gerrit Change Source and Reporter now use the system PATH variable to find the ssh binary.
