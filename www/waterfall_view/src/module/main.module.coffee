@@ -12,8 +12,18 @@ class Waterfall extends Controller
     self = null
     constructor: (@$scope, $q, $timeout, @$window, @$log,
                   @$uibModal, dataService, d3Service, @dataProcessorService,
-                  scaleService, @bbSettingsService) ->
+                  scaleService, @bbSettingsService, glTopbarContextualActionsService) ->
         self = this
+        actions = [
+            caption: ""
+            icon: "search-plus"
+            action: @zoomPlus
+        ,
+            caption: ""
+            icon: "search-minus"
+            action: @zoomMinus
+        ]
+        glTopbarContextualActionsService.setContextualActions(actions)
 
         # Show the loading spinner
         @loading = true
@@ -85,7 +95,6 @@ class Waterfall extends Controller
                 (n, o) => if n != o then @render()
             , true
             )
-            angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
             @loadingMore = false
@@ -102,18 +111,31 @@ class Waterfall extends Controller
             # Bind scroll event listener
             angular.element(containerParent).bind 'scroll', onScroll
 
-            @$window.onkeydown = (e) =>
+            resizeHandler = => @render()
+            window = angular.element(@$window)
+            window.bind 'resize', resizeHandler
+            keyHandler =  (e) =>
                 # +
                 if e.key is '+'
                     e.preventDefault()
-                    @incrementScaleFactor()
-                    @render()
+                    @zoomPlus()
                 # -
                 if e.key is '-'
                     e.preventDefault()
-                    @decrementScaleFactor()
-                    @render()
+                    @zoomMinus()
+            window.bind 'keypress', keyHandler
+            @$scope.$on '$destroy', ->
+                window.unbind 'keypress', keyHandler
+                window.unbind 'resize', resizeHandler
 
+
+    zoomPlus: =>
+        @incrementScaleFactor()
+        @render()
+
+    zoomMinus: =>
+        @decrementScaleFactor()
+        @render()
     ###
     # Increment and decrement the scale factor
     ###
@@ -395,10 +417,11 @@ class Waterfall extends Controller
                 return a
             return b
         # Draw rectangle for each build
+        height = (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at)))
         builds.append('rect')
             .attr('class', self.getResultClassFromThing)
             .attr('width', x.rangeBand(1))
-            .attr('height', (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at))))
+            .attr('height', height)
             .classed('fill', true)
 
         # Optional: grey rectangle below buildids
