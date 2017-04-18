@@ -50,9 +50,8 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        @$scope.builders = @builders = @dataAccessor.getBuilders(order: 'name')
-        @$scope.builders.queryExecutor.isFiltered = (v) ->
-            return not v.masterids? or v.masterids.length > 0
+        @all_builders = @dataAccessor.getBuilders(order: 'name')
+        @$scope.builders = @builders = []
         @buildLimit = @c.limit
         @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
 
@@ -62,7 +61,8 @@ class Waterfall extends Controller
             @scale = new scaleService(@d3)
 
             # Create groups and add builds to builders
-            @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+            @groups = @dataProcessorService.getGroups(@all_builders, @builds, @c.threshold)
+            @$scope.builders = @builders = @dataProcessorService.filterBuilders(@all_builders)
             # Add builder status to builders
             @dataProcessorService.addStatus(@builders)
 
@@ -499,7 +499,8 @@ class Waterfall extends Controller
                 selectedBuild: -> build
 
     renderNewData: =>
-        @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+        @groups = @dataProcessorService.getGroups(@all_builders, @builds, @c.threshold)
+        @$scope.builders = @builders = @dataProcessorService.filterBuilders(@all_builders)
         @dataProcessorService.addStatus(@builders)
         @render()
         @loadingMore = false

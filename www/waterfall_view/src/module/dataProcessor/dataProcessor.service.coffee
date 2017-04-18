@@ -48,3 +48,10 @@ class DataProcessor extends Service
             builder.started_at = latest?.started_at
             builder.complete = latest?.complete or false
             builder.results = latest?.results
+
+    filterBuilders: (builders) ->
+        ret = []
+        for builder in builders
+            if builder.builds?.length
+                ret.push(builder)
+        return ret
