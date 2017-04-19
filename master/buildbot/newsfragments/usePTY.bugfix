@@ -1,1 +1,0 @@
-``usePTY`` configuration of the :bb:step:`ShellCommand` now works as expected with recent version of buildbot-worker.

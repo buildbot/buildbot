@@ -1,1 +1,0 @@
-Fixed Console View infinite loading spinner when no change have been recorded yet (:issue:`3060`).

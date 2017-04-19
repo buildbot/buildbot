@@ -1,4 +1,0 @@
-Make :py:class:`future.moves.urllib.error.URLError` available in the
-:py:mod:`buildbot_net_usage_data` module.  Fixes an exception found in
-:py:func:`~buildbot_net_usage_data._sendWithUrlib` when running through the
-tutorial using Python 3.
