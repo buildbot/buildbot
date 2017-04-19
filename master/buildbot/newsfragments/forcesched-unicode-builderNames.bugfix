@@ -1,1 +1,0 @@
-Passing ``unicode`` ``builderNames`` to :bb:sched:`ForceScheduler` no longer causes an error.

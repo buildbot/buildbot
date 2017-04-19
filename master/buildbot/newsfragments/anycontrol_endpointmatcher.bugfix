@@ -1,1 +1,0 @@
-:py:class:`buildbot.www.authz.endpointmatchers.AnyControlEndpointMatcher` now actually doesn't match `GET` requests. Before it would act like an `AnyEndpointMatcher` since the `GET` had a different case.

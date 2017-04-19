@@ -1,1 +1,0 @@
-:py:class: `~buildbot_worker.commands.transfer.SlaveDirectoryUploadCommand` no longer throws exceptions because the file "is used by another process" under Windows
