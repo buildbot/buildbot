@@ -147,7 +147,7 @@ UI plugins
 Waterfall View
 ++++++++++++++
 
-Waterfall shows the whole buildbot activity in vertical timeline.
+Waterfall shows the whole buildbot activity in vertical time line.
 Builds are represented with boxes whose height vary according to their duration.
 Builds are sorted by builders in the horizontal axes, which allows you to see how builders are scheduled together.
 
@@ -203,7 +203,7 @@ In order to keep the UI usable, you have to keep your tags short!
 
     Nine's Console View is the equivalent of Buildbot Eight's Console and tgrid views.
     Unlike Waterfall, we think it is now feature equivalent and even better, with its live update capabilities.
-    Please submit an issue if you think there is an issue displaying your data, with screenshots of what happen and suggestion on what to improve.
+    Please submit an issue if you think there is an issue displaying your data, with screen shots of what happen and suggestion on what to improve.
 
 
 .. _Web-Authentication:
