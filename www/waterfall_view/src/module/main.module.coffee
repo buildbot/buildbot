@@ -12,8 +12,18 @@ class Waterfall extends Controller
     self = null
     constructor: (@$scope, $q, $timeout, @$window, @$log,
                   @$uibModal, dataService, d3Service, @dataProcessorService,
-                  scaleService, @bbSettingsService) ->
+                  scaleService, @bbSettingsService, glTopbarContextualActionsService) ->
         self = this
+        actions = [
+            caption: ""
+            icon: "search-plus"
+            action: @zoomPlus
+        ,
+            caption: ""
+            icon: "search-minus"
+            action: @zoomMinus
+        ]
+        glTopbarContextualActionsService.setContextualActions(actions)
 
         # Show the loading spinner
         @loading = true
@@ -50,9 +60,8 @@ class Waterfall extends Controller
             buildidBackground: @s.number_background_waterfall.value
 
         # Load data (builds and builders)
-        @$scope.builders = @builders = @dataAccessor.getBuilders(order: 'name')
-        @$scope.builders.queryExecutor.isFiltered = (v) ->
-            return not v.masterids? or v.masterids.length > 0
+        @all_builders = @dataAccessor.getBuilders(order: 'name')
+        @$scope.builders = @builders = []
         @buildLimit = @c.limit
         @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
 
@@ -62,7 +71,8 @@ class Waterfall extends Controller
             @scale = new scaleService(@d3)
 
             # Create groups and add builds to builders
-            @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+            @groups = @dataProcessorService.getGroups(@all_builders, @builds, @c.threshold)
+            @$scope.builders = @builders = @dataProcessorService.filterBuilders(@all_builders)
             # Add builder status to builders
             @dataProcessorService.addStatus(@builders)
 
@@ -85,7 +95,6 @@ class Waterfall extends Controller
                 (n, o) => if n != o then @render()
             , true
             )
-            angular.element(@$window).bind 'resize', => @render()
 
             # Update view on data change
             @loadingMore = false
@@ -102,18 +111,31 @@ class Waterfall extends Controller
             # Bind scroll event listener
             angular.element(containerParent).bind 'scroll', onScroll
 
-            @$window.onkeydown = (e) =>
+            resizeHandler = => @render()
+            window = angular.element(@$window)
+            window.bind 'resize', resizeHandler
+            keyHandler =  (e) =>
                 # +
                 if e.key is '+'
                     e.preventDefault()
-                    @incrementScaleFactor()
-                    @render()
+                    @zoomPlus()
                 # -
                 if e.key is '-'
                     e.preventDefault()
-                    @decrementScaleFactor()
-                    @render()
+                    @zoomMinus()
+            window.bind 'keypress', keyHandler
+            @$scope.$on '$destroy', ->
+                window.unbind 'keypress', keyHandler
+                window.unbind 'resize', resizeHandler
 
+
+    zoomPlus: =>
+        @incrementScaleFactor()
+        @render()
+
+    zoomMinus: =>
+        @decrementScaleFactor()
+        @render()
     ###
     # Increment and decrement the scale factor
     ###
@@ -158,11 +180,12 @@ class Waterfall extends Controller
                 .attr('transform', "translate(#{@c.margin.left}, #{@c.margin.top})")
                 .attr('class', 'chart')
 
+        height = @getHeaderHeight()
+        @waterfall.select(".header").style("height", height)
         @header = @header.append('svg')
             .append('g')
-                .attr('transform', "translate(#{@c.margin.left}, #{@getHeaderHeight()})")
+                .attr('transform', "translate(#{@c.margin.left}, #{height})")
                 .attr('class', 'header')
-
     ###
     # Get the container width
     ###
@@ -204,6 +227,9 @@ class Waterfall extends Controller
         if height < parseInt @waterfall.style('height').replace('px', ''), 10
             @loadMore()
         @container.style('height', "#{height}px")
+        height = @getHeaderHeight()
+        @waterfall.select("div.header").style("height", height + "px")
+        @header.attr('transform', "translate(#{@c.margin.left}, #{height})")
 
     ###
     # Returns content width
@@ -222,7 +248,11 @@ class Waterfall extends Controller
     ###
     # Returns headers height
     ###
-    getHeaderHeight: -> parseInt @header.style('height').replace('px', ''), 10
+    getHeaderHeight: ->
+        max_buildername = 0
+        for builder in @builders
+            max_buildername = Math.max(builder.name.length, max_buildername)
+        return Math.max(100, max_buildername * 3)
 
     ###
     # Returns the result string of a builder, build or step
@@ -275,7 +305,7 @@ class Waterfall extends Controller
         # Rotate text
         xAxisSelect.selectAll('text')
             .style('text-anchor', 'start')
-            .attr('transform', 'translate(0, -5) rotate(-60)')
+            .attr('transform', 'translate(0, -5) rotate(-25)')
             .attr('dy', '.75em')
             .each(link)
 
@@ -387,10 +417,11 @@ class Waterfall extends Controller
                 return a
             return b
         # Draw rectangle for each build
+        height = (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at)))
         builds.append('rect')
             .attr('class', self.getResultClassFromThing)
             .attr('width', x.rangeBand(1))
-            .attr('height', (build) -> max(10, Math.abs(y(build.started_at) - y(build.complete_at))))
+            .attr('height', height)
             .classed('fill', true)
 
         # Optional: grey rectangle below buildids
@@ -499,7 +530,8 @@ class Waterfall extends Controller
                 selectedBuild: -> build
 
     renderNewData: =>
-        @groups = @dataProcessorService.getGroups(@builders, @builds, @c.threshold)
+        @groups = @dataProcessorService.getGroups(@all_builders, @builds, @c.threshold)
+        @$scope.builders = @builders = @dataProcessorService.filterBuilders(@all_builders)
         @dataProcessorService.addStatus(@builders)
         @render()
         @loadingMore = false
