@@ -74,11 +74,14 @@ virtualenv: .venv
 	@echo now you can type following command  to activate your virtualenv
 	@echo . .venv/bin/activate
 
+release_notes: .venv
+	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
+	yes | towncrier --version $(VERSION) --date `date -u  +%F`
+	git commit -m "relnotes for $(VERSION)"
+
 # helper for release creation
 release: .venv
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
-	yes | towncrier --version $(VERSION) --date `date -u  +%F`
-	git commit -m "relnotes for $(VERSION)"
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	./common/maketarballs.sh
 	./common/smokedist.sh

@@ -27,10 +27,11 @@ This server is configured with the ``www`` configuration key, which specifies a 
 ``plugins``
     This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
     These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-waterfall-view``.
+    See :ref:`UI-Plugins`
     For example::
 
         c['www'] = {
-            'plugins': {'waterfall_view': {'num_builds': 50}}
+            'plugins': {'waterfall_view': True}
         }
 
 ``debug``
@@ -135,6 +136,75 @@ This server is configured with the ``www`` configuration key, which specifies a 
     The :bb:cfg:`www` configuration gives the settings for the webserver.
     In simple cases, the ``buildbotURL`` contains the hostname and port of the master, e.g., ``http://master.example.com:8010/``.
     In more complex cases, with multiple masters, web proxies, or load balancers, the correspondence may be less obvious.
+
+.. _UI-Plugins:
+
+UI plugins
+~~~~~~~~~~
+
+.. _WaterfallView:
+
+Waterfall View
+++++++++++++++
+
+Waterfall shows the whole buildbot activity in vertical timeline.
+Builds are represented with boxes whose height vary according to their duration.
+Builds are sorted by builders in the horizontal axes, which allows you to see how builders are scheduled together.
+
+    .. code-block:: bash
+
+        pip install buildbot-waterfall-view
+
+    .. code-block:: python
+
+        c['www'] = {
+            'plugins': {'waterfall_view': True}
+        }
+
+
+.. note::
+
+    Waterfall is the emblematic view of Buildbot Eight.
+    It allowed to see the whole Buildbot activity very quickly.
+    Waterfall however had big scalability issues, and larger installs had to disable the page in order to avoid tens of seconds master hang because of a big waterfall page rendering.
+    The whole Buildbot Eight internal status API has been tailored in order to make Waterfall possible.
+    This is not the case anymore with Buildbot Nine, which has a more generic and scalable :ref:`Data_API` and :ref:`REST_API`.
+    This is the reason why Waterfall does not display the steps details anymore.
+    However nothing is impossible.
+    We could make a specific REST api available to generate all the data needed for waterfall on the server.
+    Please step-in if you want to help improve Waterfall view.
+
+.. _ConsoleView:
+
+Console View
+++++++++++++++
+
+Console view shows the whole buildbot activity arranged by changes as discovered by :ref:`Change-Sources` vertically and builders horizontally.
+If a builder has no build in the current time range, it will not be displayed.
+If no change is available for a build, then it will generate a fake change according to the ``got_revision`` property.
+
+Console view will also group the builders by tags.
+When there are several tags defined per builders, it will first group the builders by the tag that is defined for most builders.
+Then given those builders, it will group them again in another tag cluster.
+In order to keep the UI usable, you have to keep your tags short!
+
+    .. code-block:: bash
+
+        pip install buildbot-waterfall-view
+
+    .. code-block:: python
+
+        c['www'] = {
+            'plugins': {'console_view': True}
+        }
+
+
+.. note::
+
+    Nine's Console View is the equivalent of Buildbot Eight's Console and tgrid views.
+    Unlike Waterfall, we think it is now feature equivalent and even better, with its live update capabilities.
+    Please submit an issue if you think there is an issue displaying your data, with screenshots of what happen and suggestion on what to improve.
+
 
 .. _Web-Authentication:
 
