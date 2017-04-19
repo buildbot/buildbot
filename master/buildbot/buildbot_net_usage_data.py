@@ -50,7 +50,7 @@ def linux_distribution():
         with open("/etc/os-release") as f:
             for line in f:
                 try:
-                    k, v  = line.strip().split("=")
+                    k, v = line.strip().split("=")
                     meta_data[k] = v.strip('""')
                 except Exception:
                     pass
@@ -96,10 +96,10 @@ def getName(obj):
     return sanitize(type(obj).__name__)
 
 
-def countPlugins(plugins_uses, l):
-    if isinstance(l, dict):
-        l = l.values()
-    for i in l:
+def countPlugins(plugins_uses, lst):
+    if isinstance(lst, dict):
+        lst = lst.values()
+    for i in lst:
         name = getName(i)
         plugins_uses.setdefault(name, 0)
         plugins_uses[name] += 1
