@@ -27,6 +27,7 @@ from future.moves.urllib import request as urllib_request
 import hashlib
 import inspect
 import json
+import os
 import platform
 import socket
 
@@ -42,12 +43,21 @@ from buildbot.www.config import IndexResource
 PHONE_HOME_URL = "https://events.buildbot.net/events/phone_home"
 
 
-def get_distro():
-    try:
-        from distro import linux_distribution
-    except ImportError:
-        linux_distribution = None
+def linux_distribution():
+    os_release = "/etc/os-release"
+    meta_data = {'ID': "unknown_linux", 'VERSION_ID': "unknown_version"}
+    if os.path.exists(os_release):
+        with open("/etc/os-release") as f:
+            for line in f:
+                try:
+                    k, v = line.strip().split("=")
+                    meta_data[k] = v.strip('""')
+                except Exception:
+                    pass
+    return meta_data['ID'], meta_data['VERSION_ID']
 
+
+def get_distro():
     system = platform.system()
     if system == "Linux":
         dist = linux_distribution()
@@ -86,10 +96,10 @@ def getName(obj):
     return sanitize(type(obj).__name__)
 
 
-def countPlugins(plugins_uses, l):
-    if isinstance(l, dict):
-        l = l.values()
-    for i in l:
+def countPlugins(plugins_uses, lst):
+    if isinstance(lst, dict):
+        lst = lst.values()
+    for i in lst:
         name = getName(i)
         plugins_uses.setdefault(name, 0)
         plugins_uses[name] += 1

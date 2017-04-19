@@ -19,6 +19,7 @@ from future.builtins import range
 from future.moves.urllib import request as urllib_request
 
 import os
+import platform
 from unittest.case import SkipTest
 
 from twisted.internet import reactor
@@ -29,6 +30,7 @@ import buildbot.buildbot_net_usage_data
 from buildbot import config
 from buildbot.buildbot_net_usage_data import _sendBuildbotNetUsageData
 from buildbot.buildbot_net_usage_data import computeUsageData
+from buildbot.buildbot_net_usage_data import linux_distribution
 from buildbot.config import BuilderConfig
 from buildbot.config import ConfigWarning
 from buildbot.master import BuildMaster
@@ -143,3 +145,12 @@ class Tests(unittest.TestCase):
                 " TEST_BUILDBOTNET_USAGEDATA is set")
 
         _sendBuildbotNetUsageData({'foo': 'bar'})
+
+    def test_linux_distro(self):
+        system = platform.system()
+        if system != "Linux":
+            raise SkipTest("test is only for linux")
+        distro = linux_distribution()
+        self.assertEqual(len(distro), 2)
+        self.assertNotIn("unknown", distro[0])
+        self.assertNotIn("unknown", distro[1])

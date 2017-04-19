@@ -98,7 +98,7 @@ class Waterfall extends Controller
 
             # Update view on data change
             @loadingMore = false
-            @builds.onChange = @builders.onChange = @renderNewData
+            @builds.onChange = @all_builders.onChange = @renderNewData
 
 
             # Lazy load builds on scroll
