@@ -62,4 +62,8 @@ class builderPage
     getRebuildButton: ->
         return element(By.buttonText('Rebuild'))
 
+    checkBuilderURL: () ->
+        builderLink = element.all(By.linkText(@builder))
+        expect(builderLink.count()).toBeGreaterThan(0)
+
 module.exports = builderPage
