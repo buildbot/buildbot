@@ -520,11 +520,21 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         st.descriptionSuffix = ['bar', 'bar2']
         self.checkSummary(st.getResultSummary(), u'foo ing bar bar2')
 
+    @defer.inlineCallbacks
     def test_getResultSummary_descriptionSuffix_failure(self):
         st = buildstep.BuildStep()
         st.results = FAILURE
         st.description = 'fooing'
-        self.checkSummary(st.getResultSummary(), u'fooing (failure)', u'fooing (failure)')
+        self.checkSummary((yield st.getBuildResultSummary()), u'fooing (failure)', u'fooing (failure)')
+        self.checkSummary(st.getResultSummary(), u'fooing (failure)')
+
+    @defer.inlineCallbacks
+    def test_getResultSummary_descriptionSuffix_skipped(self):
+        st = buildstep.BuildStep()
+        st.results = SKIPPED
+        st.description = 'fooing'
+        self.checkSummary((yield st.getBuildResultSummary()), u'fooing (skipped)')
+        self.checkSummary(st.getResultSummary(), u'fooing (skipped)')
 
     # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.

@@ -17,7 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import lrange
 
-SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = lrange(7)
+ALL_RESULTS = lrange(7)
+SUCCESS, WARNINGS, FAILURE, SKIPPED, EXCEPTION, RETRY, CANCELLED = ALL_RESULTS
 Results = ["success", "warnings", "failure", "skipped", "exception", "retry", "cancelled"]
 
 

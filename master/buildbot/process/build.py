@@ -533,7 +533,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
-        summary = yield step.getResultSummary()
+        summary = yield step.getBuildResultSummary()
         if 'build' in summary:
             text = [summary['build']]
         log.msg(" step '%s' complete: %s (%s)" % (step.name, statusToString(results), text))
