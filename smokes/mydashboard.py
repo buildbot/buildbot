@@ -8,6 +8,8 @@ import requests
 from flask import Flask
 from flask import render_template
 
+from buildbot.process.results import statusToString
+
 mydashboardapp = Flask('test', root_path=os.path.dirname(__file__))
 # this allows to work on the template without having to restart Buildbot
 mydashboardapp.config['TEMPLATES_AUTO_RELOAD'] = True
@@ -26,6 +28,8 @@ def main():
     for build in builds:
         build['properties'] = mydashboardapp.buildbot_api.dataGet(
             ("builds", build['buildid'], "properties"))
+
+        build['results_text'] = statusToString(build['results'])
 
     # Example on how to use requests to get some info from other web servers
     code_frequency_url = "https://api.github.com/repos/buildbot/buildbot/stats/code_frequency"
@@ -46,6 +50,7 @@ def main():
     # mydashboard.html is a template inside the template directory
     return render_template('mydashboard.html', builders=builders, builds=builds,
                            graph_data=graph_data)
+
 
 # Here we assume c['www']['plugins'] has already be created earlier.
 # Please see the web server documentation to understand how to configure
