@@ -190,7 +190,7 @@ In order to keep the UI usable, you have to keep your tags short!
 
     .. code-block:: bash
 
-        pip install buildbot-waterfall-view
+        pip install buildbot-console-view
 
     .. code-block:: python
 
