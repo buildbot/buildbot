@@ -58,7 +58,7 @@ class MailMaster(RunMasterBase):
         mail, recipients = yield self.mailDeferred
         self.assertEqual(recipients, ["author@foo.com"])
         self.assertIn("From: bot@foo.com", mail)
-        self.assertIn("Subject: buildbot success in Buildbot", mail)
+        self.assertIn("Subject: Buildbot success in Buildbot", mail)
         self.assertEncodedIn("The Buildbot has detected a passing build", mail)
 
     def assertEncodedIn(self, text, mail):

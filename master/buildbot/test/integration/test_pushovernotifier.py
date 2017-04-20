@@ -33,9 +33,9 @@ class PushoverMaster(RunMasterBase):
     @defer.inlineCallbacks
     def setUp(self):
         self.notification = defer.Deferred()
-        def sendMessage(_, params):
+        def sendNotification(_, params):
             self.notification.callback(params)
-        self.patch(PushoverNotifier, "sendMessage", sendMessage)
+        self.patch(PushoverNotifier, "sendNotification", sendNotification)
         yield self.setupConfig(masterConfig())
 
     @defer.inlineCallbacks

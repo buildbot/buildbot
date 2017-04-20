@@ -261,7 +261,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
                                   dict(bsid=98))
 
         mn.buildMessage.assert_called_with(
-            "(whole buildset)",
+            "whole buildset",
             builds, SUCCESS)
         self.assertEqual(mn.buildMessage.call_count, 1)
 
@@ -289,7 +289,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build['builder']['tags'] = ['slow']
         mn = yield self.setupMailNotifier('from@example.org',
                                           tags=["fast"])
-        self.assertFalse(mn.isMailNeeded(build))
+        self.assertFalse(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def test_isMailNeeded_tags(self):
@@ -300,7 +300,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         build['builder']['tags'] = ['fast']
         mn = yield self.setupMailNotifier('from@example.org',
                                           tags=["fast"])
-        self.assertTrue(mn.isMailNeeded(build))
+        self.assertTrue(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def test_isMailNeeded_schedulers_sends_mail(self):
@@ -310,7 +310,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # force tags
         mn = yield self.setupMailNotifier('from@example.org',
                                           schedulers=['checkin'])
-        self.assertTrue(mn.isMailNeeded(build))
+        self.assertTrue(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def test_isMailNeeded_schedulers_doesnt_send_mail(self):
@@ -320,7 +320,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # force tags
         mn = yield self.setupMailNotifier('from@example.org',
                                           schedulers=['some-random-scheduler'])
-        self.assertFalse(mn.isMailNeeded(build))
+        self.assertFalse(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def test_isMailNeeded_branches_sends_mail(self):
@@ -330,7 +330,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # force tags
         mn = yield self.setupMailNotifier('from@example.org',
                                           branches=['master'])
-        self.assertTrue(mn.isMailNeeded(build))
+        self.assertTrue(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def test_isMailNeeded_branches_doesnt_send_mail(self):
@@ -340,7 +340,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         # force tags
         mn = yield self.setupMailNotifier('from@example.org',
                                           branches=['some-random-branch'])
-        self.assertFalse(mn.isMailNeeded(build))
+        self.assertFalse(mn.isMessageNeeded(build))
 
     @defer.inlineCallbacks
     def run_simple_test_sends_email_for_mode(self, mode, result, shouldSend=True):
@@ -348,7 +348,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn = yield self.setupMailNotifier('from@example.org', mode=mode)
 
-        self.assertEqual(mn.isMailNeeded(builds[0]), shouldSend)
+        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
 
     def run_simple_test_ignores_email_for_mode(self, mode, result):
         return self.run_simple_test_sends_email_for_mode(mode, result, False)
@@ -428,7 +428,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             build['prev_build']['results'] = results1
         else:
             build['prev_build'] = None
-        self.assertEqual(mn.isMailNeeded(builds[0]), shouldSend)
+        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
 
     def test_isMailNeeded_mode_problem_sends_on_problem(self):
         return self.run_sends_email_for_problems("problem", SUCCESS, FAILURE, True)
@@ -477,7 +477,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value = "<email>"
-        mn.sendMessage = Mock(spec=mn.sendMessage)
+        mn.sendMail = Mock(spec=mn.sendMail)
         yield mn.buildMessage("mybldr", builds, SUCCESS)
         defer.returnValue((mn, builds))
 
@@ -492,7 +492,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn.findInterrestedUsersEmails.assert_called_with([u'me@foo'])
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
-        mn.sendMessage.assert_called_with('<email>', '<processedrecipients>')
+        mn.sendMail.assert_called_with('<email>', '<processedrecipients>')
         self.assertEqual(mn.createEmail.call_count, 1)
 
     @defer.inlineCallbacks
@@ -606,15 +606,15 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
 
         mn = yield self.setupMailNotifier('from@example.org')
 
-        mn.sendMessage = Mock()
+        mn.sendMail = Mock()
         yield mn.workerMissing('worker.98.complete',
                                dict(name='myworker',
                                     notify=["workeradmin@example.org"],
                                     workerinfo=dict(admin="myadmin"),
                                     last_connection="yesterday"))
 
-        mail = mn.sendMessage.call_args[0][0]
-        recipients = mn.sendMessage.call_args[0][1]
+        mail = mn.sendMail.call_args[0][0]
+        recipients = mn.sendMail.call_args[0][1]
         self.assertEqual(recipients, ['workeradmin@example.org'])
         # On Python 3, the body_encoding for 'utf8' is base64,
         # so we need to decode the payload.

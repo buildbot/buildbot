@@ -314,6 +314,7 @@ setup_args = {
                 'RemoveDirectory', 'MakeDirectory']),
         ]),
         ('buildbot.reporters', [
+            ('buildbot.reporters.notifier', ['Notifier']),
             ('buildbot.reporters.mail', ['MailNotifier']),
             ('buildbot.reporters.pushover', ['PushoverNotifier']),
             ('buildbot.reporters.message', ['MessageFormatter']),

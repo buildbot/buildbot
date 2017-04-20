@@ -116,14 +116,14 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         defer.returnValue(pn)
 
     @defer.inlineCallbacks
-    def test_SendMessage(self):
+    def test_SendNotification(self):
         pn = yield self.setupPushoverNotifier(user_key="1234", api_token="abcd",
                                               otherParams={'sound': "silent"})
         self._http.expect("post", "/1/messages.json",
                           params={'user': "1234", 'token': "abcd",
                                   'sound': "silent", 'message': "Test"},
                           content_json={'status': 1, 'request': '98765'})
-        n = yield pn.sendMessage({'message': "Test"})
+        n = yield pn.sendNotification({'message': "Test"})
         j = yield n.json()
         self.assertEqual(j['status'], 1)
         self.assertEqual(j['request'], '98765')
@@ -359,8 +359,8 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "plain",
                                                                          "subject": "subject"}
 
-        pn.sendMessage = Mock(spec=pn.sendMessage)
-        pn.sendMessage.return_value = '<notification>'
+        pn.sendNotification = Mock(spec=pn.sendNotification)
+        pn.sendNotification.return_value = '<notification>'
 
         yield pn.buildMessage("mybldr", builds, SUCCESS)
 
@@ -369,8 +369,8 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
             ('change',), 'mybldr', build['buildset'], build, self.master,
             None, [u'me@foo'])
 
-        pn.sendMessage.assert_called_with(dict(message='body', title='subject', priority=1))
-        self.assertEqual(pn.sendMessage.call_count, 1)
+        pn.sendNotification.assert_called_with(dict(message='body', title='subject', priority=1))
+        self.assertEqual(pn.sendNotification.call_count, 1)
 
     @defer.inlineCallbacks
     def test_workerMissingSendMessage(self):
@@ -378,13 +378,14 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn = yield self.setupPushoverNotifier('1234', 'abcd', priorities={'worker_missing': 2},
                                               watchedWorkers=['myworker'])
 
-        pn.sendMessage = Mock()
+        pn.sendNotification = Mock()
         yield pn.workerMissing('worker.98.complete',
                                dict(name='myworker',
+                                    notify=["workeradmin@example.org"],
                                     workerinfo=dict(admin="myadmin"),
                                     last_connection="yesterday"))
 
-        message = pn.sendMessage.call_args[0][0]['message']
-        priority = pn.sendMessage.call_args[0][0]['priority']
+        message = pn.sendNotification.call_args[0][0]['message']
+        priority = pn.sendNotification.call_args[0][0]['priority']
         self.assertEqual(priority, 2)
         self.assertIn(b"has noticed that the worker named myworker went away", message)
