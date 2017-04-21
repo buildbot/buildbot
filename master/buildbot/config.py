@@ -77,6 +77,8 @@ _errors = None
 
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 
+RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
+
 
 def error(error, always_raise=False):
     if _errors is not None and not always_raise:
@@ -690,7 +692,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         for worker in workers:
             if not interfaces.IWorker.providedBy(worker):
-                msg = "{0} must be a list of Worker instances".format(conf_key)
+                msg = "{} must be a list of Worker instances but there is {!r}".format(conf_key, worker)
                 error(msg)
                 return False
 
@@ -925,9 +927,9 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             s.checkConfig(self.status)
 
     def check_horizons(self):
-        if self.logHorizon is not None or self.buildHorizon is not None:
-            log.msg("NOTE: `buildHorizon` and `logHorizon` are currently ignored "
-                    "(see http://trac.buildbot.net/ticket/3572)")
+        if self.buildHorizon is not None:
+            log.msg("NOTE: `buildHorizon` and `logHorizon` are deprecated and ignored "
+                    "They are replaced by util.JanitorConfigurator")
         if self.logHorizon is not None and self.buildHorizon is not None:
             if self.logHorizon > self.buildHorizon:
                 error("logHorizon must be less than or equal to buildHorizon")
@@ -1009,7 +1011,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
             name = '<unknown>'
-        elif name[0] == '_':
+        elif name[0] == '_' and name not in RESERVED_UNDERSCORE_NAMES:
             error(
                 "builder names must not start with an underscore: '%s'" % name)
         try:
@@ -1039,7 +1041,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         if workername:
             if not isinstance(workername, str):
-                error("builder '%s': workername must be a string" % (name,))
+                error("builder '%s': workername must be a string but it is %r" % (name, workername))
             workernames = workernames + [workername]
         if not workernames:
             error("builder '%s': at least one workername is required" %

@@ -197,6 +197,18 @@ Build History
 
 There is no support for importing build history from 0.8.x (where the history was stored on-disk in pickle files) into 0.9.x (where it is stored in the database).
 
+Data LifeTime
+-------------
+
+Buildbot Nine data being implemented fully in an SQL database, the ``buildHorizon`` feature had to be reworked.
+Instead of being number-of-things based, it is now time based.
+This makes more sense from a user perspective but makes it harder to predict the database average size.
+Please be careful to provision enough disk space for your database.
+
+The old ``c['logHorizon']`` way of configuring is not supported anymore.
+See :bb:cfg:`JanitorConfigurator` to learn how to configure.
+A new ``__Janitor`` builder will be created to help keep an eye on the cleanup activities.
+
 More Information
 ----------------
 

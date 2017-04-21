@@ -276,27 +276,39 @@ Data Lifetime
 .. bb:cfg:: changeHorizon
 .. bb:cfg:: buildHorizon
 .. bb:cfg:: logHorizon
+.. bb:cfg:: JanitorConfigurator
 
 Horizons
 ++++++++
 
 ::
 
-    c['changeHorizon'] = 200
-    c['buildHorizon'] = 100
-    c['logHorizon'] = 40
-    c['buildCacheSize'] = 15
+    from buildbot.plugins import util
+    from datetime import timedelta
+
+    # at the end of your master.cfg
+    # configure a janitor which will delete all logs older than one month, and will run on sundays at noon
+    util.JanitorConfigurator(c,
+        logHorizon=timedelta(weeks=4),
+        hour=12,
+        dayOfWeek=6)
 
 Buildbot stores historical information in its database.
 In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
 
-The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
-One place these changes are displayed is on the waterfall page.
-This parameter defaults to 0, which means keep all changes indefinitely.
+Parameters for :bb:cfg:`JanitorConfigurator` are:
 
-The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept.
-The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
-Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
+``c``
+    The `BuildmasterConfig` config dictionary from your ``master.cfg``
+
+``logHorizon``
+    a ``timedelta`` object describing the minimum time for which the log data should be maintained
+
+``hour``, ``dayOfWeek``, ...
+    Arguments given to the :bb:sched::`Nightly` scheduler which is backing the JanitorConfigurator.
+    Determines when the cleanup will be done.
+    With this, you can configure it daily, weekly or even hourly if you wish.
+
 
 .. bb:cfg:: caches
 .. bb:cfg:: changeCacheSize
