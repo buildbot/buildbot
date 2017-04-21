@@ -32,10 +32,14 @@ from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process.properties import renderer
+from buildbot.process.results import ALL_RESULTS
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
+from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
@@ -107,6 +111,36 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertRaisesConfigError(
             "__init__ got unexpected keyword argument(s) ['oogaBooga']",
             lambda: buildstep.BuildStep(oogaBooga=5))
+
+    def test_updateBuildSummaryPolicyDefaults(self):
+        """
+        updateBuildSummaryPolicy builds default value according to resultsMixin parameters (flunkOnFailure..)
+        """
+        step = buildstep.BuildStep()
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted([
+            EXCEPTION, RETRY, CANCELLED, FAILURE]))
+
+        step = buildstep.BuildStep(warnOnWarnings=True)
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted([
+            EXCEPTION, RETRY, CANCELLED, FAILURE, WARNINGS]))
+
+        step = buildstep.BuildStep(flunkOnFailure=False)
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted([
+            EXCEPTION, RETRY, CANCELLED]))
+
+        step = buildstep.BuildStep(updateBuildSummaryPolicy=False)
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy), [])
+
+        step = buildstep.BuildStep(updateBuildSummaryPolicy=True)
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted(ALL_RESULTS))
+
+    def test_updateBuildSummaryPolicyBadType(self):
+        """
+        updateBuildSummaryPolicy raise ConfigError in case of bad type
+        """
+        self.assertRaisesConfigError(
+            "BuildStep updateBuildSummaryPolicy must be a list of result ids or boolean but it is 2",
+            lambda: buildstep.BuildStep(updateBuildSummaryPolicy=FAILURE))
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
