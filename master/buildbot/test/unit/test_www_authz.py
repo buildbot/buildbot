@@ -150,7 +150,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_fnmatchPatternRoleCheck(self):
-        # set defaultDeny to True so action is denied if no match
+        # defaultDeny is True by default so action is denied if no match
         allow_rules = [
                         AnyEndpointMatcher(role="[a,b]dmin?")
         ]
@@ -160,17 +160,18 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
 
         # check if action is denied
-        with self.assertRaises(authz.Forbidden):
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
 
-        with self.assertRaises(authz.Forbidden):
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
     def test_regexPatternRoleCheck(self):
         # change matcher
         self.authz.match = authz.reStrMatcher
-        # set defaultDeny to True so action is denied if no match
+
+        # defaultDeny is True by default so action is denied if no match
         allow_rules = [
             AnyEndpointMatcher(role="(admin|agent)s"),
         ]
@@ -181,15 +182,15 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         yield self.assertUserAllowed("builds/13", "rebuild", {}, "bond")
 
         # check if action is denied
-        with self.assertRaises(authz.Forbidden):
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
 
-        with self.assertRaises(authz.Forbidden):
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
 
     @defer.inlineCallbacks
     def test_DefaultDenyFalseContinuesCheck(self):
-        # set defaultDeny to True in last rule so action is denied in this test
+        # defaultDeny is True in the last rule so action is denied in the last check
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
@@ -199,12 +200,12 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         self.setAllowRules(allow_rules)
 
         # check if action is denied and last check was exact against not-exist3
-        with self.assertRaisesRegex(authz.Forbidden, '.*not-exists3.*'):
+        with self.assertRaisesRegex(authz.Forbidden, '.+not-exists3.+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
 
     @defer.inlineCallbacks
     def test_DefaultDenyTrueStopsCheckIfFailed(self):
-        # set defaultDeny to True in last rule so action is denied in this test
+        # defaultDeny is True in the first rule so action is denied in the first check
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=True),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
@@ -213,6 +214,6 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
 
         self.setAllowRules(allow_rules)
 
-        # check if action is denied and last check was exact against not-exist3
-        with self.assertRaisesRegex(authz.Forbidden, '.*not-exists1.*'):
+        # check if action is denied and last check was exact against not-exist1
+        with self.assertRaisesRegex(authz.Forbidden, '.+not-exists1.+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
