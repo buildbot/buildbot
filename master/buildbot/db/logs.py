@@ -345,6 +345,39 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         saved = yield self.db.pool.do(thdcompressLog)
         defer.returnValue(saved)
 
+    def deleteOldLogChunks(self, older_than_timestamp):
+        def thddeleteOldLogs(conn):
+            model = self.db.model
+            res = conn.execute("SELECT count(*) from `logchunks`")
+            count1 = res.fetchone()[0]
+            res.close()
+            # join the step and log tables
+            from_clause = model.logs.join(model.steps, model.steps.c.id == model.logs.c.stepid)
+
+            # query all logs older than timestamps
+            q = sa.select([model.logs.c.id]).select_from(from_clause).where(
+                model.steps.c.started_at < older_than_timestamp)
+
+            # update their types
+            res = conn.execute(
+                model.logs.update()
+                .where(model.logs.c.id.in_(q))
+                .values(type='d')
+            )
+            res.close()
+
+            # delete their logchunks
+            res = conn.execute(
+                model.logchunks.delete()
+                .where(model.logchunks.c.logid.in_(q))
+            )
+            res.close()
+            res = conn.execute("SELECT count(*) from `logchunks`")
+            count2 = res.fetchone()[0]
+            res.close()
+            return count1 - count2
+        return self.db.pool.do(thddeleteOldLogs)
+
     def _logdictFromRow(self, row):
         rv = dict(row)
         rv['complete'] = bool(rv['complete'])

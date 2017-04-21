@@ -179,7 +179,7 @@ class Model(base.DBConnectorComponent):
         sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
         sa.Column('complete', sa.SmallInteger, nullable=False),
         sa.Column('num_lines', sa.Integer, nullable=False),
-        # 's' = stdio, 't' = text, 'h' = html
+        # 's' = stdio, 't' = text, 'h' = html, 'd' = deleted
         sa.Column('type', sa.String(1), nullable=False),
     )
 
