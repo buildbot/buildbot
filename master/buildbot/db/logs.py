@@ -351,20 +351,21 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
             count1 = res.fetchone()[0]
             res.close()
-            # join the step and log tables
-            from_clause = model.logs.join(model.steps, model.steps.c.id == model.logs.c.stepid)
 
-            # query all logs older than timestamps
-            q = sa.select([model.logs.c.id]).select_from(from_clause).where(
-                model.steps.c.started_at < older_than_timestamp)
-
-            # update their types
+            # update log types older than timestamps
             res = conn.execute(
                 model.logs.update()
-                .where(model.logs.c.id.in_(q))
+                .where(model.logs.c.stepid.in_(
+                    sa.select([model.steps.c.id])
+                    .where(model.steps.c.started_at < older_than_timestamp)))
                 .values(type='d')
             )
             res.close()
+
+            # query all logs older than timestamps
+            q = sa.select([model.logs.c.id])
+            q = q.select_from(model.logs.join(model.steps, model.steps.c.id == model.logs.c.stepid))
+            q = q.where(model.steps.c.started_at < older_than_timestamp)
 
             # delete their logchunks
             res = conn.execute(
