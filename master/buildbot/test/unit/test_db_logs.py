@@ -551,7 +551,7 @@ class RealTests(Tests):
         yield self.insertTestData(self.backgroundData)
         logids = []
         for stepid in (101, 102):
-            for i in xrange(stepid):
+            for i in range(stepid):
                 logid = yield self.db.logs.addLog(
                     stepid=stepid, name=u'another' + str(i), slug=u'another' + str(i), type=u's')
                 yield self.db.logs.appendLog(logid, u'xyz\n')

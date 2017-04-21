@@ -348,7 +348,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def deleteOldLogChunks(self, older_than_timestamp):
         def thddeleteOldLogs(conn):
             model = self.db.model
-            res = conn.execute("SELECT count(*) from `logchunks`")
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
             count1 = res.fetchone()[0]
             res.close()
             # join the step and log tables
@@ -372,7 +372,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 .where(model.logchunks.c.logid.in_(q))
             )
             res.close()
-            res = conn.execute("SELECT count(*) from `logchunks`")
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
             count2 = res.fetchone()[0]
             res.close()
             return count1 - count2
