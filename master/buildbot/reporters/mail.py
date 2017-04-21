@@ -129,7 +129,7 @@ class MailNotifier(service.BuildbotService):
             config.error("extraRecipients must be a list or tuple")
         else:
             for r in extraRecipients:
-                if not isinstance(r, str) or not VALID_EMAIL.search(r):
+                if not isinstance(r, string_types) or not VALID_EMAIL.search(r):
                     config.error(
                         "extra recipient %r is not a valid email" % (r,))
 

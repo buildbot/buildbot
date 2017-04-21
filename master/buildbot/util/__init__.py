@@ -218,7 +218,7 @@ def encodeString(s, encoding='utf-8'):
 
 
 def none_or_str(x):
-    if x is not None and not isinstance(x, str):
+    if x is not None and not isinstance(x, string_types):
         return str(x)
     return x
 

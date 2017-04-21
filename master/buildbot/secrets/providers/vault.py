@@ -18,6 +18,7 @@ vault based providers
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 from twisted.internet import defer
 
@@ -34,9 +35,9 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
     name = 'SecretInVault'
 
     def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None):
-        if not isinstance(vaultServer, str):
+        if not isinstance(vaultServer, string_types):
             config.error("vaultServer must be a string while it is %s" % (type(vaultServer,)))
-        if not isinstance(vaultToken, str):
+        if not isinstance(vaultToken, string_types):
             config.error("vaultToken must be a string while it is %s" % (type(vaultToken,)))
 
     @defer.inlineCallbacks

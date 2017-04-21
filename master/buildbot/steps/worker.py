@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 import stat
 
@@ -58,7 +59,7 @@ class SetPropertiesFromEnv(WorkerBuildStep):
         environ = self.worker.worker_environ
         variables = self.variables
         log = []
-        if isinstance(variables, str):
+        if isinstance(variables, string_types):
             variables = [self.variables]
         for variable in variables:
             key = variable

@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 import warnings
 
@@ -123,7 +124,7 @@ class GNUAutoconf(BuildFactory):
             # we either need to wind up with a string (which will be
             # space-split), or with a list of strings (which will not). The
             # list of strings is the preferred form.
-            if isinstance(configure, str):
+            if isinstance(configure, string_types):
                 if configureFlags:
                     assert " " not in configure  # please use list instead
                     command = [configure] + configureFlags

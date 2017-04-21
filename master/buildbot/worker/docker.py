@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from future.utils import string_types
 
 import hashlib
 import json
@@ -68,7 +69,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         # container is almost immediate, we can afford doing so for each build.
         if 'build_wait_timeout' not in kwargs:
             kwargs['build_wait_timeout'] = 0
-        if image is not None and not isinstance(image, str):
+        if image is not None and not isinstance(image, string_types):
             if not hasattr(image, 'getRenderingFor'):
                 config.error("image must be a string")
 
@@ -133,7 +134,7 @@ class DockerLatentWorker(DockerBaseWorker):
         # Renderables can be direct volumes definition or list member
         if isinstance(volumes, list):
             for volume_string in (volumes or []):
-                if not isinstance(volume_string, str):
+                if not isinstance(volume_string, string_types):
                     continue
                 try:
                     bind, volume = volume_string.split(":", 1)

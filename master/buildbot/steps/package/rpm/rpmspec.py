@@ -20,6 +20,7 @@ library to populate parameters from and rpmspec file into a memory structure
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 import re
 
@@ -59,7 +60,7 @@ class RpmSpec(ShellCommand):
         """
         # If we are given a string, open it up else assume it's something we
         # can call read on.
-        if isinstance(self.specfile, str):
+        if isinstance(self.specfile, string_types):
             f = open(self.specfile, 'r')
         else:
             f = self.specfile

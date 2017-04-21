@@ -492,7 +492,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         # Now compile a regular expression from whichever warning pattern we're
         # using
         wre = self.warningPattern
-        if isinstance(wre, str):
+        if isinstance(wre, string_types):
             wre = re.compile(wre)
 
         directoryEnterRe = self.directoryEnterPattern

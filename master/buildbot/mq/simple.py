@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 import pprint
 
@@ -47,7 +48,7 @@ class SimpleMQ(service.ReconfigurableServiceMixin, base.MQBase):
                 qref.invoke(routingKey, data)
 
     def startConsuming(self, callback, filter, persistent_name=None):
-        if any(not isinstance(k, str) and k is not None for k in filter):
+        if any(not isinstance(k, string_types) and k is not None for k in filter):
             raise AssertionError("%s is not a filter" % (filter,))
         if persistent_name:
             if persistent_name in self.persistent_qrefs:
