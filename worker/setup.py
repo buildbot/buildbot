@@ -115,10 +115,13 @@ setup_args = {
     'entry_points': {
         'console_scripts': [
             'buildbot-worker=buildbot_worker.scripts.runner:run',
-            # this will also be shipped on non windows :-(
-            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
         ]}
 }
+
+if sys.platform == "win32":
+    setup_args['entry_points']['console_scripts'] += [
+            'buildbot_worker_windows_service=buildbot_worker.scripts.windows_service:HandleCommandLine',
+        ]
 
 # set zip_safe to false to force Windows installs to always unpack eggs
 # into directories, which seems to work better --
