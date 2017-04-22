@@ -18,6 +18,10 @@ from __future__ import print_function
 
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
+
+from __future__ import division
+from __future__ import print_function
+
 import distutils.cmd
 import os
 import subprocess
@@ -119,6 +123,7 @@ class BuildJsCommand(distutils.cmd.Command):
 
     description = 'run JS build'
     already_run = False
+
     def initialize_options(self):
         """Set default values for options."""
 
@@ -182,6 +187,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info):
     def run(self):
         self.run_command('build_js')
         setuptools.command.egg_info.egg_info.run(self)
+
 
 def setup_www_plugin(**kw):
     package = kw['packages'][0]
