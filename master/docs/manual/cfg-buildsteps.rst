@@ -2124,8 +2124,8 @@ The ``blocksize=`` argument controls how the file is sent over the network: larg
 
 The ``mode=`` argument allows you to control the access permissions of the target file, traditionally expressed as an octal integer.
 The most common value is probably ``0755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
-The default value for ``mode=`` is None, which means the permission bits will default to whatever the umask of the writing process is.
-The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a --umask command-line option at creation time (:ref:`Worker-Options`).
+The default value for ``mode=`` is ``None``, which means the permission bits will default to whatever the umask of the writing process is.
+The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a ``--umask`` command-line option at creation time (:ref:`Worker-Options`).
 
 The ``keepstamp=`` argument is a boolean that, when ``True``, forces the modified and accessed time of the destination file to match the times of the source file.
 When ``False`` (the default), the modified and accessed times of the destination file are set to the current time on the buildmaster.
