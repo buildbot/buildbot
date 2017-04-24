@@ -353,6 +353,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             res.close()
 
             # update log types older than timestamps
+            # we do it first to avoid having UI discrepancy
             res = conn.execute(
                 model.logs.update()
                 .where(model.logs.c.stepid.in_(
@@ -362,10 +363,10 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             )
             res.close()
 
-            # query all logs older than timestamps
+            # query all logs with type 'd' and delete their chunks.
             q = sa.select([model.logs.c.id])
-            q = q.select_from(model.logs.join(model.steps, model.steps.c.id == model.logs.c.stepid))
-            q = q.where(model.steps.c.started_at < older_than_timestamp)
+            q = q.select_from(model.logs)
+            q = q.where(model.logs.c.type == 'd')
 
             # delete their logchunks
             res = conn.execute(
