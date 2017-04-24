@@ -15,25 +15,20 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import iteritems
 from future.utils import string_types
 
 from twisted.internet import defer
-from twisted.python import log as twlog
 
 from buildbot import config
-from buildbot import interfaces
-from buildbot import util
-from buildbot.process.properties import Properties
-from buildbot.process.results import CANCELLED, EXCEPTION, \
-                                     FAILURE, SUCCESS, WARNINGS
-from buildbot.process.results import Results
+from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
+from buildbot.process.results import WARNINGS
 from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter \
-                                        as DefaultMessageFormatter
+from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
 from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.util import service, httpclientservice
-
+from buildbot.util import service
 
 ENCODING = 'utf8'
 

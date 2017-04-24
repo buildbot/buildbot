@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import base64
 import copy
 import sys
 
@@ -26,8 +25,6 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
-from buildbot.config import ConfigErrors
-from buildbot.process import properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -39,8 +36,6 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.util import bytes2unicode
-from buildbot.util import ssl
 
 py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
