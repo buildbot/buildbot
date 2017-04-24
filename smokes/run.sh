@@ -2,6 +2,19 @@
 set -e
 set -v
 cd `dirname $0`
+function finish {
+    # uncomment for debug in hyper
+    # for i in `seq 1000`
+    # do
+    #   echo please debug me!
+    #   sleep 60
+    # done
+    set +e
+    buildbot stop workdir
+    buildbot-worker stop workdir/worker
+    rm -rf workdir
+}
+trap finish EXIT
 rm -rf workdir
 buildbot create-master workdir
 ln -s ../templates ../mydashboard.py ../master.cfg workdir
@@ -27,7 +40,3 @@ else
     ./node_modules/protractor/bin/webdriver-manager update
     ./node_modules/protractor/bin/protractor protractor.conf.js
 fi
-set +e
-buildbot stop workdir
-buildbot-worker stop workdir/worker
-rm -rf workdir

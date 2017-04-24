@@ -13,6 +13,33 @@ class HomePage
     getPanel: () ->
         return element.all(By.css(".panel-title"))
 
+    getAnonymousButton: ->
+        anonymousButton = element(By.css('[ng-class="loginCollapsed ? \'\':\'open\'"'))
+        return anonymousButton
+
+    getLoginButton: ->
+        return element(By.buttonText('Login'))
+
+    setUserText: (value) ->
+        setUserValue = element.all(By.css('[ng-model="username"]'))
+        setUserValue.clear()
+        setUserValue.sendKeys(value)
+
+    setPasswordText: (value) ->
+        setPasswordValue = element.all(By.css('[ng-model="password"]'))
+        setPasswordValue.clear()
+        setPasswordValue.sendKeys(value)
+
+    logOut: ->
+        @go()
+        element.all(By.css('.avatar img')).click()
+        element.all(By.css('[ng-click="logout()"]')).click()
+        anonymousButton = element(By.css('[ng-class="loginCollapsed ? \'\':\'open\'"'))
+        expect(anonymousButton.getText()).toContain("Anonymous")
+
+    loginUser: (user, password) ->
+        browser.get("http://#{user}:#{password}@localhost:8010/auth/login")
+
     waitAllBuildsFinished: () ->
         @go()
         self = this

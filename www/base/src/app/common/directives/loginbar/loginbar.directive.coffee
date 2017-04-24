@@ -22,16 +22,6 @@ class _loginbar extends Controller('common')
         $scope.loginCollapsed = 1
         $scope.config = config
         _.assign($scope, config.user)
-        $scope.login = ->
-            $http.defaults.headers.common =
-                "Access-Control-Request-Headers": "accept, origin, authorization"
-            auth = "Basic #{btoa($scope.username + ':' + $scope.password)}"
-            $http.defaults.headers.common['Authorization'] = auth
-            $http
-                method: "GET"
-                url: "#{baseurl}auth/login"
-            .success (data, status) ->
-                window.location.reload()
 
         $scope.logout = ->
             $http.defaults.headers.common = {}
@@ -41,5 +31,5 @@ class _loginbar extends Controller('common')
             .success (data, status) ->
                 window.location.reload()
 
-        $scope.loginoauth2 = ->
+        $scope.login = ->
             document.location = "#{baseurl}auth/login"

@@ -3,20 +3,15 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
         a(ng-click="loginCollapsed = !loginCollapsed")
             | Anonymous
             b.caret
-        ul.dropdown-menu(style="padding:17px;")
-            form(role='login', ng-hide="config.auth.oauth2")
-                | Login:
-                .form-group
-                    input(type='text', placeholder='username', ng-model="username")
-                .form-group
-                    input(type='password', placeholder='password', ng-model="password")
-                button.btn.btn-default(type='submit', ng-click="login()")
-                   i.fa.fa-sign-in
-                   | Login
-            form(role='login', ng-show="config.auth.oauth2")
-                button.btn.btn-default(type='submit', ng-click="loginoauth2()")
-                   i.fa(ng-class="config.auth.fa_icon")
-                   | &nbsp;login with {{config.auth.name}}
+        ul.dropdown-menu(uib-dropdown-menu)
+            li
+                a(ng-click="login()")
+                    span(ng-hide="config.auth.oauth2")
+                        i.fa.fa-sign-in
+                        | &nbsp;Login
+                    span(ng-show="config.auth.oauth2")
+                       i.fa(ng-class="config.auth.fa_icon")
+                       | &nbsp;Login with {{config.auth.name}}
 
     li.dropdown(uib-dropdown, ng-hide="anonymous")
         a.dropdown-toggle(uib-dropdown-toggle)
@@ -26,8 +21,10 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
                 | {{full_name || username}}
                 b.caret
         ul.dropdown-menu(uib-dropdown-menu)
-            li(ng-if="full_name")
+            li.dropdown-header(ng-if="full_name || email")
+                i.fa.fa-user
                 span {{ full_name }} {{ email }}
+            li.divider
             li
                 a(ng-click="logout()")
                    i.fa.fa-sign-out

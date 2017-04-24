@@ -30,6 +30,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import config
 from buildbot.www import resource
 
@@ -158,8 +159,8 @@ class HTPasswdAuth(TwistedICredAuthBase):
     def __init__(self, passwdFile, **kwargs):
         TwistedICredAuthBase.__init__(
             self,
-            [DigestCredentialFactory("md5", "buildbot"),
-             BasicCredentialFactory("buildbot")],
+            [DigestCredentialFactory(b"md5", b"buildbot"),
+             BasicCredentialFactory(b"buildbot")],
             [FilePasswordDB(passwdFile)],
             **kwargs)
 
@@ -169,8 +170,8 @@ class UserPasswordAuth(TwistedICredAuthBase):
     def __init__(self, users, **kwargs):
         TwistedICredAuthBase.__init__(
             self,
-            [DigestCredentialFactory("md5", "buildbot"),
-             BasicCredentialFactory("buildbot")],
+            [DigestCredentialFactory(b"md5", b"buildbot"),
+             BasicCredentialFactory(b"buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
 
@@ -186,8 +187,10 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=self.username)
+        session.user_info = dict(username=bytes2NativeString(self.username))
         yield self.master.www.auth.updateUserInfo(request)
+        url = request.args.get("redirect", [self.master.config.buildbotURL])[0]
+        raise resource.Redirect(url)
 
 
 class LogoutResource(resource.Resource):
