@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import re
 
@@ -120,7 +121,8 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
+        uriRE = re.search(
+            r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)

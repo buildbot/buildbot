@@ -18,6 +18,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib.parse import quote_plus as urlquote_plus
 from future.utils import text_type
 
@@ -360,7 +361,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                 path = "".join([t.data for t in p.childNodes])
                 # Convert the path from unicode to bytes
                 path = path.encode("ascii")
-                # Convert path from bytes to native string.  Needed for Python 3.
+                # Convert path from bytes to native string.  Needed for Python
+                # 3.
                 path = bytes2NativeString(path, "ascii")
                 if path.startswith("/"):
                     path = path[1:]
@@ -408,7 +410,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     chdict = dict(
                         author=author,
                         # weakly assume filenames are utf-8
-                        files=[bytes2unicode(f, 'utf-8', 'replace') for f in files],
+                        files=[bytes2unicode(f, 'utf-8', 'replace')
+                               for f in files],
                         comments=comments,
                         revision=revision,
                         branch=util.ascii2unicode(branch),

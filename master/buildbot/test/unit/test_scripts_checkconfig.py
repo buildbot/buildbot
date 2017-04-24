@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import os
@@ -35,7 +36,8 @@ from buildbot.test.util import dirs
 class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     def setUp(self):
-        # config dir must be unique so that the python runtime does not optimize its list of module
+        # config dir must be unique so that the python runtime does not
+        # optimize its list of module
         self.configdir = self.mktemp()
         return self.setUpDirs(self.configdir)
 

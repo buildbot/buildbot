@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -80,4 +81,4 @@ class AvatarResource(www.WwwTestMixin, unittest.TestCase):
 
         res = yield self.render_resource(rsrc, b'/?email=foo')
         self.assertEqual(res, dict(redirected='//www.gravatar.com/avatar/acbd18db4cc2f85ce'
-                         'def654fccc4a4d8?d=retro&s=32'))
+                                   'def654fccc4a4d8?d=retro&s=32'))

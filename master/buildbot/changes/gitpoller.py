@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
 from future.utils import text_type
@@ -73,14 +74,15 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             project = ''
 
         if only_tags and (branch or branches):
-            config.error("GitPoller: can't specify only_tags and branch/branches")
+            config.error(
+                "GitPoller: can't specify only_tags and branch/branches")
         if branch and branches:
             config.error("GitPoller: can't specify both branch and branches")
         elif branch:
             branches = [branch]
         elif not branches:
             if only_tags:
-                branches = lambda ref: ref.startswith('refs/tags/')
+                def branches(ref): return ref.startswith('refs/tags/')
             else:
                 branches = ['master']
 

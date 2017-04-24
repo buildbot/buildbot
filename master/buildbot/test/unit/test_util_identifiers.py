@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import text_type
 
 import locale
@@ -35,7 +36,7 @@ class Tests(unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise(unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding)))
+                                    "on this platform with {}".format(os_encoding)))
 
         good = [
             u"linux", u"Linux", u"abc123", u"a" * 50,

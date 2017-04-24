@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from mock import Mock
 
@@ -327,7 +328,8 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_bogus_scheduler(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a', 'x']))
-        # bogus scheduler is an exception, not a failure (don't blame the patch)
+        # bogus scheduler is an exception, not a failure (don't blame the
+        # patch)
         self.expectOutcome(result=EXCEPTION)
         self.expectTriggeredWith(a=None)  # a is not triggered!
         yield self.runStep()

@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import text_type
 
 import copy
@@ -146,7 +147,8 @@ class Change(base.ResourceType):
             uid = None
 
         if not revlink and revision and repository and callable(self.master.config.revlink):
-            # generate revlink from revision and repository using the configured callable
+            # generate revlink from revision and repository using the
+            # configured callable
             revlink = self.master.config.revlink(revision, repository) or u''
 
         if callable(category):

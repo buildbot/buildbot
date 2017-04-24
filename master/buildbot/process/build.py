@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from functools import reduce
 
@@ -530,7 +531,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
-        log.msg(" step '%s' complete: %s" % (step.name, statusToString(results)))
+        log.msg(" step '%s' complete: %s" %
+                (step.name, statusToString(results)))
         if text:
             self.text.extend(text)
         self.results, terminate = computeResultAndTermination(step, results,

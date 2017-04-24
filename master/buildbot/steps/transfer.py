@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import json
 import os
@@ -41,7 +42,8 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 def makeStatusRemoteCommand(step, remote_command, args):
     self = remotecommand.RemoteCommand(
         remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
-    callback = lambda arg: step.step_status.addLog('stdio')
+
+    def callback(arg): return step.step_status.addLog('stdio')
     self.useLogDelayed('stdio', callback, True)
     return self
 
@@ -128,7 +130,8 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         self.urlText = urlText
 
     def finished(self, results):
-        log.msg("File '%s' upload finished with results %s" % (os.path.basename(self.workersrc), str(results)))
+        log.msg("File '%s' upload finished with results %s" %
+                (os.path.basename(self.workersrc), str(results)))
         self.step_status.setText(self.descriptionDone)
         _TransferBuildStep.finished(self, results)
 
@@ -294,7 +297,8 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
 
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.workersrcs = workersrcs if isinstance(workersrcs, list) else [workersrcs]
+        self.workersrcs = workersrcs if isinstance(
+            workersrcs, list) else [workersrcs]
         self._registerOldWorkerAttr("workersrcs")
         self.masterdest = masterdest
         self.maxsize = maxsize

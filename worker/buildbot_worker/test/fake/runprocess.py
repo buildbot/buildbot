@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.python import failure
@@ -97,7 +98,8 @@ class FakeRunProcess(object):
         have not taken place, this will raise the appropriate AssertionError.
         """
         if cls._expectations:
-            raise AssertionError("%d expected instances not created" % len(cls._expectations))
+            raise AssertionError(
+                "%d expected instances not created" % len(cls._expectations))
         del cls._expectations
 
     def __init__(self, builder, command, workdir, **kwargs):
@@ -126,18 +128,21 @@ class FakeRunProcess(object):
                         msg.append('%s: expected default (%r),\n  got %r' %
                                    (key, default_values[key], kwargs[key]))
                     else:
-                        msg.append('%s: unexpected arg, value = %r' % (key, kwargs[key]))
+                        msg.append('%s: unexpected arg, value = %r' %
+                                   (key, kwargs[key]))
                 elif key not in kwargs:
                     msg.append('%s: did not get expected arg' % (key,))
                 elif exp.kwargs[key] != kwargs[key]:
-                    msg.append('%s: expected %r,\n  got %r' % (key, exp.kwargs[key], kwargs[key]))
+                    msg.append('%s: expected %r,\n  got %r' %
+                               (key, exp.kwargs[key], kwargs[key]))
             if msg:
                 msg.insert(
                     0,
                     'did not get expected __init__ arguments for\n {0}'.format(
                         " ".join(map(repr, kwargs.get('command',
                                                       ['unknown command'])))))
-                self._expectations[:] = []  # don't expect any more instances, since we're failing
+                # don't expect any more instances, since we're failing
+                self._expectations[:] = []
                 raise AssertionError("\n".join(msg))
 
         self._builder = builder

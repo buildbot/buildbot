@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -152,7 +153,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
     def test_fnmatchPatternRoleCheck(self):
         # defaultDeny is True by default so action is denied if no match
         allow_rules = [
-                        AnyEndpointMatcher(role="[a,b]dmin?")
+            AnyEndpointMatcher(role="[a,b]dmin?")
         ]
 
         self.setAllowRules(allow_rules)
@@ -190,7 +191,8 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_DefaultDenyFalseContinuesCheck(self):
-        # defaultDeny is True in the last rule so action is denied in the last check
+        # defaultDeny is True in the last rule so action is denied in the last
+        # check
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=False),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
@@ -205,7 +207,8 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_DefaultDenyTrueStopsCheckIfFailed(self):
-        # defaultDeny is True in the first rule so action is denied in the first check
+        # defaultDeny is True in the first rule so action is denied in the
+        # first check
         allow_rules = [
             AnyEndpointMatcher(role="not-exists1", defaultDeny=True),
             AnyEndpointMatcher(role="not-exists2", defaultDeny=False),

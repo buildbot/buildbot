@@ -9,6 +9,7 @@ wrapper will disconnect in that case, and inform the caller.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet.interfaces import IProtocol
 from twisted.internet.interfaces import IProtocolFactory
@@ -106,7 +107,8 @@ class HangCheckFactory(
         protocol = self._wrapped_factory.buildProtocol(addr)
         return HangCheckProtocol(protocol, hung_callback=self._hung_callback)
 
-    # This is used as a ClientFactory, which doesn't have a specific interface, so forward the additional methods.
+    # This is used as a ClientFactory, which doesn't have a specific
+    # interface, so forward the additional methods.
 
     def startedConnecting(self, connector):
         self._wrapped_factory.startedConnecting(connector)

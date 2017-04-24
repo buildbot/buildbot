@@ -18,6 +18,7 @@ Test clean shutdown functionality of the master
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import mock
 
@@ -68,7 +69,8 @@ class TestPBManager(unittest.TestCase):
         # dynamically allocated port number which is buried out of reach;
         # however, we can try the requestAvatar and requestAvatarId methods.
 
-        d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+        d = disp.requestAvatarId(
+            credentials.UsernamePassword(b'boris', b'pass'))
 
         def check_avatarid(username):
             self.assertEqual(username, b'boris')

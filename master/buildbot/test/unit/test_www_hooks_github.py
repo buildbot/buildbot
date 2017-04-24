@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import PY3
 from future.utils import string_types
 from future.utils import text_type
@@ -434,7 +435,8 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
-        self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, github_property_whitelist=["github.*"])
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}

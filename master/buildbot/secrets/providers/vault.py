@@ -18,6 +18,7 @@ vault based providers
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 
@@ -35,9 +36,11 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
 
     def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None):
         if not isinstance(vaultServer, str):
-            config.error("vaultServer must be a string while it is %s" % (type(vaultServer,)))
+            config.error("vaultServer must be a string while it is %s" %
+                         (type(vaultServer,)))
         if not isinstance(vaultToken, str):
-            config.error("vaultToken must be a string while it is %s" % (type(vaultToken,)))
+            config.error("vaultToken must be a string while it is %s" %
+                         (type(vaultToken,)))
 
     @defer.inlineCallbacks
     def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None):

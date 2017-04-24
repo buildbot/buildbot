@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 
@@ -39,7 +40,8 @@ class ShellMaster(RunMasterBase):
                       revision="HEAD",
                       project="none"
                       )
-        # switch the configuration of the scheduler, and make sure the correct builder is run
+        # switch the configuration of the scheduler, and make sure the correct
+        # builder is run
         cfg['schedulers'] = [
             schedulers.AnyBranchScheduler(
                 name="sched1",

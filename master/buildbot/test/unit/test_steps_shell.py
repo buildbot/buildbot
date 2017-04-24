@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import re
 import textwrap
@@ -421,7 +422,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: " + repr(u'\n\nabcdef\n'))
+        self.expectLogfile('property changes', r"res: " +
+                           repr(u'\n\nabcdef\n'))
         return self.runStep()
 
     def test_run_failure(self):

@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import PY3
 from future.utils import text_type
@@ -567,7 +568,7 @@ class Contact(service.AsyncService):
         # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
         #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
         r += " - %s" % utils.getURLForBuild(
-                        self.master, builder['builderid'], buildNumber)
+            self.master, builder['builderid'], buildNumber)
         self.send(r)
 
     results_descriptions = {
@@ -632,7 +633,7 @@ class Contact(service.AsyncService):
                                      results[1], self.useColors)
 
         r += " - %s" % utils.getURLForBuild(
-                self.master, builder['builderid'], buildnum)
+            self.master, builder['builderid'], buildnum)
 
         self.send(r)
 

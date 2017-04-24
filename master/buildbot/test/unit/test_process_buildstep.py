@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import itervalues
 from future.utils import text_type
 
@@ -1102,7 +1103,8 @@ class TestShellMixin(steps.BuildStepMixin,
         self.setupStep(ShellMixinExample(usePTY=False, interruptSignal='DIE'),
                        worker_version={'*': "3.0"}, wantDefaultWorkdir=False)
         self.expectCommands(
-            ExpectShell(workdir='build', usePTY=False, command=['./cleanup.sh'])
+            ExpectShell(workdir='build', usePTY=False,
+                        command=['./cleanup.sh'])
             # note missing parameters
             + 0,
         )

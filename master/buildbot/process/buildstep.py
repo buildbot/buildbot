@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
@@ -363,7 +364,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def __str__(self):
         args = [repr(x) for x in self._factory.args]
-        args.extend([str(k) + "=" + repr(v) for k, v in self._factory.kwargs.items()])
+        args.extend([str(k) + "=" + repr(v)
+                     for k, v in self._factory.kwargs.items()])
         return "{}({})".format(
             self.__class__.__name__, ", ".join(args))
     __repr__ = __str__

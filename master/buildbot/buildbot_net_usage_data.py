@@ -21,6 +21,7 @@ urllib2 supports http_proxy already urllib2 is blocking and thus everything is d
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib import error as urllib_error
 from future.moves.urllib import request as urllib_request
 
@@ -118,7 +119,8 @@ def basicData(master):
 
     # we hash the master's name + various other master dependent variables
     # to get as much as possible an unique id
-    # we hash it to not leak private information about the installation such as hostnames and domain names
+    # we hash it to not leak private information about the installation such
+    # as hostnames and domain names
     hashInput = (
         master.name +  # master name contains hostname + master basepath
         socket.getfqdn()  # we add the fqdn to account for people
@@ -136,7 +138,8 @@ def basicData(master):
             'machine': platform.machine(),
             'processor': platform.processor(),
             'python_implementation': platform.python_implementation(),
-            # xBSD including osx will disclose too much information after [4] like where it was built
+            # xBSD including osx will disclose too much information after [4]
+            # like where it was built
             'version': " ".join(platform.version().split(' ')[:4]),
             'distro': get_distro()
         },
@@ -213,7 +216,8 @@ def _sendBuildbotNetUsageData(data):
         log.msg("buildbotNetUsageData: Could not send using https, "
                 "please `pip install 'requests[security]'` for proper SSL implementation`")
         data['buggySSL'] = True
-        res = _sendWithUrlib(PHONE_HOME_URL.replace("https://", "http://"), data)
+        res = _sendWithUrlib(PHONE_HOME_URL.replace(
+            "https://", "http://"), data)
 
     log.msg("buildbotNetUsageData: buildbot.net said:", res)
 

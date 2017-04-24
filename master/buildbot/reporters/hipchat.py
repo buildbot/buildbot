@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import string_types
 
 from twisted.internet import defer
@@ -90,9 +91,11 @@ class HipChatStatusPush(HttpStatusPushBase):
 
         urls = []
         if 'id_or_email' in postData:
-            urls.append('/v2/user/{}/message'.format(postData.pop('id_or_email')))
+            urls.append(
+                '/v2/user/{}/message'.format(postData.pop('id_or_email')))
         if 'room_id_or_name' in postData:
-            urls.append('/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
+            urls.append(
+                '/v2/room/{}/notification'.format(postData.pop('room_id_or_name')))
 
         for url in urls:
             response = yield self._http.post(url, params=dict(auth_token=self.auth_token), json=postData)

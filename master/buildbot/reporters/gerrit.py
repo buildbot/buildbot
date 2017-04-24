@@ -18,6 +18,7 @@ Push events to Gerrit
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import iteritems
 
@@ -236,10 +237,12 @@ class GerritStatusPush(service.BuildbotService):
 
     def callWithVersion(self, func):
         command = self._gerritCmd("version")
-        callback = lambda gerrit_version: self.processVersion(
+
+        def callback(gerrit_version): return self.processVersion(
             gerrit_version, func)
 
-        self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
+        self.spawnProcess(self.VersionPP(callback),
+                          command[0], command, env=None)
 
     class LocalPP(ProcessProtocol):
 

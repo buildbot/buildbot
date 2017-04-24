@@ -21,6 +21,7 @@ relative to the top of the maildir (so it will look like "new/blahblah").
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 

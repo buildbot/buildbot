@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import re
 
@@ -85,7 +86,8 @@ class Cppcheck(ShellCommand):
                 continue
             self.descriptionDone.append("%s=%d" % (msg, self.counts[msg]))
             self.addCompleteLog(msg, '\n'.join(self.summaries[msg]))
-        self.setProperty('cppcheck-total', sum(self.counts.values()), 'Cppcheck')
+        self.setProperty('cppcheck-total',
+                         sum(self.counts.values()), 'Cppcheck')
 
     def evaluateCommand(self, cmd):
         """ cppcheck always return 0, unless a special parameter is given """

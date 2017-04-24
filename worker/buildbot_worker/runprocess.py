@@ -19,6 +19,7 @@ Support for running 'shell commands'
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import iteritems
 from future.utils import string_types
@@ -211,14 +212,14 @@ class RunProcessPP(protocol.ProcessProtocol):
         if self.debug:
             log.msg("RunProcessPP.outReceived")
         data = bytes2NativeString(
-                   data, self.command.builder.unicode_encoding)
+            data, self.command.builder.unicode_encoding)
         self.command.addStdout(data)
 
     def errReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.errReceived")
         data = bytes2NativeString(
-                   data, self.command.builder.unicode_encoding)
+            data, self.command.builder.unicode_encoding)
         self.command.addStderr(data)
 
     def processEnded(self, status_object):
@@ -483,7 +484,7 @@ class RunProcess(object):
             # handle path searching, etc.
             if runtime.platformType == 'win32' and not \
                (bytes2NativeString(self.command[0]).lower().endswith(".exe")
-               and os.path.isabs(self.command[0])):
+                    and os.path.isabs(self.command[0])):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
@@ -494,7 +495,8 @@ class RunProcess(object):
                 argv = self.command
             # Attempt to format this for use by a shell, although the process
             # isn't perfect
-            display = shell_quote(self.fake_command, self.builder.unicode_encoding)
+            display = shell_quote(
+                self.fake_command, self.builder.unicode_encoding)
 
         display = bytes2NativeString(display, self.builder.unicode_encoding)
 

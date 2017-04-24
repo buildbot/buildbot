@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib.parse import unquote as urlunquote
 from future.moves.urllib.parse import parse_qs
 from future.utils import integer_types
@@ -214,7 +215,8 @@ class WwwTestMixin(RequiresWwwMixin):
             got['content'] = self.request.written
             exp['content'] = content
         if contentJson is not None:
-            got['contentJson'] = json.loads(bytes2NativeString(self.request.written))
+            got['contentJson'] = json.loads(
+                bytes2NativeString(self.request.written))
             exp['contentJson'] = contentJson
         if contentType is not None:
             got['contentType'] = self.request.headers[b'content-type']

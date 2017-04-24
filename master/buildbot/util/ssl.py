@@ -21,6 +21,7 @@ Modules using this should call ensureHasSSL in order to make sure that the user 
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 try:
     from twisted.internet.ssl import *  # noqa pylint: disable=unused-wildcard-import, wildcard-import

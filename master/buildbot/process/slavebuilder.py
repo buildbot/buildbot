@@ -18,6 +18,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder as _AbstractWorkerForBuilder
 from buildbot.process.workerforbuilder import LatentWorkerForBuilder as _LatentWorkerForBuilder

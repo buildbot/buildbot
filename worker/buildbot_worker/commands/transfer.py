@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import tarfile
@@ -223,7 +224,8 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         else:
             mode = 'w'
         # TODO: Use 'with' when depending on Python 2.7
-        # Not possible with older versions: exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
+        # Not possible with older versions: exceptions.AttributeError:
+        # 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
         archive.add(self.path, '')
         archive.close()

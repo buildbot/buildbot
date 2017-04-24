@@ -21,6 +21,7 @@ Standard setup script.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import glob
 import os
@@ -323,7 +324,8 @@ setup_args = {
             ('buildbot.reporters.gerrit_verify_status',
              ['GerritVerifyStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
-            ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
+            ('buildbot.reporters.github', [
+             'GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),

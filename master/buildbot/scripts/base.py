@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 
 import copy
@@ -57,7 +58,8 @@ def checkPidFile(pidfile):
             with open(pidfile) as f:
                 pid = int(f.read())
         except ValueError:
-            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile))
+            raise ValueError(
+                'Pidfile {} contains non-numeric value'.format(pidfile))
         try:
             os.kill(pid, 0)
         except OSError as why:
@@ -69,7 +71,8 @@ def checkPidFile(pidfile):
                 raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
                     pid, pidfile, why))
         else:
-            raise BusyError("'{}' exists - is this master still running?".format(pidfile))
+            raise BusyError(
+                "'{}' exists - is this master still running?".format(pidfile))
 
 
 def checkBasedir(config):

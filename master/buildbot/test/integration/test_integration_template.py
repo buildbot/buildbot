@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 
@@ -29,7 +30,8 @@ class ShellMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_shell(self):
         yield self.setupConfig(masterConfig())
-        # if you don't need change, you can just remove this change, and useChange parameter
+        # if you don't need change, you can just remove this change, and
+        # useChange parameter
         change = dict(branch="master",
                       files=["foo.c"],
                       author="me@foo.com",

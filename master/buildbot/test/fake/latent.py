@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet.defer import Deferred
 from twisted.internet.defer import succeed
@@ -66,12 +67,14 @@ class LatentController(object):
             raise SkipTest("buildbot-worker package is not installed")
         workdir = FilePath(case.mktemp())
         workdir.createDirectory()
-        self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
+        self.remote_worker = RemoteWorker(
+            self.worker.name, workdir.path, False)
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self, workdir):
         self.worker.conn, conn = None, self.worker.conn
-        # LocalWorker does actually disconnect, so we must force disconnection via detached
+        # LocalWorker does actually disconnect, so we must force disconnection
+        # via detached
         conn.notifyDisconnected()
         return self.remote_worker.disownServiceParent()
 

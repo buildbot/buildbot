@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from mock import Mock
 
@@ -94,7 +95,8 @@ class FakeRequest(Mock):
             self.finish()
             return self.deferred
         elif isinstance(result, str):
-            raise ValueError("%r should return bytes, not string: %r" % (resource.render, result))
+            raise ValueError("%r should return bytes, not string: %r" %
+                             (resource.render, result))
         elif result is server.NOT_DONE_YET:
             return self.deferred
         else:

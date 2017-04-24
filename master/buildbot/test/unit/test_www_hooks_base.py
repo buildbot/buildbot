@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,7 +26,8 @@ def _prepare_request(payload, headers=None):
         headers = {}
 
     if b'comments' not in payload:
-        payload[b'comments'] = b'test_www_hook_base submission'  # Required field
+        # Required field
+        payload[b'comments'] = b'test_www_hook_base submission'
 
     request = FakeRequest()
 
@@ -49,15 +51,22 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
         change = self.changeHook.master.addedChanges[0]
         self.assertEqual(change['files'], payload.get(b'files', []))
         self.assertEqual(change['properties'], payload.get(b'properties', {}))
-        self.assertEqual(change['revision'], bytes2NativeString(payload.get(b'revision')))
+        self.assertEqual(change['revision'],
+                         bytes2NativeString(payload.get(b'revision')))
         self.assertEqual(change['author'],
                          payload.get('author', bytes2NativeString(payload.get(b'who'))))
-        self.assertEqual(change['comments'], bytes2NativeString(payload[b'comments']))
-        self.assertEqual(change['branch'], bytes2NativeString(payload.get(b'branch')))
-        self.assertEqual(change['category'], bytes2NativeString(payload.get(b'category')))
-        self.assertEqual(change['revlink'], bytes2NativeString(payload.get(b'revlink')))
-        self.assertEqual(change['repository'], bytes2NativeString(payload.get(b'repository')))
-        self.assertEqual(change['project'], bytes2NativeString(payload.get(b'project')))
+        self.assertEqual(change['comments'],
+                         bytes2NativeString(payload[b'comments']))
+        self.assertEqual(change['branch'],
+                         bytes2NativeString(payload.get(b'branch')))
+        self.assertEqual(change['category'],
+                         bytes2NativeString(payload.get(b'category')))
+        self.assertEqual(change['revlink'],
+                         bytes2NativeString(payload.get(b'revlink')))
+        self.assertEqual(change['repository'],
+                         bytes2NativeString(payload.get(b'repository')))
+        self.assertEqual(change['project'],
+                         bytes2NativeString(payload.get(b'project')))
 
     def test_base_with_no_change(self):
         self._check_base_with_change({})

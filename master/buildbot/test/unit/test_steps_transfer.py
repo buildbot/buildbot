@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import json
@@ -185,7 +186,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
     def testDescriptionDone(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file",
-                descriptionDone="Test File Uploaded"))
+                                descriptionDone="Test File Uploaded"))
 
         self.step.addURL = Mock()
 
@@ -592,7 +593,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', dict(path=os.path.join('wkdir', 'src*'), logEnviron=False))
+            Expect('glob', dict(path=os.path.join(
+                'wkdir', 'src*'), logEnviron=False))
             + Expect.update('files', ["srcfile"])
             + 0,
             Expect('stat', dict(file="srcfile",
@@ -616,11 +618,13 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             transfer.MultipleFileUpload(
                 workersrcs=["src*"], masterdest=self.destdir, glob=True))
         self.expectCommands(
-            Expect('glob', {'path': os.path.join('wkdir', 'src*'), 'logEnviron': False})
+            Expect('glob', {'path': os.path.join(
+                'wkdir', 'src*'), 'logEnviron': False})
             + Expect.update('files', [])
             + 1,
         )
-        self.expectOutcome(result=SKIPPED, state_string="uploading 0 files (skipped)")
+        self.expectOutcome(
+            result=SKIPPED, state_string="uploading 0 files (skipped)")
         d = self.runStep()
         return d
 
@@ -1205,7 +1209,8 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 data = reader.remote_read(100)
                 data = bytes2NativeString(data)
                 actualJson = json.loads(data)
-                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                expectedJson = dict(
+                    sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
                 break
         else:
@@ -1237,7 +1242,8 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 data = reader.remote_read(100)
                 data = bytes2NativeString(data)
                 actualJson = json.loads(data)
-                expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
+                expectedJson = dict(
+                    sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
                 break
         else:

@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import sqlalchemy as sa
@@ -104,6 +105,7 @@ class NoneComparator(object):
     '> None' and '< None' are not supported
     in Python 3.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -141,6 +143,7 @@ class ReverseComparator(object):
     and instead of a > b, it does b > a.
     This can be used in reverse comparisons.
     """
+
     def __init__(self, value):
         self.value = value
 
@@ -175,8 +178,8 @@ class ResultSpec(object):
     def __repr__(self):
         return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
                 "'order': {}, 'limit': {}, 'offset': {}").format(
-                self.filters, self.fields, self.properties, self.order,
-                self.limit, self.offset) + "})"
+            self.filters, self.fields, self.properties, self.order,
+            self.limit, self.offset) + "})"
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
@@ -300,7 +303,8 @@ class ResultSpec(object):
             self.filters = unmatched_filters
             self.order = unmatched_order
             return query, None
-        count_query = sa.select([sa.func.count()]).select_from(query.alias('query'))
+        count_query = sa.select([sa.func.count()]).select_from(
+            query.alias('query'))
         self.order = None
         self.filters = []
         # finally, slice out the limit/offset

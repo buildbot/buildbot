@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
@@ -35,7 +36,8 @@ def upgrade(migrate_engine):
                                        autoload=True)
     fks_to_change = []
     # we need to parse the reflected model in order to find the automatic fk name that was put
-    # mysql and pgsql have different naming convention so this is not very easy to have generic code working.
+    # mysql and pgsql have different naming convention so this is not very
+    # easy to have generic code working.
     for table, keys in [(builder_masters, (builders.c.id, masters.c.id)),
                         (configured_workers, (builder_masters.c.id, workers.c.id))]:
         for fk in table.constraints:
@@ -44,7 +46,8 @@ def upgrade(migrate_engine):
             for c in fk.elements:
                 if c.column in keys:
                     # migrate.xx.ForeignKeyConstraint is changing the model so initializing here
-                    # would break the iteration (Set changed size during iteration)
+                    # would break the iteration (Set changed size during
+                    # iteration)
                     fks_to_change.append((
                         table, (fk.columns, [c.column]), dict(name=fk.name, ondelete='CASCADE')))
 

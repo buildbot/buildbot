@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
@@ -112,7 +113,8 @@ class OAuth2Auth(auth.AuthBase):
         if redirect_url is not None:
             oauth_params['state'] = urlencode(dict(redirect=redirect_url))
         oauth_params.update(self.authUriAdditionalParams)
-        sorted_oauth_params = sorted(oauth_params.items(), key=lambda val: val[0])
+        sorted_oauth_params = sorted(
+            oauth_params.items(), key=lambda val: val[0])
         return defer.succeed("%s?%s" % (self.authUri, urlencode(sorted_oauth_params)))
 
     def createSessionFromToken(self, token):
@@ -126,7 +128,8 @@ class OAuth2Auth(auth.AuthBase):
         return ret.json()
 
     # If the user wants to authenticate directly with an access token they
-    # already have, go ahead and just directly accept an access_token from them.
+    # already have, go ahead and just directly accept an access_token from
+    # them.
     def acceptToken(self, token):
         def thd():
             session = self.createSessionFromToken({'access_token': token})

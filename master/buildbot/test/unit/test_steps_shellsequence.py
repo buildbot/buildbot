@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.trial import unittest
 
@@ -142,6 +143,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))
-        self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1)
+        self.expectCommands(ExpectShell(
+            workdir='build', command='make p1') + 1)
         self.expectOutcome(result=FAILURE, state_string="'make p1'")
         return self.runStep()

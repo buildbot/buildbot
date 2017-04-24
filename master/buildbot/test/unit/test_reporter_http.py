@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from mock import Mock
 
@@ -73,7 +74,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             "serv", auth=("username", "passwd"))
-        self.sp = sp = HttpStatusPush("serv", auth=("username", "passwd"), **kwargs)
+        self.sp = sp = HttpStatusPush(
+            "serv", auth=("username", "passwd"), **kwargs)
         yield sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -121,7 +123,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_wantKwargsCheck(self):
         yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
                                   wantPreviousBuild=True, wantLogs=True)
-        self._http.expect("post", "", json=BuildLookAlike(keys=['steps', 'prev_build']))
+        self._http.expect("post", "", json=BuildLookAlike(
+            keys=['steps', 'prev_build']))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)

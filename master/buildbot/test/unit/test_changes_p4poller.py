@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import datetime
 
@@ -358,35 +359,35 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 return change['branch']
 
             self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
-                sorted([{
-                'author': u'mpatel',
-                'branch': u'branch_c',
-                'category': None,
-                'codebase': None,
-                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-                'files': [u'branch_c_file'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '5',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when),
-            }, {
-                'author': u'mpatel',
-                'branch': u'branch_b',
-                'category': None,
-                'codebase': None,
-                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-                'files': [u'branch_b_file'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '5',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when),
-            }], key=changeKey))
+                             sorted([{
+                                 'author': u'mpatel',
+                                 'branch': u'branch_c',
+                                 'category': None,
+                                 'codebase': None,
+                                 'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+                                 'files': [u'branch_c_file'],
+                                 'project': '',
+                                 'properties': {},
+                                 'repository': '',
+                                 'revision': '5',
+                                 'revlink': '',
+                                 'src': None,
+                                 'when_timestamp': datetime2epoch(when),
+                             }, {
+                                 'author': u'mpatel',
+                                 'branch': u'branch_b',
+                                 'category': None,
+                                 'codebase': None,
+                                 'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+                                 'files': [u'branch_b_file'],
+                                 'project': '',
+                                 'properties': {},
+                                 'repository': '',
+                                 'revision': '5',
+                                 'revlink': '',
+                                 'src': None,
+                                 'when_timestamp': datetime2epoch(when),
+                             }], key=changeKey))
             self.assertEqual(self.changesource.last_change, 5)
             self.assertAllCommandsRan()
         d.addCallback(check)
