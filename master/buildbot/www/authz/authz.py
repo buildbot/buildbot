@@ -24,8 +24,8 @@ from twisted.web.error import Error
 from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
-from buildbot.www.authz.roles import RolesFromOwner
 from buildbot.util import unicode2bytes
+from buildbot.www.authz.roles import RolesFromOwner
 
 
 class Forbidden(Error):
@@ -97,6 +97,7 @@ class Authz(object):
                 if not rule.defaultDeny:
                     continue   # check next suitable rule if not denied
                 else:
-                    error_msg = unicode2bytes("you need to have role '%s'" % rule.role)
+                    error_msg = unicode2bytes(
+                        "you need to have role '%s'" % rule.role)
                     raise Forbidden(error_msg)
         defer.returnValue(None)
