@@ -88,7 +88,7 @@ class Console extends Controller
 
     onChange: (s) =>
         # if there is no data, no need to try and build something.
-        if @builds.length == 0 or @all_builders.length == 0 or @changes.length == 0 or
+        if @builds.length == 0 or @all_builders.length == 0 or not @changes.$resolved or
                 @buildsets.length == 0 or @buildrequests == 0
             return
         if not @onchange_debounce?
@@ -268,8 +268,13 @@ class Console extends Controller
                 change = @changesBySSID[sourcestamp.ssid]
 
         if not change? and build.properties?.got_revision?
-            for codebase, revision of build.properties.got_revision[0]
-                change = @makeFakeChange(codebase, revision)
+            rev = build.properties.got_revision[0]
+            # got_revision can be per codebase or just the revision string
+            if typeof(rev) == "string"
+                change = @makeFakeChange("", rev)
+            else
+                for codebase, revision of rev
+                    change = @makeFakeChange(codebase, revision)
 
         if not change?
             change = @makeFakeChange("unknown codebase", "unknown revision")
@@ -284,7 +289,7 @@ class Console extends Controller
                 revision: revision
                 changeid: revision
                 author: "unknown author for " + revision
-                comment: revision
+                comments: revision + "\n\nno change for this revision, please setup a changesource in Buildbot"
             @changesBySSID[revision] = change
             @populateChange(change)
         return change

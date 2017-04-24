@@ -3,12 +3,12 @@
         .spinner
             i.fa.fa-circle-o-notch.fa-spin.fa-2x
             p loading
-    div(ng-show="c.changes.$resolved && c.changes.length==0")
+    div(ng-show="c.changes.$resolved && c.filtered_changes.length==0")
         p No changes. Console view needs changesource to be setup, and 
             a(href="#changes") changes 
             | to be in the system.
 
-    table.table.table-striped.table-bordered(ng-hide="c.changes.length==0" ng-class="{'table-fixedwidth': c.isBigTable()}")
+    table.table.table-striped.table-bordered(ng-hide="c.filtered_changes.length==0" ng-class="{'table-fixedwidth': c.isBigTable()}")
         tr.first-row
             th.row-header(ng-style="{'width': c.getRowHeaderWidth()}")
                 i.fa.fa-plus-circle.pull-left(ng-click='c.openAll()' uib-tooltip='Open information for all changes' uib-tooltip-placement='right')
