@@ -17,6 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import string_types
 
+import abc
+
 from twisted.internet import defer
 
 from buildbot import config
@@ -90,8 +92,7 @@ class NotifierBase(service.BuildbotService):
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         addLogs=False, addPatch=True,
                         name=None, schedulers=None, branches=None,
-                        messageFormatterMissingWorker=None
-                       ):
+                        messageFormatterMissingWorker=None):
 
         self.mode = self.computeShortcutModes(mode)
         self.tags = tags
@@ -266,10 +267,11 @@ class NotifierBase(service.BuildbotService):
         yield self.sendMessage(body, subject, msgtype, name, results, builds,
                                list(users), patches, logs)
 
+    @abc.abstractmethod
     def sendMessage(self, body, subject=None, type=None, builderName=None,
                     results=None, builds=None, users=None, patches=None,
                     logs=None, worker=None):
-        return
+        pass
 
     @defer.inlineCallbacks
     def workerMissing(self, key, worker):

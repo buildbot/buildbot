@@ -45,6 +45,7 @@ PRIORITIES = {
     WARNINGS: 'warnings'
 }
 
+
 class PushoverNotifier(NotifierBase):
 
     def checkConfig(self, user_key, api_token,
@@ -75,22 +76,19 @@ class PushoverNotifier(NotifierBase):
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         name=None, schedulers=None, branches=None,
                         priorities=None, otherParams=None,
-                        watchedWorkers=None, messageFormatterMissingWorker=None
-                       ):
+                        watchedWorkers=None, messageFormatterMissingWorker=None):
 
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter(template_type='html',
                 template='The Buildbot has detected a <a href="{{ build_url }}">'
                          '{{ status_detected }}</a> of <i>{{ buildername }}</i> '
-                         'while building {{ projects }} on {{ workername }}.'
-            )
+                         'while building {{ projects }} on {{ workername }}.')
         if messageFormatterMissingWorker is None:
             messageFormatterMissingWorker = MessageFormatterMissingWorker(
                 template="The Buildbot working for '{{buildbot_title}}' "
                          "has noticed that the worker named {{worker.name}} "
                          "went away.\n\n"
-                         "It last disconnected at {{worker.last_connection}}."
-                )
+                         "It last disconnected at {{worker.last_connection}}.")
         super(PushoverNotifier, self).reconfigService(mode, tags, builders,
                                                       buildSetSummary,
                                                       messageFormatter,

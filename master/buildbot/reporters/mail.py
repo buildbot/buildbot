@@ -37,17 +37,9 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
-from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
-from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.reporters.notifier import NotifierBase, ENCODING
-from buildbot.util import service
+from buildbot.reporters.notifier import ENCODING
+from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
@@ -347,4 +339,3 @@ class MailNotifier(NotifierBase):
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
 
         return self.sendmail(s, recipients)
-

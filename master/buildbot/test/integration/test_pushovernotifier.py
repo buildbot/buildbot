@@ -16,14 +16,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import sys
-
 from twisted.internet import defer
 
-from buildbot.test.util.integration import RunMasterBase
-
-from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.plugins import reporters
+from buildbot.reporters.pushover import PushoverNotifier
+from buildbot.test.util.integration import RunMasterBase
 
 
 # This integration test creates a master and worker environment,
@@ -33,8 +30,10 @@ class PushoverMaster(RunMasterBase):
     @defer.inlineCallbacks
     def setUp(self):
         self.notification = defer.Deferred()
+
         def sendNotification(_, params):
             self.notification.callback(params)
+
         self.patch(PushoverNotifier, "sendNotification", sendNotification)
         yield self.setupConfig(masterConfig())
 
@@ -56,7 +55,7 @@ class PushoverMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_notifiy_for_build(self):
         self.master.config.services = [
-            reporters.PushoverNotifier('1234', 'abcd', mode="all", 
+            reporters.PushoverNotifier('1234', 'abcd', mode="all",
                 messageFormatter=reporters.MessageFormatter(template='This is a message.'))]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         yield self.doTest('testy')
@@ -64,7 +63,7 @@ class PushoverMaster(RunMasterBase):
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
         self.master.config.services = [
-            reporters.PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True, 
+            reporters.PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True,
                 messageFormatter=reporters.MessageFormatter(template='This is a message.'))]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
         yield self.doTest('whole buildset')
