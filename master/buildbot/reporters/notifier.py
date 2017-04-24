@@ -37,6 +37,8 @@ ENCODING = 'utf8'
 
 class NotifierBase(service.BuildbotService):
 
+    __meta__ = abc.ABCMeta
+
     possible_modes = ("change", "failing", "passing", "problem", "warnings",
                       "exception", "cancelled")
 
