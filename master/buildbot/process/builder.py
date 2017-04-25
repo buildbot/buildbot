@@ -127,7 +127,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.config = builder_config
 
         # allocate  builderid now, so that the builder is visible in the web
-        # UI; without this, the bulider wouldn't appear until it preformed a
+        # UI; without this, the builder wouldn't appear until it preformed a
         # build.
         builderid = yield self.getBuilderId()
 
@@ -149,15 +149,19 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def __repr__(self):
         return "<Builder '%r' at %d>" % (self.name, id(self))
 
+    def getBuilderIdForName(self, name):
+        # buildbot.config should ensure this is already unicode, but it doesn't
+        # hurt to check again
+        name = ascii2unicode(name)
+        return self.master.data.updates.findBuilderId(name)
+
     def getBuilderId(self):
         # since findBuilderId is idempotent, there's no reason to add
         # additional locking around this function.
         if self._builderid:
             return defer.succeed(self._builderid)
-        # buildbot.config should ensure this is already unicode, but it doesn't
-        # hurt to check again
-        name = ascii2unicode(self.name)
-        d = self.master.data.updates.findBuilderId(name)
+
+        d = self.getBuilderIdForName(self.name)
 
         @d.addCallback
         def keep(builderid):

@@ -26,6 +26,7 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
 
@@ -174,42 +175,42 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testGitWithChange(self):
         self.request = FakeRequest(content=gitJsonPayload)
-        self.request.uri = "/change_hook/gitlab"
-        self.request.method = "POST"
+        self.request.uri = b"/change_hook/gitlab"
+        self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res)
 
     @defer.inlineCallbacks
     def testGitWithChange_WithProjectToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
-        self.request.uri = "/change_hook/gitlab"
+        self.request.uri = b"/change_hook/gitlab"
         self.request.args = {'project': ['MyProject']}
-        self.request.method = "POST"
+        self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res, project="MyProject")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithCodebaseToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
-        self.request.uri = "/change_hook/gitlab"
+        self.request.uri = b"/change_hook/gitlab"
         self.request.args = {'codebase': ['MyCodebase']}
-        self.request.method = "POST"
+        self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_push_event(res, codebase="MyCodebase")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithPushTag(self):
         self.request = FakeRequest(content=gitJsonPayloadTag)
-        self.request.uri = "/change_hook/gitlab"
+        self.request.uri = b"/change_hook/gitlab"
         self.request.args = {'codebase': ['MyCodebase']}
-        self.request.method = "POST"
+        self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_tag_event(res, codebase="MyCodebase")
 
     def testGitWithNoJson(self):
         self.request = FakeRequest()
-        self.request.uri = "/change_hook/gitlab"
-        self.request.method = "POST"
+        self.request.uri = b"/change_hook/gitlab"
+        self.request.method = b"POST"
         d = self.request.test_render(self.changeHook)
 
         def check_changes(r):
@@ -219,6 +220,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         d.addCallback(check_changes)
         return d
+
+    @defer.inlineCallbacks
+    def test_event_property(self):
+        self.request = FakeRequest(content=gitJsonPayload)
+        self.request.received_headers[_HEADER_EVENT] = "Push Hook"
+        self.request.uri = b"/change_hook/gitlab"
+        self.request.method = b"POST"
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change["properties"]["event"], "Push Hook")
 
 
 class TestChangeHookConfiguredWithSecret(unittest.TestCase):
@@ -233,9 +245,9 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
     @defer.inlineCallbacks
     def test_missing_secret(self):
         self.request = FakeRequest(content=gitJsonPayloadTag)
-        self.request.uri = "/change_hook/gitlab"
+        self.request.uri = b"/change_hook/gitlab"
         self.request.args = {'codebase': ['MyCodebase']}
-        self.request.method = "POST"
+        self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
         expected = b'Invalid secret'
         self.assertEqual(self.request.written, expected)
@@ -245,7 +257,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
     def test_valid_secret(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.received_headers[_HEADER_GITLAB_TOKEN] = self._SECRET
-        self.request.uri = "/change_hook/gitlab"
-        self.request.method = "POST"
+        self.request.uri = b"/change_hook/gitlab"
+        self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.addedChanges), 2)

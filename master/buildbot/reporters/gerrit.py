@@ -239,7 +239,7 @@ class GerritStatusPush(service.BuildbotService):
         callback = lambda gerrit_version: self.processVersion(
             gerrit_version, func)
 
-        self.spawnProcess(self.VersionPP(callback), command[0], command)
+        self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
 
     class LocalPP(ProcessProtocol):
 
@@ -424,7 +424,7 @@ class GerritStatusPush(service.BuildbotService):
 
         command.append(revision)
         command = [str(s) for s in command]
-        self.spawnProcess(self.LocalPP(self), command[0], command)
+        self.spawnProcess(self.LocalPP(self), command[0], command, env=None)
 
     def spawnProcess(self, *arg, **kw):
         reactor.spawnProcess(*arg, **kw)

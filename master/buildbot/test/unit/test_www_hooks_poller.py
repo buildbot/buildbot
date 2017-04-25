@@ -39,8 +39,8 @@ class TestPollingChangeHook(unittest.TestCase):
     @defer.inlineCallbacks
     def setUpRequest(self, args, options=True, activate=True):
         self.request = FakeRequest(args=args)
-        self.request.uri = "/change_hook/poller"
-        self.request.method = "GET"
+        self.request.uri = b"/change_hook/poller"
+        self.request.method = b"GET"
         www = self.request.site.master.www
         self.master = master = self.request.site.master = fakemaster.make_master(
             testcase=self, wantData=True)

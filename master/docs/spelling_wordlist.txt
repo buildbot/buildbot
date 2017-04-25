@@ -299,6 +299,7 @@ getProperties
 getRecipients
 getters
 GiB
+GitHub
 github
 Gitlab
 Gitorious
@@ -639,6 +640,7 @@ Repos
 repourl
 requeset
 resouce
+resultSpec
 reStructuredText
 revertive
 revlink
@@ -757,6 +759,7 @@ temptatation
 testsuite
 textarea
 tgz
+tgrid
 th
 timestamp
 Todo

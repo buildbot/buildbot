@@ -164,7 +164,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             return self._thd_row2dict(conn, row)
         return self.db.pool.do(thd)
 
-    def getBuildsets(self, complete=None):
+    def getBuildsets(self, complete=None, resultSpec=None):
         def thd(conn):
             bs_tbl = self.db.model.buildsets
             q = bs_tbl.select()
@@ -174,6 +174,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 else:
                     q = q.where((bs_tbl.c.complete == 0) |
                                 (bs_tbl.c.complete == NULL))
+            if resultSpec is not None:
+                return resultSpec.thd_execute(conn, q, lambda x: self._thd_row2dict(conn, x))
             res = conn.execute(q)
             return [self._thd_row2dict(conn, row) for row in res.fetchall()]
         return self.db.pool.do(thd)

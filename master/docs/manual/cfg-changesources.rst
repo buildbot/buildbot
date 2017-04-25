@@ -917,7 +917,8 @@ The :bb:chsrc:`GitHubPullrequestPoller` accepts the following arguments:
 ``magic_link``
    Set to `True` if the changes should contain ``refs/pulls/<PR #>/merge`` in the `branch` property and a link to the base `repository` in the repository property. These properties can be used by the :bb:step:`GitHub` source to pull from the special branch in the base repository. Default is `False`.
 
-
+``github_property_whitelist``
+   A list of ``fnmatch`` expressions which match against the flattened pull request information JSON prefixed with ``github``. For example ``github.number`` represents the pull request number. Available entries can be looked up in the GitHub API Documentation or by examining the data returned for a pull request by the API.
 
 .. bb:chsrc:: BitbucketPullrequestPoller
 

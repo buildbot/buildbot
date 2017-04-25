@@ -108,9 +108,9 @@ If the ``BUILDBOT_CONFIG_URL`` does not end with ``.tar.gz``, it is considered t
 Customize your Worker container
 -------------------------------
 It is advised to customize you worker container in order to suit your project's build dependencies and need.
-An example DockerFile is available in the contrib directory of buildbot:
+An example DockerFile is available which the buildbot community uses for its own CI purposes:
 
-https://github.com/buildbot/buildbot/blob/master/master/contrib/docker/pythonnode_worker/Dockerfile
+https://github.com/buildbot/metabbotcfg/blob/nine/docker/metaworker/Dockerfile
 
 Multi-master
 ------------

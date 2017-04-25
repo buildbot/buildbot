@@ -313,7 +313,7 @@ class GerritChangeSource(GerritChangeSourceBase):
             args = args + ['-i', self.identity_file]
         self.process = reactor.spawnProcess(
             self.LocalPP(self), "ssh",
-            ["ssh"] + args + ["gerrit", "stream-events"])
+            ["ssh"] + args + ["gerrit", "stream-events"], env=None)
 
     def activate(self):
         self.wantProcess = True

@@ -149,6 +149,9 @@ disable=
 # mypackage.mymodule.MyReporterClass.
 output-format=text
 
+# Change the default error message template.
+msg-template={path}:{line} {msg} [{symbol}]
+
 # Include message's id in output
 include-ids=yes
 

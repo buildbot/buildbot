@@ -10,5 +10,6 @@ towncrier has a few standard types of news fragments, signified by the file exte
 The core of the filename can be the fixed issue number of any unique text relative to your work.
 Buildbot project does not require a tracking ticket to be made for each contribution even if this is appreciated.
 
-Please point to the bug using syntax: (:bug:`NNN`)
+Please point to the trac bug using syntax: (:bug:`NNN`)
+Please point to the github bug using syntax: (:issue:`NNN`)
 please point to classes using syntax: :py:class:`~buildbot.reporters.http.HttpStatusBase`

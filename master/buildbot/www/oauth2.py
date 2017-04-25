@@ -197,6 +197,19 @@ class GitHubAuth(OAuth2Auth):
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
+    def __init__(self,
+                 clientId, clientSecret, serverURL=None, autologin=False, **kwargs):
+
+        OAuth2Auth.__init__(self, clientId, clientSecret, autologin, **kwargs)
+        if serverURL is not None:
+            # setup for enterprise github
+            if serverURL.endswith("/"):
+                serverURL = serverURL[:-1]
+
+            self.authUri = '{0}/login/oauth/authorize'.format(serverURL)
+            self.tokenUri = '{0}/login/oauth/access_token'.format(serverURL)
+            self.resourceEndpoint = '{0}/api/v3'.format(serverURL)
+
     def getUserInfoFromOAuthClient(self, c):
         user = self.get(c, '/user')
         emails = self.get(c, '/user/emails')

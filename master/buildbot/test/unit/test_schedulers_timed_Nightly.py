@@ -193,13 +193,13 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                                    minute=[10, 20, 21, 40, 50, 51])
 
         # add a change classification
-        self.db.schedulers.fakeClassifications(self.OBJECTID, {19: True})
+        self.db.schedulers.fakeClassifications(self.SCHEDULERID, {19: True})
 
         yield sched.activate()
 
         # check that the classification has been flushed, since this
         # invocation has not requested onlyIfChanged
-        self.db.schedulers.assertClassifications(self.OBJECTID, {})
+        self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
 
         self.clock.advance(0)  # let it get set up
         while self.clock.seconds() < self.localtime_offset + 30 * 60:

@@ -23,6 +23,10 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
+
+_HEADER_EVENT = b'X-Event-Key'
+
 
 def getChanges(request, options=None):
     """Catch a POST request from BitBucket and start a build process
@@ -34,6 +38,8 @@ def getChanges(request, options=None):
     :param options: additional options
     """
 
+    event_type = request.getHeader(_HEADER_EVENT)
+    event_type = bytes2NativeString(event_type)
     payload = json.loads(request.args['payload'][0])
     repo_url = '%s%s' % (
         payload['canon_url'], payload['repository']['absolute_url'])
@@ -50,7 +56,10 @@ def getChanges(request, options=None):
             'branch': commit['branch'],
             'revlink': '%scommits/%s' % (repo_url, commit['raw_node']),
             'repository': repo_url,
-            'project': project
+            'project': project,
+            'properties': {
+                'event': event_type,
+            },
         })
         log.msg('New revision: %s' % (commit['node'],))
 

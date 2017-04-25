@@ -609,6 +609,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                      lambda: ForceScheduler(name='testsched', builderNames=[1234],
                                                             codebases=['bar'], username="foo"))
 
+    def test_listofunicode_builderNames(self):
+        ForceScheduler(name='testsched', builderNames=[u'a', u'b'])
+
     def test_listofmixed_builderNames(self):
         self.assertRaisesConfigError("ForceScheduler 'testsched': builderNames must be a list of strings:",
                                      lambda: ForceScheduler(name='testsched',

@@ -24,7 +24,7 @@ module.exports =
                 version: "3.4.11"
                 files: "d3.js"
             'buildbot-data':
-                version: '~2.0.0'
+                version: '~2.1.0'
                 files: 'dist/buildbot-data.js'
     karma:
         # we put tests first, so that we have angular, and fake app defined

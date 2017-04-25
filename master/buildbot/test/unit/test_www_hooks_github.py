@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -16,13 +17,16 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import PY3
+from future.utils import string_types
+from future.utils import text_type
 
 import hmac
 from calendar import timegm
 from hashlib import sha1
+from io import BytesIO
+from io import StringIO
 
 from twisted.internet import defer
-from twisted.python.compat import NativeStringIO
 from twisted.trial import unittest
 
 from buildbot.test.fake.web import FakeRequest
@@ -119,6 +123,56 @@ gitJsonPayloadTag = """
       "author": {
         "email": "fred@flinstone.org",
         "name": "Fred Flinstone"
+      },
+      "message": "update pricing a tad",
+      "timestamp": "2008-02-15T14:36:34-08:00",
+      "modified": ["modfile"],
+      "removed": ["removedFile"]
+    }
+  ],
+  "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+  "ref": "refs/tags/v1.0.0"
+}
+"""
+
+gitJsonPayloadTagUnicode = u"""
+{
+  "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
+  "repository": {
+    "url": "http://github.com/defunkt/github",
+    "html_url": "http://github.com/defunkt/github",
+    "name": "github",
+    "full_name": "defunkt/github",
+    "description": "You're lookin' at it.",
+    "watchers": 5,
+    "forks": 2,
+    "private": 1,
+    "owner": {
+      "email": "julian.rueth@fsfe.org",
+      "name": "Julian Rüth"
+    }
+  },
+  "commits": [
+    {
+      "id": "41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "distinct": true,
+      "url": "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "author": {
+        "name": "Julian Rüth",
+        "email": "julian.rueth@fsfe.org",
+        "username": "saraedum"
+      },
+      "message": "okay i give in",
+      "timestamp": "2008-02-15T14:57:17-08:00",
+      "added": ["filepath.rb"]
+    },
+    {
+      "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+      "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+      "author": {
+        "name": "Julian Rüth",
+        "email": "julian.rueth@fsfe.org",
+        "username": "saraedum"
       },
       "message": "update pricing a tad",
       "timestamp": "2008-02-15T14:36:34-08:00",
@@ -292,6 +346,21 @@ gitJsonPayloadPullRequest = """
 }
 """
 
+gitPRproperties = {
+    'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
+    'github.state': 'open',
+    'github.base.repo.full_name': 'defunkt/github',
+    'github.number': 50,
+    'github.base.ref': 'master',
+    'github.base.sha': '69a8b72e2d3d955075d47f03d902929dcaf74034',
+    'github.head.repo.full_name': 'defunkt/github',
+    'github.merged_at': None,
+    'github.head.ref': 'changes',
+    'github.closed_at': None,
+    'github.title': 'Update the README with new information',
+    'event': 'pull_request'
+}
+
 gitJsonPayloadEmpty = """
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
@@ -332,14 +401,17 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 
     request = FakeRequest()
 
-    request.uri = "/change_hook/github"
-    request.method = "GET"
+    request.uri = b"/change_hook/github"
+    request.method = b"GET"
     request.received_headers = {
         _HEADER_EVENT: event
     }
 
-    if isinstance(payload, str):
-        request.content = NativeStringIO(payload)
+    if isinstance(payload, string_types):
+        if isinstance(payload, text_type):
+            request.content = StringIO(payload)
+        elif isinstance(payload, bytes):
+            request.content = BytesIO(payload)
         request.received_headers[_HEADER_CT] = _CT_JSON
 
         if _secret is not None:
@@ -362,7 +434,14 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
-        self.changeHook = _prepare_github_change_hook(strict=False)
+        self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
+
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
 
     @defer.inlineCallbacks
     def test_unknown_event(self):
@@ -407,6 +486,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
                          "Fred Flinstone <fred@flinstone.org>")
         self.assertEqual(change["branch"], "v1.0.0")
 
+    @defer.inlineCallbacks
+    def test_git_with_push_tag_unicode(self):
+        self.request = _prepare_request('push', gitJsonPayloadTagUnicode)
+        yield self.request.test_render(self.changeHook)
+
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change["author"],
+                         u"Julian Rüth <julian.rueth@fsfe.org>")
+        self.assertEqual(change["branch"], "v1.0.0")
+
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.
     @defer.inlineCallbacks
@@ -448,6 +538,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["revlink"],
                          "http://github.com/defunkt/github/commit/"
                          "de8251ff97ee194a289832576287d6f8ad74e3d0")
+        self.assertEqual(change["properties"]["event"], "push")
 
     def test_git_with_change_encoded(self):
         self._check_git_with_change([gitJsonPayload])
@@ -565,10 +656,13 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["revision"],
                          '05c588ba8cd510ecbe112d020f215facb17817a7')
         self.assertEqual(change["comments"],
-                         "GitHub Pull Request #50 (1 commit)")
+                         "GitHub Pull Request #50 (1 commit)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")
         self.assertEqual(change["branch"], "refs/pull/50/merge")
         self.assertEqual(change["revlink"],
                          "https://github.com/defunkt/github/pull/50")
+        self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
         self._check_git_with_pull([gitJsonPayloadPullRequest])

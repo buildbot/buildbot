@@ -60,6 +60,18 @@ class Db2DataMixin(object):
 
         defer.returnValue(buildset)
 
+    fieldMapping = {
+        'buildsetid': 'buildsets.id',
+        'external_idstring': 'buildsets.external_idstring',
+        'reason': 'buildsets.reason',
+        'submitted_at': 'buildsets.submitted_at',
+        'complete': 'buildsets.complete',
+        'complete_at': 'buildsets.complete_at',
+        'results': 'buildsets.results',
+        'parent_buildid': 'buildsets.parent_buildid',
+        'parent_relationship': 'buildsets.parent_relationship'
+    }
+
 
 class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
 
@@ -85,15 +97,11 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
 
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
-        d = self.master.db.buildsets.getBuildsets(complete=complete)
+        resultSpec.fieldMapping = self.fieldMapping
+        d = self.master.db.buildsets.getBuildsets(complete=complete, resultSpec=resultSpec)
 
         @d.addCallback
         def db2data(buildsets):
-            # buildset db2data is pretty heavy. for the sake of console_view prefilter the data
-            # should fix it properly in http://trac.buildbot.net/ticket/3537
-            if (resultSpec.order == ['-submitted_at'] and resultSpec.limit and resultSpec.offset is None):
-                buildsets.sort(key=lambda x: x['submitted_at'], reverse=True)
-                buildsets = buildsets[:resultSpec.limit]
             d = defer.DeferredList([self.db2data(bs) for bs in buildsets],
                                    fireOnOneErrback=True, consumeErrors=True)
 

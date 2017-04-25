@@ -25,11 +25,13 @@ from __future__ import print_function
 import glob
 import os
 import pkg_resources
+import platform
 import sys
 from distutils.command.install_data import install_data
 from distutils.command.sdist import sdist
 from distutils.version import LooseVersion
 
+from setuptools import version as setuptools_version
 from setuptools import setup
 
 from buildbot import version
@@ -180,6 +182,7 @@ setup_args = {
         "buildbot.schedulers",
         "buildbot.scripts",
         "buildbot.secrets",
+        "buildbot.secrets.providers",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
         "buildbot.status",
@@ -455,7 +458,6 @@ setup_args['install_requires'] = [
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
     'PyJWT',
-    'distro'
 ]
 
 # Unit test dependencies.
@@ -488,7 +490,7 @@ setup_args['extras_require'] = {
         'setuptools_trial',
         'isort',
         # spellcheck introduced in version 1.4.0
-        'pylint>=1.4.0',
+        'pylint<1.7.0',
         'pyenchant',
         'flake8~=2.6.0',
     ] + test_deps,

@@ -10,6 +10,79 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.6`` ( ``2017-04-19`` )
+=====================================================
+
+Core Bug fixes
+--------------
+
+- :py:class:`buildbot.www.authz.endpointmatchers.AnyControlEndpointMatcher` now
+  actually doesn't match `GET` requests. Before it would act like an
+  `AnyEndpointMatcher` since the `GET` had a different case.
+- Passing ``unicode`` ``builderNames`` to :bb:sched:`ForceScheduler` no longer
+  causes an error.
+- Fix issue with :bb:sched::`Nightly` change classification raising foreign key
+  exceptions (:issue:`3021`)
+- Fixes an exception found :py:func:`buildbot_net_usage_data._sendWithUrlib` when running through the tutorial using Python 3.
+- ``usePTY`` configuration of the :bb:step:`ShellCommand` now works as expected
+  with recent version of buildbot-worker.
+
+Components Bug fixes
+--------------------
+- ``pollAtLaunch`` of the :bb:chsrc:`GitHubPullrequestPoller` now works as
+  expected. Also the author email won't be displayed as None
+- :bb:chsrc:`GerritChangeSource` and :bb:reporter:`GerritStatusPush` now use the master's environment including PATH variable to find
+  the ssh binary.
+- :py:class:`~buildbot_worker.commands.transfer.SlaveDirectoryUploadCommand`
+  no longer throws exceptions because the file "is used by another process"
+  under Windows
+
+UI Bug fixes
+------------
+
+- Fix waterfall scrolling and zooming in current browsers
+- ``console_view`` now properly uses ``revlink`` metadata to link to changes.
+- Fixed Console View infinite loading spinner when no change have been recorded
+  yet (:issue:`3060`).
+
+Core Features
+-------------
+
+- new :ref:`Virtual-Builders` concept for better integration of frameworks
+  which store the build config along side the source code.
+
+Components Features
+-------------------
+
+- :bb:chsrc:`BitBucket` now sets the ``event``
+  property on each change to what the ``X-Event-Key`` header contains.
+- :bb:chsrc:`GitHubPullrequestPoller` now adds additional information about the
+  pull request to properties. The property argument is removed and is populated
+  with the repository full name.
+- :bb:chsrc:`GitHub` now sets
+  the ``event`` property on each change to what the ``X-GitHub-Event`` header
+  contains.
+- Changed :py:class:`~buildbot.www.oauth2.GitHubAuth` now supports GitHub
+  Enterprise when setting new ``serverURL`` argument.
+- :bb:chsrc:`GitLab` now sets the ``event`` property
+  on each change to what the ``X-Gitlab-Event`` header contains.
+- :bb:chsrc:`GitHub` now process
+  git tag push events
+- :bb:chsrc:`GitHub` now adds
+  more information about the pull request to the properties. This syncs
+  features with :bb:chsrc:`GitHubPullrequestPoller`
+- :bb:chsrc:`GitLab` now process git tag push
+  events
+- :bb:chsrc:`GitLab` now supports authentication
+  with the secret token
+
+UI Features
+-----------
+- Reworked :ref:`ConsoleView` and :ref:`WaterfallView` for better usability and better integration with virtual builders
+- :ref:`WWW-data-module` collections now have a ``$resolved`` attribute which
+  allows dashboard to know when the data is loaded.
+
+
 Buildbot ``0.9.5`` ( ``2017-03-18`` )
 ===================================================
 

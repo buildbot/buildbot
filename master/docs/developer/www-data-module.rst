@@ -147,6 +147,7 @@ Methods:
       , (reason) ->
           $log.error(reason)
 
+
 DataAccessor
 ............
 
@@ -194,6 +195,10 @@ Collections
   This is called when data is coming via the event stream.
   `this` context is the collection.
   The full collection is given in parameter (in case you override ``this`` via fat arrow).
+
+``.$ready``: attribute similar to what ``ngResource`` provides.
+  True after first server interaction is completed, false before that.
+  Knowing if the Collection has been resolved is useful in data-binding (for example to display a loading graphic).
 
 Wrapper
 .......

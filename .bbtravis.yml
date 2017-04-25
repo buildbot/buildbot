@@ -5,7 +5,14 @@ language: python
 # Available Python versions:
 python:
   - "2.7"
-
+label_mapping:
+  TWISTED: tw
+  SQLALCHEMY: sqla
+  SQLALCHEMY_MIGRATE: sqlam
+  latest: l
+  python: py
+  TESTS: t
+  DB_TYPE: db
 env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
@@ -29,9 +36,9 @@ env:
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
   # Helps to detect issues with incorrect database setup/cleanup in tests.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
   # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
 
   # innodb tests takes 20min probably because of docker aufs.
   # travis images provides much faster innodb so we keep these test there until we implement ramfs based
@@ -83,7 +90,6 @@ install:
       # pip installs
       set -e
       if [ $TWISTED = trunk ]; then
-          pip install git+https://github.com/glyph/automat
           pip install git+https://github.com/twisted/twisted
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
