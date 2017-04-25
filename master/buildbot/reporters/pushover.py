@@ -33,9 +33,8 @@ from buildbot.util import httpclientservice
 
 ENCODING = 'utf8'
 
-VALID_PARAMS = set(("sound", "callback", "timestamp",
-                    "url", "url_title", "device",
-                    "retry", "expire", "html"))
+VALID_PARAMS = {"sound", "callback", "timestamp", "url",
+                "url_title", "device", "retry", "expire", "html"}
 
 PRIORITIES = {
     CANCELLED: 'cancelled',
@@ -65,8 +64,7 @@ class PushoverNotifier(NotifierBase):
 
         if otherParams is not None and set(otherParams.keys()) - VALID_PARAMS:
             config.error("otherParams can be only 'sound', 'callback', 'timestamp', "
-                         "'url', 'url_title', 'device', "
-                         "'retry', 'expire', or 'html'")
+                         "'url', 'url_title', 'device', 'retry', 'expire', or 'html'")
 
     @defer.inlineCallbacks
     def reconfigService(self, user_key, api_token,
@@ -80,15 +78,10 @@ class PushoverNotifier(NotifierBase):
 
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter(template_type='html',
-                template='The Buildbot has detected a <a href="{{ build_url }}">'
-                         '{{ status_detected }}</a> of <i>{{ buildername }}</i> '
-                         'while building {{ projects }} on {{ workername }}.')
+                template_filename='default_notification.txt')
         if messageFormatterMissingWorker is None:
             messageFormatterMissingWorker = MessageFormatterMissingWorker(
-                template="The Buildbot working for '{{buildbot_title}}' "
-                         "has noticed that the worker named {{worker.name}} "
-                         "went away.\n\n"
-                         "It last disconnected at {{worker.last_connection}}.")
+                template_filename='missing_notification.txt')
         super(PushoverNotifier, self).reconfigService(mode, tags, builders,
                                                       buildSetSummary,
                                                       messageFormatter,

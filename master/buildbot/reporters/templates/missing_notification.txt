@@ -1,0 +1,1 @@
+The Buildbot '{{buildbot_title}}' has noticed that the worker named {{worker.name}} went away. It last disconnected at {{worker.last_connection}}.
