@@ -137,6 +137,3 @@ class PushoverNotifier(NotifierBase):
         params.update(dict(user=self.user_key, token=self.api_token))
         params.update(self.otherParams)
         return self._http.post('/1/messages.json', params=params)
-
-    def isWorkerMessageNeeded(self, key, worker):
-        return worker['name'] in self.watchedWorkers

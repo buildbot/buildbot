@@ -23,6 +23,7 @@ from twisted.internet import defer
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
 from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import bytes2unicode
@@ -105,7 +106,7 @@ class NotifierMaster(RunMasterBase):
             workerid='local1',
             masterid=self.master.masterid,
             last_connection='long time ago',
-            notify='admin@worker.org',
+            notify=['admin@worker.org'],
         )
         mail, recipients = yield self.mailDeferred
         self.assertIn("From: bot@foo.com", mail)
@@ -134,11 +135,12 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       factory=f)]
+    notifier = reporters.PushoverNotifier('1234', 'abcd', mode="all", watchedWorkers=['local1'],
+                                          messageFormatter=MessageFormatter(template='This is a message.'),
+                                          messageFormatterMissingWorker=MessageFormatterMissingWorker(
+                                              template='No worker.'))
     c['services'] = [
         reporters.MailNotifier("bot@foo.com", mode="all"),
-        reporters.PushoverNotifier('1234', 'abcd', mode="all", watchedWorkers=['worky'],
-            messageFormatter=reporters.MessageFormatter(template='This is a message.'),
-            messageFormatterMissingWorker=reporters.MessageFormatter(template='No worker.'))
+        notifier
     ]
     return c
-

@@ -133,7 +133,7 @@ class NotifierBase(service.BuildbotService):
             ('builds', None, 'finished'))
         self._workerMissingConsumer = yield startConsuming(
             self.workerMissing,
-            ('worker', None, 'missing'))
+            ('workers', None, 'missing'))
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -282,12 +282,12 @@ class NotifierBase(service.BuildbotService):
                     logs=None, worker=None):
         pass
 
-    def isWorkerMessageNeeded(self, key, worker):
-        return False
+    def isWorkerMessageNeeded(self, worker):
+        return self.watchedWorkers == 'all' or worker['name'] in self.watchedWorkers
 
     @defer.inlineCallbacks
     def workerMissing(self, key, worker):
-        if not self.isWorkerMessageNeeded(key, worker):
+        if not self.isWorkerMessageNeeded(worker):
             return
         msg = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
         text = msg['body'].encode(ENCODING)

@@ -341,6 +341,7 @@ class MailNotifier(NotifierBase):
 
         return self.sendmail(s, recipients)
 
-    def isWorkerMessageNeeded(self, key, worker):
-        return worker['notify']
+    def isWorkerMessageNeeded(self, worker):
+        return super(MailNotifier, self).isWorkerMessageNeeded(worker) \
+               and worker['notify']
 
