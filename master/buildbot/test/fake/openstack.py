@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import uuid
 
@@ -37,11 +38,14 @@ class Client():
 
     def __init__(self, version, session):
         self.images = ItemManager()
-        self.images._add_items([Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
+        self.images._add_items(
+            [Image(TEST_UUIDS['image'], 'CirrOS 0.3.4', 13287936)])
         self.volumes = ItemManager()
-        self.volumes._add_items([Volume(TEST_UUIDS['volume'], 'CirrOS 0.3.4', 4)])
+        self.volumes._add_items(
+            [Volume(TEST_UUIDS['volume'], 'CirrOS 0.3.4', 4)])
         self.volume_snapshots = ItemManager()
-        self.volume_snapshots._add_items([Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
+        self.volume_snapshots._add_items(
+            [Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
         self.servers = Servers()
 
 

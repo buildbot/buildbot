@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.python import log
@@ -69,7 +70,8 @@ class ReconfigurablePollingChangeSource(ChangeSource):
         self.pollAtLaunch = pollAtLaunch
         yield ChangeSource.reconfigService(self, name=name)
 
-        # pollInterval change is the only value which makes sense to reconfigure check.
+        # pollInterval change is the only value which makes sense to
+        # reconfigure check.
         if prevPollInterval != pollInterval and self.doPoll.started:
             yield self.doPoll.stop()
             # As a implementation detail, poller will 'pollAtReconfigure' if poll interval changes
@@ -101,7 +103,8 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
     # instead of porting everything at once, we make a class to support legacy
 
     def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
-        ReconfigurablePollingChangeSource.checkConfig(self, name=name, pollInterval=60 * 10, pollAtLaunch=False)
+        ReconfigurablePollingChangeSource.checkConfig(
+            self, name=name, pollInterval=60 * 10, pollAtLaunch=False)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch
 

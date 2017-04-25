@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import datetime
@@ -261,7 +262,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         # describe is not used yet in buildbot nine, but it can still be useful in the future, so lets
         # implement and test it
         yield self.newChangeSource()
-        self.assertSubstring('GerritEventLogPoller', self.changesource.describe())
+        self.assertSubstring('GerritEventLogPoller',
+                             self.changesource.describe())
 
     @defer.inlineCallbacks
     def test_name(self):
@@ -274,7 +276,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
             fakedb.Object(id=self.OBJECTID, name='GerritEventLogPoller:gerrit',
                           class_name='GerritEventLogPoller')])
         yield self.newChangeSource()
-        self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(self.NOW_TIMESTAMP)
+        self.changesource.now = lambda: datetime.datetime.utcfromtimestamp(
+            self.NOW_TIMESTAMP)
         self._http.expect(method='get', ep='/plugins/events-log/events/',
                           params={'t1': self.NOW_FORMATTED},
                           content_json=dict(
@@ -283,7 +286,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                                   branch="br",
                                   project="pr",
                                   number="4321",
-                                  owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                                  owner=dict(name="Dustin",
+                                             email="dustin@mozilla.com"),
                                   url="http://buildbot.net",
                                   subject="fix 1234"
                               ),
@@ -296,7 +300,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         c = self.master.data.updates.changesAdded[0]
         for k, v in iteritems(c):
             self.assertEqual(TestGerritChangeSource.expected_change[k], v)
-        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
+        self.master.db.state.assertState(
+            self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)
 
         # do a second poll, it should ask for the next events
         self._http.expect(method='get', ep='/plugins/events-log/events/',
@@ -307,7 +312,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                                   branch="br",
                                   project="pr",
                                   number="4321",
-                                  owner=dict(name="Dustin", email="dustin@mozilla.com"),
+                                  owner=dict(name="Dustin",
+                                             email="dustin@mozilla.com"),
                                   url="http://buildbot.net",
                                   subject="fix 1234"
                               ),
@@ -315,7 +321,8 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
                               patchSet=dict(revision="abcdef", number="12")))
 
         yield self.changesource.poll()
-        self.master.db.state.assertState(self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
+        self.master.db.state.assertState(
+            self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP + 1)
 
 
 class TestGerritChangeFilter(unittest.TestCase):

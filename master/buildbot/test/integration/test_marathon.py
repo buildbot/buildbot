@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 from unittest.case import SkipTest
@@ -31,7 +32,8 @@ from buildbot.worker.marathon import MarathonLatentWorker
 
 # This integration test creates a master and marathon worker environment,
 # It requires environment variable set to your marathon hosting.
-# you can use the mesos-compose to create a marathon environment for development:
+# you can use the mesos-compose to create a marathon environment for
+# development:
 
 # git clone https://github.com/bobrik/mesos-compose.git
 # cd mesos-compose
@@ -40,7 +42,8 @@ from buildbot.worker.marathon import MarathonLatentWorker
 # then set the environment variable to run the test:
 # export BBTEST_MARATHON_URL=http://localhost:8080
 
-# following environment variable can be used to stress concurrent worker startup
+# following environment variable can be used to stress concurrent worker
+# startup
 NUM_CONCURRENT = int(os.environ.get("MARATHON_TEST_NUM_CONCURRENT_BUILD", 1))
 
 # if you run the stress test against a real mesos deployment, you want to also use https and basic credentials

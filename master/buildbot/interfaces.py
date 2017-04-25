@@ -25,6 +25,7 @@ Define the interfaces that are implemented by various buildbot classes.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from zope.interface import Attribute
 from zope.interface import Interface

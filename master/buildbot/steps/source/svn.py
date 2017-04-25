@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.moves.urllib.parse import unquote as urlunquote
 from future.moves.urllib.parse import urlparse
 from future.moves.urllib.parse import urlunparse
@@ -361,7 +362,8 @@ class SVN(Source):
                 if self.workerVersionIsOlderThan('rmdir', '2.14'):
                     d = self.removeFiles(files)
                 else:
-                    d = self.runRmdir(files, abandonOnFailure=False, timeout=self.timeout)
+                    d = self.runRmdir(
+                        files, abandonOnFailure=False, timeout=self.timeout)
             return d
 
         @d.addCallback
@@ -428,7 +430,9 @@ class SVN(Source):
                         'svn': '3690'}
 
         relative_schemes = ['http', 'https', 'svn']
-        quote = lambda uri: urlquote(uri, "!$&'()*+,-./:=@_~", encoding="latin-1")
+
+        def quote(uri): return urlquote(
+            uri, "!$&'()*+,-./:=@_~", encoding="latin-1")
 
         if len(uri) == 0 or uri == '/':
             return uri
@@ -485,7 +489,8 @@ class SVN(Source):
                         % (repeats, delay))
                 self.retry = (delay, repeats - 1)
                 df = defer.Deferred()
-                df.addCallback(lambda _: self.runRmdir(self.workdir, timeout=self.timeout))
+                df.addCallback(lambda _: self.runRmdir(
+                    self.workdir, timeout=self.timeout))
                 df.addCallback(lambda _: self._checkout())
                 reactor.callLater(delay, df.callback, None)
                 return df

@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 
@@ -60,11 +61,13 @@ class TestEC2LatentWorker(unittest.TestCase):
             raise unittest.SkipTest("moto not found")
 
     def botoSetup(self, name='latent_buildbot_worker'):
-        # the proxy system is also not properly mocked, so we need to delete environment variables
+        # the proxy system is also not properly mocked, so we need to delete
+        # environment variables
         for env in ['http_proxy', 'https_proxy', 'HTTP_PROXY', 'HTTPS_PROXY']:
             if env in os.environ:
                 del os.environ[env]
-        # create key pair is not correctly mocked and need to have fake aws creds configured
+        # create key pair is not correctly mocked and need to have fake aws
+        # creds configured
         kw = dict(region_name='us-east-1',
                   aws_access_key_id='ACCESS_KEY',
                   aws_secret_access_key='SECRET_KEY',
@@ -76,7 +79,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         except NotImplementedError:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
                                     " in this version of moto, please update.")
-        r.create_security_group(GroupName=name, Description='the security group')
+        r.create_security_group(
+            GroupName=name, Description='the security group')
         instance = r.create_instances(ImageId='foo', MinCount=1, MaxCount=1)[0]
         c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
         c.terminate_instances(InstanceIds=[instance.id])
@@ -164,7 +168,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         subnet = r.create_subnet(VpcId=vpc.id, CidrBlock="192.168.0.0/24")
         amis = list(r.images.all())
 
-        sg = r.create_security_group(GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
+        sg = r.create_security_group(
+            GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
@@ -214,7 +219,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, instance_id)
         self.assertEqual(instances[0].tags, [])
-        self.assertEqual(instances[0].id, bs.properties.getProperty('instance'))
+        self.assertEqual(
+            instances[0].id, bs.properties.getProperty('instance'))
 
     @mock_ec2
     def test_start_instance_volumes_deprecated(self):
@@ -232,24 +238,24 @@ class TestEC2LatentWorker(unittest.TestCase):
             }
         }
         block_device_map_res = [
-                {
-                    'DeviceName': "/dev/xvdb",
-                    'Ebs': {
-                        "VolumeType": "io1",
-                        "Iops": 10,
-                        "VolumeSize": 20,
-                        "DeleteOnTermination": True,
-                        }
-                    },
-                {
-                    'DeviceName': "/dev/xvdc",
-                    'Ebs': {
-                        "VolumeType": "gp2",
-                        "VolumeSize": 30,
-                        "DeleteOnTermination": False,
-                        }
-                    },
-                ]
+            {
+                'DeviceName': "/dev/xvdb",
+                'Ebs': {
+                    "VolumeType": "io1",
+                    "Iops": 10,
+                    "VolumeSize": 20,
+                    "DeleteOnTermination": True,
+                }
+            },
+            {
+                'DeviceName': "/dev/xvdc",
+                'Ebs': {
+                    "VolumeType": "gp2",
+                    "VolumeSize": 30,
+                    "DeleteOnTermination": False,
+                }
+            },
+        ]
 
         amis = list(r.images.all())
         with assertProducesWarnings(
@@ -278,42 +284,42 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_start_instance_volumes(self):
         c, r = self.botoSetup()
         block_device_map_arg = [
-                {
-                    'DeviceName': "/dev/xvdb",
-                    'Ebs': {
-                        "VolumeType": "io1",
-                        "Iops": 10,
-                        "VolumeSize": 20,
-                        }
-                    },
-                {
-                    'DeviceName': "/dev/xvdc",
-                    'Ebs': {
-                        "VolumeType": "gp2",
-                        "VolumeSize": 30,
-                        "DeleteOnTermination": False,
-                        }
-                    },
-                ]
+            {
+                'DeviceName': "/dev/xvdb",
+                'Ebs': {
+                    "VolumeType": "io1",
+                    "Iops": 10,
+                    "VolumeSize": 20,
+                }
+            },
+            {
+                'DeviceName': "/dev/xvdc",
+                'Ebs': {
+                    "VolumeType": "gp2",
+                    "VolumeSize": 30,
+                    "DeleteOnTermination": False,
+                }
+            },
+        ]
         block_device_map_res = [
-                {
-                    'DeviceName': "/dev/xvdb",
-                    'Ebs': {
-                        "VolumeType": "io1",
-                        "Iops": 10,
-                        "VolumeSize": 20,
-                        "DeleteOnTermination": True,
-                        }
-                    },
-                {
-                    'DeviceName': "/dev/xvdc",
-                    'Ebs': {
-                        "VolumeType": "gp2",
-                        "VolumeSize": 30,
-                        "DeleteOnTermination": False,
-                        }
-                    },
-                ]
+            {
+                'DeviceName': "/dev/xvdb",
+                'Ebs': {
+                    "VolumeType": "io1",
+                    "Iops": 10,
+                    "VolumeSize": 20,
+                    "DeleteOnTermination": True,
+                }
+            },
+            {
+                'DeviceName': "/dev/xvdc",
+                'Ebs': {
+                    "VolumeType": "gp2",
+                    "VolumeSize": 30,
+                    "DeleteOnTermination": False,
+                }
+            },
+        ]
 
         amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
@@ -349,7 +355,8 @@ class TestEC2LatentWorker(unittest.TestCase):
             Filters=[{'Name': 'instance-state-name', 'Values': ['running']}])
         instances = list(instances)
         instance = instances[0]
-        sdz = [bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
+        sdz = [
+            bm for bm in instance.block_device_mappings if bm['DeviceName'] == '/dev/sdz'][0]
         self.assertEqual(vol.id, sdz['Ebs']['VolumeId'])
 
     @mock_ec2
@@ -410,7 +417,8 @@ class TestEC2LatentWorker(unittest.TestCase):
         subnet = r.create_subnet(VpcId=vpc.id, CidrBlock="192.168.0.0/24")
         amis = list(r.images.all())
 
-        sg = r.create_security_group(GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
+        sg = r.create_security_group(
+            GroupName="test_sg", Description="test_sg", VpcId=vpc.id)
 
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
@@ -566,8 +574,10 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         except NotImplementedError:
             raise unittest.SkipTest("KeyPairs.create_key_pair not implemented"
                                     " in this version of moto, please update.")
-        r.create_security_group(GroupName='latent_buildbot_slave', Description='the security group')
-        r.create_security_group(GroupName='test_security_group', Description='other security group')
+        r.create_security_group(
+            GroupName='latent_buildbot_slave', Description='the security group')
+        r.create_security_group(
+            GroupName='test_security_group', Description='other security group')
         instance = r.create_instances(ImageId='foo', MinCount=1, MaxCount=1)[0]
         c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
         c.terminate_instances(InstanceIds=[instance.id])

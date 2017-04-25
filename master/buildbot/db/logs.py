@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import itervalues
 
@@ -121,7 +122,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             rv = []
             for row in conn.execute(q):
                 # Retrieve associated "reader" and extract the data
-                # Note that row.content is stored as bytes, and our caller expects unicode
+                # Note that row.content is stored as bytes, and our caller
+                # expects unicode
                 data = self.COMPRESSION_BYID[
                     row.compressed]["read"](row.content)
                 content = data.decode('utf-8')
@@ -195,7 +197,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
         assert content[-1] == u'\n'
-        # Note that row.content is stored as bytes, and our caller is sending unicode
+        # Note that row.content is stored as bytes, and our caller is sending
+        # unicode
         content = content[:-1].encode('utf-8')
         q = sa.select([self.db.model.logs.c.num_lines])
         q = q.where(self.db.model.logs.c.id == logid)
@@ -279,7 +282,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         (row.last_line - todo_first_line) > self.MAX_CHUNK_LINES):
                     if todo_numchunks > 1 or (force and todo_numchunks):
                         # this group is worth re-compressing
-                        todo_gather_list.append((todo_first_line, todo_last_line))
+                        todo_gather_list.append(
+                            (todo_first_line, todo_last_line))
                     todo_first_line = row.first_line
                     todo_length = 0
                     todo_numchunks = 0
@@ -302,7 +306,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 todo_gather_list.append((todo_first_line, todo_last_line))
             for todo_first_line, todo_last_line in todo_gather_list:
                 # decompress this group of chunks. Note that the content is binary bytes.
-                # no need to decode anything as we are going to put in back stored as bytes anyway
+                # no need to decode anything as we are going to put in back
+                # stored as bytes anyway
                 q = sa.select(
                     [tbl.c.first_line, tbl.c.last_line, tbl.c.content, tbl.c.compressed])
                 q = q.where(tbl.c.logid == logid)
@@ -318,7 +323,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         "read"](row.content)
                 rows.close()
 
-                # Transaction is necessary so that readers don't see disappeared chunks
+                # Transaction is necessary so that readers don't see
+                # disappeared chunks
                 transaction = conn.begin()
 
                 # we remove the chunks that we are compressing

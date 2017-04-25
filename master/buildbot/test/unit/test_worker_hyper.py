@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.python import threadpool
@@ -68,7 +69,8 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         _setReactor(None)
 
     def test_constructor_normal(self):
-        worker = HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy')
+        worker = HyperLatentWorker(
+            'bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy')
         # class instantiation configures nothing
         self.assertEqual(worker.client, None)
 
@@ -83,7 +85,8 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def makeWorker(self, **kwargs):
         kwargs.setdefault('image', 'debian:wheezy')
-        worker = HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', **kwargs)
+        worker = HyperLatentWorker(
+            'bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', **kwargs)
         self.worker = worker
         master = fakemaster.make_master(testcase=self, wantData=True)
         worker.setServiceParent(master)
@@ -132,7 +135,8 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_start_worker_but_already_created_with_same_name(self):
         worker = self.makeWorker(image="cool")
-        worker.client.create_container(image="foo", name=worker.getContainerName())
+        worker.client.create_container(
+            image="foo", name=worker.getContainerName())
         d = worker.substantiate(None, FakeBuild())
         self.reactor.advance(.1)
         worker.attached(FakeBot())

@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import re
@@ -521,8 +522,8 @@ class TestContactChannel(unittest.TestCase):
         yield self.sendBuildFinishedMessage(16)
         self.assertEqual(len(self.sent), 1)
         self.assertIn(
-                "Build builder1 #6 is complete: Success [] - "
-                "http://localhost:8080/#builders/23/builds/6", self.sent)
+            "Build builder1 #6 is complete: Success [] - "
+            "http://localhost:8080/#builders/23/builds/6", self.sent)
 
     @defer.inlineCallbacks
     def test_command_watch_builder1(self):

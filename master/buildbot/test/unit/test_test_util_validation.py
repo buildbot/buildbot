@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import datetime
 import locale
@@ -92,7 +93,7 @@ class VerifyDict(unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise(unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding)))
+                                    "on this platform with {}".format(os_encoding)))
 
         self.doValidationTest(validation.IdentifierValidator(50),
                               good=[

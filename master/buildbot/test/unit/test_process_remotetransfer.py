@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import stat
@@ -73,7 +74,8 @@ class TestStringFileWriter(unittest.TestCase):
 
     def testBasic(self):
         sfw = remotetransfer.StringFileWriter()
-        # StringFileWriter takes bytes or native string and outputs native strings
+        # StringFileWriter takes bytes or native string and outputs native
+        # strings
         sfw.remote_write(b'bytes')
         sfw.remote_write(' or str')
         self.assertEqual(sfw.buffer, 'bytes or str')

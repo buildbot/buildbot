@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import textwrap
 
@@ -97,10 +98,12 @@ class TestMessage(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_inline_template(self):
-        self.message = message.MessageFormatter(template="URL: {{ build_url }} -- {{ summary }}")
+        self.message = message.MessageFormatter(
+            template="URL: {{ build_url }} -- {{ summary }}")
         res = yield self.doOneTest(SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
+        self.assertEqual(
+            res['body'], "URL: http://localhost:8080/#builders/80/builds/1 -- Build succeeded!")
 
     @defer.inlineCallbacks
     def test_inline_subject(self):

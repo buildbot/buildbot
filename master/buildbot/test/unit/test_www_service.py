@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import calendar
 import datetime
@@ -99,14 +100,16 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         return d
 
     def test_reconfigService_expiration_time(self):
-        new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
+        new_config = self.makeConfig(
+            port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
         d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
         @d.addCallback
         def check(_):
             self.assertNotEqual(self.svc.site, None)
             self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
+            self.assertEqual(service.BuildbotSession.expDelay,
+                             datetime.timedelta(minutes=1))
         return d
 
     def test_reconfigService_port_changes(self):
@@ -191,7 +194,8 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         # now configured
         self.assertEqual(ep.dialects, {'base': True})
 
-        rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
+        rsrc = self.svc.site.resource.getChildWithDefault(
+            b'change_hook', mock.Mock())
         path = b'/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
         self.master.addChange = mock.Mock()
@@ -241,7 +245,8 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
     def test_getSession_from_correct_jwt(self):
         payload = {'user_info': {'some': 'payload'}}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         session = self.site.getSession(uid)
         self.assertEqual(session.user_info, {'some': 'payload'})
 
@@ -250,12 +255,14 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         exp = datetime.datetime.utcnow() - datetime.timedelta(weeks=1)
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertRaises(KeyError, self.site.getSession, uid)
 
     def test_getSession_with_no_user_info(self):
         payload = {'foo': 'bar'}
-        uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
+        uid = jwt.encode(payload, self.SECRET,
+                         algorithm=service.SESSION_SECRET_ALGORITHM)
         self.assertRaises(KeyError, self.site.getSession, uid)
 
     def test_makeSession(self):

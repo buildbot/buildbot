@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 
@@ -52,7 +53,8 @@ class TestLog(RunMasterBase):
         class MyStep(steps.ShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.ShellCommand._newLog(obj, name, type, logid, logEncoding)
+                r = steps.ShellCommand._newLog(
+                    obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 return self.curr_log
 
@@ -77,7 +79,8 @@ class TestLog(RunMasterBase):
         class MyStep(steps.MasterShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(
+                    obj, name, type, logid, logEncoding)
                 self.curr_log = r
                 return self.curr_log
 
@@ -102,9 +105,11 @@ class TestLog(RunMasterBase):
         class MyStep(steps.MasterShellCommand):
 
             def _newLog(obj, name, type, logid, logEncoding):
-                r = steps.MasterShellCommand._newLog(obj, name, type, logid, logEncoding)
+                r = steps.MasterShellCommand._newLog(
+                    obj, name, type, logid, logEncoding)
                 self.curr_log = r
-                self.patch(r, "finish", lambda: defer.fail(RuntimeError('Could not finish')))
+                self.patch(r, "finish", lambda: defer.fail(
+                    RuntimeError('Could not finish')))
                 return self.curr_log
 
         step = MyStep(command='echo hello')

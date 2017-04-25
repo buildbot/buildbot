@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import calendar
@@ -80,13 +81,15 @@ class BuildbotSession(server.Session):
 
     def _fromToken(self, token):
         try:
-            decoded = jwt.decode(token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+            decoded = jwt.decode(token, self.site.session_secret, algorithms=[
+                                 SESSION_SECRET_ALGORITHM])
         except jwt.exceptions.ExpiredSignatureError as e:
             raise KeyError(str(e))
         except Exception as e:
             log.err(e, "while decoding JWT session")
             raise KeyError(str(e))
-        # might raise KeyError: will be caught by caller, which makes the token invalid
+        # might raise KeyError: will be caught by caller, which makes the token
+        # invalid
         self.user_info = decoded['user_info']
 
     def updateSession(self, request):
@@ -113,7 +116,8 @@ class BuildbotSession(server.Session):
         self._defaultValue()
 
     def notifyOnExpire(self, callback):
-        raise NotImplementedError("BuildbotSession can't support notify on session expiration")
+        raise NotImplementedError(
+            "BuildbotSession can't support notify on session expiration")
 
     def touch(self):
         pass

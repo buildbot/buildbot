@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import mock
 
@@ -339,7 +340,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addChange_repository_revision(self):
         self.master.config = mock.Mock(name='master.config')
-        self.master.config.revlink = lambda rev, repo: 'foo%sbar%sbaz' % (repo, rev)
+        self.master.config.revlink = lambda rev, repo: 'foo%sbar%sbaz' % (
+            repo, rev)
         # revlink is default here
         kwargs = dict(author=u'warner', branch=u'warnerdb',
                       category=u'devel', comments=u'fix whitespace',
@@ -350,7 +352,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         expectedRoutingKey = ('changes', '500', 'new')
         # When no revlink is passed to addChange, but a repository and revision is
         # passed, the revlink should be constructed by calling the revlink callable
-        # in the config. We thus expect a revlink of 'foogit://warnerbar0e92a098bbaz'
+        # in the config. We thus expect a revlink of
+        # 'foogit://warnerbar0e92a098bbaz'
         expectedMessage = {
             'author': u'warner',
             'branch': u'warnerdb',

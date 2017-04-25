@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import json as jsonmodule
 
@@ -86,7 +87,8 @@ class HTTPClientService(service.SharedService):
             case.fail(("HTTPClientService called with *{!r}, **{!r}"
                        "while should be called *{!r} **{!r}").format(
                 _args, _kwargs, args, kwargs))
-        case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
+        case.patch(httpclientservice.HTTPClientService,
+                   "__init__", assertNotCalled)
 
         @ret.addCallback
         def assertNoOutstanding(fake):

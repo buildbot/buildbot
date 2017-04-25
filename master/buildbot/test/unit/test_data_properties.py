@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import mock
 
@@ -137,7 +138,8 @@ class Properties(interfaces.InterfaceTests, unittest.TestCase):
         props = processProperties.fromDict(
             dict(a=(1, 't'), b=(['abc', 9], 't')))
         yield self.rtype.setBuildProperties(1234, props)
-        setBuildPropertiesCalls = sorted(self.master.db.builds.setBuildProperty.mock_calls)
+        setBuildPropertiesCalls = sorted(
+            self.master.db.builds.setBuildProperty.mock_calls)
         self.assertEqual(setBuildPropertiesCalls, [
             mock.call(1234, u'a', 1, u't'),
             mock.call(1234, u'b', ['abc', 9], u't')])

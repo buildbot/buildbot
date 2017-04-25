@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import hashlib
 import json
@@ -108,7 +109,8 @@ class DockerBaseWorker(AbstractLatentWorker):
         if self.registration is not None:
             result["BUILDMASTER_PORT"] = str(self.registration.getPBPort())
         if ":" in self.masterFQDN:
-            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
+            result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(
+                ":")
         return result
 
 
@@ -119,7 +121,8 @@ class DockerLatentWorker(DockerBaseWorker):
                     volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
                     masterFQDN=None, hostconfig=None, **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
+        DockerBaseWorker.checkConfig(
+            self, name, password, image, masterFQDN, **kwargs)
 
         if not client:
             config.error("The python module 'docker-py>=1.4' is needed to use a"
@@ -216,7 +219,8 @@ class DockerLatentWorker(DockerBaseWorker):
             filters=dict(name=self.getContainerName()))
         for instance in instances:
             try:
-                docker_client.remove_container(instance['Id'], v=True, force=True)
+                docker_client.remove_container(
+                    instance['Id'], v=True, force=True)
             except NotFound:
                 pass  # that's a race condition
 

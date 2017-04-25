@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import string_types
 
 import json
@@ -43,7 +44,8 @@ from buildbot.worker.hyper import HyperLatentWorker
 # and then, according to ngrok choice of port something like:
 # export masterFQDN=0.tcp.ngrok.io:17994
 
-# following environment variable can be used to stress concurrent worker startup
+# following environment variable can be used to stress concurrent worker
+# startup
 NUM_CONCURRENT = int(os.environ.get("HYPER_TEST_NUM_CONCURRENT_BUILD", 1))
 
 
@@ -108,7 +110,8 @@ class HyperMaster(RunMasterBase):
             yield util.asyncSleep(.1)
 
         worker = self.master.workers.workers['hyper0']
-        worker.client.remove_container(worker.instance['Id'], v=True, force=True)
+        worker.client.remove_container(
+            worker.instance['Id'], v=True, force=True)
 
         # wait that the build is retried
         while len(builds) == 2:

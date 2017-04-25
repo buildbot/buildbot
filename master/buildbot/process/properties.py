@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import PY3
 from future.utils import iteritems
@@ -437,7 +438,8 @@ class _SecretRenderer(object):
         credsservice = build.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
-            raise KeyError("secret key %s is not found in any provider" % self.secret_name)
+            raise KeyError(
+                "secret key %s is not found in any provider" % self.secret_name)
         defer.returnValue(secret_detail.value)
 
 

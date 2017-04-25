@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import error
 from twisted.python.reflect import namedModule
@@ -2138,7 +2139,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                                state_string="update")
             self.expectProperty(
                 'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
-            self.expectProperty('commit-description', 'Tag-1234', self.sourceName)
+            self.expectProperty('commit-description',
+                                'Tag-1234', self.sourceName)
 
     def test_getDescription_empty_dict(self):
         self.setup_getDescription_test(

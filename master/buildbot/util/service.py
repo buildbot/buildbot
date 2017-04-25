@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import itervalues
 
 import hashlib
@@ -499,7 +500,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
                 # legacy support. Its too painful to transition old code to new Service life cycle
                 # so we implement switch of child when the service raises NotImplementedError
                 # Note this means that self will stop, and sibling will take ownership
-                # means that we have a small time where the service is unavailable.
+                # means that we have a small time where the service is
+                # unavailable.
                 yield svc.disownServiceParent()
                 config_sibling.objectid = svc.objectid
                 yield config_sibling.setServiceParent(self)

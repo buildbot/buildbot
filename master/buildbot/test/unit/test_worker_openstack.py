@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import mock
 
@@ -87,9 +88,11 @@ class TestOpenStackWorker(unittest.TestCase):
     def test_constructor_block_devices_get_sizes(self):
         block_devices = [
             {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image']},
-            {'source_type': 'image', 'uuid': novaclient.TEST_UUIDS['image'], 'volume_size': 4},
+            {'source_type': 'image',
+                'uuid': novaclient.TEST_UUIDS['image'], 'volume_size': 4},
             {'source_type': 'volume', 'uuid': novaclient.TEST_UUIDS['volume']},
-            {'source_type': 'snapshot', 'uuid': novaclient.TEST_UUIDS['snapshot']},
+            {'source_type': 'snapshot',
+                'uuid': novaclient.TEST_UUIDS['snapshot']},
         ]
 
         def check_volume_sizes(_images, block_devices):
@@ -168,14 +171,15 @@ class TestOpenStackWorker(unittest.TestCase):
             novaclient.Image('uuid1', 'name1', 1),
             novaclient.Image('uuid2', 'name2', 1),
             novaclient.Image('uuid3', 'name3', 1),
-            ])
+        ])
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual('uuid1', image_uuid)
 
     @defer.inlineCallbacks
     def test_getImage_renderable(self):
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
-                                             image=Interpolate('%(prop:image)s'),
+                                             image=Interpolate(
+                                                 '%(prop:image)s'),
                                              **self.os_auth)
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)

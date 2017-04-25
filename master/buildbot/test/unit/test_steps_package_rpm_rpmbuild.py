@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -54,7 +55,8 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_autoRelease(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", autoRelease=True))
+        self.setupStep(rpmbuild.RpmBuild(
+            specfile="foo.spec", autoRelease=True))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
@@ -69,7 +71,8 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_renderable_dist(self):
-        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s')))
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+                                         dist=Interpolate('%(prop:renderable_dist)s')))
         self.properties.setProperty('renderable_dist', '.el7', 'test')
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '

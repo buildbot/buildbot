@@ -20,6 +20,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import PY3
 from future.utils import iteritems
@@ -77,7 +78,8 @@ global_defaults = dict(
     protocols={},
     multiMaster=False,
     manhole=None,
-    buildbotNetUsageData=None,  # in unit tests we default to None, but normally defaults to 'basic'
+    # in unit tests we default to None, but normally defaults to 'basic'
+    buildbotNetUsageData=None,
     www=dict(port=None, plugins={},
              auth={'name': 'NoAuth'}, authz={},
              avatar_methods={'name': 'gravatar'},
@@ -517,7 +519,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.errors, "c['logCompressionMethod'] must be 'raw', 'bz2', 'gz' or 'lz4'")
 
     def test_load_global_codebaseGenerator(self):
-        func = lambda _: "dummy"
+        def func(_): return "dummy"
         self.do_test_load_global(dict(codebaseGenerator=func),
                                  codebaseGenerator=func)
 
@@ -553,7 +555,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                  collapseRequests=False)
 
     def test_load_global_collapseRequests_callable(self):
-        callable = lambda: None
+        def callable(): return None
         self.do_test_load_global(dict(collapseRequests=callable),
                                  collapseRequests=callable)
 
@@ -564,7 +566,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                "must be a callable, True, or False")
 
     def test_load_global_prioritizeBuilders_callable(self):
-        callable = lambda: None
+        def callable(): return None
         self.do_test_load_global(dict(prioritizeBuilders=callable),
                                  prioritizeBuilders=callable)
 
@@ -599,7 +601,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.do_test_load_global(dict(manhole=mh), manhole=mh)
 
     def test_load_global_revlink_callable(self):
-        callable = lambda: None
+        def callable(): return None
         self.do_test_load_global(dict(revlink=callable),
                                  revlink=callable)
 
@@ -1462,8 +1464,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                               description='buzz')
 
     def test_getConfigDict(self):
-        ns = lambda: 'ns'
-        nb = lambda: 'nb'
+        def ns(): return 'ns'
+
+        def nb(): return 'nb'
         cfg = config.BuilderConfig(
             name='b', workername='s1', workernames='s2', builddir='bd',
             workerbuilddir='wbd', factory=self.factory, tags=['c'],
@@ -1584,7 +1587,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
     def test_next_worker_old_api(self):
-        f = lambda: None
+        def f(): return None
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
             nextWorker=f)
@@ -1601,7 +1604,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertIdentical(new, old)
 
     def test_init_next_worker_new_api_no_warns(self):
-        f = lambda: None
+        def f(): return None
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
                 name='a b c', workername='a', factory=self.factory,
@@ -1610,7 +1613,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.nextWorker, f)
 
     def test_init_next_worker_old_api_warns(self):
-        f = lambda: None
+        def f(): return None
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern="'nextSlave' keyword argument is deprecated"):
@@ -1621,7 +1624,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(cfg.nextWorker, f)
 
     def test_init_next_worker_positional(self):
-        f = lambda: None
+        def f(): return None
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
                 'a b c', 'a', None, None, None, self.factory, None, None, f)

@@ -18,6 +18,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import mock
 
@@ -258,8 +259,8 @@ class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin)
 
         def check(result):
             exp_format = ('user(s) found:\nbb_username: None\n'
-                         'git: x <x@y>\nidentifier: x@y\n'
-                         'uid: 1\n\n')
+                          'git: x <x@y>\nidentifier: x@y\n'
+                          'uid: 1\n\n')
             self.assertEqual(result, exp_format)
         d.addCallback(check)
         return d

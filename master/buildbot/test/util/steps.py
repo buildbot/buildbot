@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 from future.utils import itervalues
 
@@ -370,7 +371,8 @@ class BuildStepMixin(object):
                     log.msg("Unexpected log output:\n" + got)
                     raise AssertionError("Unexpected log output; see logs")
             if self.exp_exception:
-                self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)
+                self.assertEqual(
+                    len(self.flushLoggedErrors(self.exp_exception)), 1)
 
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)

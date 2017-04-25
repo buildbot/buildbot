@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 from future.utils import text_type
 
@@ -169,7 +170,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_getCollapseRequestsFn(self, builder_param=None,
                                       global_param=None, expected=0):
-        cble = lambda: None
+        def cble(): return None
         builder_param = builder_param == 'callable' and cble or builder_param
         global_param = global_param == 'callable' and cble or global_param
 

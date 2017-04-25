@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import mock
@@ -270,7 +271,8 @@ class RunSteps(unittest.TestCase):
             # instant step
             u'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
-            u'Observer saw [' + repr(u'stdout\n') + u", " + repr(u"\u2603\n") + u"]\n"
+            u'Observer saw [' + repr(u'stdout\n') + \
+            u", " + repr(u"\u2603\n") + u"]\n"
         })
 
     def test_OldStyleCustomBuildStep(self):

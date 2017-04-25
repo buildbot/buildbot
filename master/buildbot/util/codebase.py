@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 
@@ -32,7 +33,8 @@ class AbsoluteSourceStampsMixin(object):
             self._lastCodebases = yield self.getState('lastCodebases', {})
 
         # may fail with KeyError
-        defer.returnValue(self._lastCodebases.get(codebase, self.codebases[codebase]))
+        defer.returnValue(self._lastCodebases.get(
+            codebase, self.codebases[codebase]))
 
     @defer.inlineCallbacks
     def recordChange(self, change):

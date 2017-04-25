@@ -19,6 +19,7 @@ Steps and objects related to lintian
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from buildbot import config
 from buildbot.process import buildstep
@@ -93,7 +94,8 @@ class DebLintian(ShellCommand):
         errors = self.obs.errors
 
         if warnings:
-            self.addCompleteLog('%d Warnings' % len(warnings), "\n".join(warnings))
+            self.addCompleteLog('%d Warnings' %
+                                len(warnings), "\n".join(warnings))
             self.warnCount = len(warnings)
         if errors:
             self.addCompleteLog('%d Errors' % len(errors), "\n".join(errors))

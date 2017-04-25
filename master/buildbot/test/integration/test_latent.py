@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 
 import os
@@ -419,7 +420,7 @@ class Tests(SynchronousTestCase):
             self.assertIn("can't create dir", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_latent.TestException",
-                logs_by_name[i])
+                          logs_by_name[i])
         controller.auto_stop(True)
 
     def test_failed_ping_get_requeued(self):
@@ -484,7 +485,7 @@ class Tests(SynchronousTestCase):
             self.assertIn("can't ping", logs_by_name[i])
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_latent.TestException",
-                logs_by_name[i])
+                          logs_by_name[i])
         controller.auto_stop(True)
 
     def test_worker_close_connection_while_building(self):

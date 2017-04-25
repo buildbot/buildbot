@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import datetime
@@ -238,7 +239,8 @@ class GerritChangeSource(GerritChangeSourceBase):
                         name=None,
                         **kwargs):
         if 'gitBaseURL' not in kwargs:
-            kwargs['gitBaseURL'] = "ssh://%s@%s:%s" % (username, gerritserver, gerritport)
+            kwargs['gitBaseURL'] = "ssh://%s@%s:%s" % (
+                username, gerritserver, gerritport)
         self.gerritserver = gerritserver
         self.gerritport = gerritport
         self.username = username

@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import abc
@@ -34,7 +35,8 @@ class HttpStatusPushBase(service.BuildbotService):
 
     def checkConfig(self, *args, **kwargs):
         service.BuildbotService.checkConfig(self)
-        httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
+        httpclientservice.HTTPClientService.checkAvailable(
+            self.__class__.__name__)
         if not isinstance(kwargs.get('builders'), (type(None), list)):
             config.error("builders must be a list or None")
 
@@ -94,7 +96,8 @@ class HttpStatusPush(HttpStatusPushBase):
         if user is not None and auth is not None:
             config.error("Only one of user/password or auth must be given")
         if user is not None:
-            config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
+            config.warnDeprecated(
+                "0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
         if (format_fn is not None) and not callable(format_fn):
             config.error("format_fn must be a function")
         HttpStatusPushBase.checkConfig(self, **kwargs)

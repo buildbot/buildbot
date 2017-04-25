@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import json
@@ -276,7 +277,8 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                   "not {}".format(dictType))
         self.assertRaisesConfigError(errMsg,
                                      lambda: ForceScheduler(name='foo',
-                                                            builderNames=['bar'],
+                                                            builderNames=[
+                                                                'bar'],
                                                             codebases={'cb': {'branch': 'trunk'}}))
 
     @defer.inlineCallbacks

@@ -14,6 +14,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.trial import unittest
 
@@ -90,7 +91,8 @@ class RolesFromOwner(unittest.TestCase):
 class RolesFromUsername(unittest.TestCase, ConfigErrorsMixin):
 
     def setUp(self):
-        self.roles = roles.RolesFromUsername(roles=["admins"], usernames=["Admin"])
+        self.roles = roles.RolesFromUsername(
+            roles=["admins"], usernames=["Admin"])
         self.roles2 = roles.RolesFromUsername(
             roles=["developers", "integrators"], usernames=["Alice", "Bob"])
 
@@ -112,4 +114,4 @@ class RolesFromUsername(unittest.TestCase, ConfigErrorsMixin):
 
     def test_badUsernames(self):
         self.assertRaisesConfigError('Usernames cannot be None',
-            lambda: roles.RolesFromUsername(roles=[], usernames=[None]))
+                                     lambda: roles.RolesFromUsername(roles=[], usernames=[None]))

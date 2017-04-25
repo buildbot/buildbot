@@ -19,6 +19,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import protocol
 from twisted.python import log
@@ -97,7 +98,8 @@ class ReconnectingPBClientFactory(PBClientFactory,
     # oldcred methods
 
     def getPerspective(self, *args):
-        raise RuntimeError("getPerspective is one-shot: use startGettingPerspective instead")
+        raise RuntimeError(
+            "getPerspective is one-shot: use startGettingPerspective instead")
 
     def startGettingPerspective(self, username, password, serviceName,
                                 perspectiveName=None, client=None):

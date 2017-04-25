@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import buildbot_worker.commands.fs
 import buildbot_worker.commands.shell

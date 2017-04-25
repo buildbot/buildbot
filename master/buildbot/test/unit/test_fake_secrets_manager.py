@@ -1,5 +1,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -55,7 +56,8 @@ class TestSecretsManager(unittest.TestCase):
         otherFakeStorageService.reconfigService(secretdict={"foo2": "bar",
                                                             "other2": "value"})
 
-        secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
+        secret_service_manager.services = [
+            fakeStorageService, otherFakeStorageService]
         expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
                                              "foo2",
                                              "bar")
@@ -72,7 +74,8 @@ class TestSecretsManager(unittest.TestCase):
         otherFakeStorageService.reconfigService(secretdict={"foo2": "bar2",
                                                             "other": ""})
 
-        secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
+        secret_service_manager.services = [
+            fakeStorageService, otherFakeStorageService]
         expectedSecretDetail = SecretDetails(FakeSecretStorage.__name__,
                                              "other",
                                              "")
@@ -88,6 +91,7 @@ class TestSecretsManager(unittest.TestCase):
         otherFakeStorageService = FakeSecretStorage()
         otherFakeStorageService.reconfigService(secretdict={"foo2": "bar",
                                                             "other2": "value"})
-        secret_service_manager.services = [fakeStorageService, otherFakeStorageService]
+        secret_service_manager.services = [
+            fakeStorageService, otherFakeStorageService]
         secret_result = yield secret_service_manager.get("foo3")
         self.assertEqual(secret_result, None)

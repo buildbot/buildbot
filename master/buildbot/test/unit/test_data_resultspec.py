@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import lrange
 
 import datetime
@@ -322,7 +323,7 @@ class Comparator(unittest.TestCase):
         self.assertLess(NoneComparator(datetime.datetime(1, 1, 1)),
                         NoneComparator(datetime.datetime(1, 1, 2)))
         self.assertEqual(NoneComparator(datetime.datetime(1, 1, 1)),
-                        NoneComparator(datetime.datetime(1, 1, 1)))
+                         NoneComparator(datetime.datetime(1, 1, 1)))
         self.assertGreater(NoneComparator(datetime.datetime(1, 1, 2)),
                            NoneComparator(datetime.datetime(1, 1, 1)))
         self.assertEqual(NoneComparator(None),
@@ -349,5 +350,6 @@ class Comparator(unittest.TestCase):
 
     def test_reverseComparisonWithNone(self):
         noneInList = ["z", None, None, "q", "a", None, "v"]
-        sortedList = sorted(noneInList, key=lambda x: ReverseComparator(NoneComparator(x)))
+        sortedList = sorted(
+            noneInList, key=lambda x: ReverseComparator(NoneComparator(x)))
         self.assertEqual(sortedList, ["z", "v", "q", "a", None, None, None])

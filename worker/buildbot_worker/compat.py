@@ -21,6 +21,7 @@ between Python 2 and Python 3.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import text_type
 
 if str != bytes:

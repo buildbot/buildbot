@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import PY3
 from future.utils import iteritems
 from future.utils import itervalues
@@ -772,7 +773,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error(msg)
             return
 
-        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(
+        def msg(s): return "c['status'] contains an object that is not a status receiver (type %r)" % type(
             s)
         for s in status:
             if not interfaces.IStatusReceiver.providedBy(s):
@@ -826,7 +827,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         cookie_expiration_time = www_cfg.get('cookie_expiration_time')
         if cookie_expiration_time is not None:
             if not isinstance(cookie_expiration_time, datetime.timedelta):
-                error('Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
+                error(
+                    'Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
 
         self.www.update(www_cfg)
 

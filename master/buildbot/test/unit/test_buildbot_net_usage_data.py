@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.moves.urllib import request as urllib_request
 
@@ -107,7 +108,8 @@ class Tests(unittest.TestCase):
                          sorted(['db']))
 
     def test_urllib(self):
-        self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
+        self.patch(buildbot.buildbot_net_usage_data,
+                   '_sendWithRequests', lambda _, __: None)
 
         class FakeRequest(object):
 

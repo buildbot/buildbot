@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 
 import re
@@ -38,7 +39,8 @@ class ChangeFilter(ComparableMixin):
                  # PROJECT_FN returns True when called with the project; repository,
                  # branch, and so on are similar.  Note that the regular expressions
                  # are anchored to the first character of the string.  For convenience,
-                 # a list can also be specified to the singular option (e.g, PROJECTS).
+                 # a list can also be specified to the singular option (e.g,
+                 # PROJECTS).
                  project=None, project_re=None, project_fn=None,
                  repository=None, repository_re=None, repository_fn=None,
                  branch=NotABranch, branch_re=None, branch_fn=None,

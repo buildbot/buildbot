@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import itervalues
 
 import time
@@ -273,7 +274,8 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def reconfigServiceWithSibling(self, sibling):
         # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
-        # However, the worker configuration depends on which builder it is configured
+        # However, the worker configuration depends on which builder it is
+        # configured
         yield service.BuildbotService.reconfigServiceWithSibling(self, sibling)
 
         # update the attached worker's notion of which builders are attached.

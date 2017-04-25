@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -38,7 +39,8 @@ class myTestedService(service.BuildbotService):
         if res.code != 200:
             raise Exception("%d: server did not succeed" % (res.code))
         res_json = yield res.json()
-        # res.json() returns a deferred to represent the time needed to fetch the entire body
+        # res.json() returns a deferred to represent the time needed to fetch
+        # the entire body
         defer.returnValue(res_json)
 
 
@@ -64,4 +66,5 @@ class Test(unittest.SynchronousTestCase):
         self._http.expect("get", "/", content_json={'foo': 'bar'}, code=404)
 
         response = self.failureResultOf(self.tested.doGetRoot())
-        self.assertEqual(response.getErrorMessage(), '404: server did not succeed')
+        self.assertEqual(response.getErrorMessage(),
+                         '404: server did not succeed')

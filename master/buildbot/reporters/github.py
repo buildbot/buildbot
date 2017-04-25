@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import re
 
@@ -204,5 +205,6 @@ class GitHubCommentPush(GitHubStatusPush):
         payload = {'body': description}
 
         return self._http.post(
-            '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
+            '/'.join(['/repos', repo_user, repo_name,
+                      'issues', issue, 'comments']),
             json=payload)

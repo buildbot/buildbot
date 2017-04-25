@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from buildbot_worker import runprocess
 from buildbot_worker.test.util import command
@@ -37,7 +38,8 @@ class SourceCommandTestMixin(command.CommandTestMixin):
         * doCopy - invokes RunProcess(['copy', cmd.srcdir, cmd.workdir])
         """
 
-        cmd = command.CommandTestMixin.make_command(self, cmdclass, args, makedirs)
+        cmd = command.CommandTestMixin.make_command(
+            self, cmdclass, args, makedirs)
 
         # note that these patches are to an *instance*, not a class, so there
         # is no need to use self.patch() to reverse them

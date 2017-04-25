@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import locale
 import os
@@ -221,7 +222,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.
             raise(unittest.SkipTest("Cannot encode weird unicode "
-                "on this platform with {}".format(os_encoding)))
+                                    "on this platform with {}".format(os_encoding)))
 
         d = self.db.model.upgrade()
         d.addCallback(lambda r: self.assertModelMatches())

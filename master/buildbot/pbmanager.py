@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.application import strports
 from twisted.cred import checkers
@@ -199,7 +200,8 @@ class Dispatcher(service.AsyncService):
         username = bytes2NativeString(creds.username)
         if username in self.users:
             password, _ = self.users[username]
-            d = defer.maybeDeferred(creds.checkPassword, unicode2bytes(password))
+            d = defer.maybeDeferred(
+                creds.checkPassword, unicode2bytes(password))
 
             @d.addCallback
             def check(matched):

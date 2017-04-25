@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 from future.utils import text_type
 
@@ -735,14 +736,17 @@ class UnderTestDependentService(service.AsyncService):
 class SharedService(unittest.SynchronousTestCase):
     def test_bad_constructor(self):
         parent = service.AsyncMultiService()
-        self.failureResultOf(UnderTestSharedService.getService(parent, arg2="foo"))
+        self.failureResultOf(
+            UnderTestSharedService.getService(parent, arg2="foo"))
 
     def test_creation(self):
         parent = service.AsyncMultiService()
         r = self.successResultOf(UnderTestSharedService.getService(parent))
         r2 = self.successResultOf(UnderTestSharedService.getService(parent))
-        r3 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
-        r4 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
+        r3 = self.successResultOf(
+            UnderTestSharedService.getService(parent, "arg1"))
+        r4 = self.successResultOf(
+            UnderTestSharedService.getService(parent, "arg1"))
         self.assertIdentical(r, r2)
         self.assertNotIdentical(r, r3)
         self.assertIdentical(r3, r4)

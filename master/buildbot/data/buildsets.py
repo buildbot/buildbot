@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import itervalues
 
 import copy
@@ -98,7 +99,8 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
-        d = self.master.db.buildsets.getBuildsets(complete=complete, resultSpec=resultSpec)
+        d = self.master.db.buildsets.getBuildsets(
+            complete=complete, resultSpec=resultSpec)
 
         @d.addCallback
         def db2data(buildsets):

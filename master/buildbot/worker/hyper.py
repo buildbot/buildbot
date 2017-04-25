@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import time
 
@@ -93,7 +94,8 @@ class HyperLatentWorker(DockerBaseWorker):
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
+        DockerBaseWorker.checkConfig(
+            self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
 
         if not Hyper:
             config.error("The python modules 'docker-py>=1.4' and 'hyper_sh' are needed to use a"
@@ -138,7 +140,8 @@ class HyperLatentWorker(DockerBaseWorker):
             if "".join(instance['Names']).strip("/") != container_name:
                 continue
             try:
-                self.client.remove_container(instance['Id'], v=True, force=True)
+                self.client.remove_container(
+                    instance['Id'], v=True, force=True)
             except NotFound:
                 pass  # that's a race condition
             except docker.errors.APIError as e:

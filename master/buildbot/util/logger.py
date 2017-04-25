@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 try:
     from twisted.logger import Logger
@@ -23,6 +24,7 @@ except ImportError:
 
     class Logger(object):
         """A simplistic backporting of the new logger system for old versions of twisted"""
+
         def _log(self, format, *args, **kwargs):
             log.msg(format.format(args, **kwargs))
 

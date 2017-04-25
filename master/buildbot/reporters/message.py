@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 
@@ -41,10 +42,12 @@ class MessageFormatterBase(object):
                  subject_filename=None, subject=None,
                  template_type=None, ctx=None,
                  ):
-        self.body_template = self.getTemplate(template_filename, template_dir, template)
+        self.body_template = self.getTemplate(
+            template_filename, template_dir, template)
         self.subject_template = None
         if subject_filename or subject:
-            self.subject_template = self.getTemplate(subject_filename, template_dir, subject)
+            self.subject_template = self.getTemplate(
+                subject_filename, template_dir, subject)
 
         if template_type is not None:
             self.template_type = template_type
@@ -95,7 +98,8 @@ class MessageFormatter(MessageFormatterBase):
                  wantProperties=True, wantSteps=False, wantLogs=False):
 
         if template_name is not None:
-            config.warnDeprecated('0.9.1', "template_name is deprecated, use template_filename")
+            config.warnDeprecated(
+                '0.9.1', "template_name is deprecated, use template_filename")
             template_filename = template_name
         MessageFormatterBase.__init__(self,
                                       template_dir=template_dir,

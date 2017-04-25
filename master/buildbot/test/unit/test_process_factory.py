@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 
 from random import choice
@@ -154,7 +155,7 @@ class TestGNUAutoconf(TestBuildFactory):
             try:
                 cmd = step.buildStep().command
                 self.assertNotIn(cmd, [['make', 'all'], ['make', 'check'],
-                                 ['make', 'distcheck']],
+                                       ['make', 'distcheck']],
                                  "Build step %s should not be present." % cmd)
             except(AttributeError, KeyError):
                 pass

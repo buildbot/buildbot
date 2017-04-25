@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import text_type
@@ -440,7 +441,8 @@ class FakeUpdates(service.AsyncService):
             masterid=masterid)
 
     def workerMissing(self, workerid, masterid, last_connection, notify):
-        self.missingWorkers.append((workerid, masterid, last_connection, notify))
+        self.missingWorkers.append(
+            (workerid, masterid, last_connection, notify))
 
     def schedulerEnable(self, schedulerid, v):
         return self.master.db.schedulers.enable(schedulerid, v)

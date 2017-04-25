@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import sqlalchemy as sa
 
@@ -33,7 +34,8 @@ def upgrade(migrate_engine):
     # This table contains input properties for builds
     build_properties = sautils.Table(
         'build_properties', metadata,
-        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id'), nullable=False),
+        sa.Column('buildid', sa.Integer, sa.ForeignKey(
+            'builds.id'), nullable=False),
         sa.Column('name', sa.String(256), nullable=False),
         # JSON-encoded value
         sa.Column('value', sa.Text, nullable=False),

@@ -22,6 +22,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 
 import sys
@@ -663,7 +664,8 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     subcommandFunction = "buildbot.scripts.cleanupdb.cleanupDatabase"
     optFlags = [
         ["quiet", "q", "Do not emit the commands being run"],
-        ["force", "f", "Force log recompression (useful when changing compression algorithm)"],
+        ["force", "f",
+            "Force log recompression (useful when changing compression algorithm)"],
         # when this command has several maintainance jobs, we should make
         # them optional here. For now there is only one.
     ]

@@ -16,6 +16,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import platform
 import textwrap
@@ -424,7 +425,8 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         \t//depot/trunk/... //p4_client1/...
         ''' % root_dir)
         client_spec = unicode2bytes(client_spec)
-        self._incremental(client_stdin=client_spec, extra_args=[b'-Zproxyload'])
+        self._incremental(client_stdin=client_spec,
+                          extra_args=[b'-Zproxyload'])
 
     def test_mode_incremental_timeout(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',

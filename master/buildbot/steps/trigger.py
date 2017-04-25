@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 from future.utils import itervalues
 
@@ -119,7 +120,8 @@ class Trigger(BuildStep):
                                      ("buildrequests", brid))
         if self.running and not self.ended:
             self.ended = True
-            # if we are interrupted because of a connection lost, we interrupt synchronously
+            # if we are interrupted because of a connection lost, we interrupt
+            # synchronously
             if self.build.conn is None and self.waitForFinishDeferred is not None:
                 self.waitForFinishDeferred.cancel()
 
@@ -159,7 +161,8 @@ class Trigger(BuildStep):
                 codebase = ss.get('codebase', '')
                 assert codebase not in ss_for_trigger, "codebase specified multiple times"
                 ss_for_trigger[codebase] = ss
-            trigger_values = [ss_for_trigger[k] for k in sorted(ss_for_trigger.keys())]
+            trigger_values = [ss_for_trigger[k]
+                              for k in sorted(ss_for_trigger.keys())]
             return trigger_values
 
         if self.alwaysUseLatest:
@@ -178,7 +181,8 @@ class Trigger(BuildStep):
                 if codebase in got:
                     ss_for_trigger[codebase]['revision'] = got[codebase]
 
-        trigger_values = [ss_for_trigger[k] for k in sorted(ss_for_trigger.keys())]
+        trigger_values = [ss_for_trigger[k]
+                          for k in sorted(ss_for_trigger.keys())]
         return trigger_values
 
     def getAllGotRevisions(self):
@@ -220,7 +224,8 @@ class Trigger(BuildStep):
                     for build in builds:
                         builderid = build['builderid']
                         # When virtual builders are used, the builderid used for triggering
-                        # is not the same as the one that the build actually got
+                        # is not the same as the one that the build actually
+                        # got
                         if builderid not in builderNames:
                             builderDict = yield self.master.data.get(("builders", builderid))
                             builderNames[builderid] = builderDict["name"]
@@ -299,7 +304,8 @@ class Trigger(BuildStep):
         self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
-            self.waitForFinishDeferred = defer.DeferredList(dl, consumeErrors=1)
+            self.waitForFinishDeferred = defer.DeferredList(
+                dl, consumeErrors=1)
             try:
                 rclist = yield self.waitForFinishDeferred
             except defer.CancelledError:

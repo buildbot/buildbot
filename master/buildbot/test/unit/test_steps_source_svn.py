@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet import error
 from twisted.python.reflect import namedModule
@@ -423,7 +424,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -453,13 +455,15 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', dict(file='wkdir/.svn',
                                 logEnviron=True))
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -496,7 +500,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + ExpectShell.log('stdio',  # expecting ../trunk/app
                               stdout="""<?xml version="1.0"?><url>http://svn.local/branch/foo/app</url>""")
             + 0,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/trunk/app',
@@ -790,19 +795,22 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
                                  '.', '--non-interactive', '--no-auth-cache'])
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
@@ -1009,7 +1017,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',
@@ -1040,7 +1049,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             Expect('stat', {'file': 'wkdir/.svn',
                             'logEnviron': True})
             + 1,
-            Expect('rmdir', {'dir': 'wkdir', 'logEnviron': True, 'timeout': 1200})
+            Expect('rmdir', {'dir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'checkout', 'http://svn.local/app/trunk',

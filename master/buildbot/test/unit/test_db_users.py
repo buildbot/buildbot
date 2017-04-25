@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import sqlalchemy
 
@@ -455,9 +456,11 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                                  attr_data='8.8.8.8')
                 r.close()
             except sqlalchemy.exc.OperationalError:
-                # some engine (mysql innodb) will enforce lock until the transaction is over
+                # some engine (mysql innodb) will enforce lock until the
+                # transaction is over
                 transaction_wins.append(True)
-                # scope variable, we modify a list so that modification is visible in parent scope
+                # scope variable, we modify a list so that modification is
+                # visible in parent scope
         d = self.insertTestData(self.user1_rows)
 
         def update1(_):

@@ -17,6 +17,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import string_types
@@ -149,7 +150,7 @@ class _NSNode(object):
 
     def add(self, name, entry):
         assert isinstance(name, string_types) and isinstance(entry,
-                                                            _PluginEntry)
+                                                             _PluginEntry)
         self._add(name, entry)
 
     def _add(self, name, entry):

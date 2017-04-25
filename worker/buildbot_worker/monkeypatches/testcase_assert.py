@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import string_types
 
 import re
@@ -48,8 +49,10 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
 
 
 def patch():
-    hasAssertRaisesRegexp = getattr(unittest.TestCase, "assertRaisesRegexp", None)
-    hasAssertRaisesRegex = getattr(unittest.TestCase, "assertRaisesRegex", None)
+    hasAssertRaisesRegexp = getattr(
+        unittest.TestCase, "assertRaisesRegexp", None)
+    hasAssertRaisesRegex = getattr(
+        unittest.TestCase, "assertRaisesRegex", None)
     if not hasAssertRaisesRegexp:
         # Python 2.6
         unittest.TestCase.assertRaisesRegexp = _assertRaisesRegexp

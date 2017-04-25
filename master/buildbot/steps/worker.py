@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import stat
 
@@ -146,7 +147,8 @@ class CopyDirectory(WorkerBuildStep):
 
     def commandComplete(self, cmd):
         if cmd.didFail():
-            self.step_status.setText(["Copying", self.src, "to", self.dest, "failed."])
+            self.step_status.setText(
+                ["Copying", self.src, "to", self.dest, "failed."])
             self.finished(FAILURE)
             return
         self.step_status.setText(self.describe(done=True))

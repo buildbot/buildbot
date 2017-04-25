@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.utils import text_type
 
 import datetime
@@ -417,7 +418,8 @@ class JoinList(unittest.TestCase):
         self.assertEqual(util.join_list(u'abc'), u'abc')
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda: util.join_list([b'\xff']))
+        self.assertRaises(UnicodeDecodeError,
+                          lambda: util.join_list([b'\xff']))
 
 
 class CommandToString(unittest.TestCase):

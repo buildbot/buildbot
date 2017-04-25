@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 from future.builtins import range
 
 import mock
@@ -68,10 +69,12 @@ class TestChangeManager(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_change_reconfigurable(self):
-        src1, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=1)
+        src1, = self.make_sources(
+            1, base.ReconfigurablePollingChangeSource, pollInterval=1)
         src1.setServiceParent(self.cm)
 
-        src2, = self.make_sources(1, base.ReconfigurablePollingChangeSource, pollInterval=2)
+        src2, = self.make_sources(
+            1, base.ReconfigurablePollingChangeSource, pollInterval=2)
 
         self.new_config.change_sources = [src2]
 
