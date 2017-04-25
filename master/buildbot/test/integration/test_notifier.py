@@ -22,6 +22,8 @@ from twisted.internet import defer
 
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
+from buildbot.reporters.message import MessageFormatter
+from buildbot.reporters.pushover import PushoverNotifier
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
@@ -29,12 +31,13 @@ from buildbot.util import unicode2bytes
 
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step, and a MailNotifier
-class MailMaster(RunMasterBase):
+class NotifierMaster(RunMasterBase):
 
     if not ESMTPSenderFactory:
         skip = ("twisted-mail unavailable, "
                 "see: https://twistedmatrix.com/trac/ticket/8770")
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.mailDeferred = defer.Deferred()
 
@@ -43,8 +46,16 @@ class MailMaster(RunMasterBase):
             self.mailDeferred.callback((mail, recipients))
         self.patch(MailNotifier, "sendmail", sendmail)
 
+        self.notification = defer.Deferred()
+
+        def sendNotification(_, params):
+            self.notification.callback(params)
+        self.patch(PushoverNotifier, "sendNotification", sendNotification)
+
+        yield self.setupConfig(masterConfig())
+
     @defer.inlineCallbacks
-    def doTest(self):
+    def doTest(self, what):
 
         change = dict(branch="master",
                       files=["foo.c"],
@@ -60,6 +71,11 @@ class MailMaster(RunMasterBase):
         self.assertIn("From: bot@foo.com", mail)
         self.assertIn("Subject: Buildbot success in Buildbot", mail)
         self.assertEncodedIn("The Buildbot has detected a passing build", mail)
+        params = yield self.notification
+        self.assertEqual(build['buildid'], 1)
+        self.assertEqual(params, {'title': "Buildbot success in Buildbot on {}".format(what),
+                                  'message': u"This is a message."})
+
 
     def assertEncodedIn(self, text, mail):
         # python 2.6 default transfer in base64 for utf-8
@@ -72,20 +88,36 @@ class MailMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_notifiy_for_build(self):
-        yield self.setupConfig(masterConfig())
-        yield self.doTest()
+        yield self.doTest('testy')
 
     @defer.inlineCallbacks
     def test_notifiy_for_buildset(self):
-        yield self.setupConfig(masterConfig())
         self.master.config.services = [
-            MailNotifier("bot@foo.com", mode="all", buildSetSummary=True)]
+            MailNotifier("bot@foo.com", mode="all", buildSetSummary=True),
+            PushoverNotifier('1234', 'abcd', mode="all", buildSetSummary=True,
+                messageFormatter=MessageFormatter(template='This is a message.'))]
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        yield self.doTest()
+        yield self.doTest('whole buildset')
+
+    @defer.inlineCallbacks
+    def test_missing_worker(self):
+        yield self.master.data.updates.workerMissing(
+            workerid='local1',
+            masterid=self.master.masterid,
+            last_connection='long time ago',
+            notify='admin@worker.org',
+        )
+        mail, recipients = yield self.mailDeferred
+        self.assertIn("From: bot@foo.com", mail)
+        self.assertEqual(recipients, ['admin@worker.org'])
+        self.assertIn("Subject: Buildbot worker local1 missing", mail)
+        self.assertEncodedIn("worker named local1 went away", mail)
+        params = yield self.notification
+        self.assertEqual(params, {'title': "Buildbot worker local1 missing",
+                                  'message': u"No worker."})
+
 
 # master configuration
-
-
 def masterConfig():
     c = {}
     from buildbot.config import BuilderConfig
@@ -102,5 +134,11 @@ def masterConfig():
         BuilderConfig(name="testy",
                       workernames=["local1"],
                       factory=f)]
-    c['services'] = [reporters.MailNotifier("bot@foo.com", mode="all")]
+    c['services'] = [
+        reporters.MailNotifier("bot@foo.com", mode="all"),
+        reporters.PushoverNotifier('1234', 'abcd', mode="all", watchedWorkers=['worky'],
+            messageFormatter=reporters.MessageFormatter(template='This is a message.'),
+            messageFormatterMissingWorker=reporters.MessageFormatter(template='No worker.'))
+    ]
     return c
+

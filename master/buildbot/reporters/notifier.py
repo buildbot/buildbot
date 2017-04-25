@@ -56,7 +56,7 @@ class NotifierBase(service.BuildbotService):
     def checkConfig(self, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    name=None, schedulers=None, branches=None):
+                    name=None, schedulers=None, branches=None, watchedWorkers=None):
 
         for m in self.computeShortcutModes(mode):
             if m not in self.possible_modes:
@@ -88,13 +88,17 @@ class NotifierBase(service.BuildbotService):
                 "Please specify only builders or tags to include - " +
                 "not both.")
 
+        if not(watchedWorkers == 'all' or watchedWorkers is None or
+               isinstance(watchedWorkers, (list,tuple,set))):
+                   config.error("watchedWorkers must be 'all', None, or list of worker names")
+
     def reconfigService(self, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None,
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         addLogs=False, addPatch=True,
                         name=None, schedulers=None, branches=None,
-                        messageFormatterMissingWorker=None):
+                        watchedWorkers=None, messageFormatterMissingWorker=None):
 
         self.mode = self.computeShortcutModes(mode)
         self.tags = tags
@@ -112,7 +116,10 @@ class NotifierBase(service.BuildbotService):
         self.messageFormatterMissingWorker = messageFormatterMissingWorker
         self.buildSetSummary = buildSetSummary
         self._buildset_complete_consumer = None
-        self.watched = []
+        if watchedWorkers is None:
+            self.watchedWorkers = ()
+        else:
+            self.watchedWorkers = watchedWorkers
 
     @defer.inlineCallbacks
     def startService(self):
@@ -275,9 +282,12 @@ class NotifierBase(service.BuildbotService):
                     logs=None, worker=None):
         pass
 
+    def isWorkerMessageNeeded(self, key, worker):
+        return False
+
     @defer.inlineCallbacks
     def workerMissing(self, key, worker):
-        if not worker['notify']:
+        if not self.isWorkerMessageNeeded(key, worker):
             return
         msg = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
         text = msg['body'].encode(ENCODING)

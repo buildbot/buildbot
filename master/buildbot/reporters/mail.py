@@ -94,14 +94,15 @@ class MailNotifier(NotifierBase):
                     messageFormatter=None, extraHeaders=None,
                     addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None, schedulers=None, branches=None):
+                    name=None, schedulers=None, branches=None,
+                    watchedWorkers='all', messageFormatterMissingWorker=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
 
         super(MailNotifier, self).checkConfig(mode, tags, builders,
                                               subject, name, schedulers,
-                                              branches)
+                                              branches, watchedWorkers)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -135,15 +136,15 @@ class MailNotifier(NotifierBase):
                         addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
                         name=None, schedulers=None, branches=None,
-                        messageFormatterMissingWorker=None):
+                        watchedWorkers='all', messageFormatterMissingWorker=None):
 
         super(MailNotifier, self).reconfigService(mode, tags, builders,
                                                   buildSetSummary,
                                                   messageFormatter,
                                                   subject,
                                                   addLogs, addPatch,
-                                                  name, schedulers,
-                                                  branches, messageFormatterMissingWorker)
+                                                  name, schedulers, branches,
+                                                  watchedWorkers, messageFormatterMissingWorker)
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients
@@ -339,3 +340,7 @@ class MailNotifier(NotifierBase):
         twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
 
         return self.sendmail(s, recipients)
+
+    def isWorkerMessageNeeded(self, key, worker):
+        return worker['notify']
+

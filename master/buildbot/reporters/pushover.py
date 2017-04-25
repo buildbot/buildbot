@@ -59,7 +59,7 @@ class PushoverNotifier(NotifierBase):
 
         super(PushoverNotifier, self).checkConfig(mode, tags, builders,
                                                   subject, name, schedulers,
-                                                  branches)
+                                                  branches, watchedWorkers)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
 
@@ -94,18 +94,14 @@ class PushoverNotifier(NotifierBase):
                                                       messageFormatter,
                                                       subject,
                                                       False, False,
-                                                      name, schedulers,
-                                                      branches, messageFormatterMissingWorker)
+                                                      name, schedulers, branches,
+                                                      watchedWorkers, messageFormatterMissingWorker)
         self.user_key = user_key
         self.api_token = api_token
         if priorities is None:
             self.priorities = {}
         else:
             self.priorities = priorities
-        if watchedWorkers is None:
-            self.watchedWorkers = {}
-        else:
-            self.watchedWorkers = watchedWorkers
         if otherParams is None:
             self.otherParams = {}
         else:
@@ -141,3 +137,6 @@ class PushoverNotifier(NotifierBase):
         params.update(dict(user=self.user_key, token=self.api_token))
         params.update(self.otherParams)
         return self._http.post('/1/messages.json', params=params)
+
+    def isWorkerMessageNeeded(self, key, worker):
+        return worker['name'] in self.watchedWorkers

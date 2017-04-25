@@ -295,6 +295,10 @@ MailNotifier arguments
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
+``watchedWorkers``
+    This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
+    The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify email address to which the notification is sent in the worker configuration.
+
 ``messageFormatterMissingWorker``
     This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
     This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
@@ -534,6 +538,7 @@ The following parameters are accepted by this class:
 
 ``watchedWorkers``
     This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
+    The value of ``watchedWorkers`` can also be set to *all* or ``None`` (default).
     
 ``messageFormatterMissingWorker``
     This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
