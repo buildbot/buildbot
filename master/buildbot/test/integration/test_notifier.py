@@ -127,14 +127,15 @@ def masterConfig():
     c['schedulers'] = [
         schedulers.AnyBranchScheduler(
             name="sched",
-            builderNames=["testy"])]
-
+            builderNames=["testy"])
+    ]
     f = BuildFactory()
     f.addStep(steps.ShellCommand(command='echo hello'))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],
-                      factory=f)]
+                      factory=f)
+    ]
     notifier = reporters.PushoverNotifier('1234', 'abcd', mode="all", watchedWorkers=['local1'],
                                           messageFormatter=MessageFormatter(template='This is a message.'),
                                           messageFormatterMissingWorker=MessageFormatterMissingWorker(
