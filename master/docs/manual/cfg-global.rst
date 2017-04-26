@@ -273,41 +273,11 @@ It can also be overridden for a single log file by passing the ``logEncoding`` p
 Data Lifetime
 ~~~~~~~~~~~~~
 
-.. bb:cfg:: changeHorizon
-.. bb:cfg:: buildHorizon
-.. bb:cfg:: logHorizon
-.. bb:cfg:: JanitorConfigurator
-
 Horizons
 ++++++++
 
-::
-
-    from buildbot.plugins import util
-    from datetime import timedelta
-
-    # at the end of your master.cfg
-    # configure a janitor which will delete all logs older than one month, and will run on sundays at noon
-    util.JanitorConfigurator(c,
-        logHorizon=timedelta(weeks=4),
-        hour=12,
-        dayOfWeek=6)
-
-Buildbot stores historical information in its database.
-In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
-
-Parameters for :bb:cfg:`JanitorConfigurator` are:
-
-``c``
-    The `BuildmasterConfig` config dictionary from your ``master.cfg``
-
-``logHorizon``
-    a ``timedelta`` object describing the minimum time for which the log data should be maintained
-
-``hour``, ``dayOfWeek``, ...
-    Arguments given to the :bb:sched::`Nightly` scheduler which is backing the JanitorConfigurator.
-    Determines when the cleanup will be done.
-    With this, you can configure it daily, weekly or even hourly if you wish.
+Previously Buildbot implemented a global configuration for horizons.
+Now it is implemented as an utility Builder, and shall be configured via :bb:configurator:`JanitorConfigurator`
 
 
 .. bb:cfg:: caches

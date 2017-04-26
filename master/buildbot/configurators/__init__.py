@@ -15,6 +15,8 @@
 #
 from __future__ import absolute_import
 from __future__ import print_function
+from zope.interface import implementer
+from buildbot.interfaces import IConfigurator
 
 """ This module holds configurators, which helps setup schedulers, builders, steps,
     for a very specific purpose.
@@ -22,11 +24,15 @@ from __future__ import print_function
 """
 
 
+@implementer(IConfigurator)
 class ConfiguratorBase(object):
     """
         I provide base helper methods for configurators
     """
-    def __init__(self, config_dict):
+    def __init__(self):
+        pass
+
+    def configure(self, config_dict):
         self.config_dict = c = config_dict
         if 'schedulers' not in c:
             c['schedulers'] = []

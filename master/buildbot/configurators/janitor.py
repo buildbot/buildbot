@@ -57,10 +57,20 @@ class LogChunksJanitor(BuildStep):
 
 
 class JanitorConfigurator(ConfiguratorBase):
-    def __init__(self, config_dict, logHorizon=None, hour=0, **kwargs):
-        if logHorizon is None:
+    def __init__(self, logHorizon=None, hour=0, **kwargs):
+        ConfiguratorBase.__init__(self)
+        self.logHorizon = logHorizon
+        self.hour = hour
+        self.kwargs = kwargs
+
+    def configure(self, config_dict):
+        if self.logHorizon is None:
             return
-        ConfiguratorBase.__init__(self, config_dict)
+        logHorizon = self.logHorizon
+        hour = self.hour
+        kwargs = self.kwargs
+
+        ConfiguratorBase.configure(self, config_dict)
         nightly_kwargs = {}
 
         # we take the defaults of Nightly, except for hour

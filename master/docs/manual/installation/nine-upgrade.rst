@@ -206,7 +206,7 @@ This makes more sense from a user perspective but makes it harder to predict the
 Please be careful to provision enough disk space for your database.
 
 The old ``c['logHorizon']`` way of configuring is not supported anymore.
-See :bb:cfg:`JanitorConfigurator` to learn how to configure.
+See :bb:configurator:`JanitorConfigurator` to learn how to configure.
 A new ``__Janitor`` builder will be created to help keep an eye on the cleanup activities.
 
 More Information

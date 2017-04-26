@@ -25,6 +25,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.configurators import janitor
+from buildbot.configurators.janitor import JANITOR_NAME
 from buildbot.configurators.janitor import JanitorConfigurator
 from buildbot.configurators.janitor import LogChunksJanitor
 from buildbot.process.results import SUCCESS
@@ -48,18 +49,18 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
 
     def test_basic(self):
         self.setupConfigurator(logHorizon=timedelta(weeks=1))
-        self.expectWorker("__Janitor", LocalWorker)
-        self.expectScheduler("__Janitor", Nightly)
-        self.expectBuilderHasSteps("__Janitor", [LogChunksJanitor])
+        self.expectWorker(JANITOR_NAME, LocalWorker)
+        self.expectScheduler(JANITOR_NAME, Nightly)
+        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         self.expectNoConfigError()
 
     def test_worker_vs_slaves(self):
         """The base configurator uses the slaves config if it exists already"""
         self.config_dict['slaves'] = []
         self.setupConfigurator(logHorizon=timedelta(weeks=1))
-        self.expectWorker("__Janitor", LocalWorker)
-        self.expectScheduler("__Janitor", Nightly)
-        self.expectBuilderHasSteps("__Janitor", [LogChunksJanitor])
+        self.expectWorker(JANITOR_NAME, LocalWorker)
+        self.expectScheduler(JANITOR_NAME, Nightly)
+        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern=r"c\['slaves'\] key is deprecated, "

@@ -167,6 +167,8 @@ Config
 configs
 Configs
 configurability
+configurator
+configurators
 contrib
 Contrib
 coolproject

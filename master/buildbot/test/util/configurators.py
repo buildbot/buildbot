@@ -31,7 +31,8 @@ class ConfiguratorMixin(object):
         self.config_dict = {}
 
     def setupConfigurator(self, *args, **kwargs):
-        self.configurator = self.ConfiguratorClass(self.config_dict, *args, **kwargs)
+        self.configurator = self.ConfiguratorClass(*args, **kwargs)
+        return self.configurator.configure(self.config_dict)
 
     def expectWorker(self, name, klass):
         if 'workers' in self.config_dict and 'slaves' in self.config_dict:

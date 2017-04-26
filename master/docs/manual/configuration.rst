@@ -27,3 +27,4 @@ The next section, :doc:`customization`, describes this approach, with frequent r
     cfg-wwwhooks
     cfg-services
     cfg-dbconfig
+    cfg-configurators
