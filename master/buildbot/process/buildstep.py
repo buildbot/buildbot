@@ -49,6 +49,7 @@ from buildbot.process import remotecommand
 from buildbot.process import results
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
+from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -293,6 +294,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         'flunkOnFailure',
         'flunkOnWarnings',
         'haltOnFailure',
+        'updateBuildSummaryPolicy',
         'hideStepIf',
         'locks',
         'logEncoding',
@@ -308,6 +310,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
     descriptionSuffix = None  # extra information to append to suffix
+    updateBuildSummaryPolicy = None
     locks = []
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
@@ -346,6 +349,21 @@ class BuildStep(results.ResultComputingConfigMixin,
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
+        if self.updateBuildSummaryPolicy is None:  # compute default value for updateBuildSummaryPolicy
+            self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
+            if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
+                self.updateBuildSummaryPolicy.append(FAILURE)
+            if self.warnOnWarnings or self.flunkOnWarnings:
+                self.updateBuildSummaryPolicy.append(WARNINGS)
+            self.updateBuildSummaryPolicy
+        if self.updateBuildSummaryPolicy is False:
+            self.updateBuildSummaryPolicy = []
+        if self.updateBuildSummaryPolicy is True:
+            self.updateBuildSummaryPolicy = ALL_RESULTS
+        if not isinstance(self.updateBuildSummaryPolicy, list):
+            config.error("BuildStep updateBuildSummaryPolicy must be "
+                         "a list of result ids or boolean but it is %r" %
+                         (self.updateBuildSummaryPolicy,))
         self._acquiringLock = None
         self.stopped = False
         self.master = None
@@ -444,6 +462,13 @@ class BuildStep(results.ResultComputingConfigMixin,
             stepsumm += u' (%s)' % Results[self.results]
 
         return {u'step': stepsumm}
+
+    @defer.inlineCallbacks
+    def getBuildResultSummary(self):
+        summary = yield self.getResultSummary()
+        if self.results in self.updateBuildSummaryPolicy and u'build' not in summary and u'step' in summary:
+            summary[u'build'] = summary[u'step']
+        defer.returnValue(summary)
 
     @debounce.method(wait=1)
     @defer.inlineCallbacks
