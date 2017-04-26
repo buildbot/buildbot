@@ -344,4 +344,3 @@ class MailNotifier(NotifierBase):
     def isWorkerMessageNeeded(self, worker):
         return super(MailNotifier, self).isWorkerMessageNeeded(worker) \
                and worker['notify']
-

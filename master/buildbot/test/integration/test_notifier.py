@@ -57,7 +57,6 @@ class NotifierMaster(RunMasterBase):
 
     @defer.inlineCallbacks
     def doTest(self, what):
-
         change = dict(branch="master",
                       files=["foo.c"],
                       author="author@foo.com",
@@ -76,7 +75,6 @@ class NotifierMaster(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(params, {'title': "Buildbot success in Buildbot on {}".format(what),
                                   'message': u"This is a message."})
-
 
     def assertEncodedIn(self, text, mail):
         # python 2.6 default transfer in base64 for utf-8
@@ -112,6 +110,7 @@ class NotifierMaster(RunMasterBase):
         self.assertIn("From: bot@foo.com", mail)
         self.assertEqual(recipients, ['admin@worker.org'])
         self.assertIn("Subject: Buildbot worker local1 missing", mail)
+        self.assertIn("disconnected at long time ago", mail)
         self.assertEncodedIn("worker named local1 went away", mail)
         params = yield self.notification
         self.assertEqual(params, {'title': "Buildbot worker local1 missing",

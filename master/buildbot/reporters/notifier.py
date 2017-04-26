@@ -89,8 +89,8 @@ class NotifierBase(service.BuildbotService):
                 "not both.")
 
         if not(watchedWorkers == 'all' or watchedWorkers is None or
-               isinstance(watchedWorkers, (list,tuple,set))):
-                   config.error("watchedWorkers must be 'all', None, or list of worker names")
+               isinstance(watchedWorkers, (list, tuple, set))):
+                    config.error("watchedWorkers must be 'all', None, or list of worker names")
 
     def reconfigService(self, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None,
