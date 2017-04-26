@@ -43,9 +43,9 @@ class NotifierMaster(RunMasterBase):
         self.mailDeferred = defer.Deferred()
 
         # patch MailNotifier.sendmail to know when the mail has been sent
-        def sendmail(_, mail, recipients):
-            self.mailDeferred.callback((mail, recipients))
-        self.patch(MailNotifier, "sendmail", sendmail)
+        def sendMail(_, mail, recipients):
+            self.mailDeferred.callback((mail.as_string(), recipients))
+        self.patch(MailNotifier, "sendMail", sendMail)
 
         self.notification = defer.Deferred()
 

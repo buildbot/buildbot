@@ -57,7 +57,9 @@ class PushoverNotifier(NotifierBase):
                     watchedWorkers=None, messageFormatterMissingWorker=None):
 
         super(PushoverNotifier, self).checkConfig(mode, tags, builders,
-                                                  subject, name, schedulers,
+                                                  buildSetSummary, messageFormatter,
+                                                  subject, False, False,
+                                                  name, schedulers,
                                                   branches, watchedWorkers)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
@@ -83,10 +85,8 @@ class PushoverNotifier(NotifierBase):
             messageFormatterMissingWorker = MessageFormatterMissingWorker(
                 template_filename='missing_notification.txt')
         super(PushoverNotifier, self).reconfigService(mode, tags, builders,
-                                                      buildSetSummary,
-                                                      messageFormatter,
-                                                      subject,
-                                                      False, False,
+                                                      buildSetSummary, messageFormatter,
+                                                      subject, False, False,
                                                       name, schedulers, branches,
                                                       watchedWorkers, messageFormatterMissingWorker)
         self.user_key = user_key

@@ -26,21 +26,15 @@ from mock import Mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot import config
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
 from buildbot.reporters import mail
-from buildbot.reporters import utils
 from buildbot.reporters.mail import ESMTPSenderFactory
 from buildbot.reporters.mail import MailNotifier
-from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import ssl
 
@@ -48,7 +42,7 @@ py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 
-class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
+class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
 
     if not ESMTPSenderFactory:
         skip = ("twisted-mail unavailable, "
@@ -57,60 +51,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
-
-    @defer.inlineCallbacks
-    def setupBuildResults(self, results, wantPreviousBuild=False):
-        # this testsuite always goes through setupBuildResults so that
-        # the data is sure to be the real data schema known coming from data
-        # api
-
-        self.db = self.master.db
-        self.db.insertTestData([
-            fakedb.Master(id=92),
-            fakedb.Worker(id=13, name='wrk'),
-            fakedb.Buildset(id=98, results=results, reason="testReason1"),
-            fakedb.Builder(id=80, name='Builder1'),
-            fakedb.BuildRequest(id=11, buildsetid=98, builderid=80),
-            fakedb.Build(id=20, number=0, builderid=80, buildrequestid=11, workerid=13,
-                         masterid=92, results=results),
-            fakedb.Step(id=50, buildid=20, number=5, name='make'),
-            fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
-            fakedb.SourceStamp(id=234, patchid=99),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283', author='me@foo',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=234),
-            fakedb.Log(id=60, stepid=50, name='stdio', slug='stdio', type='s',
-                       num_lines=7),
-            fakedb.LogChunk(logid=60, first_line=0, last_line=1, compressed=0,
-                            content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
-                         patch_author='him@foo', patch_comment='foo', subdir='/foo',
-                         patchlevel=3),
-        ])
-        for _id in (20,):
-            self.db.insertTestData([
-                fakedb.BuildProperty(
-                    buildid=_id, name="workername", value="wrk"),
-                fakedb.BuildProperty(
-                    buildid=_id, name="reason", value="because"),
-                fakedb.BuildProperty(
-                    buildid=_id, name="scheduler", value="checkin"),
-                fakedb.BuildProperty(
-                    buildid=_id, name="branch", value="master"),
-            ])
-        res = yield utils.getDetailsForBuildset(self.master, 98, wantProperties=True,
-                                                wantPreviousBuild=wantPreviousBuild)
-        builds = res['builds']
-        buildset = res['buildset']
-
-        @defer.inlineCallbacks
-        def getChangesForBuild(buildid):
-            assert buildid == 20
-            ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
-
-        self.master.db.changes.getChangesForBuild = getChangesForBuild
-        defer.returnValue((buildset, builds))
 
     @defer.inlineCallbacks
     def setupMailNotifier(self, *args, **kwargs):
@@ -236,226 +176,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         except UnicodeEncodeError:
             self.fail('Failed to call as_string() on email message.')
 
-    def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
-        self.assertRaises(config.ConfigErrors,
-                          MailNotifier, 'from@example.org',
-                          tags=['fast', 'slow'], builders=['a', 'b'])
-
-    def test_init_warns_notifier_mode_all_in_iter(self):
-        self.assertRaisesConfigError(
-            "mode 'all' is not valid in an iterator and must be passed in as a separate string",
-            lambda: MailNotifier('from@example.org', mode=['all']))
-
-    @defer.inlineCallbacks
-    def test_buildsetComplete_sends_email(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          buildSetSummary=True,
-                                          mode=(
-                                              "failing", "passing", "warnings"),
-                                          builders=["Builder1", "Builder2"])
-
-        mn.buildMessage = Mock()
-        yield mn.buildsetComplete('buildset.98.complete',
-                                  dict(bsid=98))
-
-        mn.buildMessage.assert_called_with(
-            "whole buildset",
-            builds, SUCCESS)
-        self.assertEqual(mn.buildMessage.call_count, 1)
-
-    @defer.inlineCallbacks
-    def test_buildsetComplete_doesnt_send_email(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        # disable passing...
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          buildSetSummary=True,
-                                          mode=("failing", "warnings"),
-                                          builders=["Builder1", "Builder2"])
-
-        mn.buildMessage = Mock()
-        yield mn.buildsetComplete('buildset.98.complete',
-                                  dict(bsid=98))
-
-        self.assertFalse(mn.buildMessage.called)
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_ignores_unspecified_tags(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        build['builder']['tags'] = ['slow']
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          tags=["fast"])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_tags(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        build['builder']['tags'] = ['fast']
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          tags=["fast"])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_schedulers_sends_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          schedulers=['checkin'])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_schedulers_doesnt_send_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          schedulers=['some-random-scheduler'])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_branches_sends_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          branches=['master'])
-        self.assertTrue(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def test_isMailNeeded_branches_doesnt_send_mail(self):
-        _, builds = yield self.setupBuildResults(SUCCESS)
-
-        build = builds[0]
-        # force tags
-        mn = yield self.setupMailNotifier('from@example.org',
-                                          branches=['some-random-branch'])
-        self.assertFalse(mn.isMessageNeeded(build))
-
-    @defer.inlineCallbacks
-    def run_simple_test_sends_email_for_mode(self, mode, result, shouldSend=True):
-        _, builds = yield self.setupBuildResults(result)
-
-        mn = yield self.setupMailNotifier('from@example.org', mode=mode)
-
-        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
-
-    def run_simple_test_ignores_email_for_mode(self, mode, result):
-        return self.run_simple_test_sends_email_for_mode(mode, result, False)
-
-    def test_isMailNeeded_mode_all_for_success(self):
-        return self.run_simple_test_sends_email_for_mode("all", SUCCESS)
-
-    def test_isMailNeeded_mode_all_for_failure(self):
-        return self.run_simple_test_sends_email_for_mode("all", FAILURE)
-
-    def test_isMailNeeded_mode_all_for_warnings(self):
-        return self.run_simple_test_sends_email_for_mode("all", WARNINGS)
-
-    def test_isMailNeeded_mode_all_for_exception(self):
-        return self.run_simple_test_sends_email_for_mode("all", EXCEPTION)
-
-    def test_isMailNeeded_mode_all_for_cancelled(self):
-        return self.run_simple_test_sends_email_for_mode("all", CANCELLED)
-
-    def test_isMailNeeded_mode_failing_for_success(self):
-        return self.run_simple_test_ignores_email_for_mode("failing", SUCCESS)
-
-    def test_isMailNeeded_mode_failing_for_failure(self):
-        return self.run_simple_test_sends_email_for_mode("failing", FAILURE)
-
-    def test_isMailNeeded_mode_failing_for_warnings(self):
-        return self.run_simple_test_ignores_email_for_mode("failing", WARNINGS)
-
-    def test_isMailNeeded_mode_failing_for_exception(self):
-        return self.run_simple_test_ignores_email_for_mode("failing", EXCEPTION)
-
-    def test_isMailNeeded_mode_exception_for_success(self):
-        return self.run_simple_test_ignores_email_for_mode("exception", SUCCESS)
-
-    def test_isMailNeeded_mode_exception_for_failure(self):
-        return self.run_simple_test_ignores_email_for_mode("exception", FAILURE)
-
-    def test_isMailNeeded_mode_exception_for_warnings(self):
-        return self.run_simple_test_ignores_email_for_mode("exception", WARNINGS)
-
-    def test_isMailNeeded_mode_exception_for_exception(self):
-        return self.run_simple_test_sends_email_for_mode("exception", EXCEPTION)
-
-    def test_isMailNeeded_mode_warnings_for_success(self):
-        return self.run_simple_test_ignores_email_for_mode("warnings", SUCCESS)
-
-    def test_isMailNeeded_mode_warnings_for_failure(self):
-        return self.run_simple_test_sends_email_for_mode("warnings", FAILURE)
-
-    def test_isMailNeeded_mode_warnings_for_warnings(self):
-        return self.run_simple_test_sends_email_for_mode("warnings", WARNINGS)
-
-    def test_isMailNeeded_mode_warnings_for_exception(self):
-        return self.run_simple_test_ignores_email_for_mode("warnings", EXCEPTION)
-
-    def test_isMailNeeded_mode_passing_for_success(self):
-        return self.run_simple_test_sends_email_for_mode("passing", SUCCESS)
-
-    def test_isMailNeeded_mode_passing_for_failure(self):
-        return self.run_simple_test_ignores_email_for_mode("passing", FAILURE)
-
-    def test_isMailNeeded_mode_passing_for_warnings(self):
-        return self.run_simple_test_ignores_email_for_mode("passing", WARNINGS)
-
-    def test_isMailNeeded_mode_passing_for_exception(self):
-        return self.run_simple_test_ignores_email_for_mode("passing", EXCEPTION)
-
-    @defer.inlineCallbacks
-    def run_sends_email_for_problems(self, mode, results1, results2, shouldSend=True):
-        _, builds = yield self.setupBuildResults(results2)
-
-        mn = yield self.setupMailNotifier('from@example.org', mode=mode)
-
-        build = builds[0]
-        if results1 is not None:
-            build['prev_build'] = copy.deepcopy(builds[0])
-            build['prev_build']['results'] = results1
-        else:
-            build['prev_build'] = None
-        self.assertEqual(mn.isMessageNeeded(builds[0]), shouldSend)
-
-    def test_isMailNeeded_mode_problem_sends_on_problem(self):
-        return self.run_sends_email_for_problems("problem", SUCCESS, FAILURE, True)
-
-    def test_isMailNeeded_mode_problem_ignores_successful_build(self):
-        return self.run_sends_email_for_problems("problem", SUCCESS, SUCCESS, False)
-
-    def test_isMailNeeded_mode_problem_ignores_two_failed_builds_in_sequence(self):
-        return self.run_sends_email_for_problems("problem", FAILURE, FAILURE, False)
-
-    def test_isMailNeeded_mode_change_sends_on_change(self):
-        return self.run_sends_email_for_problems("change", FAILURE, SUCCESS, True)
-
-    def test_isMailNeeded_mode_change_sends_on_failure(self):
-        return self.run_sends_email_for_problems("change", SUCCESS, FAILURE, True)
-
-    def test_isMailNeeded_mode_change_ignores_first_build(self):
-        return self.run_sends_email_for_problems("change", None, FAILURE, False)
-
-    def test_isMailNeeded_mode_change_ignores_first_build2(self):
-        return self.run_sends_email_for_problems("change", None, SUCCESS, False)
-
-    def test_isMailNeeded_mode_change_ignores_same_result_in_sequence(self):
-        return self.run_sends_email_for_problems("change", SUCCESS, SUCCESS, False)
-
-    def test_isMailNeeded_mode_change_ignores_same_result_in_sequence2(self):
-        return self.run_sends_email_for_problems("change", FAILURE, FAILURE, False)
-
     @defer.inlineCallbacks
     def setupBuildMessage(self, **mnKwargs):
 
@@ -481,7 +201,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         defer.returnValue((mn, builds))
 
     @defer.inlineCallbacks
-    def test_buildMessage_nominal(self):
+    def test_buildMessage(self):
         mn, builds = yield self.setupBuildMessage(mode=("change",))
 
         build = builds[0]
@@ -493,44 +213,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
         mn.processRecipients.assert_called_with('<recipients>', '<email>')
         mn.sendMail.assert_called_with('<email>', '<processedrecipients>')
         self.assertEqual(mn.createEmail.call_count, 1)
-
-    @defer.inlineCallbacks
-    def test_buildMessage_addLogs(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addLogs=True)
-        self.assertEqual(mn.createEmail.call_count, 1)
-        # make sure the logs are send
-        self.assertEqual(mn.createEmail.call_args[0][6][0]['logid'], 60)
-        # make sure the log has content
-        self.assertIn(
-            "log with", mn.createEmail.call_args[0][6][0]['content']['content'])
-
-    @defer.inlineCallbacks
-    def test_buildMessage_addPatch(self):
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
-        self.assertEqual(mn.createEmail.call_count, 1)
-        # make sure the patch are sent
-        self.assertEqual(mn.createEmail.call_args[0][5],
-                         [{'author': u'him@foo',
-                           'body': b'hello, world',
-                           'comment': u'foo',
-                           'level': 3,
-                           'patchid': 99,
-                           'subdir': u'/foo'}])
-
-    @defer.inlineCallbacks
-    def test_buildMessage_addPatchNoPatch(self):
-        SourceStamp = fakedb.SourceStamp
-
-        class NoPatchSourcestamp(SourceStamp):
-
-            def __init__(self, id, patchid):
-                SourceStamp.__init__(self, id=id)
-        self.patch(fakedb, 'SourceStamp', NoPatchSourcestamp)
-        mn, builds = yield self.setupBuildMessage(mode=("change",), addPatch=True)
-        self.assertEqual(mn.createEmail.call_count, 1)
-        # make sure no patches are sent
-        self.assertEqual(mn.createEmail.call_args[0][5],
-                         [])
 
     @defer.inlineCallbacks
     def do_test_sendToInterestedUsers(self, lookup=None, extraRecipients=[],
@@ -599,27 +281,6 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase):
             self.assertRaises(
                 ConfigErrors, MailNotifier,
                 'foo@example.com', extraRecipients=[invalid])
-
-    @defer.inlineCallbacks
-    def test_workerMissingSendEmail(self):
-
-        mn = yield self.setupMailNotifier('from@example.org')
-
-        mn.sendMail = Mock()
-        yield mn.workerMissing('worker.98.complete',
-                               dict(name='myworker',
-                                    notify=["workeradmin@example.org"],
-                                    workerinfo=dict(admin="myadmin"),
-                                    last_connection="yesterday"))
-
-        mail = mn.sendMail.call_args[0][0]
-        recipients = mn.sendMail.call_args[0][1]
-        self.assertEqual(recipients, ['workeradmin@example.org'])
-        # On Python 3, the body_encoding for 'utf8' is base64,
-        # so we need to decode the payload.
-        text = mail.get_payload(decode=True)
-        self.assertIn(
-            b"has noticed that the worker named myworker went away", text)
 
     @defer.inlineCallbacks
     def do_test_sendMessage(self, **mnKwargs):

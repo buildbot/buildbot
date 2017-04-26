@@ -55,8 +55,11 @@ class NotifierBase(service.BuildbotService):
 
     def checkConfig(self, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None,
+                    buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    name=None, schedulers=None, branches=None, watchedWorkers=None):
+                    addLogs=False, addPatch=False,
+                    name=None, schedulers=None, branches=None,
+                    watchedWorkers=None, messageFormatterMissingWorker=None):
 
         for m in self.computeShortcutModes(mode):
             if m not in self.possible_modes:
@@ -96,7 +99,7 @@ class NotifierBase(service.BuildbotService):
                         tags=None, builders=None,
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                        addLogs=False, addPatch=True,
+                        addLogs=False, addPatch=False,
                         name=None, schedulers=None, branches=None,
                         watchedWorkers=None, messageFormatterMissingWorker=None):
 

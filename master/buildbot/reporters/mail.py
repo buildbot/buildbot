@@ -101,8 +101,10 @@ class MailNotifier(NotifierBase):
                          "send mail")
 
         super(MailNotifier, self).checkConfig(mode, tags, builders,
-                                              subject, name, schedulers,
-                                              branches, watchedWorkers)
+                                              buildSetSummary, messageFormatter,
+                                              subject, addLogs, addPatch,
+                                              name, schedulers, branches,
+                                              watchedWorkers, messageFormatterMissingWorker)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -315,7 +317,10 @@ class MailNotifier(NotifierBase):
 
         return list(to_recipients | cc_recipients)
 
-    def sendmail(self, s, recipients):
+    def sendMail(self, m, recipients):
+        s = m.as_string()
+        twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
+
         result = defer.Deferred()
 
         useAuth = self.smtpUser and self.smtpPassword
@@ -334,12 +339,6 @@ class MailNotifier(NotifierBase):
             reactor.connectTCP(self.relayhost, self.smtpPort, sender_factory)
 
         return result
-
-    def sendMail(self, m, recipients):
-        s = m.as_string()
-        twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
-
-        return self.sendmail(s, recipients)
 
     def isWorkerMessageNeeded(self, worker):
         return super(MailNotifier, self).isWorkerMessageNeeded(worker) \
