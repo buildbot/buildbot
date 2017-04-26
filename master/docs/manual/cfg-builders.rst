@@ -79,6 +79,8 @@ Other optional keys may be set on each ``BuilderConfig``:
     The function should return ``True`` if the combination is acceptable, or ``False`` otherwise.
     This function can optionally return a Deferred which should fire with the same results.
 
+    See :ref:`canStartBuild-Functions` for a concrete example.
+
 ``locks``
     This argument specifies a list of locks that apply to this builder; see :ref:`Interlocks`.
 

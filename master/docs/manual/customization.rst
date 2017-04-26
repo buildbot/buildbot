@@ -207,6 +207,37 @@ The ``nextBuild`` function is passed as parameter to :class:`BuilderConfig`::
 
     ... BuilderConfig(..., nextBuild=nextBuild, ...) ...
 
+.. _canStartBuild-Functions:
+
+``canStartBuild`` Functions
+---------------------------
+
+Sometimes, you cannot know in advance what workers to assign to a :class:`BuilderConfig`.
+For example, you might need to check for the existence of a file on a worker before running a build on it.
+It is possible to do that by setting the ``canStartBuild`` callback.
+
+Here is an example that checks if there is a ``vm`` property set for the build request.
+If it is set, it checks if a file named after it exists in the ``/opt/vm`` folder.
+If the file does not exist on the given worker, refuse to run the build to force the master to select another worker.
+
+.. code-block:: python
+
+   @defer.inlineCallbacks
+   def canStartBuild(builder, wfb, request):
+
+       vm = request.properties.get('vm', builder.config.properties.get('vm'))
+       if vm:
+           args = {'file': os.path.join('/opt/vm', vm)}
+           cmd = RemoteCommand('stat', args, stdioLogName=None)
+           cmd.worker = wfb.worker
+           res = yield cmd.run(None, wfb.worker.conn, builder.name)
+           if res.rc != 0:
+               defer.returnValue(False)
+
+       defer.returnValue(True)
+
+You can extend this example using any remote command described in the :doc:`../developer/master-worker`.
+
 .. _Customizing-SVNPoller:
 
 Customizing SVNPoller
