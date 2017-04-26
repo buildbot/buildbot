@@ -105,6 +105,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # overall results, may downgrade after each step
         self.results = SUCCESS
         self.properties = properties.Properties()
+        self.nsteps = 0
+        self.doneSteps = []
 
     def setBuilder(self, builder):
         """
@@ -436,6 +438,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
             if self.useProgress:
                 step.setupProgress()
+        self.nsteps += len(steps)
         return steps
 
     def setupBuild(self):
@@ -518,7 +521,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         terminate = self.stepDone(results, step)  # interpret/merge results
         if terminate:
             self.terminate = True
-        return self.startNextStep()
+        self.doneSteps.append(step)
+        if len(self.doneSteps) == self.nsteps:
+            return self.allStepsDone()
+        if self.steps:
+            return self.startNextStep()
 
     def stepDone(self, results, step):
         """This method is called when the BuildStep completes. It is passed a

@@ -319,6 +319,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     rendered = False  # true if attributes are rendered
     _workdir = None
     _waitingForLocks = False
+    __mutex = defer.DeferredLock()
 
     def _run_finished_hook(self):
         return None  # override in tests
@@ -484,9 +485,11 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
+        self.__mutex.acquire()
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
+        self.__mutex.release()
         yield self.master.data.updates.startStep(self.stepid)
 
     @defer.inlineCallbacks
