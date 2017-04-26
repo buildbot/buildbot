@@ -88,7 +88,7 @@ class Console extends Controller
 
     onChange: (s) =>
         # if there is no data, no need to try and build something.
-        if @builds.length == 0 or @all_builders.length == 0 or @changes.length == 0 or
+        if @builds.length == 0 or @all_builders.length == 0 or not @changes.$resolved or
                 @buildsets.length == 0 or @buildrequests == 0
             return
         if not @onchange_debounce?
@@ -102,7 +102,7 @@ class Console extends Controller
 
         @sortBuildersByTags(@all_builders)
 
-        @changesBySSID = {}
+        @changesBySSID ?= {}
         for change in @changes
             @changesBySSID[change.sourcestamp.ssid] = change
             @populateChange(change)
@@ -268,23 +268,29 @@ class Console extends Controller
                 change = @changesBySSID[sourcestamp.ssid]
 
         if not change? and build.properties?.got_revision?
-            for codebase, revision of build.properties.got_revision[0]
-                change = @makeFakeChange(codebase, revision)
+            rev = build.properties.got_revision[0]
+            # got_revision can be per codebase or just the revision string
+            if typeof(rev) == "string"
+                change = @makeFakeChange("", rev, build.started_at)
+            else
+                for codebase, revision of rev
+                    change = @makeFakeChange(codebase, revision, build.started_at)
 
         if not change?
             change = @makeFakeChange("unknown codebase", "unknown revision")
 
         change.buildersById[build.builderid].builds.push(build)
 
-    makeFakeChange: (codebase, revision) =>
+    makeFakeChange: (codebase, revision, when_timestamp) =>
         change = @changesBySSID[revision]
         if not change?
             change =
                 codebase: codebase
                 revision: revision
                 changeid: revision
+                when_timestamp: when_timestamp
                 author: "unknown author for " + revision
-                comment: revision
+                comments: revision + "\n\nFake comment for revision: No change for this revision, please setup a changesource in Buildbot"
             @changesBySSID[revision] = change
             @populateChange(change)
         return change
@@ -292,15 +298,15 @@ class Console extends Controller
     # Open all change row information
     ###
     openAll: ->
-        for change in @changes
-            @_infoIsExpanded[change.changeid] = true
+        for change in @filtered_changes
+            change.show_details = true
 
     ###
     # Close all change row information
     ###
     closeAll: ->
-        for change in @changes
-            @_infoIsExpanded[change.changeid] = false
+        for change in @filtered_changes
+            change.show_details = false
 
     ###
     # Calculate row header (aka first column) width
@@ -362,6 +368,6 @@ class Console extends Controller
     #
     ###
     toggleInfo: (change) ->
-        @_infoIsExpanded[change.changeid] = !@_infoIsExpanded[change.changeid]
+        change.show_details = !change.show_details
     infoIsExpanded: (change) ->
-        return @_infoIsExpanded[change.changeid]
+        return change.show_details

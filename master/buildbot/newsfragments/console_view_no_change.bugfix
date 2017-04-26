@@ -1,0 +1,1 @@
+Fix issue with :ref:`ConsoleView` when no change source is configured but still builds have ``got_revision`` property
