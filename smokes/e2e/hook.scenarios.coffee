@@ -20,7 +20,8 @@ describe 'change hook', () ->
                     comments:'sd',
                     project:'pyflakes'
                     repository:'git://github.com/buildbot/pyflakes.git'
-                    author:'foo'
+                    author:'foo <foo@bar.com>'
+                    revision: 'HEAD'
                     branch:'master'
                     }, done)
             builder.waitNextBuildFinished(lastbuild)

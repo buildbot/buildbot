@@ -23,29 +23,7 @@
                 span(uib-tooltip='{{ tag.tag }}' ng-style='{width: tag.colspan*50}') {{tag.tag}}
         tr(ng-repeat="change in c.filtered_changes | orderBy: ['-changeid'] track by change.changeid")
             td
-                .change-avatar(uib-tooltip='{{ change.author }}')
-                    a(ng-if='change.author_email'
-                      ng-href='mailto: {{change.author_email}}'
-                      target='_blank')
-                      img(ng-src="avatar?email={{change.author_email}}")
-                    img(ng-if='!change.author_email' ng-src="avatar?email={{change.author_email}}" de)
-                span(ng-click='c.toggleInfo(change)' uib-tooltip='{{ change.comments }}' uib-tooltip-placement='top') {{ change.subject }}&nbsp;
-                    i.fa.fa-chevron-circle-right(ng-class="{'fa-rotate-90': c.infoIsExpanded(change)}")
-                div(ng-show='c.infoIsExpanded(change)')
-                    // Comment
-                    .info
-                        i.fa.fa-comment-o
-                        pre {{ change.comments }}
-                    // Link to the change
-                    .info
-                        i.fa.fa-link
-                        pre
-                            a(ng-href='{{ change.revlink }}' target='_blank') {{ change.revision | limitTo: 10 }}
-                    // Changed files
-                    .info
-                        i.fa.fa-file-o
-                        p(ng-repeat='file in change.files')
-                            | {{ file }}
+                changedetails(change="change")
             td.column(ng-repeat="builder in change.builders"
                       title="{{builder.name}}")
                 a(ng-repeat="build in builder.builds | orderBy: ['number']")
