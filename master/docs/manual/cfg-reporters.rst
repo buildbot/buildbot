@@ -451,7 +451,7 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
 The following parameters are accepted by this class:
 
 ``user_key``
-    The user key from the Pushover website. It is used to identify the notification receipent.
+    The user key from the Pushover website. It is used to identify the notification recipient.
 
 ``api_token``
     API token for a custom application from the Pushover website.
