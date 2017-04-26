@@ -274,9 +274,6 @@ class BuildRequest(object):
 
         for c, selfSS in iteritems(selfSources):
             otherSS = otherSources[c]
-            if selfSS['revision'] != otherSS['revision']:
-                defer.returnValue(False)
-                return
             if selfSS['repository'] != otherSS['repository']:
                 defer.returnValue(False)
                 return
@@ -288,6 +285,22 @@ class BuildRequest(object):
                 return
             # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
+                defer.returnValue(False)
+                return
+            # get changes & compare
+            selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
+            otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
+            # if both have changes, proceed, else fail - if no changes check revision instead
+            if selfChanges and otherChanges:
+                continue
+            elif selfChanges and not otherChanges:
+                defer.returnValue(False)
+                return
+            elif not selfChanges and otherChanges:
+                defer.returnValue(False)
+                return
+            # else check revisions
+            elif selfSS['revision'] != otherSS['revision']:
                 defer.returnValue(False)
                 return
 
