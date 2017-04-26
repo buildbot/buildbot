@@ -2201,6 +2201,11 @@ class FakeLogsComponent(FakeDBComponent):
     def compressLog(self, logid, force=False):
         return defer.succeed(None)
 
+    def deleteOldLogChunks(self, older_than_timestamp):
+        # not implemented
+        self._deleted = older_than_timestamp
+        return defer.succeed(1)
+
 
 class FakeUsersComponent(FakeDBComponent):
 

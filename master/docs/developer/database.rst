@@ -550,6 +550,16 @@ logs
         It should only be called for finished logs.
         This method may take some time to complete.
 
+    .. py:method:: deleteOldLogChunks(older_than_timestamp)
+
+        :param integer older_than_timestamp: the logs whose step's ``started_at`` is older than ``older_than_timestamp`` will be deleted.
+        :returns: Deferred
+
+        Delete old logchunks (helper for the ``logHorizon`` policy).
+        Old logs have their logchunks deleted from the database, but they keep their ``num_lines`` metadata.
+        They have their types changed to 'd', so that the UI can display something meaningful.
+
+
 buildsets
 ~~~~~~~~~
 
