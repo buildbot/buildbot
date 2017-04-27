@@ -160,7 +160,7 @@ And then press the ``Add Webhook`` button.
 
    Even though tag and release does not associate with real change it contains a change set. This change set has branch and revision properties with tag name as value.
 
-   These values can be utilized in buildsteps using interpolations, util.Interpolate("%(prop:branch)s") and util.Interpolate("%(prop:revision)s").
+   These values can be utilized in buildsteps using util.Property("branch") and util.Property("revision").
 
 .. warning::
 

@@ -177,6 +177,8 @@ class GitHubEventHandler(object):
             branch = payload['ref']
         elif category == 'release':
             branch = payload['release']['tag_name']
+        else:
+            return []
 
         log.debug('Processing {0},{1}'.format(category, branch))
         changes = []
