@@ -408,6 +408,8 @@ Kerberos
 keystoneauth
 KiB
 kibibytes
+kube
+kubernetes
 kwargs
 langage
 latin
