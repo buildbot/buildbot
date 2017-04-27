@@ -371,3 +371,47 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ma
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
 .. _requests authentication plugin: http://docs.python-requests.org/en/master/user/authentication/
+
+Kubernetes latent worker
+========================
+
+Kubernetes_ is an open-source system for automating deployment, scaling, and management of containerized applications.
+
+Buildbot supports using Kubernetes_ to host your latent workers.
+
+.. py:class:: buildbot.worker.kubernetes.KubeLatentWorker
+.. py:class:: buildbot.plugins.worker.KubeLatentWorker
+
+The :class:`KubeLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds
+Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
+
+.. _Kubernetes: https://kubernetes.io/
+
+In addition to the arguments available for any :ref:`Latent-Workers`, :class:`KubeLatentWorker` will accept the following extra ones:
+
+``password``
+    (optional)
+    The worker password part of the :ref:`Latent-Workers` API.
+    If the password is ``None``, then it will be automatically generated from random number.
+
+``image``
+    (optional, default to ``buildbot/buildbot-worker``)
+    Docker image. Default to the `official buildbot image`.
+
+``namespace``
+    (optional)
+    This is the name of the namespace. Default to the current namespace
+
+``masterFQDN``
+    (optional, default to ``None``)
+    Address of the master the worker should connect to. Put the service master service name if you want to place a load-balancer between the workers and the masters.
+    The default behaviour is to compute address IP of the master. This option works out-of-the box inside kubernetes but don't leverage the load-balancing through service.
+    You can pass any callable, such as ``KubeLatentWorker.get_fqdn`` that will set ``masterFQDN=socket.getfqdn()``.
+
+``kube_extra_config``
+    (optional)
+    Specify patch to the job kube spec
+
+
+.. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
