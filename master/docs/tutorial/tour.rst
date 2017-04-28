@@ -259,7 +259,7 @@ To use this you will need to install an additional package or two to your virtua
   cd
   cd tmp/buildbot
   source sandbox/bin/activate
-  easy_install pycrypto
+  easy_install cryptography
   easy_install pyasn1
 
 In your master.cfg find::
