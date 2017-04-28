@@ -1,2 +1,2 @@
-buildbot==0.8.14
+buildbot[bundle]
 psycopg2cffi-compat
