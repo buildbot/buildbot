@@ -446,9 +446,10 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
     c['services'].append(pn)
 
 
-``PushoverNotifier`` supports ``messageFormatter`` parameter, which allows to customize the notification text. Contrary to the mail notifier, HTML is not supported in its template.
+This notifier supports parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` from the mail notifier. See above for their explanation.
+However, ``watchedWorkers`` defaults to *None*.
 
-The following parameters are accepted by this class:
+The following additional parameters are accepted by this class:
 
 ``user_key``
     The user key from the Pushover website. It is used to identify the notification recipient.
@@ -456,96 +457,37 @@ The following parameters are accepted by this class:
 ``api_token``
     API token for a custom application from the Pushover website.
 
-``subject``
-    (string).
-    A string to be used as the subject line of the message.
-    ``%(builder)s`` will be replaced with the name of the builder which provoked the message.
-
-``mode``
-    Mode is a list of strings; however there are two strings which can be used as shortcuts instead of the full lists.
-    The possible shortcuts are:
-
-    ``all``
-        Always send mail about builds.
-        Equivalent to (``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``).
-
-    ``warnings``
-        Equivalent to (``warnings``, ``failing``).
-
-    (list of strings).
-    A combination of:
-
-    ``cancelled``
-        Send mail about builds which were cancelled.
-
-    ``change``
-        Send mail about builds which change status.
-
-    ``failing``
-        Send mail about builds which fail.
-
-    ``passing``
-        Send mail about builds which succeed.
-
-    ``problem``
-        Send mail about a build which failed when the previous build has passed.
-
-    ``warnings``
-        Send mail about builds which generate warnings.
-
-    ``exception``
-        Send mail about builds which generate exceptions.
-
-    Defaults to (``failing``, ``passing``, ``warnings``).
-
-``builders``
-    (list of strings).
-    A list of builder names for which mail should be sent.
-    Defaults to ``None`` (send mail for all builds).
-    Use either builders or tags, but not both.
-
-``tags``
-    (list of strings).
-    A list of tag names to serve status information for.
-    Defaults to ``None`` (all tags).
-    Use either builders or tags, but not both.
-
-``schedulers``
-    (list of strings).
-    A list of scheduler names to serve status information for.
-    Defaults to ``None`` (all schedulers).
-
-``branches``
-    (list of strings).
-    A list of branch names to serve status information for.
-    Defaults to ``None`` (all branches).
-
-``buildSetSummary``
-    (boolean).
-    If ``True``, send a single summary email consisting of the concatenation of all build completion messages rather than a completion message for each build.
-    Defaults to ``False``.
-
-``messageFormatter``
-    This is an optional instance of the ``reporters.MessageFormatter`` class that can be used to generate a custom mail message.
-    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
-    Templates can either be given inline (as string), or read from the filesystem.
-
 ``priorities``
     Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
 
 ``otherParams``
     Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
 
-``watchedWorkers``
-    This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
-    The value of ``watchedWorkers`` can also be set to *all* or ``None`` (default).
-    
-``messageFormatterMissingWorker``
-    This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
-    This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
-    Templates can either be given inline (as string), or read from the filesystem.
-
 .. _Pushover: https://pushover.net/
+
+
+Pushjet Notifications
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.pushover.PushjetNotifier
+
+Pushjet (https://pushjet.io/) is another instant notification service, similar to Pushover.
+To use this reporter, you need to generate a Pushjet service and provide provide its secret.
+
+The parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` are common with mail and pushover notifier.
+
+The Pushjet specific parameters are:
+
+``secret``
+    This is a secret for your Pushjet service.
+
+``levels``
+    Dictionary of Pushjet notification levels. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between 0...5, specifying notification priority. In case a mode is missing from this dictionary, the default value of 3 is used.
+
+``base_url``
+    Base URL for custom Pushjet instances. Defaults to https://api.pushjet.io.
+
+.. _Pushjet: https://pushjet.io/
 
 
 .. bb:reporter:: IRC

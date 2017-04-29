@@ -24,7 +24,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.pushover import PushoverNotifier
+from buildbot.reporters.pushjet import PushjetNotifier
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
@@ -34,19 +34,19 @@ py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
                                     and sys.version_info[1] >= 7)
 
 
-class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
+class TestPushjetNotifier(ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         self.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True, wantMq=True)
 
-    def setupFakeHttp(self):
+    def setupFakeHttp(self, base_url='https://api.pushjet.io'):
         return self.successResultOf(fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.pushover.net'))
+            self.master, self, base_url))
 
     @defer.inlineCallbacks
-    def setupPushoverNotifier(self, user_key="1234", api_token="abcd", **kwargs):
-        pn = PushoverNotifier(user_key, api_token, **kwargs)
+    def setupPushjetNotifier(self, secret="1234", **kwargs):
+        pn = PushjetNotifier(secret, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()
         defer.returnValue(pn)
@@ -54,40 +54,36 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_sendMessage(self):
         _http = self.setupFakeHttp()
-        pn = yield self.setupPushoverNotifier(priorities={'passing': 2})
-        _http.expect("post", "/1/messages.json",
-                     params={'user': "1234", 'token': "abcd",
-                             'message': "Test", 'title': "Tee", 'priority': 2},
-                     content_json={'status': 1, 'request': '98765'})
+        pn = yield self.setupPushjetNotifier(levels={'passing': 2})
+        _http.expect("post", "/message",
+                     data={'secret': "1234", 'level': 2,
+                           'message': "Test", 'title': "Tee"},
+                     content_json={'status': 'ok'})
         n = yield pn.sendMessage(body="Test", subject="Tee", results=SUCCESS)
         j = yield n.json()
-        self.assertEqual(j['status'], 1)
-        self.assertEqual(j['request'], '98765')
+        self.assertEqual(j['status'], 'ok')
 
     @defer.inlineCallbacks
     def test_sendNotification(self):
-        _http = self.setupFakeHttp()
-        pn = yield self.setupPushoverNotifier(otherParams={'sound': "silent"})
-        _http.expect("post", "/1/messages.json",
-                     params={'user': "1234", 'token': "abcd",
-                             'sound': "silent", 'message': "Test"},
-                     content_json={'status': 1, 'request': '98765'})
+        _http = self.setupFakeHttp('https://tests.io')
+        pn = yield self.setupPushjetNotifier(base_url='https://tests.io')
+        _http.expect("post", "/message",
+                     data={'secret': "1234", 'message': "Test"},
+                     content_json={'status': 'ok'})
         n = yield pn.sendNotification({'message': "Test"})
         j = yield n.json()
-        self.assertEqual(j['status'], 1)
-        self.assertEqual(j['request'], '98765')
+        self.assertEqual(j['status'], 'ok')
 
     @defer.inlineCallbacks
     def test_sendRealNotification(self):
-        creds = os.environ.get('TEST_PUSHOVER_CREDENTIALS')
-        if creds is None:
-            raise SkipTest("real pushover test runs only if the variable "
-                           "TEST_PUSHOVER_CREDENTIALS is defined")
-        user, token = creds.split(':')
+        secret = os.environ.get('TEST_PUSHJET_SECRET')
+        if secret is None:
+            raise SkipTest("real pushjet test runs only if the variable "
+                           "TEST_PUSHJET_SECRET is defined")
         _http = yield httpclientservice.HTTPClientService.getService(
-            self.master, 'https://api.pushover.net')
+            self.master, 'https://api.pushjet.io')
         yield _http.startService()
-        pn = yield self.setupPushoverNotifier(user_key=user, api_token=token)
-        n = yield pn.sendNotification({'message': "Buildbot Pushover test passed!"})
+        pn = yield self.setupPushjetNotifier(secret=secret)
+        n = yield pn.sendNotification({'message': "Buildbot Pushjet test passed!"})
         j = yield n.json()
-        self.assertEqual(j['status'], 1)
+        self.assertEqual(j['status'], 'ok')
