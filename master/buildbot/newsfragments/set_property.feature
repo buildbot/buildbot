@@ -1,1 +1,1 @@
-``value`` argument in SetPropery is now renderable.
+``property`` argument in SetPropery is now renderable.
