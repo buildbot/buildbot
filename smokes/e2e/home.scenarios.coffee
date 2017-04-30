@@ -20,7 +20,7 @@ describe 'home page', () ->
     afterEach () ->
         home.logOut()
 
-    fit 'should go to the home page and check the different builder', () ->
+    it 'should go to the home page and check the different builder', () ->
         builderName = {
             "0" : "runtests"
         }

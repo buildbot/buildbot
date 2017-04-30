@@ -5,7 +5,7 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
             b.caret
         ul.dropdown-menu(uib-dropdown-menu)
             li
-                a(ng-click="login()")
+                a(href="auth/login?redirect={{redirect}}")
                     span(ng-hide="config.auth.oauth2")
                         i.fa.fa-sign-in
                         | &nbsp;Login
@@ -26,6 +26,6 @@ ul.nav.navbar-nav.navbar-right(ng-show="config.auth.name != 'NoAuth'")
                 span {{ full_name }} {{ email }}
             li.divider
             li
-                a(ng-click="logout()")
+                a(href="auth/logout?redirect={{redirect}}")
                    i.fa.fa-sign-out
                    | Logout

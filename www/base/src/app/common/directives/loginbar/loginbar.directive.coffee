@@ -21,15 +21,8 @@ class _loginbar extends Controller('common')
         $scope.password = ""
         $scope.loginCollapsed = 1
         $scope.config = config
+        # as the loginbar is never reloaded, we need to update the redirect
+        # when the hash changes
+        $scope.$watch (-> document.location.hash), ->
+            $scope.redirect = document.location.hash.substr(1)
         _.assign($scope, config.user)
-
-        $scope.logout = ->
-            $http.defaults.headers.common = {}
-            $http
-                method: "GET"
-                url: "#{baseurl}auth/logout"
-            .success (data, status) ->
-                window.location.reload()
-
-        $scope.login = ->
-            document.location = "#{baseurl}auth/login"

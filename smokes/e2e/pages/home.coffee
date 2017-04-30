@@ -33,12 +33,14 @@ class HomePage
     logOut: ->
         @go()
         element.all(By.css('.avatar img')).click()
-        element.all(By.css('[ng-click="logout()"]')).click()
-        anonymousButton = element(By.css('[ng-class="loginCollapsed ? \'\':\'open\'"'))
+        element.all(By.linkText('Logout')).click()
+        anonymousButton = element(By.css('.dropdown'))
         expect(anonymousButton.getText()).toContain("Anonymous")
 
     loginUser: (user, password) ->
         browser.get("http://#{user}:#{password}@localhost:8010/auth/login")
+        anonymousButton = element(By.css('.dropdown'))
+        expect(anonymousButton.getText()).not.toContain("Anonymous")
 
     waitAllBuildsFinished: () ->
         @go()

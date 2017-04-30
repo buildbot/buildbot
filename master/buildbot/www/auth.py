@@ -176,6 +176,11 @@ class UserPasswordAuth(TwistedICredAuthBase):
             **kwargs)
 
 
+def _redirect(master, request):
+    url = request.args.get("redirect", ["/"])[0]
+    return resource.Redirect(master.config.buildbotURL + "#" + url)
+
+
 class PreAuthenticatedLoginResource(LoginResource):
     # a LoginResource which is already authenticated via a
     # HTTPAuthSessionWrapper
@@ -189,8 +194,7 @@ class PreAuthenticatedLoginResource(LoginResource):
         session = request.getSession()
         session.user_info = dict(username=bytes2NativeString(self.username))
         yield self.master.www.auth.updateUserInfo(request)
-        url = request.args.get("redirect", [self.master.config.buildbotURL])[0]
-        raise resource.Redirect(url)
+        raise _redirect(self.master, request)
 
 
 class LogoutResource(resource.Resource):
@@ -199,4 +203,5 @@ class LogoutResource(resource.Resource):
         session = request.getSession()
         session.expire()
         session.updateSession(request)
+        request.redirect(_redirect(self.master, request).url)
         return b''

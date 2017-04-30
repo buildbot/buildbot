@@ -10,6 +10,7 @@ function finish {
     #   sleep 60
     # done
     set +e
+    cat workdir/twistd.log
     buildbot stop workdir
     buildbot-worker stop workdir/worker
     rm -rf workdir
