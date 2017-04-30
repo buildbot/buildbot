@@ -20,6 +20,7 @@ from future.utils import iteritems
 from twisted.internet import defer
 
 from buildbot import config
+from buildbot.interfaces import IRenderable
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.buildstep import ShellMixin
 
@@ -47,12 +48,14 @@ class CMake(ShellMixin, BuildStep):
         self.path = path
         self.generator = generator
 
-        if not (definitions is None or isinstance(definitions, dict)):
-            config.error('definitions must be a dictionary')
+        if not (definitions is None or isinstance(definitions, dict)
+                or IRenderable.providedBy(definitions)):
+            config.error('definitions must be a dictionary or implement IRenderable')
         self.definitions = definitions
 
-        if not (options is None or isinstance(options, (list, tuple))):
-            config.error('options must be a list or a tuple')
+        if not (options is None or isinstance(options, (list, tuple))
+                or IRenderable.providedBy(options)):
+            config.error('options must be a list, a tuple or implement IRenderable')
         self.options = options
 
         self.cmake = cmake
