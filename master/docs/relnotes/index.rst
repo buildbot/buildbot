@@ -10,6 +10,54 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.6-35-g615cb76`` ( ``2017-04-30`` )
+=====================================================
+
+Bug fixes
+---------
+
+- Fix :py:class:`UserPasswordAuth` authentication on ``py3`` and recent
+  browsers. (:issue:`3162`, :issue:`3163`). The ``py3`` fix also requires
+  Twisted https://github.com/twisted/twisted/pull/773.
+- :ref:`ConsoleView` now display changes the same way as in Recent Changes
+  page.
+- Fix issue with :ref:`ConsoleView` when no change source is configured but
+  still builds have ``got_revision`` property
+
+Features
+--------
+
+- Builds ``state_string`` is now automatically computed according to the
+  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
+  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
+  allows the dashboards and reporters to get a descent summary text of the
+  build without fetching the steps.
+
+
+Buildbot ``0.9.6-35-g615cb76`` ( ``2017-04-30`` )
+=====================================================
+
+Bug fixes
+---------
+
+- Fix :py:class:`UserPasswordAuth` authentication on ``py3`` and recent
+  browsers. (:issue:`3162`, :issue:`3163`). The ``py3`` fix also requires
+  Twisted https://github.com/twisted/twisted/pull/773.
+- :ref:`ConsoleView` now display changes the same way as in Recent Changes
+  page.
+- Fix issue with :ref:`ConsoleView` when no change source is configured but
+  still builds have ``got_revision`` property
+
+Features
+--------
+
+- Builds ``state_string`` is now automatically computed according to the
+  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
+  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
+  allows the dashboards and reporters to get a descent summary text of the
+  build without fetching the steps.
+
+
 Buildbot ``0.9.6`` ( ``2017-04-19`` )
 =====================================================
 

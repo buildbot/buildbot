@@ -444,7 +444,7 @@ bundle_version = version.split("-")[0]
 # dependencies
 setup_args['install_requires'] = [
     'setuptools >= 8.0',
-    'Twisted',
+    'Twisted ' + twisted_ver,
     'Jinja2 >= 2.1',
     # required for tests, but Twisted requires this anyway
     'zope.interface >= 4.1.1',

@@ -1,2 +1,0 @@
-Fix BasicAuth authentication on py3 and recent browsers. (:bb:issue:`3162`, :bb:issue:`3163`).
-The py3 fix also requires twisted https://github.com/twisted/twisted/pull/773.
