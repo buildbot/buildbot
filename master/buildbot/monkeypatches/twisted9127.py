@@ -21,7 +21,7 @@ from twisted.python.compat import networkString
 
 
 # patch for http://twistedmatrix.com/trac/ticket/9127
-# unfortunatly the impacted code is deeply inside render method, so we need to patch the whole
+# unfortunately the impacted code is deeply inside render method, so we need to patch the whole
 # render method
 
 def render(self, request):
