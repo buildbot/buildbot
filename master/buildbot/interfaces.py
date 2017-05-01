@@ -1103,7 +1103,7 @@ class IConfigurator(Interface):
         """
         Alter the buildbot config_dict, as defined in master.cfg
 
-        like the master.cfg, this is run from the a thread, so this can block, but this can't
+        like the master.cfg, this is run out of the main reactor thread, so this can block, but this can't
         call most Buildbot facilities.
 
         :returns: None
