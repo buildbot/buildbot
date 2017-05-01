@@ -30,7 +30,7 @@ class MQConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService)
         },
         'wamp': {
             'class': "buildbot.mq.wamp.WampMQ",
-            'keys': set(["router_url", "debug", "realm", "debug_websockets", "debug_lowlevel"]),
+            'keys': set(["router_url", "realm", "wamp_debug_level"]),
         },
     }
     name = 'mq'

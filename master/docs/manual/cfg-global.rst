@@ -129,7 +129,7 @@ Wamp
 
     c['mq'] = {
         'type' : 'wamp',
-        'router_url': 'ws://localhost:8080',
+        'router_url': 'ws://localhost:8080/ws',
         'realm': 'realm1',
         'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
