@@ -20,6 +20,7 @@ describe 'waterfall', () ->
         builder.goDefault()
 
     afterEach () ->
+        console.log window.innerHeight, window.innerWidth
         new homePage().waitAllBuildsFinished()
 
     it 'should navigate to the waterfall, check one builder and hyperlink', () ->

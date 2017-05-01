@@ -36,10 +36,18 @@ class waterfallPage
         self.goBuild()
         self.checkBuildResult()
 
+    clickWhenClickable: (element) ->
+        browser.wait ->
+            element.click().then (->
+                true
+            ), ->
+                console.log 'not clickable'
+                false
+
     goBuilderAndCheck: (builderRef) ->
         self = this
         localBuilder = element.all(By.linkText(@builder))
-        localBuilder.click()
+        clickWhenClickable(localBuilder)
         self.checkBuilder()
 
 module.exports = waterfallPage

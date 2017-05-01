@@ -7,6 +7,15 @@ forcePage = require('./pages/force.coffee')
 builderPage = require('./pages/builder.coffee')
 homePage = require('./pages/home.coffee')
 
+clickWhenClickable = (element) ->
+    browser.wait ->
+        element.click().then (->
+            true
+        ), ->
+            console.log 'not clickable'
+            false
+
+
 describe 'previousnextlink', () ->
     force = null
     builder = null
@@ -36,9 +45,9 @@ describe 'previousnextlink', () ->
             builder.waitNextBuildFinished(+lastbuild + 1)
             builder.goBuild(+lastbuild + 2)
             lastBuildURL = browser.getCurrentUrl()
-            builder.getPreviousButton().click()
+            clickWhenClickable(builder.getPreviousButton())
             expect(browser.getCurrentUrl()).not.toMatch(lastBuildURL)
-            builder.getNextButton().click()
+            clickWhenClickable(builder.getNextButton())
             expect(browser.getCurrentUrl()).toMatch(lastBuildURL)
 
 describe 'forceandstop', () ->
