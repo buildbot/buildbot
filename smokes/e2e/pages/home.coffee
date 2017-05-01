@@ -2,9 +2,10 @@
 # will be called by the different tests
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
+BasePage = require("./base.coffee")
 
-class HomePage
-    #constructor: (@builder)->
+class HomePage extends BasePage
+
     constructor: ()->
 
     go: () ->
@@ -29,18 +30,6 @@ class HomePage
         setPasswordValue = element.all(By.css('[ng-model="password"]'))
         setPasswordValue.clear()
         setPasswordValue.sendKeys(value)
-
-    logOut: ->
-        @go()
-        element.all(By.css('.avatar img')).click()
-        element.all(By.linkText('Logout')).click()
-        anonymousButton = element(By.css('.dropdown'))
-        expect(anonymousButton.getText()).toContain("Anonymous")
-
-    loginUser: (user, password) ->
-        browser.get("http://#{user}:#{password}@localhost:8010/auth/login")
-        anonymousButton = element(By.css('.dropdown'))
-        expect(anonymousButton.getText()).not.toContain("Anonymous")
 
     waitAllBuildsFinished: () ->
         @go()

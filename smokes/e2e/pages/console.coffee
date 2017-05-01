@@ -3,7 +3,9 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class consolePage
+BasePage = require("./base.coffee")
+
+class ConsolePage extends BasePage
     constructor: ->
 
     go: ->
@@ -11,4 +13,4 @@ class consolePage
     countSuccess: () ->
         element.all(By.css('.badge-status.results_SUCCESS')).count()
 
-module.exports = consolePage
+module.exports = ConsolePage

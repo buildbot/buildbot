@@ -3,10 +3,12 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class dashboardPage
+BasePage = require("./base.coffee")
+
+class DashboardPage extends BasePage
     constructor: ->
 
     go: ->
         browser.get('#/mydashboard')
 
-module.exports = dashboardPage
+module.exports = DashboardPage

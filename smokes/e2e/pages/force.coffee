@@ -2,8 +2,9 @@
 # will be called by the different tests
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
+BasePage = require("./base.coffee")
 
-class forcePage
+class ForcePage extends BasePage
     constructor: ->
 
     setInputText: (cssLabel, value) ->
@@ -42,4 +43,4 @@ class forcePage
     getStopButton: ->
         return element(By.buttonText('Stop'))
 
-module.exports = forcePage
+module.exports = ForcePage

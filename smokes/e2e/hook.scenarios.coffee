@@ -12,7 +12,7 @@ describe 'change hook', () ->
     afterEach () ->
         new homePage().waitAllBuildsFinished()
 
-    xit 'should create a build', () ->
+    it 'should create a build', () ->
         builder.go()
         builder.getLastSuccessBuildNumber().then (lastbuild) ->
             browser.executeAsyncScript (done)->

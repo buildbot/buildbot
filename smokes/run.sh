@@ -10,7 +10,7 @@ function finish {
     #   sleep 60
     # done
     set +e
-    cat workdir/twistd.log
+    kill %1
     buildbot stop workdir
     buildbot-worker stop workdir/worker
     rm -rf workdir
@@ -24,6 +24,7 @@ buildbot checkconfig workdir
 # on docker buildbot might be a little bit slower to start, so sleep another 20s in case of start to slow.
 buildbot start workdir || sleep 20
 buildbot-worker start workdir/worker
+cat workdir/twistd.log &
 
 # CI mode: use preinstalled protractor with xvfb-run
 if [ -f /usr/bin/protractor ]; then
@@ -34,7 +35,7 @@ else
     PROTRACTOR=./node_modules/protractor/bin/protractor
 fi
 if [ -f /usr/bin/xvfb-run ] ; then
-    xvfb-run $PROTRACTOR protractor-headless.conf.js
+    xvfb-run --server-args="-screen 0 1024x768x24" $PROTRACTOR protractor-headless.conf.js
 else
     # manual mode: install locally
     yarn install

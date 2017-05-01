@@ -3,7 +3,9 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class aboutPage
+BasePage = require("./base.coffee")
+
+class AboutPage extends BasePage
     constructor: (builder) ->
         @builder = builder
 
@@ -26,4 +28,4 @@ class aboutPage
         dependenciesTitle = element.all(By.css('h2')).get(2)
         expect(dependenciesTitle.getText()).toContain('Javascript dependencies')
 
-module.exports = aboutPage
+module.exports = AboutPage

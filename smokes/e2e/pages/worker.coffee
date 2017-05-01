@@ -3,9 +3,11 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-builderPage = require('./builder.coffee')
+BuilderPage = require('./builder.coffee')
+BasePage = require("./base.coffee")
 
-class workerPage
+class WorkerPage extends BasePage
+
     constructor: (builder) ->
         @builder = builder
 
@@ -23,6 +25,6 @@ class workerPage
     goBuilderLink: (builderName) ->
         builderLink = element.all(By.linkText(builderName))
         builderLink.click()
-        return new builderPage(builderName, 'Force')
+        return new BuilderPage(builderName, 'Force')
 
-module.exports = workerPage
+module.exports = WorkerPage
