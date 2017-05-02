@@ -2,8 +2,9 @@
 # will be called by the different tests
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
+BasePage = require("./base.coffee")
 
-class settingsPage
+class SettingsPage extends BasePage
     constructor: (builder) ->
         @builder = builder
 
@@ -65,4 +66,4 @@ class settingsPage
         maxBuilderForm = element.all(By.css('input.form-control')).get(5)
         expect(maxBuilderForm.getAttribute('value')).toEqual(maxBuildersVar)
 
-module.exports = settingsPage
+module.exports = SettingsPage

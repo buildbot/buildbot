@@ -3,7 +3,9 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class waterfallPage
+BasePage = require("./base.coffee")
+
+class WaterfallPage extends BasePage
     constructor: (builder) ->
         @builder = builder
 
@@ -15,10 +17,11 @@ class waterfallPage
             expect(currentUrl).toContain("builders/")
 
     checkBuildResult: () ->
-        popupContents = element.all(By.css('a.ng-binding')).first()
-        popupContents.getAttribute('href').then (linkTarget) ->
-            popupContents.click()
-            expect(browser.getCurrentUrl()).toEqual(linkTarget)
+        firstLinkInPopup = element.all(By.css('.modal-dialog a')).first()
+        firstLinkInPopup.click()
+        browser.getCurrentUrl().then (currentUrl) ->
+            expect(currentUrl).toContain("builders/")
+            expect(currentUrl).toContain("builds/")
 
     goBuild: () ->
         buildList = element.all(By.css('text.id')).last()
@@ -39,7 +42,7 @@ class waterfallPage
     goBuilderAndCheck: (builderRef) ->
         self = this
         localBuilder = element.all(By.linkText(@builder))
-        localBuilder.click()
+        @clickWhenClickable(localBuilder)
         self.checkBuilder()
 
-module.exports = waterfallPage
+module.exports = WaterfallPage

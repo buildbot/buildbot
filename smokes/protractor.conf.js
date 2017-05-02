@@ -6,7 +6,12 @@ exports.config = {
     ],
 
     capabilities: {
-        'browserName': 'chrome'
+        'browserName': 'chrome',
+        chromeOptions: {
+            // minimal supported browser size for tests
+            // if smaller we start need to scroll for clicking buttons
+            args: ['--window-size=1024,768']
+        }
     },
 
     baseUrl: 'http://localhost:8010',

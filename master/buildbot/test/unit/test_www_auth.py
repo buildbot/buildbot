@@ -197,7 +197,7 @@ class PreAuthenticatedLoginResource(www.WwwTestMixin, AuthResourceMixin,
         self.auth.updateUserInfo = mock.Mock(side_effect=updateUserInfo)
 
         res = yield self.render_resource(self.rsrc, b'/auth/login')
-        self.assertEqual(res, b'')
+        self.assertEqual(res, {'redirected': 'h:/a/b/#/'})
         self.assertFalse(self.auth.maybeAutoLogin.called)
         self.auth.updateUserInfo.assert_called_with(mock.ANY)
         self.assertEqual(self.master.session.user_info,
@@ -214,5 +214,5 @@ class LogoutResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
     def test_render(self):
         self.master.session.expire = mock.Mock()
         res = yield self.render_resource(self.rsrc, b'/auth/logout')
-        self.assertEqual(res, b'')
+        self.assertEqual(res, {'redirected': 'h:/a/b/#/'})
         self.master.session.expire.assert_called_with()
