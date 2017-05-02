@@ -23,6 +23,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.statistics import capture
 from buildbot.statistics import stats_service
 from buildbot.statistics.storage_backends.base import StatsStorageBase
+from buildbot.status.master import Status as status_service
 
 
 class FakeStatsStorageService(StatsStorageBase):
@@ -93,3 +94,21 @@ class FakeInfluxDBClient(object):
 
     def write_points(self, points):
         self.points.extend(points)
+
+
+class FakeStatusService(status_service):
+
+    """
+    Fake StatusService for use in fakemaster
+    """
+    def __init__(self, master=None, *args, **kwargs):
+        status_service.__init__(self, *args, **kwargs)
+        self.master = master
+
+    @property
+    def master(self):
+        return self._master
+
+    @master.setter
+    def master(self, value):
+        self._master = value

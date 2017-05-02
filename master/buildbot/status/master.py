@@ -133,6 +133,12 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getBuildbotURL(self):
         return self.master.config.buildbotURL
 
+    def getBuildbotURLAliases(self):
+        if not self.master.config.buildbotURLAliases:
+            self.master.config.buildbotURLAliases.append(
+                self.master.config.buildbotURL)
+        return self.master.config.buildbotURLAliases
+
     def getStatus(self):
         # some listeners expect their .parent to be a BuildMaster object, and
         # use this method to get the Status object.  This is documented, so for
@@ -423,6 +429,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             'title': self.getTitle(),
             'titleURL': self.getTitleURL(),
             'buildbotURL': self.getBuildbotURL(),
+            'buildbotURLAliases': self.getBuildbotURLAliases(),
             # TODO: self.getSchedulers()
             # self.getChangeSources()
         }
