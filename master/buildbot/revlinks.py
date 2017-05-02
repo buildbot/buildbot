@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import text_type
+from future.utils import string_types
 
 import re
 
@@ -23,7 +23,7 @@ import re
 class RevlinkMatch(object):
 
     def __init__(self, repo_urls, revlink):
-        if isinstance(repo_urls, str) or isinstance(repo_urls, text_type):
+        if isinstance(repo_urls, string_types):
             repo_urls = [repo_urls]
         self.repo_urls = [re.compile(url) for url in repo_urls]
         self.revlink = revlink

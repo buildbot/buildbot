@@ -153,13 +153,17 @@ After:
 
 .. code-block:: python
 
-    from builtins import str
+    from future.utils import text_type, string_types
     unicode_s = u"this is a unicode string"
     byte_s = b"this is a bytestring"
 
-    if(isinstance(unicode_s, str)):
+    if(isinstance(unicode_s, string_types)):
         print("This line will print")
-    if(isinstance(byte_s, str):
+    if(isinstance(byte_s, string_types)):
+        print("This line will print")
+    if(isinstance(unicode_s, text_type)):
+        print("This line will print")
+    if(isinstance(byte_s, text_type):
         print("this line will not print")
 
 

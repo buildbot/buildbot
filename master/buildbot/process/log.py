@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import itervalues
+from future.utils import string_types
 from future.utils import text_type
 
 import re
@@ -51,7 +52,7 @@ class Log(object):
         then we return a new lambda, s.decode().
         If cfg is already a lambda or function, then we return that.
         """
-        if isinstance(cfg, (bytes, str)):
+        if isinstance(cfg, string_types):
             return lambda s: s.decode(cfg, 'replace')
         else:
             return cfg

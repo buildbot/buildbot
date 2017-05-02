@@ -339,14 +339,14 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, list(kwargs)))
         self._pendingLogObservers = []
 
-        if not isinstance(self.name, str):
+        if not isinstance(self.name, string_types):
             config.error("BuildStep name must be a string: %r" % (self.name,))
 
-        if isinstance(self.description, str):
+        if isinstance(self.description, string_types):
             self.description = [self.description]
-        if isinstance(self.descriptionDone, str):
+        if isinstance(self.descriptionDone, string_types):
             self.descriptionDone = [self.descriptionDone]
-        if isinstance(self.descriptionSuffix, str):
+        if isinstance(self.descriptionSuffix, string_types):
             self.descriptionSuffix = [self.descriptionSuffix]
 
         if self.updateBuildSummaryPolicy is None:  # compute default value for updateBuildSummaryPolicy

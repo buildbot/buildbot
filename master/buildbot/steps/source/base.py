@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import string_types
 
 from twisted.python import log
 
@@ -169,7 +170,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             source = self.__class__.__name__
 
         if self.codebase != '':
-            assert not isinstance(self.getProperty(name, None), str), \
+            assert not isinstance(self.getProperty(name, None), string_types), \
                 "Sourcestep %s has a codebase, other sourcesteps don't" \
                 % self.name
             property_dict = self.getProperty(name, {})

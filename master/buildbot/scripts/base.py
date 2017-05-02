@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from future.builtins import range
+from future.utils import string_types
 
 import copy
 import errno
@@ -92,13 +93,13 @@ def checkBasedir(config):
 
     tac = getConfigFromTac(config['basedir'])
     if tac:
-        if isinstance(tac.get('rotateLength', 0), str):
+        if isinstance(tac.get('rotateLength', 0), string_types):
             print("ERROR: rotateLength is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
             print(
                 "ERROR: See http://trac.buildbot.net/ticket/2588 for more details")
             return False
-        if isinstance(tac.get('maxRotatedFiles', 0), str):
+        if isinstance(tac.get('maxRotatedFiles', 0), string_types):
             print("ERROR: maxRotatedFiles is a string, it should be a number")
             print("ERROR: Please, edit your buildbot.tac file and run again")
             print(

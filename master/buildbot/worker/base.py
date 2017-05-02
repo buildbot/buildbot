@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import itervalues
+from future.utils import string_types
 
 import time
 
@@ -107,11 +108,11 @@ class AbstractWorker(service.BuildbotService, object):
 
         if notify_on_missing is None:
             notify_on_missing = []
-        if isinstance(notify_on_missing, str):
+        if isinstance(notify_on_missing, string_types):
             notify_on_missing = [notify_on_missing]
         self.notify_on_missing = notify_on_missing
         for i in notify_on_missing:
-            if not isinstance(i, str):
+            if not isinstance(i, string_types):
                 config.error(
                     'notify_on_missing arg %r is not a string' % (i,))
 

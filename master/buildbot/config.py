@@ -477,7 +477,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         protocols = config_dict.get('protocols', {})
         if isinstance(protocols, dict):
             for proto, options in iteritems(protocols):
-                if not isinstance(proto, str):
+                if not isinstance(proto, string_types):
                     error("c['protocols'] keys must be strings")
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
@@ -1028,7 +1028,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         # workernames can be a single worker name or a list, and should also
         # include workername, if given
-        if isinstance(workernames, str):
+        if isinstance(workernames, string_types):
             workernames = [workernames]
         if workernames:
             if not isinstance(workernames, list):
@@ -1038,7 +1038,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             workernames = []
 
         if workername:
-            if not isinstance(workername, str):
+            if not isinstance(workername, string_types):
                 error("builder '%s': workername must be a string" % (name,))
             workernames = workernames + [workername]
         if not workernames:
@@ -1069,13 +1069,13 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             warnDeprecated("0.9", "builder '%s': builder categories are "
                                   "deprecated and should be replaced with "
                                   "'tags=[cat]'" % (name,))
-            if not isinstance(category, str):
+            if not isinstance(category, string_types):
                 error("builder '%s': category must be a string" % (name,))
             tags = [category]
         if tags:
             if not isinstance(tags, list):
                 error("builder '%s': tags must be a list" % (name,))
-            bad_tags = any((tag for tag in tags if not isinstance(tag, str)))
+            bad_tags = any((tag for tag in tags if not isinstance(tag, string_types)))
             if bad_tags:
                 error(
                     "builder '%s': tags list contains something that is not a string" % (name,))

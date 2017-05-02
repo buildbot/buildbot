@@ -19,6 +19,7 @@ BuildSteps that are specific to the Twisted source tree
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.utils import string_types
 
 import re
 
@@ -291,7 +292,7 @@ class Trial(ShellCommand):
         if python:
             self.python = python
         if self.python is not None:
-            if isinstance(self.python, str):
+            if isinstance(self.python, string_types):
                 self.python = [self.python]
             for s in self.python:
                 if " " in s:
@@ -318,14 +319,14 @@ class Trial(ShellCommand):
             self.testpath = testpath
         if self.testpath is UNSPECIFIED:
             raise ValueError("You must specify testpath= (it can be None)")
-        assert isinstance(self.testpath, str) or self.testpath is None
+        assert isinstance(self.testpath, string_types) or self.testpath is None
 
         if reactor is not UNSPECIFIED:
             self.reactor = reactor
 
         if tests is not None:
             self.tests = tests
-        if isinstance(self.tests, str):
+        if isinstance(self.tests, string_types):
             self.tests = [self.tests]
         if testChanges is not None:
             self.testChanges = testChanges
@@ -386,7 +387,7 @@ class Trial(ShellCommand):
                 # this bit produces a list, which can be used
                 # by buildbot_worker.runprocess.RunProcess
                 ppath = e.get('PYTHONPATH', self.testpath)
-                if isinstance(ppath, str):
+                if isinstance(ppath, string_types):
                     ppath = [ppath]
                 if self.testpath not in ppath:
                     ppath.insert(0, self.testpath)
