@@ -10,6 +10,71 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.6-36-ga66539fe7`` ( ``2017-04-27`` )
+=====================================================
+
+Bug fixes
+---------
+
+- :ref:`ConsoleView` now display changes the same way as in Recent Changes
+  page.
+- Fix issue with :ref:`ConsoleView` when no change source is configured but
+  still builds have ``got_revision`` property
+
+Features
+--------
+
+- Builds ``state_string`` is now automatically computed according to the
+  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
+  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
+  allows the dashboards and reporters to get a descent summary text of the
+  build without fetching the steps.
+- Add a :py:class:`~buildbot.worker.kubernetes.KubeLatentWorker` to launch
+  workers into a kubernetes cluster
+
+
+Buildbot ``0.9.6-35-gfb26e170d`` ( ``2017-04-27`` )
+=====================================================
+
+Bug fixes
+---------
+
+- :ref:`ConsoleView` now display changes the same way as in Recent Changes
+  page.
+- Fix issue with :ref:`ConsoleView` when no change source is configured but
+  still builds have ``got_revision`` property
+
+Features
+--------
+
+- Builds ``state_string`` is now automatically computed according to the
+  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
+  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
+  allows the dashboards and reporters to get a descent summary text of the
+  build without fetching the steps.
+
+
+Buildbot ``0.9.5-182-gfb26e170d`` ( ``2017-04-27`` )
+=====================================================
+
+Bug fixes
+---------
+
+- :ref:`ConsoleView` now display changes the same way as in Recent Changes
+  page.
+- Fix issue with :ref:`ConsoleView` when no change source is configured but
+  still builds have ``got_revision`` property
+
+Features
+--------
+
+- Builds ``state_string`` is now automatically computed according to the
+  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
+  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
+  allows the dashboards and reporters to get a descent summary text of the
+  build without fetching the steps.
+
+
 Buildbot ``0.9.6`` ( ``2017-04-19`` )
 =====================================================
 
