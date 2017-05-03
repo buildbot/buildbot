@@ -5,7 +5,7 @@ Configurators
 
 For advanced users or plugins writers, the 'configurators' key is available, and holds a list of :py:class:`buildbot.interfaces.IConfigurator`.
 Configurators will run after the master.cfg has been processed, and will modify the config dictionary.
-Configurator implementers should make sure that they are inter operable with each other, which means carefully modifying the config to avoid overriding a setting already made by the user or by another configurator.
+Configurator implementers should make sure that they are interoperable with each other, which means carefully modifying the config to avoid overriding a setting already made by the user or by another configurator.
 Configurators are run (thus prioritized) in the order of the 'configurators' list.
 
 .. bb:configurator:: JanitorConfigurator
