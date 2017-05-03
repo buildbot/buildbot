@@ -1095,3 +1095,16 @@ class IHttpResponse(Interface):
         """
     master = Attribute('code',
                        "http status code of the request's response (e.g 200)")
+
+
+class IConfigurator(Interface):
+
+    def configure(config_dict):
+        """
+        Alter the buildbot config_dict, as defined in master.cfg
+
+        like the master.cfg, this is run out of the main reactor thread, so this can block, but this can't
+        call most Buildbot facilities.
+
+        :returns: None
+        """

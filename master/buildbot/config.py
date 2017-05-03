@@ -77,6 +77,8 @@ _errors = None
 
 DEFAULT_DB_URL = 'sqlite:///state.sqlite'
 
+RESERVED_UNDERSCORE_NAMES = ["__Janitor"]
+
 
 def error(error, always_raise=False):
     if _errors is not None and not always_raise:
@@ -199,8 +201,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.titleURL = 'http://buildbot.net'
         self.buildbotURL = 'http://localhost:8080/'
         self.changeHorizon = None
-        self.logHorizon = None
-        self.buildHorizon = None
         self.logCompressionLimit = 4 * 1024
         self.logCompressionMethod = 'gz'
         self.logEncoding = 'utf-8'
@@ -260,6 +260,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "caches",
         "change_source",
         "codebaseGenerator",
+        "configurators"
         "changeCacheSize",
         "changeHorizon",
         'db',
@@ -317,6 +318,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
     @classmethod
     def loadFromDict(cls, config_dict, filename):
+        # warning, all of this is loaded from a thread
         global _errors
         _errors = errors = ConfigErrors()
 
@@ -336,6 +338,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         # and defer the rest to sub-functions, for code clarity
         try:
+            config.run_configurators(filename, config_dict)
             config.load_global(filename, config_dict)
             config.load_validation(filename, config_dict)
             config.load_db(filename, config_dict)
@@ -358,7 +361,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             config.check_locks()
             config.check_builders()
             config.check_status()
-            config.check_horizons()
             config.check_ports()
         finally:
             _errors = None
@@ -367,6 +369,10 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             raise errors
 
         return config
+
+    def run_configurators(self, filename, config_dict):
+        for configurator in config_dict.get('configurators', []):
+            interfaces.IConfigurator(configurator).configure(config_dict)
 
     def load_global(self, filename, config_dict):
         def copy_param(name, alt_key=None,
@@ -416,16 +422,14 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 )
         copy_str_or_callable_param('buildbotNetUsageData')
 
+        for horizon in ('logHorizon', 'buildHorizon', 'eventHorizon'):
+            if horizon in config_dict:
+                warnDeprecated(
+                    '0.9.0',
+                    "NOTE: `{}` is deprecated and ignored "
+                    "They are replaced by util.JanitorConfigurator".format(horizon))
+
         copy_int_param('changeHorizon')
-        copy_int_param('logHorizon')
-        copy_int_param('buildHorizon')
-
-        if 'eventHorizon' in config_dict:
-            warnDeprecated(
-                '0.9.0',
-                '`eventHorizon` is deprecated and will be removed in a future version.',
-            )
-
         copy_int_param('logCompressionLimit')
 
         self.logCompressionMethod = config_dict.get(
@@ -690,7 +694,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         for worker in workers:
             if not interfaces.IWorker.providedBy(worker):
-                msg = "{0} must be a list of Worker instances".format(conf_key)
+                msg = "{} must be a list of Worker instances but there is {!r}".format(conf_key, worker)
                 error(msg)
                 return False
 
@@ -924,14 +928,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         for s in self.status:
             s.checkConfig(self.status)
 
-    def check_horizons(self):
-        if self.logHorizon is not None or self.buildHorizon is not None:
-            log.msg("NOTE: `buildHorizon` and `logHorizon` are currently ignored "
-                    "(see http://trac.buildbot.net/ticket/3572)")
-        if self.logHorizon is not None and self.buildHorizon is not None:
-            if self.logHorizon > self.buildHorizon:
-                error("logHorizon must be less than or equal to buildHorizon")
-
     def check_ports(self):
         ports = set()
         if self.protocols:
@@ -953,14 +949,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             return
         if self.workers:
             error("workers are configured, but c['protocols'] not")
-
-    @property
-    def eventHorizon(self):
-        warnings.warn(
-            "`eventHorizon` is deprecated and will be removed in a future version.",
-            category=DeprecationWarning,
-        )
-        return 0
 
 
 class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
@@ -1009,7 +997,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
             name = '<unknown>'
-        elif name[0] == '_':
+        elif name[0] == '_' and name not in RESERVED_UNDERSCORE_NAMES:
             error(
                 "builder names must not start with an underscore: '%s'" % name)
         try:
@@ -1039,7 +1027,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         if workername:
             if not isinstance(workername, str):
-                error("builder '%s': workername must be a string" % (name,))
+                error("builder '%s': workername must be a string but it is %r" % (name, workername))
             workernames = workernames + [workername]
         if not workernames:
             error("builder '%s': at least one workername is required" %

@@ -273,30 +273,12 @@ It can also be overridden for a single log file by passing the ``logEncoding`` p
 Data Lifetime
 ~~~~~~~~~~~~~
 
-.. bb:cfg:: changeHorizon
-.. bb:cfg:: buildHorizon
-.. bb:cfg:: logHorizon
-
 Horizons
 ++++++++
 
-::
+Previously Buildbot implemented a global configuration for horizons.
+Now it is implemented as an utility Builder, and shall be configured via :bb:configurator:`JanitorConfigurator`
 
-    c['changeHorizon'] = 200
-    c['buildHorizon'] = 100
-    c['logHorizon'] = 40
-    c['buildCacheSize'] = 15
-
-Buildbot stores historical information in its database.
-In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
-
-The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
-One place these changes are displayed is on the waterfall page.
-This parameter defaults to 0, which means keep all changes indefinitely.
-
-The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept.
-The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
-Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
 .. bb:cfg:: caches
 .. bb:cfg:: changeCacheSize

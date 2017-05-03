@@ -46,17 +46,6 @@ described in :ref:`developer-Reconfiguration`.
         The URL of this buildmaster, for use in constructing WebStatus URLs;
         from :bb:cfg:`buildbotURL`.
 
-    .. py:attribute:: changeHorizon
-
-        The current change horizon, from :bb:cfg:`changeHorizon`.
-
-    .. py:attribute:: logHorizon
-
-        The current log horizon, from :bb:cfg:`logHorizon`.
-
-    .. py:attribute:: buildHorizon
-
-        The current build horizon, from :bb:cfg:`buildHorizon`.
 
     .. py:attribute:: logCompressionLimit
 
