@@ -564,6 +564,9 @@ To run with Apache2, you'll need `mod_proxy_wstunnel <https://httpd.apache.org/d
 
 Here is a configuration that is known to work (Apache 2.4.10 / Debian 8 and Apache 2.4.25 / Debian 9), directly at the top of the domain.
 
+If you want to add access control directives, just put them in a
+``<Location />``.
+
 .. code-block:: none
 
 
