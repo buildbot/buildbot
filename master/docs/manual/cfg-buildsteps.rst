@@ -1655,7 +1655,7 @@ Available constructor arguments are:
     An array of custom parameters to pass directly to the ``robocopy`` command.
 
 ``verbose``
-    Whether to output verbose information (``/V /TS /TP`` parameters).
+    Whether to output verbose information (``/V /TS /FP`` parameters).
 
 Note that parameters ``/TEE /NP`` will always be appended to the command to signify, respectively, to output logging to the console, use Unicode logging, and not print any percentage progress information for each file.
 
