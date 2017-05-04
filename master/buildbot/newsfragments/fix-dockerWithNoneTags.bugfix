@@ -1,0 +1,1 @@
+:py:class:`~buildbot.worker.docker.DockerLatentWorker`: ``_image_exists`` does not raise anymore if it encounters an image with ``<none>`` tag
