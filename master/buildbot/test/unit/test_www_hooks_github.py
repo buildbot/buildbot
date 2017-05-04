@@ -722,6 +722,23 @@ class TestChangeHookConfiguredWithReleaseCreated(unittest.TestCase):
         self._check_git_with_release(PayloadRelease)
 
 
+class TestChangeHookConfiguredWithNoEventCreated(unittest.TestCase):
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(strict=False)
+
+    @defer.inlineCallbacks
+    def _check_git_with_release(self, payload):
+        self.request = _prepare_request('Test', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_git_with_release_encoded(self):
+        self._check_git_with_release([PayloadRelease])
+
+    def test_git_with_release_json(self):
+        self._check_git_with_release(PayloadRelease)
+
+
 class TestChangeHookConfiguredWithTagCreated(unittest.TestCase):
     def setUp(self):
         self.changeHook = _prepare_github_change_hook(strict=False)
