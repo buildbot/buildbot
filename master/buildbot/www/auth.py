@@ -49,8 +49,6 @@ class AuthRootResource(resource.Resource):
 class AuthBase(config.ConfiguredMixin):
 
     def __init__(self, userInfoProvider=None):
-        if userInfoProvider is None:
-            userInfoProvider = UserInfoProviderBase()
         self.userInfoProvider = userInfoProvider
 
     def reconfigAuth(self, master, new_config):
@@ -104,6 +102,8 @@ class RemoteUserAuth(AuthBase):
 
     def __init__(self, header=None, headerRegex=None, **kwargs):
         AuthBase.__init__(self, **kwargs)
+        if self.userInfoProvider is None:
+            self.userInfoProvider = UserInfoProviderBase()
         if header is not None:
             self.header = header
         if headerRegex is not None:
@@ -145,6 +145,8 @@ class TwistedICredAuthBase(AuthBase):
 
     def __init__(self, credentialFactories, checkers, **kwargs):
         AuthBase.__init__(self, **kwargs)
+        if self.userInfoProvider is None:
+            self.userInfoProvider = UserInfoProviderBase()
         self.credentialFactories = credentialFactories
         self.checkers = checkers
 

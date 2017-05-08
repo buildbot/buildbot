@@ -1,0 +1,1 @@
+``OAuth`` Authentication are now working with :py:class:`RolesFromEmails`.
