@@ -18,11 +18,15 @@ from __future__ import print_function
 from future.builtins import range
 
 import warnings
+from distutils.version import LooseVersion
 
 from mock import Mock
 from mock import call
 
 from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -489,3 +493,19 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
              "--message 'bla'", '--verified 1', 'revision'],
             env=None)
+
+    @defer.inlineCallbacks
+    def test_callWithVersion_bytes_output(self):
+        gsp = yield self.setupGerritStatusPushSimple()
+        exp_argv = ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version']
+
+        def spawnProcess(pp, cmd, argv, env):
+            self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
+            pp.errReceived(b'test stderr\n')
+            pp.outReceived(b'gerrit version 2.14\n')
+            pp.outReceived(b'(garbage that should not cause a crash)\n')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+        gsp.callWithVersion(lambda: self.assertEqual(
+            gsp.gerrit_version, LooseVersion('2.14')))

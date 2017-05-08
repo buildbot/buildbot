@@ -37,6 +37,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 
 # Cache the version that the gerrit server is running for this many seconds
@@ -203,16 +204,16 @@ class GerritStatusPush(service.BuildbotService):
             self.gerrit_version = None
 
         def outReceived(self, data):
-            vstr = "gerrit version "
+            vstr = b"gerrit version "
             if not data.startswith(vstr):
-                log.msg("Error: Cannot interpret gerrit version info:", data)
+                log.msg(b"Error: Cannot interpret gerrit version info: " + data)
                 return
-            vers = data[len(vstr):]
-            log.msg("gerrit version:", vers)
-            self.gerrit_version = LooseVersion(vers)
+            vers = data[len(vstr):].strip()
+            log.msg(b"gerrit version: " + vers)
+            self.gerrit_version = LooseVersion(bytes2NativeString(vers))
 
         def errReceived(self, data):
-            log.msg("gerriterr:", data)
+            log.msg(b"gerriterr: " + data)
 
         def processEnded(self, status_object):
             if status_object.value.exitCode:
