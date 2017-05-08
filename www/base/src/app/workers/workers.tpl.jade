@@ -21,7 +21,7 @@
                     a(ui-sref='worker({worker: worker.workerid})')
                         | {{worker.name}}
                 td
-                    span(ng-repeat="build in worker.builds | orderBy : '-number' |limitTo: '7' ")
+                    span(ng-repeat="build in worker.builds | orderBy : '-buildid' |limitTo: '7' ")
                         a(ui-sref='build({builder: build.builderid, build: build.number})')
                             span.badge-status(ng-class="results2class(build, 'pulse')")
                               | {{ builders.get(build.builderid).name }}/{{ build.number }}
