@@ -585,7 +585,6 @@ psycopg
 Psycopg
 pubDate
 publically
-Pushjet
 py
 pyasn
 pyflakes
