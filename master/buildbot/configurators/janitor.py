@@ -25,6 +25,7 @@ from buildbot.configurators import ConfiguratorBase
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
+from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.timed import Nightly
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
@@ -80,6 +81,10 @@ class JanitorConfigurator(ConfiguratorBase):
 
         self.schedulers.append(Nightly(
             name=JANITOR_NAME, builderNames=[JANITOR_NAME], hour=hour, **nightly_kwargs))
+
+        self.schedulers.append(ForceScheduler(
+            name=JANITOR_NAME + "_force",
+            builderNames=[JANITOR_NAME]))
 
         self.builders.append(BuilderConfig(
             name=JANITOR_NAME, workername=JANITOR_NAME, factory=BuildFactory(steps=[
