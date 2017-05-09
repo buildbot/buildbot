@@ -156,6 +156,26 @@ class BuildJsCommand(distutils.cmd.Command):
                     level=distutils.log.INFO)
                 subprocess.call(command, shell=shell)
 
+        elif os.path.exists("webpack.config.js"):
+            npm_version = check_output("npm -v")
+            assert npm_version != "", "need nodejs and npm installed in current PATH"
+            assert LooseVersion(npm_version) >= LooseVersion(
+                "1.4"), "npm < 1.4 (%s)" % (npm_version)
+
+            npm_install_cmd = ['npm', 'install']
+            npm_build_cmd = ['npm', 'run', 'build']
+
+            if os.name == 'nt':
+                shell = True
+            else:
+                shell = False
+
+            for command in [npm_install_cmd, npm_build_cmd]:
+                self.announce(
+                    'Running command: %s' % str(" ".join(command)),
+                    level=distutils.log.INFO)
+                subprocess.call(command, shell=shell)
+
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
             "build", "lib", package, "static"))
 
