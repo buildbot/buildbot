@@ -29,19 +29,41 @@ if sys.platform == 'win32':
     import win32pipe
 
 def getoutput(cmd):
+    timeout = 120
+    maxtries = 3
     if sys.platform == 'win32':
         f = win32pipe.popen(cmd)
         stdout = ''.join(f.readlines())
         f.close()
     else:
-        p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
-        p.wait()
-        stdout = p.stdout.read()
-        if p.returncode != 0:
-            print('WARNING: "%s" returned status code: %s' % (' '.join(cmd), p.returncode))
-            if stdout is not None:
-                print(stdout)
-            sys.exit(1)
+        currentry = 1
+        while True: # retry loop
+            p = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+            waited = 0
+            while True: # wait loop
+                if p.poll() != None:
+                    break # process ended.
+                if waited > timeout:
+                    print("WARNING: Timeout of %s seconds reached while trying to run: %s" % ( timeout,' '.join(cmd)) )
+                    break
+                waited += 1
+                time.sleep(1)
+
+            if p.returncode != None: # process has endend
+                stdout = p.stdout.read()
+                if p.returncode == 0:
+                    break # ok: exit retry loop
+                else:
+                    print('WARNING: "%s" returned status code: %s' % (' '.join(cmd), p.returncode))
+                    if stdout is not None:
+                        print(stdout)
+            else:
+                p.kill()
+
+            if currentry > maxtries:
+                print("ERROR: Reached maximum number of tries (%s) to run: %s" % ( maxtries,' '.join(cmd)) )
+                sys.exit(1)
+            currentry += 1
     return stdout
 
 def sendchange_cmd(master, revisionData):
