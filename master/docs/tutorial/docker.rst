@@ -64,12 +64,12 @@ Building and running Buildbot
   docker-compose up
 
 
-You should now be able to go to http://localhost:8010 and see a web page similar to:
+You should now be able to go to http://localhost:8080 and see a web page similar to:
 
 .. image:: _images/index.png
    :alt: index page
 
-Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and you get this:
+Click on the `Waterfall Display link <http://localhost:8080/#/waterfall>`_ and you get this:
 
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
