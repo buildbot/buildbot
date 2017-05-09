@@ -1,1 +1,0 @@
-Allow renderables in options and definitions of  step ``CMake``. Currently only dicts and lists with renderables inside are allowed.

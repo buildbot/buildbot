@@ -1,2 +1,0 @@
-Fix :py:class:`UserPasswordAuth` authentication on ``py3`` and recent browsers. (:issue:`3162`, :issue:`3163`).
-The ``py3`` fix also requires Twisted https://github.com/twisted/twisted/pull/773.
