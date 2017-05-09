@@ -75,6 +75,7 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updateUserInfo(self):
+        self.auth.userInfoProvider = auth.UserInfoProviderBase()
         self.auth.userInfoProvider.getUserInfo = lambda un: {'info': un}
         self.req.session.user_info = {'username': 'elvira'}
         yield self.auth.updateUserInfo(self.req)
