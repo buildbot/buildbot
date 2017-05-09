@@ -201,7 +201,7 @@ class DockerLatentWorker(DockerBaseWorker):
     def _image_exists(self, client, name):
         # Make sure the image exists
         for image in client.images():
-            for tag in image['RepoTags']:
+            for tag in image['RepoTags'] or []:
                 if ':' in name and tag == name:
                     return True
                 if tag.startswith(name + ':'):
