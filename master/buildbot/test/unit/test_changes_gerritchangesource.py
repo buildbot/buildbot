@@ -22,6 +22,9 @@ import json
 import types
 
 from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.changes import gerritchangesource
@@ -217,6 +220,23 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             c = self.master.data.updates.changesAdded[0]
             self.assertEqual(c['project'], "world")
         return d
+
+    def test_startStreamProcess_bytes_output(self):
+        s = self.newChangeSource(
+            'somehost', 'some_choosy_user', debug=True)
+
+        exp_argv = ['ssh', 'some_choosy_user@somehost', '-p', '29418']
+        exp_argv += ['gerrit', 'stream-events']
+
+        def spawnProcess(pp, cmd, argv, env):
+            self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
+            pp.errReceived(b'test stderr\n')
+            pp.outReceived(b'{"type":"dropped-output"}\n')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+
+        s.startStreamProcess()
 
 
 class TestGerritEventLogPoller(changesource.ChangeSourceMixin,

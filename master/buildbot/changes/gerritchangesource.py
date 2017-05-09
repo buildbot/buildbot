@@ -252,23 +252,23 @@ class GerritChangeSource(GerritChangeSourceBase):
 
         def __init__(self, change_source):
             self.change_source = change_source
-            self.data = ""
+            self.data = b""
 
         @defer.inlineCallbacks
         def outReceived(self, data):
             """Do line buffering."""
             self.data += data
-            lines = self.data.split("\n")
+            lines = self.data.split(b"\n")
             # last line is either empty or incomplete
             self.data = lines.pop(-1)
             for line in lines:
                 if self.change_source.debug:
-                    log.msg("gerrit: %s" % line)
+                    log.msg(b"gerrit: %s" % line)
                 yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
             if self.change_source.debug:
-                log.msg("gerrit stderr: %s" % data)
+                log.msg(b"gerrit stderr: %s" % data)
 
         def processEnded(self, status_object):
             self.change_source.streamProcessStopped()
