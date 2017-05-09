@@ -295,6 +295,10 @@ MailNotifier arguments
     A dictionary containing key/value pairs of extra headers to add to sent e-mails.
     Both the keys and the values may be a `Interpolate` instance.
 
+``watchedWorkers``
+    This is a list of names of workers, which should be watched. In case a worker get missing, a notification is sent.
+    The value of ``watchedWorkers`` can also be set to *all* (default) or ``None``. You also need to specify email address to which the notification is sent in the worker configuration.
+
 ``messageFormatterMissingWorker``
     This is an optional instance of the ``reporters.messageFormatterMissingWorker`` class that can be used to generate a custom mail message for missing workers.
     This class uses the Jinja2_ templating language to generate the body and optionally the subject of the mails.
@@ -417,6 +421,51 @@ The default ``ctx`` for the missing worker email is made of:
         String describing the approximate the time of last connection for this worker.
 
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
+
+
+.. bb:reporter:: Pushover
+
+.. index:: Pushover
+
+Pushover Notifications
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.pushover.PushoverNotifier
+
+Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
+
+To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and API token.
+
+The following simple example will send an email upon the completion of each build.
+The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaces with proper ones obtained from the Pushover website for your application.
+
+::
+
+    from buildbot.plugins import reporters
+    pn = reporters.PushoverNotifier(user_key="1234", api_token='abcd')
+    c['services'].append(pn)
+
+
+This notifier supports parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` from the mail notifier. See above for their explanation.
+However, ``watchedWorkers`` defaults to *None*.
+
+The following additional parameters are accepted by this class:
+
+``user_key``
+    The user key from the Pushover website. It is used to identify the notification recipient.
+
+``api_token``
+    API token for a custom application from the Pushover website.
+
+``priorities``
+    Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
+
+``otherParams``
+    Other parameters send to Pushover API. Check https://pushover.net/api/ for their list.
+
+.. _Pushover: https://pushover.net/
+
+
 
 .. bb:reporter:: IRC
 
