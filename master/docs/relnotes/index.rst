@@ -10,11 +10,11 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``0.9.6-35-g615cb76`` ( ``2017-04-30`` )
+Buildbot ``0.9.7`` ( ``2017-05-09`` )
 =====================================================
 
-Bug fixes
----------
+Core Bug fixes
+--------------
 
 - Fix :py:class:`UserPasswordAuth` authentication on ``py3`` and recent
   browsers. (:issue:`3162`, :issue:`3163`). The ``py3`` fix also requires
@@ -24,38 +24,34 @@ Bug fixes
 - Fix issue with :ref:`ConsoleView` when no change source is configured but
   still builds have ``got_revision`` property
 
-Features
---------
+Components Bug fixes
+--------------------
+
+- Allow renderables in options and definitions of step ``CMake``. Currently
+  only dicts and lists with renderables inside are allowed.
+- ``OAuth`` Authentication are now working with :py:class:`RolesFromEmails`.
+- :py:class:`~buildbot.worker.docker.DockerLatentWorker`: ``_image_exists``
+  does not raise anymore if it encounters an image with ``<none>`` tag
+- Fix command line parameters for ``Robocopy`` step ``verbose`` option
+
+Core Features
+-------------
 
 - Builds ``state_string`` is now automatically computed according to the
   :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
   ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
   allows the dashboards and reporters to get a descent summary text of the
   build without fetching the steps.
+- New :bb:cfg:`configurators` section, which can be used to create higher level
+  configuration modules for Buildbot.
+- New :bb:configurator:`JanitorConfigurator` which can be used to create a
+  builder which save disk space by removing old logs from the database.
 
+Components Features
+-------------------
 
-Buildbot ``0.9.6-35-g615cb76`` ( ``2017-04-30`` )
-=====================================================
-
-Bug fixes
----------
-
-- Fix :py:class:`UserPasswordAuth` authentication on ``py3`` and recent
-  browsers. (:issue:`3162`, :issue:`3163`). The ``py3`` fix also requires
-  Twisted https://github.com/twisted/twisted/pull/773.
-- :ref:`ConsoleView` now display changes the same way as in Recent Changes
-  page.
-- Fix issue with :ref:`ConsoleView` when no change source is configured but
-  still builds have ``got_revision`` property
-
-Features
---------
-
-- Builds ``state_string`` is now automatically computed according to the
-  :py:meth:`BuildStep.getResultSummary`, :py:attr:`BuildStep.description` and
-  ``updateBuildSummaryPolicy`` from :ref:`Buildstep-Common-Parameters`. This
-  allows the dashboards and reporters to get a descent summary text of the
-  build without fetching the steps.
+- Added a https://pushover.net/ reporter as :py:class:`buildbot.reporters.pushover.PushoverNotifier`
+- ``property`` argument in SetPropery is now renderable.
 
 
 Buildbot ``0.9.6`` ( ``2017-04-19`` )

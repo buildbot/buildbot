@@ -260,7 +260,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "caches",
         "change_source",
         "codebaseGenerator",
-        "configurators"
+        "configurators",
         "changeCacheSize",
         "changeHorizon",
         'db',

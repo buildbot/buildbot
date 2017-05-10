@@ -29,6 +29,7 @@ from buildbot.configurators.janitor import JANITOR_NAME
 from buildbot.configurators.janitor import JanitorConfigurator
 from buildbot.configurators.janitor import LogChunksJanitor
 from buildbot.process.results import SUCCESS
+from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.timed import Nightly
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
@@ -51,6 +52,7 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.setupConfigurator(logHorizon=timedelta(weeks=1))
         self.expectWorker(JANITOR_NAME, LocalWorker)
         self.expectScheduler(JANITOR_NAME, Nightly)
+        self.expectScheduler(JANITOR_NAME + "_force", ForceScheduler)
         self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         self.expectNoConfigError()
 

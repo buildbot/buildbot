@@ -341,6 +341,7 @@ setup_args = {
                  'split_file_projects_branches'),
                 ('svn.split_file_branches', 'split_file_branches'),
                 ('svn.split_file_alwaystrunk', 'split_file_alwaystrunk')]),
+            ('buildbot.configurators.janitor', ['JanitorConfigurator']),
             ('buildbot.config', ['BuilderConfig']),
             ('buildbot.locks', [
                 'MasterLock',
