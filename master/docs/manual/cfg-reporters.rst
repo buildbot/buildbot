@@ -466,6 +466,29 @@ The following additional parameters are accepted by this class:
 .. _Pushover: https://pushover.net/
 
 
+Pushjet Notifications
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.pushover.PushjetNotifier
+
+Pushjet (https://pushjet.io/) is another instant notification service, similar to Pushover.
+To use this reporter, you need to generate a Pushjet service and provide provide its secret.
+
+The parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` are common with mail and pushover notifier.
+
+The Pushjet specific parameters are:
+
+``secret``
+    This is a secret for your Pushjet service.
+
+``levels``
+    Dictionary of Pushjet notification levels. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between 0...5, specifying notification priority. In case a mode is missing from this dictionary, the default value of 3 is used.
+
+``base_url``
+    Base URL for custom Pushjet instances. Defaults to https://api.pushjet.io.
+
+.. _Pushjet: https://pushjet.io/
+
 
 .. bb:reporter:: IRC
 
