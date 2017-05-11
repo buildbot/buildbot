@@ -339,7 +339,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             # calculate how many bytes we saved
             q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
             q = q.where(tbl.c.logid == logid)
-            newsize = conn.execute(q).fetchone()[0]
+            # if fetchone()[0] is None, then set it to 0  # pylint:disable=wrong-spelling-in-comment
+            newsize = conn.execute(q).fetchone()[0] or 0
             return totlength - newsize
 
         saved = yield self.db.pool.do(thdcompressLog)
