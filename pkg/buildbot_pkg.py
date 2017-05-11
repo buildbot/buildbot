@@ -138,7 +138,7 @@ class BuildJsCommand(distutils.cmd.Command):
             assert npm_version != "", "need nodejs and npm installed in current PATH"
             assert LooseVersion(npm_version) >= LooseVersion(
                 "1.4"), "npm < 1.4 (%s)" % (npm_version)
-            
+
             commands = []
 
             # if we find yarn, then we use it as it is much faster
