@@ -1,1 +1,1 @@
-Added a https://pushjet.io/ reporter as :py:class `buildbot.reporters.pushjet.PushjetNotifier`
+Added a https://pushjet.io/ reporter as :py:class:`buildbot.reporters.pushjet.PushjetNotifier`
