@@ -340,6 +340,8 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = sa.select([sa.func.sum(sa.func.length(tbl.c.content))])
             q = q.where(tbl.c.logid == logid)
             newsize = conn.execute(q).fetchone()[0]
+            if newsize is None:
+                newsize = totlength
             return totlength - newsize
 
         saved = yield self.db.pool.do(thdcompressLog)
