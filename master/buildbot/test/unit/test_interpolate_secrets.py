@@ -55,3 +55,23 @@ class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
         self.assertFailure(self.build.render(command), defer.FirstError)
         self.flushLoggedErrors(defer.FirstError)
         self.flushLoggedErrors(KeyError)
+
+
+class TestInterpolateSecretsHiddenSecrets(unittest.TestCase):
+
+    def setUp(self):
+        self.master = fakemaster.make_master()
+        fakeStorageService = FakeSecretStorage()
+        fakeStorageService.reconfigService(secretdict={"foo": "bar",
+                                                       "other": "value"})
+        self.secretsrv = SecretManager()
+        self.secretsrv.services = [fakeStorageService]
+        self.secretsrv.setServiceParent(self.master)
+        self.build = FakeBuildWithMaster(self.master)
+
+    @defer.inlineCallbacks
+    def test_secret(self):
+        command = Interpolate("echo %(secrets:foo)s")
+        rendered = yield self.build.render(command)
+        cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+        self.assertEqual(cleantext, "echo <foo>")
