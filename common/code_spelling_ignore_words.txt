@@ -570,6 +570,7 @@ pserver
 pty
 ptys
 pullrequests
+pushjet
 pwd
 py
 pycrypto

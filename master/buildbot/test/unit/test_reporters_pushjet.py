@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
-import sys
 from unittest import SkipTest
 
 from twisted.internet import defer
@@ -29,9 +28,6 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.util import httpclientservice
-
-py_27 = sys.version_info[0] > 2 or (sys.version_info[0] == 2
-                                    and sys.version_info[1] >= 7)
 
 
 class TestPushjetNotifier(ConfigErrorsMixin, unittest.TestCase):
@@ -87,3 +83,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, unittest.TestCase):
         n = yield pn.sendNotification({'message': "Buildbot Pushjet test passed!"})
         j = yield n.json()
         self.assertEqual(j['status'], 'ok')
+
+        # Test with:
+        # TEST_PUSHJET_SECRET=edcfaf21ab1bbad7b12bd7602447e6cb
+        # https://api.pushjet.io/message?uuid=b8b8b8b8-0000-b8b8-0000-b8b8b8b8b8b8

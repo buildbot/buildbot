@@ -479,7 +479,7 @@ The parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``
 The Pushjet specific parameters are:
 
 ``secret``
-    This is a secret for your Pushjet service.
+    This is a secret token for your Pushjet service. See http://docs.pushjet.io/docs/creating-a-new-service to learn how to create a new Pushjet service and get its secret token.
 
 ``levels``
     Dictionary of Pushjet notification levels. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between 0...5, specifying notification priority. In case a mode is missing from this dictionary, the default value of 3 is used.

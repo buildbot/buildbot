@@ -97,10 +97,9 @@ class PushjetNotifier(NotifierBase):
             return
 
         msg = {'message': body}
-        try:
-            msg['level'] = self.levels[LEVELS[results] if worker is None else 'worker_missing']
-        except KeyError:
-            pass
+        level = self.levels.get(LEVELS[results] if worker is None else 'worker_missing')
+        if level is not None:
+            msg['level'] = level
         if subject is not None:
             msg['title'] = subject
         else:
