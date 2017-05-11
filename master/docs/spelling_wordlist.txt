@@ -861,6 +861,7 @@ warningPattern
 webapp
 webdav
 webhook
+webpack
 webserver
 websocket
 websvn
