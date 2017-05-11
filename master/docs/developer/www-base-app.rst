@@ -29,6 +29,7 @@ On top of Angular we use nodeJS tools to ease development
 
 * gulp buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
   In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
+* alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
 * `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
 * `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates.
 * `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
@@ -67,6 +68,9 @@ Typical plugin source code layout is:
     package.json                 # declares npm dependency. normallly, only guanlecoja is needed. Typically, no change needed
     gulpfile.js                  # entrypoint for gulp, should be a one line call to guanlecoja. Typically, no change needed
     MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
+
+Alternatively it is possible to use webpack instead of gulp so `gulpfile.js` shall be replaced with `webpack.config.js` (with proper code inside of course).
+When `gulpfile.js` found, gulp is used even `webpack.config.js` is defined.
 
 Plugins are packaged as python entry-points for the ``buildbot.www`` namespace.
 The python part is defined in the `buildbot.www.plugin` module.

@@ -130,7 +130,7 @@ class BuildJsCommand(distutils.cmd.Command):
         if self.already_run:
             return
         package = self.distribution.packages[0]
-        if os.path.exists("gulpfile.js"):
+        if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
             yarn_version = check_output("yarn --version")
             npm_version = check_output("npm -v")
             print("yarn:", yarn_version, "npm: ", npm_version)
@@ -138,19 +138,26 @@ class BuildJsCommand(distutils.cmd.Command):
             assert npm_version != "", "need nodejs and npm installed in current PATH"
             assert LooseVersion(npm_version) >= LooseVersion(
                 "1.4"), "npm < 1.4 (%s)" % (npm_version)
+
+            commands = []
+
             # if we find yarn, then we use it as it is much faster
             if yarn_version != "":
-                npm_cmd = ['yarn', 'install']
+                commands.append(['yarn', 'install'])
             else:
-                npm_cmd = ['npm', 'install']
-            gulp_cmd = [os.path.join(npm_bin, "gulp"), 'prod', '--notests']
+                commands.append(['npm', 'install'])
+
+            if os.path.exists("gulpfile.js"):
+                commands.append([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+            elif os.path.exists("webpack.config.js"):
+                commands.append([os.path.join(npm_bin, "webpack"), '-p'])
 
             if os.name == 'nt':
                 shell = True
             else:
                 shell = False
 
-            for command in [npm_cmd, gulp_cmd]:
+            for command in commands:
                 self.announce(
                     'Running command: %s' % str(" ".join(command)),
                     level=distutils.log.INFO)
