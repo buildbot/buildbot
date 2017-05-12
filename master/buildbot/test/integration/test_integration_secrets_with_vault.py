@@ -72,7 +72,7 @@ def masterConfig():
     )]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:key)s')]))
+    f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",

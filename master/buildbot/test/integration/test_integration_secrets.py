@@ -72,10 +72,10 @@ def masterConfig():
     f = BuildFactory()
     if os.name == "posix":
         f.addStep(steps.ShellCommand(command=Interpolate(
-            'echo %(secrets:foo)s | sed "s/bar/The password was there/"')))
+            'echo %(secret:foo)s | sed "s/bar/The password was there/"')))
     else:
         f.addStep(steps.ShellCommand(command=Interpolate(
-            'echo %(secrets:foo)s')))
+            'echo %(secret:foo)s')))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],

@@ -566,7 +566,7 @@ class Interpolate(util.ComparableMixin, object):
         return _thePropertyDict, prop, repl
 
     @staticmethod
-    def _parse_secrets(arg):
+    def _parse_secret(arg):
         try:
             secret, repl = arg.split(":", 1)
         except ValueError:
