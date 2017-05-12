@@ -49,11 +49,11 @@ File provider
 
 .. code-block:: python
 
-    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles"]
 
 In the master configuration the provider is instantiated through a Buildbot service secret manager with the file directory path.
 File secrets provider reads the file named by the key wanted by Buildbot and returns the contained text value.
-SecretInFile provider allows Buildbot to read secrets in the secret directory.
+SecretInAFile provider allows Buildbot to read secrets in the secret directory.
 
 Vault provider
 ``````````````

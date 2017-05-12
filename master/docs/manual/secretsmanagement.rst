@@ -42,24 +42,24 @@ The following example shows a basic usage of secrets in Buildbot.
 
     # First we declare that the secrets are stored in a directory of the filesystem
     # each file contain one secret identified by the filename
-    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles"]
 
     # then in a buildfactory:
 
     # use a secret on a shell command via Interpolate
-    f1.addStep(ShellCommand(Interpolate("wget -u user -p %{secrets:userpassword}s %{prop:urltofetch}s")))
+    f1.addStep(ShellCommand(Interpolate("wget -u user -p %(secret:userpassword)s %(prop:urltofetch)s")))
 
 Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
 
 Secrets storages
 ----------------
 
-SecretInFile
-````````````
+SecretInAFile
+`````````````
 
 .. code-block:: python
 
-    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles"]
 
 In the passed directory, every file contains a secret identified by the filename.
 
