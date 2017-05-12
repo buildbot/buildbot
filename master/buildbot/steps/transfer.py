@@ -294,7 +294,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
 
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
-        self.workersrcs = workersrcs if isinstance(workersrcs, list) else [workersrcs]
+        self.workersrcs = workersrcs
         self._registerOldWorkerAttr("workersrcs")
         self.masterdest = masterdest
         self.maxsize = maxsize
@@ -394,7 +394,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
         self.checkWorkerHasCommand("stat")
 
         masterdest = os.path.expanduser(self.masterdest)
-        sources = self.workersrcs
+        sources = self.workersrcs if isinstance(self.workersrcs, list) else [self.workersrcs]
 
         if self.keepstamp and self.workerVersionIsOlderThan("uploadFile", "2.13"):
             m = ("This worker (%s) does not support preserving timestamps. "
