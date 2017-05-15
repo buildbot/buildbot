@@ -319,6 +319,7 @@ setup_args = {
         ]),
         ('buildbot.reporters', [
             ('buildbot.reporters.mail', ['MailNotifier']),
+            ('buildbot.reporters.pushjet', ['PushjetNotifier']),
             ('buildbot.reporters.pushover', ['PushoverNotifier']),
             ('buildbot.reporters.message', ['MessageFormatter']),
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),

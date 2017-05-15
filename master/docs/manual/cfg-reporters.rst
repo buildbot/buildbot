@@ -423,7 +423,7 @@ The default ``ctx`` for the missing worker email is made of:
 .. _Jinja2: http://jinja.pocoo.org/docs/dev/templates/
 
 
-.. bb:reporter:: Pushover
+.. bb:reporter:: PushoverNotifier
 
 .. index:: Pushover
 
@@ -434,7 +434,7 @@ Pushover Notifications
 
 Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used by administrators to receive an instant message to an iPhone or an Android device if a build fails. The :class:`PushoverNotifier` reporter is used to accomplish this. Its configuration is very similar to the mail notifications, however—due to the notification size constrains—the logs and patches cannot be attached.
 
-To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and API token.
+To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
 
 The following simple example will send an email upon the completion of each build.
 The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaces with proper ones obtained from the Pushover website for your application.
@@ -446,7 +446,7 @@ The email contains a description of the :class:`Build`, its results, and URLs wh
     c['services'].append(pn)
 
 
-This notifier supports parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` from the mail notifier. See above for their explanation.
+This notifier supports parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` from the :bb:reporter:`mail notifier <MailNotifier>`. See above for their explanation.
 However, ``watchedWorkers`` defaults to *None*.
 
 The following additional parameters are accepted by this class:
@@ -465,6 +465,33 @@ The following additional parameters are accepted by this class:
 
 .. _Pushover: https://pushover.net/
 
+
+.. bb:reporter:: PushjetNotifier
+
+.. index:: Pushjet
+
+Pushjet Notifications
+~~~~~~~~~~~~~~~~~~~~~
+
+.. py:class:: buildbot.reporters.pushover.PushjetNotifier
+
+Pushjet_ is another instant notification service, similar to :bb:reporter:`Pushover <PushoverNotifier>`.
+To use this reporter, you need to generate a Pushjet service and provide its secret.
+
+The parameters ``subject``, ``mode``, ``builders``, ``tags``, ``schedulers``, ``branches``, ``buildSetSummary``, ``messageFormatter``, ``watchedWorkers``, and ``messageFormatterMissingWorker`` are common with :bb:reporter:`mail <MailNotifier>` and :bb:reporter:`Pushover <PushoverNotifier>` notifier.
+
+The Pushjet specific parameters are:
+
+``secret``
+    This is a secret token for your Pushjet service. See http://docs.pushjet.io/docs/creating-a-new-service to learn how to create a new Pushjet service and get its secret token.
+
+``levels``
+    Dictionary of Pushjet notification levels. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between 0...5, specifying notification priority. In case a mode is missing from this dictionary, the default value set by Pushover is used.
+
+``base_url``
+    Base URL for custom Pushjet instances. Defaults to https://api.pushjet.io.
+
+.. _Pushjet: https://pushjet.io/
 
 
 .. bb:reporter:: IRC
