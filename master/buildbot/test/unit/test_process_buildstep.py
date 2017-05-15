@@ -406,6 +406,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.master.reactor = self.clock
         step.stepid = 13
         step.step_status = mock.Mock()
+        step.build = fakebuild.FakeBuild()
         return step
 
     def test_updateSummary_running(self):

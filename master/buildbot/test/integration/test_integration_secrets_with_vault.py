@@ -51,7 +51,7 @@ class SecretsConfig(RunMasterBase):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo word")
+        res = yield self.checkBuildStepLogExist(build, "echo <key>")
         self.assertTrue(res)
 
 
@@ -72,7 +72,7 @@ def masterConfig():
     )]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:key)s')]))
+    f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",
