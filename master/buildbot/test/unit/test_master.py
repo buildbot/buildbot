@@ -119,6 +119,14 @@ class OldTriggeringMethods(unittest.TestCase):
             kwargs=dict(when=892293875),
             exp_data_kwargs=dict(when_timestamp=892293875))
 
+    def test_addChange_args_new_and_old(self):
+        func = self.do_test_addChange_args
+        kwargs = dict(who='author',
+                      author='author'),
+        exp_data_kwargs = dict(author='author')
+        self.assertRaises(TypeError, func, kwargs=kwargs,
+                          exp_data_kwargs=exp_data_kwargs)
+
     def test_addChange_args_properties(self):
         # properties should not be qualified with a source
         return self.do_test_addChange_args(
