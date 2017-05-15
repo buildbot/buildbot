@@ -5,6 +5,9 @@ DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg http
 
 PIP?=pip
 
+VENV_NAME:=.venv$(VENV_PY_VERSION)
+VENV_PY_VERSION?=python
+
 # build rst documentation
 docs:
 	$(MAKE) -C master/docs
@@ -60,27 +63,27 @@ docker-buildbot-master:
 docker-buildbot-master-ubuntu:
 	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
-.venv:
-		virtualenv .venv
-		.venv/bin/pip install -U pip setuptools
-		.venv/bin/pip install -e pkg \
-			-e 'master[tls,test,docs]' \
-			-e 'worker[test]' \
-			buildbot_www \
-			'git+https://github.com/tardyp/towncrier'
+$(VENV_NAME):
+	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
+	$(VENV_NAME)/bin/pip install -U pip
+	$(VENV_NAME)/bin/pip install -e pkg \
+		-e 'master[tls,test,docs]' \
+		-e 'worker[test]' \
+		buildbot_www \
+		'git+https://github.com/tardyp/towncrier'
 
 # helper for virtualenv creation
-virtualenv: .venv
+virtualenv: $(VENV_NAME)   # usage: make virtaulenv VENV_PY_VERSION=python3.4
 	@echo now you can type following command  to activate your virtualenv
-	@echo . .venv/bin/activate
+	@echo . $(VENV_NAME)/bin/activate
 
-release_notes: .venv
+release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
 	git commit -m "relnotes for $(VERSION)"
 
 # helper for release creation
-release: .venv
+release: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	./common/maketarballs.sh
