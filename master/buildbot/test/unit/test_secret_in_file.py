@@ -46,7 +46,7 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         self.tmp_dir = self.createTempDir("temp")
         filetmp, self.filepath = self.createFileTemp(self.tmp_dir,
                                                      "tempfile.txt",
-                                                     text="key value")
+                                                     text="key value\n")
         self.srvfile = SecretInAFile(self.tmp_dir)
         yield self.srvfile.startService()
 
@@ -107,3 +107,9 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
     def testGetSecretInFileNotFound(self):
         value = self.srvfile.get("tempfile2.txt")
         self.assertEqual(value, None)
+
+    @defer.inlineCallbacks
+    def testGetSecretInFileNoStrip(self):
+        yield self.srvfile.reconfigService(self.tmp_dir, strip=False)
+        value = self.srvfile.get("tempfile.txt")
+        self.assertEqual(value, "key value\n")
