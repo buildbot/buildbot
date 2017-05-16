@@ -459,16 +459,15 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         kwargs['comments'] = comments
 
         def handle_deprec(oldname, newname):
-            if oldname not in kwargs:
-                return
-            old = kwargs.pop(oldname)
-            if old is not None:
-                if kwargs.get(newname) is None:
-                    log.msg("WARNING: change source is using deprecated "
-                            "addChange parameter '%s'" % oldname)
-                    return old
-                raise TypeError("Cannot provide '%s' and '%s' to addChange"
-                                % (oldname, newname))
+            if oldname in kwargs:
+                old = kwargs.pop(oldname)
+                if old is not None:
+                    if kwargs.get(newname) is None:
+                        log.msg("WARNING: change source is using deprecated "
+                                "addChange parameter '%s'" % oldname)
+                        return old
+                    raise TypeError("Cannot provide '%s' and '%s' to addChange"
+                                    % (oldname, newname))
             return kwargs.get(newname)
 
         kwargs['author'] = handle_deprec("who", "author")

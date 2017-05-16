@@ -1,0 +1,1 @@
+Update old ``addChange`` method to accept the new chdict names if only the new name is present. Fixes :issue:`3191`.

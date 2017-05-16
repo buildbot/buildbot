@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import datetime
 import os
 import signal
 
@@ -118,6 +119,20 @@ class OldTriggeringMethods(unittest.TestCase):
         return self.do_test_addChange_args(
             kwargs=dict(when=892293875),
             exp_data_kwargs=dict(when_timestamp=892293875))
+
+    def test_addChange_args_when_timestamp(self):
+        # when_timestamp should come through as an epoch time.
+        return self.do_test_addChange_args(
+            kwargs=dict(when_timestamp=datetime.datetime(1998, 4, 11, 11, 24, 35)),
+            exp_data_kwargs=dict(when_timestamp=892293875))
+
+    def test_addChange_args_new_and_old(self):
+        func = self.do_test_addChange_args
+        kwargs = dict(who='author',
+                      author='author'),
+        exp_data_kwargs = dict(author='author')
+        self.assertRaises(TypeError, func, kwargs=kwargs,
+                          exp_data_kwargs=exp_data_kwargs)
 
     def test_addChange_args_properties(self):
         # properties should not be qualified with a source
