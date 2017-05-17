@@ -8,6 +8,7 @@ machine:
 dependencies:
   override:
     - pyenv global 2.7.11
+    - pip install -r requirements-dev.txt
     - pip install -e pkg -e 'master[docs]' -e worker 'git+https://github.com/tardyp/towncrier'
 
 test:

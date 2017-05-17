@@ -89,6 +89,7 @@ install:
   - |
       # pip installs
       set -e
+      pip install -r requirements-dev.txt
       if [ $TWISTED = trunk ]; then
           pip install git+https://github.com/twisted/twisted
       fi
