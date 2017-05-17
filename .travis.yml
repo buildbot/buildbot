@@ -34,6 +34,9 @@ install:
   - pip install -U pip
   # codecov is the interface to codecov.io; see after_success
   - pip install codecov
+  # some of our deps depends of this, and setuptools has a known bug of not being capable of installing
+  # correctly the install_deps :-/ https://github.com/pypa/setuptools_scm/issues/164
+  - pip install -U pbr setuptools_scm==1.15.0
   - "if [ $TWISTED = trunk ]; then pip install git+https://github.com/twisted/twisted ; fi"
   - "if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi"
   - "if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi"

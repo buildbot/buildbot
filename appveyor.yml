@@ -17,6 +17,9 @@ install:
   - "python -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "python -m pip install pypiwin32"
+  # some of our deps depends of this, and setuptools has a known bug of not being capable of installing
+  # correctly the install_deps :-/ https://github.com/pypa/setuptools_scm/issues/164
+  - python -m pip install -U pbr git+https://github.com/pypa/setuptools_scm
 
   # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
   # install third-party SQLite.
