@@ -45,7 +45,7 @@ moto==1.0.0
 olefile==0.44
 packaging==16.8
 pathlib2==2.2.1
-pbr==3.0.0
+pbr==3.0.1
 pep8==1.7.0
 pg8000==1.10.6
 psycopg2==2.7.1
