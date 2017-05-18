@@ -20,7 +20,7 @@ coverage==4.4.1
 cryptography==1.8.1
 decorator==4.0.11
 dicttoxml==1.7.4
-docutils==0.12
+docutils==0.13.1
 enum34==1.1.6
 flake8==2.6.2
 funcparserlib==0.3.6
