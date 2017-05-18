@@ -55,7 +55,7 @@ pyasn1-modules==0.0.8
 pycodestyle==2.0.0
 pycparser==2.17
 pyenchant==1.6.8
-pyflakes==1.2.3
+pyflakes==1.5.0
 Pygments==2.2.0
 pyjade==4.0.0
 PyJWT==1.5.0
