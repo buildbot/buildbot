@@ -165,7 +165,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 )
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for'
+                        'Updated status with "{state}" for '
                         '{repoOwner}/{repoName} at {sha}, issue {issue}.'.format(
                             state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
             except Exception as e:
