@@ -835,7 +835,7 @@ More complex config with separation per branch:
     )
     c['www']['authz'] = authz
 
-Using GitHub authentication and allowing access to control endpoints for users in the "BuildBot" organization:
+Using GitHub authentication and allowing access to control endpoints for users in the "Buildbot" organization:
 
 .. code-block:: python
 

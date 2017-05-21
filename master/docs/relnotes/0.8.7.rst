@@ -43,7 +43,7 @@ In addition to what's listed below, the 0.8.7p1 release adds the following.
 
 * ``CVSMailDir`` has been fixed.
 
-* Importing ``buildbot.test`` no longer causes python to exit, if ``mock`` insn't installed.
+* Importing ``buildbot.test`` no longer causes python to exit, if ``mock`` isn't installed.
   The fixes ``pydoc -k`` when buildbot is installed.
 
 * ``Mercurial`` properly updates to the correct branch, when using ``inrepo`` branches.
