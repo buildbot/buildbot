@@ -77,7 +77,7 @@ Sphinx==1.5.6
 sphinx-jinja==0.2.1
 sphinxcontrib-spelling==2.3.0
 sphinxcontrib-websupport==1.0.1
-SQLAlchemy==1.1.9
+SQLAlchemy==1.1.10
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.3
 Tempita==0.5.2
