@@ -42,7 +42,7 @@ The following example shows a basic usage of secrets in Buildbot.
 
     # First we declare that the secrets are stored in a directory of the filesystem
     # each file contain one secret identified by the filename
-    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles")]
 
     # then in a buildfactory:
 
@@ -59,11 +59,20 @@ SecretInAFile
 
 .. code-block:: python
 
-    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles")]
 
 In the passed directory, every file contains a secret identified by the filename.
 
 e.g: a file ``user`` contains the text ``pa$$w0rd``.
+
+Arguments:
+
+``dirname``
+  (required) Absolute path to directory containing the files with a secret.
+
+``strip``
+  (optional) if ``True`` (the default), trailing newlines are removed from the
+  file contents.
 
 SecretInVault
 `````````````
