@@ -471,13 +471,12 @@ class RealTests(Tests):
             row = res.fetchone()
             res.close()
             return dict(row)
-
         newRow = yield self.db.pool.do(thd)
         self.assertEqual(newRow, {
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': logs.dumps_lz4(line),
+            'content': logs.dumps_lz4(line.encode('utf-8')),
             'compressed': 3})
 
     @defer.inlineCallbacks
