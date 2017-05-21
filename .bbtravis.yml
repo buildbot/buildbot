@@ -71,43 +71,32 @@ matrix:
 
     # python 3 tests
     - python: "3.5"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=coverage
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
 
     - python: "3.6"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
 # Dependencies installation commands
 install:
   - pip install -U pip
-  # codecov is the interface to codecov.io; see after_success
-  # Install mysqlclient for tests that uses real MySQL
-  # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
+  - condition: 'python != "2.6"'
+    cmd: pip install -r requirements-ci.txt
+  - condition: 'python == "2.6"'
+    cmd: pip install -r requirements-ci2.6.txt
+  - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
+    cmd: pip install -r requirements-cidb.txt
   - |
-      # pip installs
+      # pip installs for backward compat
       set -e
-      pip install -r requirements-dev.txt
       if [ $TWISTED = trunk ]; then
           pip install git+https://github.com/twisted/twisted
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
-      pip install -e pkg \
-                  -e 'master[tls,test]' \
-                  -e 'worker[test]' \
-                  mysqlclient \
-                  psycopg2 \
-                  pg8000 \
-                  codecov
-      # install buildbot_www from pip in order to run the www tests
-      pip install buildbot_www
-
-      if [ $TESTS = pylint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
-      # until towncrier toml is released, we need to fetch from git :-/
-      if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
 
 before_script:
   # create real database for tests
