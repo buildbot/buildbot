@@ -20,12 +20,15 @@ Versions
 ~~~~~~~~
 
 The API described here is version 2.
-The ad-hoc API from Buildbot-0.8.x, version 1, is no longer supported.
+The ad-hoc API from Buildbot-0.8.x, version 1, is no longer supported [#apiv1]_.
+
 
 The policy for incrementing the version is when there is incompatible change added.
 Removing a field or endpoint is considered incompatible change.
 Adding a field or endpoint is not considered incompatible, and thus will only be described as a change in release note.
 The policy is that we will avoid as much as possible incrementing version.
+
+.. [#apiv1] The JSON API defined by ``status_json.py`` in Buildbot-0.8.x is considered version 1, although its root path was ``json``, not ``api/v1``.
 
 Getting
 ~~~~~~~

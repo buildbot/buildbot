@@ -1,0 +1,3 @@
+mysqlclient
+psycopg2
+pg8000
