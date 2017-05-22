@@ -52,6 +52,7 @@ from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
+from buildbot.plugins import util
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -241,6 +242,18 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_doStepIf_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_renderable_false(self):
+        @util.renderer
+        def dostepif(props):
+            return False
+        self.setupStep(self.FakeBuildStep(doStepIf=dostepif))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()
