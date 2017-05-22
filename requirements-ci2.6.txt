@@ -19,7 +19,7 @@ pbr==3.0.1
 pep8==1.7.0
 pycodestyle==2.0.0
 pyenchant==1.6.8
-pyflakes==1.2.3
+pyflakes==1.5.0
 pylint==1.7.1
 pyparsing==2.2.0
 singledispatch==3.4.0.3
