@@ -363,3 +363,80 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ma
 .. _txrequests: https://pypi.python.org/pypi/txrequests
 .. _treq: https://pypi.python.org/pypi/treq
 .. _requests authentication plugin: http://docs.python-requests.org/en/master/user/authentication/
+
+Kubernetes latent worker
+========================
+
+Kubernetes_ is an open-source system for automating deployment, scaling, and management of containerized applications.
+
+Buildbot supports using Kubernetes_ to host your latent workers.
+
+.. py:class:: buildbot.worker.kubernetes.KubeLatentWorker
+.. py:class:: buildbot.plugins.worker.KubeLatentWorker
+
+The :class:`KubeLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds
+Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
+See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
+
+.. _Kubernetes: https://kubernetes.io/
+
+In addition to the arguments available for any :ref:`Latent-Workers`, :class:`KubeLatentWorker` will accept the following extra ones:
+
+``password``
+    (mandatory)
+    The worker password part of the :ref:`Latent-Workers` API.
+    If the password in ``None``, then it will be automatically generated from random number.
+
+``job``
+    (optional, default to KubeLatentWorker.default_job())
+    This is the V1JobSpec_ object to the kubernetes API. You will find documentation about python object on the doc of the python kubernetes-client_.
+    If you want to pass renderable in Job definition you need to wrap your object with ``KubeRenderable``.
+    You can get a default job that references the `official buildbot image`_
+
+``namespace``
+    (optional, default to ``default``)
+    This is the name of the namespace.
+
+``masterFQDN``
+    (optional, default depend of ``getMasterMethod``)
+    Address of the master the worker should connect to. Use if you want to place a loadbalancer between the workers and the masters.
+    See the section ``getMasterMethod`` to see the default value.
+
+``getMasterMethod``
+    (optional, default to ``auto_ip``)
+    If ``None`` passed as ``masterFQDN`` or no ``masterFQDN`` passed, determines the default value of ``masterFQDN``:
+
+    * ``auto_ip`` scheme will set ``masterFQDN=socker.gethostbyname(socket.getfqdn())``
+    * ``fqdn`` scheme will set ``masterFQDN=socket.getfqdn()``
+
+    ``auto_ip`` is used by default as it fits better the kubernetes case
+
+``kubeConfig``
+    (optional)
+    Override python kubernetes-client configuration. For example, you can disable ssl verification when use in cluster configuration::
+
+        # Kube api-master host is loaded via environment variable available inside cluster.
+        # Credential are loaded from service-account available inside the cluster too.
+        KubeLatentWorker('example1', 'password', kubeConfig={'verify_ssl': False})
+
+.. _V1JobSpec: https://github.com/kubernetes-incubator/client-python/blob/master/kubernetes/docs/V1JobSpec.md
+.. _kubernetes-client: https://github.com/kubernetes-incubator/client-python
+.. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
+
+
+Configuration
+-------------
+
+The KubeLatentWorker can be configured in multiple ways. It leverage the auto-configuration capabilities
+of the python `kubernetes-client`_. It follow this simple scheme:
+
+1. Loads config from ``~/.kube/config`` file
+2. If config file couldn't be loaded, loads config from environment variable and service-account
+   at a specific path on the file system. This refers to `in cluster configuration`_ because kubernetes provides this environment
+   variables and mount token for pods inside the cluster.
+3. Whatever 1 or 2 section has failed: It overrides configuration from `kubeConfig` parameter if provided.
+   This must be a Dict-like object where key match the attribute of `python client configuration`
+
+.. _kubernetes-client: https://github.com/kubernetes-incubator/client-python
+.. _in cluster configuration: https://kubernetes.io/docs/tasks/configure-pod-container/configure-service-account/
+.. _python client configuration: https://github.com/kubernetes-incubator/client-python/blob/master/kubernetes/client/configuration.py
