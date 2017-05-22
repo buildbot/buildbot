@@ -28,6 +28,7 @@ from twisted.trial import unittest
 
 from buildbot import locks
 from buildbot.interfaces import WorkerTooOldError
+from buildbot.plugins import util
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -52,7 +53,6 @@ from buildbot.test.util import steps
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util.eventual import eventually
-from buildbot.plugins import util
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
