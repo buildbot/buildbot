@@ -17,7 +17,7 @@ mock==2.0.0
 packaging==16.8
 pbr==3.0.1
 pep8==1.7.0
-pycodestyle==2.0.0
+pycodestyle==2.3.1
 pyenchant==1.6.8
 pyflakes==1.2.3
 pylint==1.7.1
