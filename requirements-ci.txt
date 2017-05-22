@@ -54,7 +54,6 @@ pycodestyle==2.0.0
 pycparser==2.17
 pyenchant==1.6.8
 pyflakes==1.2.3
-Pygments==2.2.0
 pyjade==4.0.0
 PyJWT==1.5.0
 pylint==1.6.5
@@ -72,11 +71,6 @@ setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.10.0
 snowballstemmer==1.2.1
-Sphinx==1.6.1
-sphinx-jinja==0.2.1
-sphinxcontrib-blockdiag==1.5.5
-sphinxcontrib-spelling==2.3.0
-sphinxcontrib-websupport==1.0.1
 SQLAlchemy==1.1.10
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.3
