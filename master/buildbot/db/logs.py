@@ -245,8 +245,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         i = content.find(b'\n', self.MAX_CHUNK_SIZE)
         if i == -1:
             return truncline, None
-        else:
-            return truncline, content[i + 1:]
+        return truncline, content[i + 1:]
 
     def finishLog(self, logid):
         def thdfinishLog(conn):

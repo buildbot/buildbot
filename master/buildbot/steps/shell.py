@@ -145,8 +145,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
                 invalid_args.append(arg)
         # Raise Configuration error in case invalid arguments are present
         if invalid_args:
-            config.error("Invalid argument(s) passed to RemoteShellCommand: "
-                         + ', '.join(invalid_args))
+            config.error("Invalid argument(s) passed to RemoteShellCommand: " +
+                         ', '.join(invalid_args))
 
         # everything left over goes to the RemoteShellCommand
         kwargs['usePTY'] = usePTY
@@ -365,9 +365,9 @@ class SetPropertyFromCommand(ShellCommand):
             return ["%d properties set" % len(self.property_changes)]
         elif len(self.property_changes) == 1:
             return ["property '%s' set" % list(self.property_changes)[0]]
-        else:
-            # let ShellCommand describe
-            return ShellCommand.describe(self, done)
+        # else:
+        # let ShellCommand describe
+        return ShellCommand.describe(self, done)
 
 
 SetProperty = SetPropertyFromCommand
@@ -496,13 +496,13 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             wre = re.compile(wre)
 
         directoryEnterRe = self.directoryEnterPattern
-        if (directoryEnterRe is not None
-                and isinstance(directoryEnterRe, string_types)):
+        if (directoryEnterRe is not None and
+                isinstance(directoryEnterRe, string_types)):
             directoryEnterRe = re.compile(directoryEnterRe)
 
         directoryLeaveRe = self.directoryLeavePattern
-        if (directoryLeaveRe is not None
-                and isinstance(directoryLeaveRe, string_types)):
+        if (directoryLeaveRe is not None and
+                isinstance(directoryLeaveRe, string_types)):
             directoryLeaveRe = re.compile(directoryLeaveRe)
 
         # Check if each line in the output from this command matched our

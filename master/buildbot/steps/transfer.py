@@ -41,8 +41,7 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 def makeStatusRemoteCommand(step, remote_command, args):
     self = remotecommand.RemoteCommand(
         remote_command, args, decodeRC={None: SUCCESS, 0: SUCCESS})
-    callback = lambda arg: step.step_status.addLog('stdio')
-    self.useLogDelayed('stdio', callback, True)
+    self.useLogDelayed('stdio', lambda arg: step.step_status.addLog('stdio'), True)
     return self
 
 
@@ -128,7 +127,8 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         self.urlText = urlText
 
     def finished(self, results):
-        log.msg("File '%s' upload finished with results %s" % (os.path.basename(self.workersrc), str(results)))
+        log.msg("File '{}' upload finished with results {}".format(
+            os.path.basename(self.workersrc), str(results)))
         self.step_status.setText(self.descriptionDone)
         _TransferBuildStep.finished(self, results)
 
@@ -368,8 +368,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
                 return self.uploadDirectory(source, masterdest)
             elif stat.S_ISREG(s[stat.ST_MODE]):
                 return self.uploadFile(source, masterdest)
-            else:
-                return defer.fail('%r is neither a regular file, nor a directory' % source)
+            return defer.fail('%r is neither a regular file, nor a directory' % source)
 
         @d.addCallback
         def uploadDone(result):

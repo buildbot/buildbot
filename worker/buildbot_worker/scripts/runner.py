@@ -58,7 +58,7 @@ class MakerBase(usage.Options):
     opt_h = usage.Options.opt_help
 
     def parseArgs(self, *args):
-        if len(args) > 0:
+        if args:
             self['basedir'] = args[0]
         else:
             # Use the current directory if no basedir was specified.

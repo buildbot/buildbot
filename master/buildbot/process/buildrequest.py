@@ -309,8 +309,7 @@ class BuildRequest(object):
             for other in others:
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
-            assert len(
-                all_sources) > 0, "each codebase should have atleast one sourcestamp"
+            assert all_sources, "each codebase should have atleast one sourcestamp"
 
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by

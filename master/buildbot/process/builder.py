@@ -333,7 +333,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # set up locks
         build.setLocks(self.config.locks)
 
-        if len(self.config.env) > 0:
+        if self.config.env:
             build.setWorkerEnvironment(self.config.env)
 
         # append the build to self.building
@@ -374,7 +374,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
-        if len(self.config.properties) > 0:
+        if self.config.properties:
             for propertyname in self.config.properties:
                 props.setProperty(propertyname,
                                   self.config.properties[propertyname],

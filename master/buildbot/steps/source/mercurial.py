@@ -154,9 +154,8 @@ class Mercurial(Source):
             if updatable:
                 yield self._dovccmd(self.getHgPullCommand())
                 return
-            else:
-                yield self._clone()
-                return
+            yield self._clone()
+            return
 
         d.addCallback(_cmd)
         d.addCallback(self._checkBranchChange)
@@ -263,8 +262,7 @@ class Mercurial(Source):
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
-            else:
-                return cmd.rc
+            return cmd.rc
         return d
 
     def computeSourceRevision(self, changes):
@@ -283,13 +281,12 @@ class Mercurial(Source):
     def _getCurrentBranch(self):
         if self.branchType == 'dirname':
             return defer.succeed(self.branch)
-        else:
-            d = self._dovccmd(['identify', '--branch'], collectStdout=True)
+        d = self._dovccmd(['identify', '--branch'], collectStdout=True)
 
-            @d.addCallback
-            def _getbranch(stdout):
-                return stdout.strip()
-            return d
+        @d.addCallback
+        def _getbranch(stdout):
+            return stdout.strip()
+        return d
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
@@ -313,7 +310,7 @@ class Mercurial(Source):
             for filename in stdout.splitlines():
                 filename = self.workdir + '/' + filename
                 files.append(filename)
-            if len(files) == 0:
+            if not files:
                 d = defer.succeed(0)
             else:
                 if self.workerVersionIsOlderThan('rmdir', '2.14'):

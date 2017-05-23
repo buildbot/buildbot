@@ -56,8 +56,8 @@ class ValidationErrorCollector(object):
         try:
             res = yield defer.maybeDeferred(fn, *args, **kwargs)
         except CollectedValidationError as e:
-            for name, e in iteritems(e.errors):
-                self.errors[name] = e
+            for error_name, e in iteritems(e.errors):
+                self.errors[error_name] = e
         except ValueError as e:
             self.errors[name] = str(e)
         defer.returnValue(res)
@@ -150,7 +150,7 @@ class BaseParameter(object):
             if not arg.strip():
                 args.remove(arg)
 
-        if len(args) == 0:
+        if not args:
             if self.required:
                 raise ValidationError(
                     "'%s' needs to be specified" % (self.label))
@@ -187,8 +187,7 @@ class BaseParameter(object):
            a validated value into a single property value"""
         if self.multiple:
             return [self.parse_from_arg(arg) for arg in l]
-        else:
-            return self.parse_from_arg(l[0])
+        return self.parse_from_arg(l[0])
 
     def parse_from_arg(self, s):
         return s
@@ -673,19 +672,22 @@ class ForceScheduler(base.BaseScheduler):
         if codebases is None:
             codebases = [CodebaseParameter(codebase='')]
         elif not codebases:
-            config.error("ForceScheduler '%s': 'codebases' cannot be empty; use [CodebaseParameter(codebase='', hide=True)] if needed: %r " % (
-                name, codebases))
+            config.error("ForceScheduler '%s': 'codebases' cannot be empty;"
+                         " use [CodebaseParameter(codebase='', hide=True)] if needed: %r " % (
+                             name, codebases))
         elif not isinstance(codebases, list):
-            config.error("ForceScheduler '%s': 'codebases' should be a list of strings or CodebaseParameter, not %s" % (
-                name, type(codebases)))
+            config.error("ForceScheduler '%s': 'codebases' should be a list of strings or CodebaseParameter,"
+                         " not %s" % (
+                             name, type(codebases)))
 
         codebase_dict = {}
         for codebase in codebases:
             if isinstance(codebase, string_types):
                 codebase = CodebaseParameter(codebase=codebase)
             elif not isinstance(codebase, CodebaseParameter):
-                config.error("ForceScheduler '%s': 'codebases' must be a list of strings or CodebaseParameter objects: %r" % (
-                    name, codebases))
+                config.error("ForceScheduler '%s': 'codebases' must be a list of strings"
+                             " or CodebaseParameter objects: %r" % (
+                                 name, codebases))
 
             self.forcedProperties.append(codebase)
             codebase_dict[codebase.codebase] = dict(

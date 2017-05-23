@@ -54,8 +54,7 @@ def split_file_branches(path):
         return (None, '/'.join(pieces[1:]))
     elif len(pieces) > 2 and pieces[0] == 'branches':
         return ('/'.join(pieces[0:2]), '/'.join(pieces[2:]))
-    else:
-        return None
+    return None
 
 
 def split_file_projects_branches(path):
@@ -402,7 +401,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
-                if action == u'D' and number_of_directories_changed == 1 and number_of_files_changed == 1 and files[0] == '':
+                if (action == u'D' and number_of_directories_changed == 1 and
+                        number_of_files_changed == 1 and files[0] == ''):
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
                     chdict = dict(

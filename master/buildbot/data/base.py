@@ -161,10 +161,9 @@ class ListResult(UserList):
                 and self.offset == other.offset \
                 and self.total == other.total \
                 and self.limit == other.limit
-        else:
-            return self.data == other \
-                and self.offset == self.limit is None \
-                and (self.total is None or self.total == len(other))
+        return self.data == other \
+            and self.offset == self.limit is None \
+            and (self.total is None or self.total == len(other))
 
     def __ne__(self, other):
         return not (self == other)

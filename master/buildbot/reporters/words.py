@@ -88,8 +88,7 @@ def maybeColorize(text, color, useColors):
 
     if useColors:
         return "%c%d%s%c" % (3, irc_colors.index(color), text, 15)
-    else:
-        return text
+    return text
 
 
 class UsageError(ValueError):
@@ -114,11 +113,11 @@ class ForceOptions(usage.Options):
 
     def parseArgs(self, *args):
         args = list(args)
-        if len(args) > 0:
+        if args:
             if self['builder'] is not None:
                 raise UsageError("--builder provided in two ways")
             self['builder'] = args.pop(0)
-        if len(args) > 0:
+        if args:  # args might be modified above
             if self['reason'] is not None:
                 raise UsageError("--reason provided in two ways")
             self['reason'] = " ".join(args)
@@ -336,7 +335,7 @@ class Contact(service.AsyncService):
     @defer.inlineCallbacks
     def command_STATUS(self, args):
         args = self.splitArgs(args)
-        if len(args) == 0:
+        if not args:
             which = "all"
         elif len(args) == 1:
             which = args[0]
@@ -351,7 +350,9 @@ class Contact(service.AsyncService):
     command_STATUS.usage = "status [<which>] - List status of a builder (or all builders)"
 
     def validate_notification_event(self, event):
-        if not re.compile("^(started|finished|success|failure|exception|warnings|(success|warnings|exception|failure)To(Failure|Success|Warnings|Exception))$").match(event):
+        if not re.compile("^(started|finished|success|failure|exception|warnings|"
+                          "(success|warnings|exception|failure)To"
+                          "(Failure|Success|Warnings|Exception))$").match(event):
             raise UsageError("try 'notify on|off <EVENT>'")
 
     def list_notified_events(self):
@@ -437,7 +438,10 @@ class Contact(service.AsyncService):
         else:
             raise UsageError("try 'notify on|off|list [<EVENT>]'")
 
-    command_NOTIFY.usage = "notify on|off|list [<EVENT>] ... - Notify me about build events.  event should be one or more of: 'started', 'finished', 'failure', 'success', 'exception' or 'xToY' (where x and Y are one of success, warnings, failure, exception, but Y is capitalized)"
+    command_NOTIFY.usage = ("notify on|off|list [<EVENT>] ... - Notify me about build events."
+                            "  event should be one or more of: 'started', 'finished', 'failure',"
+                            " 'success', 'exception' or 'xToY' (where x and Y are one of success,"
+                            " warnings, failure, exception, but Y is capitalized)")
 
     def getRunningBuilds(self, builderid):
         d = self.master.data.get(('builds',),
@@ -567,7 +571,7 @@ class Contact(service.AsyncService):
         # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
         #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
         r += " - %s" % utils.getURLForBuild(
-                        self.master, builder['builderid'], buildNumber)
+            self.master, builder['builderid'], buildNumber)
         self.send(r)
 
     results_descriptions = {
@@ -590,13 +594,15 @@ class Contact(service.AsyncService):
         if self.notify_for(self.results_descriptions.get(build['results'])[0].lower()):
             defer.returnValue(True)
 
-        prevBuild = yield self.master.data.get(('builders', build['builderid'], 'builds', build['number'] - 1))
+        prevBuild = yield self.master.data.get(
+            ('builders', build['builderid'], 'builds', build['number'] - 1))
         if prevBuild:
             prevResult = prevBuild['results']
 
-            required_notification_control_string = ''.join((self.results_descriptions.get(prevResult)[0].lower(),
-                                                            'To',
-                                                            self.results_descriptions.get(build['results'])[0].capitalize()))
+            required_notification_control_string = ''.join(
+                (self.results_descriptions.get(prevResult)[0].lower(),
+                 'To',
+                 self.results_descriptions.get(build['results'])[0].capitalize()))
 
             if (self.notify_for(required_notification_control_string)):
                 defer.returnValue(True)
@@ -632,7 +638,7 @@ class Contact(service.AsyncService):
                                      results[1], self.useColors)
 
         r += " - %s" % utils.getURLForBuild(
-                self.master, builder['builderid'], buildnum)
+            self.master, builder['builderid'], buildnum)
 
         self.send(r)
 
@@ -703,15 +709,18 @@ class Contact(service.AsyncService):
                                                        # For now, we just use
                                                        # this as the id.
                                                        scheduler=u"status.words",
-                                                       sourcestamps=[{'codebase': codebase, 'branch': branch,
-                                                                      'revision': revision, 'project': project, 'repository': "null"}],
+                                                       sourcestamps=[{
+                                                           'codebase': codebase, 'branch': branch,
+                                                           'revision': revision, 'project': project,
+                                                           'repository': "null"}],
                                                        reason=reason,
                                                        properties=properties.asDict(),
                                                        waited_for=False)
         except AssertionError as e:
             self.send("I can't: " + str(e))
 
-    command_FORCE.usage = "force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision] [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build"
+    command_FORCE.usage = ("force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision]"
+                           "[--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build")
 
     @defer.inlineCallbacks
     def command_STOP(self, args):
@@ -734,7 +743,8 @@ class Contact(service.AsyncService):
         for bdict in builds:
             num = bdict['number']
 
-            yield self.master.data.control('stop', {'reason': r}, ('builders', builder['builderid'], 'builds', num))
+            yield self.master.data.control('stop', {'reason': r},
+                                           ('builders', builder['builderid'], 'builds', num))
 
             if self.useRevisions:
                 revisions = yield self.getRevisionsForBuild(bdict)
@@ -797,7 +807,7 @@ class Contact(service.AsyncService):
         # FIXME: NEED TO THINK ABOUT!
         args = self.splitArgs(args)
 
-        if len(args) == 0:
+        if not args:
             builders = yield self.getAllBuilders()
         elif len(args) == 1:
             builder = yield self.getBuilder(buildername=args[0])
@@ -880,7 +890,8 @@ class Contact(service.AsyncService):
         else:
             self.send(
                 "No usage info for " + ' '.join(["'%s'" % arg for arg in args]))
-    command_HELP.usage = "help <command> [<arg> [<subarg> ...]] - Give help for <command> or one of it's arguments"
+    command_HELP.usage = ("help <command> [<arg> [<subarg> ...]] - "
+                          "Give help for <command> or one of it's arguments")
 
     def command_SOURCE(self, args):
         self.send("My source can be found at "

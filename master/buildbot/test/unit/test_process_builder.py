@@ -169,9 +169,11 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def do_test_getCollapseRequestsFn(self, builder_param=None,
                                       global_param=None, expected=0):
-        cble = lambda: None
-        builder_param = builder_param == 'callable' and cble or builder_param
-        global_param = global_param == 'callable' and cble or global_param
+        def cble():
+            pass
+
+        builder_param = cble if builder_param == 'callable' else builder_param
+        global_param = cble if global_param == 'callable' else global_param
 
         # omit the constructor parameter if None was given
         if builder_param is None:

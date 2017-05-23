@@ -27,8 +27,7 @@ def statusToString(status):
         return "not finished"
     if status < 0 or status >= len(Results):
         return "Invalid status"
-    else:
-        return Results[status]
+    return Results[status]
 
 
 def worst_status(a, b):

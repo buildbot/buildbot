@@ -31,8 +31,7 @@ class FakeBuild(object):
     def render(self, r):
         if isinstance(r, str):
             return "rendered:" + r
-        else:
-            return r
+        return r
 
 
 class FakeBot(object):

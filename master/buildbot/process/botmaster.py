@@ -103,7 +103,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             for builder in self.builders.values():
                 for build in builder.building:
                     l.append(build.waitUntilFinished())
-            if len(l) == 0:
+            if not l:
                 log.msg("No running jobs, starting shutdown immediately")
             else:
                 log.msg("Waiting for %i build(s) to finish" % len(l))

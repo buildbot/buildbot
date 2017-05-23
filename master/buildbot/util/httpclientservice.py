@@ -134,8 +134,7 @@ class HTTPClientService(service.SharedService):
     def stopService(self):
         if self._session:
             return self._session.close()
-        else:
-            return self._pool.closeCachedConnections()
+        return self._pool.closeCachedConnections()
 
     def _prepareRequest(self, ep, kwargs):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
