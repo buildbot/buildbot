@@ -527,7 +527,7 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             ssl_certificate_key /etc/nginx/ssl/server.key;
 
             # put a one day session timeout for websockets to stay longer
-            ssl_session_cache      shared:SSL:1440m;
+            ssl_session_cache      shared:SSL:10m;
             ssl_session_timeout  1440m;
 
             # please consult latest nginx documentation for current secure encryption settings
