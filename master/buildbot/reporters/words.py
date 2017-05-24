@@ -720,7 +720,7 @@ class Contact(service.AsyncService):
             self.send("I can't: " + str(e))
 
     command_FORCE.usage = ("force build [--codebase=CODEBASE] [--branch=branch] [--revision=revision]"
-                           "[--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build")
+                           " [--props=prop1=val1,prop2=val2...] <which> <reason> - Force a build")
 
     @defer.inlineCallbacks
     def command_STOP(self, args):
