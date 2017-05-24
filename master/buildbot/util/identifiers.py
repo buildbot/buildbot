@@ -28,12 +28,12 @@ subsequent_re = re.compile('[^a-zA-Z0-9_-]')
 trailing_digits_re = re.compile('_([0-9]+)$')
 
 
-def isIdentifier(maxLength, object):
-    if not isinstance(object, text_type):
+def isIdentifier(maxLength, obj):
+    if not isinstance(obj, text_type):
         return False
-    elif not ident_re.match(object):
+    elif not ident_re.match(obj):
         return False
-    elif not 0 < len(object) <= maxLength:
+    elif not obj or len(obj) > maxLength:
         return False
     return True
 

@@ -298,8 +298,7 @@ class Test(TestBRDBase):
         def mklambda(t):  # work around variable-binding issues
             if returnDeferred:
                 return lambda: defer.succeed(t)
-            else:
-                return lambda: t
+            return lambda: t
 
         for n, t in iteritems(oldestRequestTimes):
             if t is not None:
@@ -545,7 +544,8 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=140000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10, 11], exp_builds=[('test-worker1', [10]), ('test-worker3', [11])])
+                                                     exp_claims=[10, 11], exp_builds=[
+                                                         ('test-worker1', [10]), ('test-worker3', [11])])
 
         self.assertEqual(
             workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
@@ -560,7 +560,8 @@ class TestMaybeStartBuilds(TestBRDBase):
             ('test-worker3', 11),
             ('test-worker2', 12)])
 
-    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser', SkipWorkerThatCantGetLock)
+    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser',
+                SkipWorkerThatCantGetLock)
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
         """Another variant that:
@@ -633,7 +634,8 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10, 11], exp_builds=[('test-worker3', [10]), ('test-worker2', [11])])
+                                                     exp_claims=[10, 11], exp_builds=[
+                                                         ('test-worker3', [10]), ('test-worker2', [11])])
 
         self.assertEqual(workers_attempted, ['test-worker3', 'test-worker2'])
 
@@ -649,7 +651,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      exp_claims=[10, 11],
-                                                     exp_builds=[('test-worker2', [10]), ('test-worker1', [11])])
+                                                     exp_builds=[
+                                                         ('test-worker2', [10]), ('test-worker1', [11])])
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_always(self):
@@ -672,7 +675,8 @@ class TestMaybeStartBuilds(TestBRDBase):
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
                                                      # reclaimed so none taken!
                                                      exp_claims=[],
-                                                     exp_builds=[('test-worker2', [10]), ('test-worker1', [11])])
+                                                     exp_builds=[
+                                                         ('test-worker2', [10]), ('test-worker1', [11])])
 
     @defer.inlineCallbacks
     def test_bldr_maybeStartBuild_fails_once(self):

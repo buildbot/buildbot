@@ -40,8 +40,7 @@ def getChanges(request, options=None):
         """
         if (isinstance(value, type([]))):
             return value[0]
-        else:
-            return value
+        return value
 
     args = request.args
     # first, convert files, links and properties

@@ -171,8 +171,7 @@ def getConfigFileFromTac(basedir, quiet=False):
     config = getConfigFromTac(basedir, quiet=quiet)
     if config:
         return config.get("configfile", "master.cfg")
-    else:
-        return "master.cfg"
+    return "master.cfg"
 
 
 class SubcommandOptions(usage.Options):
@@ -293,7 +292,7 @@ class BasedirMixin(object):
             extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
 
     def parseArgs(self, *args):
-        if len(args) > 0:
+        if args:
             self['basedir'] = args[0]
         else:
             # Use the current directory if no basedir was specified.

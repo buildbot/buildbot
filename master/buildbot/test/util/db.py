@@ -213,8 +213,7 @@ class RealDatabaseMixin(object):
     def tearDownRealDatabase(self):
         if self.__want_pool:
             return self.db_pool.do(self.__thd_clean_database)
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
     def insertTestData(self, rows):
         """Insert test data into the database for use during the test.

@@ -33,7 +33,7 @@ class Client(object):
 
     def close(self):
         # we should never close if we have live containers
-        assert len(self._containers) == 0, self._containers
+        assert not self._containers, self._containers
         Client.instance = None
 
     def stop(self, id):

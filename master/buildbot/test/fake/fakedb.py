@@ -121,14 +121,12 @@ class Row(object):
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
-        else:
-            return self.values == other.values
+        return self.values == other.values
 
     def __ne__(self, other):
         if self.__class__ != other.__class__:
             return True
-        else:
-            return self.values != other.values
+        return self.values != other.values
 
     def __lt__(self, other):
         if self.__class__ != other.__class__:
@@ -169,8 +167,7 @@ class Row(object):
                 return b'\xf5'
             elif isinstance(x, text_type):
                 return x.encode('utf-8')
-            else:
-                return str(x).encode('utf-8')
+            return str(x).encode('utf-8')
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
@@ -757,8 +754,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
             # is active
             rv['masterid'] = self.changesource_masters.get(changesourceid)
             return defer.succeed(rv)
-        else:
-            return None
+        return None
 
     def getChangeSources(self, active=None, masterid=None):
         d = defer.DeferredList([
@@ -933,8 +929,7 @@ class FakeChangesComponent(FakeDBComponent):
             self.changes) if v['sourcestampid'] == ssid]
         if chdicts:
             return defer.succeed(chdicts[0])
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
     def _chdict(self, row):
         chdict = row.copy()
@@ -1086,8 +1081,7 @@ class FakeSchedulersComponent(FakeDBComponent):
             # is active
             rv['masterid'] = self.scheduler_masters.get(schedulerid)
             return defer.succeed(rv)
-        else:
-            return None
+        return None
 
     def getSchedulers(self, active=None, masterid=None):
         d = defer.DeferredList([
@@ -1403,8 +1397,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if key in self.buildsets:
             return defer.succeed(
                 self.buildsets[key]['properties'])
-        else:
-            return defer.succeed({})
+        return defer.succeed({})
 
     # fake methods
 
@@ -1966,8 +1959,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuildProperties(self, bid):
         if bid in self.builds:
             return defer.succeed(self.builds[bid]['properties'])
-        else:
-            return defer.succeed({})
+        return defer.succeed({})
 
     def setBuildProperty(self, bid, name, value, source):
         assert bid in self.builds

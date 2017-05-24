@@ -86,13 +86,12 @@ class FakeMasterMethods(object):
         if not self.data:
             return ''
 
-        slice, self.data = self.data[:length], self.data[length:]
+        _slice, self.data = self.data[:length], self.data[length:]
         if self.delay_read:
             d = defer.Deferred()
-            reactor.callLater(0.01, d.callback, slice)
+            reactor.callLater(0.01, d.callback, _slice)
             return d
-        else:
-            return slice
+        return _slice
 
     def remote_unpack(self):
         self.add_update('unpack')

@@ -333,8 +333,8 @@ class AbstractWorker(service.BuildbotService, object):
         accepted the new builders and/or released the old ones."""
         if self.conn:
             return self.sendBuilderList()
-        else:
-            return defer.succeed(None)
+        # else:
+        return defer.succeed(None)
 
     @defer.inlineCallbacks
     def attached(self, conn):

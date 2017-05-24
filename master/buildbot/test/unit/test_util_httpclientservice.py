@@ -211,8 +211,7 @@ class MyResource(resource.Resource):
                 for a, b in iteritems(x):
                     newArgs[decode(a)] = decode(b)
                 return newArgs
-            else:
-                return x
+            return x
 
         args = decode(request.args)
         content_type = request.getHeader(b'content-type')

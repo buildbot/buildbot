@@ -45,13 +45,13 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             tbl = self.db.model.scheduler_changes
             ins_q = tbl.insert()
             upd_q = tbl.update(
-                ((tbl.c.schedulerid == schedulerid)
-                 & (tbl.c.changeid == sa.bindparam('wc_changeid'))))
+                ((tbl.c.schedulerid == schedulerid) &
+                 (tbl.c.changeid == sa.bindparam('wc_changeid'))))
             for changeid, important in iteritems(classifications):
                 transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
-                imp_int = important and 1 or 0
+                imp_int = int(bool(important))
                 try:
                     conn.execute(ins_q,
                                  schedulerid=schedulerid,

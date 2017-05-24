@@ -59,9 +59,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         def toSsid(sourcestamp):
             if isinstance(sourcestamp, integer_types):
                 return defer.succeed(sourcestamp)
-            else:
-                ssConnector = self.master.db.sourcestamps
-                return ssConnector.findSourceStampId(**sourcestamp)
+            ssConnector = self.master.db.sourcestamps
+            return ssConnector.findSourceStampId(**sourcestamp)
         sourcestamps = yield defer.DeferredList(
             [toSsid(ss) for ss in sourcestamps],
             fireOnOneErrback=True, consumeErrors=True)

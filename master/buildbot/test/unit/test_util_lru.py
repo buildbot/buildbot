@@ -116,8 +116,7 @@ class LRUCacheTest(unittest.TestCase):
         def miss_fn(k):
             if k == 'b':
                 return None
-            else:
-                return short(k)
+            return short(k)
         self.lru = lru.LRUCache(miss_fn, 1)
         val = self.lru.get('a')
         self.check_result(val, short('a'), 0, 1)
@@ -367,8 +366,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
         def miss_fn(k):
             if k == 'b':
                 return defer.succeed(None)
-            else:
-                return defer.succeed(short(k))
+            return defer.succeed(short(k))
         self.lru = lru.AsyncLRUCache(miss_fn, 1)
         d = defer.succeed(None)
 
