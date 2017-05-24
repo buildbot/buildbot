@@ -74,10 +74,9 @@ def _old_add_label(label, value):
         return ["--verified %d" % int(value)]
     elif label == GERRIT_LABEL_REVIEWED:
         return ["--code-review %d" % int(value)]
-    else:
-        warnings.warn('Gerrit older than 2.6 does not support custom labels. '
-                      'Setting %s is ignored.' % label)
-        return []
+    warnings.warn('Gerrit older than 2.6 does not support custom labels. '
+                  'Setting %s is ignored.' % label)
+    return []
 
 
 def _new_add_label(label, value):
@@ -237,8 +236,9 @@ class GerritStatusPush(service.BuildbotService):
 
     def callWithVersion(self, func):
         command = self._gerritCmd("version")
-        callback = lambda gerrit_version: self.processVersion(
-            gerrit_version, func)
+
+        def callback(gerrit_version):
+            return self.processVersion(gerrit_version, func)
 
         self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
 
@@ -295,7 +295,8 @@ class GerritStatusPush(service.BuildbotService):
             return
         yield self.getBuildDetails(build)
         if self.isBuildReported(build):
-            result = yield self.reviewCB(build['builder']['name'], build, build['results'], self.master, self.reviewArg)
+            result = yield self.reviewCB(build['builder']['name'], build, build['results'],
+                                         self.master, self.reviewArg)
             result = _handleLegacyResult(result)
             self.sendCodeReviews(build, result)
 
@@ -336,7 +337,8 @@ class GerritStatusPush(service.BuildbotService):
                         'result': result,
                         'resultText': resultText,
                         'text': build['state_string'],
-                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'], build['number']),
+                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'],
+                                                    build['number']),
                         'build': build
                         }
             buildInfoList = sorted(

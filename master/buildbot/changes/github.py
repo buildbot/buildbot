@@ -250,7 +250,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         failures[0].raiseException()
                 [files, email] = [r[1] for r in results]
 
-                if email is not None and email is not "null":
+                if email is not None and email != "null":
                     author += " <" + str(email) + ">"
 
                 properties = self.extractProperties(pr)

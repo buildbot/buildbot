@@ -1,7 +1,7 @@
 alabaster==0.7.10
 appdirs==1.4.3
 asn1crypto==0.22.0
-astroid==1.4.9
+astroid==1.5.2
 attrs==17.1.0
 autobahn==17.5.1
 Automat==0.6.0
@@ -10,7 +10,7 @@ backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.46.1
 boto3==1.4.4
-botocore==1.5.52
+botocore==1.5.54
 cffi==1.10.0
 click==6.7
 configparser==3.5.0
@@ -19,9 +19,9 @@ cookies==2.2.1
 cryptography==1.8.1
 decorator==4.0.11
 dicttoxml==1.7.4
-docutils==0.12
+docutils==0.13.1
 enum34==1.1.6
-flake8==2.6.2
+flake8==3.3.0
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.16.0
@@ -53,10 +53,10 @@ pyasn1-modules==0.0.8
 pycodestyle==2.3.1
 pycparser==2.17
 pyenchant==1.6.8
-pyflakes==1.2.3
+pyflakes==1.5.0
 pyjade==4.0.0
 PyJWT==1.5.0
-pylint==1.6.5
+pylint==1.7.1
 pyOpenSSL==17.0.0
 pyparsing==2.2.0
 python-dateutil==2.6.0
@@ -66,7 +66,7 @@ ramlfications==0.1.9
 requests==2.14.2
 s3transfer==0.1.10
 scandir==1.5
-service-identity==16.0.0
+service-identity==17.0.0
 setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.10.0
@@ -95,4 +95,4 @@ codecov==2.0.9
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot_www
+buildbot-www==0.9.7

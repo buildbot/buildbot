@@ -71,7 +71,7 @@ class RemoveDirectory(base.Command):
         self.maxTime = args.get('maxTime', None)
         self.rc = 0
         if isinstance(dirnames, list):
-            assert len(dirnames) != 0
+            assert dirnames
             for dirname in dirnames:
                 res = yield self.removeSingleDir(dirname)
                 # Even if single removal of single file/dir consider it as

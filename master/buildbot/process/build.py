@@ -673,8 +673,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             if st.hasStatistic(name)]
         if initial_value is self._sentinel:
             return reduce(summary_fn, step_stats_list)
-        else:
-            return reduce(summary_fn, step_stats_list, initial_value)
+        return reduce(summary_fn, step_stats_list, initial_value)
 
     @defer.inlineCallbacks
     def getUrl(self):

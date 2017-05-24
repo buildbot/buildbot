@@ -6,7 +6,7 @@ backports.functools-lru-cache==1.4
 configparser==3.5.0
 constantly==15.1.0
 enum34==1.1.6
-flake8==2.6.2
+flake8==3.3.0
 funcsigs==1.0.2
 future==0.16.0
 incremental==16.10.1
@@ -19,7 +19,7 @@ pbr==3.0.1
 pep8==1.7.0
 pycodestyle==2.3.1
 pyenchant==1.6.8
-pyflakes==1.2.3
+pyflakes==1.5.0
 pylint==1.7.1
 pyparsing==2.2.0
 singledispatch==3.4.0.3

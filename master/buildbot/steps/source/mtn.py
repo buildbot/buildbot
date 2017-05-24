@@ -181,13 +181,13 @@ class Monotone(Source):
         for cmd in commands:
             stdout = yield self._dovccmd(cmd, workdir=self.workdir,
                                          collectStdout=True)
-            if len(stdout) == 0:
+            if not stdout:
                 continue
             for filename in stdout.strip().split('\n'):
                 filename = self.workdir + '/' + str(filename)
                 files.append(filename)
 
-        if len(files) == 0:
+        if not files:
             rc = 0
         else:
             if self.workerVersionIsOlderThan('rmdir', '2.14'):

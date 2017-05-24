@@ -208,6 +208,5 @@ class Dispatcher(service.AsyncService):
                     return failure.Failure(error.UnauthorizedLogin())
                 return creds.username
             return d
-        else:
-            log.msg("invalid login from unknown user '%s'" % creds.username)
-            return defer.fail(error.UnauthorizedLogin())
+        log.msg("invalid login from unknown user '%s'" % creds.username)
+        return defer.fail(error.UnauthorizedLogin())

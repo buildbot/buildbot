@@ -365,8 +365,7 @@ class RemoteShellCommand(RemoteCommand):
             def obfuscate(arg):
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
-                else:
-                    return arg
+                return arg
             self.fake_command = [obfuscate(c) for c in self.command]
 
         if env is not None:

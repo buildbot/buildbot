@@ -168,7 +168,8 @@ class P4(Source):
             if debug_logging:
                 log.msg("P4: full() sync command based on :base:%s changeset:%d",
                         self._getP4BaseForLog(), int(self.revision))
-            yield self._dovccmd(['sync', '%s...@%d' % (self._getP4BaseForCommand(), int(self.revision))], collectStdout=True)
+            yield self._dovccmd(['sync', '%s...@%d' % (
+                self._getP4BaseForCommand(), int(self.revision))], collectStdout=True)
         else:
             if debug_logging:
                 log.msg(
@@ -239,8 +240,7 @@ class P4(Source):
                 # If a tuple, then the second element is the argument that will
                 # be used when executing the command.
                 return (arg[0], util.encodeString(arg[1]), arg[2])
-            else:
-                return util.encodeString(arg)
+            return util.encodeString(arg)
 
         command = [encodeArg(c) for c in command]
         return command
@@ -272,8 +272,7 @@ class P4(Source):
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
-            else:
-                return cmd.rc
+            return cmd.rc
         return d
 
     def _getMethod(self):

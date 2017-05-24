@@ -163,8 +163,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                                                  hours, minutes, seconds)
         elif hours:
             return '{}h {}m {}s'.format(hours, minutes, seconds)
-        else:
-            return '{}m {}s'.format(minutes, seconds)
+        return '{}m {}s'.format(minutes, seconds)
 
     @staticmethod
     def getGerritChanges(props):

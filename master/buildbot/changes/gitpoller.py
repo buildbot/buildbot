@@ -80,7 +80,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             branches = [branch]
         elif not branches:
             if only_tags:
-                branches = lambda ref: ref.startswith('refs/tags/')
+                branches = lambda ref: ref.startswith('refs/tags/')  # noqa: E731
             else:
                 branches = ['master']
 
@@ -231,8 +231,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                         'gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
                     raise e
                 return stamp
-            else:
-                return None
+            return None
         return d
 
     def _get_commit_files(self, rev):
@@ -261,7 +260,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         @d.addCallback
         def process(git_output):
             git_output = self._decode(git_output)
-            if len(git_output) == 0:
+            if not git_output:
                 raise EnvironmentError('could not get commit author for rev')
             return git_output
         return d
@@ -307,7 +306,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         revList = results.split()
         revList.reverse()
 
-        if rebuild and len(revList) == 0:
+        if rebuild and not revList:
             revList = [newRev]
 
         self.changeCount = len(revList)

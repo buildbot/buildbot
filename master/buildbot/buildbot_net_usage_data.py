@@ -71,8 +71,8 @@ def get_distro():
     elif system == "Darwin":
         dist = platform.mac_ver()
         return "{}".format(dist[0])
-    else:
-        return ":".join(platform.uname()[0:1])
+    # else:
+    return ":".join(platform.uname()[0:1])
 
 
 def getName(obj):

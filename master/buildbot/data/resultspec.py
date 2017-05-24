@@ -114,8 +114,7 @@ class NoneComparator(object):
             return True
         elif other.value is None:
             return False
-        else:
-            return self.value < other.value
+        return self.value < other.value
 
     def __eq__(self, other):
         return self.value == other.value
@@ -130,8 +129,7 @@ class NoneComparator(object):
             return False
         elif other.value is None:
             return True
-        else:
-            return self.value < other.value
+        return self.value < other.value
 
 
 class ReverseComparator(object):
@@ -175,8 +173,8 @@ class ResultSpec(object):
     def __repr__(self):
         return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
                 "'order': {}, 'limit': {}, 'offset': {}").format(
-                self.filters, self.fields, self.properties, self.order,
-                self.limit, self.offset) + "})"
+                    self.filters, self.fields, self.properties, self.order,
+                    self.limit, self.offset) + "})"
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:

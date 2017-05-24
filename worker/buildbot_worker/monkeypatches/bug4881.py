@@ -140,8 +140,7 @@ class _FDDetector(object):
             self.listdir("/dev/fd")
             if self._checkDevFDSanity():  # FreeBSD support :-)
                 return self._devFDImplementation
-            else:
-                return self._fallbackFDImplementation
+            return self._fallbackFDImplementation
         except Exception:  # changed in Buildbot to avoid bare 'except'
             try:
                 self.listdir("/proc/%d/fd" % (self.getpid(),))

@@ -101,8 +101,7 @@ class SVN(Source):
         def checkPatched(patched):
             if patched:
                 return self.purge(False)
-            else:
-                return 0
+            return 0
 
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
@@ -201,7 +200,8 @@ class SVN(Source):
             export_cmd.extend([checkout_dir, self.workdir])
 
             cmd = remotecommand.RemoteShellCommand('', export_cmd,
-                                                   env=self.env, logEnviron=self.logEnviron, timeout=self.timeout)
+                                                   env=self.env, logEnviron=self.logEnviron,
+                                                   timeout=self.timeout)
         cmd.useLog(self.stdio_log, False)
 
         yield self.runCommand(cmd)
@@ -251,8 +251,7 @@ class SVN(Source):
                 return cmd.stdout
             elif collectStderr:
                 return cmd.stderr
-            else:
-                return cmd.rc
+            return cmd.rc
         return d
 
     def _getMethod(self):
@@ -272,7 +271,8 @@ class SVN(Source):
             return
 
         # then run 'svn info --xml' to check that the URL matches our repourl
-        stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True, collectStderr=True, abandonOnFailure=False)
+        stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True,
+                                             collectStderr=True, abandonOnFailure=False)
 
         # svn: E155037: Previous operation has not finished; run 'cleanup' if
         # it was interrupted
@@ -355,7 +355,7 @@ class SVN(Source):
             for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
                 filename = self.workdir + '/' + str(filename)
                 files.append(filename)
-            if len(files) == 0:
+            if not files:
                 d = defer.succeed(0)
             else:
                 if self.workerVersionIsOlderThan('rmdir', '2.14'):
@@ -428,9 +428,11 @@ class SVN(Source):
                         'svn': '3690'}
 
         relative_schemes = ['http', 'https', 'svn']
-        quote = lambda uri: urlquote(uri, "!$&'()*+,-./:=@_~", encoding="latin-1")
 
-        if len(uri) == 0 or uri == '/':
+        def quote(uri):
+            return urlquote(uri, "!$&'()*+,-./:=@_~", encoding="latin-1")
+
+        if not uri or uri == '/':
             return uri
 
         (scheme, authority, path, parameters, query, fragment) = urlparse(uri)
@@ -463,8 +465,7 @@ class SVN(Source):
             return canonical_uri
         elif canonical_uri[-1] == '/' and canonical_uri[-2] != '/':
             return canonical_uri[:-1]
-        else:
-            return canonical_uri
+        return canonical_uri
 
     def _checkout(self):
         checkout_cmd = ['checkout', self.repourl, '.']

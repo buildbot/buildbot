@@ -346,10 +346,8 @@ class Sphinx(ShellCommand):
         if self.success:
             if not self.warnings:
                 return SUCCESS
-            else:
-                return WARNINGS
-        else:
-            return FAILURE
+            return WARNINGS
+        return FAILURE
 
     def describe(self, done=False):
         if not done:

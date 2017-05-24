@@ -180,8 +180,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
             return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
-        else:
-            return self.codebases[codebase]
+        return self.codebases[codebase]
 
     # Timed methods
 
@@ -279,8 +278,7 @@ class Periodic(Timed):
     def getNextBuildTime(self, lastActuated):
         if lastActuated is None:
             return defer.succeed(self.now())  # meaning "ASAP"
-        else:
-            return defer.succeed(lastActuated + self.periodicBuildTimer)
+        return defer.succeed(lastActuated + self.periodicBuildTimer)
 
 
 class NightlyBase(Timed):

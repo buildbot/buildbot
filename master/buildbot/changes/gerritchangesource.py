@@ -156,8 +156,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         if event['type'] in ('patchset-created',):
             return "%s/%s" % (event_change["branch"],
                               event_change['number'])
-        else:
-            return event_change["branch"]
+        return event_change["branch"]
 
     def addChangeFromEvent(self, properties, event):
 

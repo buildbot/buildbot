@@ -85,8 +85,7 @@ class Darcs(Source):
         def checkPatched(patched):
             if patched:
                 return self.copy()
-            else:
-                return 0
+            return 0
 
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
@@ -247,8 +246,7 @@ class Darcs(Source):
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
-            else:
-                return cmd.rc
+            return cmd.rc
         return d
 
     def _sourcedirIsUpdatable(self):

@@ -97,8 +97,7 @@ class DBConnectorComponent(object):
                 return b'\xf5'
             elif isinstance(x, text_type):
                 return x.encode('utf-8')
-            else:
-                return str(x).encode('utf-8')
+            return str(x).encode('utf-8')
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 

@@ -29,7 +29,7 @@ from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
 else:
-    debuglog = lambda m: None
+    debuglog = lambda m: None  # noqa
 
 
 class BaseLock:
@@ -96,9 +96,8 @@ class BaseLock:
             # Wants counting access
             return num_excl == 0 and num_counting + len(ahead) < self.maxCount \
                 and all([w[1].mode == 'counting' for w in ahead])
-        else:
-            # Wants exclusive access
-            return num_excl == 0 and num_counting == 0 and len(ahead) == 0
+        # else Wants exclusive access
+        return num_excl == 0 and num_counting == 0 and not ahead
 
     def claim(self, owner, access):
         """ Claim the lock (lock must be available) """

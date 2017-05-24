@@ -742,8 +742,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # **temporary** method until new-style steps are the only supported style
         if PY3:
             return self.run.__func__ is not BuildStep.run
-        else:
-            return self.run.im_func is not BuildStep.run.im_func
+        return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         # New-style classes implement 'run'.
@@ -1067,8 +1066,7 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["exception"]
         elif results == CANCELLED:
             return self.describe(True) + ["cancelled"]
-        else:
-            return self.describe(True) + ["failed"]
+        return self.describe(True) + ["failed"]
 
     # TODO: delete
     def getText2(self, cmd, results):

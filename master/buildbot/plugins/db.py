@@ -149,7 +149,7 @@ class _NSNode(object):
 
     def add(self, name, entry):
         assert isinstance(name, string_types) and isinstance(entry,
-                                                            _PluginEntry)
+                                                             _PluginEntry)
         self._add(name, entry)
 
     def _add(self, name, entry):
@@ -183,8 +183,7 @@ class _NSNode(object):
 
         if isinstance(child, _PluginEntry):
             return child.value
-        else:
-            return child
+        return child
 
     def info(self, name):
         assert isinstance(name, string_types)

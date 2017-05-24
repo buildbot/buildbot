@@ -64,9 +64,9 @@ def getVersion(init_file):
                 if isinstance(version, str):
                     # Python 2
                     return version
-                else:
-                    # Python 3
-                    return version.decode("utf-8")
+                # else:
+                # Python 3
+                return version.decode("utf-8")
     except OSError:
         pass
 

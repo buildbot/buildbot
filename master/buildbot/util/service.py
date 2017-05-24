@@ -108,8 +108,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
             # It may be too late for that, but we will do our best
             service.privilegedStartService()
             return service.startService()
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
 
 class MasterService(AsyncMultiService):
