@@ -187,7 +187,7 @@ class TestLogLineObserver(unittest.TestCase):
 
     def test_old_setMaxLineLength(self):
         # this method is gone, but used to be documented, so it's still
-        # callable.  Just don't fai_log.
+        # callable.  Just don't fail.
         lo = MyLogLineObserver()
         lo.setMaxLineLength(120939403)
 
