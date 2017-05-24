@@ -61,10 +61,10 @@ class CommonTestCase(unittest.TestCase):
         """To be implemented by subclasses"""
         raise NotImplementedError
 
-    def makeSearchSideEffect(self, l):
-        l = [[{'dn': i[0], 'raw_attributes': i[1]} for i in r]
-             for r in l]
-        self.userInfoProvider.search.side_effect = l
+    def makeSearchSideEffect(self, ret):
+        ret = [[{'dn': i[0], 'raw_attributes': i[1]} for i in r]
+             for r in ret]
+        self.userInfoProvider.search.side_effect = ret
 
     def assertSearchCalledWith(self, exp):
         got = self.userInfoProvider.search.call_args_list

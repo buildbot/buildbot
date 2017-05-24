@@ -1110,11 +1110,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock(spec=locks.MasterLock)
-            l.name = name
+            lock = mock.Mock(spec=locks.MasterLock)
+            lock.name = name
             if bare_builder_lock:
-                return l
-            return locks.LockAccess(l, "counting", _skipChecks=True)
+                return lock
+            return locks.LockAccess(lock, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [b1, b2]

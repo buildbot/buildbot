@@ -36,15 +36,15 @@ class TestWorkerTransition(unittest.TestCase):
         self.assertIdentical(SlaveLock, WorkerLock)
 
     def test_maxCountForWorker_old_api(self):
-        l = WorkerLock("lock")
+        lock = WorkerLock("lock")
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = l.maxCountForWorker
+            new = lock.maxCountForWorker
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern="'maxCountForSlave' attribute is deprecated"):
-            old = l.maxCountForSlave
+            old = lock.maxCountForSlave
 
         self.assertIdentical(new, old)
 

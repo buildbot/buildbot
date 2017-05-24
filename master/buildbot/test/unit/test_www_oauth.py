@@ -381,14 +381,14 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
         root.putChild(b'auth', auth)
         auth.putChild(b'login', self.auth.getLoginResource())
         site = MySite(root)
-        l = reactor.listenTCP(5000, site)
+        listener = reactor.listenTCP(5000, site)
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
             webbrowser.open(res.content)
         threads.deferToThread(thd)
         res = yield d
-        yield l.stopListening()
+        yield listener.stopListening()
         yield site.stopFactory()
 
         self.assertIn("full_name", res)

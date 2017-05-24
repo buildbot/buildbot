@@ -99,15 +99,15 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                             # which is substantiating. Cancel it.
                             build.workerforbuilder.worker.insubstantiate()
             # then wait for all builds to finish
-            l = []
+            dl = []
             for builder in self.builders.values():
                 for build in builder.building:
-                    l.append(build.waitUntilFinished())
-            if not l:
+                    dl.append(build.waitUntilFinished())
+            if not dl:
                 log.msg("No running jobs, starting shutdown immediately")
             else:
-                log.msg("Waiting for %i build(s) to finish" % len(l))
-                yield defer.DeferredList(l)
+                log.msg("Waiting for %i build(s) to finish" % len(dl))
+                yield defer.DeferredList(dl)
 
             # Check that there really aren't any running builds
             n = 0

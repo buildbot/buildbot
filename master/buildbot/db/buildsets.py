@@ -214,15 +214,15 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             q = sa.select(
                 [bsp_tbl.c.property_name, bsp_tbl.c.property_value],
                 whereclause=(bsp_tbl.c.buildsetid == bsid))
-            l = []
+            ret = []
             for row in conn.execute(q):
                 try:
                     properties = json.loads(row.property_value)
-                    l.append((row.property_name,
+                    ret.append((row.property_name,
                               tuple(properties)))
                 except ValueError:
                     pass
-            return BsProps(l)
+            return BsProps(ret)
         return self.db.pool.do(thd)
 
     def _thd_row2dict(self, conn, row):

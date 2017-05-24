@@ -99,18 +99,18 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
 
         # half and half
         mid = int(len(expLines) / 2)
-        for f, l in (0, mid), (mid, len(expLines) - 1):
+        for f, length in (0, mid), (mid, len(expLines) - 1):
             logchunk = yield self.callGet(path,
-                                          resultSpec=resultspec.ResultSpec(offset=f, limit=l - f + 1))
+                                          resultSpec=resultspec.ResultSpec(offset=f, limit=length - f + 1))
             self.validateData(logchunk)
-            expContent = '\n'.join(expLines[f:l + 1]) + '\n'
+            expContent = '\n'.join(expLines[f:length + 1]) + '\n'
             self.assertEqual(logchunk,
                              {'logid': logid, 'firstline': f, 'content': expContent})
 
         # truncated at EOF
-        f, l = len(expLines) - 2, len(expLines) + 10
+        f, length = len(expLines) - 2, len(expLines) + 10
         logchunk = yield self.callGet(path,
-                                      resultSpec=resultspec.ResultSpec(offset=f, limit=l - f + 1))
+                                      resultSpec=resultspec.ResultSpec(offset=f, limit=length - f + 1))
         self.validateData(logchunk)
         expContent = '\n'.join(expLines[-2:]) + '\n'
         self.assertEqual(logchunk,

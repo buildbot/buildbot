@@ -85,7 +85,7 @@ class NonThreadPool(object):
         self.calls += 1
         try:
             result = func(*args, **kw)
-        except:  # pylint: disable=bare-except
+        except:  # noqa pylint: disable=bare-except
             # We catch *everything* here, since normally this code would be
             # running in a thread, where there is nothing that will catch
             # error.

@@ -345,7 +345,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def getExpectedEnv(self, installdir, l=None, p=None, i=None):
+    def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
             installdir + r'\VC98\INCLUDE;',
             installdir + r'\VC98\ATL\INCLUDE;',
@@ -365,8 +365,8 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
             path.insert(0, '%s;' % p)
         if i:
             include.insert(0, '%s;' % i)
-        if l:
-            lib.insert(0, '%s;' % l)
+        if LIB:
+            lib.insert(0, '%s;' % LIB)
         return dict(
             INCLUDE=''.join(include),
             LIB=''.join(lib),
@@ -429,7 +429,7 @@ class TestVC6(steps.BuildStepMixin, unittest.TestCase):
                                  '/USEENV'],  # note extra param
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio',
-                            l='l', p='p', i='i'))
+                            LIB='l', p='p', i='i'))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -445,7 +445,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
-    def getExpectedEnv(self, installdir, l=None, p=None, i=None):
+    def getExpectedEnv(self, installdir, LIB=None, p=None, i=None):
         include = [
             installdir + r'\VC7\INCLUDE;',
             installdir + r'\VC7\ATLMFC\INCLUDE;',
@@ -468,8 +468,8 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
             path.insert(0, '%s;' % p)
         if i:
             include.insert(0, '%s;' % i)
-        if l:
-            lib.insert(0, '%s;' % l)
+        if LIB:
+            lib.insert(0, '%s;' % LIB)
         return dict(
             INCLUDE=''.join(include),
             LIB=''.join(lib),
@@ -530,7 +530,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
                                  '/UseEnv', '/Project', 'pj'],
                         env=self.getExpectedEnv(
                             r'C:\Program Files\Microsoft Visual Studio .NET 2003',
-                            l='l', p='p', i='i'))
+                            LIB='l', p='p', i='i'))
             + 0
         )
         self.expectOutcome(result=SUCCESS,
@@ -541,7 +541,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
 class VC8ExpectedEnvMixin(object):
     # used for VC8 and VC9Express
 
-    def getExpectedEnv(self, installdir, x64=False, l=None, i=None, p=None):
+    def getExpectedEnv(self, installdir, x64=False, LIB=None, i=None, p=None):
         include = [
             installdir + r'\VC\INCLUDE;',
             installdir + r'\VC\ATLMFC\include;',
@@ -566,8 +566,8 @@ class VC8ExpectedEnvMixin(object):
         if x64:
             path.insert(1, installdir + r'\VC\BIN\x86_amd64;')
             lib = [lb[:-1] + r'\amd64;' for lb in lib]
-        if l:
-            lib.insert(0, '%s;' % l)
+        if LIB:
+            lib.insert(0, '%s;' % LIB)
         if p:
             path.insert(0, '%s;' % p)
         if i:

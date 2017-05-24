@@ -104,8 +104,8 @@ class Properties(util.ComparableMixin):
 
     def asList(self):
         """Return the properties as a sorted list of (name, value, source)"""
-        l = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
-        return l
+        ret = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
+        return ret
 
     def asDict(self):
         """Return the properties as a simple key:value dictionary,
