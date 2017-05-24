@@ -81,8 +81,8 @@ class FakeRemoteCommand(object):
 
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
         # note that this should not be used in the same test as useLog(Delayed)
-        self.logs[log] = l = logfile.FakeLogFile(log, step)
-        l.fakeData(header=header, stdout=stdout, stderr=stderr)
+        self.logs[log] = fakelog = logfile.FakeLogFile(log, step)
+        fakelog.fakeData(header=header, stdout=stdout, stderr=stderr)
 
     def __repr__(self):
         return "FakeRemoteCommand(" + repr(self.remote_command) + "," + repr(self.args) + ")"

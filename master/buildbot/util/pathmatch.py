@@ -82,5 +82,5 @@ class Matcher(object):
     def _compile(self):
         self._by_length = {}
         for k, v in self.iterPatterns():
-            l = len(k)
-            self._by_length.setdefault(l, {})[k] = v
+            length = len(k)
+            self._by_length.setdefault(length, {})[k] = v

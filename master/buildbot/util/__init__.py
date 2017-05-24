@@ -45,8 +45,8 @@ from buildbot.util.misc import deferredLocked
 from ._notifier import Notifier
 
 
-def naturalSort(l):
-    l = l[:]
+def naturalSort(array):
+    array = array[:]
 
     def try_int(s):
         try:
@@ -57,9 +57,9 @@ def naturalSort(l):
     def key_func(item):
         return [try_int(s) for s in re.split(r'(\d+)', item)]
     # prepend integer keys to each element, sort them, then strip the keys
-    keyed_l = sorted([(key_func(i), i) for i in l])
-    l = [i[1] for i in keyed_l]
-    return l
+    keyed_array = sorted([(key_func(i), i) for i in array])
+    array = [i[1] for i in keyed_array]
+    return array
 
 
 def flattened_iterator(l, types=(list, tuple)):

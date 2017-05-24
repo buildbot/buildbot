@@ -838,19 +838,19 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addCompleteLog(self, name, text):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
-        l = self._newLog(name, u't', logid)
-        yield l.addContent(text)
-        yield l.finish()
+        _log = self._newLog(name, u't', logid)
+        yield _log.addContent(text)
+        yield _log.finish()
 
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
-        l = self._newLog(name, u'h', logid)
+        _log = self._newLog(name, u'h', logid)
         html = bytes2NativeString(html)
-        yield l.addContent(html)
-        yield l.finish()
+        yield _log.addContent(html)
+        yield _log.finish()
 
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):

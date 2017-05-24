@@ -77,25 +77,25 @@ class AsyncMultiService(AsyncService, service.MultiService):
 
     def startService(self):
         service.Service.startService(self)
-        l = []
+        dl = []
         # if a service attaches another service during the reconfiguration
         # then the service will be started twice, so we don't use iter, but rather
         # copy in a list
         for svc in list(self):
             # handle any deferreds, passing up errors and success
-            l.append(defer.maybeDeferred(svc.startService))
-        return defer.gatherResults(l, consumeErrors=True)
+            dl.append(defer.maybeDeferred(svc.startService))
+        return defer.gatherResults(dl, consumeErrors=True)
 
     def stopService(self):
         service.Service.stopService(self)
-        l = []
+        dl = []
         services = list(self)
         services.reverse()
         for svc in services:
-            l.append(defer.maybeDeferred(svc.stopService))
+            dl.append(defer.maybeDeferred(svc.stopService))
         # unlike MultiService, consume errors in each individual deferred, and
         # pass the first error in a child service up to our caller
-        return defer.gatherResults(l, consumeErrors=True)
+        return defer.gatherResults(dl, consumeErrors=True)
 
     def addService(self, service):
         if service.name is not None:

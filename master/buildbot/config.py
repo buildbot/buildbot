@@ -887,20 +887,20 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         # uniquely named.
         lock_dict = {}
 
-        def check_lock(l):
-            if isinstance(l, locks.LockAccess):
-                l = l.lockid
-            if l.name in lock_dict:
-                if lock_dict[l.name] is not l:
-                    msg = "Two locks share the same name, '%s'" % l.name
+        def check_lock(lock):
+            if isinstance(lock, locks.LockAccess):
+                lock = lock.lockid
+            if lock.name in lock_dict:
+                if lock_dict[lock.name] is not lock:
+                    msg = "Two locks share the same name, '%s'" % lock.name
                     error(msg)
             else:
-                lock_dict[l.name] = l
+                lock_dict[lock.name] = lock
 
         for b in self.builders:
             if b.locks:
-                for l in b.locks:
-                    check_lock(l)
+                for lock in b.locks:
+                    check_lock(lock)
 
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
