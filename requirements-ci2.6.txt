@@ -1,6 +1,6 @@
 appdirs==1.4.3
 astroid==1.5.2
-attrs==17.1.0
+attrs==17.2.0
 Automat==0.6.0
 backports.functools-lru-cache==1.4
 configparser==3.5.0
