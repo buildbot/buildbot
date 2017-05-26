@@ -17,8 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
+from future.utils import binary_type
 from future.utils import iteritems
-from future.utils import string_types
 
 import json
 from posixpath import join
@@ -152,7 +152,7 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
-            if isinstance(response.content, string_types):
+            if isinstance(response.content, binary_type):
                 try:
                     content = json.loads(response.content)
                 except ValueError:
