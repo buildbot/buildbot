@@ -296,7 +296,7 @@ class ResultSpec(object):
                 log.msg("Warning: limited data api query is not backed by db because of following filters",
                         unmatched_filters, unmatched_order)
             self.filters = unmatched_filters
-            self.order = unmatched_order
+            self.order = tuple(unmatched_order)
             return query, None
         count_query = sa.select([sa.func.count()]).select_from(query.alias('query'))
         self.order = None
