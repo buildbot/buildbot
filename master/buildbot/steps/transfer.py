@@ -611,6 +611,8 @@ class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
 
     name = "json_download"
 
+    renderables = ['o']
+
     def __init__(self, o, workerdest=None,
                  slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
@@ -626,11 +628,16 @@ class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
 
+        self.super_class = StringDownload
         if 's' in buildstep_kwargs:
             del buildstep_kwargs['s']
-        s = json.dumps(o)
+        self.o = o
         StringDownload.__init__(
-            self, s=s, workerdest=workerdest, **buildstep_kwargs)
+            self, s=None, workerdest=workerdest, **buildstep_kwargs)
+
+    def start(self):
+        self.s = json.dumps(self.o)
+        return self.super_class.start(self)
 
 
 class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
