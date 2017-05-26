@@ -28,6 +28,8 @@ from __future__ import print_function
 
 from zope.interface import Attribute
 from zope.interface import Interface
+from zope.interface.exceptions import DoesNotImplement
+from zope.interface.verify import verifyObject
 
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
@@ -226,6 +228,14 @@ class IRenderable(Interface):
 
         @param iprops: the L{IProperties} provider supplying the properties.
         """
+
+
+def isRenderable(obj):
+    try:
+        verifyObject(IRenderable, obj)
+        return True
+    except DoesNotImplement:
+        return False
 
 
 class IProperties(Interface):
