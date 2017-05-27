@@ -4,7 +4,7 @@ class Logpreview extends Directive
             replace: true
             transclude: true
             restrict: 'E'
-            scope: {log:"<", buildnumber:"<", builderid:"<", step:"<"},
+            scope: {log:"<", fulldisplay:"<", buildnumber:"<", builderid:"<", step:"<"},
             templateUrl: "views/logpreview.html"
             controllerAs: "logpreview"
             bindToController: true
