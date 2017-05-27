@@ -1,13 +1,13 @@
 language: node_js
+addons:
+  chrome: stable
 node_js:
-  - "0.11"
-  - "0.12"
   - "4.1"
-  - "4.2"
-  - "6.1"
+  - "6.10"
+  - "7.10"
 
 before_install:
   - npm install -g gulp yarn
 
 script:
-  - ./test.sh
+  - xvfb-run ./test.sh
