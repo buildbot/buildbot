@@ -250,6 +250,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.8.2: bump gulp-sass version for node 7.10 support.
 * 0.8.1: Some jade->pug fixes. beware that with jade-pug the default extension is .pug so extends "layout" will look for layout.pug
          You can just rename your layout file or extend with explicit file extension
 * 0.8.0: upgrade dependencies. (gulp-minify-css -> gulp-clean-css,  gulp-jade -> gulp-pug). Fix node dependencies to make yarn work.
