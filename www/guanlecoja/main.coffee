@@ -294,6 +294,8 @@ module.exports =  (gulp) ->
         if not dev
             karmaconf.singleRun = true
         _.merge(karmaconf, config.karma)
+        if (process.env.CI)
+            karmaconf.browsers = karmaconf.browsers_ci
 
         if config.vendors_apart
             karmaconf.files = [config.output_vendors].concat(config.karma.files)

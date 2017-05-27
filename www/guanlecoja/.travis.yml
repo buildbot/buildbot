@@ -1,13 +1,16 @@
 language: node_js
+sudo: false
+dist: trusty
 addons:
-  chrome: stable
+  chrome: beta
 node_js:
   - "4.5"
   - "6.10"
   - "7.10"
 
 before_install:
-  - npm install -g gulp yarn
+  - yarn global add gulp
 
 script:
+  - 'export CHROME_BIN=google-chrome-beta'
   - xvfb-run ./test.sh

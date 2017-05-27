@@ -190,6 +190,12 @@ You can configure the order the scripts are loaded using configuration:
 In this example, we are loading scripts.js last. This is useful when testing libraries, where scripts.js does not contain the necessary (e.g angular.js) dependencies.
 In that case, we rather include the dependencies in tests.js, and thus need to run it first in the karma environment.
 
+#### Testing in CI
+
+CI servers may need different configuration of browsers.
+if the "CI" environment variable is set, then guanlecoja will substitute the karma config "browsers" with the content of "browsers_ci", by default, this will run chrome headless with the --no-sandbox option.
+https://github.com/travis-ci/travis-ci/issues/2555
+
 ### Bower dependencies
 
 guanlecoja allows you to define your bower dependencies directly into the guanlecoja/config.coffee file.
@@ -250,6 +256,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.8.4: Properly configure chrome headless if the CI environment is found.
 * 0.8.3: switch to chrome for testing. phantomjs has been deprecated.
 * 0.8.2: bump gulp-sass version for node 7.10 support.
 * 0.8.1: Some jade->pug fixes. beware that with jade-pug the default extension is .pug so extends "layout" will look for layout.pug
