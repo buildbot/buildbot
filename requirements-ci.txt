@@ -63,7 +63,7 @@ python-dateutil==2.6.0
 pytz==2017.2
 PyYAML==3.12
 ramlfications==0.1.9
-requests==2.16.1
+requests==2.16.2
 s3transfer==0.1.10
 scandir==1.5
 service-identity==17.0.0
