@@ -11,6 +11,10 @@ class Logpreview extends Directive
             controller: ["$scope", ($scope) ->
 
                 @settings = bbSettingsService.getSettingsGroup("LogPreview")
+                pendingRequest = null
+                $scope.$on '$destroy', ->
+                    if pendingRequest
+                        pendingRequest.cancel()
                 loading = $sce.trustAs($sce.HTML, "...")
                 unwatch = $scope.$watch "logpreview.log", (n, o) =>
                     @log.lines = []
@@ -18,7 +22,8 @@ class Logpreview extends Directive
                         return
                     unwatch()
                     if @log.type == 'h'
-                        restService.get("logs/#{@log.logid}/contents").then (content) =>
+                        pendingRequest = restService.get("logs/#{@log.logid}/contents")
+                        pendingRequest.then (content) =>
                             @log.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
                     else
                         $scope.$watch "logpreview.log.num_lines", loadLines
@@ -52,9 +57,10 @@ class Logpreview extends Directive
                         number: offset + limit - 1
                     @log.lines.push(loading_element)
 
-                    restService.get("logs/#{@log.logid}/contents",
+                    pendingRequest = restService.get("logs/#{@log.logid}/contents",
                                     offset: offset,
-                                    limit: limit).then (content) =>
+                                    limit: limit)
+                    pendingRequest.then (content) =>
                         content = content.logchunks[0].content
                         lines = content.split("\n")
                         # there is a trailing '\n' generates an empty line in the end
