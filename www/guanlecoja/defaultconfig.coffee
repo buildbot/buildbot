@@ -134,7 +134,7 @@ module.exports =
         reporters: ['progress'],
         # start these browsers
         # available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['PhantomJS'],
+        browsers: ['Chrome'],
         files: ["scripts.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
         logLevel: "LOG_DEBUG",
         # plugins is automatically detected with recent karma

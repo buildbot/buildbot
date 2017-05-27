@@ -1,3 +1,4 @@
+set -v
 set -e
 gulp scripts vendors
 yarn link || true
