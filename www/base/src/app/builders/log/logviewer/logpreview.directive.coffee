@@ -16,17 +16,33 @@ class Logpreview extends Directive
                     if pendingRequest
                         pendingRequest.cancel()
                 loading = $sce.trustAs($sce.HTML, "...")
-                unwatch = $scope.$watch "logpreview.log", (n, o) =>
+
+                unwatchLog = null
+                unwatchLines = null
+                $scope.$watch "logpreview.fulldisplay", (n, o) =>
+                    # Cancel previous requests and stop fetching new lines first
+                    if pendingRequest
+                        pendingRequest.cancel()
+                    if unwatchLines
+                        unwatchLines()
+                    # Start fetching lines when the preview is visible.
+                    if n
+                        unwatchLog = $scope.$watch "logpreview.log", fetchLog
+
+                fetchLog = (n, o) =>
                     @log.lines = []
                     if not n?
                         return
-                    unwatch()
+                    unwatchLog()
+                    if unwatchLines
+                        unwatchLines()
                     if @log.type == 'h'
                         pendingRequest = restService.get("logs/#{@log.logid}/contents")
                         pendingRequest.then (content) =>
                             @log.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
                     else
-                        $scope.$watch "logpreview.log.num_lines", loadLines
+                        unwatchLines = $scope.$watch "logpreview.log.num_lines", loadLines
+
                 loadLines = (num_lines) =>
                     if @log.lines.length == 0
                         # initial load. only load the last few lines
