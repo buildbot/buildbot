@@ -19,3 +19,4 @@ Buildbot Manual
    optimization
    plugins
    deploy
+   credentialmanagement
