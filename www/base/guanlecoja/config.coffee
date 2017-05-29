@@ -45,7 +45,7 @@ config =
                 version: "~3.1.1"
                 files: []
             'buildbot-data':
-                version: '~2.1.0'
+                version: '~2.2.0'
                 files: 'dist/buildbot-data.js'
 
         testdeps:
