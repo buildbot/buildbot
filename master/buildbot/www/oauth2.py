@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.moves.urllib.parse import parse_qs
 from future.moves.urllib.parse import urlencode
-from future.utils import binary_type
 from future.utils import iteritems
 
 import json
@@ -152,14 +151,13 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
-            if isinstance(response.content, binary_type):
-                try:
-                    content = json.loads(response.content)
-                except ValueError:
-                    content = parse_qs(response.content)
-                    for k, v in iteritems(content):
-                        content[k] = v[0]
-            else:
+            try:
+                content = json.loads(response.content)
+            except ValueError:
+                content = parse_qs(response.content)
+                for k, v in iteritems(content):
+                    content[k] = v[0]
+            except TypeError:
                 content = response.content
 
             session = self.createSessionFromToken(content)
