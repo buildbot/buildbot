@@ -99,7 +99,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getRecentChanges(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=['-changeid'])
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.validateData(changes[0])
@@ -108,7 +108,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOrder(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=['-when_time_stamp'])
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         # limit not implemented for other order
@@ -117,7 +117,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getChangesOtherOffset(self):
         resultSpec = resultspec.ResultSpec(
-            limit=1, offset=1, order=['-changeid'])
+            limit=1, offset=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         # limit not implemented for other offset
