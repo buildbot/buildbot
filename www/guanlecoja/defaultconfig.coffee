@@ -85,7 +85,8 @@ module.exports =
         deps: {}
         testdeps: {}
 
-    # Enable code coverage on coffeescript. ATM, this restricts you to CS 1.6, so you might want to disable it.
+    # Enable code coverage on coffeescript. ATM, this restricts you to CS 1.6,
+    # so you might want to disable it.
     coffee_coverage: true
 
     # produce a vendors.js file with the js dependancies. scripts.js will now only contain
@@ -135,18 +136,16 @@ module.exports =
         # start these browsers
         # available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
         browsers: ['Chrome'],
+        browsers_ci: ['ChromeCI'],
+        customLaunchers:
+            ChromeCI:
+                base: 'ChromeHeadless',
+                flags: ['--no-sandbox']
         files: ["scripts.js", 'generatedfixtures.js', 'fixtures.js', "tests.js"]
         logLevel: "LOG_DEBUG",
-        # plugins is automatically detected with recent karma
-#        plugins: [
-#          'karma-jasmine'
-#          'karma-phantomjs-launcher'
-#          'karma-sourcemap-loader'
-#          'karma-coverage'
-#        ],
         preprocessors: {
-          '**/scripts.js': ['sourcemap']
-          '**/tests.js': ['sourcemap']
+            '**/scripts.js': ['sourcemap']
+            '**/tests.js': ['sourcemap']
         },
         coverageReporter:
             reporters: [
