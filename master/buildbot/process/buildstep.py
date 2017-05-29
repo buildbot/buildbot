@@ -178,7 +178,9 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         def next(x):
             self._catchup()
             return x
-        self.step._start_unhandled_deferreds.append(d)
+
+        if self.step._start_unhandled_deferreds is not None:
+            self.step._start_unhandled_deferreds.append(d)
 
     def _delay(self, op):
         self.delayedOperations.append(op)
@@ -819,7 +821,8 @@ class BuildStep(results.ResultComputingConfigMixin,
         # create a logfile instance that acts like old-style status logfiles
         # begin to create a new-style logfile
         loog_d = self.addLog_newStyle(name, type, logEncoding)
-        self._start_unhandled_deferreds.append(loog_d)
+        if self._start_unhandled_deferreds is not None:
+            self._start_unhandled_deferreds.append(loog_d)
         # and wrap the deferred that will eventually fire with that logfile
         # into a write-only logfile instance
         wrapper = SyncLogFileWrapper(self, name, loog_d)
