@@ -171,7 +171,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
     objectid = None
 
     def __init__(self, *args, **kwargs):
-        name = kwargs.pop("name", None)
+        name = kwargs.get("name", None)
         if name is not None:
             self.name = ascii2unicode(name)
         self.checkConfig(*args, **kwargs)
