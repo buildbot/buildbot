@@ -212,9 +212,8 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                 pass
         yield AsyncMultiService.startService(self)
 
-    def checkConfig(self, name=None, *args, **kwargs):
-        if name is not None:
-            self.name = ascii2unicode(name)
+    def checkConfig(self, *args, **kwargs):
+        return defer.succeed(True)
 
     def reconfigService(self, name=None, *args, **kwargs):
         return defer.succeed(None)

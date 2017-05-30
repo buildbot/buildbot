@@ -509,3 +509,18 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         self.patch(reactor, 'spawnProcess', spawnProcess)
         gsp.callWithVersion(lambda: self.assertEqual(
             gsp.gerrit_version, LooseVersion('2.14')))
+
+    def test_name_as_class_attribute(self):
+        class FooStatusPush(GerritStatusPush):
+            name = 'foo'
+
+        reporter = FooStatusPush('gerrit.server.com', 'password')
+        self.assertEqual(reporter.name, 'foo')
+
+    def test_name_as_kwarg(self):
+        reporter = GerritStatusPush('gerrit.server.com', 'password', name='foo')
+        self.assertEqual(reporter.name, 'foo')
+
+    def test_default_name(self):
+        reporter = GerritStatusPush('gerrit.server.com', 'password')
+        self.assertEqual(reporter.name, 'GerritStatusPush')

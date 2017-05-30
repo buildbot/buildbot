@@ -50,10 +50,10 @@ class TestPollingChangeHook(unittest.TestCase):
             dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
         yield master.change_svc.setServiceParent(master)
-        self.changesrc = self.Subclass("example", 21)
+        self.changesrc = self.Subclass(21, name='example')
         yield self.changesrc.setServiceParent(master.change_svc)
 
-        self.otherpoller = self.Subclass("otherpoller", 22)
+        self.otherpoller = self.Subclass(22, name="otherpoller")
         yield self.otherpoller.setServiceParent(master.change_svc)
 
         anotherchangesrc = base.ChangeSource(name='notapoller')
