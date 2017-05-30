@@ -261,3 +261,23 @@ class ListDir(base.Command):
             self.sendStatus(
                 {'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
+
+
+class RemoveFile(base.Command):
+
+    header = "rmfile"
+
+    # args['path'] is relative to Builder directory, and is required.
+    requiredArgs = ['path']
+
+    def start(self):
+        pathname = os.path.join(self.builder.basedir, self.args['path'])
+
+        try:
+            os.remove(pathname)
+            self.sendStatus({'rc': 0})
+        except OSError as e:
+            log.msg("remove file %s failed" % pathname, e)
+            self.sendStatus(
+                {'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
+            self.sendStatus({'rc': e.errno})

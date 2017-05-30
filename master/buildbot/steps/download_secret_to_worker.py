@@ -17,12 +17,16 @@ from __future__ import print_function
 
 import os
 
+from twisted.internet import defer
+
+from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
-from buildbot.process.buildstep import LoggingBuildStep
+from buildbot.steps.transfer import _TransferBuildStep
+from buildbot.steps.worker import CompositeStepMixin
 
 
-class workerFileSecret():
+class WorkerFileSecret(object):
 
     def __init__(self, path, secretvalue):
         self.path = path
@@ -32,41 +36,53 @@ class workerFileSecret():
         if not os.path.exists(os.path.dirname(self.path)):
             raise ValueError("Path %s does not exist")
 
-    def createSecretFile(self):
-        file_path = os.path.join(self.path)
-        with open(file_path, 'w') as filetmp:
-            filetmp.write(self.secretvalue)
 
-
-class PushSecretToWorker(LoggingBuildStep):
+class DownloadSecretsToWorker(_TransferBuildStep, CompositeStepMixin):
 
     def __init__(self, populated_secret_list, **kwargs):
-        super(PushSecretToWorker, self).__init__(**kwargs)
+        super(DownloadSecretsToWorker, self).__init__(**kwargs)
         self.secret_to_be_populated = []
-        for secretvalue, path in populated_secret_list:
-            self.secret_to_be_populated.append(workerFileSecret(secretvalue, path))
+        for path, secretvalue in populated_secret_list:
+            self.secret_to_be_populated.append(WorkerFileSecret(path, secretvalue))
 
+    @defer.inlineCallbacks
     def runPopulateSecrets(self):
+        all_results = []
         for secret in self.secret_to_be_populated:
-            secret.createSecretFile()
-        return SUCCESS
+            res = yield self.downloadFileContentToWorker(secret.path, secret.secretvalue)
+            all_results.append(res)
+        if FAILURE in all_results:
+            result = FAILURE
+        else:
+            result = SUCCESS
+        defer.returnValue(result)
 
-    def run(self):
-        return self.runPopulateSecrets()
+    @defer.inlineCallbacks
+    def start(self):
+        res = yield self.runPopulateSecrets()
+        yield self.finished(res)
 
 
-class RemoveWorkerFileSecret(BuildStep):
+class RemoveWorkerFileSecret(_TransferBuildStep, CompositeStepMixin):
 
-    def __init__(self, paths, **kwargs):
+    def __init__(self, paths, logEnviron=False, **kwargs):
         self.paths = paths
+        self.logEnviron = logEnviron
         super(RemoveWorkerFileSecret, self).__init__(**kwargs)
 
+    @defer.inlineCallbacks
     def runRemoveWorkerFileSecret(self):
+        all_results = []
         for path in self.paths:
-            if not os.path.exists(path):
-                raise ValueError("Path %s does not exist")
-            os.remove(path)
-        return SUCCESS
+            res = yield self.runRmFile(path, abandonOnFailure=False)
+            all_results.append(res)
+        if FAILURE in all_results:
+            result = FAILURE
+        else:
+            result = SUCCESS
+        defer.returnValue(result)
 
-    def run(self):
-        return self.runRemoveWorkerFileSecret()
+    @defer.inlineCallbacks
+    def start(self):
+        res = yield self.runRemoveWorkerFileSecret()
+        yield self.finished(res)

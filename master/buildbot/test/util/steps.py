@@ -417,13 +417,11 @@ class BuildStepMixin(object):
         self.assertEqual(step, self.step)
         self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
-
         if not self.expected_remote_commands:
             self.fail("got command %r when no further commands were expected"
                       % (got,))
 
         exp = self.expected_remote_commands[0]
-
         try:
             yield self._validate_expectation(exp, command)
             exp.expectationPassed(exp)
@@ -437,5 +435,4 @@ class BuildStepMixin(object):
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
-
         defer.returnValue(command)

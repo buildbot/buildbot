@@ -263,6 +263,13 @@ class CompositeStepMixin():
             cmd_args['timeout'] = timeout
         return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
 
+    def runRmFile(self, path, timeout=None, **kwargs):
+        """ remove a file from the worker """
+        cmd_args = {'path': path, 'logEnviron': self.logEnviron}
+        if timeout:
+            cmd_args['timeout'] = timeout
+        return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
+
     def pathExists(self, path):
         """ test whether path exists"""
         def commandComplete(cmd):
@@ -313,3 +320,28 @@ class CompositeStepMixin():
                                      abandonOnFailure=abandonOnFailure,
                                      evaluateCommand=commandComplete)
     deprecatedWorkerClassMethod(locals(), getFileContentFromWorker)
+
+    def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False):
+        self.checkWorkerHasCommand("downloadFile")
+        fileReader = remotetransfer.FileReader(strfile)
+
+        # default arguments
+        args = {
+            'maxsize': None,
+            'reader': fileReader,
+            'blocksize': 32 * 1024,
+        }
+
+        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
+            args['slavedest'] = workerdest
+        else:
+            args['workerdest'] = workerdest
+
+        def commandComplete(cmd):
+            if cmd.didFail():
+                return None
+            return fileReader
+
+        return self.runRemoteCommand('downloadFile', args,
+                                     abandonOnFailure=abandonOnFailure,
+                                     evaluateCommand=commandComplete)

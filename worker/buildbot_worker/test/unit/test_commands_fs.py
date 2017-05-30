@@ -370,3 +370,50 @@ class TestListDir(CommandTestMixin, unittest.TestCase):
                 self.builder.show())
         d.addCallback(check)
         return d
+
+
+class TestRemoveFile(CommandTestMixin, unittest.TestCase):
+
+    def setUp(self):
+        self.setUpCommand()
+
+    def tearDown(self):
+        self.tearDownCommand()
+
+    def test_simple(self):
+        workdir = os.path.join(self.basedir, 'workdir')
+        self.file1_path = os.path.join(workdir, 'file1')
+        self.make_command(fs.RemoveFile, dict(
+            path=self.file1_path,
+        ), True)
+
+        with open(os.path.join(workdir, 'file1'), "w"):
+            pass
+        d = self.run_command()
+
+        def check(_):
+            self.assertFalse(
+                os.path.exists(self.file1_path))
+            self.assertIn({'rc': 0},  # this may ignore a 'header' : '..', which is OK
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
+
+    def test_simple_exception(self):
+        workdir = os.path.join(self.basedir, 'workdir')
+        self.file2_path = os.path.join(workdir, 'file2')
+
+        def fail(src, dest):
+            raise RuntimeError("oh noes")
+        self.make_command(fs.RemoveFile, dict(
+            path=self.file2_path
+        ), True)
+        d = self.run_command()
+
+        def check(_):
+            self.assertIn({'rc': 2},
+                          self.get_updates(),
+                          self.builder.show())
+        d.addCallback(check)
+        return d
