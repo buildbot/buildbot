@@ -827,7 +827,7 @@ HttpStatusPush
 ::
 
     from buildbot.plugins import reporters
-    sp = reporters.HttpStatusPush(serverUrl="http://example.com/submit")
+    sp = reporters.HttpStatusPush(serverUrl="http://example.com/submit", user="jdoe", password="S3cre1")
     c['services'].append(sp)
 
 :class:`HttpStatusPush` builds on :class:`StatusPush` and sends HTTP requests to ``serverUrl``, with all the items json-encoded.
