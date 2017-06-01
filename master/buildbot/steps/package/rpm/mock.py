@@ -82,7 +82,7 @@ class Mock(ShellCommand):
         if not self.root:
             config.error("You must specify a mock root")
 
-        self.command = ['mock', '--root', self.root]
+        self.command = ['/usr/bin/mock', '--root', self.root]
         if self.resultdir:
             self.command += ['--resultdir', self.resultdir]
 
