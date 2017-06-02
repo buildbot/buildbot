@@ -884,7 +884,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     def test_authz_forbidden(self):
 
         def deny(request, ep, action, options):
-            if b"13" in ep:
+            if "13" in ep:
                 raise authz.Forbidden("no no")
             return None
         self.master.www.assertUserAllowed = deny

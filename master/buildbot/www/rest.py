@@ -228,7 +228,8 @@ class V2RootResource(resource.Resource):
         with self.handleErrors(writeError):
             method, id, params = self.decodeJsonRPC2(request)
             jsonRpcReply['id'] = id
-            yield self.master.www.assertUserAllowed(request, tuple(request.postpath),
+            request_postpath = tuple([bytes2NativeString(p) for p in request.postpath])
+            yield self.master.www.assertUserAllowed(request, request_postpath,
                                                     method, params)
             userinfos = self.master.www.getUserInfos(request)
             if 'anonymous' in userinfos and userinfos['anonymous']:
