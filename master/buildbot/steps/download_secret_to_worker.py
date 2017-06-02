@@ -21,7 +21,6 @@ from twisted.internet import defer
 
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
-from buildbot.process.buildstep import BuildStep
 from buildbot.steps.transfer import _TransferBuildStep
 from buildbot.steps.worker import CompositeStepMixin
 
