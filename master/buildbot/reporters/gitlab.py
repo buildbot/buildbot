@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.moves.urllib.parse import quote_plus as urlquote_plus
 
 import re
 
@@ -106,7 +107,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             }.get(build['results'], 'error')
             description = yield props.render(self.endDescription)
         else:
-            state = 'pending'
+            state = 'running'
             description = yield props.render(self.startDescription)
 
         context = yield props.render(self.context)
@@ -114,24 +115,34 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         sourcestamps = build['buildset']['sourcestamps']
         project = sourcestamps[0]['project']
 
-        # default to master if not found
-        branch = sourcestamps[0].get('branch', 'master')
+        for ss in sourcestamps:
+            try:
+                repo = ss['repository'].split('/')[-2:]
+                repoOwner = repo[0]
+                if repo[1].endswith(".git"):
+                    repoName = '.'.join(repo[1].split('.')[:-1])
+                else:
+                    repoName = repo[1]
+                # default to master if not found
+                branch = ss.get('branch', 'master')
+                break
+            except Exception:
+                pass
 
-        if project:
+        if project and len(project.split('/')) == 2:
             repoOwner, repoName = project.split('/')
-        else:
-            repo = sourcestamps[0]['repository'].split('/')[-2:]
-            repoOwner = repo[0]
-            repoName = '.'.join(repo[1].split('.')[:-1])
 
         m = re.match(".*:(.*)", repoOwner)
         if m is not None:
             repoOwner = m.group(1)
 
         # retrieve project id via cache
-        self.project_ids
-        project_full_name = "%s%%2F%s" % (repoOwner, repoName)
+
+        project_full_name = u"%s/%s" % (repoOwner, repoName)
         project_full_name = unicode2NativeString(project_full_name)
+
+        # gitlab needs project name to be fully url quoted to get the project id
+        project_full_name = urlquote_plus(project_full_name)
 
         if project_full_name not in self.project_ids:
             proj = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
