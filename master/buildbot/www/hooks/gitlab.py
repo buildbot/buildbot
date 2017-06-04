@@ -36,7 +36,7 @@ def _process_change(payload, user, repo, repo_url, project, event,
 
     :arguments:
         payload
-            Python Object that represents the JSON sent by GitHub Service
+            Python Object that represents the JSON sent by GitLab Service
             Hook.
     """
     changes = []
@@ -78,6 +78,7 @@ def _process_change(payload, user, repo, repo_url, project, event,
             'revlink': commit['url'],
             'repository': repo_url,
             'project': project,
+            'category': event,
             'properties': {
                 'event': event,
             },
@@ -88,6 +89,42 @@ def _process_change(payload, user, repo, repo_url, project, event,
 
         changes.append(change)
 
+    return changes
+
+
+def _process_merge_request_change(payload, project, event, codebase=None):
+    """
+    Consumes the merge_request JSON as a python object and turn it into a buildbot change.
+
+    :arguments:
+        payload
+            Python Object that represents the JSON sent by GitLab Service
+            Hook.
+    """
+    attrs = payload['object_attributes']
+    commit = attrs['last_commit']
+    when_timestamp = dateparse(commit['timestamp'])
+    # @todo provide and document a way to choose between http and ssh url
+    repo_url = attrs['target']['git_http_url']
+    changes = [{
+        'author': '%s <%s>' % (commit['author']['name'],
+                               commit['author']['email']),
+        'files': [],  # @todo use rest API
+        'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'], attrs['description']),
+        'revision': commit['id'],
+        'when_timestamp': when_timestamp,
+        'branch': "refs/merge-requests/{}/head".format(attrs['iid']),
+        'repository': repo_url.replace(":30302", ''),
+        'project': project,
+        'category': event,
+        'revlink': attrs['url'],
+        'properties': {
+            'target_branch': attrs['target_branch'],
+            'event': event,
+        },
+    }]
+    if codebase is not None:
+        changes[0]['codebase'] = codebase
     return changes
 
 
@@ -110,16 +147,23 @@ def getChanges(request, options=None):
         raise ValueError("Error loading JSON: " + str(e))
     event_type = request.getHeader(_HEADER_EVENT)
     event_type = bytes2NativeString(event_type)
-    user = payload['user_name']
-    repo = payload['repository']['name']
-    repo_url = payload['repository']['url']
+    # newer version of gitlab have a object_kind parameter,
+    # which allows not to use the http header
+    event_type = payload.get('object_kind', event_type)
     project = request.args.get('project', [''])[0]
-    codebase = request.args.get('codebase', None)
-    if codebase:
-        codebase = codebase[0]
-    # This field is unused:
-    # private = payload['repository']['private']
-    changes = _process_change(
-        payload, user, repo, repo_url, project, event_type, codebase=codebase)
-    log.msg("Received %s changes from gitlab" % len(changes))
+    codebase = request.args.get('codebase', [None])[0]
+    if event_type in ("push", "tag_push", "Push Hook"):
+        user = payload['user_name']
+        repo = payload['repository']['name']
+        repo_url = payload['repository']['url']
+        changes = _process_change(
+            payload, user, repo, repo_url, project, event_type, codebase=codebase)
+    elif event_type == 'merge_request':
+        changes = _process_merge_request_change(
+            payload, project, event_type, codebase=codebase)
+    else:
+        changes = []
+    if changes:
+        log.msg("Received {} changes from {} gitlab event".format(
+            len(changes), event_type))
     return (changes, 'git')

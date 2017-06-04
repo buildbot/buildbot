@@ -556,6 +556,7 @@ gf
 gib
 giger
 github
+gitlab
 gitorious
 gmail
 gmt
