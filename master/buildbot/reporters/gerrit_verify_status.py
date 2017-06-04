@@ -68,7 +68,8 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
             baseURL = baseURL[:-1]
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, auth=auth)
+            self.master, baseURL, auth=auth,
+            debug=self.debug, verify=self.verify)
 
         self._verification_name = verification_name or Interpolate(
             '%(prop:buildername)s')

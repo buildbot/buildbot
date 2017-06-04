@@ -57,7 +57,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             self.master, baseURL, headers={
                 'Authorization': 'token ' + token,
                 'User-Agent': 'Buildbot'
-            })
+            },
+            debug=self.debug, verify=self.verify)
         self.verbose = verbose
 
     def setDefaults(self, context, startDescription, endDescription):

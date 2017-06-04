@@ -964,6 +964,8 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param string baseURL: specify the github api endpoint if you work with GitHub Enterprise
     :param boolean verbose: if True, logs a message for each successful status push
     :param list builders: only send update for specified builders
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 .. bb:reporter:: StashStatusPush
 
@@ -1007,6 +1009,8 @@ As a result, we recommend you use https in your base_url rather than http.
     :param renderable string endDescription: Custom end message (default: 'Build done.')
     :param boolean verbose: If True, logs a message for each successful status push.
     :param list builders: Only send update for specified builders.
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 .. bb:reporter:: BitbucketStatusPush
 
@@ -1041,6 +1045,8 @@ After creating the consumer, you will then be able to see the OAuth key and secr
     :param string base_url: Bitbucket's Build Status API URL
     :param string oauth_url: Bitbucket's OAuth API URL
     :param list builders: only send update for specified builders
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 .. bb:reporter:: GitLabStatusPush
 
@@ -1073,6 +1079,8 @@ It uses private token auth, and the token owner is required to have at least dev
     :param string context: Name of your build system, eg. continuous-integration/buildbot
     :param string baseURL: the base url of the GitLab host, up to and optionally including the first `/` of the path. Do not include /api/
     :param string verbose: Be more verbose
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 
 .. bb:reporter:: HipchatStatusPush
@@ -1112,6 +1120,8 @@ It uses API token auth, and the token owner is required to have at least message
         This needs wantSteps=True.
         This dumps the *full* content of logs.
     :param boolean wantPreviousBuild: (optional) include 'prev_build' in the build dictionary
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 
 .. note::
@@ -1229,6 +1239,8 @@ Most parameters are :index:`renderables <renderable>`
     :param renderable boolean reporter: The user that verified this build
     :param boolean verbose: Whether to log every requests.
     :param list builders: only send update for specified builders
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
 
 This reporter is integrated with :class:`GerritChangeSource`, and will update changes detected by this change source.
 

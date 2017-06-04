@@ -39,9 +39,10 @@ class HttpStatusPushBase(service.BuildbotService):
             config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
-    def reconfigService(self, builders=None, **kwargs):
+    def reconfigService(self, builders=None, debug=None, verify=None, **kwargs):
         yield service.BuildbotService.reconfigService(self)
-
+        self.debug = debug
+        self.verify = verify
         self.builders = builders
         self.neededDetails = copy.copy(self.neededDetails)
         for k, v in iteritems(kwargs):
