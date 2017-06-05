@@ -300,6 +300,7 @@ class Waterfall extends Controller
             p = self.d3.select(@parentNode)
             a = p.append('a')
                 .attr('xlink:href', "#/builders/#{builderid}")
+            a.append('title').text(this.textContent)
             a.node().appendChild(this)
 
         # Rotate text

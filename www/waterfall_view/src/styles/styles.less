@@ -1,5 +1,7 @@
 @navbar-height: 52px;
 @main-color: #3498db;
+// Spacing to prevent rotated text from falling off the screen.
+@header-right-margin: 100px;
 
 .waterfall {
   position: absolute;
@@ -8,6 +10,7 @@
   bottom: 0;
   right: 0;
   width: auto;
+  padding-right: @header-right-margin;
   overflow-x: auto;
   overflow-y: hidden;
 
@@ -40,8 +43,7 @@
     height: 100px;
     line-height: 100px;
     margin-bottom: 2px;
-    // @FIXME: add a bit of margin-right in order to be able to see the rotated titles.
-    margin-right: -150px;
+    margin-right: -@header-right-margin;
     vertical-align: middle;
 
     .header-content {
