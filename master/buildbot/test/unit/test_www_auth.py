@@ -166,6 +166,17 @@ class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
         self.assertIsInstance(rsrc, HTTPAuthSessionWrapper)
 
 
+class UserPasswordAuth(www.WwwTestMixin, unittest.TestCase):
+
+    def test_passwordStringToBytes(self):
+        login = {"user_string": "password",
+                 "user_bytes": b"password"}
+        correct_login = {b"user_string": b"password",
+                         b"user_bytes": b"password"}
+        self.auth = auth.UserPasswordAuth(login)
+        self.assertEqual(self.auth.checkers[0].users, correct_login)
+
+
 class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
