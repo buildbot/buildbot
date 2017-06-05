@@ -470,6 +470,7 @@ class Waterfall extends Controller
             else "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
         tooltip = e.append('g')
             .attr('class', 'svg-tooltip')
+            .style('pointer-events', 'none')
             .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
             .append('g')
                 .attr('class', 'tooltip-content')
