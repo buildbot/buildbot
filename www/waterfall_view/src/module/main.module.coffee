@@ -462,7 +462,8 @@ class Waterfall extends Controller
         p.each -> @parentNode.appendChild(this)
 
         # Show tooltip on the left or on the right
-        r = build.builderid < self.builders.length / 2
+        builderIds = self.builders.map((builder) -> builder.builderid)
+        r = builderIds.indexOf(build.builderid) < self.builders.length / 2
 
         # Create tooltip
         height = 40
