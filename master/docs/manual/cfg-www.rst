@@ -540,6 +540,13 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;";
             spdy_headers_comp 5;
 
+            proxy_set_header HOST $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto  $scheme;
+            proxy_set_header X-Forwarded-Server  $host;
+            proxy_set_header X-Forwarded-Host  $host;
+
             # you could use / if you use domain based proxy instead of path based proxy
             location /buildbot/ {
                 proxy_pass http://127.0.0.1:5000/;
@@ -551,12 +558,12 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             }
             # required for websocket
             location /buildbot/ws {
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade $http_upgrade;
-                  proxy_set_header Connection "upgrade";
-                  proxy_pass http://127.0.0.1:5000/ws;
-                  # raise the proxy timeout for the websocket
-                  proxy_read_timeout 6000s;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_pass http://127.0.0.1:5000/ws;
+                # raise the proxy timeout for the websocket
+                proxy_read_timeout 6000s;
             }
     }
 
