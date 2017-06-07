@@ -135,7 +135,7 @@ module.exports =
         reporters: ['progress'],
         # start these browsers
         # available browser launchers: https://npmjs.org/browse/keyword/karma-launcher
-        browsers: ['Chrome'],
+        browsers: ['ChromeHeadless'],
         browsers_ci: ['ChromeCI'],
         customLaunchers:
             ChromeCI:

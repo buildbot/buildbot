@@ -153,7 +153,7 @@ Guanlecoja supports npm3 in experimental mode. Please report issues if you have 
 
 #### --notests
 
-In some environments where it is hard to install phantomjs, or setup xvfb (old systems, or Paas build environment), it might be suitable to just not run the tests, and only run the build part. In those case, just run:
+In some environments where it is hard to install Chrome or Chromium 59+, it might be suitable to just not run the tests, and only run the build part. In those case, just run:
 
 ```
 gulp prod --notests
@@ -205,7 +205,7 @@ guanlecoja will create BOWERDEPS global variable that contains the list of packa
 
 Note that the BOWERDEPS variable is shared between all modules that use guanlecoja as build system, this will contain deps of deps.
 
-### Developement server
+### Development server
 
 For standalone UI, development server is given as a simple helper.
 Just setup the parameter `devserver.port: 8080`, and use the `server` gulp task:
@@ -235,18 +235,6 @@ Code Coverage is a technique that tells you how much of your code is run during 
 
 ``gulp --coverage`` enables code coverage report using coffeescript coverage annotation engine.
 This will create a ``coverage`` directory with the report inside it.
-
-### PhantomJS
-
-Guanlecoja uses karma phantomjs by default to run the unit tests.
-This eventually downloads a version of the headless browser called phantomJS.
-In order to speed up the CI builds in a enterprise intranet environment, you might want to use a local phantomJS URL.
-In this case, you can use the environment variable:
-
-    PHANTOMJS_CDNURL=https://bitbucket.org/ariya/phantomjs/downloads
-
-You can also install phantomjs in your CI machine in /usr/bin/phantomjs.
-Basically, this is just about copying bin/phantomjs from the binary distribution into your system.
 
 ### Examples
 
