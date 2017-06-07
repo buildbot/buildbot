@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import os
 import stat
 
 from buildbot.process import buildstep
@@ -268,7 +269,11 @@ class CompositeStepMixin():
         cmd_args = {'path': path, 'logEnviron': self.logEnviron}
         if timeout:
             cmd_args['timeout'] = timeout
-        return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
+        if self.workerVersionIsOlderThan('rmfile', '3.1'):
+            cmd_args['dir'] = os.path.abspath(path)
+            return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
+        else:
+            return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
 
     def pathExists(self, path):
         """ test whether path exists"""

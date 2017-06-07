@@ -21,7 +21,7 @@ from twisted.internet import defer
 
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
-from buildbot.steps.transfer import _TransferBuildStep
+from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 
 
@@ -36,7 +36,7 @@ class WorkerFileSecret(object):
             raise ValueError("Path %s does not exist")
 
 
-class DownloadSecretsToWorker(_TransferBuildStep, CompositeStepMixin):
+class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
     def __init__(self, populated_secret_list, **kwargs):
         super(DownloadSecretsToWorker, self).__init__(**kwargs)
@@ -57,12 +57,13 @@ class DownloadSecretsToWorker(_TransferBuildStep, CompositeStepMixin):
         defer.returnValue(result)
 
     @defer.inlineCallbacks
-    def start(self):
+    def run(self):
+        self._start_deferred = None
         res = yield self.runPopulateSecrets()
-        yield self.finished(res)
+        defer.returnValue(res)
 
 
-class RemoveWorkerFileSecret(_TransferBuildStep, CompositeStepMixin):
+class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
 
     def __init__(self, paths, logEnviron=False, **kwargs):
         self.paths = paths
@@ -82,6 +83,7 @@ class RemoveWorkerFileSecret(_TransferBuildStep, CompositeStepMixin):
         defer.returnValue(result)
 
     @defer.inlineCallbacks
-    def start(self):
+    def run(self):
+        self._start_deferred = None
         res = yield self.runRemoveWorkerFileSecret()
-        yield self.finished(res)
+        defer.returnValue(res)

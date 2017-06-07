@@ -31,31 +31,7 @@ from buildbot.test.util import config as configmixin
 from buildbot.test.util import steps
 
 
-class TestDownloadSecretToWorkerStep(steps.BuildStepMixin, unittest.TestCase,
-                                     configmixin.ConfigErrorsMixin):
-
-    def createTempDir(self, dirname):
-        tempdir = FilePath(self.mktemp())
-        tempdir.createDirectory()
-        return tempdir.path
-
-    def setUp(self):
-        self.temp_path = self.createTempDir("tempdir")
-
-    def testPushSecretToWorkerStepSuccess(self):
-        self.setupStep(DownloadSecretsToWorker([(os.path.join(self.temp_path, "pathA"),
-         "something")]))
-        self.expected_remote_commands = ""
-        self.exp_result = SUCCESS
-        self.runStep()
-
-    def testPathDoesNotExists(self):
-        self.assertRaises(ValueError,
-                          lambda: self.setupStep(DownloadSecretsToWorker([(os.path.join("/dir/pathA"),
-                                                                           "something")])))
-
-
-class TestDownloadFileSecretToWorker(steps.BuildStepMixin, unittest.TestCase):
+class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
         tempdir = FilePath(self.mktemp())
@@ -95,30 +71,47 @@ class TestDownloadFileSecretToWorker(steps.BuildStepMixin, unittest.TestCase):
         return d
 
 
-class TestRemoveSecretToWorkerStep(steps.BuildStepMixin, unittest.TestCase,
-                                   configmixin.ConfigErrorsMixin):
-
-    def createTempDir(self, dirname):
-        tempdir = FilePath(self.mktemp())
-        tempdir.createDirectory()
-        return tempdir.path
+class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin, unittest.TestCase):
 
     def setUp(self):
-        self.temp_path = self.createTempDir("tempdir")
-        file_path = os.path.join(self.temp_path, "filename")
-        with open(file_path, 'w') as filetmp:
-            filetmp.write("text")
-            self.fileToRemove = filetmp
+        tempdir = FilePath(self.mktemp())
+        tempdir.createDirectory()
+        self.temp_path = tempdir.path
+        return self.setUpBuildStep()
 
-    def testRemoveSecretToWorkerStepSuccess(self):
-        self.setupStep(RemoveWorkerFileSecret([os.path.join(self.temp_path, "filename")]))
-        self.expected_remote_commands = ""
-        self.exp_result = SUCCESS
-        self.runStep()
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def testBasic(self):
+        self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA")),
+                                               (os.path.join(self.temp_path, "pathB"))]),
+                                               worker_version={'*': '3.0'})
+
+        args1 = {
+                    'path': os.path.join(self.temp_path, "pathA"),
+                    'dir': os.path.abspath(os.path.join(self.temp_path, "pathA")),
+                    'logEnviron': False
+                    }
+        args2 = {
+                    'path': os.path.join(self.temp_path, "pathB"),
+                    'dir': os.path.abspath(os.path.join(self.temp_path, "pathB")),
+                    'logEnviron': False
+                    }
+        self.expectCommands(
+            Expect('rmdir', args1)
+            + 0,
+            Expect('rmdir', args2)
+            + 0,
+            )
+
+        self.expectOutcome(
+            result=SUCCESS, state_string="finished")
+        d = self.runStep()
+        return d
 
 
-class TestRemoveFileSecretToWorkerStep(steps.BuildStepMixin, unittest.TestCase,
-                                   configmixin.ConfigErrorsMixin):
+class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestCase,
+                                          configmixin.ConfigErrorsMixin):
 
     def setUp(self):
         tempdir = FilePath(self.mktemp())

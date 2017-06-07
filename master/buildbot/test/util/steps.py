@@ -417,6 +417,7 @@ class BuildStepMixin(object):
         self.assertEqual(step, self.step)
         self.assertEqual(conn, self.conn)
         got = (command.remote_command, command.args)
+
         if not self.expected_remote_commands:
             self.fail("got command %r when no further commands were expected"
                       % (got,))
