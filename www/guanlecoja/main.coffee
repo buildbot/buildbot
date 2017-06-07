@@ -14,6 +14,9 @@ karma = require 'karma'
 # sass uses native code, and cannot be browserified
 sass = require('gulp-sass')
 
+# gulp.watch replacement for gulp < 4.0 to fix CPU hogging
+watch = require('gulp-watch')
+
 # utilities
 path = vendors.path
 fs = vendors.fs
@@ -279,12 +282,12 @@ module.exports =  (gulp) ->
     gulp.task "watch", false, ->
         lr.listen(livereload:path.join(__dirname,"livereload.js"))
         # karma own watch mode is used. no need to restart karma
-        gulp.watch(script_sources, ["scripts"])
-        gulp.watch(config.files.templates, ["templates"])
-        gulp.watch(config.files.tests, ["tests"])
-        gulp.watch(config.files.less, ["styles"])
-        gulp.watch(config.files.sass, ["styles"])
-        gulp.watch(config.files.index, ["index"])
+        watch(script_sources, ["scripts"])
+        watch(config.files.templates, ["templates"])
+        watch(config.files.tests, ["tests"])
+        watch(config.files.less, ["styles"])
+        watch(config.files.sass, ["styles"])
+        watch(config.files.index, ["index"])
         null
 
     # karma configuration, we build a lot of the config file automatically
