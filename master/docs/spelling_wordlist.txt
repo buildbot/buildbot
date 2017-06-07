@@ -662,6 +662,7 @@ revertive
 revlink
 revlinks
 rmdir
+rmfile
 Robocopy
 rootlink
 routingkeys
