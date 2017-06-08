@@ -85,7 +85,7 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin, unittest.TestCas
     def testBasic(self):
         self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA")),
                                                (os.path.join(self.temp_path, "pathB"))]),
-                                               worker_version={'*': '3.0'})
+                                              worker_version={'*': '3.0'})
 
         args1 = {
                     'path': os.path.join(self.temp_path, "pathA"),

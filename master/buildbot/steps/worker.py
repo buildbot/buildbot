@@ -272,8 +272,7 @@ class CompositeStepMixin():
         if self.workerVersionIsOlderThan('rmfile', '3.1'):
             cmd_args['dir'] = os.path.abspath(path)
             return self.runRemoteCommand('rmdir', cmd_args, **kwargs)
-        else:
-            return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
+        return self.runRemoteCommand('rmfile', cmd_args, **kwargs)
 
     def pathExists(self, path):
         """ test whether path exists"""
