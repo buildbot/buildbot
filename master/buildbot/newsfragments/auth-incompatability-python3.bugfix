@@ -1,0 +1,1 @@
+Fix incompatibility issue of ``UserPasswordAuth`` with python 3.

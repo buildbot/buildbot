@@ -32,6 +32,7 @@ from zope.interface import implementer
 
 from buildbot.util import bytes2NativeString
 from buildbot.util import config
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -170,6 +171,8 @@ class HTPasswdAuth(TwistedICredAuthBase):
 class UserPasswordAuth(TwistedICredAuthBase):
 
     def __init__(self, users, **kwargs):
+        for user, password in users.items():
+            users[user] = unicode2bytes(password)
         TwistedICredAuthBase.__init__(
             self,
             [DigestCredentialFactory(b"md5", b"buildbot"),
