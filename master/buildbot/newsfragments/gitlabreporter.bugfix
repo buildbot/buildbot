@@ -1,0 +1,1 @@
+Gitlab reporter now correctly sets the status to running instead of pending when a build starts.

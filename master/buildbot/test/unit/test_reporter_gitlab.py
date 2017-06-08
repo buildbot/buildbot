@@ -71,7 +71,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
         self._http.expect(
             'post',
             '/api/v3/projects/1/statuses/d34db33fd43db33f',
-            json={'state': 'pending',
+            json={'state': 'running',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
