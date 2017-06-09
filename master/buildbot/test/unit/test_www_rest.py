@@ -657,7 +657,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     def test_authz_forbidden(self):
 
         def deny(request, ep, action, options):
-            if b"test" in ep:
+            if "test" in ep:
                 raise authz.Forbidden("no no")
             return None
         self.master.www.assertUserAllowed = deny
