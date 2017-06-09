@@ -22,7 +22,6 @@ from twisted.internet import task
 
 from buildbot.test.util.integration import RunMasterBase
 
-
 # This integration test helps reproduce http://trac.buildbot.net/ticket/3024
 # we make sure that we can reconfigure the master while build is running
 

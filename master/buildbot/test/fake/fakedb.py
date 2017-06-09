@@ -43,7 +43,6 @@ from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
-
 # Fake DB Rows
 
 

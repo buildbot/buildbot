@@ -25,9 +25,9 @@ from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.steps.shell import ShellCommand
 from buildbot.test.util.integration import RunMasterBase
 
-
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
+
 
 class SecretsConfig(RunMasterBase):
 

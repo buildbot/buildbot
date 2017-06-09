@@ -39,7 +39,6 @@ from twisted.python import log
 
 from buildbot.util import sautils
 
-
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
 

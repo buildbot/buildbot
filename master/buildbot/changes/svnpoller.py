@@ -33,7 +33,6 @@ from buildbot.changes import base
 from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 
-
 # these split_file_* functions are available for use as values to the
 # split_file= argument.
 
@@ -408,7 +407,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     chdict = dict(
                         author=author,
                         # weakly assume filenames are utf-8
-                        files=[bytes2unicode(f, 'utf-8', 'replace') for f in files],
+                        files=[bytes2unicode(f, 'utf-8', 'replace')
+                               for f in files],
                         comments=comments,
                         revision=revision,
                         branch=util.ascii2unicode(branch),
