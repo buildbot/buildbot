@@ -155,7 +155,7 @@ class SharedService(AsyncMultiService):
         for arg in args:
             arg = unicode2bytes(str(arg))
             _hash.update(arg)
-        for k, v in kwargs.items():
+        for k, v in sorted(kwargs.items()):
             k = unicode2bytes(str(k))
             v = unicode2bytes(str(v))
             _hash.update(k)
