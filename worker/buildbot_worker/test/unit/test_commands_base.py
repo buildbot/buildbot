@@ -22,7 +22,6 @@ from twisted.trial import unittest
 from buildbot_worker.commands.base import Command
 from buildbot_worker.test.util.command import CommandTestMixin
 
-
 # set up a fake Command subclass to test the handling in Command.  Think of
 # this as testing Command's subclassability.
 

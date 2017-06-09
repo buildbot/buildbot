@@ -30,7 +30,6 @@ from twisted.internet.task import Clock
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
-
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
 # https://twistedmatrix.com/trac/ticket/8296

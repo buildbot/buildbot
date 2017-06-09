@@ -28,8 +28,8 @@ from twisted.trial import unittest
 
 from buildbot.util import lru
 
-
 # construct weakref-able objects for particular keys
+
 
 def short(k):
     return set([k.upper() * 3])

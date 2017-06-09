@@ -1,7 +1,7 @@
 alabaster==0.7.10
 appdirs==1.4.3
 asn1crypto==0.22.0
-astroid==1.5.2
+astroid==1.5.3
 attrs==17.2.0
 autobahn==17.5.1
 Automat==0.6.0
@@ -10,7 +10,7 @@ backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.47.0
 boto3==1.4.4
-botocore==1.5.56
+botocore==1.5.60
 cffi==1.10.0
 click==6.7
 configparser==3.5.0
@@ -30,7 +30,7 @@ idna==2.5
 imagesize==0.7.1
 incremental==17.5.0
 ipaddress==1.0.18
-isort==4.2.5
+isort==4.2.13
 Jinja2==2.9.6
 jmespath==0.9.3
 jsonref==0.1
@@ -40,7 +40,7 @@ markdown2==2.3.4
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.0.0
+moto==1.0.1
 olefile==0.44
 packaging==16.8
 pathlib2==2.2.1
@@ -49,7 +49,7 @@ pep8==1.7.0
 Pillow==4.1.1
 pyaml==16.12.2
 pyasn1==0.2.3
-pyasn1-modules==0.0.8
+pyasn1-modules==0.0.9
 pycodestyle==2.3.1
 pycparser==2.17
 pyenchant==1.6.8

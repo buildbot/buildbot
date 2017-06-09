@@ -33,7 +33,6 @@ from zope.interface import implementer
 from buildbot_worker import bot
 from buildbot_worker.test.util import misc
 
-
 # I don't see any simple way to test the PB equipment without actually setting
 # up a TCP connection.  This just tests that the PB code will connect and can
 # execute a basic ping.  The rest is done without TCP (or PB) in other
