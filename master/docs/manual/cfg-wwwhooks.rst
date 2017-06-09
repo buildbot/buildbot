@@ -197,6 +197,33 @@ Then, create a BitBucket service hook (see https://confluence.atlassian.com/disp
 
 Note that as before, not using ``change_hook_auth`` can expose you to security risks.
 
+Bitbucket Server hook
++++++++++++++++++++++
+
+.. code-block:: python
+
+    c['www'] = dict(
+        ...,
+        change_hook_dialects={'bitbucketserver': {}},
+    )
+
+When this is setup you should add a webhook pointing to ``/change_hook/bitbucketserver`` relative to the root of the web status.
+
+According to the type of the event, the change category is set to ``push``, ``pull-created``, ``pull-rejected``, ``pull-updated`` or ``pull-fulfilled``.
+
+The Bitbucket Server hook may have the following optional parameters:
+
+``codebase`` (default `None`)
+    The codebase value to include with changes or a callable object that will be passed the payload in order to get it.
+
+.. Warning::
+    The incoming HTTP requests for this hook are not authenticated by default.
+    Anyone who can access the web server can "fake" a request from Bitbucket Server, potentially causing the buildmaster to run arbitrary code
+
+.. Note::
+    This hook requires the bitbucket-webhooks plugin (see https://marketplace.atlassian.com/plugins/nl.topicus.bitbucket.bitbucket-webhooks/server/overview).
+
+
 Poller hook
 +++++++++++
 
