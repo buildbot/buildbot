@@ -32,8 +32,8 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 
 class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot/buildbot'
+    # repository must be in the form http://gitlab/<owner>/<project>
+    TEST_REPO = u'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
