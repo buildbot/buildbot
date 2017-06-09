@@ -661,6 +661,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
                          'http://localhost:7990/projects/'
                          'CI/repos/py-repo/pull-requests/21')
         self.assertEqual(change['revision'], None)
+        pr_url = change['properties'].get('pullrequesturl')
+        self.assertNotEqual(pr_url, None)
+        self.assertEqual(
+            pr_url,
+            "http://localhost:7990/projects/CI/repos/py-repo/pull-requests/21")
 
     @defer.inlineCallbacks
     def testHookWithChangeOnPullRequestCreated(self):

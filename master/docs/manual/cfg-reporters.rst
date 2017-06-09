@@ -1012,6 +1012,48 @@ As a result, we recommend you use https in your base_url rather than http.
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
 
+.. bb:reporter:: StashPRCommentPush
+
+StashPRCommentPush
+~~~~~~~~~~~~~~~~~~
+
+.. @cindex StashPRCommentPush
+.. py:class:: buildbot.reporters.stash.StashPRCommentPush
+
+::
+
+    from buildbot.plugins import reporters
+
+    ss = reporters.StashPRCommentPush('https://bitbucket-server.example.com:8080/',
+                                   'bitbucket_server__username',
+                                   'secret_password')
+    c['services'].append(ss)
+
+
+:class:`StashPRCommentPush`  publishes a comment on a PR using `Bitbucket Server (former Stash) REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
+
+
+.. py:class:: StashPRCommentPush(base_url, user, password, text=None, verbose=False, builders=None)
+
+    :param string base_url: The base url of the Bitbucket server host
+    :param string user: The Bitbucket server user to post as.
+    :param string password: The Bitbucket server user's password.
+    :param renderable string text: Used to render the comment text.
+        A static string can be passed or :class:`Interpolate` for dynamic substitution (default: `Interpolate('Builder: %(prop:buildername)s Status: %(prop:statustext)s')`).
+
+        Besides the build properties, you have the following available:
+
+        :url: link to the build page
+        :statustext: ``SUCCESS`` or ``FAILED`` according to the build status
+
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param list builders: Only send update for specified builders.
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param boolean debug: logs every requests and their response
+
+.. Note::
+    This reporter depends on the Bitbucket server hook to get the pull request url.
+
 .. bb:reporter:: BitbucketStatusPush
 
 BitbucketStatusPush
