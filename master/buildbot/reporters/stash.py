@@ -67,8 +67,22 @@ class StashStatusPush(http.HttpStatusPushBase):
         else:
             status = STASH_INPROGRESS
             description = self.startDescription
+
+        # got_revision could be a string, a dictionary or None
+        got_revision = props.getProperty('got_revision', None)
         for sourcestamp in build['buildset']['sourcestamps']:
             sha = sourcestamp['revision']
+
+            if sha is None:
+                if isinstance(got_revision, dict):
+                    sha = got_revision[sourcestamp['codebase']]
+                else:
+                    sha = got_revision
+
+            if sha is None:
+                log.error("Unable to get the commit hash")
+                continue
+
             key = yield props.render(self.key)
             payload = {
                 'state': status,
