@@ -39,6 +39,7 @@ class Tests(unittest.TestCase):
         for u in [
                 "ssh://git@mygitlab.com/group/subgrouptest/testproject.git",
                 "https://mygitlab.com/group/subgrouptest/testproject.git",
+                "git@mygitlab.com:group/subgrouptest/testproject.git",
                 "git://mygitlab.com/group/subgrouptest/testproject.git"]:
             u = giturlparse(u)
             self.assertIn(u.user, (None, "git"))

@@ -234,12 +234,21 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :returns: a :py:class:`GitUrl` with results of parsed url
 
     This function is intended to help various components to parse git urls.
-    It helps to find the ``<owner>/<repo>`` of a git repository url comming from a change, in order to call urls.
+    It helps to find the ``<owner>/<repo>`` of a git repository url coming from a change, in order to call urls.
     ``owner`` and ``repo`` is a common scheme for identifying git repository between various git hosting services like GitHub, Gitlab, BitBucket, etc.
     Each service have their own naming for similar things, but we choose to use the GitHub naming as a de-facto standard.
     To simplify implementation, the parser is accepting invalid urls, but it should always parse valid urls correctly.
     The unit tests in ``test_util_giturlparse.py`` is the references of what the parser is accepting.
     Please feel free to update the parser and unit tests
+
+    Example use:
+
+    .. code-block:: python
+
+            from buildbot.util import giturlparse
+            repourl = giturlparse(sourcestamp['repository'])
+            repoOwner = repourl.owner
+            repoName = repourl.repo
 
 .. py:class:: GitUrl():
 
@@ -249,7 +258,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     .. py:attribute:: user
 
-        The userprotocol of the url
+        The user of the url (as in ``user@domain``)
 
     .. py:attribute:: domain
 
@@ -266,6 +275,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     .. py:attribute:: repo
 
         The owner of the repository (in case of Gitlab might be a nested group, i.e contain ``/``)
+
 
 :py:mod:`buildbot.util.lru`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~

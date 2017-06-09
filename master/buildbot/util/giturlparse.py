@@ -20,7 +20,7 @@ import re
 from collections import namedtuple
 
 # The regex is matching more than it should and is not intended to be an url validator.
-# It is intended to efficiently and reliabily extract information from the various examples
+# It is intended to efficiently and reliably extract information from the various examples
 # that are described in the unit tests.
 
 _giturlmatcher = re.compile(

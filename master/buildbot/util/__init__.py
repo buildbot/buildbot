@@ -532,4 +532,5 @@ __all__ = [
     'check_functional_environment', 'human_readable_delta',
     'rewrap',
     'Notifier',
+    "giturlparse",
 ]
