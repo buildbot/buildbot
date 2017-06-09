@@ -30,8 +30,9 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
+from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
-from buildbot.util import unicode2NativeString, giturlparse
+from buildbot.util import unicode2NativeString
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
