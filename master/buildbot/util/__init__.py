@@ -42,6 +42,7 @@ from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util.misc import deferredLocked
+from buildbot.util.giturlparse import giturlparse
 from ._notifier import Notifier
 
 
@@ -531,4 +532,5 @@ __all__ = [
     'check_functional_environment', 'human_readable_delta',
     'rewrap',
     'Notifier',
+    "giturlparse",
 ]
