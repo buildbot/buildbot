@@ -543,12 +543,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.stopped:
                 raise BuildStepCancelled
 
-            # check doStepIf
-            if isinstance(self.doStepIf, bool):
-                doStep = self.doStepIf
-            else:
-                doStep = yield self.doStepIf(self)
-
             # render renderables in parallel
             renderables = []
             accumulateClassList(self.__class__, 'renderables', renderables)
@@ -565,6 +559,12 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
             self.realUpdateSummary()
+
+            # check doStepIf (after rendering)
+            if isinstance(self.doStepIf, bool):
+                doStep = self.doStepIf
+            else:
+                doStep = yield self.doStepIf(self)
 
             # run -- or skip -- the step
             if doStep:
