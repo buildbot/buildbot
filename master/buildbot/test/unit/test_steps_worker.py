@@ -344,6 +344,15 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         yield self.runStep()
         self.assertTrue(testFunc.ran)
 
+    def test_rmfile(self):
+        self.setupStep(CompositeUser(lambda x: x.runRmFile("d")))
+        self.expectCommands(
+            Expect('rmfile', {'path': 'd', 'logEnviron': False})
+            + 0
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
     def test_mkdir(self):
         self.setupStep(CompositeUser(lambda x: x.runMkdir("d")))
         self.expectCommands(
@@ -473,6 +482,24 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
                 dummy = m.getFileContentFromSlave('file')
         self.assertEqual(dummy, 'dummy')
         method.assert_called_once_with('file')
+
+    def test_downloadFileContentToWorker(self):
+        @defer.inlineCallbacks
+        def testFunc(x):
+            res = yield x.downloadFileContentToWorker("/path/dest1", "file text")
+            self.assertEqual(res, None)
+
+        exp_args = {'maxsize': None,
+                    'reader': ExpectRemoteRef(remotetransfer.FileReader),
+                    'blocksize': 32768,
+                    'workerdest': '/path/dest1'}
+
+        self.setupStep(CompositeUser(testFunc))
+        self.expectCommands(
+            Expect('downloadFile', exp_args)
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
 
 
 class TestWorkerTransition(unittest.TestCase):

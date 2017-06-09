@@ -423,7 +423,6 @@ class BuildStepMixin(object):
                       % (got,))
 
         exp = self.expected_remote_commands[0]
-
         try:
             yield self._validate_expectation(exp, command)
             exp.expectationPassed(exp)
@@ -437,5 +436,4 @@ class BuildStepMixin(object):
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
-
         defer.returnValue(command)

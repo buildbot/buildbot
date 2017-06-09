@@ -28,7 +28,7 @@ from buildbot_worker.interfaces import IWorkerCommand
 # this used to be a CVS $-style "Revision" auto-updated keyword, but since I
 # moved to Darcs as the primary repository, this is updated manually each
 # time this file is changed. The last cvs_ver that was here was 1.51 .
-command_version = "3.0"
+command_version = "3.1"
 
 # version history:
 #  >=1.17: commands are interruptable
@@ -71,6 +71,7 @@ command_version = "3.0"
 #      uploadDirectory commands.
 #    * "slavedest" command argument renamed to "workerdest" in downloadFile
 #      command.
+#  >= 3.1: rmfile command added to remove a file
 
 
 @implementer(IWorkerCommand)

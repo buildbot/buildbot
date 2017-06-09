@@ -1107,6 +1107,7 @@ rieder
 riley
 rmdir
 rmdirrecursive
+rmfile
 rmtree
 robocopy
 routingkey
