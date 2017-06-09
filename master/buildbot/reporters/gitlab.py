@@ -57,7 +57,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers={'PRIVATE-TOKEN': token})
+            self.master, baseURL, headers={'PRIVATE-TOKEN': token},
+            debug=self.debug, verify=self.verify)
         self.verbose = verbose
         self.project_ids = {}
 

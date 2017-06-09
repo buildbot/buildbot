@@ -1076,13 +1076,17 @@ For example, a particular daily scheduler could be configured on multiple master
         As most of this module is implemented as a pass-through to the underlying libraries, other options can work but have not been tested to work in both backends.
         If there is a need for more functionality, please add new tests before using them.
 
-    .. py:staticmethod:: getService(master, base_url, auth=None)
+    .. py:staticmethod:: getService(master, base_url, auth=None, headers=None, debug=None, verify=None)
 
         :param master: the instance of the master service (available in self.master for all the :py:class:`BuildbotService` instances)
         :param base_url: The base http url of the service to access. e.g. ``http://github.com/``
         :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
             It can also be a :mod:`requests.auth` authentication plugin.
             In this case `txrequests`_ will be forced, and `treq`_ cannot be used.
+        :param headers: The headers to pass to every requests for this url
+        :param debug: log every requests and every response.
+        :param verify: disable the SSL verification.
+        
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.

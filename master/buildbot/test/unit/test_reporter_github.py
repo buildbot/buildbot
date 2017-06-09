@@ -49,7 +49,8 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
             HOSTED_BASE_URL, headers={
                 'Authorization': 'token XXYYZZ',
                 'User-Agent': 'Buildbot'
-            })
+            },
+            debug=None, verify=None)
         sp = self.setService()
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)

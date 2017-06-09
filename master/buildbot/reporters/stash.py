@@ -48,7 +48,8 @@ class StashStatusPush(http.HttpStatusPushBase):
         self.startDescription = startDescription or 'Build started.'
         self.verbose = verbose
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url, auth=(user, password))
+            self.master, base_url, auth=(user, password),
+            debug=self.debug, verify=self.verify)
 
     @defer.inlineCallbacks
     def send(self, build):

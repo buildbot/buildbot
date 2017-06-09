@@ -42,7 +42,8 @@ class TestStashStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            'serv', auth=('username', 'passwd'))
+            'serv', auth=('username', 'passwd'),
+            debug=None, verify=None)
         self.sp = sp = StashStatusPush("serv", "username", "passwd", **kwargs)
         yield sp.setServiceParent(self.master)
         yield self.master.startService()

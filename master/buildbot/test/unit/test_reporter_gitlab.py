@@ -45,7 +45,8 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'})
+            HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
+            debug=None, verify=None)
         self.sp = sp = GitLabStatusPush('XXYYZZ')
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)

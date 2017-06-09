@@ -50,7 +50,8 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
         self.sp = HipChatStatusPush(**kwargs)
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            kwargs.get('endpoint', HOSTED_BASE_URL))
+            kwargs.get('endpoint', HOSTED_BASE_URL),
+            debug=None, verify=None)
         yield self.sp.setServiceParent(self.master)
         yield self.master.startService()
 
