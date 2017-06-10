@@ -132,8 +132,8 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
             }, code=404)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
-        self.assertLogged("Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
-                          " project not found")
+        self.assertLogged(r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
+                          r" project not found")
 
     @defer.inlineCallbacks
     def test_nourl(self):
