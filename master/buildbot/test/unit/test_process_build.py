@@ -1040,6 +1040,7 @@ class TestBuildProperties(unittest.TestCase):
         @implementer(interfaces.IProperties)
         class FakeProperties(Mock):
             pass
+        FakeProperties.render = Mock(side_effect=lambda x: x)
 
         class FakeBuildStatus(Mock):
             pass

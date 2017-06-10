@@ -18,7 +18,9 @@ from __future__ import print_function
 
 from twisted.python import log
 
+from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
+from buildbot.process import properties
 from buildbot.process import remotecommand
 from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
@@ -121,7 +123,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
 
         self.codebase = codebase
         if self.codebase:
-            self.name = '-'.join((self.name, self.codebase))
+            self.name = properties.Interpolate(
+                "%(kw:name)s-%(kw:codebase)s",
+                name=self.name, codebase=self.codebase)
 
         self.alwaysUseLatest = alwaysUseLatest
 

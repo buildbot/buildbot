@@ -510,6 +510,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
+        self.name = yield self.build.render(self.name)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
