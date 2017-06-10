@@ -18,7 +18,6 @@ from __future__ import print_function
 
 from twisted.python import log
 
-from buildbot.interfaces import IRenderable
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
