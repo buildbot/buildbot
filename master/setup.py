@@ -437,7 +437,7 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 if sys.version_info[0] >= 3:
-    twisted_ver = ">= 17.1.0"
+    twisted_ver = ">= 17.5.0"
 else:
     twisted_ver = ">= 14.0.1"
 autobahn_ver = ">= 0.16.0"
