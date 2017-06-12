@@ -129,10 +129,10 @@ class V2RootResource(resource.Resource):
     @defer.inlineCallbacks
     def getEndpoint(self, request, method, params):
         # note that trailing slashes are not allowed
-        request_postpath = [bytes2NativeString(p) for p in request.postpath]
+        request_postpath = tuple(bytes2NativeString(p) for p in request.postpath)
         yield self.master.www.assertUserAllowed(request, request_postpath,
                                                 method, params)
-        ret = yield self.master.data.getEndpoint(tuple(request_postpath))
+        ret = yield self.master.data.getEndpoint(request_postpath)
         defer.returnValue(ret)
 
     @contextmanager
@@ -375,7 +375,7 @@ class V2RootResource(resource.Resource):
             request.write(data)
 
         with self.handleErrors(writeError):
-            ep, kwargs = yield self.getEndpoint(request, request.method, {})
+            ep, kwargs = yield self.getEndpoint(request, bytes2NativeString(request.method), {})
 
             rspec = self.decodeResultSpec(request, ep)
             data = yield ep.get(rspec, kwargs)
