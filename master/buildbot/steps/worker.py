@@ -327,11 +327,12 @@ class CompositeStepMixin():
 
     def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False):
         self.checkWorkerHasCommand("downloadFile")
-        fileReader = remotetransfer.FileReader(strfile)
-
+        fileReader = remotetransfer.StringFileReader(strfile)
         # default arguments
         args = {
+            'workdir': self.workdir,
             'maxsize': None,
+            'mode': None,
             'reader': fileReader,
             'blocksize': 32 * 1024,
         }
@@ -345,7 +346,6 @@ class CompositeStepMixin():
             if cmd.didFail():
                 return None
             return fileReader
-
         return self.runRemoteCommand('downloadFile', args,
                                      abandonOnFailure=abandonOnFailure,
                                      evaluateCommand=commandComplete)

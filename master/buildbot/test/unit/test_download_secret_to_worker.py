@@ -44,19 +44,23 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestC
 
     def testBasic(self):
         self.setupStep(
-            DownloadSecretsToWorker([((os.path.join(self.temp_path, "pathA"), "something", )),
-                                     ((os.path.join(self.temp_path, "pathB")), "something more")]))
+            DownloadSecretsToWorker([(os.path.join(self.temp_path, "pathA"), "something"),
+                                     (os.path.join(self.temp_path, "pathB"), "something more")]))
         args1 = {
                     'maxsize': None,
-                    'reader': ExpectRemoteRef(remotetransfer.FileReader),
+                    'mode': None,
+                    'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
                     'blocksize': 32 * 1024,
-                    'workerdest': os.path.join(self.temp_path, "pathA")
+                    'workerdest': os.path.join(self.temp_path, "pathA"),
+                    'workdir': "wkdir"
                     }
         args2 = {
                     'maxsize': None,
-                    'reader': ExpectRemoteRef(remotetransfer.FileReader),
+                    'mode': None,
+                    'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
                     'blocksize': 32 * 1024,
-                    'workerdest': os.path.join(self.temp_path, "pathB")
+                    'workerdest': os.path.join(self.temp_path, "pathB"),
+                    'workdir': "wkdir"
                     }
         self.expectCommands(
             Expect('downloadFile', args1)
@@ -83,8 +87,8 @@ class TestRemoveWorkerFileSecretCommand30(steps.BuildStepMixin, unittest.TestCas
         return self.tearDownBuildStep()
 
     def testBasic(self):
-        self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA")),
-                                               (os.path.join(self.temp_path, "pathB"))]),
+        self.setupStep(RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
+                                               (os.path.join(self.temp_path, "pathB"), "somethingmore")]),
                        worker_version={'*': '3.0'})
 
         args1 = {
@@ -124,8 +128,8 @@ class TestRemoveFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestCas
 
     def testBasic(self):
         self.setupStep(
-            RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA")),
-                                    (os.path.join(self.temp_path, "pathB"))]))
+            RemoveWorkerFileSecret([(os.path.join(self.temp_path, "pathA"), "something"),
+                                    (os.path.join(self.temp_path, "pathB"), "somethingmore")]))
         args1 = {
                     'path': os.path.join(self.temp_path, "pathA"),
                     'logEnviron': False

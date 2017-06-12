@@ -15,8 +15,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import os
-
 from twisted.internet import defer
 
 from buildbot.process.buildstep import FAILURE
@@ -25,30 +23,22 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 
 
-class WorkerFileSecret(object):
-
-    def __init__(self, path, secretvalue):
-        self.path = path
-        if not isinstance(self.path, str):
-            raise ValueError("Secret path %s is not a string" % path)
-        self.secretvalue = secretvalue
-        if not os.path.exists(os.path.dirname(self.path)):
-            raise ValueError("Path %s does not exist")
-
-
 class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
+
+    renderables = ['secret_to_be_populated']
 
     def __init__(self, populated_secret_list, **kwargs):
         super(DownloadSecretsToWorker, self).__init__(**kwargs)
-        self.secret_to_be_populated = []
-        for path, secretvalue in populated_secret_list:
-            self.secret_to_be_populated.append(WorkerFileSecret(path, secretvalue))
+        self.secret_to_be_populated = populated_secret_list
 
     @defer.inlineCallbacks
     def runPopulateSecrets(self):
         all_results = []
-        for secret in self.secret_to_be_populated:
-            res = yield self.downloadFileContentToWorker(secret.path, secret.secretvalue)
+        for path, secretvalue in self.secret_to_be_populated:
+            if not isinstance(path, str):
+                raise ValueError("Secret path %s is not a string" % path)
+            self.secret_to_be_interpolated = secretvalue
+            res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated)
             all_results.append(res)
         if FAILURE in all_results:
             result = FAILURE
@@ -65,8 +55,10 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
 class RemoveWorkerFileSecret(BuildStep, CompositeStepMixin):
 
-    def __init__(self, paths, logEnviron=False, **kwargs):
-        self.paths = paths
+    def __init__(self, populated_secret_list, logEnviron=False, **kwargs):
+        self.paths = []
+        for path, secret in populated_secret_list:
+            self.paths.append(path)
         self.logEnviron = logEnviron
         super(RemoveWorkerFileSecret, self).__init__(**kwargs)
 
