@@ -1,1 +1,0 @@
-Fix issue with oauth sequence not working with Firefox (:issue:`3306`)

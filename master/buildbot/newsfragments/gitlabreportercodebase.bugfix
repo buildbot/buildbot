@@ -1,1 +1,0 @@
-Gitlab reporter now correctly works when there are multiple codebase, and when the projects names contain url reserved characters.
