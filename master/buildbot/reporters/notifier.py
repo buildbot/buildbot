@@ -32,7 +32,7 @@ from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatt
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
 
-ENCODING = 'utf8'
+ENCODING = 'utf-8'
 
 
 class NotifierBase(service.BuildbotService):

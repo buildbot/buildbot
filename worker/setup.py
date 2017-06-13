@@ -127,7 +127,7 @@ if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
 if sys.version_info[0] >= 3:
-    twisted_ver = ">= 17.1.0"
+    twisted_ver = ">= 17.5.0"
 else:
     twisted_ver = ">= 10.2.0"
 

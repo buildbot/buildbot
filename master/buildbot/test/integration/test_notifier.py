@@ -74,7 +74,7 @@ class NotifierMaster(RunMasterBase):
         params = yield self.notification
         self.assertEqual(build['buildid'], 1)
         self.assertEqual(params, {'title': "Buildbot success in Buildbot on {}".format(what),
-                                  'message': u"This is a message."})
+                                  'message': "This is a message."})
 
     def assertEncodedIn(self, text, mail):
         # python 2.6 default transfer in base64 for utf-8
@@ -114,7 +114,7 @@ class NotifierMaster(RunMasterBase):
         self.assertEncodedIn("worker named local1 went away", mail)
         params = yield self.notification
         self.assertEqual(params, {'title': "Buildbot worker local1 missing",
-                                  'message': u"No worker."})
+                                  'message': b"No worker."})
 
 
 # master configuration

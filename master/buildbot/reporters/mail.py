@@ -19,8 +19,6 @@ from future.utils import iteritems
 from future.utils import string_types
 
 import re
-# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
-# although it has no effect before python-2.7.
 from email import charset
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
@@ -43,7 +41,10 @@ from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
-charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
+# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
+# although it has no effect before python-2.7.
+# needs to match notifier.ENCODING
+charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
@@ -174,10 +175,10 @@ class MailNotifier(NotifierBase):
     @defer.inlineCallbacks
     def createEmail(self, msgdict, builderName, title, results, builds=None,
                     patches=None, logs=None):
-        text = msgdict['body'].encode(ENCODING)
+        text = msgdict['body']
         type = msgdict['type']
         if msgdict.get('subject') is not None:
-            subject = msgdict['subject'].encode(ENCODING)
+            subject = msgdict['subject']
         else:
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
@@ -250,12 +251,12 @@ class MailNotifier(NotifierBase):
     def sendMessage(self, body, subject=None, type='plain', builderName=None,
                     results=None, builds=None, users=None,
                     patches=None, logs=None, worker=None):
-
+        body = unicode2bytes(body)
         msgdict = {'body': body, 'subject': subject, 'type': type}
 
         # ensure message body ends with double carriage return
-        if not body.endswith("\n\n"):
-            msgdict['body'] = body + '\n\n'
+        if not body.endswith(b"\n\n"):
+            msgdict['body'] = body + b'\n\n'
 
         m = yield self.createEmail(msgdict, builderName, self.master.config.title,
                                    results, builds, patches, logs)
