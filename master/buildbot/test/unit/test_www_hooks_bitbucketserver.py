@@ -17,7 +17,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from StringIO import StringIO
+from io import StringIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -30,7 +30,7 @@ from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT
 
 _CT_JSON = 'application/json'
 
-pushJsonPayload = """
+pushJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -85,7 +85,7 @@ pushJsonPayload = """
 }
 """
 
-pullRequestCreatedJsonPayload = """
+pullRequestCreatedJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -190,7 +190,7 @@ pullRequestCreatedJsonPayload = """
 }
 """
 
-pullRequestUpdatedJsonPayload = """
+pullRequestUpdatedJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -295,7 +295,7 @@ pullRequestUpdatedJsonPayload = """
 }
 """
 
-pullRequestRejectedJsonPayload = """
+pullRequestRejectedJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -400,7 +400,7 @@ pullRequestRejectedJsonPayload = """
 }
 """
 
-pullRequestFulfilledJsonPayload = """
+pullRequestFulfilledJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -505,7 +505,7 @@ pullRequestFulfilledJsonPayload = """
 }
 """
 
-deleteTagJsonPayload = """
+deleteTagJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
@@ -553,7 +553,7 @@ deleteTagJsonPayload = """
 }
 """
 
-deleteBranchJsonPayload = """
+deleteBranchJsonPayload = u"""
 {
 	"actor": {
 		"username": "John",
