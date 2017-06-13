@@ -14,9 +14,12 @@
 # Copyright Buildbot Team Members
 # Copyright Mamba Team
 
-from twisted.python import log
+from __future__ import absolute_import
+from __future__ import print_function
 
 import json
+
+from twisted.python import log
 
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
 GIT_HEAD_REF = "refs/heads/{}"
