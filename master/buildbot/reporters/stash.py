@@ -122,7 +122,7 @@ class StashPRCommentPush(http.HttpStatusPushBase):
 
     @defer.inlineCallbacks
     def send(self, build):
-        if build['complete'] and build['properties'].has_key("pullrequesturl"):
+        if build['complete'] and "pullrequesturl" in build['properties']:
             yield self.sendPullRequestComment(build)
 
     @defer.inlineCallbacks
