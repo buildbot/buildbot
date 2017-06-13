@@ -28,12 +28,13 @@ from buildbot.reporters.gitlab import HOSTED_BASE_URL
 from buildbot.reporters.gitlab import GitLabStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.util import logging
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
-    # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot/buildbot'
+class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
+    # repository must be in the form http://gitlab/<owner>/<project>
+    TEST_REPO = u'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -97,3 +98,90 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin):
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_sshurl(self):
+        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'get',
+            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        self._http.expect(
+            'post',
+            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'running',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'master',
+                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+
+    @defer.inlineCallbacks
+    def test_noproject(self):
+        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        self.setUpLogging()
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'get',
+            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+                "message": 'project not found'
+            }, code=404)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        self.assertLogged(r"Unknown \(or hidden\) gitlab projectbuildbot%2Fbuildbot:"
+                          r" project not found")
+
+    @defer.inlineCallbacks
+    def test_nourl(self):
+        self.TEST_REPO = u''
+        build = yield self.setupBuildResults(SUCCESS)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        # implicit check that no http request is done
+        # nothing is logged as well
+
+    @defer.inlineCallbacks
+    def test_senderror(self):
+        self.setUpLogging()
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'get',
+            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        self._http.expect(
+            'post',
+            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            json={'state': 'running',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'master',
+                  'description': 'Build started.', 'name': 'buildbot/Builder0'},
+            content_json={'message': 'sha1 not found for branch master'},
+            code=404)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        self.assertLogged("Could not send status \"running\" for"
+                          " http://gitlab/buildbot/buildbot at d34db33fd43db33f:"
+                          " sha1 not found for branch master")
+
+    @defer.inlineCallbacks
+    def test_badchange(self):
+        self.setUpLogging()
+        build = yield self.setupBuildResults(SUCCESS)
+        # we make sure proper calls to txrequests have been made
+        self._http.expect(
+            'get',
+            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+                "id": 1
+            })
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        self.assertLogged("Failed to send status \"running\" for"
+                          " http://gitlab/buildbot/buildbot at d34db33fd43db33f\n"
+                          "Traceback")
+        self.flushLoggedErrors(AssertionError)
