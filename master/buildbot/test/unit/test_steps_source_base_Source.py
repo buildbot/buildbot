@@ -25,7 +25,7 @@ from buildbot.test.util import sourcesteps
 from buildbot.test.util import steps
 
 
-class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
+class TestSource(sourcesteps.SourceStepMixin, unittest.SynchronousTestCase):
 
     def setUp(self):
         return self.setUpBuildStep()
@@ -96,6 +96,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'codebase'])
+        step.name = self.successResultOf(step.build.render(step.name))
         self.assertEqual(step.name, Source.name + "-codebase")
 
         step.startStep(mock.Mock())
@@ -112,6 +113,7 @@ class TestSource(sourcesteps.SourceStepMixin, unittest.TestCase):
         step.build.getSourceStamp.return_value = None
 
         self.assertEqual(step.describe(), ['updating', 'suffix'])
+        step.name = self.successResultOf(step.build.render(step.name))
         self.assertEqual(step.name, Source.name + "-my-code")
 
         step.startStep(mock.Mock())

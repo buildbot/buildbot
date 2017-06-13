@@ -46,7 +46,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``name``
     the name used to describe the step on the status display.
-    It is also used to give a name to any :class:`LogFile`\s created by this step.
+    Since 0.9.8, this argument might be renderable.
 
 .. index:: Buildstep Parameter; haltOnFailure
 
