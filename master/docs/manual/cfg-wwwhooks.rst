@@ -221,7 +221,7 @@ The Bitbucket Server hook may have the following optional parameters:
     Anyone who can access the web server can "fake" a request from Bitbucket Server, potentially causing the buildmaster to run arbitrary code
 
 .. Note::
-    This hook requires the bitbucket-webhooks plugin (see https://marketplace.atlassian.com/plugins/nl.topicus.bitbucket.bitbucket-webhooks/server/overview).
+    This hook requires the `bitbucket-webhooks` plugin (see https://marketplace.atlassian.com/plugins/nl.topicus.bitbucket.bitbucket-webhooks/server/overview).
 
 
 Poller hook
