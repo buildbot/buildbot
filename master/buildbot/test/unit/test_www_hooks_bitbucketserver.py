@@ -25,7 +25,6 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
-from buildbot.www.hooks.bitbucketserver import _HEADER_CT
 from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT
 
 _CT_JSON = 'application/json'
@@ -608,7 +607,7 @@ def _prepare_request(payload, headers=None, change_dict=None):
     request.uri = "/change_hook/bitbucketserver"
     request.method = "POST"
     request.content = StringIO(payload)
-    request.received_headers[_HEADER_CT] = _CT_JSON
+    request.received_headers['Content-Type'] = _CT_JSON
     request.received_headers.update(headers)
     return request
 
@@ -795,7 +794,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         request = _prepare_request(
                     pushJsonPayload,
                     headers={_HEADER_EVENT: 'repo:push'})
-        request.received_headers[_HEADER_CT] = 'invalid/content'
+        request.received_headers['Content-Type'] = 'invalid/content'
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written,

@@ -24,7 +24,6 @@ from twisted.python import log
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
 GIT_HEAD_REF = "refs/heads/{}"
 
-_HEADER_CT = 'Content-Type'
 _HEADER_EVENT = 'X-Event-Key'
 
 
@@ -49,7 +48,7 @@ class BitbucketServerEventHandler(object):
 
     def _get_payload(self, request):
         content = request.content.read()
-        content_type = request.getHeader(_HEADER_CT)
+        content_type = request.getHeader('Content-Type')
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         elif content_type.startswith('application/x-www-form-urlencoded'):
