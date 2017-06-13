@@ -177,8 +177,8 @@ class TestStashPRCommentPush(unittest.TestCase, ReporterTestMixin, LoggingMixin)
         build = yield self.setupBuildResults(SUCCESS)
         self._http.expect(
             "post",
-             u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
-            json={"text" : "Builder: Builder0 Status: SUCCESS"},
+            u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
+            json={"text": "Builder: Builder0 Status: SUCCESS"},
             code=201)
         build["complete"] = False
         # this shouldn't send anything
@@ -189,7 +189,7 @@ class TestStashPRCommentPush(unittest.TestCase, ReporterTestMixin, LoggingMixin)
         self._http.expect(
             "post",
             u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
-            json={"text" : "Builder: Builder0 Status: FAILED"},
+            json={"text": "Builder: Builder0 Status: FAILED"},
             code=201)
         build["results"] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
@@ -200,7 +200,7 @@ class TestStashPRCommentPush(unittest.TestCase, ReporterTestMixin, LoggingMixin)
         build = yield self.setupBuildResults(SUCCESS)
         self._http.expect(
             "post",
-             u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
+            u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
             json={'text': 'url: http://localhost:8080/#builders/79/builds/0 status: SUCCESS'},
             code=201)
         build["complete"] = False
@@ -223,7 +223,7 @@ class TestStashPRCommentPush(unittest.TestCase, ReporterTestMixin, LoggingMixin)
         self._http.expect(
             "post",
             u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments',
-            json={"text" : "Builder: Builder0 Status: SUCCESS"},
+            json={"text": "Builder: Builder0 Status: SUCCESS"},
             code=404,
             content_json=None)
         self.setUpLogging()

@@ -43,11 +43,11 @@ class StashStatusPush(http.HttpStatusPushBase):
     name = "StashStatusPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, key=None, statusName=None,
-                        startDescription=None, endDescription=None,
-                        verbose=False, **kwargs):
-        yield http.HttpStatusPushBase.reconfigService(self, wantProperties=True,
-                                                      **kwargs)
+    def reconfigService(self, base_url, user, password, key=None,
+                        statusName=None, startDescription=None,
+                        endDescription=None, verbose=False, **kwargs):
+        yield http.HttpStatusPushBase.reconfigService(
+            self, wantProperties=True, **kwargs)
         self.key = key or Interpolate('%(prop:buildername)s')
         self.statusName = statusName
         self.endDescription = endDescription or 'Build done.'
@@ -111,8 +111,8 @@ class StashPRCommentPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, text=None,
                         verbose=False, **kwargs):
-        yield http.HttpStatusPushBase.reconfigService(self, wantProperties=True,
-                                                      **kwargs)
+        yield http.HttpStatusPushBase.reconfigService(
+            self, wantProperties=True, **kwargs)
         self.text = text or Interpolate('Builder: %(prop:buildername)s '
                                         'Status: %(prop:statustext)s')
         self.verbose = verbose
@@ -135,9 +135,9 @@ class StashPRCommentPush(http.HttpStatusPushBase):
         props.setProperty('statustext', status, self.name)
         props.setProperty('url', build['url'], self.name)
         comment_text = yield props.render(self.text)
-        payload = {'text' : comment_text}
+        payload = {'text': comment_text}
         response = yield self._http.post(
-            STASH_COMMENT_API_URL.format(path=path),json=payload)
+            STASH_COMMENT_API_URL.format(path=path), json=payload)
 
         if response.code == HTTP_CREATED:
             if self.verbose:

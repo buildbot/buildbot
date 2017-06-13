@@ -27,6 +27,7 @@ GIT_HEAD_REF = "refs/heads/{}"
 _HEADER_CT = 'Content-Type'
 _HEADER_EVENT = 'X-Event-Key'
 
+
 class BitbucketServerEventHandler(object):
 
     def __init__(self, codebase=None, options={}):
@@ -82,8 +83,8 @@ class BitbucketServerEventHandler(object):
                 'comments': 'Bitbucket Server commit {}'.format(
                     payload_change['new']['target']['hash']),
                 'branch': GIT_HEAD_REF.format(payload_change['new']['name']),
-                'project' : project,
-                'category' : 'push'
+                'project': project,
+                'category': 'push'
             }
 
             if callable(self._codebase):
@@ -132,10 +133,10 @@ class BitbucketServerEventHandler(object):
             'author': '{} <{}>'.format(payload['actor']['displayName'],
                                        payload['actor']['username']),
             'comments': 'Bitbucket Server Pull Request #{}'.format(pr_number),
-            'branch' : refname,
+            'branch': refname,
             'project': payload['repository']['project']['name'],
             'category': category,
-            'properties' : {'pullrequesturl' : payload['pullrequest']['link']}
+            'properties': {'pullrequesturl': payload['pullrequest']['link']}
         }
 
         if callable(self._codebase):
@@ -151,5 +152,5 @@ def getChanges(request, options=None):
         options = {}
 
     handler = BitbucketServerEventHandler(options.get('codebase', None),
-            options)
+                                          options)
     return handler.process(request)
