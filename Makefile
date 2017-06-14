@@ -82,11 +82,17 @@ release_notes: $(VENV_NAME)
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
 	git commit -m "relnotes for $(VERSION)"
 
+clean:
+	git clean -xdf
 # helper for release creation
-release: $(VENV_NAME)
+release: clean $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
+	test -d "../bbdocs/.git"  #  make release shoud be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
-	./common/maketarballs.sh
+	. .venv/bin/activate && ./common/maketarballs.sh
 	./common/smokedist.sh
-	make docs
+	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs
+	rm -rf ../bbdocs/docs/$(VERSION)  # in case of re-run
+	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
+	cd ../bbdocs && make && git add . && git commit -m $(VERSION) && git push
 	echo twine upload --sign dist/*
