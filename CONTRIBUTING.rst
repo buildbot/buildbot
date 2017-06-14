@@ -14,7 +14,7 @@ See http://trac.buildbot.net/wiki/Development for the full story.
 Issues, Bugs, Tickets
 ---------------------
 
-Please file tickets for any bugs you discover at http://trac.buildbot.net.
+Please file tickets for any bugs you discover at https://github.com/buildbot/buildbot/issues.
 It is not necessary to file a bug if you are preparing a patch.
 
 Submitting Patches
