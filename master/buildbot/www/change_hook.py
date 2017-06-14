@@ -25,9 +25,9 @@ import re
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.reflect import namedModule
 from twisted.web import server
 
+from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
@@ -51,7 +51,9 @@ class ChangeHookResource(resource.Resource):
         if dialects is None:
             dialects = {}
         self.dialects = dialects
+        self._dialect_handlers = {}
         self.request_dialect = None
+        self._plugins = get_plugins("webhooks")
 
     def reconfigResource(self, new_config):
         self.dialects = new_config.www.get('change_hook_dialects', {})
@@ -107,12 +109,35 @@ class ChangeHookResource(resource.Resource):
 
         return server.NOT_DONE_YET
 
+    def makeHandler(self, dialect):
+        """create and cache the handler object for this dialect"""
+        if dialect not in self.dialects:
+            m = "The dialect specified, '{}', wasn't whitelisted in change_hook".format(dialect)
+            log.msg(m)
+            log.msg(
+                "Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
+            raise ValueError(m)
+
+        if dialect not in self._dialect_handlers:
+            if dialect not in self._plugins:
+                m = "The dialect specified, '{}', is not registered as a buildbot.webhook plugin".format(dialect)
+                log.msg(m)
+                raise ValueError(m)
+            options = self.dialects[dialect]
+            if isinstance(options, dict) and 'custom_class' in options:
+                klass = options['custom_class']
+            else:
+                klass = self._plugins.get(dialect)
+            self._dialect_handlers[dialect] = klass(self.master, self.dialects[dialect])
+
+        return self._dialect_handlers[dialect]
+
     def getChanges(self, request):
         """
         Take the logic from the change hook, and then delegate it
         to the proper handler
-        http://localhost/change_hook/DIALECT will load up
-        buildmaster/hooks/DIALECT.py
+
+        We use the buildbot plugin mechanisms to find out about dialects
 
         and call getChanges()
 
@@ -136,19 +161,8 @@ class ChangeHookResource(resource.Resource):
         else:
             dialect = 'base'
 
-        if dialect in self.dialects:
-            log.msg("Attempting to load module buildbot.www.hooks." + dialect)
-            tempModule = namedModule('buildbot.www.hooks.' + dialect)
-            changes, src = tempModule.getChanges(
-                request, self.dialects[dialect])
-            log.msg("Got the following changes %s" % changes)
-            self.request_dialect = dialect
-        else:
-            m = "The dialect specified, '%s', wasn't whitelisted in change_hook" % dialect
-            log.msg(m)
-            log.msg(
-                "Note: if dialect is 'base' then it's possible your URL is malformed and we didn't regex it properly")
-            raise ValueError(m)
+        handler = self.makeHandler(dialect)
+        changes, src = handler.getChanges(request)
 
         return (changes, src)
 

@@ -303,3 +303,32 @@ Note that as before, not using ``change_hook_auth`` can expose you to security r
 .. note::
 
     Web hooks are only available for local Gitorious installations, since this feature is not offered as part of Gitorious.org yet.
+
+
+Custom Hooks
+++++++++++++
+
+Custom hooks are supported via the :ref:`Plugins` mechanism.
+You can subclass any of the available hook handler class available in :py:mod:`buildbot.www.hooks` and register it in the plugin system, via a custom python module.
+For convenience, you ca also use the generic option ``custom_class`` e.g:
+
+.. code-block:: python
+
+    from buildbot.plugins import webhooks
+    class CustomBase(webhooks.base):
+        def getChanges(self, request):
+            args = request.args
+            chdict = dict(
+                          revision=args.get(b'revision'),
+                          repository=args.get(b'repository'),
+                          project=args.get(b'project'),
+                          codebase=args.get(b'codebase'))
+            return ([chdict], None)
+
+    c['www'] = dict(...,
+        change_hook_dialects={
+            'base' : {
+                'custom_class': CustomBase,
+            },
+        },
+    )

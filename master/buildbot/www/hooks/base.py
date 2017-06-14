@@ -24,58 +24,66 @@ from __future__ import print_function
 import json
 
 
-def getChanges(request, options=None):
-    """
-    Consumes a naive build notification (the default for now)
-    basically, set POST variables to match commit object parameters:
-    revision, revlink, comments, branch, who, files, links
+class BaseHookHandler(object):
+    def __init__(self, master, options):
+        self.master = master
+        self.options = options
 
-    files, links and properties will be de-json'd, the rest are interpreted as strings
-    """
-
-    def firstOrNothing(value):
+    def getChanges(self, request):
         """
-        Small helper function to return the first value (if value is a list)
-        or return the whole thing otherwise
+        Consumes a naive build notification (the default for now)
+        basically, set POST variables to match commit object parameters:
+        revision, revlink, comments, branch, who, files, links
+
+        files, links and properties will be de-json'd, the rest are interpreted as strings
         """
-        if (isinstance(value, type([]))):
-            return value[0]
-        return value
 
-    args = request.args
-    # first, convert files, links and properties
-    files = None
-    if args.get(b'files'):
-        files = json.loads(args.get(b'files')[0])
-    else:
-        files = []
+        def firstOrNothing(value):
+            """
+            Small helper function to return the first value (if value is a list)
+            or return the whole thing otherwise
+            """
+            if (isinstance(value, type([]))):
+                return value[0]
+            return value
 
-    properties = None
-    if args.get(b'properties'):
-        properties = json.loads(args.get(b'properties')[0])
-    else:
-        properties = {}
+        args = request.args
+        # first, convert files, links and properties
+        files = None
+        if args.get(b'files'):
+            files = json.loads(args.get(b'files')[0])
+        else:
+            files = []
 
-    revision = firstOrNothing(args.get(b'revision'))
-    when = firstOrNothing(args.get(b'when'))
-    if when is not None:
-        when = float(when)
-    author = firstOrNothing(args.get(b'author'))
-    if not author:
-        author = firstOrNothing(args.get(b'who'))
-    comments = firstOrNothing(args.get(b'comments'))
-    if isinstance(comments, bytes):
-        comments = comments.decode('utf-8')
-    branch = firstOrNothing(args.get(b'branch'))
-    category = firstOrNothing(args.get(b'category'))
-    revlink = firstOrNothing(args.get(b'revlink'))
-    repository = firstOrNothing(args.get(b'repository'))
-    project = firstOrNothing(args.get(b'project'))
-    codebase = firstOrNothing(args.get(b'codebase'))
+        properties = None
+        if args.get(b'properties'):
+            properties = json.loads(args.get(b'properties')[0])
+        else:
+            properties = {}
 
-    chdict = dict(author=author, files=files, comments=comments,
-                  revision=revision, when=when,
-                  branch=branch, category=category, revlink=revlink,
-                  properties=properties, repository=repository,
-                  project=project, codebase=codebase)
-    return ([chdict], None)
+        revision = firstOrNothing(args.get(b'revision'))
+        when = firstOrNothing(args.get(b'when'))
+        if when is not None:
+            when = float(when)
+        author = firstOrNothing(args.get(b'author'))
+        if not author:
+            author = firstOrNothing(args.get(b'who'))
+        comments = firstOrNothing(args.get(b'comments'))
+        if isinstance(comments, bytes):
+            comments = comments.decode('utf-8')
+        branch = firstOrNothing(args.get(b'branch'))
+        category = firstOrNothing(args.get(b'category'))
+        revlink = firstOrNothing(args.get(b'revlink'))
+        repository = firstOrNothing(args.get(b'repository'))
+        project = firstOrNothing(args.get(b'project'))
+        codebase = firstOrNothing(args.get(b'codebase'))
+
+        chdict = dict(author=author, files=files, comments=comments,
+                      revision=revision, when=when,
+                      branch=branch, category=category, revlink=revlink,
+                      properties=properties, repository=repository,
+                      project=project, codebase=codebase)
+        return ([chdict], None)
+
+
+base = BaseHookHandler  # alternate name for buildbot plugin

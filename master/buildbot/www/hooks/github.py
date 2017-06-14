@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import hmac
+import json
 import logging
 import re
 from hashlib import sha1
@@ -28,26 +29,20 @@ from twisted.python import log
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
+from buildbot.www.hooks.base import BaseHookHandler
 
-try:
-    import json
-    assert json
-except ImportError:
-    import simplejson as json
-
-
-_HEADER_CT = b'Content-Type'
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 
 class GitHubEventHandler(PullRequestMixin):
 
-    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None):
+    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None, master=None):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
         self.github_property_whitelist = github_property_whitelist
+        self.master = master
         if github_property_whitelist is None:
             self.github_property_whitelist = []
 
@@ -98,12 +93,11 @@ class GitHubEventHandler(PullRequestMixin):
             if mac.hexdigest() != hexdigest:
                 raise ValueError('Hash mismatch')
 
-        content_type = request.getHeader(_HEADER_CT)
-        content_type = bytes2NativeString(content_type)
+        content_type = request.getHeader('Content-Type')
 
-        if content_type == 'application/json':
+        if content_type == b'application/json':
             payload = json.loads(content)
-        elif content_type == 'application/x-www-form-urlencoded':
+        elif content_type == b'application/x-www-form-urlencoded':
             payload = json.loads(request.args['payload'][0])
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
@@ -234,22 +228,27 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes
 
+# for GitHub, we do another level of indirection because
+# we already had documented API that encouraged people to subclass GitHubEventHandler
+# so we need to be careful not breaking that API.
 
-def getChanges(request, options=None):
-    """
-    Responds only to POST events and starts the build process
 
-    :arguments:
-        request
-            the http request object
-    """
-    if options is None:
-        options = {}
+class GitHubHandler(BaseHookHandler):
+    def __init__(self, master, options):
+        if options is None:
+            options = {}
+        BaseHookHandler.__init__(self, master, options)
 
-    klass = options.get('class', GitHubEventHandler)
+        klass = options.get('class', GitHubEventHandler)
+        handler = klass(options.get('secret', None),
+                        options.get('strict', False),
+                        options.get('codebase', None),
+                        options.get('github_property_whitelist', None),
+                        master=master)
+        self.handler = handler
 
-    handler = klass(options.get('secret', None),
-                    options.get('strict', False),
-                    options.get('codebase', None),
-                    options.get('github_property_whitelist', None))
-    return handler.process(request)
+    def getChanges(self, request):
+        return self.handler.process(request)
+
+
+github = GitHubHandler

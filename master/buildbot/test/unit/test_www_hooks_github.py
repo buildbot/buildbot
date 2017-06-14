@@ -33,9 +33,9 @@ from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import unicode2bytes
 from buildbot.www.change_hook import ChangeHookResource
-from buildbot.www.hooks.github import _HEADER_CT
 from buildbot.www.hooks.github import _HEADER_EVENT
 from buildbot.www.hooks.github import _HEADER_SIGNATURE
+from buildbot.www.hooks.github import GitHubEventHandler
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modified" and "removed", and change email
@@ -385,9 +385,9 @@ gitJsonPayloadEmpty = """
 }
 """
 
+_HEADER_CT = 'Content-Type'
 _CT_ENCODED = 'application/x-www-form-urlencoded'
 _CT_JSON = 'application/json'
-
 
 def _prepare_github_change_hook(**params):
     return ChangeHookResource(dialects={
@@ -816,3 +816,22 @@ class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase):
 
     def test_git_with_change_json(self):
         return self._check_git_with_change(gitJsonPayload)
+
+
+class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase):
+
+    def setUp(self):
+        class CustomGitHubEventHandler(GitHubEventHandler):
+            def handle_ping(self, _, __):
+                self.master.hook_called = True
+                return [], None
+
+        self.changeHook = _prepare_github_change_hook(
+            **{'class': CustomGitHubEventHandler})
+
+    @defer.inlineCallbacks
+    def test_ping(self):
+        self.request = _prepare_request('ping', '{}')
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertTrue(self.changeHook.master.hook_called)
