@@ -25,7 +25,7 @@ See http://trac.buildbot.net/wiki/SubmittingPatches for the details.
 Your contribution must be licensed under the GPLv2, and copyright assignment is not expected.
 See http://trac.buildbot.net/wiki/LicensingYourContribution for details.
 
-You should run common/validate.sh before sending your patches.
+You should run ``common/validate.sh`` before sending your patches.
 
 Also you can install our git hook for validating and fixing most common coding style issues
 
@@ -43,5 +43,5 @@ While we try to perform reviews in a timely fashion, if your review has lagged f
 Development Tips
 ----------------
 
-The easiest way to hack on Buildbot is in a virtualenv.
+The easiest way to hack on Buildbot is in a ``virtualenv``.
 See http://docs.buildbot.net/latest/developer/tests.html#quick-start for a description of how to set up such a thing, and how to run the test suite.
