@@ -32,8 +32,7 @@ Open a new terminal, and first enter the same sandbox you created before (where 
 
 .. code-block:: bash
 
-  cd
-  cd tmp/buildbot
+  cd ~/tmp/bb-master
   source sandbox/bin/activate
   $EDITOR master/master.cfg
 
@@ -256,8 +255,7 @@ To use this you will need to install an additional package or two to your virtua
 
 .. code-block:: bash
 
-  cd
-  cd tmp/buildbot
+  cd ~/tmp/bb-master
   source sandbox/bin/activate
   pip install -U pip
   pip install cryptography pyasn1
@@ -332,7 +330,8 @@ Then run buildbot's ``try`` command as follows:
 
 .. code-block:: bash
 
-  source ~/tmp/buildbot/sandbox/bin/activate
+  cd ~/tmp/bb-master
+  source sandbox/bin/activate
   buildbot try --connect=pb --master=127.0.0.1:5555 --username=sampleuser --passwd=samplepass --vc=git
 
 This will do ``git diff`` for you and send the resulting patch to the server for build and test against the latest sources from Git.
