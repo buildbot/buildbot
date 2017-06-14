@@ -967,44 +967,44 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
 
-.. bb:reporter:: StashStatusPush
+.. bb:reporter:: BitbucketServerStatusPush
 
-StashStatusPush
+BitbucketServerStatusPush
 ~~~~~~~~~~~~~~~
 
-.. @cindex StashStatusPush
-.. py:class:: buildbot.reporters.stash.StashStatusPush
+.. @cindex BitbucketServerStatusPush
+.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
 
 ::
 
     from buildbot.plugins import reporters
 
-    ss = reporters.StashStatusPush('https://stash.example.com:8080/',
-                                   'stash_username',
+    ss = reporters.BitbucketServerStatusPush('https://bitbucketserver.example.com:8080/',
+                                   'bitbucketserver_username',
                                    'secret_password')
     c['services'].append(ss)
 
-:class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
-The build status is published to a specific commit SHA in Stash.
+:class:`BitbucketServerStatusPush` publishes build status using `BitbucketServer Build Integration REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.1.0/bitbucket-build-rest.html#idm46185565214672>`_.
+The build status is published to a specific commit SHA in Bitbucket Server.
 It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txrequests`_ package to allow interaction with Stash REST API.
+It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
 
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
 
-.. py:class:: StashStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
+.. py:class:: BitbucketServerStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
 
-    :param string base_url: The base url of the Stash host, up to and optionally including the first `/` of the path.
-    :param string user: The Stash user to post as.
-    :param string password: The Stash user's password.
-    :param renderable string key: Passed to Stash to differentiate between statuses.
+    :param string base_url: The base url of the Bitbucket Server host, up to and optionally including the first `/` of the path.
+    :param string user: The Bitbucket Server user to post as.
+    :param string password: The Bitbucket Server user's password.
+    :param renderable string key: Passed to Bitbucket Server to differentiate between statuses.
         A static string can be passed or :class:`Interpolate` for dynamic substitution.
         The default key is `%(prop:buildername)s`.
     :param renderable string statusName: The name that is displayed for this status.
-        The default name is nothing, so Stash will use the ``key`` parameter.
+        The default name is nothing, so Bitbucket Server will use the ``key`` parameter.
     :param renderable string startDescription: Custom start message (default: 'Build started.')
     :param renderable string endDescription: Custom end message (default: 'Build done.')
     :param boolean verbose: If True, logs a message for each successful status push.
@@ -1012,28 +1012,28 @@ As a result, we recommend you use https in your base_url rather than http.
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
 
-.. bb:reporter:: StashPRCommentPush
+.. bb:reporter:: BitbucketServerPRCommentPush
 
-StashPRCommentPush
+BitbucketServerPRCommentPush
 ~~~~~~~~~~~~~~~~~~
 
-.. @cindex StashPRCommentPush
-.. py:class:: buildbot.reporters.stash.StashPRCommentPush
+.. @cindex BitbucketServerPRCommentPush
+.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush
 
 ::
 
     from buildbot.plugins import reporters
 
-    ss = reporters.StashPRCommentPush('https://bitbucket-server.example.com:8080/',
+    ss = reporters.BitbucketServerPRCommentPush('https://bitbucket-server.example.com:8080/',
                                    'bitbucket_server__username',
                                    'secret_password')
     c['services'].append(ss)
 
 
-:class:`StashPRCommentPush`  publishes a comment on a PR using `Bitbucket Server (former Stash) REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
+:class:`BitbucketServerPRCommentPush`  publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
 
 
-.. py:class:: StashPRCommentPush(base_url, user, password, text=None, verbose=False, builders=None)
+.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, text=None, verbose=False, builders=None)
 
     :param string base_url: The base url of the Bitbucket server host
     :param string user: The Bitbucket server user to post as.
