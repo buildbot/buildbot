@@ -213,6 +213,23 @@ class SetProperties(BuildStep):
         return defer.succeed(SUCCESS)
 
 
+class Assert(BuildStep):
+    name = 'Assert'
+    description = ['Checking..']
+    descriptionDone = ["checked"]
+    renderables = ['check']
+
+    def __init__(self, check, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.check = check
+        self.descriptionDone = ["checked {}".format(repr(self.check))]
+
+    def run(self):
+        if self.check:
+            return defer.succeed(SUCCESS)
+        return defer.succeed(FAILURE)
+
+
 class LogRenderable(BuildStep):
     name = 'LogRenderable'
     description = ['Logging']

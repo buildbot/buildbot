@@ -27,6 +27,7 @@ from twisted.python import runtime
 from twisted.trial import unittest
 
 from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Property
 from buildbot.process.properties import WithProperties
 from buildbot.process.properties import renderer
 from buildbot.process.results import EXCEPTION
@@ -280,3 +281,44 @@ class TestsSetProperties(steps.BuildStepMixin, unittest.TestCase):
             # the renderer returns renderable!
             return {'a': Interpolate('b')}
         return self.doOneTest(properties=manipulate)
+
+
+class TestAssert(steps.BuildStepMixin, unittest.TestCase):
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_eq_pass(self):
+        self.setupStep(master.Assert(
+            Property("test_prop") == "foo"))
+        self.properties.setProperty("test_prop", "foo", "bar")
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_eq_fail(self):
+        self.setupStep(master.Assert(
+            Property("test_prop") == "bar"))
+        self.properties.setProperty("test_prop", "foo", "bar")
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_renderable_pass(self):
+        @renderer
+        def test_renderer(props):
+            return props.getProperty("test_prop") == "foo"
+        self.setupStep(master.Assert(test_renderer))
+        self.properties.setProperty("test_prop", "foo", "bar")
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_renderable_fail(self):
+        @renderer
+        def test_renderer(props):
+            return props.getProperty("test_prop") == "bar"
+        self.setupStep(master.Assert(test_renderer))
+        self.properties.setProperty("test_prop", "foo", "bar")
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()

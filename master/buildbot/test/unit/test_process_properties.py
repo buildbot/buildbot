@@ -1232,6 +1232,62 @@ class TestProperty(unittest.TestCase):
                       ["string", "bla", "string", "bla"])
         return d
 
+    @defer.inlineCallbacks
+    def testCompEq(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        result = yield self.build.render(Property("do-tests") == "string")
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testCompNe(self):
+        self.props.setProperty("do-tests", "not-string", "scheduler")
+        result = yield self.build.render(Property("do-tests") != "string")
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testCompLt(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        result = yield self.build.render(Property("do-tests") < 2)
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testCompLe(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        result = yield self.build.render(Property("do-tests") <= 2)
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testCompGt(self):
+        self.props.setProperty("do-tests", 3, "scheduler")
+        result = yield self.build.render(Property("do-tests") > 2)
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testCompGe(self):
+        self.props.setProperty("do-tests", 3, "scheduler")
+        result = yield self.build.render(Property("do-tests") >= 2)
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testStringCompEq(self):
+        self.props.setProperty("do-tests", "string", "scheduler")
+        test_string = "string"
+        result = yield self.build.render(test_string == Property("do-tests"))
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testIntCompLe(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        test_int = 1
+        result = yield self.build.render(test_int <= Property("do-tests"))
+        self.assertEqual(result, True)
+
+    @defer.inlineCallbacks
+    def testPropCompGe(self):
+        self.props.setProperty("do-tests", 1, "scheduler")
+        result = yield self.build.render(Property("do-tests") >= Property("do-tests"))
+        self.assertEqual(result, True)
+
 
 class TestRenderableAdapters(unittest.TestCase):
 
