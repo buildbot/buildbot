@@ -44,4 +44,4 @@ Development Tips
 ----------------
 
 The easiest way to hack on Buildbot is in a virtualenv.
-See http://trac.buildbot.net/wiki/RunningBuildbotWithVirtualEnv for a description of how to set up such a thing.
+See http://docs.buildbot.net/latest/developer/tests.html#quick-start for a description of how to set up such a thing, and how to run the test suite.

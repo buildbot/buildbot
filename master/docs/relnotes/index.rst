@@ -10,6 +10,56 @@ Release Notes
 
 .. towncrier release notes start
 
+
+Buildbot ``0.9.8`` ( ``2017-06-14`` )
+=====================================
+
+Core Bug fixes
+--------------
+
+- Fix incompatibility issue of ``UserPasswordAuth`` with python 3.
+- Fix issue with oauth sequence not working with Firefox (:issue:`3306`)
+- Update old ``addChange`` method to accept the new chdict names if only the
+  new name is present. Fixes :issue:`3191`.
+- fix bytes vs string issue on python3 with authorization of rest endpoints.
+
+Core Features
+-------------
+
+- ``doStepIf`` is now renderable.
+- Source step codebase is now renderable.
+- Step names are now renderable.
+- Added :py:func:`giturlparse` utility function to help buildbot components
+  like reporters to parse git url from change sources.
+- Factorized the mail reporter to be able to write new message based reporters, for other backend than SMTP.
+- The class :py:class:`~buildbot.process.properties.Property` now allows being
+  used with Python built in comparators. It will return a Renderable which
+  executes the comparison.
+
+Components Bug fixes
+--------------------
+
+- Gitlab reporter now correctly sets the status to running instead of pending
+  when a build starts.
+- Gitlab reporter now correctly works when there are multiple codebase, and
+  when the projects names contain url reserved characters.
+- Gitlab reporter now correctly reports the status even if there are several
+  sourcestamps. Better parsing of change repository in Gitlab reporter so that
+  it understands ssh urls and https url. Gitlab reporter do not use the project
+  field anymore to know the repository to push to.
+
+Components Features
+-------------------
+
+- Gitlab hook now supports the merge_request event to automatically build from
+  a merge request. Note that the results will not properly displayed in
+  merge_request UI due to https://gitlab.com/gitlab-org/gitlab-ce/issues/33293
+- Added a https://pushjet.io/ reporter as
+  :py:class:`buildbot.reporters.pushjet.PushjetNotifier`
+- New build step :py:class:`~buildbot.steps.master.Assert` Tests a renderable
+  or constant if it evaluates to true. It will succeed or fail to step
+  according to the result.
+
 Buildbot ``0.9.7`` ( ``2017-05-09`` )
 =====================================================
 
