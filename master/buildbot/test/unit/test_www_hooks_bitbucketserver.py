@@ -542,7 +542,7 @@ deleteTagJsonPayload = u"""
                     "name": "1.0.0",
                     "target": {
                         "type": "commit",
-                        "hash": "8eecf59b93ba4fd8d6bb578f6632fc3f5994d331"
+                        "hash": "793d4754230023d85532f9a38dba3290f959beb4"
                     }
                 },
                 "new": null
@@ -561,14 +561,14 @@ deleteBranchJsonPayload = u"""
     "repository": {
         "scmId": "git",
         "project": {
-            "key": "BUIL",
-            "name": "buildbot"
+            "key": "CI",
+            "name": "Continuous Integration"
         },
         "slug": "py-repo",
         "links": {
             "self": [
                 {
-                    "href": "http://localhost:7990/projects/BUIL/repos/py-repo/browse"
+                    "href": "http://localhost:7990/projects/CI/repos/py-repo/browse"
                 }
             ]
         },
@@ -590,10 +590,58 @@ deleteBranchJsonPayload = u"""
                     "name": "branch_1496758965",
                     "target": {
                         "type": "commit",
-                        "hash": "8eecf59b93ba4fd8d6bb578f6632fc3f5994d331"
+                        "hash": "793d4754230023d85532f9a38dba3290f959beb4"
                     }
                 },
                 "new": null
+            }
+        ]
+    }
+}
+"""
+
+newTagJsonPayload = u"""
+{
+    "actor": {
+        "username": "John",
+        "displayName": "John Smith"
+    },
+    "repository": {
+        "scmId": "git",
+        "project": {
+            "key": "CI",
+            "name": "Continuous Integration"
+        },
+        "slug": "py-repo",
+        "links": {
+            "self": [
+                {
+                    "href": "http://localhost:7990/projects/CI/repos/py-repo/browse"
+                }
+            ]
+        },
+        "public": false,
+        "ownerName": "CI",
+        "owner": {
+            "username": "CI",
+            "displayName": "CI"
+        },
+        "fullName": "CI/py-repo"
+    },
+    "push": {
+        "changes": [
+            {
+                "created": true,
+                "closed": false,
+                "old": null,
+                "new": {
+                    "type": "tag",
+                    "name": "1.0.0",
+                    "target": {
+                        "type": "commit",
+                        "hash": "793d4754230023d85532f9a38dba3290f959beb4"
+                    }
+                }
             }
         ]
     }
@@ -614,12 +662,25 @@ def _prepare_request(payload, headers=None, change_dict=None):
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
-    """Unit tests for Bitbucket Server Change Hook
-    """
-
     def setUp(self):
         self.change_hook = change_hook.ChangeHookResource(
             dialects={'bitbucketserver': {}}, master=fakeMasterForHooks())
+
+    def _checkPush(self, change):
+        self.assertEqual(
+            change['repository'],
+            'http://localhost:7990/projects/CI/repos/py-repo/')
+        self.assertEqual(change['author'], 'John Smith <John>')
+        self.assertEqual(change['project'], 'Continuous Integration')
+        self.assertEqual(change['revision'],
+                         '793d4754230023d85532f9a38dba3290f959beb4')
+        self.assertEqual(
+            change['comments'], 'Bitbucket Server commit '
+                                '793d4754230023d85532f9a38dba3290f959beb4')
+        self.assertEqual(
+            change['revlink'],
+            'http://localhost:7990/projects/CI/repos/py-repo/commits/'
+            '793d4754230023d85532f9a38dba3290f959beb4')
 
     @defer.inlineCallbacks
     def testHookWithChangeOnPushEvent(self):
@@ -632,21 +693,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
         self.assertEqual(len(self.change_hook.master.addedChanges), 1)
         change = self.change_hook.master.addedChanges[0]
-        self.assertEqual(
-            change['repository'],
-            'http://localhost:7990/projects/CI/repos/py-repo/')
-        self.assertEqual(change['author'], 'John Smith <John>')
-        self.assertEqual(change['project'], 'Continuous Integration')
-        self.assertEqual(change['revision'],
-                         '793d4754230023d85532f9a38dba3290f959beb4')
-        self.assertEqual(
-            change['comments'], 'Bitbucket Server commit '
-                                '793d4754230023d85532f9a38dba3290f959beb4')
+        self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
-        self.assertEqual(
-            change['revlink'],
-            'http://localhost:7990/projects/CI/repos/py-repo/commits/'
-            '793d4754230023d85532f9a38dba3290f959beb4')
         self.assertEqual(change['category'], 'push')
 
     def _checkPullRequest(self, change):
@@ -774,12 +822,28 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(request.written, "Unknown event: invented_event")
 
     @defer.inlineCallbacks
+    def testHookWithChangeOnCreateTag(self):
+        request = _prepare_request(
+                    newTagJsonPayload,
+                    headers={_HEADER_EVENT: 'repo:push'})
+        yield request.test_render(self.change_hook)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        change = self.change_hook.master.addedChanges[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/tags/1.0.0')
+        self.assertEqual(change['category'], 'push')
+
+    @defer.inlineCallbacks
     def testHookWithChangeOnDeleteTag(self):
         request = _prepare_request(
                     deleteTagJsonPayload,
                     headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        change = self.change_hook.master.addedChanges[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/tags/1.0.0')
+        self.assertEqual(change['category'], 'ref-deleted')
 
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteBranch(self):
@@ -787,7 +851,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
                     deleteBranchJsonPayload,
                     headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
-        self.assertEqual(len(self.change_hook.master.addedChanges), 0)
+        self.assertEqual(len(self.change_hook.master.addedChanges), 1)
+        change = self.change_hook.master.addedChanges[0]
+        self._checkPush(change)
+        self.assertEqual(change['branch'], 'refs/heads/branch_1496758965')
+        self.assertEqual(change['category'], 'ref-deleted')
 
     @defer.inlineCallbacks
     def testHookWithInvalidContentType(self):

@@ -21,8 +21,9 @@ import json
 
 from twisted.python import log
 
+GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
-GIT_HEAD_REF = "refs/heads/{}"
+GIT_TAG_REF = "refs/tags/{}"
 
 _HEADER_EVENT = 'X-Event-Key'
 
@@ -68,22 +69,30 @@ class BitbucketServerEventHandler(object):
         repo_url = repo_url.rstrip('browse')
 
         for payload_change in payload['push']['changes']:
-            if not payload_change['new']:
-                # skip change if deleting a tag or a branch
-                continue
+            if payload_change['new']:
+                age = 'new'
+                category = 'push'
+            else:  # when new is null the ref is deleted
+                age = 'old'
+                category = 'ref-deleted'
+
+            commit_hash = payload_change[age]['target']['hash']
+
+            if payload_change[age]['type'] == 'branch':
+                branch = GIT_BRANCH_REF.format(payload_change[age]['name'])
+            elif payload_change[age]['type'] == 'tag':
+                branch = GIT_TAG_REF.format(payload_change[age]['name'])
 
             change = {
-                'revision': payload_change['new']['target']['hash'],
-                'revlink': '{}commits/{}'.format(
-                    repo_url, payload_change['new']['target']['hash']),
+                'revision': commit_hash,
+                'revlink': '{}commits/{}'.format(repo_url, commit_hash),
                 'repository': repo_url,
                 'author': '{} <{}>'.format(payload['actor']['displayName'],
                                            payload['actor']['username']),
-                'comments': 'Bitbucket Server commit {}'.format(
-                    payload_change['new']['target']['hash']),
-                'branch': GIT_HEAD_REF.format(payload_change['new']['name']),
+                'comments': 'Bitbucket Server commit {}'.format(commit_hash),
+                'branch': branch,
                 'project': project,
-                'category': 'push'
+                'category': category
             }
 
             if callable(self._codebase):
@@ -110,14 +119,14 @@ class BitbucketServerEventHandler(object):
     def handle_pullrequest_fulfilled(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_HEAD_REF.format(
+            GIT_BRANCH_REF.format(
                 payload['pullrequest']['toRef']['branch']['name']),
             "pull-fulfilled")
 
     def handle_pullrequest_rejected(self, payload):
         return self.handle_pullrequest(
             payload,
-            GIT_HEAD_REF.format(
+            GIT_BRANCH_REF.format(
                 payload['pullrequest']['fromRef']['branch']['name']),
             "pull-rejected")
 

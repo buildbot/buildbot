@@ -209,7 +209,7 @@ Bitbucket Server hook
 
 When this is setup you should add a webhook pointing to ``/change_hook/bitbucketserver`` relative to the root of the web status.
 
-According to the type of the event, the change category is set to ``push``, ``pull-created``, ``pull-rejected``, ``pull-updated`` or ``pull-fulfilled``.
+According to the type of the event, the change category is set to ``push``, ``pull-created``, ``pull-rejected``, ``pull-updated``, ``pull-fulfilled`` or ``ref-deleted``.
 
 The Bitbucket Server hook may have the following optional parameters:
 
