@@ -618,7 +618,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_no_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = b"no changes found"
+        expected = b"no change found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -632,7 +632,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_non_branch_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = b"no changes found"
+        expected = b"no change found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 

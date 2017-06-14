@@ -25,6 +25,7 @@ import re
 
 from twisted.internet import defer
 from twisted.python import log
+from twisted.python.failure import Failure
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
@@ -77,37 +78,39 @@ class ChangeHookResource(resource.Resource):
             request
                 the http request object
         """
-
         try:
-            changes, src = self.getChanges(request)
-        except ValueError as val_err:
-            request.setResponseCode(400, unicode2bytes(val_err.args[0]))
-            return unicode2bytes(val_err.args[0])
-        except Exception as e:
-            log.err(e, "processing changes from web hook")
-            msg = b"Error processing changes."
-            request.setResponseCode(500, msg)
-            return msg
-
-        log.msg("Payload: " + str(request.args))
-
-        if not changes:
-            log.msg("No changes found")
-            return b"no changes found"
-        d = self.submitChanges(changes, request, src)
+            d = self.getAndSubmitChanges(request)
+        except Exception:
+            d = defer.fail()
 
         def ok(_):
             request.setResponseCode(202)
             request.finish()
 
         def err(why):
-            log.err(why, "adding changes from web hook")
-            request.setResponseCode(500)
+            code = 500
+            if why.check(ValueError):
+                code = 400
+                msg = unicode2bytes(why.getErrorMessage())
+            else:
+                log.err(why, "adding changes from web hook")
+                msg = b'Error processing changes.'
+            request.setResponseCode(code, msg)
+            request.write(msg)
             request.finish()
 
         d.addCallbacks(ok, err)
 
         return server.NOT_DONE_YET
+
+    @defer.inlineCallbacks
+    def getAndSubmitChanges(self, request):
+        changes, src = yield self.getChanges(request)
+        if not changes:
+            request.write(b"no change found")
+        else:
+            yield self.submitChanges(changes, request, src)
+            request.write("{} change found".format(len(changes)).encode())
 
     def makeHandler(self, dialect):
         """create and cache the handler object for this dialect"""
@@ -132,6 +135,7 @@ class ChangeHookResource(resource.Resource):
 
         return self._dialect_handlers[dialect]
 
+    @defer.inlineCallbacks
     def getChanges(self, request):
         """
         Take the logic from the change hook, and then delegate it
@@ -162,9 +166,8 @@ class ChangeHookResource(resource.Resource):
             dialect = 'base'
 
         handler = self.makeHandler(dialect)
-        changes, src = handler.getChanges(request)
-
-        return (changes, src)
+        changes, src = yield handler.getChanges(request)
+        defer.returnValue((changes, src))
 
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
