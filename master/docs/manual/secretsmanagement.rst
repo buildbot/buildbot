@@ -94,6 +94,32 @@ In the master configuration, the Vault provider is instantiated through the Buil
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
+How to populate secrets in a build
+----------------------------------
+
+To populate secrets in files during a build, 2 steps are used to create and delete the files on the worker.
+The files will be automatically deleted at the end of the build.
+
+.. code-block:: python
+
+        f = BuildFactory()
+        with f.withSecret(secrets_list):
+            f.addStep(...)
+ or
+
+.. code-block:: python
+
+        f = BuildFactory()
+        f.addSteps([...], withSecret=[secrets_list])
+
+In both cases the secrets_list is a list of tuple (secret path, secret value).
+
+.. code-block:: python
+
+        secrets_list = [('/first/path', Interpolate('write something and %(secret:somethingmore)s'))]
+
+The Interpolate class is used to render the value during the build execution.
+
 How to configure a Vault instance
 ---------------------------------
 

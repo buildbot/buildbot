@@ -32,6 +32,14 @@ class SecretsConfig(RunMasterBase):
         res = yield self.checkBuildStepLogExist(build, "<foo>")
         self.assertTrue(res)
 
+    @defer.inlineCallbacks
+    def test_withsecret(self):
+        yield self.setupConfig(masterConfigWith())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['buildid'], 1)
+        res = yield self.checkBuildStepLogExist(build, "<foo>")
+        self.assertTrue(res)
+
 
 # master configuration
 def masterConfig():
@@ -50,6 +58,31 @@ def masterConfig():
     f = BuildFactory()
     f.addSteps([steps.ShellCommand(command=Interpolate('echo %(secret:foo)s'))],
                withSecret=[("pathA", Interpolate('%(secret:something)s'))])
+    c['builders'] = [
+        BuilderConfig(name="testy",
+                      workernames=["local1"],
+                      factory=f)]
+    return c
+
+
+# master configuration with withSecret as context manager
+def masterConfigWith():
+    c = {}
+    from buildbot.config import BuilderConfig
+    from buildbot.process.factory import BuildFactory
+    from buildbot.plugins import schedulers, steps
+
+    c['schedulers'] = [
+        schedulers.ForceScheduler(
+            name="force",
+            builderNames=["testy"])]
+
+    c['secretsProviders'] = [FakeSecretStorage(
+        secretdict={"foo": "bar", "something": "more"})]
+    f = BuildFactory()
+    secrets_list = [("pathA", Interpolate('%(secret:something)s'))]
+    with f.withSecret(secrets_list):
+        f.addStep(steps.ShellCommand(command=Interpolate('echo %(secret:foo)s')))
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],
