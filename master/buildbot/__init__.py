@@ -28,6 +28,26 @@ from subprocess import Popen
 from subprocess import STDOUT
 
 
+def gitDescribeToPep440(version):
+    # git describe produce version in the form: v0.9.8-20-gf0f45ca
+    # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
+    # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
+
+    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    v = VERSION_MATCH.search(version)
+    if v:
+        major = int(v.group('major'))
+        minor = int(v.group('minor'))
+        patch = int(v.group('patch'))
+        if v.group('dev'):
+            patch += 1
+            dev = int(v.group('dev'))
+            return "{}.{}.{}-dev{}".format(major, minor, patch, dev)
+        return "{}.{}.{}".format(major, minor, patch)
+            
+    return v
+
+
 def getVersion(init_file):
     """
     Return BUILDBOT_VERSION environment variable, content of VERSION file, git
@@ -47,18 +67,14 @@ def getVersion(init_file):
     except IOError:
         pass
 
-    # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
-    # no matter the number of digits for X, Y and Z
-    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?(\w|-)*)')
-
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            v = VERSION_MATCH.search(str(out))
+            v = gitDescribeToPep440(str(out))
             if v:
-                return v.group(1)
+                return v
     except OSError:
         pass
 
