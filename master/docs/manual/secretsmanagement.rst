@@ -104,19 +104,20 @@ The files will be automatically deleted at the end of the build.
 
         f = BuildFactory()
         with f.withSecret(secrets_list):
-            f.addStep(...)
+            f.addStep(step_definition)
  or
 
 .. code-block:: python
 
         f = BuildFactory()
-        f.addSteps([...], withSecret=[secrets_list])
+        f.addSteps([list_of_step_definitions], withSecret=[secrets_list])
 
 In both cases the secrets_list is a list of tuple (secret path, secret value).
 
 .. code-block:: python
 
-        secrets_list = [('/first/path', Interpolate('write something and %(secret:somethingmore)s'))]
+        secrets_list = [('/first/path', Interpolate('write something and %(secret:somethingmore)s')),
+                        ('/second/path', Interpolate('%(secret:othersecret)s')]
 
 The Interpolate class is used to render the value during the build execution.
 

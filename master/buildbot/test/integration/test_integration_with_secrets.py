@@ -65,7 +65,7 @@ def masterConfig():
     return c
 
 
-# master configuration with withSecret as context manager
+# master configuration with context manager function
 def masterConfigWith():
     c = {}
     from buildbot.config import BuilderConfig
