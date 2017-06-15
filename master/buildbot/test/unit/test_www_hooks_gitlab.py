@@ -142,18 +142,18 @@ gitJsonPayloadMR = """
     "source":{
       "name":"Awesome Project",
       "description":"Aut reprehenderit ut est.",
-      "web_url":"http://example.com/awesome_space/awesome_project",
+      "web_url":"http://example.com/awesome_user/awesome_project",
       "avatar_url":null,
-      "git_ssh_url":"git@example.com:awesome_space/awesome_project.git",
-      "git_http_url":"http://example.com/awesome_space/awesome_project.git",
+      "git_ssh_url":"git@example.com:awesome_user/awesome_project.git",
+      "git_http_url":"http://example.com/awesome_user/awesome_project.git",
       "namespace":"Awesome Space",
       "visibility_level":20,
-      "path_with_namespace":"awesome_space/awesome_project",
+      "path_with_namespace":"awesome_user/awesome_project",
       "default_branch":"master",
-      "homepage":"http://example.com/awesome_space/awesome_project",
-      "url":"http://example.com/awesome_space/awesome_project.git",
-      "ssh_url":"git@example.com:awesome_space/awesome_project.git",
-      "http_url":"http://example.com/awesome_space/awesome_project.git"
+      "homepage":"http://example.com/awesome_user/awesome_project",
+      "url":"http://example.com/awesome_user/awesome_project.git",
+      "ssh_url":"git@example.com:awesome_user/awesome_project.git",
+      "http_url":"http://example.com/awesome_user/awesome_project.git"
     },
     "target": {
       "name":"Awesome Project",
@@ -215,12 +215,16 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(len(self.changeHook.master.addedChanges), 1)
         change = self.changeHook.master.addedChanges[0]
 
-        self.assertEqual(change["repository"], "http://example.com/awesome_space/awesome_project.git")
+        self.assertEqual(change["repository"],
+                         "http://example.com/awesome_user/awesome_project.git")
+        self.assertEqual(change['properties']["target_repository"],
+                         "http://example.com/awesome_space/awesome_project.git")
         self.assertEqual(
             calendar.timegm(change["when_timestamp"].utctimetuple()),
             1325626589
         )
-        self.assertEqual(change["branch"], "refs/merge-requests/1/head")
+        self.assertEqual(change["branch"], "ms-viewport")
+        self.assertEqual(change['properties']["target_branch"], 'master')
         self.assertEqual(change["category"], "merge_request")
 
     def check_changes_push_event(self, r, project='', codebase=None):

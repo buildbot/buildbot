@@ -39,19 +39,19 @@ Core Features
 Components Bug fixes
 --------------------
 
-- Gitlab reporter now correctly sets the status to running instead of pending
+- GitLab reporter now correctly sets the status to running instead of pending
   when a build starts.
-- Gitlab reporter now correctly works when there are multiple codebase, and
+- GitLab reporter now correctly works when there are multiple codebase, and
   when the projects names contain url reserved characters.
-- Gitlab reporter now correctly reports the status even if there are several
-  sourcestamps. Better parsing of change repository in Gitlab reporter so that
-  it understands ssh urls and https url. Gitlab reporter do not use the project
+- GitLab reporter now correctly reports the status even if there are several
+  sourcestamps. Better parsing of change repository in GitLab reporter so that
+  it understands ssh urls and https url. GitLab reporter do not use the project
   field anymore to know the repository to push to.
 
 Components Features
 -------------------
 
-- Gitlab hook now supports the merge_request event to automatically build from
+- GitLab hook now supports the merge_request event to automatically build from
   a merge request. Note that the results will not properly displayed in
   merge_request UI due to https://gitlab.com/gitlab-org/gitlab-ce/issues/33293
 - Added a https://pushjet.io/ reporter as
@@ -159,7 +159,7 @@ Components Features
 - Changed :py:class:`~buildbot.www.oauth2.GitHubAuth` now supports GitHub
   Enterprise when setting new ``serverURL`` argument.
 - :bb:chsrc:`GitLab` now sets the ``event`` property
-  on each change to what the ``X-Gitlab-Event`` header contains.
+  on each change to what the ``X-GitLab-Event`` header contains.
 - :bb:chsrc:`GitHub` now process
   git tag push events
 - :bb:chsrc:`GitHub` now adds
@@ -346,7 +346,7 @@ Bug fixes
 - Fix :py:class:`~buildbot.www.oauth2.GitHubAuth` to retrieve all organizations
   instead of only those publicly available.
 - Fixed `ref` to point to `branch` instead of commit `sha` in
-  :py:class:`~buildbot.reporters.GitlabStatusPush`
+  :py:class:`~buildbot.reporters.GitLabStatusPush`
 - :bb:reporter:`IRC` :py:meth:`maybeColorize` is able to highlight single words
   and stop colorization at the end. The previous implementation only stopped
   colorization but not boldface.

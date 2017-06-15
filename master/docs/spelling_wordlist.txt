@@ -310,7 +310,7 @@ getters
 GiB
 github
 GitHub
-Gitlab
+GitLab
 Gitorious
 glMenuProvider
 google

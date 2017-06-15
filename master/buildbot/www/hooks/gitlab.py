@@ -105,7 +105,7 @@ def _process_merge_request_change(payload, project, event, codebase=None):
     commit = attrs['last_commit']
     when_timestamp = dateparse(commit['timestamp'])
     # @todo provide and document a way to choose between http and ssh url
-    repo_url = attrs['target']['git_http_url']
+    repo_url = attrs['source']['git_http_url']
     changes = [{
         'author': '%s <%s>' % (commit['author']['name'],
                                commit['author']['email']),
@@ -113,13 +113,14 @@ def _process_merge_request_change(payload, project, event, codebase=None):
         'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'], attrs['description']),
         'revision': commit['id'],
         'when_timestamp': when_timestamp,
-        'branch': "refs/merge-requests/{}/head".format(attrs['iid']),
-        'repository': repo_url.replace(":30302", ''),
+        'branch': attrs['source_branch'],
+        'repository': repo_url,
         'project': project,
         'category': event,
         'revlink': attrs['url'],
         'properties': {
             'target_branch': attrs['target_branch'],
+            'target_repository': attrs['target']['git_http_url'],
             'event': event,
         },
     }]
