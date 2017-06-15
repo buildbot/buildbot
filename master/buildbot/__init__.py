@@ -22,6 +22,7 @@ from __future__ import print_function
 
 import os
 import re
+import datetime
 
 from subprocess import PIPE
 from subprocess import Popen
@@ -44,8 +45,18 @@ def gitDescribeToPep440(version):
             dev = int(v.group('dev'))
             return "{}.{}.{}-dev{}".format(major, minor, patch, dev)
         return "{}.{}.{}".format(major, minor, patch)
-            
+
     return v
+
+
+def mTimeVersion(init_file):
+    cwd = os.path.dirname(os.path.abspath(init_file))
+    m = 0
+    for root, dirs, files in os.walk(cwd):
+        for f in files:
+            m = max(os.path.getmtime(os.path.join(root, f)), m)
+    d = datetime.datetime.fromtimestamp(m)
+    return d.strftime("%Y.%m.%d")
 
 
 def getVersion(init_file):
@@ -78,7 +89,13 @@ def getVersion(init_file):
     except OSError:
         pass
 
-    return "latest"
+    try:
+        # if we really can't find the version, we use the date of modification of the most recent file
+        # docker hub builds cannot use git describe
+        return mTimeVersion(init_file)
+    except Exception:
+        # bummer. lets report something
+        return "latest"
 
 
 version = getVersion(__file__)
