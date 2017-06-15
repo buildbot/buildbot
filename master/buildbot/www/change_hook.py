@@ -25,7 +25,6 @@ import re
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python.failure import Failure
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
