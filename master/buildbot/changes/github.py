@@ -42,7 +42,7 @@ link_urls = {
 
 
 class PullRequestMixin(object):
-    def extractProperties(self, pr_info):
+    def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
             for k, v in iteritems(info_dict):
                 name = ".".join([base, k])
@@ -53,7 +53,7 @@ class PullRequestMixin(object):
                     properties[name] = v
 
         properties = {}
-        flatten(properties, "github", pr_info)
+        flatten(properties, "github", payload)
         return properties
 
 
