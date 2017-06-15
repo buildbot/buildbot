@@ -970,7 +970,7 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
 .. bb:reporter:: BitbucketServerStatusPush
 
 BitbucketServerStatusPush
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. @cindex BitbucketServerStatusPush
 .. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
@@ -1015,7 +1015,7 @@ As a result, we recommend you use https in your base_url rather than http.
 .. bb:reporter:: BitbucketServerPRCommentPush
 
 BitbucketServerPRCommentPush
-~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. @cindex BitbucketServerPRCommentPush
 .. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush

@@ -22,6 +22,6 @@ import warnings
 
 def StashStatusPush(*args, **kwargs):
     warnings.warn("The 'StashStatusPush' class was renamed to "
-                  "'BitbucketServerStatusPush'",
+                  "'BitbucketServer.BitbucketServerStatusPush'",
                   DeprecationWarning )
     return BitbucketServerStatusPush(*args, **kwargs)
