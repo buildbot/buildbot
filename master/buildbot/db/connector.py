@@ -127,6 +127,11 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
 
         # make sure the db is up to date, unless specifically asked not to
         if check_version:
+            if db_url == 'sqlite://':
+                # Using in-memory database. Since it is reset after each process
+                # restart, `buildbot upgrade-master` cannot be used (data is not
+                # persistent). Upgrade model here to allow startup to continue.
+                self.model.upgrade()
             current = yield self.model.is_current()
             if not current:
                 for l in upgrade_message.format(basedir=self.master.basedir).split('\n'):
