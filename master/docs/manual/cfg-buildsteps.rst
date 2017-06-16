@@ -1333,10 +1333,12 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
 
 ``definitions``
     A dictionary that contains parameters that will be converted to ``-D{name}={value}`` when passed to CMake.
+    A renderable which renders to a dictionary can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``options``
     A list or a tuple that contains options that will be passed to CMake as is.
+    A renderable which renders to a tuple or list can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``cmake``
