@@ -171,8 +171,10 @@ class HTPasswdAuth(TwistedICredAuthBase):
 class UserPasswordAuth(TwistedICredAuthBase):
 
     def __init__(self, users, **kwargs):
-        for user, password in users.items():
-            users[user] = unicode2bytes(password)
+        if isinstance(users, dict):
+            users = {user: unicode2bytes(pw) for user, pw in users.items()}
+        elif isinstance(users, list):
+            users = [(user, unicode2bytes(pw)) for user, pw in users]
         TwistedICredAuthBase.__init__(
             self,
             [DigestCredentialFactory(b"md5", b"buildbot"),

@@ -176,6 +176,13 @@ class UserPasswordAuth(www.WwwTestMixin, unittest.TestCase):
         self.auth = auth.UserPasswordAuth(login)
         self.assertEqual(self.auth.checkers[0].users, correct_login)
 
+        login = [("user_string", "password"),
+                 ("user_bytes", b"password")]
+        correct_login = {b"user_string": b"password",
+                         b"user_bytes": b"password"}
+        self.auth = auth.UserPasswordAuth(login)
+        self.assertEqual(self.auth.checkers[0].users, correct_login)
+
 
 class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):
 
