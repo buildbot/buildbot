@@ -65,7 +65,7 @@ docker-buildbot-master-ubuntu:
 
 $(VENV_NAME):
 	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
-	$(VENV_NAME)/bin/pip install -U pip
+	$(VENV_NAME)/bin/pip install -U pip setuptools
 	$(VENV_NAME)/bin/pip install -e pkg \
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
