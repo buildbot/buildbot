@@ -1033,23 +1033,36 @@ BitbucketServerPRCommentPush
 :class:`BitbucketServerPRCommentPush`  publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
 
 
-.. py:class:: BitbucketServerPRCommentPush(base_url, user, password, text=None, verbose=False, builders=None)
+.. py:class:: BitBucketServerPRCommentPush(base_url, user, password, messageFormatter=None, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, builders=None, schedulers=None, branches=None, buildSetSummary=False):
 
     :param string base_url: The base url of the Bitbucket server host
     :param string user: The Bitbucket server user to post as.
     :param string password: The Bitbucket server user's password.
-    :param renderable string text: Used to render the comment text.
-        A static string can be passed or :class:`Interpolate` for dynamic substitution (default: `Interpolate('Builder: %(prop:buildername)s Status: %(prop:statustext)s')`).
-
-        Besides the build properties, you have the following available:
-
-        :url: link to the build page
-        :statustext: ``SUCCESS`` or ``FAILED`` according to the build status
-
+    :param messageFormatter: This is an optional instance of :class:`MessageFormatter` that can be used to generate a custom comment.
     :param boolean verbose: If True, logs a message for each successful status push.
-    :param list builders: Only send update for specified builders.
-    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param list mode: A list of strings which will determine the build status that will be reported.
+        The values could be ``change``, ``failing``, ``passing``, ``problem``, ``warnings`` or ``exception``.
+        There are two shortcuts:
+
+            ``all``
+                Equivalent to (``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``)
+
+            ``warnings``
+                Equivalent to (``warnings``, ``failing``).
+
+    :param list tags: A list of tag names to serve status information for.
+        Defaults to ``None`` (all tags).
+        Use either builders or tags, but not both.
+    :param list builders: Only send update for specified builders.
+        Defaults to ``None`` (all builders).
+        Use either builders or tags, but not both
+    :param list schedulers: A list of scheduler names to serve status information for.
+        Defaults to ``None`` (all schedulers).
+    :param list branches: A list of branch names to serve status information for.
+        Defaults to ``None`` (all branches).
+    :param boolean buildSetSummary: If true, post a comment when a build set is finished with all build completion messages in it, instead of doing it for each separate build.
 
 .. Note::
     This reporter depends on the Bitbucket server hook to get the pull request url.

@@ -23,9 +23,11 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
+from buildbot.reporters import notifier
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
 from buildbot.util import unicode2bytes
+from buildbot.util import bytes2NativeString
 
 log = Logger()
 
@@ -105,45 +107,63 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                           code=response.code, content=content)
 
 
-class BitbucketServerPRCommentPush(http.HttpStatusPushBase):
+class BitbucketServerPRCommentPush(notifier.NotifierBase):
     name = "BitbucketServerPRCommentPush"
 
     @defer.inlineCallbacks
-    def reconfigService(self, base_url, user, password, text=None,
-                        verbose=False, **kwargs):
-        yield http.HttpStatusPushBase.reconfigService(
-            self, wantProperties=True, **kwargs)
-        self.text = text or Interpolate('Builder: %(prop:buildername)s '
-                                        'Status: %(prop:statustext)s')
+    def reconfigService(self, base_url, user, password, messageFormatter=None,
+                        verbose=False, debug=None, verify=None, **kwargs):
+        yield notifier.NotifierBase.reconfigService(
+            self, messageFormatter=messageFormatter, watchedWorkers=None,
+            messageFormatterMissingWorker=None, subject='', addLogs=False,
+            addPatch=False, **kwargs)
         self.verbose = verbose
         self._http = yield httpclientservice.HTTPClientService.getService(
             self.master, base_url, auth=(user, password),
-            debug=self.debug, verify=self.verify)
+            debug=debug, verify=verify)
+
+    def checkConfig(self, base_url, user, password, messageFormatter=None,
+                    verbose=False, debug=None, verify=None, **kwargs):
+
+        notifier.NotifierBase.checkConfig(self,
+                                          messageFormatter=messageFormatter,
+                                          watchedWorkers=None,
+                                          messageFormatterMissingWorker=None,
+                                          subject='',
+                                          addLogs=False,
+                                          addPatch=False,
+                                          **kwargs)
+
+    def isMessageNeeded(self, build):
+        if 'pullrequesturl' in build['properties']:
+            return notifier.NotifierBase.isMessageNeeded(self, build)
+        return False
+
+    def workerMissing(self, key, worker):
+        # a comment is always associated to a change
+        pass
 
     @defer.inlineCallbacks
-    def send(self, build):
-        if build['complete'] and "pullrequesturl" in build['properties']:
-            yield self.sendPullRequestComment(build)
+    def sendMessage(self, body, subject=None, type=None, builderName=None,
+                    results=None, builds=None, users=None, patches=None,
+                    logs=None, worker=None):
+        pr_urls = set()
+        for build in builds:
+            props = Properties.fromDict(build['properties'])
+            pr_urls.add(props.getProperty("pullrequesturl"))
+        for pr_url in pr_urls:
+            # we assume that the PR URL is well-formed as it comes from a PR event
+            path = urlparse(unicode2bytes(pr_url)).path
+            payload = {'text': body}
+            response = yield self._http.post(
+                COMMENT_API_URL.format(
+                    path=bytes2NativeString(path)), json=payload)
 
-    @defer.inlineCallbacks
-    def sendPullRequestComment(self, build):
-        props = Properties.fromDict(build['properties'])
-        pr_url = props.getProperty("pullrequesturl")
-        # we assume that the PR URL is well-formed as it comes from a PR event
-        path = urlparse(unicode2bytes(pr_url)).path
-        status = "SUCCESS" if build['results'] == SUCCESS else "FAILED"
-        props.setProperty('statustext', status, self.name)
-        props.setProperty('url', build['url'], self.name)
-        comment_text = yield props.render(self.text)
-        payload = {'text': comment_text}
-        response = yield self._http.post(
-            COMMENT_API_URL.format(path=path), json=payload)
-
-        if response.code == HTTP_CREATED:
-            if self.verbose:
-                log.info('{comment} sent to {url}',
-                         comment=comment_text, url=pr_url)
-        else:
-            content = yield response.content()
-            log.error("{code}: Unable to send a comment: {content}",
-                      code=response.code, content=content)
+            if response.code == HTTP_CREATED:
+                if self.verbose:
+                    log.info('{comment} sent to {url}',
+                             comment=body, url=pr_url)
+            else:
+                content = yield response.content()
+                log.error("{code}: Unable to send a comment: {content}",
+                          code=response.code, content=content)
