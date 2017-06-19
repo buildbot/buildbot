@@ -1,0 +1,20 @@
+{
+    "name": "buildbot-grid-view",
+    "dependencies": {
+        "guanlecoja": "~0.8.0",
+        "gulp": "~3.9.0"
+    },
+    "coffeelintConfig": {
+        "indentation" : {
+            "level" : "error",
+            "value" : 4
+        },
+        "max_line_length": {
+            "level": "ignore"
+        },
+        "line_endings" : {
+            "value" : "unix",
+            "level" : "error"
+        }
+    }
+}

@@ -143,7 +143,7 @@ echo "${MAGENTA}Validating the following commits:${NORM}"
 git log "$REVRANGE" --pretty=oneline || exit 1
 
 if ! $quick && ! $no_js; then
-    for module in www/base www/console_view www/waterfall_view www/codeparameter www/wsgi_dashboards;
+    for module in www/base www/console_view www/grid_view www/waterfall_view www/codeparameter www/wsgi_dashboards;
     do
         status "running 'setup.py develop' for $module"
         if ! (cd $module; python setup.py develop >/dev/null ); then
