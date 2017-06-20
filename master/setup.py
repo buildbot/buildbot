@@ -184,6 +184,8 @@ setup_args = {
         "buildbot.scripts",
         "buildbot.secrets",
         "buildbot.secrets.providers",
+        "buildbot.secrets.providers.file",
+        "buildbot.secrets.providers.vault",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
         "buildbot.status",
