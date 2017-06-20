@@ -165,7 +165,7 @@ class RunSteps(unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Builder(id=80, name='test'), ])
 
-        self.builder = builder.Builder('test', _addServices=False)
+        self.builder = builder.Builder('test')
         self.builder._builderid = 80
         self.builder.master = self.master
         yield self.builder.startService()

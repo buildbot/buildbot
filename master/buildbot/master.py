@@ -73,10 +73,6 @@ class LogRotation(object):
 class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                   WorkerAPICompatMixin):
 
-    # frequency with which to reclaim running builds; this should be set to
-    # something fairly long, to avoid undue database load
-    RECLAIM_BUILD_INTERVAL = 10 * 60
-
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
     UNCLAIMED_BUILD_FACTOR = 6

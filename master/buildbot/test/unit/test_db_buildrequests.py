@@ -494,77 +494,6 @@ class Tests(interfaces.InterfaceTests):
             self.assertEqual(results, [])
         return d
 
-    def do_test_reclaimBuildRequests(self, rows, now, brids, expected=None,
-                                     expfailure=None):
-        clock = task.Clock()
-        clock.advance(now)
-
-        d = self.insertTestData(rows)
-        d.addCallback(lambda _:
-                      self.db.buildrequests.reclaimBuildRequests(brids=brids,
-                                                                 _reactor=clock))
-        d.addCallback(lambda _:
-                      self.db.buildrequests.getBuildRequests())
-
-        @d.addCallback
-        def check(results):
-            self.assertNotEqual(expected, None,
-                                "unexpected success from claimBuildRequests")
-            self.assertEqual(
-                sorted([
-                    (r['buildrequestid'], r['claimed_at'],
-                     r['claimed_by_masterid'])
-                    for r in results
-                ]),
-                sorted(expected)
-            )
-
-        d.addErrback(self.failWithExpFailure(expfailure))
-        return d
-
-    def test_reclaimBuildRequests(self):
-        return self.do_test_reclaimBuildRequests([
-            fakedb.BuildRequest(
-                id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
-            fakedb.BuildRequestClaim(brid=44, masterid=self.MASTER_ID,
-                                     claimed_at=1300103810),
-        ], 1300305712, [44],
-            # note that the time is updated
-            [(44, epoch2datetime(1300305712), self.MASTER_ID)])
-
-    def test_reclaimBuildRequests_fail(self):
-        d = self.do_test_reclaimBuildRequests([
-            fakedb.BuildRequest(
-                id=44, buildsetid=self.BSID, builderid=self.BLDRID1),
-            fakedb.BuildRequestClaim(brid=44, masterid=self.MASTER_ID,
-                                     claimed_at=1300103810),
-            fakedb.BuildRequest(
-                id=45, buildsetid=self.BSID, builderid=self.BLDRID1),
-            fakedb.BuildRequestClaim(brid=45, masterid=self.OTHER_MASTER_ID,
-                                     claimed_at=1300103810),
-        ], 1300305712, [44, 45],
-            expfailure=buildrequests.AlreadyClaimedError)
-
-        # check that the time wasn't updated on 44, noting that MySQL does
-        # not support this.
-        if self.db_engine.dialect.name == 'mysql':
-            return d
-
-        d.addCallback(lambda _:
-                      self.db.buildrequests.getBuildRequests())
-
-        @d.addCallback
-        def check(results):
-            self.assertEqual(sorted(
-                (r['buildrequestid'], r['claimed_at'],
-                 r['claimed_by_masterid'])
-                for r in results
-            ), [
-                (44, epoch2datetime(1300103810), self.MASTER_ID),
-                (45, epoch2datetime(1300103810), self.OTHER_MASTER_ID),
-            ])
-        return d
-
     def do_test_completeBuildRequests(self, rows, now, expected=None,
                                       expfailure=None, brids=[44],
                                       complete_at=None):
@@ -726,15 +655,6 @@ class Tests(interfaces.InterfaceTests):
             self.assertEqual(sorted([r['buildrequestid'] for r in results]),
                              sorted(expected))
         return d
-
-    def test_unclaimExpiredRequests(self):
-        clock = task.Clock()
-        clock.advance(self.CLAIMED_AT_EPOCH)
-
-        meth = self.db.buildrequests.unclaimExpiredRequests
-        return self.do_test_unclaimMethod(
-            lambda: meth(100, _reactor=clock),
-            [47, 49])
 
     def test_unclaimBuildRequests(self):
         to_unclaim = [

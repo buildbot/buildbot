@@ -658,7 +658,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_bldr_maybeStartBuild_fails_always(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         # the builder fails to start the build; we'll see that the build
-        # was requested, but the brids will get reclaimed
+        # was requested, but the brids will get claimed again
 
         def maybeStartBuild(worker, builds):
             self.startedBuilds.append((worker.name, builds))
@@ -673,7 +673,7 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=135000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     # reclaimed so none taken!
+                                                     # claimed again so none taken!
                                                      exp_claims=[],
                                                      exp_builds=[
                                                          ('test-worker2', [10]), ('test-worker1', [11])])
@@ -682,7 +682,7 @@ class TestMaybeStartBuilds(TestBRDBase):
     def test_bldr_maybeStartBuild_fails_once(self):
         self.bldr.config.nextWorker = nth_worker(-1)
         # the builder fails to start the build; we'll see that the build
-        # was requested, but the brids will get reclaimed
+        # was requested, but the brids will get claimed again
 
         def maybeStartBuild(worker, builds, _fail=[False]):
             self.startedBuilds.append((worker.name, builds))
@@ -703,7 +703,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         # first time around, only #11 stays claimed
         yield self.brd._maybeStartBuildsOnBuilder(self.bldr)
-        self.assertMyClaims([11])  # reclaimed so none taken!
+        self.assertMyClaims([11])  # claimed again so none taken!
         self.assertBuildsStarted(
             [('test-worker2', [10]), ('test-worker1', [11])])
 
