@@ -3,6 +3,8 @@ class Changedetails extends Directive('common')
         return {
             replace: true
             restrict: 'E'
-            scope: {change: '=?'}
+            scope:
+                change: '='
+                compact: '=?'
             templateUrl: 'views/changedetails.html'
         }

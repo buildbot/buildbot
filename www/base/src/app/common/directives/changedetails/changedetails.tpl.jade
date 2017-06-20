@@ -1,16 +1,14 @@
-div(style="width:100%;")
+div.changedetails(style="width:100%;")
     div.no-select(style="width:100%;", ng-click="change.show_details = !change.show_details")
-        .change-avatar(ng-if="change.author_email")
-            a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name }}")
+        .change-avatar(ng-if="!compact && change.author_email")
+            a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name}}")
                 img(ng-src="avatar?email={{change.author_email}}")
-        | &nbsp;
         a(ng-if="change.revlink", ng-href="{{change.revlink}}", uib-tooltip="{{change.comments}}")
             | {{ change.comments.split("\n")[0] }}
         span(ng-if="!change.revlink", uib-tooltip="{{change.comments}}")
             | {{ change.comments.split("\n")[0] }}
-        | &nbsp;  
-        span(uib-tooltip="{{ change.when_timestamp | dateformat:'LLL'}}") ({{ change.when_timestamp | timeago }})
-        | &nbsp;  
+        span(ng-if="!compact" uib-tooltip="{{change.when_timestamp | dateformat:'LLL'}}")
+            | ({{ change.when_timestamp | timeago }})
         i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
     div.anim-changedetails(ng-show="change.show_details")
         table.table.table-striped.table-condensed(ng-show="change.show_details")
