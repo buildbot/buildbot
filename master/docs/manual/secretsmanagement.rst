@@ -103,14 +103,14 @@ The files will be automatically deleted at the end of the build.
 .. code-block:: python
 
         f = BuildFactory()
-        with f.withSecret(secrets_list):
+        with f.withSecrets(secrets_list):
             f.addStep(step_definition)
  or
 
 .. code-block:: python
 
         f = BuildFactory()
-        f.addSteps([list_of_step_definitions], withSecret=[secrets_list])
+        f.addSteps([list_of_step_definitions], withSecrets=[secrets_list])
 
 In both cases the secrets_list is a list of tuple (secret path, secret value).
 

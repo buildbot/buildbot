@@ -20,6 +20,7 @@ from twisted.internet import defer
 from buildbot.process.buildstep import FAILURE
 from buildbot.process.buildstep import SUCCESS
 from buildbot.process.buildstep import BuildStep
+from buildbot.process.results import worst_status
 from buildbot.steps.worker import CompositeStepMixin
 
 
@@ -33,17 +34,13 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
 
     @defer.inlineCallbacks
     def runPopulateSecrets(self):
-        all_results = []
+        result = SUCCESS
         for path, secretvalue in self.secret_to_be_populated:
             if not isinstance(path, str):
                 raise ValueError("Secret path %s is not a string" % path)
             self.secret_to_be_interpolated = secretvalue
             res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated)
-            all_results.append(res)
-        if FAILURE in all_results:
-            result = FAILURE
-        else:
-            result = SUCCESS
+            result = worst_status(result, res)
         defer.returnValue(result)
 
     @defer.inlineCallbacks

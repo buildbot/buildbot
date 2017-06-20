@@ -33,8 +33,8 @@ class SecretsConfig(RunMasterBase):
         self.assertTrue(res)
 
     @defer.inlineCallbacks
-    def test_withsecret(self):
-        yield self.setupConfig(masterConfigWith())
+    def test_withsecrets(self):
+        yield self.setupConfig(masterConfig(use_with=True))
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "<foo>")
@@ -42,7 +42,7 @@ class SecretsConfig(RunMasterBase):
 
 
 # master configuration
-def masterConfig():
+def masterConfig(use_with=False):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -56,33 +56,13 @@ def masterConfig():
     c['secretsProviders'] = [FakeSecretStorage(
         secretdict={"foo": "bar", "something": "more"})]
     f = BuildFactory()
-    f.addSteps([steps.ShellCommand(command=Interpolate('echo %(secret:foo)s'))],
-               withSecret=[("pathA", Interpolate('%(secret:something)s'))])
-    c['builders'] = [
-        BuilderConfig(name="testy",
-                      workernames=["local1"],
-                      factory=f)]
-    return c
-
-
-# master configuration with context manager function
-def masterConfigWith():
-    c = {}
-    from buildbot.config import BuilderConfig
-    from buildbot.process.factory import BuildFactory
-    from buildbot.plugins import schedulers, steps
-
-    c['schedulers'] = [
-        schedulers.ForceScheduler(
-            name="force",
-            builderNames=["testy"])]
-
-    c['secretsProviders'] = [FakeSecretStorage(
-        secretdict={"foo": "bar", "something": "more"})]
-    f = BuildFactory()
-    secrets_list = [("pathA", Interpolate('%(secret:something)s'))]
-    with f.withSecret(secrets_list):
-        f.addStep(steps.ShellCommand(command=Interpolate('echo %(secret:foo)s')))
+    if use_with:
+        secrets_list = [("pathA", Interpolate('%(secret:something)s'))]
+        with f.withSecrets(secrets_list):
+            f.addStep(steps.ShellCommand(command=Interpolate('echo %(secret:foo)s')))
+    else:
+        f.addSteps([steps.ShellCommand(command=Interpolate('echo %(secret:foo)s'))],
+                   withSecrets=[("pathA", Interpolate('%(secret:something)s'))])
     c['builders'] = [
         BuilderConfig(name="testy",
                       workernames=["local1"],

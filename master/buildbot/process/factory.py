@@ -82,16 +82,16 @@ class BuildFactory(util.ComparableMixin):
             step = step(**kwargs)
         self.steps.append(interfaces.IBuildStepFactory(step))
 
-    def addSteps(self, steps, withSecret=[]):
-        if withSecret:
-            self.addStep(DownloadSecretsToWorker(withSecret))
+    def addSteps(self, steps, withSecrets=[]):
+        if withSecrets:
+            self.addStep(DownloadSecretsToWorker(withSecrets))
         for s in steps:
             self.addStep(s)
-        if withSecret:
-            self.addStep(RemoveWorkerFileSecret(withSecret))
+        if withSecrets:
+            self.addStep(RemoveWorkerFileSecret(withSecrets))
 
     @contextmanager
-    def withSecret(self, secrets):
+    def withSecrets(self, secrets):
         self.addStep(DownloadSecretsToWorker(secrets))
         yield self
         self.addStep(RemoveWorkerFileSecret(secrets))
