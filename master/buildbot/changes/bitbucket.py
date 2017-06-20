@@ -37,7 +37,7 @@ from buildbot.util import epoch2datetime
 
 class BitbucketPullrequestPoller(base.PollingChangeSource):
 
-    compare_attrs = ("owner", "slug", "branch",
+    compare_attrs = ("owner", "slug", "branches",
                      "pollInterval", "useTimestamps",
                      "category", "project", "pollAtLaunch",
                      "username", "app_password")
@@ -45,7 +45,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     db_class_name = 'BitbucketPullrequestPoller'
 
     def __init__(self, owner, slug,
-                 branch=None,
+                 branches=None,
                  pollInterval=10 * 60,
                  useTimestamps=True,
                  category=None,
@@ -59,7 +59,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.agent = Agent(reactor)
         self.owner = owner
         self.slug = slug
-        self.branch = branch
+        self.branches = branches
         self.username = username
         self.app_password = app_password
         base.PollingChangeSource.__init__(
@@ -81,8 +81,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
 
     def describe(self):
         return "BitbucketPullrequestPoller watching the "\
-            "Bitbucket repository %s/%s, branch: %s" % (
-                self.owner, self.slug, self.branch)
+            "Bitbucket repository %s/%s, branches: %s" % (
+                self.owner, self.slug, self.branches)
 
     @deferredLocked('initLock')
     def poll(self):
@@ -94,7 +94,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _getChanges(self):
         self.lastPoll = time.time()
         log.msg("BitbucketPullrequestPoller: polling "
-                "Bitbucket repository %s/%s, branch: %s" % (self.owner, self.slug, self.branch))
+                "Bitbucket repository %s/%s, branches: %s" % (self.owner, self.slug, self.branches))
         url = "https://bitbucket.org/api/2.0/repositories/%s/%s/pullrequests" % (
             self.owner, self.slug)
         return self._getPage(url)
@@ -113,7 +113,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
             revision = pr['source']['commit']['hash']
 
             # check branch
-            if not self.branch or branch in self.branch:
+            if not self.branches or branch in self.branches:
                 current = yield self._getCurrentRev(nr)
 
                 # compare _short_ hashes to check if the PR has been updated
@@ -206,7 +206,7 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
     def _getStateObjectId(self):
         # Return a deferred for object id in state db.
         return self.master.db.state.getObjectId(
-            '%s/%s#%s' % (self.owner, self.slug, self.branch), self.db_class_name)
+            '%s/%s#%s' % (self.owner, self.slug, self.branches), self.db_class_name)
 
     def _getPage(self, url):
         headers = None

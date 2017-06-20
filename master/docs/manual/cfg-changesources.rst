@@ -941,7 +941,7 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``slug``
     The name of the Bitbucket repository.
 
-``branch``
+``branches``
     A single branch or a list of branches which should be processed.
     If it is ``None`` (the default) all pull requests are used.
 
