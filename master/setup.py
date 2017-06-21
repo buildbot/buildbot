@@ -184,8 +184,6 @@ setup_args = {
         "buildbot.scripts",
         "buildbot.secrets",
         "buildbot.secrets.providers",
-        "buildbot.secrets.providers.file",
-        "buildbot.secrets.providers.vault",
         "buildbot.statistics",
         "buildbot.statistics.storage_backends",
         "buildbot.status",
@@ -254,6 +252,10 @@ setup_args = {
                 'Periodic', 'Nightly', 'NightlyTriggerable']),
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
+        ]),
+        ('buildbot.secrets', [
+            ('buildbot.secrets.providers.file', ['SecretInAFile']),
+            ('buildbot.secrets.providers.vault', ['HashiCorpVaultSecretProvider'])
         ]),
         ('buildbot.worker', [
             ('buildbot.worker.base', ['Worker']),
