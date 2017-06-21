@@ -20,7 +20,6 @@ from future.utils import string_types
 import warnings
 import weakref
 
-from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
