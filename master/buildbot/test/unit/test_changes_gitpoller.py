@@ -258,7 +258,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
-                       b'refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
             .exit(1),
         )
@@ -275,7 +275,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
-                       b'+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
@@ -404,11 +404,11 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
-                       b'+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED,
-                       b'+release:refs/buildbot/%s/release' % self.REPOURL_QUOTED)
+                       b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master',
+                       b'+release:refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
-                       b'refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
             .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
@@ -841,8 +841,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
                 '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
             gpo.Expect(
-                b'git', b'rev-parse', b'refs/buildbot/%s/release' %
-                self.REPOURL_QUOTED)
+                b'git', b'rev-parse', b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
             .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
