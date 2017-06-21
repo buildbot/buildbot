@@ -355,7 +355,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self.updateBuildSummaryPolicy.append(FAILURE)
             if self.warnOnWarnings or self.flunkOnWarnings:
                 self.updateBuildSummaryPolicy.append(WARNINGS)
-            self.updateBuildSummaryPolicy
         if self.updateBuildSummaryPolicy is False:
             self.updateBuildSummaryPolicy = []
         if self.updateBuildSummaryPolicy is True:
