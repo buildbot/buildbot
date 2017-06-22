@@ -253,6 +253,10 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
+        ('buildbot.secrets', [
+            ('buildbot.secrets.providers.file', ['SecretInAFile']),
+            ('buildbot.secrets.providers.vault', ['HashiCorpVaultSecretProvider'])
+        ]),
         ('buildbot.worker', [
             ('buildbot.worker.base', ['Worker']),
             ('buildbot.worker.ec2', ['EC2LatentWorker']),
