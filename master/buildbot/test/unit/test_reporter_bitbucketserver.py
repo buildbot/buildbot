@@ -25,8 +25,8 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import HTTP_CREATED
+from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice

@@ -24,10 +24,10 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 from buildbot.reporters import notifier
-from buildbot.util import httpclientservice
-from buildbot.util.logger import Logger
-from buildbot.util import unicode2bytes
 from buildbot.util import bytes2NativeString
+from buildbot.util import httpclientservice
+from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 
 log = Logger()
 
