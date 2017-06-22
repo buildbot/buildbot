@@ -150,9 +150,17 @@ The parameters are:
                 ...))
 
 :guilabel:`Which events would you like to trigger this webhook?`
-    Leave the default -- ``Just the push [tag]  events`` -- other kind of events are not currently supported.
+    Leave the default -- ``Just the push [tag], create, release,  events`` -- other kind of events are not currently supported.
 
 And then press the ``Add Webhook`` button.
+
+.. note::
+
+   Create and Release events does not reflect a strict code change, but still is a useful event to start a build on.
+
+   Even though tag and release does not associate with real change it contains a change set. This change set has branch and revision properties with tag name as value.
+
+   These values can be utilized in buildsteps using util.Property("branch") and util.Property("revision").
 
 .. warning::
 

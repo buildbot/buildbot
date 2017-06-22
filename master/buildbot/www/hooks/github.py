@@ -28,6 +28,7 @@ from twisted.python import log
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 
 try:
     import json
@@ -176,6 +177,48 @@ class GitHubEventHandler(PullRequestMixin):
             len(changes), number))
         return changes, 'git'
 
+    def _get_changes_for_misc_event(self, category, payload):
+        log = Logger()
+        if category == 'create':
+            branch = payload['ref']
+        elif category == 'release':
+            branch = payload['release']['tag_name']
+        else:
+            return []
+
+        log.debug('Processing {0},{1}'.format(category, branch))
+        changes = []
+        change = {
+            'when_timestamp': dateparse(payload['repository']['created_at']),
+            'repository': payload['repository']['html_url'],
+            'project': payload['repository']['full_name'],
+            'branch': branch,
+            'revision': branch,
+            'category': category,
+            'author': payload['sender']['login'],
+            'comments': 'Created %s' % branch,
+            'properties': {
+                'event': category,
+            },
+        }
+        if category == 'release':
+
+            change['comments'] = 'Release created %s' % \
+                payload['release']['name']
+        if callable(self._codebase):
+            change['codebase'] = self._codebase(payload)
+        elif self._codebase is not None:
+            change['codebase'] = self._codebase
+        changes.append(change)
+
+        return changes
+
+    def handle_release(self, payload, event):
+        return self._get_changes_for_misc_event(event, payload), 'git'
+
+    def handle_create(self, payload, event):
+        return self._get_changes_for_misc_event(event, payload), 'git'
+
     def _process_change(self, payload, user, repo, repo_url, project, event):
         """
         Consumes the JSON as a python object and actually starts the build.
@@ -210,7 +253,7 @@ class GitHubEventHandler(PullRequestMixin):
 
             change = {
                 'author': u'{} <{}>'.format(commit['author']['name'],
-                                           commit['author']['email']),
+                                            commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
