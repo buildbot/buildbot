@@ -593,10 +593,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.workername))
             raise LatentWorkerFailedToSubstantiate(
-                request['SpotInstanceRequestId'], request.status)
+                request['SpotInstanceRequestId'], request_status)
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,
                      request['SpotInstanceRequestId'], request_status))
             raise LatentWorkerFailedToSubstantiate(
-                request['SpotInstanceRequestId'], request.status)
+                request['SpotInstanceRequestId'], request_status)
