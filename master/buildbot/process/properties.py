@@ -454,6 +454,29 @@ class _SecretRenderer(object):
         defer.returnValue(secret_detail.value)
 
 
+class Secret(_SecretRenderer):
+
+    def __repr__(self):
+        return "Secret({0})".format(self.secretKey)
+
+    def __init__(self, secretKey):
+        self.secretKey = secretKey
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, master):
+        secretsSrv = master.namedServices.get("secrets")
+        if not secretsSrv:
+            error_message = "secrets service not started, need to configure" \
+                            " SecretManager in c['services'] to use 'secrets'" \
+                            "in Interpolate"
+            raise KeyError(error_message)
+        credsservice = master.namedServices['secrets']
+        secret_detail = yield credsservice.get(self.secretKey)
+        if secret_detail is None:
+            raise KeyError("secret key %s is not found in any provider" % self.secretKey)
+        defer.returnValue(secret_detail.value)
+
+
 class _SecretIndexer(object):
 
     def __contains__(self, password):
