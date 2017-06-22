@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
+from future.utils import string_types
 
 from twisted.internet import defer
 from twisted.python import log
@@ -46,11 +47,11 @@ class ShellArg(results.ResultComputingConfigMixin):
 
     def validateAttributes(self):
         # only make the check if we have a list
-        if not isinstance(self.command, (str, list)):
+        if not isinstance(self.command, (string_types, list)):
             config.error("%s is an invalid command, "
                          "it must be a string or a list" % (self.command,))
         if isinstance(self.command, list):
-            if not all([isinstance(x, str) for x in self.command]):
+            if not all([isinstance(x, string_types) for x in self.command]):
                 config.error("%s must only have strings in it" %
                              (self.command,))
         runConfParams = [(p_attr, getattr(self, p_attr))
