@@ -103,6 +103,10 @@ class BuildbotConsolePkg(BuildbotWWWPkg):
     pkgPaths = ["www", "console_view"]
     epName = "console_view"
 
+class BuildbotConsoleModifiedPkg(BuildbotWWWPkg):
+    pkgName = "buildbot-console-view-modified"
+    pkgPaths = ["www", "console_view_modified"]
+    epName = "console_view_modified"
 
 class BuildbotWaterfallPkg(BuildbotWWWPkg):
     pkgName = "buildbot-waterfall-view"

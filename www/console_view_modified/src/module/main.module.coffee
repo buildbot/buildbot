@@ -9,29 +9,30 @@ class App extends App
             'bbData'
         ]
 
+
 class State extends Config
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
-        name = 'console'
+        name = 'consoleModified'
 
         # Menu configuration
         glMenuServiceProvider.addGroup
             name: name
-            caption: 'Console View'
+            caption: 'Console View - Modified'
             icon: 'exclamation-circle'
             order: 5
 
         # Configuration
         cfg =
             group: name
-            caption: 'Console View'
+            caption: 'Console View - Modified'
 
         # Register new state
         state =
             controller: "#{name}Controller"
             controllerAs: "c"
-            templateUrl: "console_view/views/#{name}.html"
+            templateUrl: "console_view_modified/views/#{name}.html"
             name: name
             url: "/#{name}"
             data: cfg
@@ -39,8 +40,8 @@ class State extends Config
         $stateProvider.state(state)
 
         bbSettingsServiceProvider.addSettingsGroup
-            name: 'Console'
-            caption: 'Console related settings'
+            name: 'ConsoleModified'
+            caption: 'Console Modified related settings'
             items: [
                 type: 'integer'
                 name: 'buildLimit'
@@ -53,11 +54,11 @@ class State extends Config
                 default_value: 30
             ]
 
-class Console extends Controller
+class ConsoleModified extends Controller
     constructor: (@$scope, $q, @$window, dataService, bbSettingsService, resultsService,
         @$uibModal, @$timeout) ->
         angular.extend this, resultsService
-        settings = bbSettingsService.getSettingsGroup('Console')
+        settings = bbSettingsService.getSettingsGroup('ConsoleModified')
         @buildLimit = settings.buildLimit.value
         @changeLimit = settings.changeLimit.value
         @dataAccessor = dataService.open().closeOnDestroy(@$scope)
@@ -355,7 +356,7 @@ class Console extends Controller
     ###
     selectBuild: (build) ->
         modal = @$uibModal.open
-            templateUrl: 'console_view/views/modal.html'
+            templateUrl: 'console_view_modified/views/modal.html'
             controller: 'consoleModalController as modal'
             windowClass: 'modal-big'
             resolve:
