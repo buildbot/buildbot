@@ -197,21 +197,6 @@ class FakeUpdates(service.AsyncService):
         defer.returnValue(True)
 
     @defer.inlineCallbacks
-    def reclaimBuildRequests(self, brids, _reactor=reactor):
-        validation.verifyType(self.testcase, 'brids', brids,
-                              validation.ListValidator(validation.IntValidator()))
-        if not brids:
-            defer.returnValue(True)
-            return
-        try:
-            yield self.master.db.buildrequests.reclaimBuildRequests(
-                brids=brids, _reactor=_reactor)
-        except AlreadyClaimedError:
-            defer.returnValue(False)
-        self.claimedBuildRequests.update(set(brids))
-        defer.returnValue(True)
-
-    @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):
         validation.verifyType(self.testcase, 'brids', brids,
                               validation.ListValidator(validation.IntValidator()))
@@ -227,11 +212,6 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'complete_at', complete_at,
                               validation.NoneOk(validation.DateTimeValidator()))
         return defer.succeed(True)
-
-    def unclaimExpiredRequests(self, old, _reactor=reactor):
-        validation.verifyType(
-            self.testcase, "old", old, validation.IntValidator())
-        return defer.succeed(None)
 
     def rebuildBuildrequest(self, buildrequest):
         return defer.succeed(None)

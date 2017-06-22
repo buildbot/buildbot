@@ -1790,17 +1790,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                                                   masterid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
-    def reclaimBuildRequests(self, brids, _reactor):
-        for brid in brids:
-            if brid in self.claims and self.claims[brid].masterid != self.db.master.masterid:
-                raise buildrequests.AlreadyClaimedError
-
-        # now that we've thrown any necessary exceptions, get started
-        for brid in brids:
-            self.claims[brid] = BuildRequestClaim(brid=brid,
-                                                  masterid=self.MASTER_ID, claimed_at=_reactor.seconds())
-        return defer.succeed(None)
-
     def unclaimBuildRequests(self, brids):
         for brid in brids:
             if brid in self.claims and self.claims[brid].masterid == self.db.master.masterid:
@@ -1822,17 +1811,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             self.reqs[brid].results = results
             self.reqs[brid].complete_at = complete_at
         return defer.succeed(None)
-
-    def unclaimExpiredRequests(self, old, _reactor=reactor):
-        old_epoch = _reactor.seconds() - old
-
-        for br in itervalues(self.reqs):
-            if br.complete == 1:
-                continue
-
-            claim_row = self.claims.get(br.id)
-            if claim_row and claim_row.claimed_at < old_epoch:
-                del self.claims[br.id]
 
     def _brdictFromRow(self, row):
         return buildrequests.BuildRequestsConnectorComponent._brdictFromRow(row, self.MASTER_ID)

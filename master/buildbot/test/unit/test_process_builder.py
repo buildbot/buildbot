@@ -55,7 +55,7 @@ class BuilderMixin(object):
         config_args.update(config_kwargs)
         self.builder_config = config.BuilderConfig(**config_args)
         self.bldr = builder.Builder(
-            self.builder_config.name, _addServices=False)
+            self.builder_config.name)
         self.bldr.master = self.master
         self.bldr.botmaster = self.master.botmaster
 
@@ -215,35 +215,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     # other methods
 
     @defer.inlineCallbacks
-    def test_reclaimAllBuilds_empty(self):
-        yield self.makeBuilder()
-
-        # just to be sure this doesn't crash
-        yield self.bldr.reclaimAllBuilds()
-
-    @defer.inlineCallbacks
-    def test_reclaimAllBuilds(self):
-        yield self.makeBuilder()
-
-        def mkbld(brids):
-            bld = mock.Mock(name='Build')
-            bld.requests = []
-            for brid in brids:
-                br = mock.Mock(name='BuildRequest %d' % brid)
-                br.id = brid
-                bld.requests.append(br)
-            return bld
-
-        old = mkbld([15])  # keep a reference to the "old" build
-        self.bldr.old_building[old] = None
-        self.bldr.building.append(mkbld([10, 11, 12]))
-
-        yield self.bldr.reclaimAllBuilds()
-
-        self.assertEqual(self.master.data.updates.claimedBuildRequests,
-                         set([10, 11, 12, 15]))
-
-    @defer.inlineCallbacks
     def test_canStartBuild(self):
         yield self.makeBuilder()
 
@@ -325,7 +296,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.factory = factory.BuildFactory()
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         # only include the necessary required config, plus user-requested
-        self.bldr = builder.Builder('bldr', _addServices=False)
+        self.bldr = builder.Builder('bldr')
         self.bldr.master = self.master
         self.master.data.updates.findBuilderId = fbi = mock.Mock()
         fbi.return_value = defer.succeed(13)
@@ -348,7 +319,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(deprecated, builder.enforceChosenWorker)
 
     def test_attaching_workers_old_api(self):
-        bldr = builder.Builder('bldr', _addServices=False)
+        bldr = builder.Builder('bldr')
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = bldr.attaching_workers
@@ -361,7 +332,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(new, old)
 
     def test_workers_old_api(self):
-        bldr = builder.Builder('bldr', _addServices=False)
+        bldr = builder.Builder('bldr')
 
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             new = bldr.workers
@@ -374,7 +345,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertIdentical(new, old)
 
     def test_canStartWithWorkerForBuilder_old_api(self):
-        bldr = builder.Builder('bldr', _addServices=False)
+        bldr = builder.Builder('bldr')
         bldr.config = mock.Mock()
         bldr.config.locks = []
 
@@ -388,7 +359,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 self.assertEqual(dummy, 'dummy')
 
     def test_addLatentWorker_old_api(self):
-        bldr = builder.Builder('bldr', _addServices=False)
+        bldr = builder.Builder('bldr')
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
@@ -402,7 +373,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 self.assertTrue(method.called)
 
     def test_getAvailableWorkers_old_api(self):
-        bldr = builder.Builder('bldr', _addServices=False)
+        bldr = builder.Builder('bldr')
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,

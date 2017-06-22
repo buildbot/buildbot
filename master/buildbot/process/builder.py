@@ -20,7 +20,6 @@ from future.utils import string_types
 import warnings
 import weakref
 
-from twisted.application import internet
 from twisted.application import service
 from twisted.internet import defer
 from twisted.python import log
@@ -64,7 +63,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         warnings.warn("'Builder.expectations' is deprecated.")
         return None
 
-    def __init__(self, name, _addServices=True):
+    def __init__(self, name):
         service.MultiService.__init__(self)
         self.name = name
 
@@ -89,23 +88,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         self.config = None
         self.builder_status = None
-
-        if _addServices:
-            self.reclaim_svc = internet.TimerService(10 * 60,
-                                                     self.reclaimAllBuilds)
-            self.reclaim_svc.setServiceParent(self)
-
-            # update big status every 30 minutes, working around #1980
-            self.updateStatusService = internet.TimerService(30 * 60,
-                                                             self.updateBigStatus)
-            self.updateStatusService.setServiceParent(self)
-
-    def setServiceParent(self, parent):
-        # botmaster needs to set before setServiceParent which calls
-        # startService
-        for child in [self.reclaim_svc, self.updateStatusService]:
-            child.clock = parent.master.reactor
-        return service.MultiService.setServiceParent(self, parent)
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -186,20 +168,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         else:
             defer.returnValue(None)
 
-    def reclaimAllBuilds(self):
-        brids = set()
-        for b in self.building:
-            brids.update([br.id for br in b.requests])
-        for b in self.old_building:
-            brids.update([br.id for br in b.requests])
-
-        if not brids:
-            return defer.succeed(None)
-
-        d = self.master.data.updates.reclaimBuildRequests(list(brids))
-        d.addErrback(log.err, 'while re-claiming running BuildRequests')
-        return d
-
     def getBuild(self, number):
         for b in self.building:
             if b.build_status and b.build_status.number == number:
@@ -260,8 +228,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
         self.attaching_workers.remove(wfb)
         self.workers.append(wfb)
 
-        self.updateBigStatus()
-
         return self
 
     def _not_attached(self, why, worker):
@@ -290,22 +256,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # inform the WorkerForBuilder that their worker went away
         wfb.detached()
-        self.updateBigStatus()
-
-    def updateBigStatus(self):
-        try:
-            # Catch exceptions here, since this is called in a LoopingCall.
-            if not self.builder_status:
-                return
-            if not self.workers:
-                self.builder_status.setBigState("offline")
-            elif self.building or self.old_building:
-                self.builder_status.setBigState("building")
-            else:
-                self.builder_status.setBigState("idle")
-        except Exception:
-            log.err(
-                None, "while trying to update status of builder '%s'" % (self.name,))
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
@@ -338,9 +288,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         # append the build to self.building
         self.building.append(build)
-
-        # update the big status accordingly
-        self.updateBigStatus()
 
         # The worker is ready to go. workerforbuilder.buildStarted() sets its
         # state to BUILDING (so we won't try to use it for any other builds).
@@ -408,8 +355,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         if wfb.worker:
             wfb.worker.releaseLocks()
-
-        self.updateBigStatus()
 
     def _resubmit_buildreqs(self, build):
         brids = [br.id for br in build.requests]

@@ -207,13 +207,6 @@ class BuildRequest(base.ResourceType):
                                         _reactor=_reactor)
 
     @base.updateMethod
-    def reclaimBuildRequests(self, brids, _reactor=reactor):
-        return self.callDbBuildRequests(brids,
-                                        self.master.db.buildrequests.reclaimBuildRequests,
-                                        event="update",
-                                        _reactor=_reactor)
-
-    @base.updateMethod
     @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):
         if brids:
@@ -255,11 +248,6 @@ class BuildRequest(base.ResourceType):
                 yield self.master.data.updates.maybeBuildsetComplete(bsid)
 
         defer.returnValue(True)
-
-    @base.updateMethod
-    @defer.inlineCallbacks
-    def unclaimExpiredRequests(self, old, _reactor=reactor):
-        yield self.master.db.buildrequests.unclaimExpiredRequests(old, _reactor=_reactor)
 
     @base.updateMethod
     @defer.inlineCallbacks
