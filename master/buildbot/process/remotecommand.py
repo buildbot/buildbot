@@ -275,7 +275,10 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
     @defer.inlineCallbacks
     def remoteUpdate(self, update):
         def cleanup(data):
+            if self.step is None:
+                return data
             return self.step.build.properties.cleanupTextFromSecrets(data)
+
         if self.debug:
             for k, v in iteritems(update):
                 log.msg("Update[%s]: %s" % (k, v))
