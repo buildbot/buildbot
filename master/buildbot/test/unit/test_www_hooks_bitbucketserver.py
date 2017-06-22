@@ -686,8 +686,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testHookWithChangeOnPushEvent(self):
 
         request = _prepare_request(
-                    pushJsonPayload,
-                    headers={_HEADER_EVENT: 'repo:push'})
+            pushJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
 
         yield request.test_render(self.change_hook)
 
@@ -696,6 +695,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self._checkPush(change)
         self.assertEqual(change['branch'], 'refs/heads/branch_1496411680')
         self.assertEqual(change['category'], 'push')
+
+    @defer.inlineCallbacks
+    def testHookWithNonDictOption(self):
+        self.change_hook.dialects = {'bitbucketserver': True}
+        yield self.testHookWithChangeOnPushEvent()
 
     def _checkPullRequest(self, change):
         self.assertEqual(
@@ -718,8 +722,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnPullRequestCreated(self):
         request = _prepare_request(
-                    pullRequestCreatedJsonPayload,
-                    headers={_HEADER_EVENT: 'pullrequest:created'})
+            pullRequestCreatedJsonPayload,
+            headers={_HEADER_EVENT: 'pullrequest:created'})
 
         yield request.test_render(self.change_hook)
 
@@ -732,8 +736,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnPullRequestUpdated(self):
         request = _prepare_request(
-                    pullRequestUpdatedJsonPayload,
-                    headers={_HEADER_EVENT: 'pullrequest:updated'})
+            pullRequestUpdatedJsonPayload,
+            headers={_HEADER_EVENT: 'pullrequest:updated'})
 
         yield request.test_render(self.change_hook)
 
@@ -746,8 +750,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnPullRequestRejected(self):
         request = _prepare_request(
-                    pullRequestRejectedJsonPayload,
-                    headers={_HEADER_EVENT: 'pullrequest:rejected'})
+            pullRequestRejectedJsonPayload,
+            headers={_HEADER_EVENT: 'pullrequest:rejected'})
 
         yield request.test_render(self.change_hook)
 
@@ -777,8 +781,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             'repo:push': pushJsonPayload,
             'pullrequest:updated': pullRequestUpdatedJsonPayload}
         request = _prepare_request(
-            payloads[event_type],
-            headers={_HEADER_EVENT: event_type})
+            payloads[event_type], headers={_HEADER_EVENT: event_type})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 1)
         change = self.change_hook.master.addedChanges[0]
@@ -815,8 +818,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithUnhandledEvent(self):
         request = _prepare_request(
-                    pushJsonPayload,
-                    headers={_HEADER_EVENT: 'invented:event'})
+            pushJsonPayload, headers={_HEADER_EVENT: 'invented:event'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written, "Unknown event: invented_event")
@@ -824,8 +826,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnCreateTag(self):
         request = _prepare_request(
-                    newTagJsonPayload,
-                    headers={_HEADER_EVENT: 'repo:push'})
+            newTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 1)
         change = self.change_hook.master.addedChanges[0]
@@ -836,8 +837,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteTag(self):
         request = _prepare_request(
-                    deleteTagJsonPayload,
-                    headers={_HEADER_EVENT: 'repo:push'})
+            deleteTagJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 1)
         change = self.change_hook.master.addedChanges[0]
@@ -848,8 +848,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithChangeOnDeleteBranch(self):
         request = _prepare_request(
-                    deleteBranchJsonPayload,
-                    headers={_HEADER_EVENT: 'repo:push'})
+            deleteBranchJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 1)
         change = self.change_hook.master.addedChanges[0]
@@ -860,8 +859,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithInvalidContentType(self):
         request = _prepare_request(
-                    pushJsonPayload,
-                    headers={_HEADER_EVENT: 'repo:push'})
+            pushJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
         request.received_headers['Content-Type'] = 'invalid/content'
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
