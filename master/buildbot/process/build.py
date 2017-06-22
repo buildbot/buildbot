@@ -236,7 +236,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             builddir = self.path_module.join(
                 bytes2NativeString(workerforbuilder.worker.worker_basedir),
                 bytes2NativeString(self.builder.config.workerbuilddir))
-            self.setProperty("builddir", builddir, "worker")
+            self.setProperty("builddir", builddir, "Worker")
 
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
