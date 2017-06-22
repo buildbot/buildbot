@@ -1,0 +1,1 @@
+Make gulp "processindex" command work under Windows (was failing due to single-quoted file path on command line)
