@@ -1,0 +1,11 @@
+{
+    "name": "buildbot-console-view-modified",
+    "engines": {
+        "node": ">=0.10.0",
+        "npm": ">=1.4.0"
+    },
+    "dependencies": {
+        "guanlecoja": "~0.8.3",
+        "gulp": "3.9.0"
+    }
+}
