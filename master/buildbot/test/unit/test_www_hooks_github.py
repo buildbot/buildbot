@@ -33,9 +33,9 @@ from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import unicode2bytes
 from buildbot.www.change_hook import ChangeHookResource
-from buildbot.www.hooks.github import _HEADER_CT
 from buildbot.www.hooks.github import _HEADER_EVENT
 from buildbot.www.hooks.github import _HEADER_SIGNATURE
+from buildbot.www.hooks.github import GitHubEventHandler
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modified" and "removed", and change email
@@ -385,8 +385,9 @@ gitJsonPayloadEmpty = """
 }
 """
 
-_CT_ENCODED = 'application/x-www-form-urlencoded'
-_CT_JSON = 'application/json'
+_HEADER_CT = 'Content-Type'
+_CT_ENCODED = b'application/x-www-form-urlencoded'
+_CT_JSON = b'application/json'
 
 
 def _prepare_github_change_hook(**params):
@@ -459,9 +460,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             _HEADER_CT: bad_content_type
         })
         yield self.request.test_render(self.changeHook)
-        expected = b'Unknown content type: ' + bad_content_type
+        expected = b'Unknown content type: '
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
-        self.assertEqual(self.request.written, expected)
+        self.assertIn(expected, self.request.written)
 
     @defer.inlineCallbacks
     def _check_ping(self, payload):
@@ -617,7 +618,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_no_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = b"no changes found"
+        expected = b"no change found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -631,7 +632,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def _check_git_with_non_branch_changes(self, payload):
         self.request = _prepare_request('push', payload)
         yield self.request.test_render(self.changeHook)
-        expected = b"no changes found"
+        expected = b"no change found"
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
         self.assertEqual(self.request.written, expected)
 
@@ -816,3 +817,22 @@ class TestChangeHookConfiguredWithCodebaseFunction(unittest.TestCase):
 
     def test_git_with_change_json(self):
         return self._check_git_with_change(gitJsonPayload)
+
+
+class TestChangeHookConfiguredWithCustomEventHandler(unittest.TestCase):
+
+    def setUp(self):
+        class CustomGitHubEventHandler(GitHubEventHandler):
+            def handle_ping(self, _, __):
+                self.master.hook_called = True
+                return [], None
+
+        self.changeHook = _prepare_github_change_hook(
+            **{'class': CustomGitHubEventHandler})
+
+    @defer.inlineCallbacks
+    def test_ping(self):
+        self.request = _prepare_request('ping', '{}')
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertTrue(self.changeHook.master.hook_called)

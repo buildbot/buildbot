@@ -401,6 +401,14 @@ setup_args = {
             ('buildbot.www.authz.endpointmatchers', [
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
                 'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher', 'EnableSchedulerEndpointMatcher']),
+        ]),
+        ('buildbot.webhooks', [
+            ('buildbot.www.hooks.base', ['base']),
+            ('buildbot.www.hooks.bitbucket', ['bitbucket']),
+            ('buildbot.www.hooks.github', ['github']),
+            ('buildbot.www.hooks.gitlab', ['gitlab']),
+            ('buildbot.www.hooks.gitorious', ['gitorious']),
+            ('buildbot.www.hooks.poller', ['poller']),
         ])
     ]), {
         'console_scripts': [
