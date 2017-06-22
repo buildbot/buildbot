@@ -52,8 +52,6 @@ class BitbucketServerEventHandler(object):
         content_type = request.getHeader('Content-Type')
         if content_type.startswith('application/json'):
             payload = json.loads(content)
-        elif content_type.startswith('application/x-www-form-urlencoded'):
-            payload = json.loads(request.args['payload'][0])
         else:
             raise ValueError('Unknown content type: {}'
                              .format(content_type))
