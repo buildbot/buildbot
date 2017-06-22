@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-
 from future.utils import PY3
 
 from mock import Mock
@@ -26,10 +25,10 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
-from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
 from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import HTTP_CREATED
+from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
+from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.logging import LoggingMixin
@@ -38,6 +37,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 from buildbot.util import unicode2NativeString
 
 HTTP_NOT_FOUND = 404
+
 
 class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
 
@@ -174,7 +174,7 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         old_got_revision = self.TEST_PROPS['got_revision']
         try:
             self.TEST_REVISION = None
-            self.TEST_PROPS['got_revision'] = {'cbgerrit' : 'd34db33fd43db33f'}
+            self.TEST_PROPS['got_revision'] = {'cbgerrit': 'd34db33fd43db33f'}
             build = yield self.setupBuildResults(SUCCESS)
         finally:
             self.TEST_REVISION = old_test_revision
@@ -207,19 +207,21 @@ PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, LoggingMixin):
 
     @defer.inlineCallbacks
-    def setupReporter(self, verbose=True, **kwargs):
+    def setUp(self):
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
         self.master = fakemaster.make_master(
             testcase=self, wantData=True, wantDb=True, wantMq=True)
+        yield self.master.startService()
 
+    @defer.inlineCallbacks
+    def setupReporter(self, verbose=True, **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None,
             verify=None)
         self.cp = BitbucketServerPRCommentPush(
             "serv", "username", "passwd", verbose=verbose, **kwargs)
-        yield self.cp.setServiceParent(self.master)
-        yield self.master.startService()
+        self.cp.setServiceParent(self.master)
         self.cp.messageFormatter = Mock(spec=self.cp.messageFormatter)
         self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
             {"body": UNICODE_BODY, "type": "text"}
@@ -232,7 +234,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
     def setupBuildResults(self, buildResults, set_pr=True):
         buildset, builds = yield NotifierTestMixin.setupBuildResults(self, buildResults)
         if set_pr:
-            self.master.db.builds.setBuildProperty(
+            yield self.master.db.builds.setBuildProperty(
                 20, "pullrequesturl", PR_URL, "test")
         defer.returnValue((buildset, builds))
 
@@ -248,7 +250,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        self.cp.buildComplete(("build", 20, "finished"), build)
+        yield self.cp.buildComplete(("build", 20, "finished"), build)
         self.assertLogged(unicode2NativeString(
             u'{} sent to {}'.format(UNICODE_BODY, PR_URL)))
 
@@ -264,7 +266,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             code=HTTP_CREATED)
         build["complete"] = True
         self.setUpLogging()
-        self.cp.buildComplete(("build", 20, "finished"), build)
+        yield self.cp.buildComplete(("build", 20, "finished"), build)
 
         self.assertNotLogged(unicode2NativeString(
             u'{} sent to {}'.format(UNICODE_BODY, PR_URL)))
@@ -287,7 +289,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             json={"text": "body text"},
             code=HTTP_CREATED)
         build["complete"] = True
-        self.cp.buildComplete(("build", 20, "finished"), build)
+        yield self.cp.buildComplete(("build", 20, "finished"), build)
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):
@@ -296,7 +298,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build = builds[0]
         build["complete"] = True
         # we don't expect any request
-        self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp.buildComplete(("builds", 20, "finished"), build)
 
     @defer.inlineCallbacks
     def test_missing_worker_does_nothing(self):
@@ -312,7 +314,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             EXPECTED_API,
             json={"text": UNICODE_BODY},
             code=HTTP_CREATED)
-        self.cp.buildsetComplete(("buildsets", 20, "complete"), buildset)
+        yield self.cp.buildsetComplete(("buildsets", 20, "complete"), buildset)
 
     @defer.inlineCallbacks
     def test_reporter_logs_error_code_and_content_on_invalid_return_code(self):
@@ -331,7 +333,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             content_json=error_body)
         self.setUpLogging()
         build['complete'] = True
-        self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp.buildComplete(("builds", 20, "finished"), build)
 
         self.assertLogged("^{}: Unable to send a comment: ".format(http_error_code))
         self.assertLogged("A dataXXXbase error has occurred")
@@ -349,7 +351,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             code=http_error_code)
         self.setUpLogging()
         build['complete'] = True
-        self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp.buildComplete(("builds", 20, "finished"), build)
         self.assertLogged("^{}: Unable to send a comment: ".format(
             http_error_code))
 
@@ -367,5 +369,5 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             code=http_code)
         self.setUpLogging()
         build['complete'] = True
-        self.cp.buildComplete(("builds", 20, "finished"), build)
+        yield self.cp.buildComplete(("builds", 20, "finished"), build)
         self.assertNotLogged("^{}:".format(http_code))

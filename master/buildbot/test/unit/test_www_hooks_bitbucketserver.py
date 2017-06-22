@@ -821,7 +821,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             pushJsonPayload, headers={_HEADER_EVENT: 'invented:event'})
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
-        self.assertEqual(request.written, "Unknown event: invented_event")
+        self.assertEqual(request.written, b"Unknown event: invented_event")
 
     @defer.inlineCallbacks
     def testHookWithChangeOnCreateTag(self):
@@ -864,4 +864,4 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written,
-                         "Unknown content type: invalid/content")
+                         b"Unknown content type: invalid/content")
