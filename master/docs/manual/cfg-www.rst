@@ -205,6 +205,27 @@ In order to keep the UI usable, you have to keep your tags short!
     Unlike Waterfall, we think it is now feature equivalent and even better, with its live update capabilities.
     Please submit an issue if you think there is an issue displaying your data, with screen shots of what happen and suggestion on what to improve.
 
+.. _GridView:
+
+Grid View
++++++++++
+
+Grid view shows the whole buildbot activity arranged by builders vertically and changes horizontally.
+It is equivalent to Buildbot Eight's grid view.
+
+By default, changes on all branches are displayed but only one branch may be filtered by the user.
+Builders can also be filtered by tags.
+This feature is similar to the one in the builder list.
+
+   .. code-block:: bash
+
+      pip install buildbot-grid-view
+
+   .. code-block:: python
+
+      c['www'] = {
+          'plugins': {'grid_view': True}
+      }
 
 .. _Web-Authentication:
 

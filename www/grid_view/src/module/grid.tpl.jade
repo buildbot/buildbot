@@ -1,0 +1,47 @@
+.container.grid
+    .load-indicator(ng-hide='C.dataFetched()')
+        .spinner
+            i.fa.fa-circle-o-notch.fa-spin.fa-2x
+            p loading
+    p(ng-show="C.dataFetched() && C.changes.length == 0")
+        | No changes. Grid View needs a changesource to be setup, and
+        a(href="#/changes")
+            |  changes
+        |  to be in the system.
+    .form-inline(ng-show="C.dataReady()")
+        label
+            | Branch &nbsp;
+        select.form-control(ng-model="C.branch", ng-change="C.changeBranch(C.branch)", ng-options="br for br in branches | orderBy")
+            option(value="")
+                | (all)
+    table.table.table-condensed.table-striped.table-hover(ng-show="C.dataReady()")
+        thead
+            tr
+                th
+                    | Builder
+                th
+                    span(ng-show="C.tags.length == 0")
+                        | Tags
+                    span(ng-show="C.tags.length < 5", ng-repeat="tag in C.tags")
+                        span.builder-tag.label.label-success(ng-click="C.toggleTag(tag)")
+                          | {{ tag }}
+                    span(ng-show="C.tags.length >= 5")
+                        span.label.label-success
+                            | {{ C.tags.length }} tags
+                    span(ng-show="C.tags.length > 0")
+                        span.label.label-danger.clickable(ng-click="C.resetTags()", uib-tooltip="Reset tags filter") x
+                th.change(ng-repeat="ch in changes")
+                    changedetails(change="ch", compact="C.compactChanges")
+        tbody
+            tr(ng-repeat="b in builders | orderBy: 'name'")
+                th
+                    a(ui-sref="builder({builder: b.builderid})")
+                        | {{ b.name }}
+                td
+                    span(ng-repeat="tag in b.tags")
+                        span.builder-tag.label(ng-click="C.toggleTag(tag)", ng-class="C.isTagToggled(tag) ? 'label-success': 'label-default'")
+                            | {{ tag }}
+                td(ng-repeat="ch in changes")
+                    a(ng-if="b.builds[ch.bsid]", ui-sref="build({builder: b.builderid, build: b.builds[ch.bsid].number})")
+                        span.badge-status(ng-class="results2class(b.builds[ch.bsid], 'pulse')")
+                            | {{ b.builds[ch.bsid].number }}
