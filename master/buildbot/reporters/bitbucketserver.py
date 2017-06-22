@@ -161,8 +161,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
 
             if response.code == HTTP_CREATED:
                 if self.verbose:
-                    log.info('{comment} sent to {url}',
-                             comment=body, url=pr_url)
+                    log.info('Comment sent to {url}', url=pr_url)
             else:
                 content = yield response.content()
                 log.error("{code}: Unable to send a comment: {content}",
