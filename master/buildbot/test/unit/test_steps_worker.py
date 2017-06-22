@@ -490,6 +490,8 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(res, None)
 
         exp_args = {'maxsize': None,
+                    'workdir': 'wkdir',
+                    'mode': None,
                     'reader': ExpectRemoteRef(remotetransfer.FileReader),
                     'blocksize': 32768,
                     'workerdest': '/path/dest1'}
