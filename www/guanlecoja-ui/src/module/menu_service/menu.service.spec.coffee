@@ -18,11 +18,15 @@ describe 'menuService', ->
                 glMenuServiceProvider.addGroup
                     name: group.name
             else
-                glMenuServiceProvider.addGroup
+                groupForProvider =
                     name: group.name
                     caption: _.capitalize(group.name)
                     icon: group.name
                     order: if i == "edit" then undefined else group.name.length
+                glMenuServiceProvider.addGroup groupForProvider
+                if i == "cab"
+                    glMenuServiceProvider.setDefaultGroup groupForProvider
+                    
 
         glMenuServiceProvider.setFooter [
             caption: "Github"
@@ -49,6 +53,11 @@ describe 'menuService', ->
         expect(groups[0].items.length).toEqual(7)
         expect(namedGroups['bug'].items.length).toEqual(0)
         expect(namedGroups['bug'].caption).toEqual('Bugcab')
+
+    it 'should have the default group set', inject (glMenuService) ->
+        defaultGroup = glMenuService.getDefaultGroup()
+        groups = glMenuService.getGroups()
+        expect(defaultGroup).toEqual(groups[0])
 
     # simple test to make sure the directive loads
     it 'should generate error if group is undefined', ->

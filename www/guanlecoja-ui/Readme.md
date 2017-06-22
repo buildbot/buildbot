@@ -65,6 +65,10 @@ Declare a group in the menu. takes on object with the following attributes:
 * `icon`: Icon name from font-awesome. E.g `bug` will use the `fa-bug` class for the icon
 * `order`: The menu is reordered according to this key. This allows to declare menus in different modules, without caring about the module load order.
 
+#### `glMenuServiceProvider.setDefaultGroup(group)`
+
+Declare a group to be the default group. Can be used directly after the `addGroup(group)` call.
+
 #### `glMenuServiceProvider.setFooter(footer_items)`
 
 Declare the menu footer links. The menu contains up to three footer button, that can be used for arbitrary external links. `footer_items` is a list of objects with following attributes:

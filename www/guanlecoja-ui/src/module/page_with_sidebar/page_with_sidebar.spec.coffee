@@ -14,6 +14,7 @@ describe 'page with sidebar', ->
             name: 'g2'
         ]
         glMenuService.getGroups = -> groups
+        glMenuService.getDefaultGroup = -> groups[1]
         scope = $rootScope;
         $compile(elmBody)(scope);
         scope.$digest();
@@ -30,10 +31,11 @@ describe 'page with sidebar', ->
         expect(elmBody).toBeDefined()
         g = scope.page.groups[1]
 
-        scope.page.toggleGroup(g)
         expect(scope.page.activeGroup).toBe(g)
         scope.page.toggleGroup(g)
         expect(scope.page.activeGroup).toBe(null)
+        scope.page.toggleGroup(g)
+        expect(scope.page.activeGroup).toBe(g)
 
         scope.page.enterSidebar()
         expect(scope.page.sidebarActive).toBe(true)
