@@ -252,7 +252,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
         self.assertLogged(unicode2NativeString(
-            u'{} sent to {}'.format(UNICODE_BODY, PR_URL)))
+            u'Comment sent to {}'.format(PR_URL)))
 
     @defer.inlineCallbacks
     def test_reporter_basic_without_logging(self):
@@ -269,7 +269,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         yield self.cp.buildComplete(("build", 20, "finished"), build)
 
         self.assertNotLogged(unicode2NativeString(
-            u'{} sent to {}'.format(UNICODE_BODY, PR_URL)))
+            u'Comment sent to {}'.format(PR_URL)))
 
     @defer.inlineCallbacks
     def test_reporter_non_unicode(self):
