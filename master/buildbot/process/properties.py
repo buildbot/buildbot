@@ -68,6 +68,17 @@ class Properties(util.ComparableMixin):
         self._used_secrets = {}
         if kwargs:
             self.update(kwargs, "TEST")
+        self._master = None
+
+    @property
+    def master(self):
+        if self.build is not None:
+            return self.build.master
+        return self._master
+
+    @master.setter
+    def master(self, value):
+        self._master = value
 
     @classmethod
     def fromDict(cls, propDict):
@@ -463,14 +474,14 @@ class Secret(_SecretRenderer):
         self.secretKey = secretKey
 
     @defer.inlineCallbacks
-    def getRenderingFor(self, master):
-        secretsSrv = master.namedServices.get("secrets")
+    def getRenderingFor(self, props):
+        secretsSrv = props.master.namedServices.get("secrets")
         if not secretsSrv:
             error_message = "secrets service not started, need to configure" \
                             " SecretManager in c['services'] to use 'secrets'" \
                             "in Interpolate"
             raise KeyError(error_message)
-        credsservice = master.namedServices['secrets']
+        credsservice = props.master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secretKey)
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secretKey)
