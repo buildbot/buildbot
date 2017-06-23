@@ -1,0 +1,3 @@
+_wait_for_request() would fail to format a log statement due to an invalid type being passed to log.msg (resulting in a broken build)
+_wait_for_request() could leave a spot request open if it entered the capacity-oversubscribed or capacity-not-available states
+Tags are now applies to spot instances too

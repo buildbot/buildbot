@@ -401,6 +401,17 @@ class EC2LatentWorker(AbstractLatentWorker):
             opts = args[0]
         return dict((k, v) for k, v in iteritems(opts) if v is not None)
 
+    def _tag_instance(self):
+        if not self.tags:
+            return
+
+        self.instance.create_tags(
+            Tags=[
+                {"Key": k, "Value": v}
+                for k, v in iteritems(self.tags)
+            ]
+        )
+
     def _start_instance(self):
         image = self.get_image()
         launch_opts = dict(
@@ -422,9 +433,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.instance = reservations[0]
         instance_id, start_time = self._wait_for_instance()
         if None not in [instance_id, image.id, start_time]:
-            if self.tags:
-                self.instance.create_tags(Tags=[{"Key": k, "Value": v}
-                                                for k, v in self.tags.items()])
+            self._tag_instance()
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
@@ -533,6 +542,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise LatentWorkerFailedToSubstantiate()
         instance_id = request['InstanceId']
         self.instance = self.ec2.Instance(instance_id)
+        self._tag_instance()
         image = self.get_image()
         instance_id, start_time = self._wait_for_instance()
         return instance_id, image.id, start_time
@@ -600,7 +610,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         elif request_status in CANNOT_FULFILL_STATES:
             self.ec2.meta.client.cancel_spot_instance_requests(
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
-            log.msg('%s %s spot request rejected (status: s)' %
+            log.msg('%s %s spot request rejected (status: %s)' %
                     (self.__class__.__name__, self.workername, request_status))
             raise LatentWorkerFailedToSubstantiate(
                 request['SpotInstanceRequestId'], request_status)
