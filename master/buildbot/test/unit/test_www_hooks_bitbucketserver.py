@@ -226,11 +226,11 @@ pullRequestUpdatedJsonPayload = u"""
             "commit": {
                 "message": null,
                 "date": null,
-                "hash": "793d4754230023d85532f9a38dba3290f959beb4",
+                "hash": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "authorTimestamp": 0
             },
             "branch": {
-                "rawNode": "793d4754230023d85532f9a38dba3290f959beb4",
+                "rawNode": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "name": "branch_1496411680"
             }
         },
@@ -331,11 +331,11 @@ pullRequestRejectedJsonPayload = u"""
             "commit": {
                 "message": null,
                 "date": null,
-                "hash": "793d4754230023d85532f9a38dba3290f959beb4",
+                "hash": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "authorTimestamp": 0
             },
             "branch": {
-                "rawNode": "793d4754230023d85532f9a38dba3290f959beb4",
+                "rawNode": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "name": "branch_1496411680"
             }
         },
@@ -436,11 +436,11 @@ pullRequestFulfilledJsonPayload = u"""
             "commit": {
                 "message": null,
                 "date": null,
-                "hash": "793d4754230023d85532f9a38dba3290f959beb4",
+                "hash": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "authorTimestamp": 0
             },
             "branch": {
-                "rawNode": "793d4754230023d85532f9a38dba3290f959beb4",
+                "rawNode": "a87e21f7433d8c16ac7be7413483fbb76c72a8ba",
                 "name": "branch_1496411680"
             }
         },
@@ -712,7 +712,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change['revlink'],
                          'http://localhost:7990/projects/'
                          'CI/repos/py-repo/pull-requests/21')
-        self.assertEqual(change['revision'], None)
+        self.assertEqual(change['revision'],
+                         'a87e21f7433d8c16ac7be7413483fbb76c72a8ba')
         pr_url = change['properties'].get('pullrequesturl')
         self.assertNotEqual(pr_url, None)
         self.assertEqual(

@@ -136,7 +136,7 @@ class BitbucketServerEventHandler(object):
         repo_url = payload['repository']['links']['self'][0]['href']
         repo_url = repo_url.rstrip('browse')
         change = {
-            'revision': None,
+            'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': payload['pullrequest']['link'],
             'repository': repo_url,
             'author': '{} <{}>'.format(payload['actor']['displayName'],
