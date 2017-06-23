@@ -1,0 +1,1 @@
+     Fix Windows compatibility with frontend development tool ``gulp dev proxy`` (:issue:`3359`)

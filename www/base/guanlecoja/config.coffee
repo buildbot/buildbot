@@ -59,7 +59,7 @@ config =
 gulp.task 'processindex', ['index'], ->
     indexpath = path.join(config.dir.build, 'index.html')
     gulp.src ""
-        .pipe shell("buildbot processwwwindex -i '#{indexpath}'")
+        .pipe shell("buildbot processwwwindex -i \"#{indexpath}\"")
 
 gulp.task 'proxy', ['processindex'], ->
     # this is a task for developing, it proxy api request to http://nine.buildbot.net
