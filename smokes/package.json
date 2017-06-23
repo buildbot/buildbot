@@ -5,7 +5,7 @@
     "main": "index.js",
     "dependencies": {
         "coffee-script": "^1.11.1",
-        "protractor": "^4.0.3"
+        "protractor": "^5.1.0"
     },
     "devDependencies": {},
     "scripts": {
