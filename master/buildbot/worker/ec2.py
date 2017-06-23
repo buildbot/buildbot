@@ -51,9 +51,19 @@ PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
-SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
 FULFILLED = 'fulfilled'
 PRICE_TOO_LOW = 'price-too-low'
+CAPACITY_NOT_AVAILABLE = 'capacity-not-available'
+CAPACITY_OVERSUBSCRIBED = 'capacity-oversubscribed'
+
+SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
+
+# If the spot request can't be fulfilled due to underbidding or capacity
+# issues it will enter one of these states. EC2LatentWorker will then
+# terminate the request and retry with another worker.
+CANNOT_FULFILL_STATES = (
+    PRICE_TOO_LOW, CAPACITY_NOT_AVAILABLE, CAPACITY_OVERSUBSCRIBED
+)
 
 
 class EC2LatentWorker(AbstractLatentWorker):
@@ -587,11 +597,11 @@ class EC2LatentWorker(AbstractLatentWorker):
                     (self.__class__.__name__, self.workername,
                      request['SpotInstanceRequestId'], minutes, seconds))
             return request, True
-        elif request_status == PRICE_TOO_LOW:
+        elif request_status in CANNOT_FULFILL_STATES:
             self.ec2.meta.client.cancel_spot_instance_requests(
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
-            log.msg('%s %s spot request rejected, spot price too low' %
-                    (self.__class__.__name__, self.workername))
+            log.msg('%s %s spot request rejected (status: s)' %
+                    (self.__class__.__name__, self.workername, request_status))
             raise LatentWorkerFailedToSubstantiate(
                 request['SpotInstanceRequestId'], request_status)
         else:
