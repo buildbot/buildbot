@@ -30,7 +30,6 @@ from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.util import unicode2NativeString
 
-
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
 SUCCESSFUL = 'SUCCESSFUL'
@@ -99,7 +98,11 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
                     continue
 
                 key = unicode2NativeString(key)
+                state = unicode2NativeString(state)
                 url = unicode2NativeString(build['url'])
+                key = unicode2NativeString(key)
+                description = unicode2NativeString(description)
+                context = unicode2NativeString(context)
 
                 res = yield self.createStatus(
                     sha=sha,
@@ -112,11 +115,11 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
 
                 if res.code not in (HTTP_PROCESSED,):
                     content = yield res.content()
-                    log.msg("{code}: Unable to send Bitbucket Server status: {content}"
-                              .format(code=res.code, content=content))
+                    log.msg("{code}: Unable to send Bitbucket Server status: "
+                        "{content}".format(code=res.code, content=content))
                 elif self.verbose:
-                    log.msg('Status "{state}" sent for {sha}.'
-                            .format(state=state, sha=sha))
+                    log.msg('Status "{state}" sent for {sha}.'.format(
+                        state=state, sha=sha))
             except Exception as e:
                 log.err(
                     e,
@@ -185,11 +188,9 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
                 )
                 if res.code not in (HTTP_CREATED,):
                     content = yield res.content()
-                    log.msg("{code}: Unable to send a comment: {content}"
-                              .format(code=res.code, content=content))
+                    log.msg("{code}: Unable to send a comment: "
+                        "{content}".format(code=res.code, content=content))
                 elif self.verbose:
                     log.msg('Comment sent to {url}'.format(url=pr_url))
             except Exception as e:
-                log.err(
-                    e,
-                    'Failed to send a comment to "{}"'.format(pr_url))
+                log.err(e, 'Failed to send a comment to "{}"'.format(pr_url))
