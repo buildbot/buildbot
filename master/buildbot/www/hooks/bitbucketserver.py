@@ -30,9 +30,12 @@ _HEADER_EVENT = 'X-Event-Key'
 
 class BitbucketServerEventHandler(object):
 
-    def __init__(self, codebase=None, options={}):
-        self._codebase = codebase
+    def __init__(self, master, options={}):
+        self.master = master
+        if not isinstance(options, dict):
+            options = {}
         self.options = options
+        self._codebase = self.options.get('codebase', None)
 
     def process(self, request):
         payload = self._get_payload(request)
@@ -152,11 +155,8 @@ class BitbucketServerEventHandler(object):
 
         return [change], payload['repository']['scmId']
 
+    def getChanges(self, request):
+        return self.process(request)
 
-def getChanges(request, options=None):
-    if not isinstance(options, dict):
-        options = {}
 
-    handler = BitbucketServerEventHandler(options.get('codebase', None),
-                                          options)
-    return handler.process(request)
+bitbucketserver = BitbucketServerEventHandler

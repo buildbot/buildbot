@@ -333,6 +333,7 @@ setup_args = {
             ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
+            ('buildbot.reporters.bitbucketserver', ['BitbucketServerStatusPush', 'BitbucketServerPRCommentPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
         ]),
@@ -409,6 +410,7 @@ setup_args = {
             ('buildbot.www.hooks.gitlab', ['gitlab']),
             ('buildbot.www.hooks.gitorious', ['gitorious']),
             ('buildbot.www.hooks.poller', ['poller']),
+            ('buildbot.www.hooks.bitbucketserver', ['bitbucketserver'])
         ])
     ]), {
         'console_scripts': [
