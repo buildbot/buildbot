@@ -165,38 +165,15 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
             build = yield self.setupBuildResults(SUCCESS)
         finally:
             self.TEST_REVISION = old_test_revision
-        self._check_start_and_finish_build(build)
-
-    @defer.inlineCallbacks
-    def test_basic_with_no_revision_and_dict_got_revision(self):
-        yield self.setupReporter()
-        old_test_revision = self.TEST_REVISION
-        old_got_revision = self.TEST_PROPS['got_revision']
-        try:
-            self.TEST_REVISION = None
-            self.TEST_PROPS['got_revision'] = {'cbgerrit': 'd34db33fd43db33f'}
-            build = yield self.setupBuildResults(SUCCESS)
-        finally:
-            self.TEST_REVISION = old_test_revision
-            self.TEST_PROPS['got_revision'] = old_got_revision
-        self._check_start_and_finish_build(build)
-
-    @defer.inlineCallbacks
-    def test_basic_with_no_revision_and_no_got_revision(self):
-        yield self.setupReporter()
-        old_test_revision = self.TEST_REVISION
-        old_got_revision = self.TEST_PROPS['got_revision']
-        try:
-            self.TEST_REVISION = None
-            self.TEST_PROPS['got_revision'] = None
-            build = yield self.setupBuildResults(SUCCESS)
-        finally:
-            self.TEST_REVISION = old_test_revision
-            self.TEST_PROPS['got_revision'] = old_got_revision
-
         self.setUpLogging()
+        # we don't expect any request
+        build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
-        self.assertLogged('Unable to get the commit hash')
+        self.assertLogged("Unable to get the commit hash")
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+        build['results'] = FAILURE
+        self.sp.buildFinished(("build", 20, "finished"), build)
 
 
 UNICODE_BODY = u"body: \u00E5\u00E4\u00F6 text"

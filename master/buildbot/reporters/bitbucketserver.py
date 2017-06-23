@@ -18,6 +18,7 @@ from __future__ import print_function
 from future.moves.urllib.parse import urlparse
 
 from twisted.internet import defer
+from twisted.python import log
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
@@ -27,9 +28,8 @@ from buildbot.reporters import notifier
 from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.util.logger import Logger
+from buildbot.util import unicode2NativeString
 
-log = Logger()
 
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
@@ -51,7 +51,7 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
         yield http.HttpStatusPushBase.reconfigService(
             self, wantProperties=True, **kwargs)
         self.key = key or Interpolate('%(prop:buildername)s')
-        self.statusName = statusName
+        self.context = statusName
         self.endDescription = endDescription or 'Build done.'
         self.startDescription = startDescription or 'Build started.'
         self.verbose = verbose
@@ -59,52 +59,72 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
             self.master, base_url, auth=(user, password),
             debug=self.debug, verify=self.verify)
 
+    def createStatus(self, sha, state, url, key, description=None, context=None):
+        payload = {
+            'state': state,
+            'url': url,
+            'key': key,
+        }
+
+        if description:
+            payload['description'] = description
+        if context:
+            payload['name'] = context
+
+        return self._http.post(STATUS_API_URL.format(sha=sha), json=payload)
+
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
         results = build['results']
         if build['complete']:
-            status = SUCCESSFUL if results == SUCCESS else FAILED
+            state = SUCCESSFUL if results == SUCCESS else FAILED
             description = self.endDescription
         else:
-            status = INPROGRESS
+            state = INPROGRESS
             description = self.startDescription
 
-        # got_revision could be a string, a dictionary or None
-        got_revision = props.getProperty('got_revision', None)
-        for sourcestamp in build['buildset']['sourcestamps']:
-            sha = sourcestamp['revision']
+        key = yield props.render(self.key)
+        description = yield props.render(description) if description else None
+        context = yield props.render(self.context) if self.context else None
 
-            if sha is None:
-                if isinstance(got_revision, dict):
-                    sha = got_revision[sourcestamp['codebase']]
-                else:
-                    sha = got_revision
+        sourcestamps = build['buildset']['sourcestamps']
 
-            if sha is None:
-                log.error("Unable to get the commit hash")
-                continue
+        for sourcestamp in sourcestamps:
+            try:
+                sha = unicode2NativeString(sourcestamp['revision'])
 
-            key = yield props.render(self.key)
-            payload = {
-                'state': status,
-                'url': build['url'],
-                'key': key,
-            }
-            if description:
-                payload['description'] = yield props.render(description)
-            if self.statusName:
-                payload['name'] = yield props.render(self.statusName)
-            response = yield self._http.post(
-                STATUS_API_URL.format(sha=sha), json=payload)
-            if response.code == HTTP_PROCESSED:
-                if self.verbose:
-                    log.info('Status "{status}" sent for {sha}.',
-                             status=status, sha=sha)
-            else:
-                content = yield response.content()
-                log.error("{code}: Unable to send Bitbucket Server status: {content}",
-                          code=response.code, content=content)
+                if sha is None:
+                    log.msg("Unable to get the commit hash")
+                    continue
+
+                key = unicode2NativeString(key)
+                url = unicode2NativeString(build['url'])
+
+                res = yield self.createStatus(
+                    sha=sha,
+                    state=state,
+                    url=url,
+                    key=key,
+                    description=description,
+                    context=context
+                )
+
+                if res.code not in (HTTP_PROCESSED,):
+                    content = yield res.content()
+                    log.msg("{code}: Unable to send Bitbucket Server status: {content}"
+                              .format(code=res.code, content=content))
+                elif self.verbose:
+                    log.msg('Status "{state}" sent for {sha}.'
+                            .format(state=state, sha=sha))
+            except Exception as e:
+                log.err(
+                    e,
+                    'Failed to send status "{state}" for '
+                    '{repo} at {sha}'.format(
+                        state=state,
+                        repo=sourcestamp['repository'], sha=sha
+                    ))
 
 
 class BitbucketServerPRCommentPush(notifier.NotifierBase):
@@ -143,6 +163,12 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
         # a comment is always associated to a change
         pass
 
+    def sendComment(self, pr_url, text):
+        path = urlparse(unicode2bytes(pr_url)).path
+        payload = {'text': text}
+        return self._http.post(COMMENT_API_URL.format(
+            path=bytes2NativeString(path)), json=payload)
+
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type=None, builderName=None,
                     results=None, builds=None, users=None, patches=None,
@@ -152,17 +178,18 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
             props = Properties.fromDict(build['properties'])
             pr_urls.add(props.getProperty("pullrequesturl"))
         for pr_url in pr_urls:
-            # we assume that the PR URL is well-formed as it comes from a PR event
-            path = urlparse(unicode2bytes(pr_url)).path
-            payload = {'text': body}
-            response = yield self._http.post(
-                COMMENT_API_URL.format(
-                    path=bytes2NativeString(path)), json=payload)
-
-            if response.code == HTTP_CREATED:
-                if self.verbose:
-                    log.info('Comment sent to {url}', url=pr_url)
-            else:
-                content = yield response.content()
-                log.error("{code}: Unable to send a comment: {content}",
-                          code=response.code, content=content)
+            try:
+                res = yield self.sendComment(
+                    pr_url=pr_url,
+                    text=body
+                )
+                if res.code not in (HTTP_CREATED,):
+                    content = yield res.content()
+                    log.msg("{code}: Unable to send a comment: {content}"
+                              .format(code=res.code, content=content))
+                elif self.verbose:
+                    log.msg('Comment sent to {url}'.format(url=pr_url))
+            except Exception as e:
+                log.err(
+                    e,
+                    'Failed to send a comment to "{}"'.format(pr_url))
