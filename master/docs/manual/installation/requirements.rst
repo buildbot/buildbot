@@ -12,8 +12,8 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 
 Python: https://www.python.org
 
-  Buildbot master requires Python-2.7.
-  Buildbot worker require Python-2.6, although Python-2.7 is recommended.
+  Buildbot master works with Python 2.7 or Python-3.4+.
+  Buildbot worker works with Python 2.6-2.7, or Python 3.4+.
 
   .. note::
 
@@ -25,11 +25,6 @@ Twisted: http://twistedmatrix.com
   Buildbot requires Twisted-14.0.1 or later on the master, and Twisted-10.2.0 on the worker.
   In upcoming versions of Buildbot, a newer Twisted will also be required on the worker.
   As always, the most recent version is recommended.
-  Note that Twisted requires ZopeInterface to be installed as well.
-
-Future:
-
-  As part of ongoing (but as-yet incomplete) work to make Buildbot compatible with Python 3, the master requires the ``future`` module.
 
 Of course, your project's build process will impose additional requirements on the workers.
 These hosts must have all the tools necessary to compile and test your project's source code.
