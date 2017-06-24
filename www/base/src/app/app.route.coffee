@@ -1,5 +1,8 @@
 class Route extends Config
-    constructor: ($urlRouterProvider, glMenuServiceProvider, config) ->
+    constructor: ($urlRouterProvider, glMenuServiceProvider, $locationProvider, $compileProvider, config) ->
+        # angularjs 1.6 sets ! as default prefix, but this would break all our URLs!
+        $locationProvider.hashPrefix('')
+        $compileProvider.preAssignBindingsEnabled(true)
         $urlRouterProvider.otherwise('/')
         # the app title needs to be < 18 chars else the UI looks bad
         # we try to find best option

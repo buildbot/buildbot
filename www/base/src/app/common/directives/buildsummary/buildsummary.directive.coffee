@@ -33,8 +33,9 @@ class _buildsummary extends Controller('common')
         ONLY_NOT_SUCCESS = 1
         EVERYTHING = 2
         details = EVERYTHING
-        if @condensed
-            details = NONE
+        $scope.$watch "buildsummary.condensed", (condensed)->
+            if condensed
+                details = NONE
         @toggleDetails = ->
             details = (details + 1) % 3
 
