@@ -26,6 +26,8 @@ from buildbot.test.util import changesource
 from buildbot.test.util import gpo
 
 ENVIRON_2116_KEY = 'TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'
+LINESEP_BYTES = os.linesep.encode("ascii")
+PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 
 class TestHgPoller(gpo.GetProcessOutputMixin,
@@ -102,19 +104,19 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             .path('/some/dir'),
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout("73591"),
+            .path('/some/dir').stdout(b"73591"),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '73591:73591',  # only fetches that head
                        '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout(os.linesep.join(['73591:4423cdb'])),
+            .path('/some/dir').stdout(LINESEP_BYTES.join([b'73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
                        '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(os.linesep.join([
-                '1273258100.0 -7200',
-                'Bob Test <bobtest@example.org>',
-                'file1 with spaces' + os.pathsep +
-                os.path.join('dir with spaces', 'file2') + os.pathsep,
-                'This is rev 73591',
-                ''])),
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                b'1273258100.0 -7200',
+                b'Bob Test <bobtest@example.org>',
+                b'file1 with spaces' + PATHSEP_BYTES +
+                os.path.join(b'dir with spaces', b'file2') + PATHSEP_BYTES,
+                b'This is rev 73591',
+                b''])),
         )
 
         # do the poll
@@ -159,7 +161,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             .path('/some/dir'),
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout('5' + os.linesep + '6' + os.linesep),
+            .path('/some/dir').stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
         )
 
         yield self.poller._setCurrentRev(3)
@@ -177,18 +179,18 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             .path('/some/dir'),
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
-            .path('/some/dir').stdout('5' + os.linesep),
+            .path('/some/dir').stdout(b'5' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-b', 'default', '-r', '5:5',
                        '--template={rev}:{node}\\n')
-            .path('/some/dir').stdout('5:784bd' + os.linesep),
+            .path('/some/dir').stdout(b'5:784bd' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '784bd',
                        '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
-            .path('/some/dir').stdout(os.linesep.join([
-                '1273258009.0 -7200',
-                'Joe Test <joetest@example.org>',
-                'file1 file2',
-                'Comment for rev 5',
-                ''])),
+            .path('/some/dir').stdout(LINESEP_BYTES.join([
+                b'1273258009.0 -7200',
+                b'Joe Test <joetest@example.org>',
+                b'file1 file2',
+                b'Comment for rev 5',
+                b''])),
         )
 
         yield self.poller._setCurrentRev(4)
