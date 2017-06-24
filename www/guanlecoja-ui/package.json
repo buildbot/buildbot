@@ -5,7 +5,8 @@
         "npm": ">=1.4.0"
     },
     "devDependencies": {
-        "guanlecoja": "0.7.2",
+        "guanlecoja": "~0.8.2",
+        "gulp": "~3.9.0",
         "shelljs": "0.5.1"
     }
 }

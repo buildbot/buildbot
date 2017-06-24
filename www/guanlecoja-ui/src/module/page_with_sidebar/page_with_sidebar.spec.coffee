@@ -45,4 +45,9 @@ describe 'page with sidebar', ->
         expect(scope.page.sidebarActive).toBe(true)
         scope.page.leaveSidebar()
         $timeout.flush()
+        expect(scope.page.sidebarActive).toBe(true)
+        scope.page.sidebarPinned = false
+        scope.page.leaveSidebar()
+        $timeout.flush()
         expect(scope.page.sidebarActive).toBe(false)
+        scope.page.sidebarPinned = false
