@@ -70,6 +70,9 @@ matrix:
       env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
 
     # python 3 tests
+    - python: "3.4"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
