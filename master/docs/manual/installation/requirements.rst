@@ -27,10 +27,6 @@ Twisted: http://twistedmatrix.com
   As always, the most recent version is recommended.
   Note that Twisted requires ZopeInterface to be installed as well.
 
-Future:
-
-  As part of ongoing (but as-yet incomplete) work to make Buildbot compatible with Python 3, the master requires the ``future`` module.
-
 Of course, your project's build process will impose additional requirements on the workers.
 These hosts must have all the tools necessary to compile and test your project's source code.
 
