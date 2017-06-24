@@ -1,18 +1,21 @@
 class Log extends Controller
     constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService) ->
         data = dataService.open().closeOnDestroy($scope)
+        $scope.jumpToLine = "end"
+        if $stateParams.jump_to_line?
+            $scope.jumpToLine = $stateParams.jump_to_line
         builderid = dataUtilsService.numberOrString($stateParams.builder)
         buildnumber = dataUtilsService.numberOrString($stateParams.build)
         stepnumber = dataUtilsService.numberOrString($stateParams.step)
         slug = $stateParams.log
-        data.getBuilders(builderid).then (builders) ->
-            $scope.builder = builder = builders[0]
-            builder.getBuilds(buildnumber).then (builds) ->
-                $scope.build = build = builds[0]
-                build.getSteps(stepnumber).then (steps) ->
-                    $scope.step = step = steps[0]
-                    step.getLogs(slug).then (logs) ->
-                        $scope.log = log = logs[0]
+        data.getBuilders(builderid).onNew = (builder) ->
+            $scope.builder = builder = builder
+            builder.getBuilds(buildnumber).onNew = (build) ->
+                $scope.build = build
+                build.getSteps(stepnumber).onNew = (step) ->
+                    $scope.step = step
+                    step.getLogs(slug).onNew = (log) ->
+                        $scope.log = log
                         glBreadcrumbService.setBreadcrumb [
                                 caption: "Builders"
                                 sref: "builders"
