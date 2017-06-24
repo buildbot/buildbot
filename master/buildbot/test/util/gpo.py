@@ -22,8 +22,8 @@ from twisted.internet import utils
 
 
 class Expect(object):
-    _stdout = ""
-    _stderr = ""
+    _stdout = b""
+    _stderr = b""
     _exit = 0
     _path = None
 
@@ -32,10 +32,12 @@ class Expect(object):
         self._args = args
 
     def stdout(self, stdout):
+        assert(isinstance(stdout, bytes))
         self._stdout = stdout
         return self
 
     def stderr(self, stderr):
+        assert(isinstance(stderr, bytes))
         self._stderr = stderr
         return self
 
