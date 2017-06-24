@@ -16,7 +16,7 @@ class _glPageWithSidebar extends Controller
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
-        @activeGroup = null
+        @activeGroup = glMenuService.getDefaultGroup()
         @inSidebar = false
         @sidebarActive = @sidebarPinned
 

@@ -1,6 +1,7 @@
 class GlMenu extends Provider
     constructor: ->
         @groups = {}
+        @defaultGroup = null
         @footer = []
 
     appTitle: "set AppTitle using GlMenuServiceProvider.setAppTitle"
@@ -10,6 +11,9 @@ class GlMenu extends Provider
         group.order ?= 99
         @groups[group.name] = group
         return @groups
+
+    setDefaultGroup: (group) ->
+        @defaultGroup = group
 
     setFooter: (footer) ->
         @footer = footer
@@ -47,6 +51,7 @@ class GlMenu extends Provider
         self = @
         return {
             getGroups: -> groups
+            getDefaultGroup: -> self.defaultGroup
             getFooter: -> self.footer
             getAppTitle: -> self.appTitle
         }
