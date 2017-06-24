@@ -45,6 +45,10 @@ third_p4changes = \
     b"""Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
 """
 
+fourth_p4changes = \
+    b"""Change 6 on 2006/04/14 by mpatel@testclient 'bar \xd0\x91'
+"""
+
 p4_describe_2 = \
     b"""Change 2 by slamb@testclient on 2006/04/13 21:46:23
 
@@ -286,6 +290,21 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
         return self.assertFailure(d, UnicodeError)
+
+    def test_poll_unicode_error2(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     encoding='ascii'))
+        # Trying to decode a certain character with ascii codec should fail.
+        self.expectCommands(
+            gpo.Expect(
+                'p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(fourth_p4changes),
+        )
+
+        d = self.changesource._poll()
+        return d
 
     def test_acquire_ticket_auth(self):
         self.attachChangeSource(
