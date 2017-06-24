@@ -377,7 +377,7 @@ Features
 - ``password`` in :py:class:`~buildbot.plugins.worker.DockerLatentWorker` and
   :py:class:`~buildbot.plugins.worker.HyperLatentWorker`, can be None. In that
   case, they will be auto-generated from random number.
-- :bb:reporter:`StashStatusPush` now accepts ``key``, ``buildName``,
+- :bb:reporter:`BitbucketServerStatusPush` now accepts ``key``, ``buildName``,
   ``endDescription``, ``startDescription``, and ``verbose`` parameters to
   control the JSON sent to Stash.
 - Buildbot can now be configured to deny read access to REST api resources

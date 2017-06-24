@@ -967,50 +967,105 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
 
-.. bb:reporter:: StashStatusPush
+.. bb:reporter:: BitbucketServerStatusPush
 
-StashStatusPush
-~~~~~~~~~~~~~~~
+BitbucketServerStatusPush
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. @cindex StashStatusPush
-.. py:class:: buildbot.reporters.stash.StashStatusPush
+.. @cindex BitbucketServerStatusPush
+.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerStatusPush
 
 ::
 
     from buildbot.plugins import reporters
 
-    ss = reporters.StashStatusPush('https://stash.example.com:8080/',
-                                   'stash_username',
+    ss = reporters.BitbucketServerStatusPush('https://bitbucketserver.example.com:8080/',
+                                   'bitbucketserver_username',
                                    'secret_password')
     c['services'].append(ss)
 
-:class:`StashStatusPush` publishes build status using `Stash Build Integration REST API <https://developer.atlassian.com/static/rest/stash/3.6.0/stash-build-integration-rest.html>`_.
-The build status is published to a specific commit SHA in Stash.
+:class:`BitbucketServerStatusPush` publishes build status using `BitbucketServer Build Integration REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.1.0/bitbucket-build-rest.html#idm46185565214672>`_.
+The build status is published to a specific commit SHA in Bitbucket Server.
 It tracks the last build for each builderName for each commit built.
 
 Specifically, it follows the `Updating build status for commits <https://developer.atlassian.com/stash/docs/latest/how-tos/updating-build-status-for-commits.html>`_ document.
 
-It requires `txrequests`_ package to allow interaction with Stash REST API.
+It requires `txrequests`_ package to allow interaction with Bitbucket Server REST API.
 
 It uses HTTP Basic AUTH.
 As a result, we recommend you use https in your base_url rather than http.
 
-.. py:class:: StashStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
+.. py:class:: BitbucketServerStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
 
-    :param string base_url: The base url of the Stash host, up to and optionally including the first `/` of the path.
-    :param string user: The Stash user to post as.
-    :param string password: The Stash user's password.
-    :param renderable string key: Passed to Stash to differentiate between statuses.
+    :param string base_url: The base url of the Bitbucket Server host, up to and optionally including the first `/` of the path.
+    :param string user: The Bitbucket Server user to post as.
+    :param string password: The Bitbucket Server user's password.
+    :param renderable string key: Passed to Bitbucket Server to differentiate between statuses.
         A static string can be passed or :class:`Interpolate` for dynamic substitution.
         The default key is `%(prop:buildername)s`.
     :param renderable string statusName: The name that is displayed for this status.
-        The default name is nothing, so Stash will use the ``key`` parameter.
+        The default name is nothing, so Bitbucket Server will use the ``key`` parameter.
     :param renderable string startDescription: Custom start message (default: 'Build started.')
     :param renderable string endDescription: Custom end message (default: 'Build done.')
     :param boolean verbose: If True, logs a message for each successful status push.
     :param list builders: Only send update for specified builders.
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
+
+.. bb:reporter:: BitbucketServerPRCommentPush
+
+BitbucketServerPRCommentPush
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. @cindex BitbucketServerPRCommentPush
+.. py:class:: buildbot.reporters.BitbucketServer.BitbucketServerPRCommentPush
+
+::
+
+    from buildbot.plugins import reporters
+
+    ss = reporters.BitbucketServerPRCommentPush('https://bitbucket-server.example.com:8080/',
+                                   'bitbucket_server__username',
+                                   'secret_password')
+    c['services'].append(ss)
+
+
+:class:`BitbucketServerPRCommentPush`  publishes a comment on a PR using `Bitbucket Server REST API <https://developer.atlassian.com/static/rest/bitbucket-server/5.0.1/bitbucket-rest.html#idm45993793481168>`_.
+
+
+.. py:class:: BitBucketServerPRCommentPush(base_url, user, password, messageFormatter=None, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, builders=None, schedulers=None, branches=None, buildSetSummary=False):
+
+    :param string base_url: The base url of the Bitbucket server host
+    :param string user: The Bitbucket server user to post as.
+    :param string password: The Bitbucket server user's password.
+    :param messageFormatter: This is an optional instance of :class:`MessageFormatter` that can be used to generate a custom comment.
+    :param boolean verbose: If True, logs a message for each successful status push.
+    :param boolean debug: logs every requests and their response
+    :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
+    :param list mode: A list of strings which will determine the build status that will be reported.
+        The values could be ``change``, ``failing``, ``passing``, ``problem``, ``warnings`` or ``exception``.
+        There are two shortcuts:
+
+            ``all``
+                Equivalent to (``change``, ``failing``, ``passing``, ``problem``, ``warnings``, ``exception``)
+
+            ``warnings``
+                Equivalent to (``warnings``, ``failing``).
+
+    :param list tags: A list of tag names to serve status information for.
+        Defaults to ``None`` (all tags).
+        Use either builders or tags, but not both.
+    :param list builders: Only send update for specified builders.
+        Defaults to ``None`` (all builders).
+        Use either builders or tags, but not both
+    :param list schedulers: A list of scheduler names to serve status information for.
+        Defaults to ``None`` (all schedulers).
+    :param list branches: A list of branch names to serve status information for.
+        Defaults to ``None`` (all branches).
+    :param boolean buildSetSummary: If true, post a comment when a build set is finished with all build completion messages in it, instead of doing it for each separate build.
+
+.. Note::
+    This reporter depends on the Bitbucket server hook to get the pull request url.
 
 .. bb:reporter:: BitbucketStatusPush
 
