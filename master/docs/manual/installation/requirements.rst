@@ -12,8 +12,8 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 
 Python: https://www.python.org
 
-  Buildbot master requires Python-2.7.
-  Buildbot worker require Python-2.6, although Python-2.7 is recommended.
+  Buildbot master works with Python 2.7 or Python-3.4+.
+  Buildbot worker works with Python 2.6-2.7, or Python 3.4+.
 
   .. note::
 
