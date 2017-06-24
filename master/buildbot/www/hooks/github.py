@@ -119,8 +119,10 @@ class GitHubEventHandler(PullRequestMixin):
         # project = request.args.get('project', [''])[0]
         project = payload['repository']['full_name']
 
+        # Inject some additional white-listed event payload properties
+        properties = self.extractProperties(payload)
         changes = self._process_change(payload, user, repo, repo_url, project,
-                                       event)
+                                       event, properties)
 
         log.msg("Received {} changes from github".format(len(changes)))
 
@@ -170,7 +172,8 @@ class GitHubEventHandler(PullRequestMixin):
             len(changes), number))
         return changes, 'git'
 
-    def _process_change(self, payload, user, repo, repo_url, project, event):
+    def _process_change(self, payload, user, repo, repo_url, project, event,
+                        properties):
         """
         Consumes the JSON as a python object and actually starts the build.
 
@@ -218,6 +221,8 @@ class GitHubEventHandler(PullRequestMixin):
                     'event': event,
                 },
             }
+            # Update with any white-listed github event properties
+            change['properties'].update(properties)
 
             if callable(self._codebase):
                 change['codebase'] = self._codebase(payload)
