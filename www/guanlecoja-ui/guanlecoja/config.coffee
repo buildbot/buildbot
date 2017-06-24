@@ -13,7 +13,7 @@ gulp.task "publish", ['default'], ->
     exec "git clone git@github.com:buildbot/guanlecoja-ui.git"
     bower_json =
         name: "guanlecoja-ui"
-        version: "1.6.2"
+        version: "1.6.3"
         main: ["scripts.js", "styles.css", "fonts/*", "img/*"]
         ignore: []
         description: "Sets of widgets and integrated bower dependencies useful for dashboard SPAs"
