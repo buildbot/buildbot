@@ -317,6 +317,7 @@ glMenuProvider
 google
 gpg
 GPL
+GraphQL
 Gravatar
 groupPrefix
 Gruntfile
