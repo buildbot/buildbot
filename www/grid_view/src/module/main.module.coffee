@@ -41,7 +41,7 @@ class State extends Config
                 name: 'grid'
                 controller: 'gridController'
                 controllerAs: 'C'
-                templateUrl: 'buildbot_grid_view/views/grid.html'
+                templateUrl: 'grid_view/views/grid.html'
                 url: '/grid?branch&tag'
                 reloadOnSearch: false
                 data:
