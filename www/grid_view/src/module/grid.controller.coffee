@@ -32,23 +32,18 @@ class Grid extends Controller
         @buildsets = @data.getBuildsets(
             limit: @changeFetchLimit
             order: '-bsid'
-            property: ['bsid', 'sourcestamps']
         )
         @changes = @data.getChanges(
             limit: @changeFetchLimit
             order: '-changeid'
         )
-        @builders = @data.getBuilders(
-            property: ['builderid', 'name']
-        )
+        @builders = @data.getBuilders()
         @buildrequests = @data.getBuildrequests(
             limit: @buildFetchLimit
             order: '-buildrequestid'
-            property: ['buildrequestid', 'buildsetid', 'builderid']
         )
         @builds = @data.getBuilds(
             limit: @buildFetchLimit
-            order: '-buildrequestid'
         )
 
         @buildsets.onChange = @changes.onChange = @builders.onChange = \
