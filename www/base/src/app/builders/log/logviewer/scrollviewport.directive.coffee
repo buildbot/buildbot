@@ -238,7 +238,7 @@ class Scroll extends Directive
                         $timeout ->
                             viewport.scrollTop(pos * rowHeight)
                             maybeUpdateView()
-                        , 500
+                        , 100
 
 
                     $(window).bind 'resize', maybeUpdateView
