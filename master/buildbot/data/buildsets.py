@@ -61,7 +61,7 @@ class Db2DataMixin(object):
         defer.returnValue(buildset)
 
     fieldMapping = {
-        'buildsetid': 'buildsets.id',
+        'bsid': 'buildsets.id',
         'external_idstring': 'buildsets.external_idstring',
         'reason': 'buildsets.reason',
         'submitted_at': 'buildsets.submitted_at',
