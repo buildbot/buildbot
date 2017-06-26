@@ -28,7 +28,6 @@ class Grid extends Controller
         @changeFetchLimit = settings.changeFetchLimit.value
         @buildFetchLimit = settings.buildFetchLimit.value
         @compactChanges = settings.compactChanges.value
-        @rightToLeft = settings.rightToLeft.value
 
         @buildsets = @data.getBuildsets(
             limit: @changeFetchLimit
@@ -93,14 +92,9 @@ class Grid extends Controller
 
         # only keep the @revisionLimit most recent changes for display
         changes = (change for own cid, change of changes)
-        if @rightToLeft
-            changes.sort((a, b) -> b.changeid - a.changeid)
-            if changes.length > @revisionLimit
-                changes = changes.slice(0, @revisionLimit)
-        else
-            changes.sort((a, b) -> a.changeid - b.changeid)
-            if changes.length > @revisionLimit
-                changes = changes.slice(changes.length - @revisionLimit)
+        changes.sort((a, b) -> a.changeid - b.changeid)
+        if changes.length > @revisionLimit
+            changes = changes.slice(changes.length - @revisionLimit)
         @$scope.changes = changes
 
         @$scope.branches = (br for br of branches)
