@@ -58,6 +58,11 @@ class State extends Config
                     caption: 'Hide avatar and time ago from change details'
                     defaultValue: true
                 ,
+                    type: 'bool'
+                    name: 'rightToLeft'
+                    caption: 'Show most recent changes on the left'
+                    defaultValue: true
+                ,
                     type: 'integer'
                     name: 'revisionLimit'
                     caption: 'Maximum number of revisions to display'
