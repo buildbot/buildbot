@@ -30,7 +30,7 @@
                             | {{ C.tags.length }} tags
                     span(ng-show="C.tags.length > 0")
                         span.label.label-danger.clickable(ng-click="C.resetTags()", uib-tooltip="Reset tags filter") x
-                th.change(ng-repeat="ch in changes")
+                th.change(ng-repeat="ch in changes track by ch.changeid")
                     changedetails(change="ch", compact="C.compactChanges")
         tbody
             tr(ng-repeat="b in builders | orderBy: 'name'")
@@ -41,7 +41,7 @@
                     span(ng-repeat="tag in b.tags")
                         span.builder-tag.label(ng-click="C.toggleTag(tag)", ng-class="C.isTagToggled(tag) ? 'label-success': 'label-default'")
                             | {{ tag }}
-                td(ng-repeat="ch in changes")
-                    a(ng-if="b.builds[ch.bsid]", ui-sref="build({builder: b.builderid, build: b.builds[ch.bsid].number})")
-                        span.badge-status(ng-class="results2class(b.builds[ch.bsid], 'pulse')")
-                            | {{ b.builds[ch.bsid].number }}
+                td(ng-repeat="ch in changes track by ch.changeid")
+                    a(ng-if="b.builds[ch.changeid]", ui-sref="build({builder: b.builderid, build: b.builds[ch.changeid].number})")
+                        span.badge-status(ng-class="results2class(b.builds[ch.changeid], 'pulse')")
+                            | {{ b.builds[ch.changeid].number }}

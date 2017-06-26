@@ -28,6 +28,7 @@ class Grid extends Controller
         @changeFetchLimit = settings.changeFetchLimit.value
         @buildFetchLimit = settings.buildFetchLimit.value
         @compactChanges = settings.compactChanges.value
+        @rightToLeft = settings.rightToLeft.value
 
         @buildsets = @data.getBuildsets(
             limit: @changeFetchLimit
@@ -44,6 +45,7 @@ class Grid extends Controller
         )
         @builds = @data.getBuilds(
             limit: @buildFetchLimit
+            order: '-buildrequestid'
         )
 
         @buildsets.onChange = @changes.onChange = @builders.onChange = \
@@ -65,31 +67,41 @@ class Grid extends Controller
         if not @dataReady()
             return
 
-        changesByBSID = {}
-        @$scope.changes = []
+        changes = {}
         branches = {}
 
+        # map changes by source stamp id
         changesBySSID = {}
         for c in @changes
             changesBySSID[c.sourcestamp.ssid] = c
+            c.buildsets = {}  # there can be multiple buildsets by change
 
+        # associate buildsets to each change and remember existing branches
         for bset in @buildsets
             change = changesBySSID[_.last(bset.sourcestamps).ssid]
             unless change?
                 continue
-            change.bsid = bset.bsid
+
+            change.buildsets[bset.bsid] = bset
             change.branch ?= 'master'
             branches[change.branch] = true
 
-            if @$scope.changes.length > @revisionLimit
-                continue
             if @branch and change.branch != @branch
                 continue
 
-            @$scope.changes.push(change)
-            changesByBSID[bset.bsid] = change
+            changes[change.changeid] = change
 
-        @$scope.changes.sort((a, b) -> a.bsid - b.bsid)
+        # only keep the @revisionLimit most recent changes for display
+        changes = (change for own cid, change of changes)
+        if @rightToLeft
+            changes.sort((a, b) -> b.changeid - a.changeid)
+            if changes.length > @revisionLimit
+                changes = changes.slice(0, @revisionLimit)
+        else
+            changes.sort((a, b) -> a.changeid - b.changeid)
+            if changes.length > @revisionLimit
+                changes = changes.slice(changes.length - @revisionLimit)
+        @$scope.changes = changes
 
         @$scope.branches = (br for br of branches)
 
@@ -106,20 +118,21 @@ class Grid extends Controller
         buildersById = {}
         # find builds for the selected changes and associate them to builders
         for c in @$scope.changes
-            requests = requestsByBSID[c.bsid]
-            unless requests?
-                continue
-            for req in requests
-                build = buildByReqID[req.buildrequestid]
-                unless build?
+            for own bsid, bset of c.buildsets
+                requests = requestsByBSID[bsid]
+                unless requests?
                     continue
-                builder = @builders.get(build.builderid)
-                unless @isBuilderDisplayed(builder)
-                    continue
-                buildersById[builder.builderid] = builder
-                builder.builds[c.bsid] = build
+                for req in requests
+                    build = buildByReqID[req.buildrequestid]
+                    unless build?
+                        continue
+                    builder = @builders.get(build.builderid)
+                    unless @isBuilderDisplayed(builder)
+                        continue
+                    buildersById[builder.builderid] = builder
+                    builder.builds[c.changeid] = build
 
-        @$scope.builders = (buildersById[i] for i of buildersById)
+        @$scope.builders = (builder for own i, builder of buildersById)
 
     changeBranch: (branch) =>
         @branch = branch
