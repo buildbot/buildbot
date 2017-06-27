@@ -31,7 +31,7 @@ class Grid extends Controller
         @rightToLeft = settings.rightToLeft.value
 
         @buildsets = @data.getBuildsets(
-            limit: @changeFetchLimit
+            limit: @buildFetchLimit
             order: '-bsid'
         )
         @changes = @data.getChanges(
