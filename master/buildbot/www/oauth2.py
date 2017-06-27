@@ -20,15 +20,21 @@ from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
 
 import json
+import textwrap
 from posixpath import join
 
+import jinja2
 import requests
 
 from twisted.internet import defer
 from twisted.internet import threads
 
+from buildbot import config
+from buildbot.util.logger import Logger
 from buildbot.www import auth
 from buildbot.www import resource
+
+log = Logger()
 
 
 class OAuth2LoginResource(auth.LoginResource):
@@ -195,8 +201,30 @@ class GitHubAuth(OAuth2Auth):
     tokenUri = 'https://github.com/login/oauth/access_token'
     resourceEndpoint = 'https://api.github.com'
 
+    getUserTeamsGraphqlTpl = textwrap.dedent(r'''
+        {%- set organizations = user_info.get('groups', ()) %}
+        {%- if organizations %}
+        query getOrgTeamMembership {
+          {%- for org_name in user_info.get('groups', ()) %}
+          {{ org_name }}: organization(login: "{{ org_name }}") {
+            teams(first: 100) {
+              edges {
+                node {
+                  name,
+                  slug
+                }
+              }
+            }
+          }
+          {%- endfor %}
+        }
+        {%- endif %}
+    ''')
+
     def __init__(self,
-                 clientId, clientSecret, serverURL=None, autologin=False, **kwargs):
+                 clientId, clientSecret, serverURL=None, autologin=False,
+                 apiVersion=3, getTeamsMembership=False, debug=False,
+                 **kwargs):
 
         OAuth2Auth.__init__(self, clientId, clientSecret, autologin, **kwargs)
         if serverURL is not None:
@@ -206,9 +234,43 @@ class GitHubAuth(OAuth2Auth):
 
             self.authUri = '{0}/login/oauth/authorize'.format(serverURL)
             self.tokenUri = '{0}/login/oauth/access_token'.format(serverURL)
-            self.resourceEndpoint = '{0}/api/v3'.format(serverURL)
+        self.serverURL = serverURL or self.resourceEndpoint
+
+        if apiVersion not in (3, 4):
+            config.error(
+                'GitHubAuth apiVersion must be 3 or 4 not {}'.format(
+                    apiVersion))
+        self.apiVersion = apiVersion
+        if apiVersion == 3:
+            if getTeamsMembership is True:
+                config.error(
+                    'Retrieving team membership information using GitHubAuth is only '
+                    'possible using GitHub api v4.')
+            self.resourceEndpoint = '{0}/api/v3'.format(self.serverURL)
+        else:
+            self.resourceEndpoint = '{0}/graphql'.format(self.serverURL)
+        if getTeamsMembership:
+            self.getUserTeamsGraphqlTplC = jinja2.Template(
+                self.getUserTeamsGraphqlTpl.strip())
+        self.getTeamsMembership = getTeamsMembership
+        self.debug = debug
+
+    def post(self, session, query):
+        if self.debug:
+            log.info('{klass} GraphQL POST Request: {endpoint} -> '
+                     'DATA:\n----\n{data}\n----',
+                     klass=self.__class__.__name__,
+                     endpoint=self.resourceEndpoint,
+                     data=query)
+        ret = session.post(self.resourceEndpoint, json={'query': query})
+        return ret.json()
 
     def getUserInfoFromOAuthClient(self, c):
+        if self.apiVersion == 3:
+            return self.getUserInfoFromOAuthClient_v3(c)
+        return self.getUserInfoFromOAuthClient_v4(c)
+
+    def getUserInfoFromOAuthClient_v3(self, c):
         user = self.get(c, '/user')
         emails = self.get(c, '/user/emails')
         for email in emails:
@@ -216,11 +278,63 @@ class GitHubAuth(OAuth2Auth):
                 user['email'] = email['email']
                 break
         orgs = self.get(c, '/user/orgs')
-
         return dict(full_name=user['name'],
                     email=user['email'],
                     username=user['login'],
                     groups=[org['login'] for org in orgs])
+
+    def getUserInfoFromOAuthClient_v4(self, c):
+        graphql_query = textwrap.dedent('''
+            query {
+              viewer {
+                email
+                login
+                name
+                organizations(first: 100) {
+                  edges {
+                    node {
+                      login
+                    }
+                  }
+                }
+              }
+            }
+        ''')
+        data = self.post(c, graphql_query.strip())
+        data = data['data']
+        if self.debug:
+            log.info('{klass} GraphQL Response: {response}',
+                     klass=self.__class__.__name__,
+                     response=data)
+        user_info = dict(full_name=data['viewer']['name'],
+                         email=data['viewer']['email'],
+                         username=data['viewer']['login'],
+                         groups=[org['node']['login'] for org in
+                                 data['viewer']['organizations']['edges']])
+        if self.getTeamsMembership:
+            graphql_query = self.getUserTeamsGraphqlTplC.render(
+                {'user_info': user_info})
+            if graphql_query:
+                data = self.post(c, graphql_query)
+                if self.debug:
+                    log.info('{klass} GraphQL Response: {response}',
+                             klass=self.__class__.__name__,
+                             response=data)
+                teams = set()
+                for org, team_data in data['data'].items():
+                    for node in team_data['teams']['edges']:
+                        # On github we can mentions organization teams like
+                        # @org-name/team-name. Let's keep the team formatting
+                        # identical with the inclusion of the organization
+                        # since different organizations might share a common
+                        # team name
+                        teams.add('%s/%s' % (org, node['node']['name']))
+                user_info['groups'].extend(sorted(teams))
+        if self.debug:
+            log.info('{klass} User Details: {user_info}',
+                     klass=self.__class__.__name__,
+                     user_info=user_info)
+        return user_info
 
 
 class GitLabAuth(OAuth2Auth):
