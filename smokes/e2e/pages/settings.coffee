@@ -67,4 +67,13 @@ class SettingsPage extends BasePage
         maxBuilderForm = @getItem("Console", "changeLimit")
         expect(maxBuilderForm.getAttribute('value')).toEqual(maxBuildersVar)
 
+    changeShowWorkerBuilders: (showWorkerBuildersVar) ->
+        showWorkerBuildersForm = @getItem("Workers", "showWorkerBuilders")
+        showWorkerBuildersForm.isSelected().then (checked) ->
+            showWorkerBuildersForm.click() if checked != showWorkerBuildersVar
+
+    checkShowWorkerBuilders: (showWorkerBuildersVar) ->
+        showWorkerBuildersForm = @getItem("Workers", "showWorkerBuilders")
+        expect(showWorkerBuildersForm.isSelected()).toEqual(showWorkerBuildersVar)
+
 module.exports = SettingsPage
