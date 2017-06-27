@@ -30,7 +30,9 @@ _HEADER_EVENT = 'X-Event-Key'
 
 class BitbucketServerEventHandler(object):
 
-    def __init__(self, master, options={}):
+    def __init__(self, master, options=None):
+        if options is None:
+            options = {}
         self.master = master
         if not isinstance(options, dict):
             options = {}

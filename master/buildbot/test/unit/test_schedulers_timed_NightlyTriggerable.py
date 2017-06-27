@@ -57,7 +57,11 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
 
     # utilities
 
-    def assertBuildsetAdded(self, sourcestamps={}, properties={}):
+    def assertBuildsetAdded(self, sourcestamps=None, properties=None):
+        if sourcestamps is None:
+            sourcestamps = {}
+        if properties is None:
+            properties = {}
         properties['scheduler'] = ('test', u'Scheduler')
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(

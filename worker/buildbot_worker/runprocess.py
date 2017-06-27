@@ -279,7 +279,7 @@ class RunProcess(object):
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY=False,
+                 logEnviron=True, logfiles=None, usePTY=False,
                  useProcGroup=True):
         """
 
@@ -294,6 +294,8 @@ class RunProcess(object):
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
+        if logfiles is None:
+            logfiles = {}
 
         self.builder = builder
         if isinstance(command, list):
@@ -581,10 +583,12 @@ class RunProcess(object):
         for w in self.logFileWatchers:
             w.start()
 
-    def _spawnProcess(self, processProtocol, executable, args=(), env={},
+    def _spawnProcess(self, processProtocol, executable, args=(), env=None,
                       path=None, uid=None, gid=None, usePTY=False, childFDs=None):
         """private implementation of reactor.spawnProcess, to allow use of
         L{ProcGroupProcess}"""
+        if env is None:
+            env = {}
 
         # use the ProcGroupProcess class, if available
         if runtime.platformType == 'posix':

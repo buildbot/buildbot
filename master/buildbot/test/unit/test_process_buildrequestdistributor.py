@@ -684,7 +684,9 @@ class TestMaybeStartBuilds(TestBRDBase):
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get claimed again
 
-        def maybeStartBuild(worker, builds, _fail=[False]):
+        def maybeStartBuild(worker, builds, _fail=None):
+            if _fail is None:
+                _fail = [False]
             self.startedBuilds.append((worker.name, builds))
             ret = _fail[0]
             _fail[0] = True

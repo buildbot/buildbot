@@ -54,7 +54,9 @@ from buildbot.www.authz import authz
 
 class ConfigErrors(Exception):
 
-    def __init__(self, errors=[]):
+    def __init__(self, errors=None):
+        if errors is None:
+            errors = []
         self.errors = errors[:]
 
     def __str__(self):

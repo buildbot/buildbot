@@ -198,7 +198,9 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 % str(e))
         return e
 
-    def do_test_upgrade(self, pre_callbacks=[]):
+    def do_test_upgrade(self, pre_callbacks=None):
+        if pre_callbacks is None:
+            pre_callbacks = []
         d = defer.succeed(None)
         for cb in pre_callbacks:
             d.addCallback(cb)

@@ -82,7 +82,9 @@ class BuildFactory(util.ComparableMixin):
             step = step(**kwargs)
         self.steps.append(interfaces.IBuildStepFactory(step))
 
-    def addSteps(self, steps, withSecrets=[]):
+    def addSteps(self, steps, withSecrets=None):
+        if withSecrets is None:
+            withSecrets = []
         if withSecrets:
             self.addStep(DownloadSecretsToWorker(withSecrets))
         for s in steps:

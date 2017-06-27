@@ -170,7 +170,9 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def do_test_addChange(self, kwargs,
                           expectedRoutingKey, expectedMessage, expectedRow,
-                          expectedChangeUsers=[]):
+                          expectedChangeUsers=None):
+        if expectedChangeUsers is None:
+            expectedChangeUsers = []
         clock = task.Clock()
         clock.advance(10000000)
         d = self.rtype.addChange(_reactor=clock, **kwargs)
