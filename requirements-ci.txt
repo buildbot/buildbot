@@ -3,14 +3,14 @@ appdirs==1.4.3
 asn1crypto==0.22.0
 astroid==1.5.3
 attrs==17.2.0
-autobahn==17.6.1
+autobahn==17.6.2
 Automat==0.6.0
 Babel==2.4.0
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.47.0
 boto3==1.4.4
-botocore==1.5.70
+botocore==1.5.75
 cffi==1.10.0
 click==6.7
 configparser==3.5.0
@@ -44,7 +44,7 @@ moto==1.0.1
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
-pbr==3.0.1
+pbr==3.1.1
 pep8==1.7.0
 Pillow==4.1.1
 pyaml==16.12.2
@@ -55,7 +55,7 @@ pycparser==2.17
 pyenchant==1.6.8
 pyflakes==1.5.0
 pyjade==4.0.0
-PyJWT==1.5.0
+PyJWT==1.5.2
 pylint==1.7.1
 pyOpenSSL==17.0.0
 pyparsing==2.2.0
@@ -71,7 +71,7 @@ setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.10.0
 snowballstemmer==1.2.1
-SQLAlchemy==1.1.10
+SQLAlchemy==1.1.11
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.3
 Tempita==0.5.2
