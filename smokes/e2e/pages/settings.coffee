@@ -11,59 +11,60 @@ class SettingsPage extends BasePage
 
     goSettings: () ->
         browser.get('#/settings')
-
+    getItem: (group, name) ->
+        return  element(By.css("form[name='#{group}'] [name='#{name}']"))
     changeScallingFactor: (scallingVar) ->
-        scallingFactorForm = element.all(By.css('input.form-control')).first()
+        scallingFactorForm = @getItem("Waterfall", "scaling_waterfall")
         scallingFactorForm.clear().then () ->
             scallingFactorForm.sendKeys(scallingVar)
 
     checkScallingFactor: (scallingVar) ->
-        scallingFactor = element.all(By.css('input.form-control')).first()
+        scallingFactor = @getItem("Waterfall", "scaling_waterfall")
         expect(scallingFactor.getAttribute('value')).toEqual(scallingVar)
 
     changeColumnWidth: (columnVar) ->
-        columnWidthForm = element.all(By.css('input.form-control')).get(1)
+        columnWidthForm = @getItem("Waterfall", "min_column_width_waterfall")
         columnWidthForm.clear().then () ->
             columnWidthForm.sendKeys(columnVar)
 
     checkColumnWidth: (columnVar) ->
-        columnWidthForm = element.all(By.css('input.form-control')).get(1)
+        columnWidthForm = @getItem("Waterfall", "min_column_width_waterfall")
         expect(columnWidthForm.getAttribute('value')).toEqual(columnVar)
 
     changeLazyLoadingLimit: (lazyLoadingLimit) ->
-        lazyLoadingLimitForm = element.all(By.css('input.form-control')).get(2)
+        lazyLoadingLimitForm = @getItem("Waterfall", "lazy_limit_waterfall")
         lazyLoadingLimitForm.clear().then () ->
             lazyLoadingLimitForm.sendKeys(lazyLoadingLimit)
 
     checkLazyLoadingLimit: (lazyLoadingLimit) ->
-        lazyLoadingLimitForm = element.all(By.css('input.form-control')).get(2)
+        lazyLoadingLimitForm = @getItem("Waterfall", "lazy_limit_waterfall")
         expect(lazyLoadingLimitForm.getAttribute('value')).toEqual(lazyLoadingLimit)
 
     changeIdleTime: (idleTimeVar) ->
-        idleTimeForm = element.all(By.css('input.form-control')).get(3)
+        idleTimeForm = @getItem("Waterfall", "idle_threshold_waterfall")
         idleTimeForm.clear().then () ->
             idleTimeForm.sendKeys(idleTimeVar)
 
     checkIdleTime: (idleTimeVar) ->
-        idleTimeForm = element.all(By.css('input.form-control')).get(3)
+        idleTimeForm = @getItem("Waterfall", "idle_threshold_waterfall")
         expect(idleTimeForm.getAttribute('value')).toEqual(idleTimeVar)
 
     changeMaxBuild: (maxBuildVar) ->
-        maxBuildForm = element.all(By.css('input.form-control')).get(4)
+        maxBuildForm = @getItem("Console", "buildLimit")
         maxBuildForm.clear().then () ->
             maxBuildForm.sendKeys(maxBuildVar)
 
     checkMaxBuild: (maxBuildVar) ->
-        maxBuildForm = element.all(By.css('input.form-control')).get(4)
+        maxBuildForm = @getItem("Console", "buildLimit")
         expect(maxBuildForm.getAttribute('value')).toEqual(maxBuildVar)
 
     changeMaxRecentsBuilders: (maxBuildersVar) ->
-        maxBuilderForm = element.all(By.css('input.form-control')).get(5)
+        maxBuilderForm = @getItem("Console", "changeLimit")
         maxBuilderForm.clear().then () ->
             maxBuilderForm.sendKeys(maxBuildersVar)
 
     checkMaxRecentsBuilders: (maxBuildersVar) ->
-        maxBuilderForm = element.all(By.css('input.form-control')).get(5)
+        maxBuilderForm = @getItem("Console", "changeLimit")
         expect(maxBuilderForm.getAttribute('value')).toEqual(maxBuildersVar)
 
 module.exports = SettingsPage
