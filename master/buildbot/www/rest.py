@@ -498,7 +498,7 @@ class V2RootResource(resource.Resource):
                 err = None
                 reqOrigin = reqOrigin.lower()
                 if not any(o.match(bytes2NativeString(reqOrigin)) for o in self.origins):
-                    err = "invalid origin"
+                    err = b"invalid origin"
                 elif request.method == b'OPTIONS':
                     preflightMethod = request.getHeader(
                         b'access-control-request-method')

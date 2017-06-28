@@ -105,18 +105,18 @@ class NoAuth(unittest.TestCase):
 class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.auth = auth.RemoteUserAuth(header='HDR')
+        self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.make_master()
         self.request = self.make_request(b'/')
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin(self):
-        self.request.input_headers['HDR'] = 'rachel@foo.com'
+        self.request.input_headers[b'HDR'] = b'rachel@foo.com'
         yield self.auth.maybeAutoLogin(self.request)
         self.assertEqual(self.request.session.user_info, {
-                         'username': 'rachel',
-                         'realm': 'foo.com',
-                         'email': 'rachel'})
+                         'username': b'rachel',
+                         'realm': b'foo.com',
+                         'email': b'rachel'})
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin_no_header(self):
@@ -129,7 +129,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin_mismatched_value(self):
-        self.request.input_headers['HDR'] = 'rachel'
+        self.request.input_headers[b'HDR'] = b'rachel'
         try:
             yield self.auth.maybeAutoLogin(self.request)
         except Error as e:
@@ -141,7 +141,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
 class AuthRealm(www.WwwTestMixin, unittest.TestCase):
 
     def setUp(self):
-        self.auth = auth.RemoteUserAuth(header='HDR')
+        self.auth = auth.RemoteUserAuth(header=b'HDR')
         self.auth = auth.NoAuth()
         self.make_master()
 
@@ -160,7 +160,7 @@ class TwistedICredAuthBase(www.WwwTestMixin, unittest.TestCase):
     def test_getLoginResource(self):
         self.auth = auth.TwistedICredAuthBase(
             credentialFactories=[BasicCredentialFactory("buildbot")],
-            checkers=[InMemoryUsernamePasswordDatabaseDontUse(good='guy')])
+            checkers=[InMemoryUsernamePasswordDatabaseDontUse(good=b'guy')])
         self.auth.master = self.make_master(url='h:/a/b/')
         rsrc = self.auth.getLoginResource()
         self.assertIsInstance(rsrc, HTTPAuthSessionWrapper)
