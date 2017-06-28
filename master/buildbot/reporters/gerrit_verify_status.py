@@ -238,7 +238,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                     if not isinstance(content, string_types):
                         content = content.decode('utf-8')
 
-                    raise ValueError('Expected 204 NO CONTENT. Response was %s: %s' % (response.code, content))
+                    raise ValueError('Expected 204 NO CONTENT. Response was {}: {}'.format(response.code, content))
 
             except Exception:
                 log.failure(
