@@ -233,7 +233,10 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                 # The verify-status plugin will return 204 NO CONTENT
                 # on success.
                 if response.code != http_client.NO_CONTENT:
-                    body = yield response.text()
+                    try:
+                        body = yield response.text()
+                    except AttributeError:
+                        body = yield response.content()
                     raise ValueError('Expected 204 NO CONTENT. Response was %s: %s' % (response.code, body))
 
             except Exception:
