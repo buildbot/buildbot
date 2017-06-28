@@ -19,7 +19,6 @@ from __future__ import print_function
 import datetime
 
 from mock import Mock
-from six.moves import http_client
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -35,6 +34,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import logging
 from buildbot.test.util.reporter import ReporterTestMixin
+from six.moves import http_client
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
 
