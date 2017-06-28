@@ -136,6 +136,8 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         if duration is not None:
             payload['duration'] = duration
 
+        payload = {'verifications': {name: payload}}
+
         if self._verbose:
             log.debug(
                 'Sending Gerrit status for {change_id}/{revision_id}: data={data}',
