@@ -253,7 +253,6 @@ class BuildRequest(object):
         # short-circuit: if these are for the same buildset, collapse away
         if br1['buildsetid'] == br2['buildsetid']:
             defer.returnValue(True)
-            return
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield master.data.get(
@@ -270,23 +269,21 @@ class BuildRequest(object):
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
             defer.returnValue(False)
-            return
 
         for c, selfSS in iteritems(selfSources):
             otherSS = otherSources[c]
             if selfSS['repository'] != otherSS['repository']:
                 defer.returnValue(False)
-                return
+
             if selfSS['branch'] != otherSS['branch']:
                 defer.returnValue(False)
-                return
+
             if selfSS['project'] != otherSS['project']:
                 defer.returnValue(False)
-                return
+
             # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
                 defer.returnValue(False)
-                return
             # get changes & compare
             selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
             otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
@@ -295,14 +292,13 @@ class BuildRequest(object):
                 continue
             elif selfChanges and not otherChanges:
                 defer.returnValue(False)
-                return
+
             elif not selfChanges and otherChanges:
                 defer.returnValue(False)
-                return
+
             # else check revisions
             elif selfSS['revision'] != otherSS['revision']:
                 defer.returnValue(False)
-                return
 
         defer.returnValue(True)
 
