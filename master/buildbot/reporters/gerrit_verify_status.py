@@ -31,6 +31,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
+from six import string_types
 from six.moves import http_client
 
 log = Logger()
@@ -233,11 +234,11 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                 # The verify-status plugin will return 204 NO CONTENT
                 # on success.
                 if response.code != http_client.NO_CONTENT:
-                    try:
-                        body = yield response.text()
-                    except AttributeError:
-                        body = yield response.content()
-                    raise ValueError('Expected 204 NO CONTENT. Response was %s: %s' % (response.code, body))
+                    content = yield response.content()
+                    if not isinstance(content, string_types):
+                        content = content.decode('utf-8')
+
+                    raise ValueError('Expected 204 NO CONTENT. Response was %s: %s' % (response.code, content))
 
             except Exception:
                 log.failure(
