@@ -35,5 +35,10 @@ except ImportError:
         critical = _log
 
         def failure(self, format, failure, *args, **kwargs):
-            log.error(failure, format.format(args, **kwargs))
+            formatted = format.format(args, **kwargs)
+            try:
+                log.error(failure, formatted)
+            except AttributeError:
+                self.error(failure, formatted)
+
 __all__ = ["Logger"]
