@@ -30,6 +30,7 @@ from twisted.internet import defer
 from twisted.internet import threads
 
 from buildbot import config
+from buildbot.util import bytes2unicode
 from buildbot.util.logger import Logger
 from buildbot.www import auth
 from buildbot.www import resource
@@ -157,14 +158,15 @@ class OAuth2Auth(auth.AuthBase):
             response = requests.post(
                 url, data=data, auth=auth, verify=self.sslVerify)
             response.raise_for_status()
+            responseContent = bytes2unicode(response.content)
             try:
-                content = json.loads(response.content)
+                content = json.loads(responseContent)
             except ValueError:
-                content = parse_qs(response.content)
+                content = parse_qs(responseContent)
                 for k, v in iteritems(content):
                     content[k] = v[0]
             except TypeError:
-                content = response.content
+                content = responseContent
 
             session = self.createSessionFromToken(content)
             return self.getUserInfoFromOAuthClient(session)
