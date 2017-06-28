@@ -59,7 +59,7 @@ class AuthBase(config.ConfiguredMixin):
         return defer.succeed(None)
 
     def getLoginResource(self):
-        raise Error(501, "not implemented")
+        raise Error(501, b"not implemented")
 
     def getLogoutResource(self):
         return LogoutResource(self.master)
@@ -98,8 +98,8 @@ class NoAuth(AuthBase):
 
 
 class RemoteUserAuth(AuthBase):
-    header = "REMOTE_USER"
-    headerRegex = re.compile(r"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
+    header = b"REMOTE_USER"
+    headerRegex = re.compile(br"(?P<username>[^ @]+)@(?P<realm>[^ @]+)")
 
     def __init__(self, header=None, headerRegex=None, **kwargs):
         AuthBase.__init__(self, **kwargs)
@@ -114,13 +114,11 @@ class RemoteUserAuth(AuthBase):
     def maybeAutoLogin(self, request):
         header = request.getHeader(self.header)
         if header is None:
-            raise Error(403, "missing http header %s. Check your reverse proxy config!" % (
-                             self.header))
+            raise Error(403, b"missing http header " + self.header + b". Check your reverse proxy config!")
         res = self.headerRegex.match(header)
         if res is None:
             raise Error(
-                403, 'http header does not match regex! "%s" not matching %s' %
-                (header, self.headerRegex.pattern))
+                403, b'http header does not match regex! "' + header + b'" not matching ' + self.headerRegex.pattern)
         session = request.getSession()
         if session.user_info != dict(res.groupdict()):
             session.user_info = dict(res.groupdict())

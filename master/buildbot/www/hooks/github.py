@@ -93,7 +93,7 @@ class GitHubEventHandler(PullRequestMixin):
             if mac.hexdigest() != hexdigest:
                 raise ValueError('Hash mismatch')
 
-        content_type = request.getHeader('Content-Type')
+        content_type = request.getHeader(b'Content-Type')
 
         if content_type == b'application/json':
             payload = json.loads(content)

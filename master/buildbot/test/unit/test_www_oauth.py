@@ -32,6 +32,7 @@ from twisted.web.server import Site
 
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import bytes2NativeString
 
 try:
     import requests
@@ -481,7 +482,9 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest(
                 "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
+        with open(os.environ['OAUTHCONF']) as f:
+            jsonData = f.read()
+        config = json.loads(jsonData)[self.authClass]
         from buildbot.www import oauth2
         self.auth = self._instantiateAuth(
             getattr(oauth2, self.authClass), config)
@@ -531,7 +534,8 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
-            webbrowser.open(res.content)
+            content = bytes2NativeString(res.content)
+            webbrowser.open(content)
         threads.deferToThread(thd)
         res = yield d
         yield listener.stopListening()
