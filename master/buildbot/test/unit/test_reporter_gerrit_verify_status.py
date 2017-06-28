@@ -19,6 +19,7 @@ from __future__ import print_function
 import datetime
 
 from mock import Mock
+from six.moves import http_client
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -36,6 +37,10 @@ from buildbot.test.util import logging
 from buildbot.test.util.reporter import ReporterTestMixin
 
 from .test_changes_gerritchangesource import TestGerritChangeSource
+
+
+def wrap_with_verifications(body):
+    return {'verifications': {body['name']: body}}
 
 
 class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
@@ -77,7 +82,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -85,11 +91,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -97,11 +104,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -109,7 +117,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': -1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -118,6 +126,26 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self.sp.buildFinished(("build", 20, "finished"), build)
         build['results'] = FAILURE
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_bad_request(self):
+        yield self.createGerritStatus()
+        build = yield self.setupBuildResults(SUCCESS)
+        self._http.expect(
+            method='post',
+            ep='/a/changes/12/revisions/2/verify-status~verifications',
+            code=http_client.BAD_REQUEST,  # Gerrit sends 400 BAD REQUEST if your input data is invalid
+            json=wrap_with_verifications({
+                'comment': 'Build started.',
+                'abstain': False,
+                'name': u'Builder0',
+                'reporter': 'buildbot',
+                'url': 'http://localhost:8080/#builders/79/builds/0',
+                'value': 0,
+                'duration': 'pending'
+            }))
+        self.sp.buildStarted(("build", 20, "started"), build)
+        self.flushLoggedErrors(ValueError)
 
     @defer.inlineCallbacks
     def test_custom_description(self):
@@ -129,7 +157,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'started Builder0',
                 'abstain': False,
                 'name': u'Builder0',
@@ -137,11 +166,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'finished Builder0',
                 'abstain': False,
                 'name': u'Builder0',
@@ -149,7 +179,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -166,7 +196,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'name': u'builder Builder0',
@@ -174,11 +205,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': False,
                 'name': u'builder Builder0',
@@ -186,7 +218,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -203,7 +235,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': True,
                 'name': u'Builder0',
@@ -211,11 +244,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': True,
                 'name': u'Builder0',
@@ -223,7 +257,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -240,7 +274,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'category': 'Builder0',
@@ -249,11 +284,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': False,
                 'category': 'Builder0',
@@ -262,7 +298,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -279,7 +315,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -287,11 +324,12 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build done.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -299,7 +337,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
                 'duration': '2h 1m 4s'
-            })
+            }))
         build['complete'] = False
         build['complete_at'] = None
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -314,7 +352,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -322,7 +361,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self.setUpLogging()
         self.sp.buildStarted(("build", 20, "started"), build)
         self.assertLogged("Sending Gerrit status for")
@@ -334,7 +373,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
         self._http.expect(
             method='post',
             ep='/a/changes/12/revisions/2/verify-status~verifications',
-            json={
+            code=http_client.NO_CONTENT,
+            json=wrap_with_verifications({
                 'comment': 'Build started.',
                 'abstain': False,
                 'name': u'Builder0',
@@ -342,7 +382,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
                 'duration': 'pending'
-            })
+            }))
         self.setUpLogging()
         self._http.quiet = True
         self.sp.buildStarted(("build", 20, "started"), build)
