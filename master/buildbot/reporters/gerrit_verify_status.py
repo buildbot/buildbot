@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from six.moves import http_client
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -214,7 +215,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         changes = yield self.getGerritChanges(props)
         for change in changes:
             try:
-                yield self.createStatus(
+                response = yield self.createStatus(
                     change['change_id'],
                     change['revision_id'],
                     name,
@@ -226,6 +227,13 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                     reporter=reporter,
                     category=category,
                     duration=duration)
+
+                # The verify-status plugin will return 204 NO CONTENT
+                # on success.
+                if response.code != http_client.NO_CONTENT:
+                    body = yield response.text()
+                    raise ValueError('Expected 204 NO CONTENT. Response was %s: %s' % (response.code, body))
+
             except Exception:
                 log.failure(
                     'Failed to send status!', failure=failure.Failure())
