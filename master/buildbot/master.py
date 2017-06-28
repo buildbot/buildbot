@@ -52,7 +52,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
 from buildbot.status.master import Status
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
@@ -477,12 +477,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         for k in ('comments', 'author', 'revision', 'branch', 'category',
                   'revlink', 'repository', 'codebase', 'project'):
             if k in kwargs:
-                kwargs[k] = ascii2unicode(kwargs[k])
+                kwargs[k] = bytes2unicode(kwargs[k])
         if kwargs.get('files'):
-            kwargs['files'] = [ascii2unicode(f)
+            kwargs['files'] = [bytes2unicode(f)
                                for f in kwargs['files']]
         if kwargs.get('properties'):
-            kwargs['properties'] = dict((ascii2unicode(k), v)
+            kwargs['properties'] = dict((bytes2unicode(k), v)
                                         for k, v in iteritems(kwargs['properties']))
 
         # pass the converted call on to the data API
