@@ -1,1 +1,0 @@
-_wait_for_request() would fail to format a log statement due to an invalid type being passed to log.msg (resulting in a broken build)

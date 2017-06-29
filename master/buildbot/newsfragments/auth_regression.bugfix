@@ -1,1 +1,0 @@
-Fixed a regression inn ``UserPasswordAuth`` where a list would create an error.
