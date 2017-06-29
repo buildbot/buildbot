@@ -44,10 +44,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
-                        context=None, baseURL=None, verbose=False, **kwargs):
+                        context=None, baseURL=None, verbose=False, descriptionCB=None, **kwargs):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
-        self.setDefaults(context, startDescription, endDescription)
+        self.setDefaults(context, startDescription, endDescription, descriptionCB)
         if baseURL is None:
             baseURL = HOSTED_BASE_URL
         if baseURL.endswith('/'):
@@ -61,10 +61,11 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             debug=self.debug, verify=self.verify)
         self.verbose = verbose
 
-    def setDefaults(self, context, startDescription, endDescription):
+    def setDefaults(self, context, startDescription, endDescription, descriptionCB):
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
         self.startDescription = startDescription or 'Build started.'
         self.endDescription = endDescription or 'Build done.'
+        self.descriptionCB = descriptionCB
 
     def createStatus(self,
                      repo_user, repo_name, sha, state, target_url=None,
@@ -99,6 +100,9 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload)
 
+    def updateDescriptions(self, state, build, description):
+        return description
+
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
@@ -119,6 +123,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             description = yield props.render(self.startDescription)
         else:
             return
+
+        description = yield self.updateDescriptions(state, build, description)
 
         context = yield props.render(self.context)
 
@@ -181,10 +187,18 @@ class GitHubCommentPush(GitHubStatusPush):
     name = "GitHubCommentPush"
     neededDetails = dict(wantProperties=True)
 
-    def setDefaults(self, context, startDescription, endDescription):
+    def setDefaults(self, context, startDescription, endDescription, descriptionCB):
         self.context = ''
         self.startDescription = startDescription
         self.endDescription = endDescription or 'Build done.'
+        self.descriptionCB = descriptionCB
+
+    def updateDescriptions(self, state, build, description):
+        if self.descriptionCB:
+            desc = self.descriptionCB(self.master, state, build, description)
+        else:
+            desc = description
+        return desc
 
     def createStatus(self,
                      repo_user, repo_name, sha, state, target_url=None,
