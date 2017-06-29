@@ -1,1 +1,0 @@
-Fix non ascii payload handling in base web hook (:issue:`3321`).

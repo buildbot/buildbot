@@ -10,6 +10,43 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.9`` ( ``2017-06-29`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed a regression inn ``UserPasswordAuth`` where a list would create an
+  error.
+- Fix non ascii payload handling in base web hook (:issue:`3321`).
+- Fixed default buildrequest collapsing (:issue:`3151`)
+- _wait_for_request() would fail to format a log statement due to an invalid
+  type being passed to log.msg (resulting in a broken build)
+- Fix Windows compatibility with frontend development tool ``gulp dev proxy``
+  (:issue:`3359`)
+
+Features
+--------
+
+- New :ref:`Grid View <GridView>` UI plugin.
+- The :ref:`Change-Hooks` system is now integrated in the :ref:`Plugins`
+  system, making it easier to subclass hooks. There is still the need to re-
+  factor hook by hook to allow better customizability.
+- The :py:class:`~buildbot.www.oauth2.GitHubAuth` now allows fetching the user
+  team membership for all organizations the user belongs to. This requires
+  access to a V4 GitHub API(GraphQL).
+- GitLab merge request hook now create a change with repository to be the
+  source repository and branch the source branch. Additional properties are
+  created to point to destination branch and destination repository. This makes
+  :bb:reporter:`GitLabStatusPush` push the correct status to GitLab, so that
+  pipeline report is visible in the merge request page.
+- The :py:class:`~buildbot.www.hooks.github.GitHubEventHandler` now allows the
+  inclusion of white-listed properties for push events.
+- Allow sending a comment to a pull request for Bitbucket Server in
+  :py:class:`~buildbot.reporters.stash.BitbucketServerPRCommentPush`
+- Implement support for Bitbucket Server webhook plugin in
+  :py:class:`~buildbot.www.hooks.bitbucketserver.BitbucketServerEventHandler`
+
 
 Buildbot ``0.9.8`` ( ``2017-06-14`` )
 =====================================
