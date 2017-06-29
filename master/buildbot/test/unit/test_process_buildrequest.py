@@ -147,43 +147,159 @@ class TestBuildRequestCollapser(unittest.TestCase):
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
         return self.do_request_collapse(rows, [21], [19, 20])
 
+    # As documented:
+    # Sourcestamps are compatible if all of the below conditions are met:
+    #
+    # * Their codebase, branch, project, and repository attributes match exactly
+    # * Neither source stamp has a patch (e.g., from a try scheduler)
+    # * Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
+
+    def makeBuildRequestRows(self, brid, bsid, changeid, ssid, codebase, branch=None,
+                             project=None, repository=None, patchid=None, revision=None):
+        rows = [
+            fakedb.SourceStamp(id=ssid, codebase=codebase, branch=branch,
+                               project=project, repository=repository, patchid=patchid, revision=revision),
+            fakedb.Buildset(id=bsid, reason='foo',
+                            submitted_at=1300305712, results=-1),
+            fakedb.BuildsetSourceStamp(sourcestampid=ssid, buildsetid=bsid),
+            fakedb.BuildRequest(id=brid, buildsetid=bsid, builderid=77,
+                            priority=13, submitted_at=1300305712, results=-1),
+            ]
+        if changeid:
+            rows.append(
+                fakedb.Change(changeid=changeid, branch='trunk', revision='9283',
+                              repository='svn://...', project='world-domination',
+                              sourcestampid=ssid)
+                              )
+        if patchid:
+            rows.append(
+                fakedb.Patch(id=patchid, patch_base64='aGVsbG8sIHdvcmxk',
+                 patch_author='bar', patch_comment='foo', subdir='/foo',
+                 patchlevel=3))
+
+        return rows
+
     @defer.inlineCallbacks
-    def test_collapseRequests_collapse_default(self):
+    def test_collapseRequests_collapse_default_with_codebases(self):
 
         def collapseRequests_fn(master, builder, brdict1, brdict2):
             return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
 
         rows = [
             fakedb.Builder(id=77, name='A'),
-            fakedb.SourceStamp(id=234, codebase='C'),
-            fakedb.Buildset(id=30, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.SourceStamp(id=235, codebase='C'),
-            fakedb.Buildset(id=31, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
-            fakedb.SourceStamp(id=236, codebase='C'),
-            fakedb.SourceStamp(id=237, codebase='A'),
-            fakedb.Buildset(id=32, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
-            fakedb.Buildset(id=33, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=237, buildsetid=33),
-            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=22, buildsetid=33, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
         ]
-
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
         self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
         yield self.do_request_collapse(rows, [22], [])
         yield self.do_request_collapse(rows, [21], [19, 20])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_codebases_branches(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A', 'br1')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C', 'br2')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', 'br2')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C', 'br3')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [19])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_codebases_repository(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A', None, 'p1')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C', None, 'p2')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', None, 'p2')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C', None, 'p3')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [19])
+
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_codebases_projects(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A', None, None, 'project1')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C', None, None, 'project2')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', None, None, 'project2')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C', None, None, 'project3')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [19])
+
+    # * Neither source stamp has a patch (e.g., from a try scheduler)
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_a_patch(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', patchid=123)
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [20])
+
+    # * Either both source stamps are associated with changes..
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_changes(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A')
+        rows += self.makeBuildRequestRows(21, 121, 123, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C')
+        rows += self.makeBuildRequestRows(20, 120, 124, 220, 'C')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [20])
+
+    # * ... or neither are associated with changes but they have matching revisions.
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_non_matching_revision(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(22, 122, None, 222, 'A')
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', revision='abcd1234')
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [22], [])
+        yield self.do_request_collapse(rows, [21], [20])
 
 
 class TestBuildRequest(unittest.TestCase):
