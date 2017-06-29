@@ -194,6 +194,8 @@ class Trigger(BuildStep):
         for was_cb, results in rclist:
             if isinstance(results, tuple):
                 results, brids_dict = results
+            else:
+                brids_dict = {}
 
             if not was_cb:
                 yield self.addLogWithFailure(results)
