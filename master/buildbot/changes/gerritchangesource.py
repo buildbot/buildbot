@@ -65,6 +65,11 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     return username
 
 
+class _AnyGerritProject(object):
+    # Represents any gerrit project.
+    pass
+
+
 class GerritChangeSourceBase(base.ChangeSource):
 
     """This source will maintain a connection to gerrit ssh server
@@ -78,7 +83,8 @@ class GerritChangeSourceBase(base.ChangeSource):
     def checkConfig(self,
                     gitBaseURL=None,
                     handled_events=("patchset-created", "ref-updated"),
-                    debug=False):
+                    debug=False,
+                    gerritprojects=_AnyGerritProject):
 
         if gitBaseURL is None:
             config.error("gitBaseURL must be specified")
@@ -86,10 +92,12 @@ class GerritChangeSourceBase(base.ChangeSource):
     def reconfigService(self,
                         gitBaseURL=None,
                         handled_events=("patchset-created", "ref-updated"),
-                        debug=False):
+                        debug=False,
+                        gerritprojects=_AnyGerritProject):
         self.gitBaseURL = gitBaseURL
         self.handled_events = list(handled_events)
         self.debug = debug
+        self.gerritProjects = gerritprojects
 
     def lineReceived(self, line):
         try:
@@ -108,6 +116,13 @@ class GerritChangeSourceBase(base.ChangeSource):
         return self.eventReceived(event)
 
     def eventReceived(self, event):
+        if (self.gerritProjects is not _AnyGerritProject):
+            project = util.ascii2unicode(event['change']['project'])
+            if project not in self.gerritProjects:
+                if self.debug:
+                    log.msg("Not configured to handle events of '%s' project" % project)
+                return defer.succeed(None)
+
         if not (event['type'] in self.handled_events):
             if self.debug:
                 msg = "the event type '%s' is not setup to handle"
