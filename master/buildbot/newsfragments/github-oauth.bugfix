@@ -1,0 +1,1 @@
+Keep the old :py:class:`~buildbot.www.oauth2.GitHubAuth` v3 API behavior intact.

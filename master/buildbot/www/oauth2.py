@@ -248,9 +248,9 @@ class GitHubAuth(OAuth2Auth):
                 config.error(
                     'Retrieving team membership information using GitHubAuth is only '
                     'possible using GitHub api v4.')
-            self.resourceEndpoint = '{0}/api/v3'.format(self.serverURL)
+            self.apiResourceEndpoint = '{0}/api/v3'.format(self.serverURL)
         else:
-            self.resourceEndpoint = '{0}/graphql'.format(self.serverURL)
+            self.apiResourceEndpoint = '{0}/graphql'.format(self.serverURL)
         if getTeamsMembership:
             self.getUserTeamsGraphqlTplC = jinja2.Template(
                 self.getUserTeamsGraphqlTpl.strip())
@@ -262,9 +262,9 @@ class GitHubAuth(OAuth2Auth):
             log.info('{klass} GraphQL POST Request: {endpoint} -> '
                      'DATA:\n----\n{data}\n----',
                      klass=self.__class__.__name__,
-                     endpoint=self.resourceEndpoint,
+                     endpoint=self.apiResourceEndpoint,
                      data=query)
-        ret = session.post(self.resourceEndpoint, json={'query': query})
+        ret = session.post(self.apiResourceEndpoint, json={'query': query})
         return ret.json()
 
     def getUserInfoFromOAuthClient(self, c):
