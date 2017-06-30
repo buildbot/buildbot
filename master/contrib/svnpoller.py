@@ -23,9 +23,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import commands
 import ConfigParser
 import os.path
+import subprocess
+import sys
 import xml.dom.minidom
 
 # change these settings to match your project
@@ -33,8 +34,10 @@ svnurl = "https://pse.cheme.cmu.edu/svn/ascend/code/trunk"
 statefilename = "~/changemonitor/config.ini"
 buildmaster = "buildbot.example.org:9989"  # connects to a PBChangeSource
 
-xml1 = commands.getoutput(
-    "svn log --non-interactive --verbose --xml --limit=1 " + svnurl)
+xml1 = subprocess.check_output(
+    "svn log --non-interactive --verbose --xml --limit=1 " + svnurl,
+    shell=True)
+xml1 = xml1.decode(sys.stdout.encoding)
 # print "XML\n-----------\n"+xml1+"\n\n"
 
 try:
@@ -89,7 +92,8 @@ if lastrevision != revision:
 --comments=\"" + comments + "\" " + " ".join(paths)
 
     # print cmd
-    res = commands.getoutput(cmd)
+    res = subprocess.check_output(cmd)
+    res = res.decode(sys.stdout.encoding)
 
     print("SUBMITTING NEW REVISION", revision)
     if not ini.has_section("CurrentRevision"):

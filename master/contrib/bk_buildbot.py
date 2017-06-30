@@ -11,7 +11,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import commands
+import subprocess
 import sys
 
 from twisted.cred import credentials
@@ -83,15 +83,19 @@ class ChangeSender:
         rev_arg = ''
         if opts['revision']:
             rev_arg = '-r"%s"' % (opts['revision'], )
-        changed = commands.getoutput("bk changes -v %s -d':GFILE:\\n' '%s'" % (
-            rev_arg, repo)).split('\n')
+        changed = subprocess.check_output("bk changes -v %s -d':GFILE:\\n' '%s'" % (
+            rev_arg, repo), shell=True)
+        changed = changed.decode(sys.stdout.encoding)
+        changed = changed.split('\n')
 
         # Remove the first line, it's an info message you can't remove
         # (annoying)
         del changed[0]
 
-        change_info = commands.getoutput("bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (
-            rev_arg, repo)).split('\n')
+        change_info = subprocess.check_output("bk changes %s -d':USER:\\n$each(:C:){(:C:)\\n}' '%s'" % (
+            rev_arg, repo), shell=True)
+        change_info = change_info.decode(sys.stdout.encoding)
+        change_info = change_info.split('\n')
 
         # Remove the first line, it's an info message you can't remove
         # (annoying)

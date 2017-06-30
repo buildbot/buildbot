@@ -4,9 +4,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import commands
 import os.path
 import random
+import subprocess
 import sys
 
 from twisted.cred import credentials
@@ -71,7 +71,8 @@ def send_change(remote):
         files = sys.argv[1:]
     else:
         files = [makeFilename()]
-    comments = commands.getoutput("fortune")
+    comments = subprocess.check_output(["fortune"])
+    comments = comments.decode(sys.stdout.encoding)
     change = {'who': who, 'files': files, 'comments': comments}
     d = remote.callRemote('addChange', change)
     d.addCallback(done)
@@ -80,7 +81,7 @@ def send_change(remote):
 
 f = pb.PBClientFactory()
 d = f.login(credentials.UsernamePassword("change", "changepw"))
-reactor.connectTCP("localhost", 8007, f)
+reactor.connectTCP("10.0.24.125", 9989, f)
 err = lambda f: (log.err(), reactor.stop())
 d.addCallback(send_change).addErrback(err)
 

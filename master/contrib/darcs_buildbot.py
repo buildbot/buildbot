@@ -21,8 +21,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import commands
 import os
+import subprocess
 import sys
 import xml
 from xml.dom import minidom
@@ -85,7 +85,8 @@ def makeChange(p):
 
 
 def getChangesFromCommand(cmd, count):
-    out = commands.getoutput(cmd)
+    out = subprocess.check_output(cmd, shell=True)
+    out = out.decode(sys.stdout.encoding)
     try:
         doc = minidom.parseString(out)
     except xml.parsers.expat.ExpatError as e:
@@ -161,7 +162,8 @@ def sendChanges(master):
     # contexts is Hard.
 
     # get the context for the most recent change
-    latestcontext = commands.getoutput("darcs changes --context")
+    latestcontext = subprocess.check_output("darcs changes --context", shell=True)
+    latestcontext = latestcontext.decode(sys.stdout.encoding)
     changes[-1]['context'] = latestcontext
 
     def _send(res, c):

@@ -21,10 +21,10 @@ from __future__ import division
 from __future__ import print_function
 from future.utils import text_type
 
-import commands
 import os
 import re
 import sets
+import subprocess
 import sys
 
 from twisted.cred import credentials
@@ -169,13 +169,17 @@ class ChangeSender:
         rev_arg = ''
         if opts['revision']:
             rev_arg = '-r %s' % (opts['revision'], )
-        changed = commands.getoutput('svnlook changed %s "%s"' % (
-            rev_arg, repo)).split('\n')
+        changed = subprocess.check_output('svnlook changed %s "%s"' % (
+            rev_arg, repo), shell=True)
+        changed = changed.decode(sys.stdout.encoding)
+        changed = changed.split('\n')
         # the first 4 columns can contain status information
         changed = [x[4:] for x in changed]
 
-        message = commands.getoutput('svnlook log %s "%s"' % (rev_arg, repo))
-        who = commands.getoutput('svnlook author %s "%s"' % (rev_arg, repo))
+        message = subprocess.check_output('svnlook log %s "%s"' % (rev_arg, repo), shell=True)
+        message = message.decode(sys.stdout.encoding)
+        who = subprocess.check_output('svnlook author %s "%s"' % (rev_arg, repo), shell=True)
+        who = who.decode(sys.stdout.encoding)
         revision = opts.get('revision')
         if revision is not None:
             revision = str(int(revision))
