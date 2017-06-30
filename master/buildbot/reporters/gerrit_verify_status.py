@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from six import string_types
-
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -33,6 +31,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
+from six import string_types
 from six.moves import http_client
 
 log = Logger()
@@ -219,6 +218,8 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         changes = yield self.getGerritChanges(props)
         for change in changes:
             try:
+                # NOTE: The response object we receive here is documented here:
+                #   https://docs.buildbot.net/current/developer/utils.html#buildbot.util.service.IHTTPResponse
                 response = yield self.createStatus(
                     change['change_id'],
                     change['revision_id'],
@@ -236,7 +237,7 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                 # on success.
                 if response.code != http_client.NO_CONTENT:
                     content = yield response.content()
-                    if not isinstance(content, string_types):
+                    if content and not isinstance(content, string_types):
                         content = content.decode('utf-8')
 
                     raise ValueError('Expected 204 NO CONTENT. Response was {}: {}'.format(response.code, content))
