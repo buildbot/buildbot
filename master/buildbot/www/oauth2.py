@@ -20,6 +20,7 @@ from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
 
 import json
+import re
 import textwrap
 from posixpath import join
 
@@ -204,11 +205,10 @@ class GitHubAuth(OAuth2Auth):
     resourceEndpoint = 'https://api.github.com'
 
     getUserTeamsGraphqlTpl = textwrap.dedent(r'''
-        {%- set organizations = user_info.get('groups', ()) %}
         {%- if organizations %}
         query getOrgTeamMembership {
-          {%- for org_name in user_info.get('groups', ()) %}
-          {{ org_name }}: organization(login: "{{ org_name }}") {
+          {%- for org_slug, org_name in organizations.items() %}
+          {{ org_slug }}: organization(login: "{{ org_name }}") {
             teams(first: 100) {
               edges {
                 node {
@@ -252,6 +252,8 @@ class GitHubAuth(OAuth2Auth):
         else:
             self.apiResourceEndpoint = '{0}/graphql'.format(self.serverURL)
         if getTeamsMembership:
+            # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
+            self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
             self.getUserTeamsGraphqlTplC = jinja2.Template(
                 self.getUserTeamsGraphqlTpl.strip())
         self.getTeamsMembership = getTeamsMembership
@@ -314,8 +316,12 @@ class GitHubAuth(OAuth2Auth):
                          groups=[org['node']['login'] for org in
                                  data['viewer']['organizations']['edges']])
         if self.getTeamsMembership:
+            orgs_name_slug_mapping = dict(
+                [(self._orgname_slug_sub_re.sub('_', n), n)
+                 for n in user_info['groups']])
             graphql_query = self.getUserTeamsGraphqlTplC.render(
-                {'user_info': user_info})
+                {'user_info': user_info,
+                 'organizations': orgs_name_slug_mapping})
             if graphql_query:
                 data = self.post(c, graphql_query)
                 if self.debug:
@@ -330,7 +336,7 @@ class GitHubAuth(OAuth2Auth):
                         # identical with the inclusion of the organization
                         # since different organizations might share a common
                         # team name
-                        teams.add('%s/%s' % (org, node['node']['name']))
+                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',
