@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from six import string_types
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -31,8 +33,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
-from six import string_types
-from six.moves import http_client
+from six.moves import http_client  # pylint: disable=ungrouped-imports
 
 log = Logger()
 
