@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.9p1`` ( ``2017-07-01`` )
+Bug fixes
+---------
+
+- Keep the old :py:class:`~buildbot.www.oauth2.GitHubAuth` v3 API behavior
+  intact. When using the :py:class:`~buildbot.www.oauth2.GitHubAuth` v4 API,
+  the generated GraphQL to get the user organizations uses a name alias for
+  each organization. These aliases must not contain dashes.
+
+
 Buildbot ``0.9.9`` ( ``2017-06-29`` )
 =====================================
 
