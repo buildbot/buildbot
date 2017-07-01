@@ -34,7 +34,7 @@ def gitDescribeToPep440(version):
     # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
     # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
 
-    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(p(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
     v = VERSION_MATCH.search(version)
     if v:
         major = int(v.group('major'))
@@ -45,7 +45,7 @@ def gitDescribeToPep440(version):
             dev = int(v.group('dev'))
             return "{}.{}.{}-dev{}".format(major, minor, patch, dev)
         if v.group('post'):
-            return "{}.{}.{}p{}".format(major, minor, patch, v.group('post'))
+            return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
         return "{}.{}.{}".format(major, minor, patch)
 
     return v
