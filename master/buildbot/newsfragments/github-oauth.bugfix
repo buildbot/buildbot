@@ -1,2 +1,0 @@
-Keep the old :py:class:`~buildbot.www.oauth2.GitHubAuth` v3 API behavior intact.
-When using the :py:class:`~buildbot.www.oauth2.GitHubAuth` v4 API, the generated GraphQL to get the user organizations uses a name alias for each organization. These aliases must not contain dashes.
