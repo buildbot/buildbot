@@ -28,3 +28,9 @@ class GitDescribeToPep440(unittest.SynchronousTestCase):
 
     def test_tag(self):
         self.assertEqual(gitDescribeToPep440("v0.9.8"), "0.9.8")
+
+    def test_p1tag(self):
+        self.assertEqual(gitDescribeToPep440("v0.9.9p1"), "0.9.9p1")
+
+    def test_p1dev(self):
+        self.assertEqual(gitDescribeToPep440("v0.9.9p1-20-gf0f45ca"), "0.9.10-dev20")
