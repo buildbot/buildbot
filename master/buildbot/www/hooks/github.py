@@ -16,8 +16,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import datetime
 import hmac
 import json
+import pprint
 import re
 import textwrap
 from hashlib import sha1
@@ -102,8 +104,11 @@ class GitHubEventHandler(PullRequestMixin):
         self.github_api_endpoint = github_api_endpoint
         self.debug = debug
         self.verify = verify
+        self._http = None
+        self._api_rate_limit = None
+        self._api_rate_limit_remaining = None
+        self._api_rate_limit_reset = None
         if oauth_token is not None:
-            self._http = None
             self._user_details_cache = {}
             self.getPrCommitAuthorDetailsTplC = jinja2.Template(
                 self.getPrCommitAuthorDetailsTpl
@@ -123,6 +128,7 @@ class GitHubEventHandler(PullRequestMixin):
             raise ValueError('Unknown event: {}'.format(event_type))
 
         result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
+        self._log_rate_limit_information()
         defer.returnValue(result)
 
     def _get_payload(self, request):
@@ -214,9 +220,13 @@ class GitHubEventHandler(PullRequestMixin):
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
+        files = None
         change_author = None
         user_login = payload['pull_request']['user']['login']
+        repo_owner = payload['pull_request']['base']['user']['login']
+        repo_name = payload['pull_request']['base']['repo']['name']
         if self.oauth_token is not None:
+            files = yield self._get_changed_files(repo_owner, repo_name, number)
             change_author = self._user_details_cache.get(user_login, None)
             if change_author is None:
                 change_author = yield self._fetch_user_details(
@@ -244,6 +254,8 @@ class GitHubEventHandler(PullRequestMixin):
                 number, commits, 's' if commits != 1 else '', title, comments),
             'properties': properties,
         }
+        if files is not None:
+            change['files'] = files
 
         if callable(self._codebase):
             change['codebase'] = self._codebase(payload)
@@ -349,18 +361,57 @@ class GitHubEventHandler(PullRequestMixin):
         return False
 
     @defer.inlineCallbacks
-    def _fetch_user_details(self, login,
-                            repo_owner=None,
-                            repo_name=None,
-                            pr_num=None):
+    def _get_http_client(self):
         if self._http is None:
             # Instanticate an http client service to user
             self._http = yield httpclientservice.HTTPClientService.getService(
                 self.master, self.github_api_endpoint, headers={
                     'Authorization': 'token ' + self.oauth_token,
-                    'User-Agent': 'Buildbot'
+                    'User-Agent': 'Buildbot',
+                    'Accept': 'application/vnd.github.v3+json'
                 },
                 debug=self.debug, verify=self.verify)
+            # Get rate limits
+            response = yield self._http.get('/rate_limit')
+            rate_limit_info = yield response.json()
+            core_limits = rate_limit_info['resources']['core']
+            self._api_rate_limit = core_limits['limit']
+            self._api_rate_limit_remaining = core_limits['remaining']
+            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(core_limits['reset'])
+            self._log_rate_limit_information()
+        defer.returnValue(self._http)
+
+    def _update_rate_limit_information(self, response):
+        log.info('Response Headers:\n{headers}', headers=pprint.pformat(response.headers))
+        api_rate_limit = response.headers.get('X-RateLimit-Limit') or None
+        if api_rate_limit:
+            self._api_rate_limit = int(api_rate_limit)
+        api_rate_limit_remaining = response.headers.get('X-RateLimit-Remaining') or None
+        if api_rate_limit_remaining:
+            self._api_rate_limit_remaining = int(api_rate_limit_remaining)
+        api_rate_limit_reset = response.headers.get('X-RateLimit-Reset') or None
+        if api_rate_limit_reset:
+            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(int(api_rate_limit_reset))
+
+    def _log_rate_limit_information(self):
+        if not self._api_rate_limit or \
+                not self._api_rate_limit_reset or \
+                not self._api_rate_limit_reset:
+            return
+        log.info(
+            'GitHub API rate limit information. Limit: {limit}; '
+            'Remaining: {remaining}; Reset: {reset} UTC;',
+            limit=self._api_rate_limit,
+            remaining=self._api_rate_limit_remaining,
+            reset=self._api_rate_limit_reset)
+
+    @defer.inlineCallbacks
+    def _fetch_user_details(self, login,
+                            repo_owner=None,
+                            repo_name=None,
+                            pr_num=None):
+
+        httpclient = yield self._get_http_client()
 
         end_cursor = None
         ret_change_author = None
@@ -378,7 +429,7 @@ class GitHubEventHandler(PullRequestMixin):
                          klass=self.__class__.__name__,
                          query=graphql_query)
             # POST the GraphQL query
-            response = yield self._http.post('/graphql', json={'query': graphql_query})
+            response = yield httpclient.post('/graphql', json={'query': graphql_query})
             if response.code != 200:
                 content = yield response.content()
                 log.error("{code}: unable to POST GraphQL query: {content}",
@@ -429,6 +480,18 @@ class GitHubEventHandler(PullRequestMixin):
 
         # Return the matching change_author login
         defer.returnValue(ret_change_author)
+
+    @defer.inlineCallbacks
+    def _get_changed_files(self, repo_owner, repo_name, pr_num):
+        httpclient = yield self._get_http_client()
+        response = yield httpclient.get(
+            '/repos/{}/{}/pulls/{}/files'.format(repo_owner, repo_name, pr_num))
+        files = set()
+        changed_files = yield response.json()
+        log.info('Changed files: {c}', c=changed_files)
+        for payload in changed_files:
+            files.add(payload['filename'])
+        defer.returnValue(sorted(files))
 
 # for GitHub, we do another level of indirection because
 # we already had documented API that encouraged people to subclass GitHubEventHandler
