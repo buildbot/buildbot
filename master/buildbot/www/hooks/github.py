@@ -74,6 +74,40 @@ class GitHubEventHandler(PullRequestMixin):
         }
     ''').strip()
 
+    getPrChangesTpl = textwrap.dedent('''
+        query repoCommitsOwners {
+          repository(owner: "{{ repo_owner }}", name: "{{ repo_name }}") {
+            pullRequest(number: {{ pr_num }}) {
+              commits(first: 100 {%- if end_cursor %}, after: "{{ end_cursor }}"{% endif %}) {
+                pageInfo {
+                  endCursor
+                  hasNextPage
+                }
+                nodes {
+                  commit {
+                    oid
+                    commitUrl
+                    committedDate
+                    messageBodyHTML
+                    messageHeadlineHTML
+                    author {
+                      name
+                      email
+                      user {
+                        login
+                      }
+                    }
+                    repository {
+                      url
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+    ''').strip()
+
     def __init__(self, secret, strict,
                  codebase=None,
                  github_property_whitelist=None,
@@ -226,43 +260,36 @@ class GitHubEventHandler(PullRequestMixin):
         repo_owner = payload['pull_request']['base']['user']['login']
         repo_name = payload['pull_request']['base']['repo']['name']
         if self.oauth_token is not None:
-            files = yield self._get_changed_files(repo_owner, repo_name, number)
-            change_author = self._user_details_cache.get(user_login, None)
-            if change_author is None:
-                change_author = yield self._fetch_user_details(
-                    user_login,
-                    repo_owner=payload['pull_request']['base']['user']['login'],
-                    repo_name=payload['pull_request']['base']['repo']['name'],
-                    pr_num=number,
-                )
-
-        if change_author is None:
+            changes = yield self._process_pr_changes(repo_owner,
+                                                     repo_name,
+                                                     number,
+                                                     refname,
+                                                     properties,
+                                                     payload)
+        else:
             # The owner should be the pull request owner, not the
             # event sender
             change_author = user_login
+            change = {
+                'revision': payload['pull_request']['head']['sha'],
+                'when_timestamp': dateparse(payload['pull_request']['created_at']),
+                'branch': refname,
+                'revlink': payload['pull_request']['_links']['html']['href'],
+                'repository': payload['repository']['html_url'],
+                'project': payload['pull_request']['base']['repo']['full_name'],
+                'category': 'pull',
+                'author': change_author,
+                'comments': u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
+                    number, commits, 's' if commits != 1 else '', title, comments),
+                'properties': properties,
+            }
 
-        change = {
-            'revision': payload['pull_request']['head']['sha'],
-            'when_timestamp': dateparse(payload['pull_request']['created_at']),
-            'branch': refname,
-            'revlink': payload['pull_request']['_links']['html']['href'],
-            'repository': payload['repository']['html_url'],
-            'project': payload['pull_request']['base']['repo']['full_name'],
-            'category': 'pull',
-            'author': change_author,
-            'comments': u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
-                number, commits, 's' if commits != 1 else '', title, comments),
-            'properties': properties,
-        }
-        if files is not None:
-            change['files'] = files
+            if callable(self._codebase):
+                change['codebase'] = self._codebase(payload)
+            elif self._codebase is not None:
+                change['codebase'] = self._codebase
 
-        if callable(self._codebase):
-            change['codebase'] = self._codebase(payload)
-        elif self._codebase is not None:
-            change['codebase'] = self._codebase
-
-        changes.append(change)
+            changes.append(change)
 
         log.info("Received {num_changes} changes from GitHub PR #{pr_num}",
                  num_changes=len(changes), pr_num=number)
@@ -404,6 +431,101 @@ class GitHubEventHandler(PullRequestMixin):
             limit=self._api_rate_limit,
             remaining=self._api_rate_limit_remaining,
             reset=self._api_rate_limit_reset)
+
+    @defer.inlineCallbacks
+    def _process_pr_changes(self,
+                            repo_owner,
+                            repo_name,
+                            pr_num,
+                            refname,
+                            properties,
+                            pr_payload):
+        httpclient = yield self._get_http_client()
+
+        changes = []
+        end_cursor = None
+
+        while True:
+            graphql_query = self.getPrChangesTplC.render(
+                repo_owner=repo_owner,
+                repo_name=repo_name,
+                pr_num=pr_num,
+                end_cursor=end_cursor)
+
+            if self.debug:
+                log.info('{klass} GraphQL POST Request: -> '
+                         'DATA:\n----\n{query}\n----',
+                         klass=self.__class__.__name__,
+                         query=graphql_query)
+            # POST the GraphQL query
+            response = yield httpclient.post('/graphql', json={'query': graphql_query})
+            if response.code != 200:
+                content = yield response.content()
+                log.error("{code}: unable to POST GraphQL query: {content}",
+                          code=response.code, content=content)
+                break
+
+            data = yield response.json()
+            if 'errors' in data:
+                log.error('Unable to send query. Errors: {errors}', errors=data['errors'])
+                break
+            if 'data' not in data:
+                log.error('Unable to retrieve query response out of: {data}', data=data)
+                break
+
+            data = data['data']
+            if self.debug:
+                log.info('{klass} GraphQL Response: {response}',
+                         klass=self.__class__.__name__,
+                         response=data)
+
+            if data['repository']['pullRequest']['commits']['pageInfo']['hasNextPage']:
+                # Do we have a next page? If so, get the endCursor to pass along to
+                # the next query
+                end_cursor = data['repository']['pullRequest']['commits']['pageInfo']['endCursor']
+            else:
+                end_cursor = None
+
+            for node in data['repository']['pullRequest']['commits']['nodes']:
+                change_author = u'{} <{}>'.format(node['commit']['author']['name'],
+                                                  node['commit']['author']['email'])
+                sha = node['commit']['oid']
+
+                change = {
+                    'revision': sha,
+                    'when_timestamp': dateparse(node['commit']['committedDate']),
+                    'branch': refname,
+                    'revlink': node['commit']['commitUrl'],
+                    'repository': node['commit']['repository']['url'],
+                    'project': '{}/{}'.format(repo_owner, repo_name),
+                    'category': 'pull',
+                    'author': change_author,
+                    'properties': properties,
+                }
+                comments = node['commit']['messageHeadlineHTML']
+                body = node['commit']['messageBodyHTML']
+                if body:
+                    comments += '\n' + body
+                change['comments'] = comments
+                files = []
+                changed_files = yield httpclient.get('/repos/{}/{}/commits/{}'.format(repo_owner, repo_name, sha))
+                changed_files_data = yield changed_files.json()
+                for payload in changed_files_data['files']:
+                    files.append(payload['filename'])
+                change['files'] = files
+
+                if callable(self._codebase):
+                    change['codebase'] = self._codebase(pr_payload)
+                elif self._codebase is not None:
+                    change['codebase'] = self._codebase
+
+                changes.append(change)
+
+            if end_cursor is None:
+                # No next page? Break the loop
+                break
+
+        defer.returnValue(changes)
 
     @defer.inlineCallbacks
     def _fetch_user_details(self, login,
