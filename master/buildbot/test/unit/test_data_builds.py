@@ -46,7 +46,7 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.Builder(id=77),
+            fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
@@ -90,6 +90,12 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(build['buildid'], 15)
 
     @defer.inlineCallbacks
+    def test_get_buildername_number(self):
+        build = yield self.callGet(('builders', 'builder77', 'builds', 5))
+        self.validateData(build)
+        self.assertEqual(build['buildid'], 15)
+
+    @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = MockedResultSpec(
             filters=[resultspec.Filter('property', 'eq', [False])])
@@ -129,7 +135,8 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.Builder(id=77),
+            fakedb.Builder(id=77, name='builder77'),
+            fakedb.Builder(id=78, name='builder78'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
@@ -155,6 +162,12 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_builder(self):
         builds = yield self.callGet(('builders', 78, 'builds'))
+        [self.validateData(build) for build in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [5])
+
+    @defer.inlineCallbacks
+    def test_get_buildername(self):
+        builds = yield self.callGet(('builders', 'builder78', 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 

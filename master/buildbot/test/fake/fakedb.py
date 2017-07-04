@@ -2369,10 +2369,12 @@ class FakeBuildersComponent(FakeDBComponent):
                 self.builders_tags.setdefault(row.builderid,
                                               []).append(row.tagid)
 
-    def findBuilderId(self, name, _reactor=reactor):
+    def findBuilderId(self, name, autoCreate=True, _reactor=reactor):
         for m in itervalues(self.builders):
             if m['name'] == name:
                 return defer.succeed(m['id'])
+        if not autoCreate:
+            return defer.succeed(None)
         id = len(self.builders) + 1
         self.builders[id] = dict(
             id=id,

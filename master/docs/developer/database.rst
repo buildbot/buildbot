@@ -1457,15 +1457,17 @@ builders
     * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
 
-    .. py:method:: findBuilderId(name)
+    .. py:method:: findBuilderId(name, autoCreate=True)
 
         :param name: name of this builder
         :type name: 20-character :ref:`identifier <type-identifier>`
+        :param autoCreate: create automatically the builder if name not found
+        :type autoCreate: bool
         :returns: builder id via Deferred
 
         Return the builder ID for the builder with this builder name.
         If such a builder is already in the database, this returns the ID.
-        If not, the builder is added to the database.
+        If not and C{autoCreate} is True, the builder is added to the database.
 
     .. py:method:: addBuilderMaster(builderid=None, masterid=None)
 
@@ -1551,10 +1553,10 @@ The DB Connector and Components
         For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
         Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite)
 
-    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None)
+    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
         Find (using C{whereclause}) or add (using C{insert_values) a row to
-        C{table}, and return the resulting ID.
+        C{table}, and return the resulting ID. If C{autoCreate} == False, we will not automatically insert the row.
 
     .. py:method:: hashColumns(*args)
 

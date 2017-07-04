@@ -22,17 +22,21 @@ from buildbot.data import base
 from buildbot.data import types
 
 
-class BuilderEndpoint(base.Endpoint):
+class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
         /builders/n:builderid
+        /builders/i:buildername
         /masters/n:masterid/builders/n:builderid
     """
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        builderid = kwargs['builderid']
+        builderid = yield self.getBuilderId(kwargs)
+        if builderid is None:
+            defer.returnValue(None)
+
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
             defer.returnValue(None)

@@ -44,7 +44,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_findBuilderId(self):
         @self.assertArgSpecMatches(self.db.builders.findBuilderId)
-        def findBuilderId(self, name):
+        def findBuilderId(self, name, autoCreate=True):
             pass
 
     def test_signature_addBuilderMaster(self):
@@ -100,6 +100,11 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(builderdict,
                          dict(id=id, name='some:builder', tags=[],
                               masterids=[], description=None))
+
+    @defer.inlineCallbacks
+    def test_findBuilderId_new_no_autoCreate(self):
+        id = yield self.db.builders.findBuilderId('some:builder', autoCreate=False)
+        self.assertIsNone(id)
 
     @defer.inlineCallbacks
     def test_findBuilderId_exists(self):

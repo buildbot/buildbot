@@ -36,7 +36,7 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.Builder(id=77),
+            fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
@@ -94,6 +94,14 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_by_builder_step_name(self):
         log = yield self.callGet(
             ('builders', '77', 'builds', 3, 'steps', 'make',
+             'logs', 'errors'))
+        self.validateData(log)
+        self.assertEqual(log['name'], u'errors')
+
+    @defer.inlineCallbacks
+    def test_get_by_buildername_step_name(self):
+        log = yield self.callGet(
+            ('builders', 'builder77', 'builds', 3, 'steps', 'make',
              'logs', 'errors'))
         self.validateData(log)
         self.assertEqual(log['name'], u'errors')
