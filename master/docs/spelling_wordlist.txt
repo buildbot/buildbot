@@ -162,6 +162,7 @@ Coffeelint
 coffeescript
 coffeeScript
 collapseRequests
+collapser
 commandId
 commandline
 committer
