@@ -138,8 +138,7 @@ class BuildNestingMixin(object):
     def getBuilderId(self, kwargs):
         if 'buildername' in kwargs:
             return self.master.db.builders.findBuilderId(kwargs['buildername'], autoCreate=False)
-        else:
-            return defer.succeed(kwargs['builderid'])
+        return defer.succeed(kwargs['builderid'])
 
 
 class ListResult(UserList):

@@ -1467,7 +1467,7 @@ builders
 
         Return the builder ID for the builder with this builder name.
         If such a builder is already in the database, this returns the ID.
-        If not and C{autoCreate} is True, the builder is added to the database.
+        If not and ``autoCreate`` is True, the builder is added to the database.
 
     .. py:method:: addBuilderMaster(builderid=None, masterid=None)
 
@@ -1555,8 +1555,8 @@ The DB Connector and Components
 
     .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
-        Find (using C{whereclause}) or add (using C{insert_values) a row to
-        C{table}, and return the resulting ID. If C{autoCreate} == False, we will not automatically insert the row.
+        Find (using ``whereclause``) or add (using ``insert_values``) a row to
+        ``table``, and return the resulting ID. If ``autoCreate`` == False, we will not automatically insert the row.
 
     .. py:method:: hashColumns(*args)
 
