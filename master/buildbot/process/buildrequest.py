@@ -62,7 +62,7 @@ class BuildRequestCollapser(object):
 
     @defer.inlineCallbacks
     def collapse(self):
-        collapseBRs = []
+        brids = set()
 
         for brid in self.brids:
             # Get the BuildRequest object
@@ -86,10 +86,10 @@ class BuildRequestCollapser(object):
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
-                    collapseBRs.append(unclaim_br)
+                    brids.add(unclaim_br['buildrequestid'])
 
-        brids = [b['buildrequestid'] for b in collapseBRs]
-        if collapseBRs:
+        brids = list(brids)
+        if brids:
             # Claim the buildrequests
             yield self.master.data.updates.claimBuildRequests(brids)
             # complete the buildrequest with result SKIPPED.
