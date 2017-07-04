@@ -1,0 +1,1 @@
+Fix ``tried to complete 100 buildrequests, but only completed 25`` issue in buildrequest collapser (:issue:`3406`)
