@@ -80,6 +80,7 @@ class NotifierBase(service.BuildbotService):
                 self.name += "_schedulers_" + "+".join(schedulers)
             if branches is not None:
                 self.name += "_branches_" + "+".join(branches)
+            self.name += "_".join(mode)
 
         if '\n' in subject:
             config.error(
