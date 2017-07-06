@@ -41,6 +41,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
@@ -339,8 +340,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, list(kwargs)))
         self._pendingLogObservers = []
 
-        if not isinstance(self.name, str):
-            config.error("BuildStep name must be a string: %r" % (self.name,))
+        if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
+            config.error("BuildStep name must be a string or a renderable object: "
+                         "%r" % (self.name,))
 
         if isinstance(self.description, str):
             self.description = [self.description]
