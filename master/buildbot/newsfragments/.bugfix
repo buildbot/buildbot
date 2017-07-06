@@ -1,0 +1,10 @@
+When running buildbot with python3, the following API call: 
+
+/api/v2/builders/<int>/builds&property=* 
+
+or any property filter for that matter does not return the expected set of
+filters but instead returns an empty dictionary {}.
+
+The fix is to compare the right types of variables - string vs binary.
+
+In python 2 the b'' prefix is ignored so it shouldn't break changes there.
