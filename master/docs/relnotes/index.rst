@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.9.post2`` ( ``2017-07-06`` )
+Bug fixes
+---------
+
+- Fix ``tried to complete 100 buildrequests, but only completed 25`` issue in
+  buildrequest collapser (:issue:`3406`)
+- Fix issue when several mail notifiers are used with same parameters, but
+  different modes (:issue:`3398`).
+
+
 Buildbot ``0.9.9p1`` ( ``2017-07-01`` )
 =======================================
 
