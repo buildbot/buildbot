@@ -85,36 +85,36 @@ class TestBuildRequestCollapser(unittest.TestCase):
         ]
         return self.do_request_collapse(rows, [19], [])
 
+    BASE_ROWS = [
+        fakedb.Builder(id=77, name='A'),
+        fakedb.SourceStamp(id=234, codebase='C'),
+        fakedb.Buildset(id=30, reason='foo',
+                        submitted_at=1300305712, results=-1),
+        fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
+        fakedb.SourceStamp(id=235, codebase='C'),
+        fakedb.Buildset(id=31, reason='foo',
+                        submitted_at=1300305712, results=-1),
+        fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
+        fakedb.SourceStamp(id=236, codebase='C'),
+        fakedb.Buildset(id=32, reason='foo',
+                        submitted_at=1300305712, results=-1),
+        fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
+        fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
+                            priority=13, submitted_at=1300305712, results=-1),
+        fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
+                            priority=13, submitted_at=1300305712, results=-1),
+        fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
+                            priority=13, submitted_at=1300305712, results=-1),
+    ]
+
     def test_collapseRequests_no_collapse(self):
 
         def collapseRequests_fn(master, builder, brdict1, brdict2):
             # Fail all collapse attempts
             return False
 
-        rows = [
-            fakedb.Builder(id=77, name='A'),
-            fakedb.SourceStamp(id=234, codebase='C'),
-            fakedb.Buildset(id=30, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.SourceStamp(id=235, codebase='C'),
-            fakedb.Buildset(id=31, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
-            fakedb.SourceStamp(id=236, codebase='C'),
-            fakedb.Buildset(id=32, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
-            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-        ]
-
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
-        return self.do_request_collapse(rows, [21], [])
+        return self.do_request_collapse(self.BASE_ROWS, [21], [])
 
     def test_collapseRequests_collapse_all(self):
 
@@ -122,30 +122,17 @@ class TestBuildRequestCollapser(unittest.TestCase):
             # collapse all attempts
             return True
 
-        rows = [
-            fakedb.Builder(id=77, name='A'),
-            fakedb.SourceStamp(id=234, codebase='C'),
-            fakedb.Buildset(id=30, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=234, buildsetid=30),
-            fakedb.SourceStamp(id=235, codebase='C'),
-            fakedb.Buildset(id=31, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=235, buildsetid=31),
-            fakedb.SourceStamp(id=236, codebase='C'),
-            fakedb.Buildset(id=32, reason='foo',
-                            submitted_at=1300305712, results=-1),
-            fakedb.BuildsetSourceStamp(sourcestampid=236, buildsetid=32),
-            fakedb.BuildRequest(id=19, buildsetid=30, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=20, buildsetid=31, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-            fakedb.BuildRequest(id=21, buildsetid=32, builderid=77,
-                                priority=13, submitted_at=1300305712, results=-1),
-        ]
+        self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
+        return self.do_request_collapse(self.BASE_ROWS, [21], [19, 20])
+
+    def test_collapseRequests_collapse_all_duplicates(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            # collapse all attempts
+            return True
 
         self.bldr.getCollapseRequestsFn = lambda: collapseRequests_fn
-        return self.do_request_collapse(rows, [21], [19, 20])
+        return self.do_request_collapse(self.BASE_ROWS, [21, 21], [19, 20])
 
     # As documented:
     # Sourcestamps are compatible if all of the below conditions are met:
