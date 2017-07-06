@@ -69,7 +69,7 @@ $(VENV_NAME):
 	$(VENV_NAME)/bin/pip install -e pkg \
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
-		buildbot_www \
+		buildbot_www packaging \
 		'git+https://github.com/tardyp/towncrier'
 
 # helper for virtualenv creation
