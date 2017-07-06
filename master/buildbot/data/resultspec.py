@@ -188,7 +188,7 @@ class ResultSpec(object):
     def popProperties(self):
         values = []
         for p in self.properties:
-            if p.field == 'property' and p.op == 'eq':
+            if p.field == b'property' and p.op == 'eq':
                 self.properties.remove(p)
                 values = p.values
                 break
