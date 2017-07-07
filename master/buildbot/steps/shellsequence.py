@@ -18,6 +18,8 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import string_types
 
+import copy
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -25,7 +27,6 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
 
-import copy
 
 class ShellArg(results.ResultComputingConfigMixin):
     publicAttributes = (
