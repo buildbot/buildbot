@@ -60,6 +60,7 @@ class RolesFromEmails(RolesFromBase):
             return self.roles.get(userDetails['email'], [])
         return []
 
+
 class RolesFromDomain(RolesFromEmails):
 
     def __init__(self, **kwargs):
@@ -78,6 +79,7 @@ class RolesFromDomain(RolesFromEmails):
                 roles = self.domain_roles[edomain]
                 return roles
         return []
+
 
 class RolesFromOwner(RolesFromBase):
 
