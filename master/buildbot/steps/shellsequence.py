@@ -25,6 +25,7 @@ from buildbot import config
 from buildbot.process import buildstep
 from buildbot.process import results
 
+import copy
 
 class ShellArg(results.ResultComputingConfigMixin):
     publicAttributes = (
@@ -63,10 +64,11 @@ class ShellArg(results.ResultComputingConfigMixin):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
+        rv = copy.copy(self)
         for p_attr in self.publicAttributes:
             res = yield build.render(getattr(self, p_attr))
-            setattr(self, p_attr, res)
-        defer.returnValue(self)
+            setattr(rv, p_attr, res)
+        defer.returnValue(rv)
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
