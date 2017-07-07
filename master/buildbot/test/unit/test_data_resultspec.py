@@ -237,7 +237,7 @@ class ResultSpec(unittest.TestCase):
     def test_popProperties(self):
         expected = ['prop1', 'prop2']
         rs = resultspec.ResultSpec(properties=[
-            resultspec.Property('property', 'eq', expected)
+            resultspec.Property(b'property', 'eq', expected)
         ])
         self.assertEqual(len(rs.properties), 1)
         self.assertEqual(rs.popProperties(), expected)
