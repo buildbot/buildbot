@@ -75,9 +75,7 @@ class RolesFromDomain(RolesFromEmails):
         if 'email' in userDetails:
             email = userDetails['email']
             edomain = email.split('@')[-1]
-            if edomain in self.domain_roles:
-                roles = self.domain_roles[edomain]
-                return roles
+            return self.domain_roles.get(edomain, [])
         return []
 
 
