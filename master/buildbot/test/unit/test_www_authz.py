@@ -28,10 +28,10 @@ from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
+from buildbot.www.authz.roles import RolesFromDomain
 from buildbot.www.authz.roles import RolesFromEmails
 from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
-from buildbot.www.authz.roles import RolesFromDomain
 
 
 class Authz(www.WwwTestMixin, unittest.TestCase):
