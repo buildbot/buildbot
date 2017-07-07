@@ -810,6 +810,19 @@ You can grant roles from groups information provided by the Auth plugins, or if 
           util.RolesFromEmails(admins=["my@email.com"])
         ]
 
+.. py:class:: buildbot.www.authz.roles.RolesFromDomain(roledict)
+
+    :param roledict: dictionary with key=role, and value=list of domain strings
+
+    RolesFromDomain grants roles to users according to their email domains.
+    If a user tried to login with email ``foo@gmail.com``, then user will be granted the role 'admins'.
+
+    ex::
+
+        roleMatchers=[
+          util.RolesFromDomains(admins=["gmail.com"])
+        ]
+
 .. py:class:: buildbot.www.authz.roles.RolesFromOwner(roledict)
 
     :param roledict: dictionary with key=role, and value=list of email strings
