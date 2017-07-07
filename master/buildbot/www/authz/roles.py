@@ -60,10 +60,10 @@ class RolesFromEmails(RolesFromBase):
             return self.roles.get(userDetails['email'], [])
         return []
 
-class RolesFromDomain(util.RolesFromEmails):
+class RolesFromDomain(RolesFromEmails):
 
     def __init__(self, **kwargs):
-        super(util.RolesFromEmails, self).__init__()
+        super(RolesFromEmails, self).__init__()
 
         self.domain_roles = {}
         for role, domains in iteritems(kwargs):
