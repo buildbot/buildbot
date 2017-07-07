@@ -28,7 +28,6 @@ from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import util
-from buildbot.process.properties import Properties
 from buildbot.util import ascii2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
@@ -201,6 +200,8 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
             defer.returnValue(None)
         self.configured = True
         # render renderables in parallel
+        # Properties import to resolve cyclic import issue
+        from buildbot.process.properties import Properties
         p = Properties()
         p.master = self.master
         # render renderables in parallel
