@@ -1,1 +1,0 @@
-Fix issue when several mail notifiers are used with same parameters, but different modes (:issue:`3398`).

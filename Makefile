@@ -69,7 +69,7 @@ $(VENV_NAME):
 	$(VENV_NAME)/bin/pip install -e pkg \
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
-		buildbot_www \
+		buildbot_www packaging \
 		'git+https://github.com/tardyp/towncrier'
 
 # helper for virtualenv creation
@@ -85,7 +85,7 @@ release_notes: $(VENV_NAME)
 clean:
 	git clean -xdf
 # helper for release creation
-release: clean $(VENV_NAME)
+release:$(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
 	test -d "../bbdocs/.git"  #  make release shoud be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"

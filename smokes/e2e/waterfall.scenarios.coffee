@@ -7,6 +7,7 @@ forcePage = require('./pages/force.coffee')
 builderPage = require('./pages/builder.coffee')
 waterfallPage = require('./pages/waterfall.coffee')
 homePage = require('./pages/home.coffee')
+settingsPage = require('./pages/settings.coffee')
 
 describe 'waterfall', () ->
     force = null
@@ -17,7 +18,10 @@ describe 'waterfall', () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
         waterfall = new waterfallPage('runtests')
-        builder.goDefault()
+        settings =  new settingsPage('runtests')
+        settings.goSettings()
+        settings.changeScallingFactor('10')
+        settings.changeColumnWidth('45')
 
     afterEach () ->
         new homePage().waitAllBuildsFinished()
