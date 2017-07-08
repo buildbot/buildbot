@@ -73,7 +73,7 @@ $(VENV_NAME):
 		'git+https://github.com/tardyp/towncrier'
 
 # helper for virtualenv creation
-virtualenv: $(VENV_NAME)   # usage: make virtaulenv VENV_PY_VERSION=python3.4
+virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	@echo now you can type following command  to activate your virtualenv
 	@echo . $(VENV_NAME)/bin/activate
 
