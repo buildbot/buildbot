@@ -254,7 +254,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
         """
 
         if not manhole_ssh:
-            config.error("pycrypto required for ssh mahole.")
+            config.error("cryptography required for ssh mahole.")
         self.username = username
         self.password = password
 
@@ -288,7 +288,7 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
         """
 
         if not manhole_ssh:
-            config.error("pycrypto required for ssh mahole.")
+            config.error("cryptography required for ssh mahole.")
 
         # TODO: expanduser this, and make it relative to the buildmaster's
         # basedir
@@ -317,7 +317,7 @@ class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
         """
 
         if not manhole_ssh:
-            config.error("pycrypto required for ssh mahole.")
+            config.error("cryptography required for ssh mahole.")
 
         _BaseManhole.__init__(self, port, checker)
 

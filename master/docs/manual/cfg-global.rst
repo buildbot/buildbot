@@ -458,7 +458,7 @@ Two of them use a username+password combination to grant access, one of them use
 
 .. note::
 
-   Using any Manhole requires that ``pycrypto`` and ``pyasn1`` be installed.
+   Using any Manhole requires that ``cryptography`` and ``pyasn1`` be installed.
    These are not part of the normal Buildbot dependencies.
 
 `manhole.AuthorizedKeysManhole`

@@ -521,7 +521,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that
             # requires importing buildbot.manhole for every user, and currently
-            # that will fail if pycrypto isn't installed
+            # that will fail if cryptography isn't installed
             self.manhole = config_dict['manhole']
 
         if 'revlink' in config_dict:
