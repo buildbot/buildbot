@@ -36,6 +36,7 @@ from zope.interface import implementer  # requires Twisted-2.0 or later
 from buildbot import config
 from buildbot.util import ComparableMixin
 from buildbot.util import service
+from buildbot.util import unicode2bytes
 
 try:
     from twisted.conch import checkers as conchc, manhole_ssh
@@ -226,7 +227,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
         self.password = password
 
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        c.addUser(username, password)
+        c.addUser(unicode2bytes(username), unicode2bytes(password))
 
         _BaseManhole.__init__(self, port, c, using_ssh=False)
 
@@ -258,7 +259,7 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
         self.password = password
 
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
-        c.addUser(username, password)
+        c.addUser(unicode2bytes(username), unicode2bytes(password))
 
         _BaseManhole.__init__(self, port, c)
 
