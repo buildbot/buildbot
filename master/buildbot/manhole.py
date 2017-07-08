@@ -16,12 +16,12 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from future.utils import string_types
 
 import base64
 import binascii
 import os
 import types
-from builtins import str
 
 from twisted.application import strports
 from twisted.conch import manhole
@@ -331,19 +331,18 @@ def show(x):
     maxlen = max([0] + [len(n) for n in names])
     for k in names:
         v = getattr(x, k)
-        t = type(v)
-        if t == types.MethodType:
+        if isinstance(v, types.MethodType):
             continue
         if k[:2] == '__' and k[-2:] == '__':
             continue
-        if t is str:
+        if isinstance(v, string_types):
             if len(v) > 80 - maxlen - 5:
                 v = repr(v[:80 - maxlen - 5]) + "..."
-        elif t in (int, type(None)):
+        elif isinstance(v, (int, type(None))):
             v = str(v)
-        elif v in (list, tuple, dict):
+        elif isinstance(v, (list, tuple, dict)):
             v = "%s (%d elements)" % (v, len(v))
         else:
-            v = str(t)
+            v = str(type(v))
         print("%*s : %s" % (maxlen, k, v))
     return x
