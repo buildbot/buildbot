@@ -109,7 +109,7 @@ if conchc:
                 authorized_keys_file)
 
         def checkKey(self, credentials):
-            with open(self.authorized_keys_file) as f:
+            with open(self.authorized_keys_file, "rb") as f:
                 for l in f.readlines():
                     l2 = l.split()
                     if len(l2) < 2:
