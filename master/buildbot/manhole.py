@@ -40,11 +40,13 @@ from buildbot.util import unicode2bytes
 
 try:
     from twisted.conch import checkers as conchc, manhole_ssh
-    _hush_pyflakes = [manhole_ssh, conchc]
+    from twisted.conch.openssh_compat.factory import OpenSSHFactory
+    _hush_pyflakes = [manhole_ssh, conchc, OpenSSHFactory]
     del _hush_pyflakes
 except ImportError:
     manhole_ssh = None
     conchc = None
+    OpenSSHFactory = None
 
 
 # makeTelnetProtocol and _TelnetRealm are for the TelnetManhole
@@ -130,7 +132,7 @@ class _BaseManhole(service.AsyncMultiService):
     buildbot developers. Connect to this by running an ssh client.
     """
 
-    def __init__(self, port, checker, using_ssh=True):
+    def __init__(self, port, checker, ssh_hostkey_dir=None):
         """
         @type port: string or int
         @param port: what port should the Manhole listen on? This is a
@@ -149,9 +151,9 @@ class _BaseManhole(service.AsyncMultiService):
             c = credc.FilePasswordDB(passwd_filename) # file of name:passwd
             c = conchc.UNIXPasswordDatabase # getpwnam() (probably /etc/passwd)
 
-        @type using_ssh: bool
-        @param using_ssh: If True, accept SSH connections. If False, accept
-                          regular unencrypted telnet connections.
+        @type ssh_hostkey_dir: str
+        @param ssh_hostkey_dir: directory which contains ssh host keys for
+                                this server
         """
 
         # unfortunately, these don't work unless we're running as root
@@ -179,13 +181,22 @@ class _BaseManhole(service.AsyncMultiService):
             p = insults.ServerProtocol(manhole.ColoredManhole, namespace)
             return p
 
-        self.using_ssh = using_ssh
-        if using_ssh:
+        self.ssh_hostkey_dir = ssh_hostkey_dir
+        if self.ssh_hostkey_dir:
+            self.using_ssh = True
+            if not self.ssh_hostkey_dir:
+                raise ValueError("Most specify a value for ssh_hostkey_dir")
             r = manhole_ssh.TerminalRealm()
             r.chainedProtocolFactory = makeProtocol
             p = portal.Portal(r, [self.checker])
             f = manhole_ssh.ConchFactory(p)
+            openSSHFactory = OpenSSHFactory()
+            openSSHFactory.dataRoot = self.ssh_hostkey_dir
+            openSSHFactory.dataModuliRoot = self.ssh_hostkey_dir
+            f.publicKeys = openSSHFactory.getPublicKeys()
+            f.privateKeys = openSSHFactory.getPrivateKeys()
         else:
+            self.using_ssh = False
             r = _TelnetRealm(makeNamespace)
             p = portal.Portal(r, [self.checker])
             f = protocol.ServerFactory()
@@ -229,7 +240,7 @@ class TelnetManhole(_BaseManhole, ComparableMixin):
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
         c.addUser(unicode2bytes(username), unicode2bytes(password))
 
-        _BaseManhole.__init__(self, port, c, using_ssh=False)
+        _BaseManhole.__init__(self, port, c)
 
 
 class PasswordManhole(_BaseManhole, ComparableMixin):
@@ -238,9 +249,9 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
     username and password to authorize access.
     """
 
-    compare_attrs = ("port", "username", "password")
+    compare_attrs = ("port", "username", "password", "ssh_hostkey_dir")
 
-    def __init__(self, port, username, password):
+    def __init__(self, port, username, password, ssh_hostkey_dir):
         """
         @type port: string or int
         @param port: what port should the Manhole listen on? This is a
@@ -251,17 +262,21 @@ class PasswordManhole(_BaseManhole, ComparableMixin):
         @param username:
         @param password: username= and password= form a pair of strings to
                          use when authenticating the remote user.
+        @type ssh_hostkey_dir: str
+        @param ssh_hostkey_dir: directory which contains ssh host keys for
+                                this server
         """
 
         if not manhole_ssh:
             config.error("cryptography required for ssh mahole.")
         self.username = username
         self.password = password
+        self.ssh_hostkey_dir = ssh_hostkey_dir
 
         c = checkers.InMemoryUsernamePasswordDatabaseDontUse()
         c.addUser(unicode2bytes(username), unicode2bytes(password))
 
-        _BaseManhole.__init__(self, port, c)
+        _BaseManhole.__init__(self, port, c, ssh_hostkey_dir)
 
 
 class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
@@ -271,9 +286,9 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
     keys in our authorized_keys file. It is created with the name of a file
     that contains the public keys that we will accept."""
 
-    compare_attrs = ("port", "keyfile")
+    compare_attrs = ("port", "keyfile", "ssh_hostkey_dir")
 
-    def __init__(self, port, keyfile):
+    def __init__(self, port, keyfile, ssh_hostkey_dir):
         """
         @type port: string or int
         @param port: what port should the Manhole listen on? This is a
@@ -285,6 +300,9 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
                         basedir) that contains SSH public keys of authorized
                         users, one per line. This is the exact same format
                         as used by sshd in ~/.ssh/authorized_keys .
+        @type ssh_hostkey_dir: str
+        @param ssh_hostkey_dir: directory which contains ssh host keys for
+                                this server
         """
 
         if not manhole_ssh:
@@ -294,7 +312,7 @@ class AuthorizedKeysManhole(_BaseManhole, ComparableMixin):
         # basedir
         self.keyfile = keyfile
         c = AuthorizedKeysChecker(keyfile)
-        _BaseManhole.__init__(self, port, c)
+        _BaseManhole.__init__(self, port, c, ssh_hostkey_dir)
 
 
 class ArbitraryCheckerManhole(_BaseManhole, ComparableMixin):
