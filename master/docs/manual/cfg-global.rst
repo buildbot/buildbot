@@ -464,10 +464,12 @@ Two of them use a username+password combination to grant access, one of them use
 `manhole.AuthorizedKeysManhole`
     You construct this with the name of a file that contains one SSH public key per line, just like :file:`~/.ssh/authorized_keys`.
     If you provide a non-absolute filename, it will be interpreted relative to the buildmaster's base directory.
+    You must also specify a directory which contains an SSH host key for the Manhole server.
 
 `manhole.PasswordManhole`
     This one accepts SSH connections but asks for a username and password when authenticating.
     It accepts only one such pair.
+    You must also specify a directory which contains an SSH host key for the Manhole server.
 
 `manhole.TelnetManhole`
     This accepts regular unencrypted telnet connections, and asks for a username/password pair before providing access.
@@ -477,8 +479,8 @@ Two of them use a username+password combination to grant access, one of them use
 
     # some examples:
     from buildbot.plugins import util
-    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys")
-    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword")
+    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys", ssh_hostkey_dir="/data/ssh_host_keys/")
+    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword", ssh_hostkey_dir="/data/ssh_host_keys/")
     c['manhole'] = util.TelnetManhole(1234, "bob", "snoop_my_password_please")
 
 The :class:`Manhole` instance can be configured to listen on a specific port.
@@ -487,7 +489,7 @@ You may wish to have this listening port bind to the loopback interface (sometim
 ::
 
     from buildbot.plugins import util
-    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd", ssh_hostkey_dir="/data/ssh_host_keys/")
 
 To have the :class:`Manhole` listen on all interfaces, use ``"tcp:9999"`` or simply 9999.
 This port specification uses ``twisted.application.strports``, so you can make it listen on SSL or even UNIX-domain sockets if you want.
