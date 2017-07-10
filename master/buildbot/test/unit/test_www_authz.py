@@ -28,6 +28,7 @@ from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
+from buildbot.www.authz.roles import RolesFromDomain
 from buildbot.www.authz.roles import RolesFromEmails
 from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
@@ -76,11 +77,13 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                 RolesFromGroups(groupPrefix="buildbot-"),
                 RolesFromEmails(admins=["homer@springfieldplant.com"],
                                 agents=["007@mi6.uk"]),
-                RolesFromOwner(role="owner")
+                RolesFromOwner(role="owner"),
+                RolesFromDomain(admins=["mi7.uk"])
             ]
         )
         self.users = dict(homer=dict(email="homer@springfieldplant.com"),
                           bond=dict(email="007@mi6.uk"),
+                          moneypenny=dict(email="moneypenny@mi7.uk"),
                           nineuser=dict(email="user@nine.com", groups=["buildbot-nine-mergers",
                                                                        "buildbot-nine-developers"]),
                           eightuser=dict(
@@ -124,6 +127,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_anyEndpoint(self):
         yield self.assertUserAllowed("foo/bar", "get", {}, "homer")
+        yield self.assertUserAllowed("foo/bar", "get", {}, "moneypenny")
         yield self.assertUserForbidden("foo/bar", "get", {}, "bond")
 
     @defer.inlineCallbacks
