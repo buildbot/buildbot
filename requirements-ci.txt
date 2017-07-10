@@ -8,9 +8,9 @@ Automat==0.6.0
 Babel==2.4.0
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
-boto==2.47.0
+boto==2.48.0
 boto3==1.4.4
-botocore==1.5.78
+botocore==1.5.80
 cffi==1.10.0
 click==6.7
 configparser==3.5.0
@@ -46,12 +46,12 @@ packaging==16.8
 pathlib2==2.3.0
 pbr==3.1.1
 pep8==1.7.0
-Pillow==4.2.0
+Pillow==4.2.1
 pyaml==16.12.2
 pyasn1==0.2.3
 pyasn1-modules==0.0.9
 pycodestyle==2.3.1
-pycparser==2.17
+pycparser==2.18
 pyenchant==1.6.8
 pyflakes==1.5.0
 pyjade==4.0.0
@@ -95,4 +95,4 @@ codecov==2.0.9
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==0.9.9.post1
+buildbot-www==0.9.9.post2
