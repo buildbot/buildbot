@@ -18,6 +18,8 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import string_types
 
+import copy
+
 from twisted.internet import defer
 from twisted.python import log
 
@@ -63,10 +65,11 @@ class ShellArg(results.ResultComputingConfigMixin):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, build):
+        rv = copy.copy(self)
         for p_attr in self.publicAttributes:
             res = yield build.render(getattr(self, p_attr))
-            setattr(self, p_attr, res)
-        defer.returnValue(self)
+            setattr(rv, p_attr, res)
+        defer.returnValue(rv)
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):

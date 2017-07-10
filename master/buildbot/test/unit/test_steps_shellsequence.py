@@ -145,3 +145,34 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         self.expectCommands(ExpectShell(workdir='build', command='make p1') + 1)
         self.expectOutcome(result=FAILURE, state_string="'make p1'")
         return self.runStep()
+
+    def testShellArgsAreRenderedAnewAtEachBuild(self):
+        """Unit test to ensure that ShellArg instances are properly re-rendered.
+
+        This unit test makes sure that ShellArg instances are rendered anew at
+        each new build.
+        """
+        arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
+                                     logfile=WithProperties('make %s', 'project'))
+        step = shellsequence.ShellSequence(commands=[arg], workdir='build')
+
+        # First "build"
+        self.setupStep(step)
+        self.properties.setProperty("project", "BUILDBOT-TEST-1", "TEST")
+        self.expectCommands(ExpectShell(workdir='build',
+                            command='make BUILDBOT-TEST-1') + 0 +
+                            Expect.log('stdio make BUILDBOT-TEST-1'))
+        self.expectOutcome(result=SUCCESS,
+                           state_string="'make BUILDBOT-TEST-1'")
+        self.runStep()
+
+        # Second "build"
+        self.setupStep(step)
+        self.properties.setProperty("project", "BUILDBOT-TEST-2", "TEST")
+        self.expectCommands(ExpectShell(workdir='build',
+                            command='make BUILDBOT-TEST-2') + 0 +
+                            Expect.log('stdio make BUILDBOT-TEST-2'))
+        self.expectOutcome(result=SUCCESS,
+                           state_string="'make BUILDBOT-TEST-2'")
+
+        return self.runStep()
