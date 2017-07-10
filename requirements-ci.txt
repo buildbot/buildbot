@@ -8,7 +8,7 @@ Automat==0.6.0
 Babel==2.4.0
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
-boto==2.47.0
+boto==2.48.0
 boto3==1.4.4
 botocore==1.5.78
 cffi==1.10.0
