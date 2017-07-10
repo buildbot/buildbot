@@ -64,7 +64,7 @@ class RolesFromEmails(RolesFromBase):
 class RolesFromDomain(RolesFromEmails):
 
     def __init__(self, **kwargs):
-        super(RolesFromEmails, self).__init__()
+        RolesFromBase.__init__(self)
 
         self.domain_roles = {}
         for role, domains in iteritems(kwargs):
