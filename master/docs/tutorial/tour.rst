@@ -249,7 +249,7 @@ Debugging with Manhole
 ----------------------
 
 You can do some debugging by using manhole, an interactive Python shell.
-It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should not be enabled with a weak or easily guessable password. 
+It exposes full access to the buildmaster's account (including the ability to modify and delete files), so it should not be enabled with a weak or easily guessable password.
 
 To use this you will need to install an additional package or two to your virtualenv:
 
@@ -260,6 +260,13 @@ To use this you will need to install an additional package or two to your virtua
   pip install -U pip
   pip install cryptography pyasn1
 
+You will also need to generate an SSH host key for the Manhole server.
+
+.. code-block:: bash
+
+  mkdir -p /data/ssh_host_keys
+  ckeygen -t rsa -f /data/ssh_host_keys/ssh_host_rsa_key
+
 In your master.cfg find::
 
   c = BuildmasterConfig = {}
@@ -268,7 +275,7 @@ Insert the following to enable debugging mode with manhole::
 
   ####### DEBUGGING
   from buildbot import manhole
-  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd")
+  c['manhole'] = manhole.PasswordManhole("tcp:1234:interface=127.0.0.1","admin","passwd", ssh_hostkey_dir="/data/ssh_host_keys/")
 
 After restarting the master, you can ssh into the master and get an interactive Python shell:
 
