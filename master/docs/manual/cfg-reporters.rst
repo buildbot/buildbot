@@ -436,8 +436,8 @@ Apart of sending mail, Buildbot can send Pushover_ notifications. It can be used
 
 To use this reporter, you need to generate and application on the Pushover website https://pushover.net/apps/ and provide your user key and the API token.
 
-The following simple example will send an email upon the completion of each build.
-The email contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaces with proper ones obtained from the Pushover website for your application.
+The following simple example will send a Pushover notification upon the completion of each build.
+The notification contains a description of the :class:`Build`, its results, and URLs where more information can be obtained. The ``user_key`` and ``api_token`` values should be replaced with proper ones obtained from the Pushover website for your application.
 
 ::
 
