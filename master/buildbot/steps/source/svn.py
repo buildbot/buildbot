@@ -40,7 +40,7 @@ class SVN(Source):
 
     name = 'svn'
 
-    renderables = ['repourl']
+    renderables = ['repourl', 'password']
     possible_methods = ('clean', 'fresh', 'clobber', 'copy', 'export', None)
 
     def __init__(self, repourl=None, mode='incremental',
