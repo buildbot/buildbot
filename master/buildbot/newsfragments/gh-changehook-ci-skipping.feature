@@ -1,4 +1,4 @@
-Implement github change hook ci skipping.
+Implement github change hook ci skipping (:issue:`3443`).
 
 New parameter for github change hook: ``skips``
 (default ``[r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']``).
