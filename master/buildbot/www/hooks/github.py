@@ -37,14 +37,18 @@ _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 class GitHubEventHandler(PullRequestMixin):
 
-    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None, master=None):
+    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None,
+                 skips=None, master=None):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
         self.github_property_whitelist = github_property_whitelist
+        self.skips = skips
         self.master = master
         if github_property_whitelist is None:
             self.github_property_whitelist = []
+        if skips is None:
+            self.skips = [r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']
 
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
@@ -196,6 +200,12 @@ class GitHubEventHandler(PullRequestMixin):
             log.msg("Branch `{}' deleted, ignoring".format(branch))
             return changes
 
+        # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
+        head_msg = payload['head_commit'].get('message', '')
+        for skip in self.skips:
+            if re.search(skip, head_msg):
+                return changes
+
         for commit in payload['commits']:
             files = []
             for kind in ('added', 'modified', 'removed'):
@@ -249,6 +259,7 @@ class GitHubHandler(BaseHookHandler):
                         options.get('strict', False),
                         options.get('codebase', None),
                         options.get('github_property_whitelist', None),
+                        options.get('skips', None),
                         master=master)
         self.handler = handler
 
