@@ -107,6 +107,11 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
+    def test_get_missing_buildername_builder_number(self):
+        step = yield self.callGet(('builders', 'builder77_nope', 'builds', 7, 'steps', 1))
+        self.assertEqual(step, None)
+
+    @defer.inlineCallbacks
     def test_get_missing(self):
         step = yield self.callGet(('steps', 9999))
         self.assertEqual(step, None)

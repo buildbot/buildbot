@@ -96,6 +96,11 @@ class BuildEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(build['buildid'], 15)
 
     @defer.inlineCallbacks
+    def test_get_buildername_not_existing_number(self):
+        build = yield self.callGet(('builders', 'builder77_nope', 'builds', 5))
+        self.assertEqual(build, None)
+
+    @defer.inlineCallbacks
     def test_properties_injection(self):
         resultSpec = MockedResultSpec(
             filters=[resultspec.Filter('property', 'eq', [False])])
