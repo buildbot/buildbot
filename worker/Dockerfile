@@ -30,7 +30,11 @@ RUN         apt-get update && \
                 libffi-dev \
                 libssl-dev \
                 python-pip \
-                curl && \
+                curl \
+                libltdl7-dev \
+                software-properties-common && \
+            apt-add-repository ppa:ansible/ansible && \
+            apt-get -y install -q ansible && \
             rm -rf /var/lib/apt/lists/* && \
 # Test runs produce a great quantity of dead grandchild processes.  In a
 # non-docker environment, these are automatically reaped by init (process 1),
