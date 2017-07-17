@@ -177,10 +177,20 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(sorted([b['number'] for b in builds]), [5])
 
     @defer.inlineCallbacks
+    def test_get_buildername_not_existing(self):
+        builds = yield self.callGet(('builders', 'builder78_nope', 'builds'))
+        self.assertEqual(builds, [])
+
+    @defer.inlineCallbacks
     def test_get_buildrequest(self):
         builds = yield self.callGet(('buildrequests', 82, 'builds'))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
+
+    @defer.inlineCallbacks
+    def test_get_buildrequest_not_existing(self):
+        builds = yield self.callGet(('buildrequests', 899, 'builds'))
+        self.assertEqual(builds, [])
 
     @defer.inlineCallbacks
     def test_get_buildrequest_via_filter(self):
