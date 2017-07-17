@@ -64,6 +64,12 @@ class DBConnectorComponent(object):
                 "value for column %s is greater than max of %d characters: %s"
                 % (col, col.type.length, value))
 
+    def ensureLength(self, col, value):
+        assert col.type.length, "column %s does not have a length" % (col,)
+        if value and len(value) > col.type.length:
+            value = value[:col.type.length / 2] + hashlib.sha1(value).hexdigest()[:col.type.length / 2]
+        return value
+
     def findSomethingId(self, tbl, whereclause, insert_values,
                         _race_hook=None, autoCreate=True):
         def thd(conn, no_recurse=False):

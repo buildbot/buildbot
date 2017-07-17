@@ -49,6 +49,15 @@ class TestBase(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda:
                           self.comp.checkLength(self.tbl.c.str32, "long string" * 5))
 
+    def test_ensureLength_ok(self):
+        v = self.comp.ensureLength(self.tbl.c.str32, "short string")
+        self.assertEqual(v, "short string")
+
+    def test_ensureLength_long(self):
+        v = self.comp.ensureLength(self.tbl.c.str32, "short string" * 5)
+        self.assertEqual(v, "short stringshordacf5a81f8ae3873")
+        self.comp.checkLength(self.tbl.c.str32, v)
+
     def test_checkLength_text(self):
         self.assertRaises(AssertionError, lambda:
                           self.comp.checkLength(self.tbl.c.txt, "long string" * 5))
