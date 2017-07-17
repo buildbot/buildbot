@@ -48,14 +48,14 @@ class PushjetNotifier(NotifierBase):
                     tags=None, builders=None,
                     buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    name=None, schedulers=None, branches=None,
+                    schedulers=None, branches=None,
                     levels=None, base_url='https://api.pushjet.io',
                     watchedWorkers=None, messageFormatterMissingWorker=None):
 
         super(PushjetNotifier, self).checkConfig(mode, tags, builders,
                                                  buildSetSummary, messageFormatter,
                                                  subject, False, False,
-                                                 name, schedulers,
+                                                 schedulers,
                                                  branches, watchedWorkers)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
@@ -66,7 +66,7 @@ class PushjetNotifier(NotifierBase):
                         tags=None, builders=None,
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                        name=None, schedulers=None, branches=None,
+                        schedulers=None, branches=None,
                         levels=None, base_url='https://api.pushjet.io',
                         watchedWorkers=None, messageFormatterMissingWorker=None):
 
@@ -79,7 +79,7 @@ class PushjetNotifier(NotifierBase):
         super(PushjetNotifier, self).reconfigService(mode, tags, builders,
                                                      buildSetSummary, messageFormatter,
                                                      subject, False, False,
-                                                     name, schedulers, branches,
+                                                     schedulers, branches,
                                                      watchedWorkers, messageFormatterMissingWorker)
         self.secret = secret
         if levels is None:

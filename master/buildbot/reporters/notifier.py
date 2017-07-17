@@ -36,7 +36,7 @@ ENCODING = 'utf-8'
 
 
 class NotifierBase(service.BuildbotService):
-
+    name = None
     __meta__ = abc.ABCMeta
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings",
@@ -58,7 +58,7 @@ class NotifierBase(service.BuildbotService):
                     buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     addLogs=False, addPatch=False,
-                    name=None, schedulers=None, branches=None,
+                    schedulers=None, branches=None,
                     watchedWorkers=None, messageFormatterMissingWorker=None):
 
         for m in self.computeShortcutModes(mode):
@@ -69,8 +69,7 @@ class NotifierBase(service.BuildbotService):
                 else:
                     config.error(
                         "mode %s is not a valid mode" % (m,))
-
-        if name is None:
+        if self.name is None:
             self.name = self.__class__.__name__
             if tags is not None:
                 self.name += "_tags_" + "+".join(tags)
@@ -101,7 +100,7 @@ class NotifierBase(service.BuildbotService):
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         addLogs=False, addPatch=False,
-                        name=None, schedulers=None, branches=None,
+                        schedulers=None, branches=None,
                         watchedWorkers=None, messageFormatterMissingWorker=None):
 
         self.mode = self.computeShortcutModes(mode)
