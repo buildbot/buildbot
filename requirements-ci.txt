@@ -59,7 +59,7 @@ PyJWT==1.5.2
 pylint==1.7.2
 pyOpenSSL==17.1.0
 pyparsing==2.2.0
-python-dateutil==2.6.0
+python-dateutil==2.6.1
 pytz==2017.2
 PyYAML==3.12
 ramlfications==0.1.9
