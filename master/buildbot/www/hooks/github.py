@@ -24,10 +24,12 @@ from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2NativeString
+from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
 
@@ -54,6 +56,7 @@ class GitHubEventHandler(PullRequestMixin):
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
 
+    @defer.inlineCallbacks
     def process(self, request):
         payload = self._get_payload(request)
 
@@ -67,7 +70,8 @@ class GitHubEventHandler(PullRequestMixin):
         if handler is None:
             raise ValueError('Unknown event: {}'.format(event_type))
 
-        return handler(payload, event_type)
+        result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
+        defer.returnValue(result)
 
     def _get_payload(self, request):
         content = request.content.read()
@@ -132,6 +136,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes, 'git'
 
+    @defer.inlineCallbacks
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
@@ -139,6 +144,14 @@ class GitHubEventHandler(PullRequestMixin):
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
+        repo_url = payload['repository']['url']
+        head_sha = payload['pull_request']['head']['sha']
+
+        head_msg = yield self._get_commit_msg(repo_url, head_sha)
+        log.msg("head commit message {}".format(head_msg))
+        log.msg("head commit message has skip {}".format(self._has_skip(head_msg)))
+        if self._has_skip(head_msg):
+            defer.returnValue((changes, 'git'))
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
@@ -146,7 +159,7 @@ class GitHubEventHandler(PullRequestMixin):
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
             log.msg("GitHub PR #{} {}, ignoring".format(number, action))
-            return changes, 'git'
+            defer.returnValue((changes, 'git'))
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
@@ -174,7 +187,17 @@ class GitHubEventHandler(PullRequestMixin):
 
         log.msg("Received {} changes from GitHub PR #{}".format(
             len(changes), number))
-        return changes, 'git'
+        defer.returnValue((changes, 'git'))
+
+    @defer.inlineCallbacks
+    def _get_commit_msg(self, repo_url, sha):
+        url = '/commits/{}'.format(sha)
+        http = yield httpclientservice.HTTPClientService.getService(
+            self.master, repo_url)
+        res = yield http.get(url)
+        data = yield res.json()
+        msg = data['commit']['message']
+        defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):
