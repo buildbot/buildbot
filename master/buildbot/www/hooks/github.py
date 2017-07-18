@@ -202,9 +202,8 @@ class GitHubEventHandler(PullRequestMixin):
 
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
         head_msg = payload['head_commit'].get('message', '')
-        for skip in self.skips:
-            if re.search(skip, head_msg):
-                return changes
+        if self._has_skip(head_msg):
+            return changes
 
         for commit in payload['commits']:
             files = []
@@ -242,6 +241,17 @@ class GitHubEventHandler(PullRequestMixin):
             changes.append(change)
 
         return changes
+
+    def _has_skip(self, msg):
+        '''
+        The message contains the skipping keyword no not.
+
+        :return type: Bool
+        '''
+        for skip in self.skips:
+            if re.search(skip, msg):
+                return True
+        return False
 
 # for GitHub, we do another level of indirection because
 # we already had documented API that encouraged people to subclass GitHubEventHandler
