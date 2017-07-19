@@ -1461,7 +1461,7 @@ builders
 
         :param name: name of this builder
         :type name: 20-character :ref:`identifier <type-identifier>`
-        :param autoCreate: create automatically the builder if name not found
+        :param autoCreate: automatically create the builder if name not found
         :type autoCreate: bool
         :returns: builder id via Deferred
 
