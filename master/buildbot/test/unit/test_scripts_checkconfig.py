@@ -44,8 +44,10 @@ class TestConfigLoader(dirs.DirsMixin, unittest.TestCase):
 
     # tests
 
-    def do_test_load(self, config='', other_files={},
+    def do_test_load(self, config='', other_files=None,
                      stdout_re=None, stderr_re=None):
+        if other_files is None:
+            other_files = {}
         configFile = os.path.join(self.configdir, 'master.cfg')
         with open(configFile, "w") as f:
             f.write(config)

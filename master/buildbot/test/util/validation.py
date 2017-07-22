@@ -147,7 +147,9 @@ class DictValidator(Validator):
 
     name = 'dict'
 
-    def __init__(self, optionalNames=[], **keys):
+    def __init__(self, optionalNames=None, **keys):
+        if optionalNames is None:
+            optionalNames = []
         self.optionalNames = set(optionalNames)
         self.keys = keys
         self.expectedNames = set(keys.keys())

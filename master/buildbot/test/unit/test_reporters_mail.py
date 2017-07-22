@@ -220,10 +220,12 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         self.assertEqual(mn.createEmail.call_count, 1)
 
     @defer.inlineCallbacks
-    def do_test_sendToInterestedUsers(self, lookup=None, extraRecipients=[],
+    def do_test_sendToInterestedUsers(self, lookup=None, extraRecipients=None,
                                       sendToInterestedUsers=True,
                                       exp_called_with=None, exp_TO=None,
                                       exp_CC=None):
+        if extraRecipients is None:
+                extraRecipients = []
         _, builds = yield self.setupBuildResults(SUCCESS)
 
         mn = yield self.setupMailNotifier('from@example.org', lookup=lookup, extraRecipients=extraRecipients,

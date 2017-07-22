@@ -54,8 +54,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
+    def makeScheduler(self, name='testsched', builderNames=None,
                       **kw):
+        if builderNames is None:
+            builderNames = ['a', 'b']
         sched = self.attachScheduler(
             ForceScheduler(name=name, builderNames=builderNames, **kw),
             self.OBJECTID, self.SCHEDULERID,

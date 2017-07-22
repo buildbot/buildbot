@@ -103,7 +103,13 @@ class MSLogLineObserver(unittest.TestCase):
             self.llo.outLineReceived(line)
 
     def assertResult(self, nbFiles=0, nbProjects=0, nbWarnings=0, nbErrors=0,
-                     errors=[], warnings=[], progress={}):
+                     errors=None, warnings=None, progress=None):
+        if errors is None:
+            errors = []
+        if warnings is None:
+            warnings = []
+        if progress is None:
+            progress = {}
         self.assertEqual(
             dict(nbFiles=self.llo.nbFiles, nbProjects=self.llo.nbProjects,
                  nbWarnings=self.llo.nbWarnings,

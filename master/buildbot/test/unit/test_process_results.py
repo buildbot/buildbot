@@ -51,11 +51,21 @@ class TestResults(unittest.TestCase):
         ])
 
     def do_test_carc(self, result, previousResult, newResult, terminate,
-                     haltOnFailure=[True, False], flunkOnWarnings=[
-                         True, False],
-                     flunkOnFailure=[True, False], warnOnWarnings=[
-                         True, False],
-                     warnOnFailure=[True, False]):
+                     haltOnFailure=None, flunkOnWarnings=None,
+                     flunkOnFailure=None, warnOnWarnings=None,
+                     warnOnFailure=None):
+        if haltOnFailure is None:
+            haltOnFailure = [True, False]
+        if flunkOnWarnings is None:
+            flunkOnWarnings = [
+                         True, False]
+        if flunkOnFailure is None:
+            flunkOnFailure = [True, False]
+        if warnOnWarnings is None:
+            warnOnWarnings = [
+                         True, False]
+        if warnOnFailure is None:
+            warnOnFailure = [True, False]
         for hof in haltOnFailure:
             for fow in flunkOnWarnings:
                 for fof in flunkOnFailure:

@@ -270,8 +270,10 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         m.assert_called_with(*(exp_args or args), **(exp_kwargs or kwargs))
 
     @defer.inlineCallbacks
-    def do_test_event(self, method, exp_events=[],
+    def do_test_event(self, method, exp_events=None,
                       *args, **kwargs):
+        if exp_events is None:
+                exp_events = []
         self.patch(reactor, "seconds", lambda: 1)
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)

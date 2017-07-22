@@ -683,12 +683,11 @@ class TestMaybeStartBuilds(TestBRDBase):
         self.bldr.config.nextWorker = nth_worker(-1)
         # the builder fails to start the build; we'll see that the build
         # was requested, but the brids will get claimed again
+        start_build_results = [False, True, True]
 
-        def maybeStartBuild(worker, builds, _fail=[False]):
+        def maybeStartBuild(worker, builds):
             self.startedBuilds.append((worker.name, builds))
-            ret = _fail[0]
-            _fail[0] = True
-            return defer.succeed(ret)
+            return defer.succeed(start_build_results.pop(0))
         self.bldr.maybeStartBuild = maybeStartBuild
 
         self.addWorkers({'test-worker1': 1, 'test-worker2': 1})

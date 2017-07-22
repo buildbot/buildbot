@@ -495,8 +495,10 @@ class Tests(interfaces.InterfaceTests):
         return d
 
     def do_test_completeBuildRequests(self, rows, now, expected=None,
-                                      expfailure=None, brids=[44],
+                                      expfailure=None, brids=None,
                                       complete_at=None):
+        if brids is None:
+            brids = [44]
         clock = task.Clock()
         clock.advance(now)
 

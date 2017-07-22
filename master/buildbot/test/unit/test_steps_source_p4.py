@@ -45,7 +45,9 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownSourceStep()
 
-    def setupStep(self, step, args={}, patch=None, **kwargs):
+    def setupStep(self, step, args=None, patch=None, **kwargs):
+        if args is None:
+            args = {}
         step = sourcesteps.SourceStepMixin.setupStep(
             self, step, args={}, patch=None, **kwargs)
         self.build.getSourceStamp().revision = args.get('revision', None)

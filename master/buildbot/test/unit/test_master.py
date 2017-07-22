@@ -80,8 +80,12 @@ class OldTriggeringMethods(unittest.TestCase):
             return defer.succeed(self.fake_Change)
         self.patch(Change, 'fromChdict', staticmethod(fromChdict))
 
-    def do_test_addChange_args(self, args=(), kwargs={}, exp_data_kwargs={}):
+    def do_test_addChange_args(self, args=(), kwargs=None, exp_data_kwargs=None):
         # add default arguments
+        if kwargs is None:
+            kwargs = {}
+        if exp_data_kwargs is None:
+            exp_data_kwargs = {}
         default_data_kwargs = {
             'author': None,
             'branch': None,
