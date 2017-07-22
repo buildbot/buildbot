@@ -52,14 +52,14 @@ class PushoverNotifier(NotifierBase):
                     tags=None, builders=None,
                     buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                    name=None, schedulers=None, branches=None,
+                    schedulers=None, branches=None,
                     priorities=None, otherParams=None,
                     watchedWorkers=None, messageFormatterMissingWorker=None):
 
         super(PushoverNotifier, self).checkConfig(mode, tags, builders,
                                                   buildSetSummary, messageFormatter,
                                                   subject, False, False,
-                                                  name, schedulers,
+                                                  schedulers,
                                                   branches, watchedWorkers)
 
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
@@ -74,7 +74,7 @@ class PushoverNotifier(NotifierBase):
                         tags=None, builders=None,
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
-                        name=None, schedulers=None, branches=None,
+                        schedulers=None, branches=None,
                         priorities=None, otherParams=None,
                         watchedWorkers=None, messageFormatterMissingWorker=None):
 
@@ -87,7 +87,7 @@ class PushoverNotifier(NotifierBase):
         super(PushoverNotifier, self).reconfigService(mode, tags, builders,
                                                       buildSetSummary, messageFormatter,
                                                       subject, False, False,
-                                                      name, schedulers, branches,
+                                                      schedulers, branches,
                                                       watchedWorkers, messageFormatterMissingWorker)
         self.user_key = user_key
         self.api_token = api_token

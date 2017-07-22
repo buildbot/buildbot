@@ -60,6 +60,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         defer.returnValue(mn)
 
     @defer.inlineCallbacks
+    def test_change_name(self):
+        mn = yield self.setupMailNotifier('from@example.org', name="custom_name")
+        self.assertEqual(mn.name, "custom_name")
+
+    @defer.inlineCallbacks
     def do_test_createEmail_cte(self, funnyChars, expEncoding):
         _, builds = yield self.setupBuildResults(SUCCESS)
         msgdict = create_msgdict(funnyChars)
