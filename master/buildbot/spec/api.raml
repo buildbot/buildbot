@@ -71,11 +71,11 @@ types:
     get:
         is:
         - bbget: {bbtype: builder}
-    /{builderid}:
+    /{builderid_or_buildername}:
         uriParameters:
-            builderid:
-                type: number
-                description: the ID of the builder
+            builderid_or_buildername:
+                type: number | identifier
+                description: the ID or name of the builder
         description: This path selects a builder by builderid
         get:
             is:

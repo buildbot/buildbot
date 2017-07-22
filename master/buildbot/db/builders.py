@@ -25,15 +25,16 @@ from buildbot.db import base
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
 
-    def findBuilderId(self, name):
+    def findBuilderId(self, name, autoCreate=True):
         tbl = self.db.model.builders
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=tbl,
-            whereclause=(tbl.c.name == name),
+            whereclause=(tbl.c.name_hash == name_hash),
             insert_values=dict(
                 name=name,
-                name_hash=self.hashColumns(name),
-            ))
+                name_hash=name_hash,
+            ), autoCreate=autoCreate)
 
     @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
