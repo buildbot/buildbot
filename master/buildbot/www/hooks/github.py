@@ -16,22 +16,18 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import datetime
 import hmac
 import json
-import pprint
 import re
-import textwrap
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
-import jinja2
 from twisted.internet import defer
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2unicode
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
 from buildbot.www.hooks.base import BaseHookHandler
@@ -47,69 +43,6 @@ log = Logger()
 
 class GitHubEventHandler(PullRequestMixin):
 
-    getPrCommitAuthorDetailsTpl = textwrap.dedent('''
-        query repoCommitsOwners {
-          repository(owner: "{{ repo_owner }}", name: "{{ repo_name }}") {
-            pullRequest(number: {{ pr_num }}) {
-              commits(first: 100 {%- if end_cursor %}, after: "{{ end_cursor }}"{% endif %}) {
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                }
-                nodes {
-                  commit {
-                    oid
-                    messageBody
-                    messageHeadline
-                    author {
-                      name
-                      email
-                      user {
-                        login
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-    ''').strip()
-
-    getPrChangesTpl = textwrap.dedent('''
-        query repoCommitsOwners {
-          repository(owner: "{{ repo_owner }}", name: "{{ repo_name }}") {
-            pullRequest(number: {{ pr_num }}) {
-              commits(first: 100 {%- if end_cursor %}, after: "{{ end_cursor }}"{% endif %}) {
-                pageInfo {
-                  endCursor
-                  hasNextPage
-                }
-                nodes {
-                  commit {
-                    oid
-                    commitUrl
-                    committedDate
-                    messageBodyHTML
-                    messageHeadlineHTML
-                    author {
-                      name
-                      email
-                      user {
-                        login
-                      }
-                    }
-                    repository {
-                      url
-                    }
-                  }
-                }
-              }
-            }
-          }
-        }
-    ''').strip()
-
     def __init__(self, secret, strict,
                  codebase=None,
                  github_property_whitelist=None,
@@ -118,7 +51,10 @@ class GitHubEventHandler(PullRequestMixin):
                  oauth_token=None,
                  github_api_endpoint='https://api.github.com',
                  debug=False,
-                 verify=False):
+                 verify=False,
+                 integration_id=None,
+                 private_key=None,
+                 installation_id=None):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
@@ -136,19 +72,14 @@ class GitHubEventHandler(PullRequestMixin):
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
-        self.oauth_token = oauth_token
         self.github_api_endpoint = github_api_endpoint
         self.debug = debug
         self.verify = verify
-        self._http = None
-        self._api_rate_limit = None
-        self._api_rate_limit_remaining = None
-        self._api_rate_limit_reset = None
-        if oauth_token is not None:
-            self._user_details_cache = {}
-            self.getPrCommitAuthorDetailsTplC = jinja2.Template(
-                self.getPrCommitAuthorDetailsTpl
-            )
+        self.oauth_token = oauth_token
+        self.integration_id = integration_id
+        self.private_key = private_key
+        self.installation_id = installation_id
+        self._github_api_service = None
 
     @defer.inlineCallbacks
     def process(self, request):
@@ -164,7 +95,6 @@ class GitHubEventHandler(PullRequestMixin):
             raise ValueError('Unknown event: {}'.format(event_type))
 
         result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
-        self._log_rate_limit_information()
         defer.returnValue(result)
 
     def _get_payload(self, request):
@@ -238,16 +168,9 @@ class GitHubEventHandler(PullRequestMixin):
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
-        repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
 
         log.debug('Processing GitHub PR #{pr_num}', pr_num=number)
-
-        head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
-        if self._has_skip(head_msg):
-            log.info("GitHub PR #{pr_num}, Ignoring: head commit message "
-                     "contains skip pattern", pr_num=number)
-            defer.returnValue(([], 'git'))
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
@@ -265,12 +188,26 @@ class GitHubEventHandler(PullRequestMixin):
             u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
                 number, commits, 's' if commits != 1 else '', title, comments)
         ]
-        if self.oauth_token is not None:
-            files = yield self._get_changed_files(repo_owner, repo_name, number)
-            change_author, _comments = yield self._fetch_pr_data(user_login,
-                                                                 repo_owner,
-                                                                 repo_name,
-                                                                 number)
+        owners = set()
+        github_api_service = yield self.get_github_api_service()
+        if github_api_service is not None:
+            _comments = []
+            files = yield github_api_service.get_pull_request_changed_files(repo_owner, repo_name, number)
+            pr_change_details = yield github_api_service.get_pull_request_changes(repo_owner, repo_name, number)
+            for sha in pr_change_details:
+                details = pr_change_details[sha]
+                if sha == head_sha and self._has_skip(details['message']):
+                    log.info("GitHub PR #{pr_num}, Ignoring: head commit message "
+                             "contains skip pattern", pr_num=number)
+                    defer.returnValue(([], 'git'))
+                if details['author']:
+                    owners.add(details['author'])
+                if details['login'] and details['login'] == user_login:
+                    change_author = details['author']
+                _comments.append(u'  * {}: {}'.format(sha, details['title'].strip()))
+                if details['body']:
+                    _comments.extend([u' ' * 46 + l for l in details['body'].split(u'\n') if l])
+
             if _comments:
                 comments.append(u'Individual Commit Messages:\n')
                 comments.extend(_comments)
@@ -279,6 +216,11 @@ class GitHubEventHandler(PullRequestMixin):
             # The owner should be the pull request owner, not the
             # event sender
             change_author = user_login
+
+        if owners:
+            properties['owners'] = list(owners)
+
+        log.warn('OWNERS: {owners}', owners=owners)
 
         change = {
             'revision': payload['pull_request']['head']['sha'],
@@ -306,21 +248,6 @@ class GitHubEventHandler(PullRequestMixin):
         log.info("Received {num_changes} changes from GitHub PR #{pr_num}",
                  num_changes=len(changes), pr_num=number)
         defer.returnValue((changes, 'git'))
-
-    @defer.inlineCallbacks
-    def _get_commit_msg(self, repo, sha):
-        '''
-        :param repo: the repo full name, ``{owner}/{project}``.
-            e.g. ``buildbot/buildbot``
-        '''
-        url = '/repos/{}/commits/{}'.format(repo, sha)
-        http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.github_api_endpoint,
-            debug=self.debug, verify=self.verify)
-        res = yield http.get(url)
-        data = yield res.json()
-        msg = data['commit']['message']
-        defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):
@@ -400,141 +327,22 @@ class GitHubEventHandler(PullRequestMixin):
         return False
 
     @defer.inlineCallbacks
-    def _get_http_client(self):
-        if self._http is None:
-            # Instanticate an http client service to user
-            self._http = yield httpclientservice.HTTPClientService.getService(
-                self.master, self.github_api_endpoint, headers={
-                    'Authorization': 'token ' + self.oauth_token,
-                    'User-Agent': 'Buildbot',
-                    'Accept': 'application/vnd.github.v3+json'
-                },
-                debug=self.debug, verify=self.verify)
-            # Get rate limits
-            response = yield self._http.get('/rate_limit')
-            rate_limit_info = yield response.json()
-            core_limits = rate_limit_info['resources']['core']
-            self._api_rate_limit = core_limits['limit']
-            self._api_rate_limit_remaining = core_limits['remaining']
-            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(core_limits['reset'])
-            self._log_rate_limit_information()
-        defer.returnValue(self._http)
-
-    def _update_rate_limit_information(self, response):
-        log.info('Response Headers:\n{headers}', headers=pprint.pformat(response.headers))
-        api_rate_limit = response.headers.get('X-RateLimit-Limit') or None
-        if api_rate_limit:
-            self._api_rate_limit = int(api_rate_limit)
-        api_rate_limit_remaining = response.headers.get('X-RateLimit-Remaining') or None
-        if api_rate_limit_remaining:
-            self._api_rate_limit_remaining = int(api_rate_limit_remaining)
-        api_rate_limit_reset = response.headers.get('X-RateLimit-Reset') or None
-        if api_rate_limit_reset:
-            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(int(api_rate_limit_reset))
-
-    def _log_rate_limit_information(self):
-        if not self._api_rate_limit or \
-                not self._api_rate_limit_reset or \
-                not self._api_rate_limit_reset:
-            return
-        log.info(
-            'GitHub API rate limit information. Limit: {limit}; '
-            'Remaining: {remaining}; Reset: {reset} UTC;',
-            limit=self._api_rate_limit,
-            remaining=self._api_rate_limit_remaining,
-            reset=self._api_rate_limit_reset)
-
-    @defer.inlineCallbacks
-    def _fetch_pr_data(self, login,
-                       repo_owner=None,
-                       repo_name=None,
-                       pr_num=None):
-
-        httpclient = yield self._get_http_client()
-
-        end_cursor = None
-        ret_change_author = None
-        comments = []
-
-        while True:
-            graphql_query = self.getPrCommitAuthorDetailsTplC.render(
-                repo_owner=repo_owner,
-                repo_name=repo_name,
-                pr_num=pr_num,
-                end_cursor=end_cursor)
-
-            if self.debug:
-                log.info('{klass} GraphQL POST Request: -> '
-                         'DATA:\n----\n{query}\n----',
-                         klass=self.__class__.__name__,
-                         query=graphql_query)
-            # POST the GraphQL query
-            response = yield httpclient.post('/graphql', json={'query': graphql_query})
-            if response.code != 200:
-                content = yield response.content()
-                log.error("{code}: unable to POST GraphQL query: {content}",
-                          code=response.code, content=content)
-                break
-
-            data = yield response.json()
-            if 'errors' in data:
-                log.error('Unable to send query. Errors: {errors}', errors=data['errors'])
-                break
-            if 'data' not in data:
-                log.error('Unable to retrieve query response out of: {data}', data=data)
-                break
-
-            data = data['data']
-            if self.debug:
-                log.info('{klass} GraphQL Response: {response}',
-                         klass=self.__class__.__name__,
-                         response=data)
-
-            if data['repository']['pullRequest']['commits']['pageInfo']['hasNextPage']:
-                # Do we have a next page? If so, get the endCursor to pass along to
-                # the next query
-                end_cursor = data['repository']['pullRequest']['commits']['pageInfo']['endCursor']
-            else:
-                end_cursor = None
-
-            for node in data['repository']['pullRequest']['commits']['nodes']:
-                change_author_login = node['commit']['author']['user']['login']
-
-                change_author = u'{} <{}>'.format(node['commit']['author']['name'],
-                                                  node['commit']['author']['email'])
-
-                if change_author_login:
-                    if change_author_login not in self._user_details_cache:
-                        self._user_details_cache[change_author_login] = change_author
-
-                    if change_author_login == login:
-                        ret_change_author = change_author
-
-                sha = node['commit']['oid']
-                comment = node['commit']['messageHeadline']
-                body = node['commit']['messageBody']
-                comments.append(u'  * {}: {}'.format(sha, comment))
-                if body:
-                    comments.extend([u' ' * 46 + l for l in body.split(u'\n') if l])
-
-            if end_cursor is None:
-                # No next page? Break the loop
-                break
-
-        # Return the matching change_author login
-        defer.returnValue((ret_change_author, comments))
-
-    @defer.inlineCallbacks
-    def _get_changed_files(self, repo_owner, repo_name, pr_num):
-        httpclient = yield self._get_http_client()
-        response = yield httpclient.get(
-            '/repos/{}/{}/pulls/{}/files'.format(repo_owner, repo_name, pr_num))
-        files = set()
-        changed_files = yield response.json()
-        log.info('Changed files: {c}', c=changed_files)
-        for payload in changed_files:
-            files.add(payload['filename'])
-        defer.returnValue(sorted(files))
+    def get_github_api_service(self):
+        if self._github_api_service is None:
+            log.info('Instantiating GH API Service')
+            if self.oauth_token or (self.integration_id and self.private_key and self.installation_id):
+                self._github_api_service = yield githubapiservice.GithubApiService.getService(
+                    self.master,
+                    oauth_token=self.oauth_token,
+                    integration_id=self.integration_id,
+                    private_key=self.private_key,
+                    installation_id=self.installation_id,
+                    api_root_url=self.github_api_endpoint,
+                    debug=self.debug,
+                    verify=self.verify
+                )
+        log.info('Returning GH API Service: {service}', service=self._github_api_service)
+        defer.returnValue(self._github_api_service)
 
 # for GitHub, we do another level of indirection because
 # we already had documented API that encouraged people to subclass GitHubEventHandler
@@ -557,6 +365,9 @@ class GitHubHandler(BaseHookHandler):
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,
+            'integration_id': options.get('integration_id', None),
+            'private_key': options.get('private_key', None),
+            'installation_id': options.get('installation_id', None)
         }
         handler = klass(options.get('secret', None),
                         options.get('strict', False),
