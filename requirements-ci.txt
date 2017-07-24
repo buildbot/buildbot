@@ -80,7 +80,7 @@ toml==0.9.2
 towncrier==17.4.0
 treq==17.3.1
 Twisted==17.5.0
-txaio==2.8.0
+txaio==2.8.1
 txgithub==15.0.0
 txrequests==0.9.5
 typing==3.6.1
