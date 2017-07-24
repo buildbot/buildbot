@@ -34,110 +34,13 @@ from buildbot.util.service import SharedService
 
 log = Logger()
 
-InstallationAuthorization = namedtuple('InstallationAuthorization', ['token', 'expires_at', 'on_behalf_of'])
-
-
-class GithubIntegration(SharedService):
-
-    API_ROOT_URL = 'https://api.github.com'
-
-    def __init__(self, integration_id, private_key, api_root_url=None,
-                 debug=False, verify=None, **kwargs):
-        super(GithubIntegration, self).__init__()
-        self.integration_id = integration_id
-        self.private_key = private_key
-        self.api_root_url = api_root_url or self.API_ROOT_URL
-        self.debug = debug
-        self.verify = verify
-        self._tokens = {}
-        self._http = None
-
-    # Totally inspired in PyGithub https://goo.gl/xKXUtr
-
-    @defer.inlineCallbacks
-    def get_http_client(self):
-        if self._http is None:
-            self._http = yield HTTPClientService.getService(
-                self.master,
-                self.api_root_url,
-                headers={'User-Agent': 'Buildbot'},
-                debug=self.debug, verify=self.verify)
-        defer.returnValue(self._http)
-
-    def create_jwt(self):
-        """
-        Creates a signed JWT, valid for 60 seconds
-        """
-        now = int(time.time())
-        payload = {
-            "iat": now,
-            "exp": now + 60,
-            "iss": self.integration_id
-        }
-        return jwt.encode(
-            payload,
-            key=self.private_key,
-            algorithm="RS256"
-        )
-
-    @defer.inlineCallbacks
-    def get_access_token(self, installation_id, user_id=None):
-        """
-        Get an access token for the given installation id.
-        POSTs https://api.github.com/installations/<installation_id>/access_tokens
-        :param user_id: int
-        :param installation_id: int
-        """
-        iauth = self._tokens.get((installation_id, user_id), None)
-        if iauth is not None:
-            if iauth.expires_at < (datetime.datetime.utcnow() + datetime.timedelta(minutes=5)):
-                self._tokens.pop((installation_id, user_id))
-                iauth = None
-        elif iauth is None:
-            body = None
-            if user_id:
-                body = {"user_id": user_id}
-
-            client = yield self.get_http_client()
-            response = yield client.post(
-                "/installations/{}/access_tokens".format(installation_id),
-                headers={
-                    "Authorization": "Bearer {}".format(self.create_jwt()),
-                    "Accept": "application/vnd.github.machine-man-preview+json",
-                },
-                json=body
-            )
-
-            if response.code == 201:
-                data = yield response.json()
-                token = data['token']
-                expires_at = data['expires_at']
-                if len(expires_at) == 25:
-                    expires_at = datetime.datetime.strptime(
-                        expires_at[:19], "%Y-%m-%dT%H:%M:%S") + (
-                                1 if expires_at[19] == '-' else -1) * datetime.timedelta(
-                                        hours=int(expires_at[20:22]),
-                                        minutes=int(expires_at[23:25]))
-                else:
-                    expires_at = datetime.datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%SZ")
-                on_behalf_of = data.get('on_behalf_of', None)
-                iauth = InstallationAuthorization(token, expires_at, on_behalf_of)
-                self._tokens[(installation_id, user_id)] = iauth
-            else:
-                iauth = InstallationAuthorization(None, None, None)
-                body = yield response.content()
-                log.warn(
-                    'Unable to get GitHub installation auth token. HTTP Code: {code}. '
-                    'Error: {error}',
-                    code=response.code,
-                    error=body
-                )
-        defer.returnValue(iauth)
-
 
 class GithubApiService(SharedService):
 
     API_ROOT_URL = 'https://api.github.com'
+
+    InstallationAuthorization = namedtuple('InstallationAuthorization',
+                                           ['token', 'expires_at', 'on_behalf_of'])
 
     def __init__(self,
                  oauth_token=None,
@@ -160,6 +63,8 @@ class GithubApiService(SharedService):
         self._api_rate_limit_remaining = None
         self._api_rate_limit_reset = None
         self._http = None
+        self._jwt_token = None
+        self._access_token = None
 
     @defer.inlineCallbacks
     def get_http_client(self):
@@ -173,21 +78,84 @@ class GithubApiService(SharedService):
 
     @defer.inlineCallbacks
     def get_oauth_token(self):
+        # Make sure our HTTPClientService is all set up
         yield self.get_http_client()
+        # Get the asked for oauth_token
         if self.oauth_token:
             token = self.oauth_token
         else:
-            if self._github_integration is None:
-                self._github_integration = yield GithubIntegration.getService(
-                    self.master,
-                    self.integration_id,
-                    self.private_key,
-                    api_root_url=self.api_root_url,
-                    debug=self.debug,
-                    verify=self.verify
-                )
-            token = yield self._github_integration.get_access_token(self.installation_id)
+            token = yield self.get_access_token()
         defer.returnValue(token)
+
+    def get_jwt_token(self):
+        """
+        Creates a signed JWT, valid for 1 year
+        """
+        if self._jwt_token is not None:
+            if self._jwt_token['exp'] >= int(time.time()):
+                self._jwt_token = None
+        if self._jwt_token is None:
+            now = int(time.time())
+            payload = {
+                "iat": now,
+                "exp": now + 60 * 60 * 24 * 365,  # One year
+                "iss": self.integration_id
+            }
+            self._jwt_token = jwt.encode(
+                payload,
+                key=self.private_key,
+                algorithm="RS256"
+            )
+        return self._jwt_token
+
+    @defer.inlineCallbacks
+    def get_access_token(self, user_id=None):
+        """
+        Get an access token for the given installation id.
+        POSTs https://api.github.com/installations/<installation_id>/access_tokens
+        """
+        if self._access_token is not None:
+            expire_date = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+            if self._access_token.expires_at < expire_date:
+                self._access_token = None
+        if self._access_token is None:
+            body = None
+            if user_id:
+                body = {"user_id": user_id}
+
+            client = yield self.get_http_client()
+            response = yield client.post(
+                "/installations/{}/access_tokens".format(self.installation_id),
+                headers={
+                    "Authorization": "Bearer {}".format(self.get_jwt_token()),
+                    "Accept": "application/vnd.github.machine-man-preview+json",
+                },
+                json=body
+            )
+
+            if response.code == 201:
+                data = yield response.json()
+                token = data['token']
+                expires_at = data['expires_at']
+                if len(expires_at) == 25:
+                    expires_at = datetime.datetime.strptime(
+                        expires_at[:19], "%Y-%m-%dT%H:%M:%S") + (
+                                1 if expires_at[19] == '-' else -1) * datetime.timedelta(
+                                        hours=int(expires_at[20:22]),
+                                        minutes=int(expires_at[23:25]))
+                else:
+                    expires_at = datetime.datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%SZ")
+                on_behalf_of = data.get('on_behalf_of', None)
+                self._access_token = self.InstallationAuthorization(token, expires_at, on_behalf_of)
+            else:
+                body = yield response.content()
+                log.warn(
+                    'Unable to get GitHub installation auth token. HTTP Code: {code}. '
+                    'Error: {error}',
+                    code=response.code,
+                    error=body
+                )
+        defer.returnValue(self._access_token)
 
     @defer.inlineCallbacks
     def _prepare_request(self, endpoint, **kwargs):
@@ -199,7 +167,7 @@ class GithubApiService(SharedService):
         defer.returnValue((endpoint, kwargs))
 
     @defer.inlineCallbacks
-    def _get(self, endpoint, **kwargs):
+    def get(self, endpoint, **kwargs):
         endpoint, kwargs = yield self._prepare_request(endpoint, **kwargs)
         deferred = self._http.get(endpoint, **kwargs)
         deferred.addCallback(self._update_rate_limit_information)
@@ -207,9 +175,25 @@ class GithubApiService(SharedService):
         defer.returnValue(response)
 
     @defer.inlineCallbacks
-    def _post(self, endpoint, **kwargs):
+    def post(self, endpoint, **kwargs):
         endpoint, kwargs = yield self._prepare_request(endpoint, **kwargs)
         deferred = self._http.post(endpoint, **kwargs)
+        deferred.addCallback(self._update_rate_limit_information)
+        response = yield deferred
+        defer.returnValue(response)
+
+    @defer.inlineCallbacks
+    def put(self, endpoint, **kwargs):
+        endpoint, kwargs = yield self._prepare_request(endpoint, **kwargs)
+        deferred = self._http.put(endpoint, **kwargs)
+        deferred.addCallback(self._update_rate_limit_information)
+        response = yield deferred
+        defer.returnValue(response)
+
+    @defer.inlineCallbacks
+    def delete(self, endpoint, **kwargs):
+        endpoint, kwargs = yield self._prepare_request(endpoint, **kwargs)
+        deferred = self._http.delete(endpoint, **kwargs)
         deferred.addCallback(self._update_rate_limit_information)
         response = yield deferred
         defer.returnValue(response)
@@ -297,7 +281,7 @@ class GithubApiService(SharedService):
                          klass=self.__class__.__name__,
                          query=graphql_query)
             # POST the GraphQL query
-            response = yield self._post('/graphql', json={'query': graphql_query})
+            response = yield self.post('/graphql', json={'query': graphql_query})
             if response.code != 200:
                 content = yield response.content()
                 log.error("{code}: unable to POST GraphQL query: {content}",
@@ -351,7 +335,7 @@ class GithubApiService(SharedService):
 
     @defer.inlineCallbacks
     def get_pull_request_changed_files(self, repo_owner, repo_name, pr_num):
-        response = yield self._get(
+        response = yield self.get(
             '/repos/{}/{}/pulls/{}/files'.format(repo_owner, repo_name, pr_num),
             headers={'Accept': 'application/vnd.github.v3+json'})
         files = set()
