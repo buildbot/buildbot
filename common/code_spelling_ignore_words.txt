@@ -259,6 +259,7 @@ choosenextbuild
 christopher
 chroot
 chunkify
+ci
 clientconnectionlost
 clientid
 clientids
