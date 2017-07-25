@@ -23,6 +23,7 @@ import textwrap
 from twisted.internet import defer
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
+from twisted.web.http_headers import Headers
 from zope.interface import implementer
 
 from buildbot import config
@@ -52,6 +53,7 @@ class TxRequestsResponseWrapper(object):
 
     def __init__(self, res):
         self._res = res
+        self._headers = None
 
     def content(self):
         return defer.succeed(self._res.content)
@@ -65,7 +67,9 @@ class TxRequestsResponseWrapper(object):
 
     @property
     def headers(self):
-        return self._res.headers
+        if self._headers is None:
+            self._headers = Headers(rawHeaders=self._res.headers)
+        return self._headers
 
 
 class HTTPClientService(service.SharedService):

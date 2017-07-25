@@ -203,15 +203,15 @@ class GithubApiService(SharedService):
         if self.debug:
             log.info('Response Headers:\n{headers}',
                      headers=pprint.pformat(response.headers))
-        api_rate_limit = response.headers.get('X-RateLimit-Limit') or None
+        api_rate_limit = response.headers.getRawHeaders(b'X-RateLimit-Limit', default=None)
         if api_rate_limit:
-            self._api_rate_limit = int(api_rate_limit)
-        api_rate_limit_remaining = response.headers.get('X-RateLimit-Remaining') or None
+            self._api_rate_limit = int(api_rate_limit[0])
+        api_rate_limit_remaining = response.headers.getRawHeaders(b'X-RateLimit-Remaining', default=None)
         if api_rate_limit_remaining:
-            self._api_rate_limit_remaining = int(api_rate_limit_remaining)
-        api_rate_limit_reset = response.headers.get('X-RateLimit-Reset') or None
+            self._api_rate_limit_remaining = int(api_rate_limit_remaining[0])
+        api_rate_limit_reset = response.headers.getRawHeaders(b'X-RateLimit-Reset', default=None)
         if api_rate_limit_reset:
-            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(int(api_rate_limit_reset))
+            self._api_rate_limit_reset = datetime.datetime.utcfromtimestamp(int(api_rate_limit_reset[0]))
         self._log_rate_limit_information()
         return response
 
