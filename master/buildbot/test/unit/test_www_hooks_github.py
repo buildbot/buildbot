@@ -22,6 +22,7 @@ from future.utils import text_type
 
 import hmac
 from calendar import timegm
+from copy import deepcopy
 from hashlib import sha1
 from io import BytesIO
 from io import StringIO
@@ -29,6 +30,7 @@ from io import StringIO
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import unicode2bytes
@@ -445,6 +447,35 @@ gitJsonPayloadPullRequest = """
 }
 """
 
+gitJsonPayloadCommit = {
+    "sha": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "commit": {
+        "author": {
+            "name": "defunkt",
+            "email": "fred@flinstone.org",
+            "date": "2017-02-12T14:39:33Z"
+        },
+        "committer": {
+            "name": "defunkt",
+            "email": "fred@flinstone.org",
+            "date": "2017-02-12T14:51:05Z"
+        },
+        "message": "black magic",
+        "tree": {
+        },
+        "url": "...",
+        "comment_count": 0
+    },
+    "url": "...",
+    "html_url": "...",
+    "comments_url": "...",
+    "author": {},
+    "committer": {},
+    "parents": [],
+    "stats": {},
+    "files": []
+}
+
 gitPRproperties = {
     'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
     'github.state': 'open',
@@ -535,8 +566,22 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, github_property_whitelist=["github.*"])
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master,
+            self,
+            'https://api.github.com/repos/defunkt/github',
+            # ^ from ``gitJsonPayloadPullRequest['repository']['url']``
+        )
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}
@@ -767,18 +812,22 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
+        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull([gitJsonPayloadPullRequest])
 
     def test_git_with_pull_json(self):
+        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull(gitJsonPayloadPullRequest)
 
     @defer.inlineCallbacks
-    def _check_git_with_ci_skip_message(self, payload):
+    def _check_git_push_with_skip_message(self, payload):
         self.request = _prepare_request(b'push', payload)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
 
-    def test_git_with_ci_skip_message(self):
+    def test_git_push_with_skip_message(self):
         gitJsonPayloadCiSkips = [
             (gitJsonPayloadCiSkipTemplate % {'skip': '[ci skip]'}),
             (gitJsonPayloadCiSkipTemplate % {'skip': '[skip ci]'}),
@@ -786,41 +835,107 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         ]
 
         for payload in gitJsonPayloadCiSkips:
-            self._check_git_with_ci_skip_message(payload)
+            self._check_git_push_with_skip_message(payload)
+
+    @defer.inlineCallbacks
+    def _check_git_pull_request_with_skip_message(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_git_pull_request_with_skip_message(self):
+        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        msgs = (
+            'black magic [ci skip]',
+            'black magic [skip ci]',
+            'black magic [  ci skip   ]',
+        )
+        for msg in msgs:
+            commit['commit']['message'] = msg
+            self._http.expect('get', api_endpoint, content_json=commit)
+            self._check_git_pull_request_with_skip_message(
+                gitJsonPayloadPullRequest)
 
 
-class TestChangeHookConfiguredWITHCustomSkips(unittest.TestCase):
+class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.changeHook = _prepare_github_change_hook(
             strict=False, skips=[r'\[ *bb *skip *\]'])
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master,
+            self,
+            'https://api.github.com/repos/defunkt/github',
+            # ^ from ``gitJsonPayloadPullRequest['repository']['url']``
+        )
+        yield self.master.startService()
 
     @defer.inlineCallbacks
-    def _check_git_with_ci_skip_message(self, payload):
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_push_with_skip_message(self, payload):
         self.request = _prepare_request(b'push', payload)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
 
-    def test_git_with_ci_skip_message(self):
+    def test_push_with_skip_message(self):
         gitJsonPayloadCiSkips = [
             (gitJsonPayloadCiSkipTemplate % {'skip': '[bb skip]'}),
             (gitJsonPayloadCiSkipTemplate % {'skip': '[  bb skip   ]'}),
         ]
 
         for payload in gitJsonPayloadCiSkips:
-            self._check_git_with_ci_skip_message(payload)
+            self._check_push_with_skip_message(payload)
 
     @defer.inlineCallbacks
-    def _check_no_ci_skip(self, payload):
+    def _check_push_no_ci_skip(self, payload):
         self.request = _prepare_request(b'push', payload)
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.addedChanges), 2)
 
-    def test_no_ci_skip(self):
-        # user overrided the skip pattern already,
+    def test_push_no_ci_skip(self):
+        # user overrode the skip pattern already,
         # so the default patterns should not work.
         payload = gitJsonPayloadCiSkipTemplate % {'skip': '[ci skip]'}
-        self._check_no_ci_skip(payload)
+        self._check_push_no_ci_skip(payload)
+
+    @defer.inlineCallbacks
+    def _check_pull_request_with_skip_message(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_pull_request_with_skip_message(self):
+        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        msgs = (
+            'black magic [bb skip]',
+            'black magic [  bb skip   ]',
+        )
+        for msg in msgs:
+            commit['commit']['message'] = msg
+            self._http.expect('get', api_endpoint, content_json=commit)
+            self._check_pull_request_with_skip_message(
+                gitJsonPayloadPullRequest)
+
+    @defer.inlineCallbacks
+    def _check_pull_request_no_skip(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+
+    def test_pull_request_no_skip(self):
+        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        commit['commit']['message'] = 'black magic [skip bb]'  # pattern not matched
+
+        self._http.expect('get', api_endpoint, content_json=commit)
+        self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
 
 
 class TestChangeHookConfiguredWithStrict(unittest.TestCase):
