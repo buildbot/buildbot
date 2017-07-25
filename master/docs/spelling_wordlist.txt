@@ -147,6 +147,7 @@ checkin
 childs
 chroot
 chroots
+ci
 cleanupdb
 clickable
 Clickable
