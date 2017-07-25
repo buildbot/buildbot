@@ -63,8 +63,8 @@ class GithubApiService(SharedService):
         self._api_rate_limit_remaining = None
         self._api_rate_limit_reset = None
         self._http = None
-        self._jwt_token = None
-        self._access_token = None
+        self._jwt_token = self._jwt_token_expire = None
+        self._access_tokens = {}
 
     @defer.inlineCallbacks
     def get_http_client(self):
@@ -81,26 +81,36 @@ class GithubApiService(SharedService):
         # Make sure our HTTPClientService is all set up
         yield self.get_http_client()
         # Get the asked for oauth_token
-        if self.oauth_token:
-            token = self.oauth_token
-        else:
+        if self.integration_id and self.private_key and self.installation_id:
             token = yield self.get_access_token()
+        else:
+            token = self.oauth_token
         defer.returnValue(token)
 
     def get_jwt_token(self):
         """
-        Creates a signed JWT, valid for 1 year
+        Creates a signed JWT, valid for 10 minutes which is the maximum
+        GitHub allows
         """
+        log.info('Getting JST Token. Token: {token}; Expire: {expire}; Now: {now}',
+                 token=self._jwt_token, expire=self._jwt_token_expire, now=int(time.time()))
         if self._jwt_token is not None:
-            if self._jwt_token['exp'] >= int(time.time()):
-                self._jwt_token = None
+            if self._jwt_token_expire < int(time.time()):
+                self._jwt_token = self._jwt_token_expire = None
         if self._jwt_token is None:
             now = int(time.time())
+            # Maximum token age GH allows is 10 minutes. We generate the token
+            # for just 8 minues to allow some clock skew
+            token_expire = now + 60 * 8
             payload = {
                 "iat": now,
-                "exp": now + 60 * 60 * 24 * 365,  # One year
+                "exp": token_expire,
                 "iss": self.integration_id
             }
+            self._jwt_token_expire = token_expire
+            if self.debug:
+                log.info('Generated JWT Token at {now}: {token}',
+                         now=datetime.datetime.utcnow(), token=payload)
             self._jwt_token = jwt.encode(
                 payload,
                 key=self.private_key,
@@ -114,11 +124,11 @@ class GithubApiService(SharedService):
         Get an access token for the given installation id.
         POSTs https://api.github.com/installations/<installation_id>/access_tokens
         """
-        if self._access_token is not None:
+        if self._access_tokens.get(user_id, None) is not None:
             expire_date = datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
-            if self._access_token.expires_at < expire_date:
-                self._access_token = None
-        if self._access_token is None:
+            if self._access_tokens[user_id].expires_at < expire_date:
+                self._access_tokens.pop(user_id)
+        if self._access_tokens.get(user_id, None) is None:
             body = None
             if user_id:
                 body = {"user_id": user_id}
@@ -146,7 +156,7 @@ class GithubApiService(SharedService):
                 else:
                     expires_at = datetime.datetime.strptime(expires_at, "%Y-%m-%dT%H:%M:%SZ")
                 on_behalf_of = data.get('on_behalf_of', None)
-                self._access_token = self.InstallationAuthorization(token, expires_at, on_behalf_of)
+                self._access_tokens[user_id] = self.InstallationAuthorization(token, expires_at, on_behalf_of)
             else:
                 body = yield response.content()
                 log.warn(
@@ -155,16 +165,23 @@ class GithubApiService(SharedService):
                     code=response.code,
                     error=body
                 )
-        defer.returnValue(self._access_token)
+        if self._access_tokens.get(user_id, None) is not None:
+            defer.returnValue(self._access_tokens[user_id].token)
+        else:
+            defer.returnValue(None)
 
     @defer.inlineCallbacks
     def _prepare_request(self, endpoint, **kwargs):
         headers = kwargs.get('headers', {})
+        if self.debug:
+            log.info('Preparing request. Initial headers: {headers}', headers=headers)
         if 'Authorization' not in headers:
             oauth_token = yield self.get_oauth_token()
             if oauth_token:
                 headers['Authorization'] = 'token ' + oauth_token
                 kwargs['headers'] = headers
+        if self.debug:
+            log.info('Preparing request. Final request headers: {headers}', headers=headers)
         defer.returnValue((endpoint, kwargs))
 
     @defer.inlineCallbacks
