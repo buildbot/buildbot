@@ -147,14 +147,14 @@ class GitHubEventHandler(PullRequestMixin):
         repo_url = payload['repository']['url']
         head_sha = payload['pull_request']['head']['sha']
 
-        head_msg = yield self._get_commit_msg(repo_url, head_sha)
-        log.msg("head commit message {}".format(head_msg))
-        log.msg("head commit message has skip {}".format(self._has_skip(head_msg)))
-        if self._has_skip(head_msg):
-            defer.returnValue((changes, 'git'))
-
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
+
+        head_msg = yield self._get_commit_msg(repo_url, head_sha)
+        if self._has_skip(head_msg):
+            log.msg("GitHub PR #{}, Ignoring: "
+                    "head commit message contains skip pattern".format(number))
+            defer.returnValue(([], 'git'))
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
