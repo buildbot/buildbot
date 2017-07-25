@@ -122,6 +122,10 @@ The GitHub hook has the following parameters:
 
     If you want to disable the skip checking, please set it to ``[]``.
 
+``github_api_endpoint`` (default ``https://api.github.com``)
+    If you have a self-host GitHub Enterprise installation, please set
+    this url properly.
+
 The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python

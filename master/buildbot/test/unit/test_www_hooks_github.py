@@ -572,7 +572,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             strict=False, github_property_whitelist=["github.*"])
         self.master = self.changeHook.master
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.github.com')
+            self.master, self, 'https://api.github.com',
+            debug=False, verify=False)
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -862,7 +863,8 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
             strict=False, skips=[r'\[ *bb *skip *\]'])
         self.master = self.changeHook.master
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.github.com')
+            self.master, self, 'https://api.github.com',
+            debug=False, verify=False)
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -928,6 +930,35 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
 
         self._http.expect('get', api_endpoint, content_json=commit)
         self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
+
+
+class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, github_api_endpoint='https://black.magic.io')
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://black.magic.io',
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_pull_request(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+
+    def test_pull_request(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+        self._check_pull_request(gitJsonPayloadPullRequest)
 
 
 class TestChangeHookConfiguredWithStrict(unittest.TestCase):

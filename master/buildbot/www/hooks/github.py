@@ -39,8 +39,14 @@ _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 class GitHubEventHandler(PullRequestMixin):
 
-    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None,
-                 skips=None, master=None):
+    def __init__(self, secret, strict,
+                 codebase=None,
+                 github_property_whitelist=None,
+                 master=None,
+                 skips=None,
+                 github_api_endpoint='https://api.github.com',
+                 debug=False,
+                 verify=False):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
@@ -51,10 +57,15 @@ class GitHubEventHandler(PullRequestMixin):
             self.github_property_whitelist = []
         if skips is None:
             self.skips = [r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']
+        if github_api_endpoint is None:
+            self.github_api_endpoint = 'https://api.github.com'
 
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
+        self.github_api_endpoint = github_api_endpoint
+        self.debug = debug
+        self.verify = verify
 
     @defer.inlineCallbacks
     def process(self, request):
@@ -197,7 +208,8 @@ class GitHubEventHandler(PullRequestMixin):
         '''
         url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
-            self.master, 'https://api.github.com')
+            self.master, self.github_api_endpoint,
+            debug=self.debug, verify=self.verify)
         res = yield http.get(url)
         data = yield res.json()
         msg = data['commit']['message']
@@ -292,12 +304,18 @@ class GitHubHandler(BaseHookHandler):
         BaseHookHandler.__init__(self, master, options)
 
         klass = options.get('class', GitHubEventHandler)
+        klass_kwargs = {
+            'master': master,
+            'codebase': options.get('codebase', None),
+            'github_property_whitelist': options.get('github_property_whitelist', None),
+            'skips': options.get('skips', None),
+            'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'debug': options.get('debug', None) or False,
+            'verify': options.get('verify', None) or False,
+        }
         handler = klass(options.get('secret', None),
                         options.get('strict', False),
-                        options.get('codebase', None),
-                        options.get('github_property_whitelist', None),
-                        options.get('skips', None),
-                        master=master)
+                        **klass_kwargs)
         self.handler = handler
 
     def getChanges(self, request):
