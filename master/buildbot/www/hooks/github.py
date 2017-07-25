@@ -144,13 +144,13 @@ class GitHubEventHandler(PullRequestMixin):
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
-        repo_url = payload['repository']['url']
+        repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
 
-        head_msg = yield self._get_commit_msg(repo_url, head_sha)
+        head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
         if self._has_skip(head_msg):
             log.msg("GitHub PR #{}, Ignoring: "
                     "head commit message contains skip pattern".format(number))
@@ -190,10 +190,14 @@ class GitHubEventHandler(PullRequestMixin):
         defer.returnValue((changes, 'git'))
 
     @defer.inlineCallbacks
-    def _get_commit_msg(self, repo_url, sha):
-        url = '/commits/{}'.format(sha)
+    def _get_commit_msg(self, repo, sha):
+        '''
+        :param repo: the repo full name, ``{owner}/{project}``.
+            e.g. ``buildbot/buildbot``
+        '''
+        url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
-            self.master, repo_url)
+            self.master, 'https://api.github.com')
         res = yield http.get(url)
         data = yield res.json()
         msg = data['commit']['message']

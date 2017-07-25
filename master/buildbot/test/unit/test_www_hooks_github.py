@@ -572,11 +572,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             strict=False, github_property_whitelist=["github.*"])
         self.master = self.changeHook.master
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master,
-            self,
-            'https://api.github.com/repos/defunkt/github',
-            # ^ from ``gitJsonPayloadPullRequest['repository']['url']``
-        )
+            self.master, self, 'https://api.github.com')
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -812,12 +808,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
-        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
         self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull([gitJsonPayloadPullRequest])
 
     def test_git_with_pull_json(self):
-        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
         self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull(gitJsonPayloadPullRequest)
 
@@ -844,7 +840,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
 
     def test_git_pull_request_with_skip_message(self):
-        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
         commit = deepcopy(gitJsonPayloadCommit)
         msgs = (
             'black magic [ci skip]',
@@ -866,11 +862,7 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
             strict=False, skips=[r'\[ *bb *skip *\]'])
         self.master = self.changeHook.master
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master,
-            self,
-            'https://api.github.com/repos/defunkt/github',
-            # ^ from ``gitJsonPayloadPullRequest['repository']['url']``
-        )
+            self.master, self, 'https://api.github.com')
         yield self.master.startService()
 
     @defer.inlineCallbacks
@@ -911,7 +903,7 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
         self.assertEqual(len(self.changeHook.master.addedChanges), 0)
 
     def test_pull_request_with_skip_message(self):
-        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
         commit = deepcopy(gitJsonPayloadCommit)
         msgs = (
             'black magic [bb skip]',
@@ -930,7 +922,7 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
         self.assertEqual(len(self.changeHook.master.addedChanges), 1)
 
     def test_pull_request_no_skip(self):
-        api_endpoint = '/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
         commit = deepcopy(gitJsonPayloadCommit)
         commit['commit']['message'] = 'black magic [skip bb]'  # pattern not matched
 
