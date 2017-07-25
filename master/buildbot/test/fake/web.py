@@ -22,10 +22,13 @@ from twisted.internet import defer
 from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
+from buildbot.test.fake import fakemaster
+
 
 def fakeMasterForHooks():
-    master = Mock()
+    master = fakemaster.make_master()
     master.addedChanges = []
+    master.www = Mock()
 
     def addChange(**kwargs):
         if 'isdir' in kwargs or 'is_dir' in kwargs:
