@@ -162,8 +162,9 @@ class GithubApiService(SharedService):
         headers = kwargs.get('headers', {})
         if 'Authorization' not in headers:
             oauth_token = yield self.get_oauth_token()
-            headers['Authorization'] = 'token ' + oauth_token
-            kwargs['headers'] = headers
+            if oauth_token:
+                headers['Authorization'] = 'token ' + oauth_token
+                kwargs['headers'] = headers
         defer.returnValue((endpoint, kwargs))
 
     @defer.inlineCallbacks
