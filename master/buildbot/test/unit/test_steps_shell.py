@@ -927,6 +927,30 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         return self.do_test_suppressions(step, '', stdout, 2,
                                          exp_warning_log)
 
+    def test_suppressions_suppressionsParameter(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+
+        supps = (
+                   ("abc.c", ".*", 100, 199),
+                   ("def.c", ".*", 22, 22),
+                )
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                                 suppressionList=supps,
+                                                 warningExtractor=warningExtractor)
+        stdout = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:150: warning: unseen
+            def.c:22: warning: unseen
+            abc.c:200: warning: seen 2
+            """)
+        exp_warning_log = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:200: warning: seen 2
+            """)
+        return self.do_test_suppressions(step, None, stdout, 2,
+                                         exp_warning_log)
+
     def test_warnExtractFromRegexpGroups(self):
         step = shell.WarningCountingShellCommand(command=['make'])
         we = shell.WarningCountingShellCommand.warnExtractFromRegexpGroups
