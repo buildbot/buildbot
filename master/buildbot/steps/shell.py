@@ -404,7 +404,7 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     def __init__(self,
                  warningPattern=None, warningExtractor=None, maxWarnCount=None,
                  directoryEnterPattern=None, directoryLeavePattern=None,
-                 suppressionFile=None, **kwargs):
+                 suppressionFile=None, suppressionList=None, **kwargs):
         # See if we've been given a regular expression to use to match
         # warnings. If not, use a default that assumes any line with "warning"
         # present is a warning. This may lead to false positives in some cases.
@@ -416,6 +416,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             self.directoryLeavePattern = directoryLeavePattern
         if suppressionFile:
             self.suppressionFile = suppressionFile
+        # self.suppressions is already taken, so use something else
+        self.suppressionList = suppressionList
         if warningExtractor:
             self.warningExtractor = warningExtractor
         else:
@@ -551,6 +553,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
         self.warnCount += 1
 
     def start(self):
+        if self.suppressionList is not None:
+            self.addSuppression(self.suppressionList)
         if self.suppressionFile is None:
             return ShellCommand.start(self)
         d = self.getFileContentFromWorker(
