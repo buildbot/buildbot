@@ -110,6 +110,8 @@ passing a reference to itself as the ``stepRef`` parameter.  The
 :meth:`startCommand` method returns immediately, and the end of the command is
 signalled with a call to a method on the master-side BuildStep object.
 
+.. _worker-for-builders:
+
 Worker For Builders
 -------------------
 

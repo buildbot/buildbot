@@ -62,6 +62,10 @@ The :class:`Worker` constructor can also take an optional ``max_builds`` paramet
                       max_builds=2),
     ]
 
+.. note::
+
+    In :ref:`worker-for-builders` concept only one build from the same builder would run on the worker.
+
 Master-Worker TCP Keepalive
 +++++++++++++++++++++++++++
 
@@ -160,7 +164,7 @@ Another approach is to let the Buildbot master start workers when builds are rea
 Thanks to services such as Amazon Web Services' Elastic Compute Cloud ("AWS EC2"), this is relatively easy to set up, and can be very useful for some situations.
 
 The workers that are started on-demand are called "latent" workers.
-As of this writing, Buildbot ships with an abstract base class for building latent workers, and a concrete implementation for AWS EC2 and for libvirt.
+You can find the list of :ref:`Supported-Latent-Workers` below.
 
 .. _Common-Latent-Workers-Options:
 
@@ -174,6 +178,8 @@ The following options are available for all latent workers.
     It defaults to 10 minutes.
     If this is set to 0 then the worker will be shut down immediately.
     If it is less than 0 it will never automatically shutdown.
+
+.. _Supported-Latent-Workers:
 
 Supported Latent Workers
 ++++++++++++++++++++++++
