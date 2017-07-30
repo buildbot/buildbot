@@ -41,6 +41,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
@@ -339,8 +340,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, list(kwargs)))
         self._pendingLogObservers = []
 
-        if not isinstance(self.name, str):
-            config.error("BuildStep name must be a string: %r" % (self.name,))
+        if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
+            config.error("BuildStep name must be a string or a renderable object: "
+                         "%r" % (self.name,))
 
         if isinstance(self.description, str):
             self.description = [self.description]
@@ -355,7 +357,6 @@ class BuildStep(results.ResultComputingConfigMixin,
                 self.updateBuildSummaryPolicy.append(FAILURE)
             if self.warnOnWarnings or self.flunkOnWarnings:
                 self.updateBuildSummaryPolicy.append(WARNINGS)
-            self.updateBuildSummaryPolicy
         if self.updateBuildSummaryPolicy is False:
             self.updateBuildSummaryPolicy = []
         if self.updateBuildSummaryPolicy is True:
@@ -510,6 +511,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
+        self.name = yield self.build.render(self.name)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
@@ -543,12 +545,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.stopped:
                 raise BuildStepCancelled
 
-            # check doStepIf
-            if isinstance(self.doStepIf, bool):
-                doStep = self.doStepIf
-            else:
-                doStep = yield self.doStepIf(self)
-
             # render renderables in parallel
             renderables = []
             accumulateClassList(self.__class__, 'renderables', renderables)
@@ -565,6 +561,12 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
             self.realUpdateSummary()
+
+            # check doStepIf (after rendering)
+            if isinstance(self.doStepIf, bool):
+                doStep = self.doStepIf
+            else:
+                doStep = yield self.doStepIf(self)
 
             # run -- or skip -- the step
             if doStep:
@@ -742,8 +744,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # **temporary** method until new-style steps are the only supported style
         if PY3:
             return self.run.__func__ is not BuildStep.run
-        else:
-            return self.run.im_func is not BuildStep.run.im_func
+        return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         # New-style classes implement 'run'.
@@ -838,19 +839,19 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addCompleteLog(self, name, text):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
-        l = self._newLog(name, u't', logid)
-        yield l.addContent(text)
-        yield l.finish()
+        _log = self._newLog(name, u't', logid)
+        yield _log.addContent(text)
+        yield _log.finish()
 
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
-        l = self._newLog(name, u'h', logid)
+        _log = self._newLog(name, u'h', logid)
         html = bytes2NativeString(html)
-        yield l.addContent(html)
-        yield l.finish()
+        yield _log.addContent(html)
+        yield _log.finish()
 
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):
@@ -1067,8 +1068,7 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["exception"]
         elif results == CANCELLED:
             return self.describe(True) + ["cancelled"]
-        else:
-            return self.describe(True) + ["failed"]
+        return self.describe(True) + ["failed"]
 
     # TODO: delete
     def getText2(self, cmd, results):

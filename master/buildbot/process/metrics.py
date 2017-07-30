@@ -173,7 +173,7 @@ class AveragingFiniteList(FiniteList):
         self._calc()
 
     def _calc(self):
-        if len(self) == 0:
+        if not self:
             self.average = 0
         else:
             self.average = float(sum(self)) / len(self)

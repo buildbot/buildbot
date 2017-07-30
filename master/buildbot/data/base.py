@@ -108,8 +108,11 @@ class BuildNestingMixin(object):
         if 'buildid' in kwargs:
             defer.returnValue(kwargs['buildid'])
         else:
+            builderid = yield self.getBuilderId(kwargs)
+            if builderid is None:
+                return
             build = yield self.master.db.builds.getBuildByNumber(
-                builderid=kwargs['builderid'],
+                builderid=builderid,
                 number=kwargs['build_number'])
             if not build:
                 return
@@ -131,6 +134,11 @@ class BuildNestingMixin(object):
             if not dbdict:
                 return
             defer.returnValue(dbdict['id'])
+
+    def getBuilderId(self, kwargs):
+        if 'buildername' in kwargs:
+            return self.master.db.builders.findBuilderId(kwargs['buildername'], autoCreate=False)
+        return defer.succeed(kwargs['builderid'])
 
 
 class ListResult(UserList):
@@ -161,10 +169,9 @@ class ListResult(UserList):
                 and self.offset == other.offset \
                 and self.total == other.total \
                 and self.limit == other.limit
-        else:
-            return self.data == other \
-                and self.offset == self.limit is None \
-                and (self.total is None or self.total == len(other))
+        return self.data == other \
+            and self.offset == self.limit is None \
+            and (self.total is None or self.total == len(other))
 
     def __ne__(self, other):
         return not (self == other)

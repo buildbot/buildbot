@@ -32,11 +32,11 @@ from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatt
 from buildbot.reporters.message import MessageFormatterMissingWorker
 from buildbot.util import service
 
-ENCODING = 'utf8'
+ENCODING = 'utf-8'
 
 
 class NotifierBase(service.BuildbotService):
-
+    name = None
     __meta__ = abc.ABCMeta
 
     possible_modes = ("change", "failing", "passing", "problem", "warnings",
@@ -58,7 +58,7 @@ class NotifierBase(service.BuildbotService):
                     buildSetSummary=False, messageFormatter=None,
                     subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     addLogs=False, addPatch=False,
-                    name=None, schedulers=None, branches=None,
+                    schedulers=None, branches=None,
                     watchedWorkers=None, messageFormatterMissingWorker=None):
 
         for m in self.computeShortcutModes(mode):
@@ -69,8 +69,7 @@ class NotifierBase(service.BuildbotService):
                 else:
                     config.error(
                         "mode %s is not a valid mode" % (m,))
-
-        if name is None:
+        if self.name is None:
             self.name = self.__class__.__name__
             if tags is not None:
                 self.name += "_tags_" + "+".join(tags)
@@ -80,6 +79,7 @@ class NotifierBase(service.BuildbotService):
                 self.name += "_schedulers_" + "+".join(schedulers)
             if branches is not None:
                 self.name += "_branches_" + "+".join(branches)
+            self.name += "_".join(mode)
 
         if '\n' in subject:
             config.error(
@@ -100,7 +100,7 @@ class NotifierBase(service.BuildbotService):
                         buildSetSummary=False, messageFormatter=None,
                         subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         addLogs=False, addPatch=False,
-                        name=None, schedulers=None, branches=None,
+                        schedulers=None, branches=None,
                         watchedWorkers=None, messageFormatterMissingWorker=None):
 
         self.mode = self.computeShortcutModes(mode)

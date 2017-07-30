@@ -92,6 +92,9 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         return d
 
     def test_setup_check_version_bad(self):
+        if self.db_url == 'sqlite://':
+            raise unittest.SkipTest(
+                'sqlite in-memory model is always upgraded at connection')
         d = self.startService(check_version=True)
         return self.assertFailure(d, exceptions.DatabaseNotReadyError)
 

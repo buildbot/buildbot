@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -79,8 +80,12 @@ class OldTriggeringMethods(unittest.TestCase):
             return defer.succeed(self.fake_Change)
         self.patch(Change, 'fromChdict', staticmethod(fromChdict))
 
-    def do_test_addChange_args(self, args=(), kwargs={}, exp_data_kwargs={}):
+    def do_test_addChange_args(self, args=(), kwargs=None, exp_data_kwargs=None):
         # add default arguments
+        if kwargs is None:
+            kwargs = {}
+        if exp_data_kwargs is None:
+            exp_data_kwargs = {}
         default_data_kwargs = {
             'author': None,
             'branch': None,
@@ -113,6 +118,16 @@ class OldTriggeringMethods(unittest.TestCase):
         return self.do_test_addChange_args(
             kwargs=dict(who='me'),
             exp_data_kwargs=dict(author='me'))
+
+    def test_addChange_args_cyrillic(self):
+        return self.do_test_addChange_args(
+            kwargs=dict(who=b'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82',
+                        files=[b'\xd0\xbd\xd0\xb5'],
+                        properties={b'\xd1\x80\xd0\xb0\xd0\xb1\xd0\xbe\xd1\x82\xd0\xb0\xd0\xb5\xd1\x82':
+                                    'a'}),
+            exp_data_kwargs=dict(author=u'привет',
+                                 files=[u'не'],
+                                 properties={u'работает': 'a'}))
 
     def test_addChange_args_when(self):
         # when should come through as when_timestamp, as a datetime

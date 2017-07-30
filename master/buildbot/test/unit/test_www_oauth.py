@@ -31,6 +31,8 @@ from twisted.web.resource import Resource
 from twisted.web.server import Site
 
 from buildbot.test.util import www
+from buildbot.test.util.config import ConfigErrorsMixin
+from buildbot.util import bytes2NativeString
 
 try:
     import requests
@@ -52,7 +54,7 @@ class FakeResponse(object):
         pass
 
 
-class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
+class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 
     def setUp(self):
         if requests is None:
@@ -64,13 +66,18 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
 
         self.googleAuth = oauth2.GoogleAuth("ggclientID", "clientSECRET")
         self.githubAuth = oauth2.GitHubAuth("ghclientID", "clientSECRET")
+        self.githubAuth_v4 = oauth2.GitHubAuth(
+            "ghclientID", "clientSECRET", apiVersion=4)
+        self.githubAuth_v4_teams = oauth2.GitHubAuth(
+            "ghclientID", "clientSECRET", apiVersion=4, getTeamsMembership=True)
         self.githubAuthEnt = oauth2.GitHubAuth(
             "ghclientID", "clientSECRET", serverURL="https://git.corp.fakecorp.com")
         self.gitlabAuth = oauth2.GitLabAuth(
             "https://gitlab.test/", "glclientID", "clientSECRET")
         self.bitbucketAuth = oauth2.BitbucketAuth("bbclientID", "clientSECRET")
 
-        for auth in [self.googleAuth, self.githubAuth, self.githubAuthEnt, self.gitlabAuth, self.bitbucketAuth]:
+        for auth in [self.googleAuth, self.githubAuth, self.githubAuth_v4, self.githubAuth_v4_teams,
+                     self.githubAuthEnt, self.gitlabAuth, self.bitbucketAuth]:
             self._master = master = self.make_master(url='h:/a/b/', auth=auth)
             auth.reconfigAuth(master, master.config)
 
@@ -210,6 +217,146 @@ class OAuth2Auth(www.WwwTestMixin, unittest.TestCase):
                           'full_name': 'foo bar'}, res)
 
     @defer.inlineCallbacks
+    def test_GithubAcceptToken_v4(self):
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.githubAuth_v4.post = mock.Mock(side_effect=[
+            {
+                'data': {
+                    'viewer': {
+                        'organizations': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'login': 'hello'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'login': 'grp'
+                                    }
+                                }
+                            ]
+                        },
+                        'login': 'bar',
+                        'email': 'bar@foo',
+                        'name': 'foo bar'
+                    }
+                }
+            }
+        ])
+        res = yield self.githubAuth_v4.acceptToken("TOK3N")
+        self.assertEqual({'email': 'bar@foo',
+                          'username': 'bar',
+                          'groups': ["hello", "grp"],
+                          'full_name': 'foo bar'}, res)
+
+    @defer.inlineCallbacks
+    def test_GithubAcceptToken_v4_teams(self):
+        requests.get.side_effect = []
+        requests.post.side_effect = [
+            FakeResponse(dict(access_token="TOK3N"))]
+        self.githubAuth_v4_teams.post = mock.Mock(side_effect=[
+            {
+                'data': {
+                    'viewer': {
+                        'organizations': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'login': 'hello'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'login': 'grp'
+                                    }
+                                }
+                            ]
+                        },
+                        'login': 'bar',
+                        'email': 'bar@foo',
+                        'name': 'foo bar'
+                    }
+                }
+            },
+            {
+                'data': {
+                    'hello': {
+                        'teams': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'name': 'developers',
+                                        'slug': 'develpers'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'name': 'contributors',
+                                        'slug': 'contributors'
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    'grp': {
+                        'teams': {
+                            'edges': [
+                                {
+                                    'node': {
+                                        'name': 'developers',
+                                        'slug': 'develpers'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'name': 'contributors',
+                                        'slug': 'contributors'
+                                    }
+                                },
+                                {
+                                    'node': {
+                                        'name': 'committers',
+                                        'slug': 'committers'
+                                    }
+                                },
+                            ]
+                        }
+                    },
+                }
+            }
+        ])
+        res = yield self.githubAuth_v4_teams.acceptToken("TOK3N")
+        self.assertEqual({'email': 'bar@foo',
+                          'username': 'bar',
+                          'groups': [
+                              'hello',
+                              'grp',
+                              'grp/committers',
+                              'grp/contributors',
+                              'grp/developers',
+                              'hello/contributors',
+                              'hello/developers'
+                          ],
+                          'full_name': 'foo bar'}, res)
+
+    def test_GitHubAuthBadApiVersion(self):
+        for bad_api_version in (2, 5, 'a'):
+            self.assertRaisesConfigError(
+                'GitHubAuth apiVersion must be 3 or 4 not ',
+                lambda api_version=bad_api_version: oauth2.GitHubAuth(
+                    "ghclientID", "clientSECRET", apiVersion=api_version)
+            )
+
+    def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self):
+        self.assertRaisesConfigError(
+            'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.',
+            lambda: oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
+        )
+
+    @defer.inlineCallbacks
     def test_GitlabVerifyCode(self):
         requests.get.side_effect = []
         requests.post.side_effect = [
@@ -335,7 +482,9 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
             raise unittest.SkipTest(
                 "Need to pass OAUTHCONF path to json file via environ to run this e2e test")
 
-        config = json.load(open(os.environ['OAUTHCONF']))[self.authClass]
+        with open(os.environ['OAUTHCONF']) as f:
+            jsonData = f.read()
+        config = json.loads(jsonData)[self.authClass]
         from buildbot.www import oauth2
         self.auth = self._instantiateAuth(
             getattr(oauth2, self.authClass), config)
@@ -381,14 +530,15 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
         root.putChild(b'auth', auth)
         auth.putChild(b'login', self.auth.getLoginResource())
         site = MySite(root)
-        l = reactor.listenTCP(5000, site)
+        listener = reactor.listenTCP(5000, site)
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
-            webbrowser.open(res.content)
+            content = bytes2NativeString(res.content)
+            webbrowser.open(content)
         threads.deferToThread(thd)
         res = yield d
-        yield l.stopListening()
+        yield listener.stopListening()
         yield site.stopFactory()
 
         self.assertIn("full_name", res)

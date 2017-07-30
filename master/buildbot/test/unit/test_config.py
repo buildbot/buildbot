@@ -160,7 +160,9 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
     def tearDown(self):
         return self.tearDownDirs()
 
-    def install_config_file(self, config_file, other_files={}):
+    def install_config_file(self, config_file, other_files=None):
+        if other_files is None:
+            other_files = {}
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
@@ -270,7 +272,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                     self.patch(config.MasterConfig, n,
                                mock.Mock(side_effect=lambda: None))
 
-    def install_config_file(self, config_file, other_files={}):
+    def install_config_file(self, config_file, other_files=None):
+        if other_files is None:
+            other_files = {}
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
@@ -1110,11 +1114,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock(spec=locks.MasterLock)
-            l.name = name
+            lock = mock.Mock(spec=locks.MasterLock)
+            lock.name = name
             if bare_builder_lock:
-                return l
-            return locks.LockAccess(l, "counting", _skipChecks=True)
+                return lock
+            return locks.LockAccess(lock, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [b1, b2]

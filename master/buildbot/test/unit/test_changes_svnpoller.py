@@ -28,7 +28,7 @@ from buildbot.test.util import gpo
 
 # this is the output of "svn info --xml
 # svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-prefix_output = """\
+prefix_output = b"""\
 <?xml version="1.0"?>
 <info>
 <entry
@@ -51,7 +51,7 @@ prefix_output = """\
 
 # and this is "svn info --xml svn://svn.twistedmatrix.com/svn/Twisted". I
 # think this is kind of a degenerate case.. it might even be a form of error.
-prefix_output_2 = """\
+prefix_output_2 = b"""\
 <?xml version="1.0"?>
 <info>
 </info>
@@ -59,7 +59,7 @@ prefix_output_2 = """\
 
 # this is the svn info output for a local repository, svn info --xml
 # file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository
-prefix_output_3 = """\
+prefix_output_3 = b"""\
 <?xml version="1.0"?>
 <info>
 <entry
@@ -82,7 +82,7 @@ prefix_output_3 = """\
 
 # % svn info --xml file:///home/warner/stuff/Projects/Buildbot/trees/svnpoller/_trial_temp/test_vc/repositories/SVN-Repository/sample/trunk
 
-prefix_output_4 = """\
+prefix_output_4 = b"""\
 <?xml version="1.0"?>
 <info>
 <entry
@@ -110,7 +110,7 @@ sample_base = ("file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/" +
                "_trial_temp/test_vc/repositories/SVN-Repository/sample")
 sample_logentries = [None] * 6
 
-sample_logentries[5] = """\
+sample_logentries[5] = b"""\
 <logentry
    revision="6">
 <author>warner</author>
@@ -123,7 +123,7 @@ sample_logentries[5] = """\
 </logentry>
 """
 
-sample_logentries[4] = """\
+sample_logentries[4] = b"""\
 <logentry
    revision="5">
 <author>warner</author>
@@ -136,7 +136,7 @@ sample_logentries[4] = """\
 </logentry>
 """
 
-sample_logentries[3] = """\
+sample_logentries[3] = b"""\
 <logentry
    revision="4">
 <author>warner</author>
@@ -149,7 +149,7 @@ sample_logentries[3] = """\
 </logentry>
 """
 
-sample_logentries[2] = """\
+sample_logentries[2] = b"""\
 <logentry
    revision="3">
 <author>warner</author>
@@ -162,7 +162,7 @@ sample_logentries[2] = """\
 </logentry>
 """
 
-sample_logentries[1] = """\
+sample_logentries[1] = b"""\
 <logentry
    revision="2">
 <author>warner</author>
@@ -177,7 +177,7 @@ sample_logentries[1] = """\
 </logentry>
 """
 
-sample_logentries[0] = """\
+sample_logentries[0] = b"""\
 <logentry
    revision="1">
 <author>warner</author>
@@ -200,7 +200,7 @@ sample_logentries[0] = """\
 </logentry>
 """
 
-sample_info_output = """\
+sample_info_output = b"""\
 <?xml version="1.0"?>
 <info>
 <entry
@@ -222,20 +222,16 @@ sample_info_output = """\
 """
 
 
-changes_output_template = """\
-<?xml version="1.0"?>
-<log>
-%s</log>
-"""
-
-
 def make_changes_output(maxrevision):
     # return what 'svn log' would have just after the given revision was
     # committed
     logs = sample_logentries[0:maxrevision]
     assert len(logs) == maxrevision
     logs.reverse()
-    output = changes_output_template % ("".join(logs))
+    output = (b"""<?xml version="1.0"?>
+<log>"""
+              + b"".join(logs)
+              + b"</log>")
     return output
 
 
@@ -578,7 +574,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                                  svnuser='dustin', svnpasswd='bbrocks')
 
         self.expectCommands(
-            self.makeInfoExpect().stderr("error"))
+            self.makeInfoExpect().stderr(b"error"))
         d = s.poll()
 
         @d.addCallback
@@ -594,7 +590,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         s._prefix = "abc"  # skip the get_prefix stuff
 
         self.expectCommands(
-            self.makeLogExpect().stderr("some error"))
+            self.makeLogExpect().stderr(b"some error"))
         d = s.poll()
 
         @d.addCallback

@@ -119,7 +119,11 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
 
     def expectRepoSync(self, which_fail=-1, breakatfail=False, depth=0,
-                       syncoptions=["-c"], override_commands=[]):
+                       syncoptions=None, override_commands=None):
+        if syncoptions is None:
+            syncoptions = ["-c"]
+        if override_commands is None:
+            override_commands = []
         commands = [
             self.ExpectShell(
                 command=[
@@ -294,9 +298,11 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_update_tarball_lzop(self):
         self.do_test_update_tarball("tar.lzop", ["--lzop"])
 
-    def test_update_tarball_fail1(self, suffix="tar", option=[]):
+    def test_update_tarball_fail1(self, suffix="tar", option=None):
         """tarball extract fail -> remove the tarball + remove .repo dir
         """
+        if option is None:
+            option = []
         self.mySetupStep(tarball="/tarball." + suffix)
         self.expectClobber()
         self.expectCommands(
@@ -322,9 +328,11 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                             + 0)
         return self.myRunStep()
 
-    def test_update_tarball_fail2(self, suffix="tar", option=[]):
+    def test_update_tarball_fail2(self, suffix="tar", option=None):
         """tarball update fail -> remove the tarball + continue repo download
         """
+        if option is None:
+            option = []
         self.mySetupStep(tarball="/tarball." + suffix)
         self.build.setProperty("repo_download",
                                "repo download test/bla 564/12", "test")

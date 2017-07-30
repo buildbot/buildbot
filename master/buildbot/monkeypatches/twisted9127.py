@@ -19,10 +19,10 @@ from __future__ import print_function
 from twisted.python.compat import nativeString
 from twisted.python.compat import networkString
 
-
 # patch for http://twistedmatrix.com/trac/ticket/9127
 # unfortunately the impacted code is deeply inside render method, so we need to patch the whole
 # render method
+
 
 def render(self, request):
     """
@@ -31,7 +31,8 @@ def render(self, request):
     def generateWWWAuthenticate(scheme, challenge):
         _l = []
         for k, v in challenge.items():
-            _l.append(networkString("%s=%s" % (nativeString(k), quoteString(nativeString(v)))))
+            _l.append(networkString("%s=%s" %
+                                    (nativeString(k), quoteString(nativeString(v)))))
         return b" ".join([scheme, b", ".join(_l)])
 
     def quoteString(s):

@@ -154,10 +154,6 @@ buildrequests
 
         If ``claimed_at`` is not given, then the current time will be used.
 
-        As of 0.8.5, this method can no longer be used to re-claim build
-        requests.  All given ID's must be unclaimed.  Use
-        :py:meth:`reclaimBuildRequests` to reclaim.
-
         .. index:: single: MySQL; limitations
         .. index:: single: SQLite; limitations
 
@@ -168,20 +164,6 @@ buildrequests
             transactions (MySQL), this method will not properly roll back any
             partial claims made before an :py:exc:`AlreadyClaimedError` is
             generated.
-
-    .. py:method:: reclaimBuildRequests(brids)
-
-        :param brids: ids of buildrequests to reclaim
-        :type brids: list
-        :returns: Deferred
-        :raises: :py:exc:`AlreadyClaimedError`
-
-        Re-claim the given build requests, updating the timestamp, but checking
-        that the requests are owned by this master.  The resulting deferred will
-        fire normally on success, or fail with :py:exc:`AlreadyClaimedError` if
-        *any* of the build requests are already claimed by another master
-        instance, or don't exist.  In this case, none of the reclaims will take
-        effect.
 
     .. py:method:: unclaimBuildRequests(brids)
 
@@ -208,19 +190,6 @@ buildrequests
         instance.  This will fail with :py:exc:`NotClaimedError` if the build
         request is already completed or does not exist.  If ``complete_at`` is
         not given, the current time will be used.
-
-    .. py:method:: unclaimExpiredRequests(old)
-
-        :param old: number of seconds after which a claim is considered old
-        :type old: int
-        :returns: Deferred
-
-        Find any incomplete claimed builds which are older than ``old``
-        seconds, and clear their claim information.
-
-        This is intended to catch builds that were claimed by a master which
-        has since disappeared.  As a side effect, it will log a message if any
-        requests are unclaimed.
 
 builds
 ~~~~~~
@@ -1488,15 +1457,17 @@ builders
     * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
 
-    .. py:method:: findBuilderId(name)
+    .. py:method:: findBuilderId(name, autoCreate=True)
 
         :param name: name of this builder
         :type name: 20-character :ref:`identifier <type-identifier>`
+        :param autoCreate: automatically create the builder if name not found
+        :type autoCreate: bool
         :returns: builder id via Deferred
 
         Return the builder ID for the builder with this builder name.
         If such a builder is already in the database, this returns the ID.
-        If not, the builder is added to the database.
+        If not and ``autoCreate`` is True, the builder is added to the database.
 
     .. py:method:: addBuilderMaster(builderid=None, masterid=None)
 
@@ -1582,10 +1553,10 @@ The DB Connector and Components
         For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
         Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite)
 
-    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None)
+    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
-        Find (using C{whereclause}) or add (using C{insert_values) a row to
-        C{table}, and return the resulting ID.
+        Find (using ``whereclause``) or add (using ``insert_values``) a row to
+        ``table``, and return the resulting ID. If ``autoCreate`` == False, we will not automatically insert the row.
 
     .. py:method:: hashColumns(*args)
 

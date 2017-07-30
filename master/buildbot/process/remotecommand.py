@@ -275,7 +275,10 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
     @defer.inlineCallbacks
     def remoteUpdate(self, update):
         def cleanup(data):
+            if self.step is None:
+                return data
             return self.step.build.properties.cleanupTextFromSecrets(data)
+
         if self.debug:
             for k, v in iteritems(update):
                 log.msg("Update[%s]: %s" % (k, v))
@@ -365,8 +368,7 @@ class RemoteShellCommand(RemoteCommand):
             def obfuscate(arg):
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
-                else:
-                    return arg
+                return arg
             self.fake_command = [obfuscate(c) for c in self.command]
 
         if env is not None:

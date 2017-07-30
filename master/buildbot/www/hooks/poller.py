@@ -20,37 +20,43 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from buildbot.changes.base import PollingChangeSource
+from buildbot.www.hooks.base import BaseHookHandler
 
 
-def getChanges(req, options=None):
-    change_svc = req.site.master.change_svc
-    poll_all = "poller" not in req.args
+class PollingHandler(BaseHookHandler):
 
-    allow_all = True
-    allowed = []
-    if isinstance(options, dict) and "allowed" in options:
-        allow_all = False
-        allowed = options["allowed"]
+    def getChanges(self, req):
+        change_svc = req.site.master.change_svc
+        poll_all = "poller" not in req.args
 
-    pollers = []
+        allow_all = True
+        allowed = []
+        if isinstance(self.options, dict) and "allowed" in self.options:
+            allow_all = False
+            allowed = self.options["allowed"]
 
-    for source in change_svc:
-        if not isinstance(source, PollingChangeSource):
-            continue
-        if not hasattr(source, "name"):
-            continue
-        if not poll_all and source.name not in req.args['poller']:
-            continue
-        if not allow_all and source.name not in allowed:
-            continue
-        pollers.append(source)
+        pollers = []
 
-    if not poll_all:
-        missing = set(req.args['poller']) - set(s.name for s in pollers)
-        if missing:
-            raise ValueError("Could not find pollers: %s" % ",".join(missing))
+        for source in change_svc:
+            if not isinstance(source, PollingChangeSource):
+                continue
+            if not hasattr(source, "name"):
+                continue
+            if not poll_all and source.name not in req.args['poller']:
+                continue
+            if not allow_all and source.name not in allowed:
+                continue
+            pollers.append(source)
 
-    for p in pollers:
-        p.force()
+        if not poll_all:
+            missing = set(req.args['poller']) - set(s.name for s in pollers)
+            if missing:
+                raise ValueError("Could not find pollers: %s" % ",".join(missing))
 
-    return [], None
+        for p in pollers:
+            p.force()
+
+        return [], None
+
+
+poller = PollingHandler

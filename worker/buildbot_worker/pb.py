@@ -205,8 +205,8 @@ class Worker(WorkerBase, service.MultiService):
                     self.shutdown_file)
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
-            self.shutdown_loop = l = task.LoopingCall(self._checkShutdownFile)
-            l.start(interval=10)
+            self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
+            loop.start(interval=10)
 
     def stopService(self):
         self.bf.continueTrying = 0

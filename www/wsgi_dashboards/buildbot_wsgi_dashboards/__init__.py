@@ -33,5 +33,6 @@ class WSGIDashboardsApplication(Application):
             path = tuple(path.strip("/").split("/"))
         return blockingCallFromThread(reactor, self.master.data.get, path, **kwargs)
 
+
 # create the interface for the setuptools entry point
 ep = WSGIDashboardsApplication(__name__, "Buildbot WSGI Dashboard Glue")

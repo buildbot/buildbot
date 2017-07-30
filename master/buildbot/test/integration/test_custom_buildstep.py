@@ -75,11 +75,11 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
             lo = TestLogObserver()
             self.addLogObserver('foo', lo)
 
-            l = self.addLog('foo')
-            l.addStdout('stdout\n')
-            l.addStdout(u'\N{SNOWMAN}\n'.encode('utf-8'))
-            l.addStderr('stderr\n')
-            l.finish()
+            _log = self.addLog('foo')
+            _log.addStdout('stdout\n')
+            _log.addStdout(u'\N{SNOWMAN}\n'.encode('utf-8'))
+            _log.addStderr('stderr\n')
+            _log.finish()
 
             self.addCompleteLog('obs', 'Observer saw %r' % (lo.observed,))
 
@@ -97,10 +97,10 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
 
     @defer.inlineCallbacks
     def run(self):
-        l = yield self.addLog('xx')
+        _log = yield self.addLog('xx')
         output_str = unicode2NativeString(u'\N{CENT SIGN}', encoding='latin-1')
-        yield l.addStdout(output_str)
-        yield l.finish()
+        yield _log.addStdout(output_str)
+        yield _log.finish()
         defer.returnValue(results.SUCCESS)
 
 
@@ -124,8 +124,8 @@ class OldBuildEPYDoc(shell.ShellCommand):
 
     def runCommand(self, cmd):
         # we don't have a real worker in this test harness, so fake it
-        l = cmd.logs['stdio']
-        l.addStdout('some\noutput\n')
+        _log = cmd.logs['stdio']
+        _log.addStdout('some\noutput\n')
         return defer.succeed(None)
 
     def createSummary(self, log):
@@ -140,8 +140,8 @@ class OldPerlModuleTest(shell.Test):
 
     def runCommand(self, cmd):
         # we don't have a real worker in this test harness, so fake it
-        l = cmd.logs['stdio']
-        l.addStdout('a\nb\nc\n')
+        _log = cmd.logs['stdio']
+        _log.addStdout('a\nb\nc\n')
         return defer.succeed(None)
 
     def evaluateCommand(self, cmd):
@@ -165,7 +165,7 @@ class RunSteps(unittest.TestCase):
         self.master.db.insertTestData([
             fakedb.Builder(id=80, name='test'), ])
 
-        self.builder = builder.Builder('test', _addServices=False)
+        self.builder = builder.Builder('test')
         self.builder._builderid = 80
         self.builder.master = self.master
         yield self.builder.startService()

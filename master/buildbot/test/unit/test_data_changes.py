@@ -99,7 +99,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getRecentChanges(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=['-changeid'])
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         self.validateData(changes[0])
@@ -108,7 +108,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_getChangesOtherOrder(self):
-        resultSpec = resultspec.ResultSpec(limit=1, order=['-when_time_stamp'])
+        resultSpec = resultspec.ResultSpec(limit=1, order=('-when_time_stamp',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         # limit not implemented for other order
@@ -117,7 +117,7 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_getChangesOtherOffset(self):
         resultSpec = resultspec.ResultSpec(
-            limit=1, offset=1, order=['-changeid'])
+            limit=1, offset=1, order=('-changeid',))
         changes = yield self.callGet(('changes',), resultSpec=resultSpec)
 
         # limit not implemented for other offset
@@ -170,7 +170,9 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def do_test_addChange(self, kwargs,
                           expectedRoutingKey, expectedMessage, expectedRow,
-                          expectedChangeUsers=[]):
+                          expectedChangeUsers=None):
+        if expectedChangeUsers is None:
+            expectedChangeUsers = []
         clock = task.Clock()
         clock.advance(10000000)
         d = self.rtype.addChange(_reactor=clock, **kwargs)

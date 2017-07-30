@@ -494,3 +494,15 @@ It produces two status updates:
 ``rc``
 
     0 if the ``os.listdir`` does not raise exception, otherwise 1.
+
+rmfile
+......
+
+This command removes the file in the worker base directory.
+It takes a single parameter, ``path``, specifying the file path relative to builder's basedir.
+
+It produces one status updates:
+
+``rc``
+
+    0 if the ``os.remove`` does not raise exception, otherwise the corresponding errno.

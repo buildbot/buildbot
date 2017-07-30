@@ -162,6 +162,7 @@ Coffeelint
 coffeescript
 coffeeScript
 collapseRequests
+collapser
 commandId
 commandline
 committer
@@ -192,6 +193,7 @@ cronjob
 crontab
 css
 csv
+customizability
 cvs
 CVS
 cvsmodule
@@ -310,12 +312,13 @@ getters
 GiB
 github
 GitHub
-Gitlab
+GitLab
 Gitorious
 glMenuProvider
 google
 gpg
 GPL
+GraphQL
 Gravatar
 groupPrefix
 Gruntfile
@@ -662,6 +665,7 @@ revertive
 revlink
 revlinks
 rmdir
+rmfile
 Robocopy
 rootlink
 routingkeys

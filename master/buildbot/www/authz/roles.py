@@ -61,6 +61,24 @@ class RolesFromEmails(RolesFromBase):
         return []
 
 
+class RolesFromDomain(RolesFromEmails):
+
+    def __init__(self, **kwargs):
+        RolesFromBase.__init__(self)
+
+        self.domain_roles = {}
+        for role, domains in iteritems(kwargs):
+            for domain in domains:
+                self.domain_roles.setdefault(domain, []).append(role)
+
+    def getRolesFromUser(self, userDetails):
+        if 'email' in userDetails:
+            email = userDetails['email']
+            edomain = email.split('@')[-1]
+            return self.domain_roles.get(edomain, [])
+        return []
+
+
 class RolesFromOwner(RolesFromBase):
 
     def __init__(self, role):

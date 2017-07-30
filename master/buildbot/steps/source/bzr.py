@@ -84,8 +84,7 @@ class Bzr(Source):
         def checkPatched(patched):
             if patched:
                 return self._dovccmd(['clean-tree', '--ignored', '--force'])
-            else:
-                return 0
+            return 0
 
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
@@ -247,8 +246,7 @@ class Bzr(Source):
                 raise buildstep.BuildStepFailed()
             if collectStdout:
                 return cmd.stdout
-            else:
-                return cmd.rc
+            return cmd.rc
         return d
 
     def checkBzr(self):

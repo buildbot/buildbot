@@ -525,6 +525,29 @@ class Tests(interfaces.InterfaceTests):
                                 key=configuredOnKey))
 
     @defer.inlineCallbacks
+    def test_workerReConfigured_should_not_affect_other_worker(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+
+        # should remove all the builders in master 11
+        yield self.db.workers.workerConfigured(
+            workerid=30, masterid=11, builderids=[])
+
+        w = yield self.db.workers.getWorker(30)
+        x1 = sorted(w['configured_on'], key=configuredOnKey)
+        x2 = sorted([{'builderid': 20, 'masterid': 10},
+                     {'builderid': 21, 'masterid': 10}],
+                    key=configuredOnKey)
+        self.assertEqual(x1, x2)
+
+        # ensure worker 31 is not affected (see GitHub issue#3392)
+        w = yield self.db.workers.getWorker(31)
+        x1 = sorted(w['configured_on'], key=configuredOnKey)
+        x2 = sorted([{'builderid': 20, 'masterid': 11},
+                     {'builderid': 22, 'masterid': 11}],
+                    key=configuredOnKey)
+        self.assertEqual(x1, x2)
+
+    @defer.inlineCallbacks
     def test_workerUnconfigured(self):
         yield self.insertTestData(self.baseRows + self.multipleMasters)
 

@@ -55,11 +55,8 @@ We will also use a separate directory to demonstrate the distinction between a m
 
 .. code-block:: bash
 
-  cd
-  mkdir tmp
-  cd tmp
-  mkdir buildbot
-  cd buildbot
+  mkdir -p ~/tmp/bb-master
+  cd ~/tmp/bb-master
 
 On Python 2:
 
@@ -128,9 +125,8 @@ It would however be completely ok to do this on another computer - as long as th
 
 .. code-block:: bash
 
-  cd
-  mkdir tmp/bb-worker
-  cd tmp/bb-worker
+  mkdir -p ~/tmp/bb-worker
+  cd ~/tmp/bb-worker
 
 On Python 2:
 
@@ -150,6 +146,7 @@ Install the ``buildbot-worker`` command:
 
 .. code-block:: bash
 
+   pip install --upgrade pip
    pip install buildbot-worker
    # required for `runtests` build
    pip install setuptools-trial

@@ -31,7 +31,6 @@ from zope.interface import Interface
 
 from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
-
 # exceptions that can be raised while trying to start a build
 
 
@@ -397,7 +396,7 @@ class IStatus(Interface):
         @returns: list of L{IBuildSetStatus} implementations, via Deferred.
         """
 
-    def generateFinishedBuilds(builders=[], branches=[],
+    def generateFinishedBuilds(builders=None, branches=None,
                                num_builds=None, finished_before=None,
                                max_search=200):
         """Return a generator that will produce IBuildStatus objects each
@@ -430,6 +429,10 @@ class IStatus(Interface):
                            of builds that will be examined within any given
                            Builder.
         """
+        if builders is None:
+            builders = []
+        if branches is None:
+            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -615,7 +618,7 @@ class IBuilderStatus(Interface):
         getEvent(-1) will return the most recent event. Events are numbered,
         but it probably doesn't make sense to ever do getEvent(+n)."""
 
-    def generateFinishedBuilds(branches=[],
+    def generateFinishedBuilds(branches=None,
                                num_builds=None,
                                max_buildnum=None, finished_before=None,
                                max_search=200,
@@ -656,6 +659,8 @@ class IBuilderStatus(Interface):
                            This argument imposes a hard limit on the number
                            of builds that will be examined.
         """
+        if branches is None:
+            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -669,7 +674,7 @@ class IBuilderStatus(Interface):
 
 class IEventSource(Interface):
 
-    def eventGenerator(branches=[], categories=[], committers=[], projects=[], minTime=0):
+    def eventGenerator(branches=None, categories=None, committers=None, projects=None, minTime=0):
         """This function creates a generator which will yield all of this
         object's status events, starting with the most recent and progressing
         backwards in time. These events provide the IStatusEvent interface.
@@ -693,6 +698,14 @@ class IEventSource(Interface):
         @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
+        if branches is None:
+            branches = []
+        if categories is None:
+            categories = []
+        if committers is None:
+            committers = []
+        if projects is None:
+            projects = []
 
 
 class IBuildStatus(Interface):

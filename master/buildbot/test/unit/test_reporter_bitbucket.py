@@ -45,10 +45,12 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
 
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            _BASE_URL)
+            _BASE_URL,
+            debug=None, verify=None)
         self.oauthhttp = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            _OAUTH_URL, auth=('key', 'secret'))
+            _OAUTH_URL, auth=('key', 'secret'),
+            debug=None, verify=None)
         self.bsp = bsp = BitbucketStatusPush('key', 'secret')
         yield bsp.setServiceParent(self.master)
         yield bsp.startService()

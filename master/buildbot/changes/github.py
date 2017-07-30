@@ -42,7 +42,7 @@ link_urls = {
 
 
 class PullRequestMixin(object):
-    def extractProperties(self, pr_info):
+    def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
             for k, v in iteritems(info_dict):
                 name = ".".join([base, k])
@@ -53,7 +53,7 @@ class PullRequestMixin(object):
                     properties[name] = v
 
         properties = {}
-        flatten(properties, "github", pr_info)
+        flatten(properties, "github", payload)
         return properties
 
 
@@ -250,7 +250,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         failures[0].raiseException()
                 [files, email] = [r[1] for r in results]
 
-                if email is not None and email is not "null":
+                if email is not None and email != "null":
                     author += " <" + str(email) + ">"
 
                 properties = self.extractProperties(pr)

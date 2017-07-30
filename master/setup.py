@@ -158,6 +158,7 @@ setup_args = {
         'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
     ],
@@ -253,6 +254,10 @@ setup_args = {
             ('buildbot.schedulers.trysched', [
                 'Try_Jobdir', 'Try_Userpass'])
         ]),
+        ('buildbot.secrets', [
+            ('buildbot.secrets.providers.file', ['SecretInAFile']),
+            ('buildbot.secrets.providers.vault', ['HashiCorpVaultSecretProvider'])
+        ]),
         ('buildbot.worker', [
             ('buildbot.worker.base', ['Worker']),
             ('buildbot.worker.ec2', ['EC2LatentWorker']),
@@ -270,7 +275,7 @@ setup_args = {
                 'HTTPStep', 'POST', 'GET', 'PUT', 'DELETE', 'HEAD',
                 'OPTIONS']),
             ('buildbot.steps.master', [
-                'MasterShellCommand', 'SetProperty', 'SetProperties', 'LogRenderable']),
+                'MasterShellCommand', 'SetProperty', 'SetProperties', 'LogRenderable', "Assert"]),
             ('buildbot.steps.maxq', ['MaxQ']),
             ('buildbot.steps.mswin', ['Robocopy']),
             ('buildbot.steps.mtrlogobserver', ['MTR']),
@@ -329,6 +334,7 @@ setup_args = {
             ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
             ('buildbot.reporters.stash', ['StashStatusPush']),
+            ('buildbot.reporters.bitbucketserver', ['BitbucketServerStatusPush', 'BitbucketServerPRCommentPush']),
             ('buildbot.reporters.bitbucket', ['BitbucketStatusPush']),
             ('buildbot.reporters.irc', ['IRC']),
         ]),
@@ -397,6 +403,15 @@ setup_args = {
             ('buildbot.www.authz.endpointmatchers', [
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
                 'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher', 'EnableSchedulerEndpointMatcher']),
+        ]),
+        ('buildbot.webhooks', [
+            ('buildbot.www.hooks.base', ['base']),
+            ('buildbot.www.hooks.bitbucket', ['bitbucket']),
+            ('buildbot.www.hooks.github', ['github']),
+            ('buildbot.www.hooks.gitlab', ['gitlab']),
+            ('buildbot.www.hooks.gitorious', ['gitorious']),
+            ('buildbot.www.hooks.poller', ['poller']),
+            ('buildbot.www.hooks.bitbucketserver', ['bitbucketserver'])
         ])
     ]), {
         'console_scripts': [
@@ -437,7 +452,7 @@ if 'a' in version or 'b' in version:
             raise RuntimeError(VERSION_MSG)
 
 if sys.version_info[0] >= 3:
-    twisted_ver = ">= 17.1.0"
+    twisted_ver = ">= 17.5.0"
 else:
     twisted_ver = ">= 14.0.1"
 autobahn_ver = ">= 0.16.0"

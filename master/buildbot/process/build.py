@@ -236,7 +236,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             builddir = self.path_module.join(
                 bytes2NativeString(workerforbuilder.worker.worker_basedir),
                 bytes2NativeString(self.builder.config.workerbuilddir))
-            self.setProperty("builddir", builddir, "worker")
+            self.setProperty("builddir", builddir, "Worker")
 
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
@@ -673,8 +673,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             if st.hasStatistic(name)]
         if initial_value is self._sentinel:
             return reduce(summary_fn, step_stats_list)
-        else:
-            return reduce(summary_fn, step_stats_list, initial_value)
+        return reduce(summary_fn, step_stats_list, initial_value)
 
     @defer.inlineCallbacks
     def getUrl(self):

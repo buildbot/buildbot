@@ -33,4 +33,9 @@ class State extends Config
                 name:'show_old_workers'
                 caption:'Show old workers'
                 default_value: false
+            ,
+                type:'bool'
+                name:'showWorkerBuilders'
+                caption:'Show list of builders for each worker (can take a lot of time)'
+                default_value: false
             ]

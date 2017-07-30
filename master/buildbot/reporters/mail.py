@@ -19,8 +19,6 @@ from future.utils import iteritems
 from future.utils import string_types
 
 import re
-# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
-# although it has no effect before python-2.7.
 from email import charset
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
@@ -43,7 +41,10 @@ from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
-charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
+# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
+# although it has no effect before python-2.7.
+# needs to match notifier.ENCODING
+charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
@@ -94,17 +95,18 @@ class MailNotifier(NotifierBase):
                     messageFormatter=None, extraHeaders=None,
                     addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None, schedulers=None, branches=None,
+                    schedulers=None, branches=None,
                     watchedWorkers='all', messageFormatterMissingWorker=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
 
-        super(MailNotifier, self).checkConfig(mode, tags, builders,
-                                              buildSetSummary, messageFormatter,
-                                              subject, addLogs, addPatch,
-                                              name, schedulers, branches,
-                                              watchedWorkers, messageFormatterMissingWorker)
+        super(MailNotifier, self).checkConfig(
+            mode=mode, tags=tags, builders=builders,
+            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
+            subject=subject, addLogs=addLogs, addPatch=addPatch,
+            schedulers=schedulers, branches=branches,
+            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -137,16 +139,15 @@ class MailNotifier(NotifierBase):
                         messageFormatter=None, extraHeaders=None,
                         addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None, schedulers=None, branches=None,
+                        schedulers=None, branches=None,
                         watchedWorkers='all', messageFormatterMissingWorker=None):
 
-        super(MailNotifier, self).reconfigService(mode, tags, builders,
-                                                  buildSetSummary,
-                                                  messageFormatter,
-                                                  subject,
-                                                  addLogs, addPatch,
-                                                  name, schedulers, branches,
-                                                  watchedWorkers, messageFormatterMissingWorker)
+        super(MailNotifier, self).reconfigService(
+            mode=mode, tags=tags, builders=builders,
+            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
+            subject=subject, addLogs=addLogs, addPatch=addPatch,
+            schedulers=schedulers, branches=branches,
+            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
         if extraRecipients is None:
             extraRecipients = []
         self.extraRecipients = extraRecipients
@@ -174,10 +175,10 @@ class MailNotifier(NotifierBase):
     @defer.inlineCallbacks
     def createEmail(self, msgdict, builderName, title, results, builds=None,
                     patches=None, logs=None):
-        text = msgdict['body'].encode(ENCODING)
+        text = msgdict['body']
         type = msgdict['type']
         if msgdict.get('subject') is not None:
-            subject = msgdict['subject'].encode(ENCODING)
+            subject = msgdict['subject']
         else:
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
@@ -250,12 +251,12 @@ class MailNotifier(NotifierBase):
     def sendMessage(self, body, subject=None, type='plain', builderName=None,
                     results=None, builds=None, users=None,
                     patches=None, logs=None, worker=None):
-
+        body = unicode2bytes(body)
         msgdict = {'body': body, 'subject': subject, 'type': type}
 
         # ensure message body ends with double carriage return
-        if not body.endswith("\n\n"):
-            msgdict['body'] = body + '\n\n'
+        if not body.endswith(b"\n\n"):
+            msgdict['body'] = body + b'\n\n'
 
         m = yield self.createEmail(msgdict, builderName, self.master.config.title,
                                    results, builds, patches, logs)
@@ -327,7 +328,7 @@ class MailNotifier(NotifierBase):
 
         s = unicode2bytes(s)
         sender_factory = ESMTPSenderFactory(
-            self.smtpUser, self.smtpPassword,
+            unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
             self.fromaddr, recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)

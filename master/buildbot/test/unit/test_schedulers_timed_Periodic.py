@@ -54,8 +54,7 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
                 d = defer.Deferred()
                 self.clock.callLater(firstBuildDuration, d.callback, None)
                 return d
-            else:
-                return defer.succeed(None)
+            return defer.succeed(None)
         sched.addBuildsetForSourceStampsWithDefaults = addBuildsetForSourceStampsWithDefaults
 
         # handle state locally

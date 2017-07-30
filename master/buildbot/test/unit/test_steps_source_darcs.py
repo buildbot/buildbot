@@ -61,23 +61,23 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='full', method='clobber'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
-                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
-            + 0,
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -90,29 +90,29 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='full', method='copy'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
-            + 0,
+                                 timeout=1200)) +
+            0,
             Expect('stat', dict(file='source/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='source',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
-            + 0,
+                             'logEnviron': True, 'timeout': 1200}) +
+            0,
             ExpectShell(workdir='build',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -125,29 +125,29 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='full'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
-            + 0,
+                                 timeout=1200)) +
+            0,
             Expect('stat', dict(file='source/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='source',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
-            + 0,
+                             'logEnviron': True, 'timeout': 1200}) +
+            0,
             ExpectShell(workdir='build',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -160,22 +160,22 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('stat', dict(file='wkdir/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -188,36 +188,36 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             Expect('rmdir', dict(dir='wkdir',
                                  logEnviron=True,
-                                 timeout=1200))
-            + 0,
+                                 timeout=1200)) +
+            0,
             Expect('stat', dict(file='source/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='source',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             Expect('cpdir', {'fromdir': 'source', 'todir': 'build',
-                             'logEnviron': True, 'timeout': 1200})
-            + 0,
+                             'logEnviron': True, 'timeout': 1200}) +
+            0,
 
             Expect('stat', dict(file='build/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='build',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             ExpectShell(workdir='build',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -231,41 +231,41 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             patch=(1, 'patch'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('stat', dict(file='wkdir/_darcs',
-                                logEnviron=True))
-            + 0,
+                                logEnviron=True)) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'pull', '--all', '--verbose'])
-            + 0,
+                        command=['darcs', 'pull', '--all', '--verbose']) +
+            0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
-                                        mode=None))
-            + 0,
+                                        mode=None)) +
+            0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
-                                        mode=None))
-            + 0,
+                                        mode=None)) +
+            0,
             ExpectShell(workdir='wkdir',
                         command=['patch', '-p1', '--remove-empty-files',
-                                 '--force', '--forward', '-i', '.buildbot-diff'])
-            + 0,
+                                 '--force', '--forward', '-i', '.buildbot-diff']) +
+            0,
             Expect('rmdir', dict(dir='wkdir/.buildbot-diff',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -278,37 +278,37 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='full', method='clobber', retry=(0, 2)))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
-                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
-            + 1,
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs']) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
-                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
-            + 1,
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs']) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
-                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
-            + 0,
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -322,30 +322,30 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             dict(revision='abcdef01'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.darcs-context', workdir='wkdir',
-                                        mode=None))
-            + 0,
+                                        mode=None)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', '--context',
-                                 '.darcs-context', 'http://localhost/darcs'])
-            + 0,
+                                 '.darcs-context', 'http://localhost/darcs']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -360,30 +360,30 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
             worker_version={'*': '2.16'})
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('rmdir', dict(dir='wkdir',
-                                 logEnviron=True))
-            + 0,
+                                 logEnviron=True)) +
+            0,
             Expect('downloadFile', dict(blocksize=16384, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.darcs-context', workdir='wkdir',
-                                        mode=None))
-            + 0,
+                                        mode=None)) +
+            0,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
                                  '--repo-name', 'wkdir', '--context',
-                                 '.darcs-context', 'http://localhost/darcs'])
-            + 0,
+                                 '.darcs-context', 'http://localhost/darcs']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -396,23 +396,23 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='incremental'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + 0,
+                        command=['darcs', '--version']) +
+            0,
             Expect('stat', dict(file='wkdir/.buildbot-patched',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             Expect('stat', dict(file='wkdir/_darcs',
-                                logEnviron=True))
-            + 1,
+                                logEnviron=True)) +
+            1,
             ExpectShell(workdir='.',
                         command=['darcs', 'get', '--verbose', '--lazy',
-                                 '--repo-name', 'wkdir', 'http://localhost/darcs'])
-            + 0,
+                                 '--repo-name', 'wkdir', 'http://localhost/darcs']) +
+            0,
             ExpectShell(workdir='wkdir',
-                        command=['darcs', 'changes', '--max-count=1'])
-            + ExpectShell.log('stdio',
-                              stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com')
-            + 0,
+                        command=['darcs', 'changes', '--max-count=1']) +
+            ExpectShell.log('stdio',
+                            stdout='Tue Aug 20 09:18:41 IST 2013 abc@gmail.com') +
+            0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -425,8 +425,8 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
                         mode='full', method='clobber'))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
-                        command=['darcs', '--version'])
-            + ('err', error.ConnectionLost()),
+                        command=['darcs', '--version']) +
+            ('err', error.ConnectionLost()),
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()

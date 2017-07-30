@@ -76,7 +76,7 @@ class croniter(object):
             e_list = expr.split(',')
             res = []
 
-            while len(e_list) > 0:
+            while e_list:
                 e = e_list.pop()
                 t = re.sub(r'^\*(/.+)$', r'%d-%d\1' % (self.RANGES[i][0],
                                                        self.RANGES[i][1]),
@@ -92,8 +92,8 @@ class croniter(object):
                     if not any_int_re.search(high):
                         high = self.ALPHACONV[i][high.lower()]
 
-                    if (not low or not high or int(low) > int(high)
-                            or not only_int_re.search(str(step))):
+                    if (not low or not high or int(low) > int(high) or
+                            not only_int_re.search(str(step))):
                         raise ValueError(
                             "[%s] is not acceptable" % expr_format)
 
@@ -165,7 +165,7 @@ class croniter(object):
             nearest_diff_method = self._get_next_nearest_diff
             sign = 1
 
-        offset = len(expanded) == 6 and 1 or 60
+        offset = 1 if len(expanded) == 6 else 60
         dst = now = datetime.fromtimestamp(now + sign * offset)
 
         # BUILDBOT: unused 'day' omitted due to pyflakes warning

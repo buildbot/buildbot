@@ -89,6 +89,7 @@ setup_args = {
         'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
     ],
@@ -127,7 +128,7 @@ if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
 if sys.version_info[0] >= 3:
-    twisted_ver = ">= 17.1.0"
+    twisted_ver = ">= 17.5.0"
 else:
     twisted_ver = ">= 10.2.0"
 

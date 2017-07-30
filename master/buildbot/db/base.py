@@ -65,7 +65,7 @@ class DBConnectorComponent(object):
                 % (col, col.type.length, value))
 
     def findSomethingId(self, tbl, whereclause, insert_values,
-                        _race_hook=None):
+                        _race_hook=None, autoCreate=True):
         def thd(conn, no_recurse=False):
             # try to find the master
             q = sa.select([tbl.c.id],
@@ -77,6 +77,9 @@ class DBConnectorComponent(object):
             # found it!
             if row:
                 return row.id
+
+            if not autoCreate:
+                return None
 
             _race_hook and _race_hook(conn)
 
@@ -97,8 +100,7 @@ class DBConnectorComponent(object):
                 return b'\xf5'
             elif isinstance(x, text_type):
                 return x.encode('utf-8')
-            else:
-                return str(x).encode('utf-8')
+            return str(x).encode('utf-8')
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 

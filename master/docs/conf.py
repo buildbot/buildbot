@@ -90,6 +90,7 @@ else:
     with open('../buildbot/__init__.py') as f:
         exec(f.read(), gl)
     version = gl['version']
+
 # The full version, including alpha/beta/rc tags.
 release = version
 

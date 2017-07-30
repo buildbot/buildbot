@@ -32,8 +32,8 @@ from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.test.util import logging
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
+from buildbot.util import unicode2bytes
 
 # Test that environment variables get propagated to subprocesses (See #2116)
 os.environ['TEST_THAT_ENVIRONMENT_GETS_PASSED_TO_SUBPROCESSES'] = 'TRUE'
@@ -123,16 +123,18 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
 
     def test_get_commit_author(self):
         authorStr = u'Sammy Jankis <email@example.com>'
+        authorBytes = unicode2bytes(authorStr)
         return self._perform_git_output_test(self.poller._get_commit_author,
                                              [b'log', b'--no-walk', b'--format=%aN <%aE>',
                                                  self.dummyRevStr, b'--'],
-                                             authorStr, authorStr)
+                                             authorBytes, authorStr)
 
     def _test_get_commit_comments(self, commentStr):
+        commentBytes = unicode2bytes(commentStr)
         return self._perform_git_output_test(self.poller._get_commit_comments,
                                              [b'log', b'--no-walk', b'--format=%s%n%b',
                                                  self.dummyRevStr, b'--'],
-                                             commentStr, commentStr, emptyRaisesException=False)
+                                             commentBytes, commentStr, emptyRaisesException=False)
 
     def test_get_commit_comments(self):
         comments = [u'this is a commit message\n\nthat is multiline',
@@ -140,26 +142,27 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         return defer.DeferredList([self._test_get_commit_comments(commentStr) for commentStr in comments])
 
     def test_get_commit_files(self):
-        filesStr = '\n\nfile1\nfile2\n"\146ile_octal"\nfile space'
-        filesRes = ['file1', 'file2', 'file_octal', 'file space']
+        filesBytes = b'\n\nfile1\nfile2\n"\146ile_octal"\nfile space'
+        filesRes = [u'file1', u'file2', u'file_octal', u'file space']
         return self._perform_git_output_test(self.poller._get_commit_files,
                                              [b'log', b'--name-only', b'--no-walk',
                                                  b'--format=%n', self.dummyRevStr, b'--'],
-                                             filesStr, filesRes, emptyRaisesException=False)
+                                             filesBytes, filesRes, emptyRaisesException=False)
 
     def test_get_commit_files_with_space_in_changed_files(self):
-        filesStr = 'normal_directory/file1\ndirectory with space/file2'
+        filesBytes = b'normal_directory/file1\ndirectory with space/file2'
+        filesStr = bytes2unicode(filesBytes)
         return self._perform_git_output_test(
             self.poller._get_commit_files,
             [b'log', b'--name-only', b'--no-walk',
                 b'--format=%n', self.dummyRevStr, b'--'],
-            filesStr,
+            filesBytes,
             [l for l in filesStr.splitlines() if l.strip()],
             emptyRaisesException=False,
         )
 
     def test_get_commit_timestamp(self):
-        stampStr = '1273258009'
+        stampStr = b'1273258009'
         return self._perform_git_output_test(self.poller._get_commit_timestamp,
                                              [b'log', b'--no-walk', b'--format=%ct',
                                                  self.dummyRevStr, b'--'],
@@ -209,7 +212,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
         d = self.poller.poll()
@@ -221,7 +224,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
             self.master.db.state.assertStateByClass(
-                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
+                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
                 })
@@ -258,7 +261,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
-                       b'refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
             .exit(1),
         )
@@ -275,12 +278,12 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
-                       b'+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -340,18 +343,18 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'fetch', self.REPOURL,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('no interesting output'),
+            .stdout(b'no interesting output'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout(''),
+            .stdout(b''),
         )
 
         self.poller.lastRev = {
@@ -363,7 +366,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         def cb(_):
             self.assertAllCommandsRan()
             self.master.db.state.assertStateByClass(
-                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
+                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                 })
@@ -379,11 +382,11 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
         )
 
         # do the poll
@@ -404,13 +407,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
-                       b'+master:refs/buildbot/%s/master' % self.REPOURL_QUOTED,
-                       b'+release:refs/buildbot/%s/release' % self.REPOURL_QUOTED)
+                       b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master',
+                       b'+release:refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
-                       b'refs/buildbot/%s/master' % self.REPOURL_QUOTED)
+                       b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -418,13 +421,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                        b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
@@ -432,8 +435,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                        b'^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+            .stdout(b'\n'.join([
+                b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
             ])),
         )
 
@@ -532,14 +535,14 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout(''),
+            .stdout(b''),
         )
 
         # do the poll
@@ -569,14 +572,14 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout(''),
+            .stdout(b''),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -639,7 +642,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -647,7 +650,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                        b'^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout(''),
+            .stdout(b''),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -704,24 +707,24 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'ls-remote', self.REPOURL)
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
-                    'refs/heads/master\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 b'git', b'log', b'--format=%H',
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                 b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -786,18 +789,18 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'fetch', self.REPOURL,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('no interesting output'),
+            .stdout(b'no interesting output'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'^4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout(''),
+            .stdout(b''),
         )
 
         self.poller.lastRev = {
@@ -817,9 +820,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'ls-remote', self.REPOURL)
-            .stdout('\n'.join([
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
-                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
+            .stdout(b'\n'.join([
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
+                b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
             ])),
             gpo.Expect(
                 b'git', b'fetch', self.REPOURL,
@@ -829,7 +832,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 b'git', b'log', b'--format=%H',
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -837,14 +840,13 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
             gpo.Expect(
-                b'git', b'rev-parse', b'refs/buildbot/%s/release' %
-                self.REPOURL_QUOTED)
+                b'git', b'rev-parse', b'refs/buildbot/' + self.REPOURL_QUOTED + b'/release')
             .path(b'gitpoller-work')
-            .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
                 b'git', b'log', b'--format=%H',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
@@ -852,7 +854,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'^bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join(['9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
+            .stdout(b'\n'.join([b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -919,9 +921,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'ls-remote', self.REPOURL)
-            .stdout('\n'.join([
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
-                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
+            .stdout(b'\n'.join([
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
+                b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
             ])),
             gpo.Expect(
                 b'git', b'fetch', self.REPOURL,
@@ -930,7 +932,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(
                 b'git', b'log', b'--format=%H',
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
@@ -938,9 +940,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241']))
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241']))
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -1009,11 +1011,11 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'ls-remote', self.REPOURL)
-            .stdout('\n'.join([
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
-                'refs/pull/410/merge',
-                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2\t'
-                'refs/pull/410/head',
+            .stdout(b'\n'.join([
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                b'refs/pull/410/merge',
+                b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\t'
+                b'refs/pull/410/head',
             ])),
             gpo.Expect(
                 b'git', b'fetch', self.REPOURL,
@@ -1023,7 +1025,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'git', b'rev-parse',
                 b'refs/buildbot/' + self.REPOURL_QUOTED + b'/refs/pull/410/head')
             .path(b'gitpoller-work')
-            .stdout('9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'),
             gpo.Expect(
                 b'git', b'log', b'--format=%H',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
@@ -1031,7 +1033,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join(['9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
+            .stdout(b'\n'.join([b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2'])),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -1099,20 +1101,20 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             gpo.Expect(b'git', b'fetch', self.REPOURL,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('no interesting output'),
+            .stdout(b'no interesting output'),
             gpo.Expect(b'git', b'rev-parse',
                        b'refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work')
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\n'),
             gpo.Expect(b'git', b'log',
                        b'--format=%H',
                        b'4423cdbcbb89c14e50dd5f4152415afd686c5241',
                        b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                        b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241'
             ])),
         )
 
@@ -1178,7 +1180,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             self.assertAllCommandsRan()
 
             self.master.db.state.assertStateByClass(
-                name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
+                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
                 lastRev={
                     'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
                 })
@@ -1189,8 +1191,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
             gpo.Expect(b'git', b'ls-remote', self.REPOURL)
-            .stdout('4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
-                    'refs/heads/master\n'),
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
                        b'+master:refs/buildbot/' + self.REPOURL_QUOTED + b'/master')
             .path(b'gitpoller-work'),
@@ -1204,9 +1206,9 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 b'^fa3ae8ed68e664d4db24798611b352e3c6509930',
                 b'--')
             .path(b'gitpoller-work')
-            .stdout('\n'.join([
-                '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
+            .stdout(b'\n'.join([
+                b'64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                b'4423cdbcbb89c14e50dd5f4152415afd686c5241'])),
         )
 
         # and patch out the _get_commit_foo methods which were already tested
@@ -1287,7 +1289,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         startService = mock.Mock()
         self.patch(base.PollingChangeSource, "startService", startService)
         self.master.db.state.fakeState(
-            name=bytes2NativeString(self.REPOURL), class_name='GitPoller',
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 

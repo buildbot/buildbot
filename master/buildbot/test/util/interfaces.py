@@ -68,9 +68,8 @@ class InterfaceTests(object):
             if PY3:
                 return filter(
                     inspect.getfullargspec(remove_decorators(func)))
-            else:
-                return filter(
-                    inspect.getargspec(remove_decorators(func)))
+            return filter(
+                inspect.getargspec(remove_decorators(func)))
 
         def assert_same_argspec(expected, actual):
             if expected != actual:

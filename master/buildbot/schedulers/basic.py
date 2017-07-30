@@ -227,8 +227,7 @@ class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
             return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
-        else:
-            return self.codebases[codebase]
+        return self.codebases[codebase]
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
         if branch is NotABranch and not change_filter:

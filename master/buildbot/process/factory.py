@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import warnings
+from contextlib import contextmanager
 
 from twisted.python import deprecate
 from twisted.python import versions
@@ -25,6 +26,8 @@ from buildbot import interfaces
 from buildbot import util
 from buildbot.process.build import Build
 from buildbot.process.buildstep import BuildStep
+from buildbot.steps.download_secret_to_worker import DownloadSecretsToWorker
+from buildbot.steps.download_secret_to_worker import RemoveWorkerFileSecret
 from buildbot.steps.shell import Compile
 from buildbot.steps.shell import Configure
 from buildbot.steps.shell import PerlModuleTest
@@ -79,9 +82,21 @@ class BuildFactory(util.ComparableMixin):
             step = step(**kwargs)
         self.steps.append(interfaces.IBuildStepFactory(step))
 
-    def addSteps(self, steps):
+    def addSteps(self, steps, withSecrets=None):
+        if withSecrets is None:
+            withSecrets = []
+        if withSecrets:
+            self.addStep(DownloadSecretsToWorker(withSecrets))
         for s in steps:
             self.addStep(s)
+        if withSecrets:
+            self.addStep(RemoveWorkerFileSecret(withSecrets))
+
+    @contextmanager
+    def withSecrets(self, secrets):
+        self.addStep(DownloadSecretsToWorker(secrets))
+        yield self
+        self.addStep(RemoveWorkerFileSecret(secrets))
 
 # BuildFactory subclasses for common build tools
 

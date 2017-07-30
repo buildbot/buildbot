@@ -30,7 +30,7 @@ cat workdir/twistd.log &
 if [ -f /usr/bin/protractor ]; then
     PROTRACTOR=/usr/bin/protractor
 else
-    yarn install
+    yarn install --pure-lockfile
     ./node_modules/protractor/bin/webdriver-manager update
     PROTRACTOR=./node_modules/protractor/bin/protractor
 fi

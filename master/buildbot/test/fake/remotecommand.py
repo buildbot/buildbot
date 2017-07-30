@@ -81,8 +81,8 @@ class FakeRemoteCommand(object):
 
     def fakeLogData(self, step, log, header='', stdout='', stderr=''):
         # note that this should not be used in the same test as useLog(Delayed)
-        self.logs[log] = l = logfile.FakeLogFile(log, step)
-        l.fakeData(header=header, stdout=stdout, stderr=stderr)
+        self.logs[log] = fakelog = logfile.FakeLogFile(log, step)
+        fakelog.fakeData(header=header, stdout=stdout, stderr=stderr)
 
     def __repr__(self):
         return "FakeRemoteCommand(" + repr(self.remote_command) + "," + repr(self.args) + ")"
@@ -153,13 +153,15 @@ class Expect(object):
 
     """
 
-    def __init__(self, remote_command, args, incomparable_args=[]):
+    def __init__(self, remote_command, args, incomparable_args=None):
         """
 
         Expect a command named C{remote_command}, with args C{args}.  Any args
         in C{incomparable_args} are not cmopared, but must exist.
 
         """
+        if incomparable_args is None:
+            incomparable_args = []
         self.remote_command = remote_command
         self.incomparable_args = incomparable_args
         self.args = args
@@ -304,10 +306,14 @@ class ExpectShell(Expect):
     non-default arguments must be specified explicitly (e.g., usePTY).
     """
 
-    def __init__(self, workdir, command, env={},
+    def __init__(self, workdir, command, env=None,
                  want_stdout=1, want_stderr=1, initialStdin=None,
-                 timeout=20 * 60, maxTime=None, logfiles={},
+                 timeout=20 * 60, maxTime=None, logfiles=None,
                  usePTY=None, logEnviron=True):
+        if env is None:
+            env = {}
+        if logfiles is None:
+            logfiles = {}
         args = dict(workdir=workdir, command=command, env=env,
                     want_stdout=want_stdout, want_stderr=want_stderr,
                     initial_stdin=initialStdin,

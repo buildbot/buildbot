@@ -4,24 +4,45 @@ class Logpreview extends Directive
             replace: true
             transclude: true
             restrict: 'E'
-            scope: {log:"<", buildnumber:"<", builderid:"<", step:"<"},
+            scope: {log:"<", fulldisplay:"<", buildnumber:"<", builderid:"<", step:"<"},
             templateUrl: "views/logpreview.html"
             controllerAs: "logpreview"
             bindToController: true
             controller: ["$scope", ($scope) ->
 
                 @settings = bbSettingsService.getSettingsGroup("LogPreview")
+                pendingRequest = null
+                $scope.$on '$destroy', ->
+                    if pendingRequest
+                        pendingRequest.cancel()
                 loading = $sce.trustAs($sce.HTML, "...")
-                unwatch = $scope.$watch "logpreview.log", (n, o) =>
+
+                unwatchLog = null
+                unwatchLines = null
+                $scope.$watch "logpreview.fulldisplay", (n, o) =>
+                    # Cancel previous requests and stop fetching new lines first
+                    if pendingRequest
+                        pendingRequest.cancel()
+                    if unwatchLines
+                        unwatchLines()
+                    # Start fetching lines when the preview is visible.
+                    if n
+                        unwatchLog = $scope.$watch "logpreview.log", fetchLog
+
+                fetchLog = (n, o) =>
                     @log.lines = []
                     if not n?
                         return
-                    unwatch()
+                    unwatchLog()
+                    if unwatchLines
+                        unwatchLines()
                     if @log.type == 'h'
-                        restService.get("logs/#{@log.logid}/contents").then (content) =>
+                        pendingRequest = restService.get("logs/#{@log.logid}/contents")
+                        pendingRequest.then (content) =>
                             @log.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
                     else
-                        $scope.$watch "logpreview.log.num_lines", loadLines
+                        unwatchLines = $scope.$watch "logpreview.log.num_lines", loadLines
+
                 loadLines = (num_lines) =>
                     if @log.lines.length == 0
                         # initial load. only load the last few lines
@@ -52,9 +73,10 @@ class Logpreview extends Directive
                         number: offset + limit - 1
                     @log.lines.push(loading_element)
 
-                    restService.get("logs/#{@log.logid}/contents",
+                    pendingRequest = restService.get("logs/#{@log.logid}/contents",
                                     offset: offset,
-                                    limit: limit).then (content) =>
+                                    limit: limit)
+                    pendingRequest.then (content) =>
                         content = content.logchunks[0].content
                         lines = content.split("\n")
                         # there is a trailing '\n' generates an empty line in the end

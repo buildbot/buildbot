@@ -1,0 +1,1 @@
+Fix python 3 issue with displaying the properties when fetching builders (:issue:`3418`).

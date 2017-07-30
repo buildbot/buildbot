@@ -172,8 +172,7 @@ class PBChangeSource(base.ChangeSource):
             reg = self.registration
             self.registration = None
             return reg.unregister()
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
     def getPerspective(self, mind, username):
         assert username == self.user

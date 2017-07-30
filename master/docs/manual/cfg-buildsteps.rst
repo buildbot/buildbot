@@ -46,7 +46,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``name``
     the name used to describe the step on the status display.
-    It is also used to give a name to any :class:`LogFile`\s created by this step.
+    Since 0.9.8, this argument might be renderable.
 
 .. index:: Buildstep Parameter; haltOnFailure
 
@@ -1333,10 +1333,12 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
 
 ``definitions``
     A dictionary that contains parameters that will be converted to ``-D{name}={value}`` when passed to CMake.
+    A renderable which renders to a dictionary can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``options``
     A list or a tuple that contains options that will be passed to CMake as is.
+    A renderable which renders to a tuple or list can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``cmake``
@@ -2343,6 +2345,15 @@ LogRenderable
 
 This build step takes content which can be renderable and logs it in a pretty-printed format.
 It can be useful for debugging properties during a build.
+
+.. bb:step:: Assert
+
+Assert
+++++++
+
+.. py:class:: buildbot.steps.master.Assert
+
+This build step takes a Renderable or constant passed in as first argument. It will test if the expression evaluates to ``True`` and succeed the step or fail the step otherwise.
 
 .. index:: Properties; from steps
 

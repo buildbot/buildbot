@@ -94,8 +94,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             pattern = self.accountPattern % dict(username=username)
             res = self.search(c, self.accountBase, pattern,
                               attributes=[
-                                  self.accountEmail, self.accountFullName]
-                              + self.accountExtraFields)
+                                  self.accountEmail, self.accountFullName] +
+                              self.accountExtraFields)
             if len(res) != 1:
                 raise KeyError(
                     "ldap search \"%s\" returned %d results" % (pattern, len(res)))
@@ -143,10 +143,10 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             pattern = self.avatarPattern % dict(email=user_email)
             res = self.search(c, self.accountBase, pattern,
                               attributes=[self.avatarData])
-            if len(res) == 0:
+            if not res:
                 return None
             ldap_infos = res[0]['raw_attributes']
-            if self.avatarData in ldap_infos and len(ldap_infos[self.avatarData]) > 0:
+            if self.avatarData in ldap_infos and ldap_infos[self.avatarData]:
                 data = ldap_infos[self.avatarData][0]
                 return self.findAvatarMime(data)
             return None

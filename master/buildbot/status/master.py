@@ -231,13 +231,13 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # don't let them break it
             return util.naturalSort(self.botmaster.builderNames)
 
-        l = []
+        ret = []
         # respect addition order
         for name in self.botmaster.builderNames:
             bldr = self.getBuilder(name)
             if bldr.matchesAnyTag(tags):
-                l.append(name)
-        return util.naturalSort(l)
+                ret.append(name)
+        return util.naturalSort(ret)
 
     def getBuilder(self, name):
         """

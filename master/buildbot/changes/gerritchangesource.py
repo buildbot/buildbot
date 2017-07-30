@@ -156,8 +156,7 @@ class GerritChangeSourceBase(base.ChangeSource):
         if event['type'] in ('patchset-created',):
             return "%s/%s" % (event_change["branch"],
                               event_change['number'])
-        else:
-            return event_change["branch"]
+        return event_change["branch"]
 
     def addChangeFromEvent(self, properties, event):
 
@@ -263,12 +262,12 @@ class GerritChangeSource(GerritChangeSourceBase):
             self.data = lines.pop(-1)
             for line in lines:
                 if self.change_source.debug:
-                    log.msg(b"gerrit: %s" % line)
+                    log.msg(b"gerrit: " + line)
                 yield self.change_source.lineReceived(line)
 
         def errReceived(self, data):
             if self.change_source.debug:
-                log.msg(b"gerrit stderr: %s" % data)
+                log.msg(b"gerrit stderr: " + data)
 
         def processEnded(self, status_object):
             self.change_source.streamProcessStopped()

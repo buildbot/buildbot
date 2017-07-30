@@ -183,9 +183,10 @@ A common mistake is to omit the trailing "s", leading to a rather obscure error 
 ::
 
     from buildbot.plugins import steps, util
-    f.addStep(steps.ShellCommand(command=['make',
-                                          util.Interpolate('REVISION=%(prop:got_revision)s'),
-                                          'dist']))
+    f.addStep(steps.ShellCommand(
+        command=['make',
+                util.Interpolate('REVISION=%(prop:got_revision)s'),
+                'dist']))
 
 This example will result in a ``make`` command with an argument like ``REVISION=12098``.
 
@@ -296,7 +297,7 @@ For example::
             command.extend(['-j', str(cpus+1)])
         else:
             command.extend(['-j', '2'])
-        command.extend([Interpolate('%(prop:MAKETARGET)s')])
+        command.extend([util.Interpolate('%(prop:MAKETARGET)s')])
         return command
 
     f.addStep(steps.ShellCommand(command=makeCommand))
@@ -346,7 +347,11 @@ FlattenList
 If nested list should be flatten for some renderables, FlattenList could be used.
 For example::
 
-   f.addStep(ShellCommand(command=[ 'make' ], descriptionDone=FlattenList([ 'make ', [ 'done' ]])))
+    from buildbot.plugins import steps, util
+    f.addStep(steps.ShellCommand(
+        command=[ 'make' ],
+        descriptionDone=util.FlattenList([ 'make ', [ 'done' ]])
+    ))
 
 ``descriptionDone`` would be set to ``[ 'make', 'done' ]`` when the ``ShellCommand`` executes.
 This is useful when a list-returning property is used in renderables.
@@ -370,8 +375,8 @@ Here, ``%s`` is used as a placeholder, and property names are given as subsequen
     from buildbot.plugins import steps, util
     f.addStep(steps.ShellCommand(
         command=["tar", "czf",
-                 util.WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
-                 "source"]))
+                util.WithProperties("build-%s-%s.tar.gz", "branch", "revision"),
+                "source"]))
 
 If this :class:`BuildStep` were used in a tree obtained from Git, it would create a tarball with a name like :file:`build-master-a7d3a333db708e786edb34b6af646edd8d4d3ad9.tar.gz`.
 
@@ -384,9 +389,10 @@ A common mistake is to omit the trailing "s", leading to a rather obscure error 
 ::
 
     from buildbot.plugins import steps, util
-    f.addStep(steps.ShellCommand(command=['make',
-                                          util.WithProperties('REVISION=%(got_revision)s'),
-                                          'dist']))
+    f.addStep(steps.ShellCommand(
+        command=['make',
+                util.WithProperties('REVISION=%(got_revision)s'),
+                'dist']))
 
 This example will result in a ``make`` command with an argument like ``REVISION=12098``.
 
@@ -422,6 +428,10 @@ The method should take one argument - an :class:`~buildbot.interfaces.IPropertie
 Pass instances of the class anywhere other renderables are accepted.
 For example::
 
+    import time
+    from buildbot.interfaces import IRenderable
+    from zope.interface import implementer
+
     @implementer(IRenderable)
     class DetermineFoo(object):
         def getRenderingFor(self, props):
@@ -436,18 +446,24 @@ or, more practically,
 
 ::
 
+    from buildbot.interfaces import IRenderable
+    from zope.interface import implementer
+    from buildbot.plugins import util
+
     @implementer(IRenderable)
     class Now(object):
         def getRenderingFor(self, props):
             return time.clock()
-    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=Now())])
+    ShellCommand(command=['make', util.Interpolate('TIME=%(kw:now)s', now=Now())])
 
 This is equivalent to::
+    
+    from buildbot.plugins import util
 
-    @renderer
+    @util.renderer
     def now(props):
         return time.clock()
-    ShellCommand(command=['make', Interpolate('TIME=%(kw:now)s', now=now)])
+    ShellCommand(command=['make', util.Interpolate('TIME=%(kw:now)s', now=now)])
 
 Note that a custom renderable must be instantiated (and its constructor can take whatever arguments you'd like), whereas a function decorated with :func:`renderer` can be used directly.
 
@@ -462,4 +478,4 @@ For this you can use a special custom renderer as following::
 
     from buildbot.plugins import *
 
-    ShellCommand(command=['make', Interpolate('BUILDURL=%(kw:url)s', url=util.URLForBuild)])
+    ShellCommand(command=['make', util.Interpolate('BUILDURL=%(kw:url)s', url=util.URLForBuild)])

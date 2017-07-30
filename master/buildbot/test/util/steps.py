@@ -214,23 +214,23 @@ class BuildStepMixin(object):
         # step overrides
 
         def addLog(name, type='s', logEncoding=None):
-            l = logfile.FakeLogFile(name, step)
-            self.step.logs[name] = l
-            return defer.succeed(l)
+            _log = logfile.FakeLogFile(name, step)
+            self.step.logs[name] = _log
+            return defer.succeed(_log)
         step.addLog = addLog
         step.addLog_newStyle = addLog
 
         def addHTMLLog(name, html):
-            l = logfile.FakeLogFile(name, step)
+            _log = logfile.FakeLogFile(name, step)
             html = bytes2NativeString(html)
-            l.addStdout(html)
+            _log.addStdout(html)
             return defer.succeed(None)
         step.addHTMLLog = addHTMLLog
 
         def addCompleteLog(name, text):
-            l = logfile.FakeLogFile(name, step)
-            self.step.logs[name] = l
-            l.addStdout(text)
+            _log = logfile.FakeLogFile(name, step)
+            self.step.logs[name] = _log
+            _log.addStdout(text)
             return defer.succeed(None)
         step.addCompleteLog = addCompleteLog
 
@@ -423,7 +423,6 @@ class BuildStepMixin(object):
                       % (got,))
 
         exp = self.expected_remote_commands[0]
-
         try:
             yield self._validate_expectation(exp, command)
             exp.expectationPassed(exp)
@@ -437,5 +436,4 @@ class BuildStepMixin(object):
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
-
         defer.returnValue(command)

@@ -23,7 +23,7 @@ import re
 class RevlinkMatch(object):
 
     def __init__(self, repo_urls, revlink):
-        if isinstance(repo_urls, str) or isinstance(repo_urls, text_type):
+        if isinstance(repo_urls, (str, text_type)):
             repo_urls = [repo_urls]
         self.repo_urls = [re.compile(url) for url in repo_urls]
         self.revlink = revlink

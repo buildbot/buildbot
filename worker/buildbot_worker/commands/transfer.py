@@ -176,7 +176,7 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.debug:
             log.msg('WorkerFileUploadCommand._writeBlock(): ' +
                     'allowed=%d readlen=%d' % (length, len(data)))
-        if len(data) == 0:
+        if not data:
             log.msg("EOF: callRemote(close)")
             return True
 
@@ -223,7 +223,8 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         else:
             mode = 'w'
         # TODO: Use 'with' when depending on Python 2.7
-        # Not possible with older versions: exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
+        # Not possible with older versions:
+        # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
         archive = tarfile.open(mode=mode, fileobj=self.fp)
         archive.add(self.path, '')
         archive.close()
@@ -373,7 +374,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         if self.debug:
             log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
-        if len(data) == 0:
+        if not data:
             return True
 
         if self.bytes_remaining is not None:

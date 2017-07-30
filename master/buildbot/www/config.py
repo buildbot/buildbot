@@ -118,8 +118,8 @@ class IndexResource(resource.Resource):
     @defer.inlineCallbacks
     def renderIndex(self, request):
         config = {}
-        request.setHeader("content-type", 'text/html')
-        request.setHeader("Cache-Control", "public;max-age=0")
+        request.setHeader(b"content-type", b'text/html')
+        request.setHeader(b"Cache-Control", b"public;max-age=0")
 
         try:
             yield self.config['auth'].maybeAutoLogin(request)

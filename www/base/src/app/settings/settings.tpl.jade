@@ -18,9 +18,9 @@
                                     | {{ answer.name }}
                         .form-group(ng-switch-when="integer")
                             label {{ item.caption }}
-                            input.form-control(type="number" ng-model="item.value")
+                            input.form-control(type="number" name="{{item.name}}" ng-model="item.value")
                         .form-group(ng-switch-when="text")
                             label {{ item.caption }}
-                            input.form-control(type="text" ng-model="item.value")
+                            input.form-control(type="text" name="{{item.name}}" ng-model="item.value")
                         .alert.alert-danger(ng-switch-default) bad item type: {{item.type}} should be one of: bool, choices, integer, text 
                                 

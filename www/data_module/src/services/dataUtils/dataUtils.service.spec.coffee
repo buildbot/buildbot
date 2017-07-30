@@ -53,10 +53,10 @@ describe 'Data utils service', ->
             expect(result.test("asd/1/new")).toBeTruthy()
 
             result = dataUtilsService.socketPathRE('asd/1/bnm/*/*').source
-            expect(result).toBe('^asd\\/1\\/bnm\\/[^/]+\\/[^/]+$')
+            expect(result).toBe('^asd\\/1\\/bnm\\/[^\\/]+\\/[^\\/]+$')
 
             result = dataUtilsService.socketPathRE('asd/1/*').source
-            expect(result).toBe('^asd\\/1\\/[^/]+$')
+            expect(result).toBe('^asd\\/1\\/[^\\/]+$')
 
 
     describe 'restPath(arg)', ->

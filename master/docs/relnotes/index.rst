@@ -10,6 +10,119 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.9.post2`` ( ``2017-07-06`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix ``tried to complete 100 buildrequests, but only completed 25`` issue in
+  buildrequest collapser (:issue:`3406`)
+
+- Fixed issue when several mail notifiers are used with same parameters, but
+  different modes (:issue:`3398`).
+
+- Fixed release scripts for ``postN`` releases
+
+Buildbot ``0.9.9.post1`` ( ``2017-07-01`` )
+===========================================
+
+Bug fixes
+---------
+
+- Fix regression with :py:class:`~buildbot.www.oauth2.GitHubAuth` when API v3 is used.
+- When using the :py:class:`~buildbot.www.oauth2.GitHubAuth` v4 API,
+  the generated GraphQL to get the user organizations uses a name alias for
+  each organization. These aliases must not contain dashes.
+
+
+Buildbot ``0.9.9`` ( ``2017-06-29`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed a regression inn ``UserPasswordAuth`` where a list would create an
+  error.
+- Fix non ascii payload handling in base web hook (:issue:`3321`).
+- Fixed default buildrequest collapsing (:issue:`3151`)
+- _wait_for_request() would fail to format a log statement due to an invalid
+  type being passed to log.msg (resulting in a broken build)
+- Fix Windows compatibility with frontend development tool ``gulp dev proxy``
+  (:issue:`3359`)
+
+Features
+--------
+
+- New :ref:`Grid View <GridView>` UI plugin.
+- The :ref:`Change-Hooks` system is now integrated in the :ref:`Plugins`
+  system, making it easier to subclass hooks. There is still the need to re-
+  factor hook by hook to allow better customizability.
+- The :py:class:`~buildbot.www.oauth2.GitHubAuth` now allows fetching the user
+  team membership for all organizations the user belongs to. This requires
+  access to a V4 GitHub API(GraphQL).
+- GitLab merge request hook now create a change with repository to be the
+  source repository and branch the source branch. Additional properties are
+  created to point to destination branch and destination repository. This makes
+  :bb:reporter:`GitLabStatusPush` push the correct status to GitLab, so that
+  pipeline report is visible in the merge request page.
+- The :py:class:`~buildbot.www.hooks.github.GitHubEventHandler` now allows the
+  inclusion of white-listed properties for push events.
+- Allow sending a comment to a pull request for Bitbucket Server in
+  :py:class:`~buildbot.reporters.stash.BitbucketServerPRCommentPush`
+- Implement support for Bitbucket Server webhook plugin in
+  :py:class:`~buildbot.www.hooks.bitbucketserver.BitbucketServerEventHandler`
+
+
+Buildbot ``0.9.8`` ( ``2017-06-14`` )
+=====================================
+
+Core Bug fixes
+--------------
+
+- Fix incompatibility issue of ``UserPasswordAuth`` with python 3.
+- Fix issue with oauth sequence not working with Firefox (:issue:`3306`)
+- Update old ``addChange`` method to accept the new chdict names if only the
+  new name is present. Fixes :issue:`3191`.
+- fix bytes vs string issue on python3 with authorization of rest endpoints.
+
+Core Features
+-------------
+
+- ``doStepIf`` is now renderable.
+- Source step codebase is now renderable.
+- Step names are now renderable.
+- Added :py:func:`giturlparse` utility function to help buildbot components
+  like reporters to parse git url from change sources.
+- Factorized the mail reporter to be able to write new message based reporters, for other backend than SMTP.
+- The class :py:class:`~buildbot.process.properties.Property` now allows being
+  used with Python built in comparators. It will return a Renderable which
+  executes the comparison.
+
+Components Bug fixes
+--------------------
+
+- GitLab reporter now correctly sets the status to running instead of pending
+  when a build starts.
+- GitLab reporter now correctly works when there are multiple codebase, and
+  when the projects names contain url reserved characters.
+- GitLab reporter now correctly reports the status even if there are several
+  sourcestamps. Better parsing of change repository in GitLab reporter so that
+  it understands ssh urls and https url. GitLab reporter do not use the project
+  field anymore to know the repository to push to.
+
+Components Features
+-------------------
+
+- GitLab hook now supports the merge_request event to automatically build from
+  a merge request. Note that the results will not properly displayed in
+  merge_request UI due to https://gitlab.com/gitlab-org/gitlab-ce/issues/33293
+- Added a https://pushjet.io/ reporter as
+  :py:class:`buildbot.reporters.pushjet.PushjetNotifier`
+- New build step :py:class:`~buildbot.steps.master.Assert` Tests a renderable
+  or constant if it evaluates to true. It will succeed or fail to step
+  according to the result.
+
 Buildbot ``0.9.7`` ( ``2017-05-09`` )
 =====================================================
 
@@ -109,7 +222,7 @@ Components Features
 - Changed :py:class:`~buildbot.www.oauth2.GitHubAuth` now supports GitHub
   Enterprise when setting new ``serverURL`` argument.
 - :bb:chsrc:`GitLab` now sets the ``event`` property
-  on each change to what the ``X-Gitlab-Event`` header contains.
+  on each change to what the ``X-GitLab-Event`` header contains.
 - :bb:chsrc:`GitHub` now process
   git tag push events
 - :bb:chsrc:`GitHub` now adds
@@ -296,7 +409,7 @@ Bug fixes
 - Fix :py:class:`~buildbot.www.oauth2.GitHubAuth` to retrieve all organizations
   instead of only those publicly available.
 - Fixed `ref` to point to `branch` instead of commit `sha` in
-  :py:class:`~buildbot.reporters.GitlabStatusPush`
+  :py:class:`~buildbot.reporters.GitLabStatusPush`
 - :bb:reporter:`IRC` :py:meth:`maybeColorize` is able to highlight single words
   and stop colorization at the end. The previous implementation only stopped
   colorization but not boldface.
@@ -327,7 +440,7 @@ Features
 - ``password`` in :py:class:`~buildbot.plugins.worker.DockerLatentWorker` and
   :py:class:`~buildbot.plugins.worker.HyperLatentWorker`, can be None. In that
   case, they will be auto-generated from random number.
-- :bb:reporter:`StashStatusPush` now accepts ``key``, ``buildName``,
+- :bb:reporter:`BitbucketServerStatusPush` now accepts ``key``, ``buildName``,
   ``endDescription``, ``startDescription``, and ``verbose`` parameters to
   control the JSON sent to Stash.
 - Buildbot can now be configured to deny read access to REST api resources

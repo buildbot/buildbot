@@ -62,7 +62,7 @@ class BuildRequestCollapser(object):
 
     @defer.inlineCallbacks
     def collapse(self):
-        collapseBRs = []
+        brids = set()
 
         for brid in self.brids:
             # Get the BuildRequest object
@@ -86,10 +86,10 @@ class BuildRequestCollapser(object):
 
                 canCollapse = yield collapseRequestsFn(self.master, bldr, br, unclaim_br)
                 if canCollapse is True:
-                    collapseBRs.append(unclaim_br)
+                    brids.add(unclaim_br['buildrequestid'])
 
-        brids = [b['buildrequestid'] for b in collapseBRs]
-        if collapseBRs:
+        brids = list(brids)
+        if brids:
             # Claim the buildrequests
             yield self.master.data.updates.claimBuildRequests(brids)
             # complete the buildrequest with result SKIPPED.
@@ -253,7 +253,6 @@ class BuildRequest(object):
         # short-circuit: if these are for the same buildset, collapse away
         if br1['buildsetid'] == br2['buildsetid']:
             defer.returnValue(True)
-            return
 
         # get the buidlsets for each buildrequest
         selfBuildsets = yield master.data.get(
@@ -270,26 +269,36 @@ class BuildRequest(object):
         # if the sets of codebases do not match, we can't collapse
         if set(selfSources) != set(otherSources):
             defer.returnValue(False)
-            return
 
         for c, selfSS in iteritems(selfSources):
             otherSS = otherSources[c]
-            if selfSS['revision'] != otherSS['revision']:
-                defer.returnValue(False)
-                return
             if selfSS['repository'] != otherSS['repository']:
                 defer.returnValue(False)
-                return
+
             if selfSS['branch'] != otherSS['branch']:
                 defer.returnValue(False)
-                return
+
             if selfSS['project'] != otherSS['project']:
                 defer.returnValue(False)
-                return
+
             # anything with a patch won't be collapsed
             if selfSS['patch'] or otherSS['patch']:
                 defer.returnValue(False)
-                return
+            # get changes & compare
+            selfChanges = yield master.data.get(('sourcestamps', selfSS['ssid'], 'changes'))
+            otherChanges = yield master.data.get(('sourcestamps', otherSS['ssid'], 'changes'))
+            # if both have changes, proceed, else fail - if no changes check revision instead
+            if selfChanges and otherChanges:
+                continue
+            elif selfChanges and not otherChanges:
+                defer.returnValue(False)
+
+            elif not selfChanges and otherChanges:
+                defer.returnValue(False)
+
+            # else check revisions
+            elif selfSS['revision'] != otherSS['revision']:
+                defer.returnValue(False)
 
         defer.returnValue(True)
 
@@ -309,8 +318,7 @@ class BuildRequest(object):
             for other in others:
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
-            assert len(
-                all_sources) > 0, "each codebase should have atleast one sourcestamp"
+            assert all_sources, "each codebase should have atleast one sourcestamp"
 
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by

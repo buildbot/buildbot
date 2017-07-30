@@ -140,6 +140,17 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
                                active=1, last_active=1))
         self.assertEqual(id, 7)
 
+    @defer.inlineCallbacks
+    def test_findSomethingId_new_noCreate(self):
+        tbl = self.db.model.masters
+        hash = hashlib.sha1(b'somemaster').hexdigest()
+        id = yield self.db.base.findSomethingId(
+            tbl=self.db.model.masters,
+            whereclause=(tbl.c.name_hash == hash),
+            insert_values=dict(name='somemaster', name_hash=hash,
+                               active=1, last_active=1), autoCreate=False)
+        self.assertEqual(id, None)
+
 
 class TestCachedDecorator(unittest.TestCase):
 

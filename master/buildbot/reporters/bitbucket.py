@@ -52,10 +52,12 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
             base_url = base_url[:-1]
 
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, base_url)
+            self.master, base_url,
+            debug=self.debug, verify=self.verify)
 
         self.oauthhttp = yield httpclientservice.HTTPClientService.getService(
-            self.master, oauth_url, auth=(oauth_key, oauth_secret))
+            self.master, oauth_url, auth=(oauth_key, oauth_secret),
+            debug=self.debug, verify=self.verify)
 
     @defer.inlineCallbacks
     def send(self, build):

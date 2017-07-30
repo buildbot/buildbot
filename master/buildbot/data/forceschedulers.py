@@ -82,7 +82,7 @@ class ForceSchedulersEndpoint(base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        l = []
+        ret = []
         builderid = kwargs.get('builderid', None)
         if builderid is not None:
             bdict = yield self.master.db.builders.getBuilder(builderid)
@@ -90,8 +90,8 @@ class ForceSchedulersEndpoint(base.Endpoint):
             if isinstance(sched, forcesched.ForceScheduler):
                 if builderid is not None and bdict['name'] not in sched.builderNames:
                     continue
-                l.append(forceScheduler2Data(sched))
-        defer.returnValue(l)
+                ret.append(forceScheduler2Data(sched))
+        defer.returnValue(ret)
 
 
 class ForceScheduler(base.ResourceType):

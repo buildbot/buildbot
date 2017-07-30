@@ -28,6 +28,7 @@ from twisted.trial import unittest
 
 from buildbot import locks
 from buildbot.interfaces import WorkerTooOldError
+from buildbot.plugins import util
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
@@ -241,6 +242,18 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_doStepIf_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=False))
+        self.step.finished = mock.Mock()
+        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        yield self.runStep()
+        # 837: we want to specifically avoid calling finished() if skipping
+        self.step.finished.assert_not_called()
+
+    @defer.inlineCallbacks
+    def test_doStepIf_renderable_false(self):
+        @util.renderer
+        def dostepif(props):
+            return False
+        self.setupStep(self.FakeBuildStep(doStepIf=dostepif))
         self.step.finished = mock.Mock()
         self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
         yield self.runStep()

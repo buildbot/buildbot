@@ -134,13 +134,13 @@ class VisualStudio(ShellCommand):
         self.config = config
         self.useenv = useenv
         self.project = project
-        if len(INCLUDE) > 0:
+        if INCLUDE:
             self.INCLUDE = INCLUDE
             self.useenv = True
-        if len(LIB) > 0:
+        if LIB:
             self.LIB = LIB
             self.useenv = True
-        if len(PATH) > 0:
+        if PATH:
             self.PATH = PATH
         # always upcall !
         ShellCommand.__init__(self, **kwargs)
@@ -200,8 +200,7 @@ class VisualStudio(ShellCommand):
             return FAILURE
         if self.logobserver.nbWarnings > 0:
             return WARNINGS
-        else:
-            return SUCCESS
+        return SUCCESS
 
     def finished(self, result):
         self.getLog("warnings").finish()
