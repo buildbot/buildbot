@@ -47,7 +47,7 @@ class GitHubEventHandler(PullRequestMixin):
                  github_property_whitelist=None,
                  master=None,
                  skips=None,
-                 github_api_endpoint='https://api.github.com',
+                 github_api_endpoint=None,
                  debug=False,
                  verify=False):
         self._secret = secret
@@ -55,6 +55,7 @@ class GitHubEventHandler(PullRequestMixin):
         self._codebase = codebase
         self.github_property_whitelist = github_property_whitelist
         self.skips = skips
+        self.github_api_endpoint = github_api_endpoint
         self.master = master
         if github_property_whitelist is None:
             self.github_property_whitelist = []
@@ -66,7 +67,6 @@ class GitHubEventHandler(PullRequestMixin):
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
-        self.github_api_endpoint = github_api_endpoint
         self.debug = debug
         self.verify = verify
 
