@@ -36,6 +36,9 @@ from buildbot.www.hooks.base import BaseHookHandler
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
 
+DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
+DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+
 
 class GitHubEventHandler(PullRequestMixin):
 
@@ -56,9 +59,9 @@ class GitHubEventHandler(PullRequestMixin):
         if github_property_whitelist is None:
             self.github_property_whitelist = []
         if skips is None:
-            self.skips = [r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']
+            self.skips = DEFAULT_SKIPS_PATTERN
         if github_api_endpoint is None:
-            self.github_api_endpoint = 'https://api.github.com'
+            self.github_api_endpoint = DEFAULT_GITHUB_API_URL
 
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
