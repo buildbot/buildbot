@@ -8,7 +8,7 @@ JavaScript Application
 
 The client side of the web UI is written in JavaScript and based on the AngularJS framework and concepts.
 
-This is a `Single Page Application" <http://en.wikipedia.org/wiki/Single-page_application>`_
+This is a `Single Page Application <http://en.wikipedia.org/wiki/Single-page_application>`_.
 All Buildbot pages are loaded from the same path, at the master's base URL.
 The actual content of the page is dictated by the fragment in the URL (the portion following the ``#`` character).
 Using the fragment is a common JS techique to avoid reloading the whole page over HTTP when the user changes the URI or clicks a link.
@@ -16,32 +16,32 @@ Using the fragment is a common JS techique to avoid reloading the whole page ove
 AngularJS
 ~~~~~~~~~
 
-The best place to learn about AngularJS is `its own documentation <http://docs.angularjs.org/guide/>`_,
+The best place to learn about AngularJS is `its own documentation <http://docs.angularjs.org/guide/>`_.
 
 AngularJS strong points are:
 
 * A very powerful `MVC system <http://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when data changes
 * A `Testing Framework and philosophy <http://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
-* A `deferred system <http://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted.
+* A `deferred system <http://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted
 * A `fast growing community and ecosystem <http://builtwith.angularjs.org/>`_
 
 On top of Angular we use nodeJS tools to ease development
 
-* gulp buildsystem, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
-  In production mode, the buildsystem minifies html, css and js, so that the final app is only 3 files to download (+img).
-* alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
-* `coffeescript <http://coffeescript.org/>`_, a very expressive langage, preventing some of the major traps of JS.
-* `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates.
-* `Bootstrap <http://getbootstrap.com/>`_ is a css library providing know good basis for our styles.
+* gulp build system, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
+  In production mode, the build system minifies html, css and js, so that the final app is only 3 files to download (+img)
+* Alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
+* `coffeescript <http://coffeescript.org/>`_, a very expressive language, preventing some of the major traps of JS
+* `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
+* `Bootstrap <http://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
-modules we may or may not want to include:
+Modules we may or may not want to include:
 
 * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
 * `ngGrid <https://angular-ui.github.io/ui-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
 * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
 * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
-  Having it inside allows for all kind of hacks we may want to avoid.
+  Having it inside allows for all kind of hacks we may want to avoid
 
 Extensibility
 ~~~~~~~~~~~~~
@@ -69,17 +69,17 @@ Typical plugin source code layout is:
     gulpfile.js                  # entrypoint for gulp, should be a one line call to guanlecoja. Typically, no change needed
     MANIFEST.in                  # needed by setup.py for sdist generation. You need to adapt this file to match the name of your plugin
 
-Alternatively it is possible to use webpack instead of gulp so `gulpfile.js` shall be replaced with `webpack.config.js` (with proper code inside of course).
-When `gulpfile.js` found, gulp is used even `webpack.config.js` is defined.
+Alternatively it is possible to use webpack instead of gulp so ``gulpfile.js`` shall be replaced with ``webpack.config.js`` (with proper code inside of course).
+When ``gulpfile.js`` found, gulp is used even ``webpack.config.js`` is defined.
 
 Plugins are packaged as python entry-points for the ``buildbot.www`` namespace.
-The python part is defined in the `buildbot.www.plugin` module.
-The entrypoint must contain a twisted.web Resource, that is populated in the web server in `/<pluginname>/`.
+The python part is defined in the ``buildbot.www.plugin`` module.
+The entrypoint must contain a ``twisted.web`` Resource, that is populated in the web server in ``/<pluginname>/``.
 
-The front-end part of the plugin system automatically loads `/<pluginname>/scripts.js` and `/<pluginname>/styles.css` into the angular.js application.
-The scripts.js files can register itself as a dependency to the main "app" module, register some new states to $stateProvider, or new menu items via glMenuProvider.
+The front-end part of the plugin system automatically loads ``/<pluginname>/scripts.js`` and ``/<pluginname>/styles.css`` into the angular.js application.
+The scripts.js files can register itself as a dependency to the main "app" module, register some new states to ``$stateProvider``, or new menu items via glMenuProvider.
 
-The entrypoint containing a Resource, nothing forbids plugin writers to add more REST apis in `/<pluginname>/api`.
+The entrypoint containing a Resource, nothing forbids plugin writers to add more REST apis in ``/<pluginname>/api``.
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
 You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
 
@@ -89,9 +89,9 @@ Routing
 ~~~~~~~
 
 AngularJS uses router to match URL and choose which page to display.
-The router we use is ui.router.
+The router we use is ``ui.router``.
 Menu is managed by guanlecoja-ui's glMenuProvider.
-Please look at ui.router, and guanlecoja-ui documentation for details.
+Please look at ``ui.router``, and guanlecoja-ui documentation for details.
 
 Typically, a route regitration will look like following example.
 
