@@ -468,11 +468,12 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             for n in added_names:
                 child = new_by_name[n]
                 # setup service's objectid
-                class_name = '%s.%s' % (child.__class__.__module__,
-                                        child.__class__.__name__)
-                objectid = yield self.master.db.state.getObjectId(
-                    child.name, class_name)
-                child.objectid = objectid
+                if hasattr(child, 'objectid'):
+                    class_name = '%s.%s' % (child.__class__.__module__,
+                                            child.__class__.__name__)
+                    objectid = yield self.master.db.state.getObjectId(
+                        child.name, class_name)
+                    child.objectid = objectid
                 yield defer.maybeDeferred(child.setServiceParent, self)
 
         # As the services that were just added got
