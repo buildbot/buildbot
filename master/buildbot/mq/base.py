@@ -36,7 +36,9 @@ class MQBase(service.AsyncService):
         # we only wait if the check callback return true
         if not check:
             res = yield d
-        yield buildCompleteConsumer.stopConsuming
+        else:
+            res = None
+        yield buildCompleteConsumer.stopConsuming()
         defer.returnValue(res)
 
 

@@ -1,0 +1,1 @@
+Fix exception when shutting down a master (:issue:`3478`) 
