@@ -305,8 +305,8 @@ class Waterfall extends Controller
         # Rotate text
         xAxisSelect.selectAll('text')
             .style('text-anchor', 'start')
-            .attr('transform', 'translate(0, -5) rotate(-25)')
-            .attr('dy', '.75em')
+            .attr('transform', 'translate(0, -16) rotate(-25)')
+            .attr('dy', '0.75em')
             .each(link)
 
         # Rotate tick lines
