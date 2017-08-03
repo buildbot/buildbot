@@ -29,6 +29,10 @@ Bug fixes
   (:issue:`3418`).
 - Fix bug when :py:class:`~buildbot.steps.shellsequence.ShellArg` arguments
   were rendered only once during an instance's lifetime.
+- Fix waterfall tiny size of build status indicators (:issue:`3475`)
+- Fix waterfall natural order of builder list
+- Fix builder page use 'pointer' cursor style for tags (:issue:`3473`)
+- Fix builder page update tag filter when using the browser's back button (:issue:`3474`)
 
 Features
 --------
