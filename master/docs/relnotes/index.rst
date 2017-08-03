@@ -10,6 +10,40 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.10`` ( ``2017-08-03`` )
+======================================
+
+Bug fixes
+---------
+
+- Fix 'reconfig master causes worker lost' error (:issue:`3392`).
+- Fix bug where object names could not be larger than 150 characters
+  (:issue:`3449`)
+- Fix bug where notifier names could not be overridden (:issue:`3450`)
+- Fix exception when shutting down a master (:issue:`3478`)
+- Fix Manhole support to work with Python 3 and Twisted 16.0.0+
+  (:issue:`3160`). :py:class:`~buildbot.manhole.AuthorizedKeysManhole` and
+  :py:class:`~buildbot.manhole.PasswordManhole` now require a directory
+  containing SSH host keys to be specified.
+- Fix python 3 issue with displaying the properties when fetching builders
+  (:issue:`3418`).
+- Fix bug when :py:class:`~buildbot.steps.shellsequence.ShellArg` arguments
+  were rendered only once during an instance's lifetime.
+- Fix waterfall tiny size of build status indicators (:issue:`3475`)
+- Fix waterfall natural order of builder list
+- Fix builder page use 'pointer' cursor style for tags (:issue:`3473`)
+- Fix builder page update tag filter when using the browser's back button (:issue:`3474`)
+
+Features
+--------
+
+- added support for builder names in REST API. Note that those endpoints are
+  not (yet) available from the UI, as the events are not sent to the endpoints
+  with builder names.
+- Implemented new ability to set from by email domain. Implemented
+  :py:class:`~buildbot.www.authz.RolesFromDomain`. (:issue:`3422`)
+
+
 Buildbot ``0.9.9.post2`` ( ``2017-07-06`` )
 ===========================================
 

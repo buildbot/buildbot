@@ -1,1 +1,0 @@
-Fix bug where object names could not be larger than 150 characters (:issue:`3449`)

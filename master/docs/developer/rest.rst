@@ -247,7 +247,7 @@ RAML describes and documents all our data, rest, and javascript APIs in a format
     {% endif %}{# if ep has get #}
 
     {% for method, action in raml.iter_actions(config) -%}
-    .. bb:raction:: {{ep}}:{{method}}
+    .. bb:raction:: {{ep}} (method={{method}})
 
         :body string method:  must be ``{{ method }}``
 

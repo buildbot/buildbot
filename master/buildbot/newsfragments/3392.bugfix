@@ -1,1 +1,0 @@
-Fix 'reconfig master causes worker lost' error (:issue:`3392`).
