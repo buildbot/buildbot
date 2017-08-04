@@ -516,6 +516,7 @@ setup_args['extras_require'] = {
         "buildbot-worker=={0}".format(bundle_version),
         "buildbot-waterfall-view=={0}".format(bundle_version),
         "buildbot-console-view=={0}".format(bundle_version),
+        "buildbot-grid-view=={0}".format(bundle_version),
     ],
     'tls': [
         'Twisted[tls] ' + twisted_ver,
