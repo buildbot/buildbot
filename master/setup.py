@@ -399,7 +399,8 @@ setup_args = {
             ('buildbot.www.authz', [
                 'Authz', 'fnmatchStrMatcher', 'reStrMatcher']),
             ('buildbot.www.authz.roles', [
-                'RolesFromEmails', 'RolesFromGroups', 'RolesFromOwner', 'RolesFromUsername']),
+                'RolesFromEmails', 'RolesFromGroups', 'RolesFromOwner', 'RolesFromUsername',
+                'RolesFromDomain']),
             ('buildbot.www.authz.endpointmatchers', [
                 'AnyEndpointMatcher', 'StopBuildEndpointMatcher', 'ForceBuildEndpointMatcher',
                 'RebuildBuildEndpointMatcher', 'AnyControlEndpointMatcher', 'EnableSchedulerEndpointMatcher']),
