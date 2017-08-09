@@ -234,6 +234,20 @@ class P4(Source):
 
         command.extend(doCommand)
 
+        def encodeString(s):
+            if not isinstance(s, str):
+                return s.encode('utf-8')
+            return s
+
+        def encodeArg(arg):
+            if isinstance(arg, tuple):
+                # If a tuple, then the second element is the argument that will
+                # be used when executing the command.
+                return (arg[0], encodeString(arg[1]), arg[2])
+            return encodeString(arg)
+
+        command = [encodeArg(c) for c in command]
+
         return command
 
     def _dovccmd(self, command, collectStdout=False, initialStdin=None):
