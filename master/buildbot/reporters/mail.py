@@ -330,7 +330,7 @@ class MailNotifier(NotifierBase):
         recipients = [unicode2bytes(r) for r in recipients]
         sender_factory = ESMTPSenderFactory(
             unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
-            self.fromaddr, recipients, BytesIO(s),
+            unicode2bytes(self.fromaddr), recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 
