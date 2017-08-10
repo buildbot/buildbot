@@ -305,10 +305,10 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
 
         mn.findInterrestedUsersEmails = Mock(
             spec=mn.findInterrestedUsersEmails)
-        mn.findInterrestedUsersEmails.return_value = "<recipients>"
+        mn.findInterrestedUsersEmails.return_value = list("<recipients>")
 
         mn.processRecipients = Mock(spec=mn.processRecipients)
-        mn.processRecipients.return_value = "<processedrecipients>"
+        mn.processRecipients.return_value = list("<processedrecipients>")
 
         mn.createEmail = Mock(spec=mn.createEmail)
         mn.createEmail.return_value.as_string = Mock(return_value="<email>")
