@@ -820,7 +820,7 @@ You can grant roles from groups information provided by the Auth plugins, or if 
     ex::
 
         roleMatchers=[
-          util.RolesFromDomains(admins=["gmail.com"])
+          util.RolesFromDomain(admins=["gmail.com"])
         ]
 
 .. py:class:: buildbot.www.authz.roles.RolesFromOwner(roledict)
