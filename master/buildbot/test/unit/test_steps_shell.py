@@ -755,19 +755,27 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             writer.remote_close()
             command.rc = 0
 
-        self.expectCommands(
-            # step will first get the remote suppressions file
-            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                                      workersrc='supps', workdir='wkdir',
-                                      writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-            + Expect.behavior(upload_behavior),
+        if supps_file is not None:
+            self.expectCommands(
+                # step will first get the remote suppressions file
+                Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                                          workersrc='supps', workdir='wkdir',
+                                          writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
+                + Expect.behavior(upload_behavior),
 
-            # and then run the command
-            ExpectShell(workdir='wkdir',
-                        command=["make"])
-            + ExpectShell.log('stdio', stdout=stdout)
-            + 0
-        )
+                # and then run the command
+                ExpectShell(workdir='wkdir',
+                            command=["make"])
+                + ExpectShell.log('stdio', stdout=stdout)
+                + 0
+            )
+        else:
+            self.expectCommands(
+                ExpectShell(workdir='wkdir',
+                            command=["make"])
+                + ExpectShell.log('stdio', stdout=stdout)
+                + 0
+            )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
                                state_string="'make' (exception)")
