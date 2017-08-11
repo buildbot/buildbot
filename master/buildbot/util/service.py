@@ -205,11 +205,11 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         p = Properties()
         p.master = self.master
         # render renderables in parallel
-        renderables = []
+        secrets = []
         kwargs = {}
-        accumulateClassList(self.__class__, 'renderables', renderables)
+        accumulateClassList(self.__class__, 'secrets', secrets)
         for k, v in sibling._config_kwargs.items():
-            if k in renderables:
+            if k in secrets:
                 value = yield p.render(v)
                 setattr(self, k, value)
                 kwargs.update({k: value})
@@ -219,11 +219,9 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                                        **sibling._config_kwargs)
         defer.returnValue(d)
 
-    @defer.inlineCallbacks
     def configureService(self):
         # reconfigServiceWithSibling with self, means first configuration
-        d = yield self.reconfigServiceWithSibling(self)
-        defer.returnValue(d)
+        return self.reconfigServiceWithSibling(self)
 
     @defer.inlineCallbacks
     def startService(self):

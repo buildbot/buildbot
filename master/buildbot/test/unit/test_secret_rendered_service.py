@@ -14,7 +14,7 @@ from buildbot.util.service import BuildbotService
 class FakeServiceUsingSecrets(BuildbotService):
 
     name = "FakeServiceUsingSecrets"
-    renderables = ["foo", "bar", "secret"]
+    secrets = ["foo", "bar", "secret"]
 
     def reconfigService(self, *args, **kwargs):
         self.kwargs = kwargs
