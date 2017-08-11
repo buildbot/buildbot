@@ -96,6 +96,13 @@ class LBF(unittest.TestCase):
         self.assertCallbacks(['1%\n5%\n15%\n100%\n', 'finished\n'])
 
     @defer.inlineCallbacks
+    def test_backspace_folded(self):
+        r"a lot of \b is treated as and converted to a newline"
+        yield self.lbf.append('1%\b\b5%\b\b15%\b\b\b100%\nfinished')
+        yield self.lbf.flush()
+        self.assertCallbacks(['1%\n5%\n15%\n100%\n', 'finished\n'])
+
+    @defer.inlineCallbacks
     def test_mixed_consecutive_newlines(self):
         r"mixing newline styles back-to-back doesn't collapse them"
         yield self.lbf.append('1\r\n\n\r')
@@ -116,6 +123,34 @@ class LBF(unittest.TestCase):
             log.msg('feeding %r, %r gives %r' % (a, b, res))
             self.assertEqual(res, 'a\nb\nc\nd\n\ne\n')
             self.callbacks = []
+
+    @defer.inlineCallbacks
+    def test_split_terminal_control(self):
+        """terminal control characters are converted"""
+        yield self.lbf.append('1234\033[u4321')
+        yield self.lbf.flush()
+        self.assertCallbacks(['1234\n', '4321\n'])
+        yield self.lbf.append('1234\033[1;2H4321')
+        yield self.lbf.flush()
+        self.assertCallbacks(['1234\n', '4321\n'])
+        yield self.lbf.append('1234\033[1;2f4321')
+        yield self.lbf.flush()
+        self.assertCallbacks(['1234\n', '4321\n'])
+
+    @defer.inlineCallbacks
+    def test_long_lines(self):
+        """long lines are splitted"""
+        for i in range(4):
+            yield self.lbf.append('12' * 1000)
+        # a split at 4096 + the remaining chars
+        self.assertCallbacks(['12' * 2048 + '\n' + '12' * 952 + '\n'])
+
+    @defer.inlineCallbacks
+    def test_huge_lines(self):
+        """huge lines are splitted"""
+        yield self.lbf.append('12' * 32768)
+        yield self.lbf.flush()
+        self.assertCallbacks([('12' * 2048 + '\n') * 16])
 
     def test_empty_flush(self):
         d = self.lbf.flush()
