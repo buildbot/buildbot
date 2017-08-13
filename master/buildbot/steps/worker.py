@@ -325,14 +325,14 @@ class CompositeStepMixin():
                                      evaluateCommand=commandComplete)
     deprecatedWorkerClassMethod(locals(), getFileContentFromWorker)
 
-    def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False):
+    def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False, mode=None):
         self.checkWorkerHasCommand("downloadFile")
         fileReader = remotetransfer.StringFileReader(strfile)
         # default arguments
         args = {
             'workdir': self.workdir,
             'maxsize': None,
-            'mode': None,
+            'mode': mode,
             'reader': fileReader,
             'blocksize': 32 * 1024,
         }

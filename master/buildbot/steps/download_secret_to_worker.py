@@ -15,6 +15,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import stat
+
 from twisted.internet import defer
 
 from buildbot.process.buildstep import FAILURE
@@ -39,7 +41,7 @@ class DownloadSecretsToWorker(BuildStep, CompositeStepMixin):
             if not isinstance(path, str):
                 raise ValueError("Secret path %s is not a string" % path)
             self.secret_to_be_interpolated = secretvalue
-            res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated)
+            res = yield self.downloadFileContentToWorker(path, self.secret_to_be_interpolated, mode=stat.S_IRUSR | stat.S_IWUSR)
             result = worst_status(result, res)
         defer.returnValue(result)
 
