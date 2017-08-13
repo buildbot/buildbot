@@ -251,7 +251,7 @@ class TestBuild(unittest.TestCase):
         b.setStepFactories([FakeStepFactory(step)])
 
         def prepare(build):
-            build.stopped = True # simulate stopBuild
+            build.stopped = True  # simulate stopBuild
             return False
 
         self.workerforbuilder.prepare = prepare
