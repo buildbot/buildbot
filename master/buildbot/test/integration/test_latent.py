@@ -30,7 +30,7 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
-from buildbot.process.results import RETRY
+from buildbot.process.results import RETRY, CANCELLED
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
@@ -538,3 +538,45 @@ class Tests(SynchronousTestCase):
         builds = self.successResultOf(
             master.data.get(("builds",)))
         self.assertEqual(builds[1]['results'], SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_build_cancelled_when_build_stopped_during_substantiation(self):
+        """
+        If a build is stopping during latent worker substantiating, the build becomes cancelled
+        """
+        controller = LatentController('local')
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        # Trigger a buildrequest
+        self.createBuildrequest(master, [builder_id])
+
+        unclaimed_build_requests = []
+        self.successResultOf(master.mq.startConsuming(
+            lambda key, request: unclaimed_build_requests.append(request),
+            ('buildrequests', None, 'unclaimed')))
+
+        # Stop the build
+        master.mq.produce(("control", "builds", '1', 'stop'),
+                          dict(reason='no reason'))
+
+        # Indicate that the worker can't start an instance.
+        controller.start_instance(False)
+
+        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
+        self.assertEqual(CANCELLED, dbdict['results'])
+        controller.auto_stop(True)
+        self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
