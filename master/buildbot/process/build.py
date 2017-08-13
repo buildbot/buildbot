@@ -325,7 +325,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         # If it returns failure then we don't start a new build.
         if ready_or_failure is not True:
             yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
-            self.buildFinished(["worker", "not", "available"], RETRY)
+            if self.stopped:
+                self.buildFinished(["worker", "cancelled"], CANCELLED)
+            else:
+                self.buildFinished(["worker", "not", "available"], RETRY)
             return
 
         # ping the worker to make sure they're still there. If they've
