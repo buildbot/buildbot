@@ -86,7 +86,7 @@ txrequests==0.9.5
 typing==3.6.2
 webcolors==1.7
 Werkzeug==0.12.2
-wrapt==1.10.10
+wrapt==1.10.11
 xmltodict==0.11.0
 zope.interface==4.4.2
 coverage==4.4.1
