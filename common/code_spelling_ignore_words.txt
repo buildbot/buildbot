@@ -921,6 +921,7 @@ parms
 parseable
 parsegotrevision
 parsejob
+partialLine
 passwd
 patchable
 patchid
@@ -1209,6 +1210,7 @@ spawnprocess
 specdir
 specfile
 specfiles
+splitted
 spulec
 sql
 sqlalchemy
