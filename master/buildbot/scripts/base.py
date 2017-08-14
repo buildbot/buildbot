@@ -57,19 +57,19 @@ def checkPidFile(pidfile):
             with open(pidfile) as f:
                 pid = int(f.read())
         except ValueError:
-            raise ValueError('Pidfile %s contains non-numeric value' % pidfile)
+            raise ValueError('Pidfile {} contains non-numeric value'.format(pidfile))
         try:
             os.kill(pid, 0)
         except OSError as why:
             if why.errno == errno.ESRCH:
                 # The pid doesn't exist.
-                print('Removing stale pidfile %s' % pidfile)
+                print('Removing stale pidfile {}'.format(pidfile))
                 os.remove(pidfile)
             else:
-                raise OSError("Can't check status of PID %s from pidfile %s: %s" %
-                              (pid, pidfile, why))
+                raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
+                    pid, pidfile, why))
         else:
-            raise BusyError("'%s' exists - is this master still running?")
+            raise BusyError("'{}' exists - is this master still running?".format(pidfile))
 
 
 def checkBasedir(config):
@@ -171,8 +171,7 @@ def getConfigFileFromTac(basedir, quiet=False):
     config = getConfigFromTac(basedir, quiet=quiet)
     if config:
         return config.get("configfile", "master.cfg")
-    else:
-        return "master.cfg"
+    return "master.cfg"
 
 
 class SubcommandOptions(usage.Options):
@@ -293,7 +292,7 @@ class BasedirMixin(object):
             extraActions=[usage.CompleteDirs(descr="buildbot base directory")])
 
     def parseArgs(self, *args):
-        if len(args) > 0:
+        if args:
             self['basedir'] = args[0]
         else:
             # Use the current directory if no basedir was specified.

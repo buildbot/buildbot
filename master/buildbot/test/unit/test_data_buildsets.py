@@ -227,8 +227,10 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self._buildRequestMessageDict(brid, bsid, builderid))
 
     def _buildsetMessage(self, bsid, external_idstring=u'extid',
-                         reason=u'because', scheduler=u'fakesched', sourcestampids=[234],
+                         reason=u'because', scheduler=u'fakesched', sourcestampids=None,
                          submitted_at=A_TIMESTAMP):
+        if sourcestampids is None:
+            sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
         return (
             ('buildsets', str(bsid), 'new'),
@@ -240,7 +242,9 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
                                  submitted_at=A_TIMESTAMP_EPOCH, external_idstring=u'extid',
-                                 reason=u'because', results=0, sourcestampids=[234]):
+                                 reason=u'because', results=0, sourcestampids=None):
+        if sourcestampids is None:
+            sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
         return (
             ('buildsets', str(bsid), 'complete'),
@@ -301,8 +305,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     @defer.inlineCallbacks
     def do_test_maybeBuildsetComplete(self,
-                                      buildRequestCompletions={},
-                                      buildRequestResults={},
+                                      buildRequestCompletions=None,
+                                      buildRequestResults=None,
                                       buildsetComplete=False,
                                       expectComplete=False,
                                       expectMessage=False,
@@ -328,6 +332,10 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         Then, maybeBuildsetComplete is called for buildset 72, and the
         expectations are checked.
         """
+        if buildRequestCompletions is None:
+                buildRequestCompletions = {}
+        if buildRequestResults is None:
+                buildRequestResults = {}
 
         clock = task.Clock()
         clock.advance(A_TIMESTAMP)

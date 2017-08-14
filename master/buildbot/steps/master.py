@@ -181,7 +181,7 @@ class SetProperty(BuildStep):
     name = 'SetProperty'
     description = ['Setting']
     descriptionDone = ['Set']
-    renderables = ['value']
+    renderables = ['property', 'value']
 
     def __init__(self, property, value, **kwargs):
         BuildStep.__init__(self, **kwargs)
@@ -211,6 +211,23 @@ class SetProperties(BuildStep):
         for k, v in iteritems(self.properties):
             self.setProperty(k, v, self.name, runtime=True)
         return defer.succeed(SUCCESS)
+
+
+class Assert(BuildStep):
+    name = 'Assert'
+    description = ['Checking..']
+    descriptionDone = ["checked"]
+    renderables = ['check']
+
+    def __init__(self, check, **kwargs):
+        BuildStep.__init__(self, **kwargs)
+        self.check = check
+        self.descriptionDone = ["checked {}".format(repr(self.check))]
+
+    def run(self):
+        if self.check:
+            return defer.succeed(SUCCESS)
+        return defer.succeed(FAILURE)
 
 
 class LogRenderable(BuildStep):

@@ -26,7 +26,55 @@ from buildbot.config import ConfigErrors
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import changesource
 
-gitJsonPayloadPullRequest = """
+gitJsonPayloadSinglePullrequest = """
+{
+  "html_url": "https://github.com/buildbot/buildbot/pull/4242",
+  "number": 4242,
+  "state": "open",
+  "locked": false,
+  "title": "Update the README with new information",
+  "user": {
+    "login": "defunkt"
+  },
+  "body": "This is a pretty simple change that we need to pull into master.",
+  "updated_at": "2017-01-25T22:36:21Z",
+  "head": {
+    "ref": "defunkt/change",
+    "sha": "4c9a7f03e04e551a5e012064b581577f949dd3a4",
+    "repo": {
+      "name": "buildbot",
+      "full_name": "defunkt/buildbot",
+      "fork": true,
+      "private": false,
+      "git_url": "git://github.com/defunkt/buildbot.git",
+      "ssh_url": "git@github.com:defunkt/buildbot.git",
+      "clone_url": "https://github.com/defunkt/buildbot.git",
+      "svn_url": "https://github.com/defunkt/buildbot"
+    }
+  },
+  "base": {
+    "ref": "master",
+    "sha": "4c9a7f03e04e551a5e012064b581577f949dd3a4",
+    "name": "buildbot",
+    "repo": {
+      "full_name": "buildbot/buildbot",
+      "fork": false,
+      "private": false,
+      "git_url": "git://github.com/buildbot/buildbot.git",
+      "ssh_url": "git@github.com:buildbot/buildbot.git",
+      "clone_url": "https://github.com/buildbot/buildbot.git",
+      "svn_url": "https://github.com/buildbot/buildbot"
+    }
+  },
+  "merged": false,
+  "commits": 42,
+  "mergeable": true,
+  "mergeable_state": "clean",
+  "merged_by": null
+}
+"""
+
+gitJsonPayloadPullRequests = """
 [
   {
     "html_url": "https://github.com/buildbot/buildbot/pull/4242",
@@ -77,8 +125,32 @@ gitJsonUserPage = """
   "email": "defunkt@defunkt.null"
 }
 """
-_CT_ENCODED = 'application/x-www-form-urlencoded'
-_CT_JSON = 'application/json'
+
+gitJsonUserPage_missingEmail = """
+{
+  "login": "defunkt",
+  "email": null
+}"""
+
+
+_CT_ENCODED = b'application/x-www-form-urlencoded'
+_CT_JSON = b'application/json'
+
+_GH_PARSED_PROPS = {
+    'github.head.sha': '4c9a7f03e04e551a5e012064b581577f949dd3a4',
+    'github.state': 'open',
+    'github.number': 4242,
+    'github.merged': False,
+    'github.base.repo.full_name': 'buildbot/buildbot',
+    'github.base.ref': 'master',
+    'github.base.sha': '4c9a7f03e04e551a5e012064b581577f949dd3a4',
+    'github.head.repo.full_name': u'defunkt/buildbot',
+    'github.mergeable_state': 'clean',
+    'github.mergeable': True,
+    'github.head.ref': 'defunkt/change',
+    'github.title': 'Update the README with new information',
+    'github.merged_by': None
+}
 
 
 class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
@@ -112,6 +184,13 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         yield self.changesource.setServiceParent(self.master)
         yield self.attachChangeSource(self.changesource)
 
+    def assertDictSubset(self, expected_dict, response_dict):
+        expected = {}
+        for key in expected_dict.keys():
+            self.assertIn(key, set(response_dict.keys()))
+            expected[key] = response_dict[key]
+        self.assertDictEqual(expected_dict, expected)
+
     @defer.inlineCallbacks
     def test_describe(self):
         yield self.newChangeSource('defunkt', 'defunkt')
@@ -135,11 +214,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_SimplePR(self):
-        yield self.newChangeSource('defunkt', 'defunkt', token='1234')
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"])
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242/files',
@@ -163,6 +247,12 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
 
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertEqual(change["comments"],
+                         "GitHub Pull Request #4242 (42 commits)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")
+
     @defer.inlineCallbacks
     def test_wrongBranch(self):
         yield self.newChangeSource(
@@ -170,7 +260,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
 
         yield self.startChangeSource()
         yield self.changesource.poll()
@@ -183,11 +273,16 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             'defunkt',
             endpoint='https://my.other.endpoint',
             token='1234',
-            baseURL='https://my.other.endpoint/')
+            baseURL='https://my.other.endpoint/',
+            github_property_whitelist=["github.*"])
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242/files',
@@ -210,6 +305,11 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/defunkt/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertEqual(change["comments"],
+                         "GitHub Pull Request #4242 (42 commits)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")
 
     @defer.inlineCallbacks
     def test_PRfilter(self):
@@ -222,7 +322,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
         yield self.startChangeSource()
         yield self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 0)
@@ -233,7 +333,11 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242/files',
@@ -251,11 +355,17 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
 
     @defer.inlineCallbacks
     def test_magicLink(self):
-        yield self.newChangeSource('defunkt', 'defunkt', magic_link=True, token='1234')
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', magic_link=True,
+            token='1234', github_property_whitelist=["github.*"])
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls',
-            content_json=json.loads(gitJsonPayloadPullRequest))
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
         self._http.expect(
             method='get',
             ep='/repos/defunkt/defunkt/pulls/4242/files',
@@ -278,3 +388,48 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
         self.assertEqual(change['repository'],
                          'https://github.com/buildbot/buildbot.git')
         self.assertEqual(change['files'], ['README.md'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertEqual(change["comments"],
+                         "GitHub Pull Request #4242 (42 commits)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")
+
+    @defer.inlineCallbacks
+    def test_AuthormissingEmail(self):
+        yield self.newChangeSource(
+            'defunkt', 'defunkt', token='1234', github_property_whitelist=["github.*"])
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls',
+            content_json=json.loads(gitJsonPayloadPullRequests))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242',
+            content_json=json.loads(gitJsonPayloadSinglePullrequest))
+        self._http.expect(
+            method='get',
+            ep='/repos/defunkt/defunkt/pulls/4242/files',
+            content_json=json.loads(gitJsonPayloadFiles))
+        self._http.expect(
+            method='get',
+            ep='/users/defunkt',
+            content_json=json.loads(gitJsonUserPage_missingEmail))
+        yield self.startChangeSource()
+        yield self.changesource.poll()
+
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['author'], 'defunkt')
+        self.assertEqual(change['revision'],
+                         '4c9a7f03e04e551a5e012064b581577f949dd3a4')
+        self.assertEqual(change['revlink'],
+                         'https://github.com/buildbot/buildbot/pull/4242')
+        self.assertEqual(change['branch'], 'defunkt/change')
+        self.assertEqual(change['repository'],
+                         'https://github.com/defunkt/buildbot.git')
+        self.assertEqual(change['files'], ['README.md'])
+        self.assertDictSubset(_GH_PARSED_PROPS, change['properties'])
+        self.assertEqual(change["comments"],
+                         "GitHub Pull Request #4242 (42 commits)\n"
+                         "Update the README with new information\n"
+                         "This is a pretty simple change that we need to pull into master.")

@@ -80,8 +80,13 @@ class AnyControlEndpointMatcher(EndpointBase):
         return endpointmatchers.AnyControlEndpointMatcher(role="foo")
 
     @defer.inlineCallbacks
-    def test_get(self):
+    def test_default_action(self):
         ret = yield self.matcher.match(("foo", "bar"))
+        self.assertMatch(ret)
+
+    @defer.inlineCallbacks
+    def test_get(self):
+        ret = yield self.matcher.match(("foo", "bar"), action="GET")
         self.assertNotMatch(ret)
 
     @defer.inlineCallbacks

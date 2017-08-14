@@ -112,6 +112,18 @@ class TestRobocopySimple(steps.BuildStepMixin, unittest.TestCase):
             expected_args=['blah*', '/XD', 'foo', 'bar']
         )
 
+    def test_custom_opts(self):
+        return self._run_simple_test(
+            r'D:\source', r'E:\dest', files=['*.foo'], custom_opts=['/R:10', '/W:60'],
+            expected_args=['*.foo', '/R:10', '/W:60']
+        )
+
+    def test_verbose_output(self):
+        return self._run_simple_test(
+            r'D:\source', r'E:\dest', files=['*.foo'], verbose=True,
+            expected_args=['*.foo', '/V', '/TS', '/FP']
+        )
+
     @defer.inlineCallbacks
     def test_codes(self):
         # Codes that mean uneventful copies (including no copy at all).

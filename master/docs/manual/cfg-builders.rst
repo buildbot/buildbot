@@ -79,6 +79,8 @@ Other optional keys may be set on each ``BuilderConfig``:
     The function should return ``True`` if the combination is acceptable, or ``False`` otherwise.
     This function can optionally return a Deferred which should fire with the same results.
 
+    See :ref:`canStartBuild-Functions` for a concrete example.
+
 ``locks``
     This argument specifies a list of locks that apply to this builder; see :ref:`Interlocks`.
 
@@ -174,3 +176,28 @@ Such a function can be provided to the BuilderConfig as follows::
             nextBuild=pickNextBuild,
             workernames=['worker1', 'worker2', 'worker3', 'worker4']),
     ]
+
+.. _Virtual-Builders:
+
+Virtual Builders
+~~~~~~~~~~~~~~~~
+
+:ref:`Dynamic-Trigger` is a method which allows to trigger the same builder, with different parameters.
+This method is used by frameworks which store the build config along side the source code like Buildbot_travis_.
+The drawback of this method is that it is difficult to extract statistics for similar builds.
+The standard dashboards are not working well due to the fact that all the builds are on the same builder.
+
+In order to overcome those drawbacks, Buildbot has the concept of virtual builder.
+If a build has the property ``virtual_builder_name``, it will automatically attach to that builder instead of the original builder.
+That created virtual builder is not attached to any master and is only used for better sorting in the UI and better statistics.
+The original builder and worker configuration is still used for all other build behaviors.
+
+The virtual builder metadata is configured with the following properties:
+
+* ``virtual_builder_name``: The name of the virtual builder.
+
+* ``virtual_builder_description``: The description of the virtual builder.
+
+* ``virtual_builder_tags``: The tags for the virtual builder.
+
+.. _Buildbot_travis: https://github.com/buildbot/buildbot_travis

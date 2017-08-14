@@ -52,7 +52,7 @@ from buildbot.process.users.manager import UserManagerManager
 from buildbot.schedulers.manager import SchedulerManager
 from buildbot.secrets.manager import SecretManager
 from buildbot.status.master import Status
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import check_functional_environment
 from buildbot.util import datetime2epoch
 from buildbot.util import service
@@ -72,10 +72,6 @@ class LogRotation(object):
 
 class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                   WorkerAPICompatMixin):
-
-    # frequency with which to reclaim running builds; this should be set to
-    # something fairly long, to avoid undue database load
-    RECLAIM_BUILD_INTERVAL = 10 * 60
 
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
@@ -459,16 +455,15 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         kwargs['comments'] = comments
 
         def handle_deprec(oldname, newname):
-            if oldname not in kwargs:
-                return
-            old = kwargs.pop(oldname)
-            if old is not None:
-                if kwargs.get(newname) is None:
-                    log.msg("WARNING: change source is using deprecated "
-                            "addChange parameter '%s'" % oldname)
-                    return old
-                raise TypeError("Cannot provide '%s' and '%s' to addChange"
-                                % (oldname, newname))
+            if oldname in kwargs:
+                old = kwargs.pop(oldname)
+                if old is not None:
+                    if kwargs.get(newname) is None:
+                        log.msg("WARNING: change source is using deprecated "
+                                "addChange parameter '%s'" % oldname)
+                        return old
+                    raise TypeError("Cannot provide '%s' and '%s' to addChange"
+                                    % (oldname, newname))
             return kwargs.get(newname)
 
         kwargs['author'] = handle_deprec("who", "author")
@@ -482,12 +477,12 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
         for k in ('comments', 'author', 'revision', 'branch', 'category',
                   'revlink', 'repository', 'codebase', 'project'):
             if k in kwargs:
-                kwargs[k] = ascii2unicode(kwargs[k])
+                kwargs[k] = bytes2unicode(kwargs[k])
         if kwargs.get('files'):
-            kwargs['files'] = [ascii2unicode(f)
+            kwargs['files'] = [bytes2unicode(f)
                                for f in kwargs['files']]
         if kwargs.get('properties'):
-            kwargs['properties'] = dict((ascii2unicode(k), v)
+            kwargs['properties'] = dict((bytes2unicode(k), v)
                                         for k, v in iteritems(kwargs['properties']))
 
         # pass the converted call on to the data API

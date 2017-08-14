@@ -82,15 +82,15 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
 
     if runtime.platformType == 'win32':
         return win32_batch_quote(cmd_list, unicode_encoding)
-    else:
-        import pipes
 
-        def quote(e):
-            if not e:
-                return '""'
-            e = bytes2NativeString(e, unicode_encoding)
-            return pipes.quote(e)
-        return " ".join([quote(e) for e in cmd_list])
+    import pipes  # only available on unix
+
+    def quote(e):
+        if not e:
+            return '""'
+        e = bytes2NativeString(e, unicode_encoding)
+        return pipes.quote(e)
+    return " ".join([quote(e) for e in cmd_list])
 
 
 class LogFileWatcher(object):
@@ -211,14 +211,14 @@ class RunProcessPP(protocol.ProcessProtocol):
         if self.debug:
             log.msg("RunProcessPP.outReceived")
         data = bytes2NativeString(
-                   data, self.command.builder.unicode_encoding)
+            data, self.command.builder.unicode_encoding)
         self.command.addStdout(data)
 
     def errReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.errReceived")
         data = bytes2NativeString(
-                   data, self.command.builder.unicode_encoding)
+            data, self.command.builder.unicode_encoding)
         self.command.addStderr(data)
 
     def processEnded(self, status_object):
@@ -279,7 +279,7 @@ class RunProcess(object):
                  sendStdout=True, sendStderr=True, sendRC=True,
                  timeout=None, maxTime=None, sigtermTime=None,
                  initialStdin=None, keepStdout=False, keepStderr=False,
-                 logEnviron=True, logfiles={}, usePTY=False,
+                 logEnviron=True, logfiles=None, usePTY=False,
                  useProcGroup=True):
         """
 
@@ -294,6 +294,8 @@ class RunProcess(object):
         @param useProcGroup: (default True) use a process group for non-PTY
             process invocations
         """
+        if logfiles is None:
+            logfiles = {}
 
         self.builder = builder
         if isinstance(command, list):
@@ -481,9 +483,9 @@ class RunProcess(object):
             # So, for .exe's that we have absolute paths to, we can call directly
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
-            if runtime.platformType == 'win32' and not \
-               (bytes2NativeString(self.command[0]).lower().endswith(".exe")
-               and os.path.isabs(self.command[0])):
+            if (runtime.platformType == 'win32' and
+                not (bytes2NativeString(self.command[0]).lower().endswith(".exe") and
+                     os.path.isabs(self.command[0]))):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
@@ -581,10 +583,12 @@ class RunProcess(object):
         for w in self.logFileWatchers:
             w.start()
 
-    def _spawnProcess(self, processProtocol, executable, args=(), env={},
+    def _spawnProcess(self, processProtocol, executable, args=(), env=None,
                       path=None, uid=None, gid=None, usePTY=False, childFDs=None):
         """private implementation of reactor.spawnProcess, to allow use of
         L{ProcGroupProcess}"""
+        if env is None:
+            env = {}
 
         # use the ProcGroupProcess class, if available
         if runtime.platformType == 'posix':
@@ -596,9 +600,8 @@ class RunProcess(object):
         if self.using_comspec:
             return self._spawnAsBatch(processProtocol, executable, args, env,
                                       path, usePTY=usePTY)
-        else:
-            return reactor.spawnProcess(processProtocol, executable, args, env,
-                                        path, usePTY=usePTY)
+        return reactor.spawnProcess(processProtocol, executable, args, env,
+                                    path, usePTY=usePTY)
 
     def _spawnAsBatch(self, processProtocol, executable, args, env,
                       path, usePTY):
@@ -700,7 +703,7 @@ class RunProcess(object):
             # Chunkify the log data to make sure we're not sending more than
             # CHUNK_LIMIT at a time
             for chunk in self._chunkForSend(data):
-                if len(chunk) == 0:
+                if not chunk:
                     continue
                 logdata.append(chunk)
                 msg_size += len(chunk)
@@ -858,7 +861,7 @@ class RunProcess(object):
                 log.msg("trying to kill process group %d" %
                         (self.process.pgid,))
                 try:
-                    os.kill(-self.process.pgid, sig)
+                    os.killpg(self.process.pgid, sig)
                     log.msg(" signal %s sent successfully" % sig)
                     self.process.pgid = None
                     hit = 1
@@ -942,7 +945,8 @@ class RunProcess(object):
         self.failed(RuntimeError(signalName + " failed to kill process"))
 
     def _cancelTimers(self):
-        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer', 'sendBuffersTimer', 'sigtermTimer'):
+        for timerName in ('ioTimeoutTimer', 'killTimer', 'maxTimeoutTimer',
+                          'sendBuffersTimer', 'sigtermTimer'):
             timer = getattr(self, timerName, None)
             if timer:
                 timer.cancel()

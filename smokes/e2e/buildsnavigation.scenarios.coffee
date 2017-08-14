@@ -36,9 +36,9 @@ describe 'previousnextlink', () ->
             builder.waitNextBuildFinished(+lastbuild + 1)
             builder.goBuild(+lastbuild + 2)
             lastBuildURL = browser.getCurrentUrl()
-            builder.getPreviousButton().click()
+            builder.clickWhenClickable(builder.getPreviousButton())
             expect(browser.getCurrentUrl()).not.toMatch(lastBuildURL)
-            builder.getNextButton().click()
+            builder.clickWhenClickable(builder.getNextButton())
             expect(browser.getCurrentUrl()).toMatch(lastBuildURL)
 
 describe 'forceandstop', () ->

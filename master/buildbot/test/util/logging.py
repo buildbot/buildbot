@@ -28,16 +28,24 @@ class LoggingMixin(object):
         log.addObserver(self._logEvents.append)
         self.addCleanup(log.removeObserver, self._logEvents.append)
 
-    def assertLogged(self, regexp):
+    def logContainsMessage(self, regexp):
         r = re.compile(regexp)
         for event in self._logEvents:
             msg = log.textFromEventDict(event)
             if msg is not None:
                 assert not msg.startswith("Unable to format event"), msg
             if msg is not None and r.search(msg):
-                return
-        self.fail(
-            "%r not matched in log output.\n%s " % (
+                return True
+        return False
+
+    def assertLogged(self, regexp):
+        if not self.logContainsMessage(regexp):
+            self.fail("%r not matched in log output.\n%s " % (
+                regexp, [log.textFromEventDict(e) for e in self._logEvents]))
+
+    def assertNotLogged(self, regexp):
+        if self.logContainsMessage(regexp):
+            self.fail("%r matched in log output.\n%s " % (
                 regexp, [log.textFromEventDict(e) for e in self._logEvents]))
 
     def assertWasQuiet(self):

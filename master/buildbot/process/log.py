@@ -53,8 +53,7 @@ class Log(object):
         """
         if isinstance(cfg, (bytes, str)):
             return lambda s: s.decode(cfg, 'replace')
-        else:
-            return cfg
+        return cfg
 
     @classmethod
     def new(cls, master, name, type, logid, logEncoding):

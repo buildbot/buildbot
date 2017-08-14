@@ -46,7 +46,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 
 ``name``
     the name used to describe the step on the status display.
-    It is also used to give a name to any :class:`LogFile`\s created by this step.
+    Since 0.9.8, this argument might be renderable.
 
 .. index:: Buildstep Parameter; haltOnFailure
 
@@ -136,7 +136,7 @@ Arguments common to all :class:`BuildStep` subclasses:
 ``hideStepIf``
     A step can be optionally hidden from the waterfall and build details web pages.
     To do this, set the step's ``hideStepIf`` to a boolean value, or to a function that takes two parameters -- the results and the :class:`BuildStep` -- and returns a boolean value.
-    Steps are always shown while they execute, however after the step as finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
+    Steps are always shown while they execute, however after the step has finished, this parameter is evaluated (if a function) and if the value is True, the step is hidden.
     For example, in order to hide the step if the step has been skipped::
 
         factory.addStep(Foo(..., hideStepIf=lambda results, s: results==SKIPPED))
@@ -157,6 +157,23 @@ Arguments common to all :class:`BuildStep` subclasses:
 ``logEncoding``
     The character encoding to use to decode logs produced during the execution of this step.
     This overrides the default :bb:cfg:`logEncoding`; see :ref:`Log-Encodings`.
+
+.. index:: Buildstep Parameter; updateBuildSummaryPolicy
+
+``updateBuildSummaryPolicy``
+    The policy to use to propagate the step summary to the build summary.
+    If False, the build summary will never include step summary
+    If True, the build summary will always include step summary
+    If set to a list (e.g. ``[FAILURE, EXCEPTION]``), it will propagate if the step results id is present in that list.
+    If not set or None, the default is computed according to other BuildStep parameters using following algorithm::
+
+        self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
+        if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
+            self.updateBuildSummaryPolicy.append(FAILURE)
+        if self.warnOnWarnings or self.flunkOnWarnings:
+            self.updateBuildSummaryPolicy.append(WARNINGS)
+
+    Note that in a custom step, if :py:meth:`BuildStep.getResultSummary` is overridden and setting the ``build`` summary, ``updateBuildSummaryPolicy`` is ignored and ``build`` summary will be used regardless.
 
 .. _Source-Checkout:
 
@@ -1316,10 +1333,12 @@ In addition to the parameters :bb:step:`ShellCommand` supports, this step accept
 
 ``definitions``
     A dictionary that contains parameters that will be converted to ``-D{name}={value}`` when passed to CMake.
+    A renderable which renders to a dictionary can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``options``
     A list or a tuple that contains options that will be passed to CMake as is.
+    A renderable which renders to a tuple or list can also be provided, see :ref:`Properties`.
     Refer to `cmake(1) <https://cmake.org/cmake/help/latest/manual/cmake.1.html>`_ for more information.
 
 ``cmake``
@@ -1638,7 +1657,7 @@ Available constructor arguments are:
     An array of custom parameters to pass directly to the ``robocopy`` command.
 
 ``verbose``
-    Whether to output verbose information (``/V /TS /TP`` parameters).
+    Whether to output verbose information (``/V /TS /FP`` parameters).
 
 Note that parameters ``/TEE /NP`` will always be appended to the command to signify, respectively, to output logging to the console, use Unicode logging, and not print any percentage progress information for each file.
 
@@ -2124,8 +2143,8 @@ The ``blocksize=`` argument controls how the file is sent over the network: larg
 
 The ``mode=`` argument allows you to control the access permissions of the target file, traditionally expressed as an octal integer.
 The most common value is probably ``0755``, which sets the `x` executable bit on the file (useful for shell scripts and the like).
-The default value for ``mode=`` is None, which means the permission bits will default to whatever the umask of the writing process is.
-The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a --umask command-line option at creation time (:ref:`Worker-Options`).
+The default value for ``mode=`` is ``None``, which means the permission bits will default to whatever the umask of the writing process is.
+The default umask tends to be fairly restrictive, but at least on the worker you can make it less restrictive with a ``--umask`` command-line option at creation time (:ref:`Worker-Options`).
 
 The ``keepstamp=`` argument is a boolean that, when ``True``, forces the modified and accessed time of the destination file to match the times of the source file.
 When ``False`` (the default), the modified and accessed times of the destination file are set to the current time on the buildmaster.
@@ -2177,7 +2196,7 @@ Transferring Multiple Files At Once
 
 In addition to the :bb:step:`FileUpload` and :bb:step:`DirectoryUpload` steps there is the :bb:step:`MultipleFileUpload` step for uploading a bunch of files (and directories) in a single :class:`BuildStep`.
 The step supports all arguments that are supported by :bb:step:`FileUpload` and :bb:step:`DirectoryUpload`, but instead of a the single ``workersrc`` parameter it takes a (plural) ``workersrcs`` parameter.
-This parameter should either be a list, or something that can be rendered as a list.
+This parameter should either be a list, something that can be rendered as a list or a string which will be converted to a list.
 Additionally it supports the ``glob`` parameter if this parameter is set to ``True`` all arguments in ``workersrcs`` will be parsed through ``glob`` and the results will be uploaded to ``masterdest``.::
 
     from buildbot.plugins import steps
@@ -2326,6 +2345,15 @@ LogRenderable
 
 This build step takes content which can be renderable and logs it in a pretty-printed format.
 It can be useful for debugging properties during a build.
+
+.. bb:step:: Assert
+
+Assert
+++++++
+
+.. py:class:: buildbot.steps.master.Assert
+
+This build step takes a Renderable or constant passed in as first argument. It will test if the expression evaluates to ``True`` and succeed the step or fail the step otherwise.
 
 .. index:: Properties; from steps
 
@@ -2545,6 +2573,8 @@ Hyperlinks are added to the build detail web pages for each triggered build.
     .. note::
 
         The ``copy_properties`` parameter, given a list of properties to copy into the new build request, has been deprecated in favor of explicit use of ``set_properties``.
+
+.. _Dynamic-Trigger:
 
 Dynamic Trigger
 +++++++++++++++

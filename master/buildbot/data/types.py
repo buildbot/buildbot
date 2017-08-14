@@ -50,8 +50,7 @@ class Type(object):
             return -1
         elif val == argVal:
             return 0
-        else:
-            return 1
+        return 1
 
     def validate(self, name, object):
         raise NotImplementedError
@@ -172,7 +171,7 @@ class Identifier(Type):
 
     def valueFromString(self, arg):
         val = util.bytes2unicode(arg)
-        if not self.identRe.match(val) or not 0 < len(val) <= self.len:
+        if not self.identRe.match(val) or len(val) > self.len or not val:
             raise TypeError
         return val
 
@@ -390,4 +389,9 @@ class Entity(Type):
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([(maybeNoneOrList(k, v), {'type': v.ramlname, 'description': ''}) for k, v in iteritems(self.fields)])}
+                'properties': dict([
+                    (
+                        maybeNoneOrList(k, v),
+                        {'type': v.ramlname, 'description': ''}
+                    )
+                    for k, v in iteritems(self.fields)])}

@@ -24,44 +24,50 @@ from dateutil.parser import parse as dateparse
 from twisted.python import log
 
 from buildbot.util import bytes2NativeString
+from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-Event-Key'
 
 
-def getChanges(request, options=None):
-    """Catch a POST request from BitBucket and start a build process
+class BitBucketHandler(BaseHookHandler):
 
-    Check the URL below if you require more information about payload
-    https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management
+    def getChanges(self, request):
+        """Catch a POST request from BitBucket and start a build process
 
-    :param request: the http request Twisted object
-    :param options: additional options
-    """
+        Check the URL below if you require more information about payload
+        https://confluence.atlassian.com/display/BITBUCKET/POST+Service+Management
 
-    event_type = request.getHeader(_HEADER_EVENT)
-    event_type = bytes2NativeString(event_type)
-    payload = json.loads(request.args['payload'][0])
-    repo_url = '%s%s' % (
-        payload['canon_url'], payload['repository']['absolute_url'])
-    project = request.args.get('project', [''])[0]
+        :param request: the http request Twisted object
+        :param options: additional options
+        """
 
-    changes = []
-    for commit in payload['commits']:
-        changes.append({
-            'author': commit['raw_author'],
-            'files': [f['file'] for f in commit['files']],
-            'comments': commit['message'],
-            'revision': commit['raw_node'],
-            'when_timestamp': dateparse(commit['utctimestamp']),
-            'branch': commit['branch'],
-            'revlink': '%scommits/%s' % (repo_url, commit['raw_node']),
-            'repository': repo_url,
-            'project': project,
-            'properties': {
-                'event': event_type,
-            },
-        })
-        log.msg('New revision: %s' % (commit['node'],))
+        event_type = request.getHeader(_HEADER_EVENT)
+        event_type = bytes2NativeString(event_type)
+        payload = json.loads(request.args['payload'][0])
+        repo_url = '%s%s' % (
+            payload['canon_url'], payload['repository']['absolute_url'])
+        project = request.args.get('project', [''])[0]
 
-    log.msg('Received %s changes from bitbucket' % (len(changes),))
-    return (changes, payload['repository']['scm'])
+        changes = []
+        for commit in payload['commits']:
+            changes.append({
+                'author': commit['raw_author'],
+                'files': [f['file'] for f in commit['files']],
+                'comments': commit['message'],
+                'revision': commit['raw_node'],
+                'when_timestamp': dateparse(commit['utctimestamp']),
+                'branch': commit['branch'],
+                'revlink': '%scommits/%s' % (repo_url, commit['raw_node']),
+                'repository': repo_url,
+                'project': project,
+                'properties': {
+                    'event': event_type,
+                },
+            })
+            log.msg('New revision: %s' % (commit['node'],))
+
+        log.msg('Received %s changes from bitbucket' % (len(changes),))
+        return (changes, payload['repository']['scm'])
+
+
+bitbucket = BitBucketHandler

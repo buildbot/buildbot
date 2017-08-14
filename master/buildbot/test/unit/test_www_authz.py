@@ -28,6 +28,7 @@ from buildbot.www.authz.endpointmatchers import ForceBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import RebuildBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import StopBuildEndpointMatcher
 from buildbot.www.authz.endpointmatchers import ViewBuildsEndpointMatcher
+from buildbot.www.authz.roles import RolesFromDomain
 from buildbot.www.authz.roles import RolesFromEmails
 from buildbot.www.authz.roles import RolesFromGroups
 from buildbot.www.authz.roles import RolesFromOwner
@@ -76,11 +77,13 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                 RolesFromGroups(groupPrefix="buildbot-"),
                 RolesFromEmails(admins=["homer@springfieldplant.com"],
                                 agents=["007@mi6.uk"]),
-                RolesFromOwner(role="owner")
+                RolesFromOwner(role="owner"),
+                RolesFromDomain(admins=["mi7.uk"])
             ]
         )
         self.users = dict(homer=dict(email="homer@springfieldplant.com"),
                           bond=dict(email="007@mi6.uk"),
+                          moneypenny=dict(email="moneypenny@mi7.uk"),
                           nineuser=dict(email="user@nine.com", groups=["buildbot-nine-mergers",
                                                                        "buildbot-nine-developers"]),
                           eightuser=dict(
@@ -104,6 +107,13 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
                          buildrequestid=82, number=5),
         ])
 
+    def setAllowRules(self, allow_rules):
+        # we should add links to authz and master instances in each new rule
+        for r in allow_rules:
+            r.setAuthz(self.authz)
+
+        self.authz.allowRules = allow_rules
+
     def assertUserAllowed(self, ep, action, options, user):
         return self.authz.assertUserAllowed(tuple(ep.split("/")), action, options, self.users[user])
 
@@ -117,6 +127,7 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_anyEndpoint(self):
         yield self.assertUserAllowed("foo/bar", "get", {}, "homer")
+        yield self.assertUserAllowed("foo/bar", "get", {}, "moneypenny")
         yield self.assertUserForbidden("foo/bar", "get", {}, "bond")
 
     @defer.inlineCallbacks
@@ -140,3 +151,73 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         # not owner cannot rebuild
         yield self.assertUserForbidden("builds/13", "rebuild", {}, "eightuser")
         yield self.assertUserForbidden("buildrequests/82", "rebuild", {}, "eightuser")
+
+    @defer.inlineCallbacks
+    def test_fnmatchPatternRoleCheck(self):
+        # defaultDeny is True by default so action is denied if no match
+        allow_rules = [
+                        AnyEndpointMatcher(role="[a,b]dmin?")
+        ]
+
+        self.setAllowRules(allow_rules)
+
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
+
+        # check if action is denied
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
+
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
+
+    @defer.inlineCallbacks
+    def test_regexPatternRoleCheck(self):
+        # change matcher
+        self.authz.match = authz.reStrMatcher
+
+        # defaultDeny is True by default so action is denied if no match
+        allow_rules = [
+            AnyEndpointMatcher(role="(admin|agent)s"),
+        ]
+
+        self.setAllowRules(allow_rules)
+
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "homer")
+        yield self.assertUserAllowed("builds/13", "rebuild", {}, "bond")
+
+        # check if action is denied
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
+
+        with self.assertRaisesRegex(authz.Forbidden, '403 you need to have role .+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "eightuser")
+
+    @defer.inlineCallbacks
+    def test_DefaultDenyFalseContinuesCheck(self):
+        # defaultDeny is True in the last rule so action is denied in the last check
+        allow_rules = [
+            AnyEndpointMatcher(role="not-exists1", defaultDeny=False),
+            AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
+            AnyEndpointMatcher(role="not-exists3", defaultDeny=True)
+        ]
+
+        self.setAllowRules(allow_rules)
+
+        # check if action is denied and last check was exact against not-exist3
+        with self.assertRaisesRegex(authz.Forbidden, '.+not-exists3.+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
+
+    @defer.inlineCallbacks
+    def test_DefaultDenyTrueStopsCheckIfFailed(self):
+        # defaultDeny is True in the first rule so action is denied in the first check
+        allow_rules = [
+            AnyEndpointMatcher(role="not-exists1", defaultDeny=True),
+            AnyEndpointMatcher(role="not-exists2", defaultDeny=False),
+            AnyEndpointMatcher(role="not-exists3", defaultDeny=False)
+        ]
+
+        self.setAllowRules(allow_rules)
+
+        # check if action is denied and last check was exact against not-exist1
+        with self.assertRaisesRegex(authz.Forbidden, '.+not-exists1.+'):
+            yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")

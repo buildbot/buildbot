@@ -25,15 +25,16 @@ from buildbot.db import base
 
 class BuildersConnectorComponent(base.DBConnectorComponent):
 
-    def findBuilderId(self, name):
+    def findBuilderId(self, name, autoCreate=True):
         tbl = self.db.model.builders
+        name_hash = self.hashColumns(name)
         return self.findSomethingId(
             tbl=tbl,
-            whereclause=(tbl.c.name == name),
+            whereclause=(tbl.c.name_hash == name_hash),
             insert_values=dict(
                 name=name,
-                name_hash=self.hashColumns(name),
-            ))
+                name_hash=name_hash,
+            ), autoCreate=autoCreate)
 
     @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
@@ -41,9 +42,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def toTagid(tag):
             if isinstance(tag, type(1)):
                 return defer.succeed(tag)
-            else:
-                ssConnector = self.master.db.tags
-                return ssConnector.findTagId(tag)
+            ssConnector = self.master.db.tags
+            return ssConnector.findTagId(tag)
 
         tagsids = [r[1] for r in (yield defer.DeferredList(
             [toTagid(tag) for tag in tags],
@@ -79,8 +79,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def first(bldrs):
             if bldrs:
                 return bldrs[0]
-            else:
-                return None
+            return None
         return d
 
     def addBuilderMaster(self, builderid=None, masterid=None):
@@ -97,8 +96,8 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
             conn.execute(tbl.delete(
-                whereclause=((tbl.c.builderid == builderid)
-                             & (tbl.c.masterid == masterid))))
+                whereclause=((tbl.c.builderid == builderid) &
+                             (tbl.c.masterid == masterid))))
         return self.db.pool.do(thd)
 
     def getBuilders(self, masterid=None, _builderid=None):

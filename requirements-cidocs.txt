@@ -1,0 +1,6 @@
+Sphinx==1.6.3
+sphinx-jinja==0.2.1
+sphinxcontrib-blockdiag==1.5.5
+sphinxcontrib-spelling==2.3.0
+sphinxcontrib-websupport==1.0.1
+Pygments==2.2.0

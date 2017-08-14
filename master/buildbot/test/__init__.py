@@ -132,3 +132,6 @@ warnings.filterwarnings('ignore', r"inspect.getargspec\(\) is deprecated")
 warnings.filterwarnings('ignore',
                         "The Windows bytes API has been "
                         "deprecated, use Unicode filenames instead")
+# moto warning v1.0.0
+warnings.filterwarnings('ignore', "Flags not at the start of the expression")
+warnings.filterwarnings('ignore', r"object\(\) takes no parameters")

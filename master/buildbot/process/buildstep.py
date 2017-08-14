@@ -41,6 +41,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import interfaces
 from buildbot import util
+from buildbot.interfaces import IRenderable
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import log as plog
 from buildbot.process import logobserver
@@ -49,6 +50,7 @@ from buildbot.process import remotecommand
 from buildbot.process import results
 # (WithProperties used to be available in this module)
 from buildbot.process.properties import WithProperties
+from buildbot.process.results import ALL_RESULTS
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import FAILURE
@@ -293,6 +295,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         'flunkOnFailure',
         'flunkOnWarnings',
         'haltOnFailure',
+        'updateBuildSummaryPolicy',
         'hideStepIf',
         'locks',
         'logEncoding',
@@ -308,6 +311,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     description = None  # set this to a list of short strings to override
     descriptionDone = None  # alternate description when the step is complete
     descriptionSuffix = None  # extra information to append to suffix
+    updateBuildSummaryPolicy = None
     locks = []
     progressMetrics = ()  # 'time' is implicit
     useProgress = True  # set to False if step is really unpredictable
@@ -336,8 +340,9 @@ class BuildStep(results.ResultComputingConfigMixin,
                          % (self.__class__, list(kwargs)))
         self._pendingLogObservers = []
 
-        if not isinstance(self.name, str):
-            config.error("BuildStep name must be a string: %r" % (self.name,))
+        if not isinstance(self.name, str) and not IRenderable.providedBy(self.name):
+            config.error("BuildStep name must be a string or a renderable object: "
+                         "%r" % (self.name,))
 
         if isinstance(self.description, str):
             self.description = [self.description]
@@ -346,6 +351,20 @@ class BuildStep(results.ResultComputingConfigMixin,
         if isinstance(self.descriptionSuffix, str):
             self.descriptionSuffix = [self.descriptionSuffix]
 
+        if self.updateBuildSummaryPolicy is None:  # compute default value for updateBuildSummaryPolicy
+            self.updateBuildSummaryPolicy = [EXCEPTION, RETRY, CANCELLED]
+            if self.flunkOnFailure or self.haltOnFailure or self.warnOnFailure:
+                self.updateBuildSummaryPolicy.append(FAILURE)
+            if self.warnOnWarnings or self.flunkOnWarnings:
+                self.updateBuildSummaryPolicy.append(WARNINGS)
+        if self.updateBuildSummaryPolicy is False:
+            self.updateBuildSummaryPolicy = []
+        if self.updateBuildSummaryPolicy is True:
+            self.updateBuildSummaryPolicy = ALL_RESULTS
+        if not isinstance(self.updateBuildSummaryPolicy, list):
+            config.error("BuildStep updateBuildSummaryPolicy must be "
+                         "a list of result ids or boolean but it is %r" %
+                         (self.updateBuildSummaryPolicy,))
         self._acquiringLock = None
         self.stopped = False
         self.master = None
@@ -445,6 +464,13 @@ class BuildStep(results.ResultComputingConfigMixin,
 
         return {u'step': stepsumm}
 
+    @defer.inlineCallbacks
+    def getBuildResultSummary(self):
+        summary = yield self.getResultSummary()
+        if self.results in self.updateBuildSummaryPolicy and u'build' not in summary and u'step' in summary:
+            summary[u'build'] = summary[u'step']
+        defer.returnValue(summary)
+
     @debounce.method(wait=1)
     @defer.inlineCallbacks
     def updateSummary(self):
@@ -469,6 +495,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
         if self.stepid is not None:
+            stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
             yield self.master.data.updates.setStepStateString(self.stepid,
                                                               stepResult)
 
@@ -484,6 +511,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addStep(self):
         # create and start the step, noting that the name may be altered to
         # ensure uniqueness
+        self.name = yield self.build.render(self.name)
         self.stepid, self.number, self.name = yield self.master.data.updates.addStep(
             buildid=self.build.buildid,
             name=util.ascii2unicode(self.name))
@@ -517,12 +545,6 @@ class BuildStep(results.ResultComputingConfigMixin,
             if self.stopped:
                 raise BuildStepCancelled
 
-            # check doStepIf
-            if isinstance(self.doStepIf, bool):
-                doStep = self.doStepIf
-            else:
-                doStep = yield self.doStepIf(self)
-
             # render renderables in parallel
             renderables = []
             accumulateClassList(self.__class__, 'renderables', renderables)
@@ -539,6 +561,12 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.rendered = True
             # we describe ourselves only when renderables are interpolated
             self.realUpdateSummary()
+
+            # check doStepIf (after rendering)
+            if isinstance(self.doStepIf, bool):
+                doStep = self.doStepIf
+            else:
+                doStep = yield self.doStepIf(self)
 
             # run -- or skip -- the step
             if doStep:
@@ -716,8 +744,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         # **temporary** method until new-style steps are the only supported style
         if PY3:
             return self.run.__func__ is not BuildStep.run
-        else:
-            return self.run.im_func is not BuildStep.run.im_func
+        return self.run.im_func is not BuildStep.run.im_func
 
     def start(self):
         # New-style classes implement 'run'.
@@ -812,19 +839,19 @@ class BuildStep(results.ResultComputingConfigMixin,
     def addCompleteLog(self, name, text):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u't')
-        l = self._newLog(name, u't', logid)
-        yield l.addContent(text)
-        yield l.finish()
+        _log = self._newLog(name, u't', logid)
+        yield _log.addContent(text)
+        yield _log.finish()
 
     @_maybeUnhandled
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.ascii2unicode(name), u'h')
-        l = self._newLog(name, u'h', logid)
+        _log = self._newLog(name, u'h', logid)
         html = bytes2NativeString(html)
-        yield l.addContent(html)
-        yield l.finish()
+        yield _log.addContent(html)
+        yield _log.finish()
 
     @defer.inlineCallbacks
     def addLogWithFailure(self, why, logprefix=""):
@@ -1041,8 +1068,7 @@ class LoggingBuildStep(BuildStep):
             return self.describe(True) + ["exception"]
         elif results == CANCELLED:
             return self.describe(True) + ["cancelled"]
-        else:
-            return self.describe(True) + ["failed"]
+        return self.describe(True) + ["failed"]
 
     # TODO: delete
     def getText2(self, cmd, results):

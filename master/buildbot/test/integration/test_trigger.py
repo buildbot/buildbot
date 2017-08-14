@@ -26,7 +26,7 @@ from buildbot.test.util.integration import RunMasterBase
 # with two builders and a trigger step linking them
 
 expectedOutputRegex = \
-    r"""\*\*\* BUILD 1 \*\*\* ==> finished \(success\)
+    r"""\*\*\* BUILD 1 \*\*\* ==> build successful \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
     \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)
@@ -34,7 +34,7 @@ expectedOutputRegex = \
        url:success: build #1 \(http://localhost:8080/#builders/(1|2)/builds/1\)
     \*\*\* STEP shell_1 \*\*\* ==> 'echo world' \(success\)
         log:stdio \({loglines}\)
-\*\*\* BUILD 2 \*\*\* ==> finished \(success\)
+\*\*\* BUILD 2 \*\*\* ==> build successful \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo ola' \(success\)
         log:stdio \({loglines}\)
 """

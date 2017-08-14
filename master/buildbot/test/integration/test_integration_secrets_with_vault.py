@@ -25,9 +25,9 @@ from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
 from buildbot.steps.shell import ShellCommand
 from buildbot.test.util.integration import RunMasterBase
 
-
 # This integration test creates a master and worker environment,
 # with one builders and a shellcommand step
+
 
 class SecretsConfig(RunMasterBase):
 
@@ -51,7 +51,7 @@ class SecretsConfig(RunMasterBase):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
-        res = yield self.checkBuildStepLogExist(build, "echo word")
+        res = yield self.checkBuildStepLogExist(build, "echo <key>")
         self.assertTrue(res)
 
 
@@ -72,7 +72,7 @@ def masterConfig():
     )]
 
     f = BuildFactory()
-    f.addStep(ShellCommand(command=[Interpolate('echo %(secrets:key)s')]))
+    f.addStep(ShellCommand(command=[Interpolate('echo %(secret:key)s')]))
 
     c['builders'] = [
         BuilderConfig(name="testy",

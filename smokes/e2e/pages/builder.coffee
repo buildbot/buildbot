@@ -3,7 +3,9 @@
 # inspired by this methodology
 # http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
 
-class builderPage
+BasePage = require("./base.coffee")
+
+class BuilderPage extends BasePage
     constructor: (@builder, forcename) ->
         @forceName=forcename
 
@@ -62,4 +64,8 @@ class builderPage
     getRebuildButton: ->
         return element(By.buttonText('Rebuild'))
 
-module.exports = builderPage
+    checkBuilderURL: () ->
+        builderLink = element.all(By.linkText(@builder))
+        expect(builderLink.count()).toBeGreaterThan(0)
+
+module.exports = BuilderPage

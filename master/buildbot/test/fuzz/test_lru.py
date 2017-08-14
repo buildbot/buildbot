@@ -26,7 +26,6 @@ from twisted.python import log
 from buildbot.test.util import fuzz
 from buildbot.util import lru
 
-
 # construct weakref-able objects for particular keys
 
 

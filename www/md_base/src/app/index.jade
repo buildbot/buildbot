@@ -24,7 +24,7 @@ html(ng-app="app", ng-controller="appController as app")
         md-content.main-content.md-padding(flex, ui-view, ng-class="app.view.classname")
           h1 Hello buildbot!
 
-      script(src="scripts.js?_#{(new Date()).getTime()}")
+      script(src="scripts.js?_" + (new Date()).getTime())
       | {% for app in config.plugins %}
       script(src="{{app}}/scripts.js")
       link(rel='stylesheet', href='{{app}}/styles.css')

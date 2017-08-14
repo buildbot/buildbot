@@ -88,7 +88,7 @@ class Robocopy(ShellCommand):
             command.append('/XD')
             command += self.exclude_dirs
         if self.verbose:
-            command.append('/V /TS /FP')
+            command += ['/V', '/TS', '/FP']
         if self.custom_opts:
             command += self.custom_opts
         command += ['/TEE', '/NP']

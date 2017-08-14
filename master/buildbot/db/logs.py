@@ -245,8 +245,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         i = content.find(b'\n', self.MAX_CHUNK_SIZE)
         if i == -1:
             return truncline, None
-        else:
-            return truncline, content[i + 1:]
+        return truncline, content[i + 1:]
 
     def finishLog(self, logid):
         def thdfinishLog(conn):
@@ -346,6 +345,41 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
         saved = yield self.db.pool.do(thdcompressLog)
         defer.returnValue(saved)
+
+    def deleteOldLogChunks(self, older_than_timestamp):
+        def thddeleteOldLogs(conn):
+            model = self.db.model
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
+            count1 = res.fetchone()[0]
+            res.close()
+
+            # update log types older than timestamps
+            # we do it first to avoid having UI discrepancy
+            res = conn.execute(
+                model.logs.update()
+                .where(model.logs.c.stepid.in_(
+                    sa.select([model.steps.c.id])
+                    .where(model.steps.c.started_at < older_than_timestamp)))
+                .values(type='d')
+            )
+            res.close()
+
+            # query all logs with type 'd' and delete their chunks.
+            q = sa.select([model.logs.c.id])
+            q = q.select_from(model.logs)
+            q = q.where(model.logs.c.type == 'd')
+
+            # delete their logchunks
+            res = conn.execute(
+                model.logchunks.delete()
+                .where(model.logchunks.c.logid.in_(q))
+            )
+            res.close()
+            res = conn.execute(sa.select([sa.func.count(model.logchunks.c.content)]))
+            count2 = res.fetchone()[0]
+            res.close()
+            return count1 - count2
+        return self.db.pool.do(thddeleteOldLogs)
 
     def _logdictFromRow(self, row):
         rv = dict(row)

@@ -41,7 +41,7 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.Worker(id=47, name='linux'),
-            fakedb.Builder(id=77),
+            fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
@@ -95,10 +95,21 @@ class StepEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(step['stepid'], 71)
 
     @defer.inlineCallbacks
+    def test_get_existing_buildername_name(self):
+        step = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps', 'two'))
+        self.validateData(step)
+        self.assertEqual(step['stepid'], 71)
+
+    @defer.inlineCallbacks
     def test_get_existing_builder_number(self):
         step = yield self.callGet(('builders', 77, 'builds', 7, 'steps', 1))
         self.validateData(step)
         self.assertEqual(step['stepid'], 71)
+
+    @defer.inlineCallbacks
+    def test_get_missing_buildername_builder_number(self):
+        step = yield self.callGet(('builders', 'builder77_nope', 'builds', 7, 'steps', 1))
+        self.assertEqual(step, None)
 
     @defer.inlineCallbacks
     def test_get_missing(self):
@@ -115,7 +126,7 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.Worker(id=47, name='linux'),
-            fakedb.Builder(id=77),
+            fakedb.Builder(id=77, name='builder77'),
             fakedb.Master(id=88),
             fakedb.Buildset(id=8822),
             fakedb.BuildRequest(id=82, buildsetid=8822),
@@ -146,6 +157,12 @@ class StepsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_get_builder(self):
         steps = yield self.callGet(('builders', 77, 'builds', 7, 'steps'))
+        [self.validateData(step) for step in steps]
+        self.assertEqual([s['number'] for s in steps], [0, 1, 2])
+
+    @defer.inlineCallbacks
+    def test_get_buildername(self):
+        steps = yield self.callGet(('builders', 'builder77', 'builds', 7, 'steps'))
         [self.validateData(step) for step in steps]
         self.assertEqual([s['number'] for s in steps], [0, 1, 2])
 

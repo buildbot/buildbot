@@ -150,34 +150,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         return self.db.pool.do(thd)
 
-    def reclaimBuildRequests(self, brids, _reactor=reactor):
-        def thd(conn):
-            transaction = conn.begin()
-            tbl = self.db.model.buildrequest_claims
-            claimed_at = _reactor.seconds()
-
-            # we'll need to batch the brids into groups of 100, so that the
-            # parameter lists supported by the DBAPI aren't exhausted
-            iterator = iter(brids)
-
-            while True:
-                batch = list(itertools.islice(iterator, 100))
-                if not batch:
-                    break  # success!
-
-                q = tbl.update(tbl.c.brid.in_(batch)
-                               & (tbl.c.masterid == self.db.master.masterid))
-                res = conn.execute(q, claimed_at=claimed_at)
-
-                # if fewer rows were updated than expected, then something
-                # went wrong
-                if res.rowcount != len(batch):
-                    transaction.rollback()
-                    raise AlreadyClaimedError()
-
-            transaction.commit()
-        return self.db.pool.do(thd)
-
     def unclaimBuildRequests(self, brids):
         def thd(conn):
             transaction = conn.begin()
@@ -242,28 +214,6 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise NotClaimedError
             transaction.commit()
         return self.db.pool.do(thd)
-
-    def unclaimExpiredRequests(self, old, _reactor=reactor):
-        def thd(conn):
-            reqs_tbl = self.db.model.buildrequests
-            claims_tbl = self.db.model.buildrequest_claims
-            old_epoch = _reactor.seconds() - old
-
-            # select any expired requests, and delete each one individually
-            expired_brids = sa.select([reqs_tbl.c.id],
-                                      whereclause=(reqs_tbl.c.complete != 1))
-            res = conn.execute(claims_tbl.delete(
-                (claims_tbl.c.claimed_at < old_epoch) &
-                claims_tbl.c.brid.in_(expired_brids)))
-            return res.rowcount
-        d = self.db.pool.do(thd)
-
-        @d.addCallback
-        def log_nonzero_count(count):
-            if count != 0:
-                log.msg("unclaimed %d expired buildrequests (over %d seconds "
-                        "old)" % (count, old))
-        return d
 
     @staticmethod
     def _brdictFromRow(row, master_masterid):

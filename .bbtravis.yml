@@ -5,7 +5,14 @@ language: python
 # Available Python versions:
 python:
   - "2.7"
-
+label_mapping:
+  TWISTED: tw
+  SQLALCHEMY: sqla
+  SQLALCHEMY_MIGRATE: sqlam
+  latest: l
+  python: py
+  TESTS: t
+  DB_TYPE: db
 env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
@@ -29,9 +36,9 @@ env:
   # (by default in other tests in-memory SQLite database is used which is
   # recreated for each test).
   # Helps to detect issues with incorrect database setup/cleanup in tests.
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=sqlite:////tmp/test_db.sqlite DB_TYPE=sqlite
   # Configuration that runs tests with real MySQL database (TODO does not work yet with our docker image)
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest
+  - TWISTED=latest SQLALCHEMY=latest TESTS=trial BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest DB_TYPE=mysql
 
   # innodb tests takes 20min probably because of docker aufs.
   # travis images provides much faster innodb so we keep these test there until we implement ramfs based
@@ -63,44 +70,38 @@ matrix:
       env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
 
     # python 3 tests
+    - python: "3.4"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+
     - python: "3.5"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=coverage
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=flake8
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
 
     - python: "3.6"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
 # Dependencies installation commands
 install:
   - pip install -U pip
-  # codecov is the interface to codecov.io; see after_success
-  # Install mysqlclient for tests that uses real MySQL
-  # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
+  - condition: python != "2.6"
+    cmd: pip install -r requirements-ci.txt
+  - condition: TESTS == "docs"
+    cmd: pip install -r requirements-cidocs.txt
+  - condition: python == "2.6"
+    cmd: pip install -r requirements-ci2.6.txt
+  - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
+    cmd: pip install -r requirements-cidb.txt
   - |
-      # pip installs
+      # pip installs for backward compat
       set -e
       if [ $TWISTED = trunk ]; then
-          pip install git+https://github.com/glyph/automat
           pip install git+https://github.com/twisted/twisted
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
-      pip install -e pkg \
-                  -e 'master[tls,test]' \
-                  -e 'worker[test]' \
-                  mysqlclient \
-                  psycopg2 \
-                  pg8000 \
-                  codecov
-      # install buildbot_www from pip in order to run the www tests
-      pip install buildbot_www
-
-      if [ $TESTS = pylint -o $TESTS = flake8 -o $TESTS = isort ]; then pip install -e './master[docs,test]'; fi
-      # until towncrier toml is released, we need to fetch from git :-/
-      if [ $TESTS = docs ]; then pip install -e './master[docs]' 'git+https://github.com/tardyp/towncrier'; fi
 
 before_script:
   # create real database for tests

@@ -55,7 +55,7 @@ MySQL
 
 .. code-block:: python
 
-   c['db_url'] = "mysql://user:pass@example.com/database_name?max_idle=300"
+   c['db_url'] = "mysql://username:password@example.com/database_name?max_idle=300"
 
 The ``max_idle`` argument for MySQL connections is unique to Buildbot, and should be set to something less than the ``wait_timeout`` configured for your server.
 This controls the SQLAlchemy ``pool_recycle`` parameter, which defaults to no timeout.
@@ -76,7 +76,7 @@ Postgres
 
 .. code-block:: python
 
-    c['db_url'] = "postgresql://username@hostname/dbname"
+    c['db_url'] = "postgresql://username:password@hostname/dbname"
 
 PosgreSQL requires no special configuration.
 
@@ -129,7 +129,7 @@ Wamp
 
     c['mq'] = {
         'type' : 'wamp',
-        'router_url': 'ws://localhost:8080',
+        'router_url': 'ws://localhost:8080/ws',
         'realm': 'realm1',
         'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
     }
@@ -273,30 +273,12 @@ It can also be overridden for a single log file by passing the ``logEncoding`` p
 Data Lifetime
 ~~~~~~~~~~~~~
 
-.. bb:cfg:: changeHorizon
-.. bb:cfg:: buildHorizon
-.. bb:cfg:: logHorizon
-
 Horizons
 ++++++++
 
-::
+Previously Buildbot implemented a global configuration for horizons.
+Now it is implemented as an utility Builder, and shall be configured via :bb:configurator:`JanitorConfigurator`
 
-    c['changeHorizon'] = 200
-    c['buildHorizon'] = 100
-    c['logHorizon'] = 40
-    c['buildCacheSize'] = 15
-
-Buildbot stores historical information in its database.
-In a large installation, these can quickly consume disk space, yet in many cases developers never consult this historical information.
-
-The :bb:cfg:`changeHorizon` key determines how many changes the master will keep a record of.
-One place these changes are displayed is on the waterfall page.
-This parameter defaults to 0, which means keep all changes indefinitely.
-
-The :bb:cfg:`buildHorizon` specifies the minimum number of builds for each builder which should be kept.
-The :bb:cfg:`logHorizon` gives the minimum number of builds for which logs should be maintained; this parameter must be less than or equal to :bb:cfg:`buildHorizon`.
-Builds older than :bb:cfg:`logHorizon` but not older than :bb:cfg:`buildHorizon` will maintain their overall status and the status of each step, but the logfiles will be deleted.
 
 .. bb:cfg:: caches
 .. bb:cfg:: changeCacheSize
@@ -476,16 +458,18 @@ Two of them use a username+password combination to grant access, one of them use
 
 .. note::
 
-   Using any Manhole requires that ``pycrypto`` and ``pyasn1`` be installed.
+   Using any Manhole requires that ``cryptography`` and ``pyasn1`` be installed.
    These are not part of the normal Buildbot dependencies.
 
 `manhole.AuthorizedKeysManhole`
     You construct this with the name of a file that contains one SSH public key per line, just like :file:`~/.ssh/authorized_keys`.
     If you provide a non-absolute filename, it will be interpreted relative to the buildmaster's base directory.
+    You must also specify a directory which contains an SSH host key for the Manhole server.
 
 `manhole.PasswordManhole`
     This one accepts SSH connections but asks for a username and password when authenticating.
     It accepts only one such pair.
+    You must also specify a directory which contains an SSH host key for the Manhole server.
 
 `manhole.TelnetManhole`
     This accepts regular unencrypted telnet connections, and asks for a username/password pair before providing access.
@@ -495,8 +479,8 @@ Two of them use a username+password combination to grant access, one of them use
 
     # some examples:
     from buildbot.plugins import util
-    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys")
-    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword")
+    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys", ssh_hostkey_dir="/data/ssh_host_keys/")
+    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword", ssh_hostkey_dir="/data/ssh_host_keys/")
     c['manhole'] = util.TelnetManhole(1234, "bob", "snoop_my_password_please")
 
 The :class:`Manhole` instance can be configured to listen on a specific port.
@@ -505,7 +489,7 @@ You may wish to have this listening port bind to the loopback interface (sometim
 ::
 
     from buildbot.plugins import util
-    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd")
+    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd", ssh_hostkey_dir="/data/ssh_host_keys/")
 
 To have the :class:`Manhole` listen on all interfaces, use ``"tcp:9999"`` or simply 9999.
 This port specification uses ``twisted.application.strports``, so you can make it listen on SSL or even UNIX-domain sockets if you want.

@@ -235,6 +235,13 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             args.extend(['-m', '1', '%s...' % (self.p4base,)])
 
         result = yield self._get_process_output(args)
+        # decode the result from its designated encoding
+        try:
+            result = bytes2unicode(result, self.encoding)
+        except UnicodeError as ex:
+            log.msg(u"Warning: cannot fully decode {} in {}".format(
+                    repr(result), self.encoding))
+            result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
         changelists = []

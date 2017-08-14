@@ -41,12 +41,14 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 info={},
             ))
 
-    def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids):
+    def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids, workerid=None):
         cfg_tbl = self.db.model.configured_workers
         # batch deletes to avoid using too many variables
         for batch in self.doBatch(buildermasterids, 100):
             q = cfg_tbl.delete()
             q = q.where(cfg_tbl.c.buildermasterid.in_(batch))
+            if workerid:
+                q = q.where(cfg_tbl.c.workerid == workerid)
             conn.execute(q).close()
 
     def deconfigureAllWorkersForMaster(self, masterid):
@@ -101,8 +103,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             todeletebuildermasterids = oldbuildermasterids - buildermasterids
             toinsertbuildermasterids = buildermasterids - oldbuildermasterids
             transaction = conn.begin()
-            self._deleteFromConfiguredWorkers_thd(
-                conn, todeletebuildermasterids)
+            self._deleteFromConfiguredWorkers_thd(conn, todeletebuildermasterids, workerid)
 
             # and insert the new ones
             if toinsertbuildermasterids:

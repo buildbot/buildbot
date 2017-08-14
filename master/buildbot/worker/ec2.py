@@ -384,8 +384,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise ValueError('instance active')
         if self.spot_instance:
             return threads.deferToThread(self._request_spot_instance)
-        else:
-            return threads.deferToThread(self._start_instance)
+        return threads.deferToThread(self._start_instance)
 
     def _remove_none_opts(self, *args, **opts):
         if args:
@@ -413,7 +412,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.instance = reservations[0]
         instance_id, start_time = self._wait_for_instance()
         if None not in [instance_id, image.id, start_time]:
-            if len(self.tags) > 0:
+            if self.tags:
                 self.instance.create_tags(Tags=[{"Key": k, "Value": v}
                                                 for k, v in self.tags.items()])
             return [instance_id, image.id, start_time]
@@ -556,7 +555,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 self.elastic_ip.associate(InstanceId=self.instance.id)
             start_time = '%02d:%02d:%02d' % (
                 minutes // 60, minutes % 60, seconds)
-            if len(self.volumes) > 0:
+            if self.volumes:
                 self._attach_volumes()
             return self.instance.id, start_time
         else:
@@ -594,10 +593,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             log.msg('%s %s spot request rejected, spot price too low' %
                     (self.__class__.__name__, self.workername))
             raise LatentWorkerFailedToSubstantiate(
-                request['SpotInstanceRequestId'], request.status)
+                request['SpotInstanceRequestId'], request_status)
         else:
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,
                      request['SpotInstanceRequestId'], request_status))
             raise LatentWorkerFailedToSubstantiate(
-                request['SpotInstanceRequestId'], request.status)
+                request['SpotInstanceRequestId'], request_status)

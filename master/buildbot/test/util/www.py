@@ -180,10 +180,12 @@ class WwwTestMixin(RequiresWwwMixin):
             request.finish()
         return request.deferred
 
-    def render_control_resource(self, rsrc, path=b'/', params={},
+    def render_control_resource(self, rsrc, path=b'/', params=None,
                                 requestJson=None, action="notfound", id=None,
                                 content_type=b'application/json'):
         # pass *either* a request or postpath
+        if params is None:
+            params = {}
         id = id or self.UUID
         request = self.make_request(path)
         request.method = b"POST"
@@ -208,7 +210,9 @@ class WwwTestMixin(RequiresWwwMixin):
         return d
 
     def assertRequest(self, content=None, contentJson=None, contentType=None,
-                      responseCode=None, contentDisposition=None, headers={}):
+                      responseCode=None, contentDisposition=None, headers=None):
+        if headers is None:
+            headers = {}
         got, exp = {}, {}
         if content is not None:
             got['content'] = self.request.written

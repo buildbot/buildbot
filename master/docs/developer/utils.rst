@@ -228,6 +228,54 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
         Fire all the outstanding deferreds with the given value.
 
+.. py:function:: giturlparse(url)
+
+    :param url: a git url
+    :returns: a :py:class:`GitUrl` with results of parsed url
+
+    This function is intended to help various components to parse git urls.
+    It helps to find the ``<owner>/<repo>`` of a git repository url coming from a change, in order to call urls.
+    ``owner`` and ``repo`` is a common scheme for identifying git repository between various git hosting services like GitHub, GitLab, BitBucket, etc.
+    Each service have their own naming for similar things, but we choose to use the GitHub naming as a de-facto standard.
+    To simplify implementation, the parser is accepting invalid urls, but it should always parse valid urls correctly.
+    The unit tests in ``test_util_giturlparse.py`` is the references of what the parser is accepting.
+    Please feel free to update the parser and unit tests
+
+    Example use:
+
+    .. code-block:: python
+
+            from buildbot.util import giturlparse
+            repourl = giturlparse(sourcestamp['repository'])
+            repoOwner = repourl.owner
+            repoName = repourl.repo
+
+.. py:class:: GitUrl():
+
+    .. py:attribute:: proto
+
+        The protocol of the url
+
+    .. py:attribute:: user
+
+        The user of the url (as in ``user@domain``)
+
+    .. py:attribute:: domain
+
+        The domain part of the url
+
+    .. py:attribute:: port
+
+        The optional port of the url
+
+    .. py:attribute:: owner
+
+        The owner of the repository (in case of GitLab might be a nested group, i.e contain ``/``, e.g ``repo/subrepo/subsubrepo``)
+
+    .. py:attribute:: repo
+
+        The owner of the repository (in case of GitLab might be a nested group, i.e contain ``/``)
+
 
 :py:mod:`buildbot.util.lru`
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -1076,13 +1124,17 @@ For example, a particular daily scheduler could be configured on multiple master
         As most of this module is implemented as a pass-through to the underlying libraries, other options can work but have not been tested to work in both backends.
         If there is a need for more functionality, please add new tests before using them.
 
-    .. py:staticmethod:: getService(master, base_url, auth=None)
+    .. py:staticmethod:: getService(master, base_url, auth=None, headers=None, debug=None, verify=None)
 
         :param master: the instance of the master service (available in self.master for all the :py:class:`BuildbotService` instances)
         :param base_url: The base http url of the service to access. e.g. ``http://github.com/``
         :param auth: Authentication information. If auth is a tuple then ``BasicAuth`` will be used. e.g ``('user', 'passwd')``
             It can also be a :mod:`requests.auth` authentication plugin.
             In this case `txrequests`_ will be forced, and `treq`_ cannot be used.
+        :param headers: The headers to pass to every requests for this url
+        :param debug: log every requests and every response.
+        :param verify: disable the SSL verification.
+        
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.

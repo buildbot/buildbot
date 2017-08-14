@@ -22,8 +22,8 @@ from twisted.internet import utils
 
 
 class Expect(object):
-    _stdout = ""
-    _stderr = ""
+    _stdout = b""
+    _stderr = b""
     _exit = 0
     _path = None
 
@@ -32,10 +32,12 @@ class Expect(object):
         self._args = args
 
     def stdout(self, stdout):
+        assert(isinstance(stdout, bytes))
         self._stdout = stdout
         return self
 
     def stderr(self, stderr):
+        assert(isinstance(stderr, bytes))
         self._stderr = stderr
         return self
 
@@ -85,11 +87,9 @@ class GetProcessOutputMixin:
             stdout, stderr, exit = res
             if errortoo:
                 return defer.succeed(stdout + stderr)
-            else:
-                if stderr:
-                    return defer.fail(IOError("got stderr: %r" % (stderr,)))
-                else:
-                    return defer.succeed(stdout)
+            if stderr:
+                return defer.fail(IOError("got stderr: %r" % (stderr,)))
+            return defer.succeed(stdout)
         return d
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,

@@ -86,8 +86,7 @@ class Poller(object):
             d = defer.Deferred()
             self.stopDeferreds.append(d)
             return d
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
 
 class _Descriptor(object):

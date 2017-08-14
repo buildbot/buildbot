@@ -22,6 +22,8 @@ import itertools
 
 import sqlalchemy as sa
 
+from buildbot.util import unicode2bytes
+
 
 class DBConnectorComponent(object):
     # A fixed component of the DBConnector, handling one particular aspect of
@@ -64,8 +66,14 @@ class DBConnectorComponent(object):
                 "value for column %s is greater than max of %d characters: %s"
                 % (col, col.type.length, value))
 
+    def ensureLength(self, col, value):
+        assert col.type.length, "column %s does not have a length" % (col,)
+        if value and len(value) > col.type.length:
+            value = value[:col.type.length // 2] + hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]
+        return value
+
     def findSomethingId(self, tbl, whereclause, insert_values,
-                        _race_hook=None):
+                        _race_hook=None, autoCreate=True):
         def thd(conn, no_recurse=False):
             # try to find the master
             q = sa.select([tbl.c.id],
@@ -77,6 +85,9 @@ class DBConnectorComponent(object):
             # found it!
             if row:
                 return row.id
+
+            if not autoCreate:
+                return None
 
             _race_hook and _race_hook(conn)
 
@@ -97,8 +108,7 @@ class DBConnectorComponent(object):
                 return b'\xf5'
             elif isinstance(x, text_type):
                 return x.encode('utf-8')
-            else:
-                return str(x).encode('utf-8')
+            return str(x).encode('utf-8')
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 

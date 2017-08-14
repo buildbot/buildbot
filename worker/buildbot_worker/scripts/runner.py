@@ -29,7 +29,6 @@ from twisted.python import log
 from twisted.python import reflect
 from twisted.python import usage
 
-
 # the create/start/stop commands should all be run as the same user,
 # preferably a separate 'buildbot' account.
 
@@ -58,7 +57,7 @@ class MakerBase(usage.Options):
     opt_h = usage.Options.opt_help
 
     def parseArgs(self, *args):
-        if len(args) > 0:
+        if args:
             self['basedir'] = args[0]
         else:
             # Use the current directory if no basedir was specified.

@@ -49,6 +49,15 @@ class TestBase(unittest.TestCase):
         self.assertRaises(RuntimeError, lambda:
                           self.comp.checkLength(self.tbl.c.str32, "long string" * 5))
 
+    def test_ensureLength_ok(self):
+        v = self.comp.ensureLength(self.tbl.c.str32, "short string")
+        self.assertEqual(v, "short string")
+
+    def test_ensureLength_long(self):
+        v = self.comp.ensureLength(self.tbl.c.str32, "short string" * 5)
+        self.assertEqual(v, "short stringshordacf5a81f8ae3873")
+        self.comp.checkLength(self.tbl.c.str32, v)
+
     def test_checkLength_text(self):
         self.assertRaises(AssertionError, lambda:
                           self.comp.checkLength(self.tbl.c.txt, "long string" * 5))
@@ -139,6 +148,17 @@ class TestBaseAsConnectorComponent(unittest.TestCase,
             insert_values=dict(name='somemaster', name_hash=hash,
                                active=1, last_active=1))
         self.assertEqual(id, 7)
+
+    @defer.inlineCallbacks
+    def test_findSomethingId_new_noCreate(self):
+        tbl = self.db.model.masters
+        hash = hashlib.sha1(b'somemaster').hexdigest()
+        id = yield self.db.base.findSomethingId(
+            tbl=self.db.model.masters,
+            whereclause=(tbl.c.name_hash == hash),
+            insert_values=dict(name='somemaster', name_hash=hash,
+                               active=1, last_active=1), autoCreate=False)
+        self.assertEqual(id, None)
 
 
 class TestCachedDecorator(unittest.TestCase):

@@ -46,8 +46,7 @@ def remove_userpassword(url):
 def now(_reactor=None):
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
-    else:
-        return time.time()
+    return time.time()
 
 
 class Obfuscated(object):
@@ -73,8 +72,7 @@ class Obfuscated(object):
     def to_text(s):
         if isinstance(s, string_types):
             return s
-        else:
-            return str(s)
+        return str(s)
 
     @staticmethod
     def get_real(command):

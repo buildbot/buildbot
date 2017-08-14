@@ -42,11 +42,12 @@ from zope.interface import implementer
 
 from buildbot.interfaces import IConfigured
 from buildbot.util.misc import deferredLocked
+from buildbot.util.giturlparse import giturlparse
 from ._notifier import Notifier
 
 
-def naturalSort(l):
-    l = l[:]
+def naturalSort(array):
+    array = array[:]
 
     def try_int(s):
         try:
@@ -57,9 +58,9 @@ def naturalSort(l):
     def key_func(item):
         return [try_int(s) for s in re.split(r'(\d+)', item)]
     # prepend integer keys to each element, sort them, then strip the keys
-    keyed_l = sorted([(key_func(i), i) for i in l])
-    l = [i[1] for i in keyed_l]
-    return l
+    keyed_array = sorted([(key_func(i), i) for i in array])
+    array = [i[1] for i in keyed_array]
+    return array
 
 
 def flattened_iterator(l, types=(list, tuple)):
@@ -97,8 +98,7 @@ def flatten(l, types=(list, )):
 def now(_reactor=None):
     if _reactor and hasattr(_reactor, "seconds"):
         return _reactor.seconds()
-    else:
-        return time.time()
+    return time.time()
 
 
 def formatInterval(eta):
@@ -213,8 +213,7 @@ def safeTranslate(s):
 def encodeString(s, encoding='utf-8'):
     if isinstance(s, text_type):
         return s.encode(encoding)
-    else:
-        return s
+    return s
 
 
 def none_or_str(x):
@@ -255,7 +254,7 @@ def bytes2NativeString(x, encoding='utf-8', errors='strict'):
     @param encoding: an optional codec, default: 'utf-8'
     @return: a string of type C{str}
     """
-    if isinstance(x, bytes) and type("") != type(b""):
+    if isinstance(x, bytes) and PY3:
         # On Python 3 and higher, type("") != type(b"")
         # so we need to decode() to return a native string.
         return x.decode(encoding, errors)
@@ -277,7 +276,7 @@ def unicode2NativeString(x, encoding='utf-8', errors='strict'):
     @param encoding: an optional codec, default: 'utf-8'
     @return: a string of type C{str}
     """
-    if isinstance(x, text_type) and type(u"") != type(""):
+    if isinstance(x, text_type) and not PY3:
         # On Python 2 and lower, type(u"") != type("")
         # so we need to encode() to return a native string.
         return x.encode(encoding, errors)
@@ -357,8 +356,7 @@ def human_readable_delta(start, end):
 
     if result:
         return ', '.join(result)
-    else:
-        return 'super fast'
+    return 'super fast'
 
 
 def makeList(input):
@@ -366,8 +364,7 @@ def makeList(input):
         return [input]
     elif input is None:
         return []
-    else:
-        return list(input)
+    return list(input)
 
 
 def in_reactor(f):
@@ -422,7 +419,8 @@ def check_functional_environment(config):
     except KeyError:
         config.error("\n".join([
             "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
-            "Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE' are either unset or set to a valid locale.",
+            " Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE'"
+            " are either unset or set to a valid locale.",
         ]))
 
 
@@ -438,8 +436,7 @@ def stripUrlPassword(url):
 def join_list(maybeList):
     if isinstance(maybeList, (list, tuple)):
         return u' '.join(ascii2unicode(s) for s in maybeList)
-    else:
-        return ascii2unicode(maybeList)
+    return ascii2unicode(maybeList)
 
 
 def command_to_string(command):
@@ -535,4 +532,5 @@ __all__ = [
     'check_functional_environment', 'human_readable_delta',
     'rewrap',
     'Notifier',
+    "giturlparse",
 ]

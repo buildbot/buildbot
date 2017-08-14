@@ -19,8 +19,6 @@ from future.utils import iteritems
 from future.utils import string_types
 
 import re
-# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
-# although it has no effect before python-2.7.
 from email import charset
 from email.message import Message
 from email.mime.multipart import MIMEMultipart
@@ -37,20 +35,16 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot import util
 from buildbot.process.properties import Properties
-from buildbot.process.results import CANCELLED
-from buildbot.process.results import EXCEPTION
-from buildbot.process.results import FAILURE
-from buildbot.process.results import SUCCESS
-from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
-from buildbot.reporters import utils
-from buildbot.reporters.message import MessageFormatter as DefaultMessageFormatter
-from buildbot.reporters.message import MessageFormatterMissingWorker
-from buildbot.util import service
+from buildbot.reporters.notifier import ENCODING
+from buildbot.reporters.notifier import NotifierBase
 from buildbot.util import ssl
 from buildbot.util import unicode2bytes
 
-charset.add_charset('utf-8', charset.SHORTEST, None, 'utf-8')
+# this incantation teaches email to output utf-8 using 7- or 8-bit encoding,
+# although it has no effect before python-2.7.
+# needs to match notifier.ENCODING
+charset.add_charset(ENCODING, charset.SHORTEST, None, ENCODING)
 
 try:
     from twisted.mail.smtp import ESMTPSenderFactory
@@ -73,8 +67,6 @@ VALID_EMAIL = re.compile(r"^(?:%s|(.+\s+)?<%s>\s*)$" %
                          ((VALID_EMAIL_ADDR,) * 2))
 VALID_EMAIL_ADDR = re.compile(VALID_EMAIL_ADDR)
 
-ENCODING = 'utf8'
-
 
 @implementer(interfaces.IEmailLookup)
 class Domain(util.ComparableMixin):
@@ -92,35 +84,29 @@ class Domain(util.ComparableMixin):
 
 
 @implementer(interfaces.IEmailSender)
-class MailNotifier(service.BuildbotService):
-
-    possible_modes = ("change", "failing", "passing", "problem", "warnings",
-                      "exception", "cancelled")
-
-    def computeShortcutModes(self, mode):
-        if isinstance(mode, string_types):
-            if mode == "all":
-                mode = ("failing", "passing", "warnings",
-                        "exception", "cancelled")
-            elif mode == "warnings":
-                mode = ("failing", "warnings")
-            else:
-                mode = (mode,)
-        return mode
+class MailNotifier(NotifierBase):
 
     def checkConfig(self, fromaddr, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None, addLogs=False,
                     relayhost="localhost", buildSetSummary=False,
-                    subject="buildbot %(result)s in %(title)s on %(builder)s",
+                    subject="Buildbot %(result)s in %(title)s on %(builder)s",
                     lookup=None, extraRecipients=None,
                     sendToInterestedUsers=True,
                     messageFormatter=None, extraHeaders=None,
                     addPatch=True, useTls=False, useSmtps=False,
                     smtpUser=None, smtpPassword=None, smtpPort=25,
-                    name=None, schedulers=None, branches=None):
+                    schedulers=None, branches=None,
+                    watchedWorkers='all', messageFormatterMissingWorker=None):
         if ESMTPSenderFactory is None:
             config.error("twisted-mail is not installed - cannot "
                          "send mail")
+
+        super(MailNotifier, self).checkConfig(
+            mode=mode, tags=tags, builders=builders,
+            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
+            subject=subject, addLogs=addLogs, addPatch=addPatch,
+            schedulers=schedulers, branches=branches,
+            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
 
         if extraRecipients is None:
             extraRecipients = []
@@ -133,30 +119,6 @@ class MailNotifier(service.BuildbotService):
                     config.error(
                         "extra recipient %r is not a valid email" % (r,))
 
-        for m in self.computeShortcutModes(mode):
-            if m not in self.possible_modes:
-                if m == "all":
-                    config.error(
-                        "mode 'all' is not valid in an iterator and must be passed in as a separate string")
-                else:
-                    config.error(
-                        "mode %s is not a valid mode" % (m,))
-
-        if name is None:
-            self.name = "MailNotifier"
-            if tags is not None:
-                self.name += "_tags_" + "+".join(tags)
-            if builders is not None:
-                self.name += "_builders_" + "+".join(builders)
-            if schedulers is not None:
-                self.name += "_schedulers_" + "+".join(schedulers)
-            if branches is not None:
-                self.name += "_branches_" + "+".join(branches)
-
-        if '\n' in subject:
-            config.error(
-                'Newlines are not allowed in email subjects')
-
         if lookup is not None:
             if not isinstance(lookup, string_types):
                 assert interfaces.IEmailLookup.providedBy(lookup)
@@ -168,166 +130,40 @@ class MailNotifier(service.BuildbotService):
         if useSmtps:
             ssl.ensureHasSSL(self.__class__.__name__)
 
-        # you should either limit on builders or tags, not both
-        if builders is not None and tags is not None:
-            config.error(
-                "Please specify only builders or tags to include - " +
-                "not both.")
-
     def reconfigService(self, fromaddr, mode=("failing", "passing", "warnings"),
                         tags=None, builders=None, addLogs=False,
                         relayhost="localhost", buildSetSummary=False,
-                        subject="buildbot %(result)s in %(title)s on %(builder)s",
+                        subject="Buildbot %(result)s in %(title)s on %(builder)s",
                         lookup=None, extraRecipients=None,
                         sendToInterestedUsers=True,
                         messageFormatter=None, extraHeaders=None,
                         addPatch=True, useTls=False, useSmtps=False,
                         smtpUser=None, smtpPassword=None, smtpPort=25,
-                        name=None, schedulers=None, branches=None,
-                        messageFormatterMissingWorker=None):
+                        schedulers=None, branches=None,
+                        watchedWorkers='all', messageFormatterMissingWorker=None):
 
+        super(MailNotifier, self).reconfigService(
+            mode=mode, tags=tags, builders=builders,
+            buildSetSummary=buildSetSummary, messageFormatter=messageFormatter,
+            subject=subject, addLogs=addLogs, addPatch=addPatch,
+            schedulers=schedulers, branches=branches,
+            watchedWorkers=watchedWorkers, messageFormatterMissingWorker=messageFormatterMissingWorker)
         if extraRecipients is None:
             extraRecipients = []
-
         self.extraRecipients = extraRecipients
         self.sendToInterestedUsers = sendToInterestedUsers
         self.fromaddr = fromaddr
-        self.mode = self.computeShortcutModes(mode)
-        self.tags = tags
-        self.builders = builders
-        self.schedulers = schedulers
-        self.branches = branches
-        self.addLogs = addLogs
         self.relayhost = relayhost
-        self.subject = subject
         if lookup is not None:
             if isinstance(lookup, string_types):
                 lookup = Domain(str(lookup))
-
         self.lookup = lookup
-        if messageFormatter is None:
-            messageFormatter = DefaultMessageFormatter()
-        self.messageFormatter = messageFormatter
-        if messageFormatterMissingWorker is None:
-            messageFormatterMissingWorker = MessageFormatterMissingWorker()
-        self.messageFormatterMissingWorker = messageFormatterMissingWorker
         self.extraHeaders = extraHeaders
-        self.addPatch = addPatch
         self.useTls = useTls
         self.useSmtps = useSmtps
         self.smtpUser = smtpUser
         self.smtpPassword = smtpPassword
         self.smtpPort = smtpPort
-        self.buildSetSummary = buildSetSummary
-        self._buildset_complete_consumer = None
-        self.watched = []
-
-    @defer.inlineCallbacks
-    def startService(self):
-        yield service.BuildbotService.startService(self)
-        startConsuming = self.master.mq.startConsuming
-        self._buildsetCompleteConsumer = yield startConsuming(
-            self.buildsetComplete,
-            ('buildsets', None, 'complete'))
-        self._buildCompleteConsumer = yield startConsuming(
-            self.buildComplete,
-            ('builds', None, 'finished'))
-        self._workerMissingConsumer = yield startConsuming(
-            self.workerMissing,
-            ('worker', None, 'missing'))
-
-    @defer.inlineCallbacks
-    def stopService(self):
-        yield service.BuildbotService.stopService(self)
-        if self._buildsetCompleteConsumer is not None:
-            yield self._buildsetCompleteConsumer.stopConsuming()
-            self._buildsetCompleteConsumer = None
-        if self._buildCompleteConsumer is not None:
-            yield self._buildCompleteConsumer.stopConsuming()
-            self._buildCompleteConsumer = None
-        if self._workerMissingConsumer is not None:
-            yield self._workerMissingConsumer.stopConsuming()
-            self._workerMissingConsumer = None
-
-    def wantPreviousBuild(self):
-        return "change" in self.mode or "problem" in self.mode
-
-    @defer.inlineCallbacks
-    def buildsetComplete(self, key, msg):
-        if not self.buildSetSummary:
-            return
-        bsid = msg['bsid']
-        res = yield utils.getDetailsForBuildset(
-            self.master, bsid,
-            wantProperties=self.messageFormatter.wantProperties,
-            wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild(),
-            wantLogs=self.messageFormatter.wantLogs)
-
-        builds = res['builds']
-        buildset = res['buildset']
-
-        # only include builds for which isMailNeeded returns true
-        builds = [build for build in builds if self.isMailNeeded(build)]
-        if builds:
-            self.buildMessage("(whole buildset)", builds, buildset['results'])
-
-    @defer.inlineCallbacks
-    def buildComplete(self, key, build):
-        if self.buildSetSummary:
-            return
-        br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
-        buildset = yield self.master.data.get(("buildsets", br['buildsetid']))
-        yield utils.getDetailsForBuilds(
-            self.master, buildset, [build],
-            wantProperties=self.messageFormatter.wantProperties,
-            wantSteps=self.messageFormatter.wantSteps,
-            wantPreviousBuild=self.wantPreviousBuild(),
-            wantLogs=self.messageFormatter.wantLogs)
-        # only include builds for which isMailNeeded returns true
-        if self.isMailNeeded(build):
-            self.buildMessage(
-                build['builder']['name'], [build], build['results'])
-
-    def matchesAnyTag(self, tags):
-        return self.tags and any(tag for tag in self.tags if tag in tags)
-
-    def isMailNeeded(self, build):
-        # here is where we actually do something.
-        builder = build['builder']
-        scheduler = build['properties'].get('scheduler', [None])[0]
-        branch = build['properties'].get('branch', [None])[0]
-        results = build['results']
-        if self.builders is not None and builder['name'] not in self.builders:
-            return False  # ignore this build
-        if self.schedulers is not None and scheduler not in self.schedulers:
-            return False  # ignore this build
-        if self.branches is not None and branch not in self.branches:
-            return False  # ignore this build
-        if self.tags is not None and \
-                not self.matchesAnyTag(builder['tags']):
-            return False  # ignore this build
-
-        if "change" in self.mode:
-            prev = build['prev_build']
-            if prev and prev['results'] != results:
-                return True
-        if "failing" in self.mode and results == FAILURE:
-            return True
-        if "passing" in self.mode and results == SUCCESS:
-            return True
-        if "problem" in self.mode and results == FAILURE:
-            prev = build['prev_build']
-            if prev and prev['results'] != FAILURE:
-                return True
-        if "warnings" in self.mode and results == WARNINGS:
-            return True
-        if "exception" in self.mode and results == EXCEPTION:
-            return True
-        if "cancelled" in self.mode and results == CANCELLED:
-            return True
-
-        return False
 
     def patch_to_attachment(self, patch, index):
         # patches are specifically converted to unicode before entering the db
@@ -339,10 +175,10 @@ class MailNotifier(service.BuildbotService):
     @defer.inlineCallbacks
     def createEmail(self, msgdict, builderName, title, results, builds=None,
                     patches=None, logs=None):
-        text = msgdict['body'].encode(ENCODING)
+        text = msgdict['body']
         type = msgdict['type']
-        if 'subject' in msgdict:
-            subject = msgdict['subject'].encode(ENCODING)
+        if msgdict.get('subject') is not None:
+            subject = msgdict['subject']
         else:
             subject = self.subject % {'result': Results[results],
                                       'projectName': title,
@@ -412,58 +248,26 @@ class MailNotifier(service.BuildbotService):
         defer.returnValue(m)
 
     @defer.inlineCallbacks
-    def getLogsForBuild(self, build):
-        all_logs = []
-        steps = yield self.master.data.get(('builds', build['buildid'], "steps"))
-        for step in steps:
-            logs = yield self.master.data.get(("steps", step['stepid'], 'logs'))
-            for l in logs:
-                l['stepname'] = step['name']
-                l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
-                all_logs.append(l)
-        defer.returnValue(all_logs)
+    def sendMessage(self, body, subject=None, type='plain', builderName=None,
+                    results=None, builds=None, users=None,
+                    patches=None, logs=None, worker=None):
+        body = unicode2bytes(body)
+        msgdict = {'body': body, 'subject': subject, 'type': type}
 
-    @defer.inlineCallbacks
-    def buildMessage(self, name, builds, results):
-        patches = []
-        logs = []
-        msgdict = {"body": ""}
-        users = set()
-        for build in builds:
-            if self.addPatch:
-                ss_list = build['buildset']['sourcestamps']
+        # ensure message body ends with double carriage return
+        if not body.endswith(b"\n\n"):
+            msgdict['body'] = body + b'\n\n'
 
-                for ss in ss_list:
-                    if 'patch' in ss and ss['patch'] is not None:
-                        patches.append(ss['patch'])
-            if self.addLogs:
-                build_logs = yield self.getLogsForBuild(build)
-                logs.extend(build_logs)
-
-            if 'prev_build' in build and build['prev_build'] is not None:
-                previous_results = build['prev_build']['results']
-            else:
-                previous_results = None
-            blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
-            build_msgdict = yield self.messageFormatter.formatMessageForBuildResults(
-                self.mode, name, build['buildset'], build, self.master,
-                previous_results, blamelist)
-            users.update(set(blamelist))
-            msgdict['type'] = build_msgdict['type']
-            msgdict['body'] += build_msgdict['body']
-            if 'subject' in build_msgdict:
-                msgdict['subject'] = build_msgdict['subject']
-            # ensure msgbody ends with double carriage return
-            if not msgdict['body'].endswith("\n\n"):
-                msgdict['body'] += '\n\n'
-
-        m = yield self.createEmail(msgdict, name, self.master.config.title,
+        m = yield self.createEmail(msgdict, builderName, self.master.config.title,
                                    results, builds, patches, logs)
 
         # now, who is this message going to?
-        recipients = yield self.findInterrestedUsersEmails(list(users))
-        all_recipients = self.processRecipients(recipients, m)
-        yield self.sendMessage(m, all_recipients)
+        if worker is None:
+            recipients = yield self.findInterrestedUsersEmails(list(users))
+            all_recipients = self.processRecipients(recipients, m)
+        else:
+            all_recipients = list(users)
+        yield self.sendMail(m, all_recipients)
 
     def _shouldAttachLog(self, logname):
         if isinstance(self.addLogs, bool):
@@ -514,14 +318,17 @@ class MailNotifier(service.BuildbotService):
 
         return list(to_recipients | cc_recipients)
 
-    def sendmail(self, s, recipients):
+    def sendMail(self, m, recipients):
+        s = m.as_string()
+        twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
+
         result = defer.Deferred()
 
         useAuth = self.smtpUser and self.smtpPassword
 
         s = unicode2bytes(s)
         sender_factory = ESMTPSenderFactory(
-            self.smtpUser, self.smtpPassword,
+            unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
             self.fromaddr, recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
@@ -534,25 +341,6 @@ class MailNotifier(service.BuildbotService):
 
         return result
 
-    def sendMessage(self, m, recipients):
-        s = m.as_string()
-        twlog.msg("sending mail (%d bytes) to" % len(s), recipients)
-        return self.sendmail(s, recipients)
-
-    @defer.inlineCallbacks
-    def workerMissing(self, key, worker):
-        if not worker['notify']:
-            return
-        msgdict = yield self.messageFormatterMissingWorker.formatMessageForMissingWorker(self.master, worker)
-        text = msgdict['body'].encode(ENCODING)
-        m = Message()
-        m.set_payload(text, ENCODING)
-        m.set_type("text/%s" % msgdict['type'])
-        m['Date'] = formatdate(localtime=True)
-        if 'subject' in msgdict:
-            m['Subject'] = msgdict['subject']
-        else:
-            m['Subject'] = "Buildbot worker {name} missing".format(**worker)
-        m['From'] = self.fromaddr
-        recipients = self.processRecipients(worker['notify'], m)
-        yield self.sendMessage(m, recipients)
+    def isWorkerMessageNeeded(self, worker):
+        return super(MailNotifier, self).isWorkerMessageNeeded(worker) \
+               and worker['notify']

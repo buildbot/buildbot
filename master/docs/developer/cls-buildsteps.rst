@@ -268,6 +268,15 @@ BuildStep
 
         New-style build steps should override this method to provide a more interesting summary than the default, or to provide any build summary information.
 
+
+    .. py:method:: getBuildResultSummary()
+
+        :returns: dictionary, optionally via Deferred
+
+        Returns a dictionary containing status information for a completed step.
+        This method calls :py:meth:`getResultSummary`, and automatically compute a ``build`` key from the ``step`` key according to the ``updateBuildSummaryPolicy``
+
+
     .. py:method:: describe(done=False)
 
         :param done: If true, the step is finished.

@@ -1,6 +1,6 @@
 class Builders extends Controller
     constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams,
-        $location, dataGrouperService) ->
+        $location, dataGrouperService, $rootScope) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         $scope.connected2class = (worker) ->
@@ -31,15 +31,20 @@ class Builders extends Controller
             all_tags.sort()
             return all_tags
 
-        $scope.tags_filter = $location.search()["tags"]
-        $scope.tags_filter ?= []
-        if not angular.isArray($scope.tags_filter)
-            $scope.tags_filter = [$scope.tags_filter]
+        updateTagsFilterFromLocation = () ->
+            $scope.tags_filter = $location.search()["tags"]
+            $scope.tags_filter ?= []
+            if not angular.isArray($scope.tags_filter)
+                $scope.tags_filter = [$scope.tags_filter]
+
+        updateTagsFilterFromLocation()
 
         $scope.$watch  "tags_filter", (tags, old) ->
             if old?
                 $location.search("tags", tags)
         , true
+
+        $rootScope.$on '$locationChangeSuccess', updateTagsFilterFromLocation
 
         $scope.isBuilderFiltered = (builder, index) ->
 

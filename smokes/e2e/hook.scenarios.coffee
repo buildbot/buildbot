@@ -6,7 +6,7 @@ describe 'change hook', () ->
     builder = null
     console = null
     beforeEach(() ->
-        builder = new builderPage('runtest', 'force')
+        builder = new builderPage('runtests1', 'force')
         console = new consolePage()
     )
     afterEach () ->
@@ -20,7 +20,8 @@ describe 'change hook', () ->
                     comments:'sd',
                     project:'pyflakes'
                     repository:'git://github.com/buildbot/pyflakes.git'
-                    author:'foo'
+                    author:'foo <foo@bar.com>'
+                    revision: 'HEAD'
                     branch:'master'
                     }, done)
             builder.waitNextBuildFinished(lastbuild)

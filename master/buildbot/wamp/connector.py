@@ -47,7 +47,7 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
         for handler in [self] + self.services:
             yield self.register(handler)
             yield self.subscribe(handler)
-        yield self.publish("org.buildbot.%s.connected" % (self.master.masterid))
+        yield self.publish(u"org.buildbot.%s.connected" % (self.master.masterid))
         self.parent.service = self
         self.parent.serviceDeferred.callback(self)
 
@@ -75,10 +75,9 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
 def make(config):
     if config:
         return MasterService(config)
-    else:
-        # if no config given, return a description of this WAMPlet ..
-        return {'label': 'Buildbot master wamplet',
-                'description': 'This contains all the wamp methods provided by a buildbot master'}
+    # if no config given, return a description of this WAMPlet ..
+    return {'label': 'Buildbot master wamplet',
+            'description': 'This contains all the wamp methods provided by a buildbot master'}
 
 
 class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiService):

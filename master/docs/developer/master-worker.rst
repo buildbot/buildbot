@@ -110,6 +110,8 @@ passing a reference to itself as the ``stepRef`` parameter.  The
 :meth:`startCommand` method returns immediately, and the end of the command is
 signalled with a call to a method on the master-side BuildStep object.
 
+.. _worker-for-builders:
+
 Worker For Builders
 -------------------
 
@@ -494,3 +496,15 @@ It produces two status updates:
 ``rc``
 
     0 if the ``os.listdir`` does not raise exception, otherwise 1.
+
+rmfile
+......
+
+This command removes the file in the worker base directory.
+It takes a single parameter, ``path``, specifying the file path relative to builder's basedir.
+
+It produces one status updates:
+
+``rc``
+
+    0 if the ``os.remove`` does not raise exception, otherwise the corresponding errno.

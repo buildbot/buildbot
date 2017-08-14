@@ -42,6 +42,7 @@ from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -72,6 +73,9 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                         collects our status
     """
 
+    VIRTUAL_BUILDERNAME_PROP = "virtual_builder_name"
+    VIRTUAL_BUILDERDESCRIPTION_PROP = "virtual_builder_description"
+    VIRTUAL_BUILDERTAGS_PROP = "virtual_builder_tags"
     workdir = "build"
     build_status = None
     reason = "changes"
@@ -98,6 +102,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.terminate = False
 
         self._acquiringLock = None
+        self._builderid = None
         # overall results, may downgrade after each step
         self.results = SUCCESS
         self.properties = properties.Properties()
@@ -231,11 +236,32 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             builddir = self.path_module.join(
                 bytes2NativeString(workerforbuilder.worker.worker_basedir),
                 bytes2NativeString(self.builder.config.workerbuilddir))
-            self.setProperty("builddir", builddir, "worker")
+            self.setProperty("builddir", builddir, "Worker")
 
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
         self.build_status.setWorkername(self.workername)
+
+    @defer.inlineCallbacks
+    def getBuilderId(self):
+        if self._builderid is None:
+            if self.hasProperty(self.VIRTUAL_BUILDERNAME_PROP):
+                self._builderid = yield self.builder.getBuilderIdForName(
+                    self.getProperty(self.VIRTUAL_BUILDERNAME_PROP))
+                description = self.getProperty(
+                    self.VIRTUAL_BUILDERDESCRIPTION_PROP,
+                    self.builder.config.description)
+                tags = self.getProperty(
+                    self.VIRTUAL_BUILDERTAGS_PROP,
+                    self.builder.config.tags)
+
+                self.master.data.updates.updateBuilderInfo(self._builderid,
+                                                           description,
+                                                           tags)
+
+            else:
+                self._builderid = yield self.builder.getBuilderId()
+        defer.returnValue(self._builderid)
 
     @defer.inlineCallbacks
     def startBuild(self, build_status, workerforbuilder):
@@ -251,11 +277,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.build_status = build_status
         # TODO: this will go away when build collapsing is implemented; until
-        # then we just assign the bulid to the first buildrequest
+        # then we just assign the build to the first buildrequest
         brid = self.requests[0].id
+        builderid = yield self.getBuilderId()
         self.buildid, self.number = \
             yield self.master.data.updates.addBuild(
-                builderid=(yield self.builder.getBuilderId()),
+                builderid=builderid,
                 buildrequestid=brid,
                 workerid=worker.workerid)
 
@@ -485,15 +512,17 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         defer.returnValue(results)
 
+    @defer.inlineCallbacks
     def _stepDone(self, results, step):
         self.currentStep = None
         if self.finished:
             return  # build was interrupted, don't keep building
-        terminate = self.stepDone(results, step)  # interpret/merge results
+        terminate = yield self.stepDone(results, step)  # interpret/merge results
         if terminate:
             self.terminate = True
-        return self.startNextStep()
+        yield self.startNextStep()
 
+    @defer.inlineCallbacks
     def stepDone(self, results, step):
         """This method is called when the BuildStep completes. It is passed a
         status object from the BuildStep and is responsible for merging the
@@ -504,16 +533,21 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if isinstance(results, tuple):
             results, text = results
         assert isinstance(results, type(SUCCESS)), "got %r" % (results,)
-        log.msg(" step '%s' complete: %s" % (step.name, statusToString(results)))
+        summary = yield step.getBuildResultSummary()
+        if 'build' in summary:
+            text = [summary['build']]
+        log.msg(" step '%s' complete: %s (%s)" % (step.name, statusToString(results), text))
         if text:
             self.text.extend(text)
+            self.master.data.updates.setBuildStateString(self.buildid,
+                                                         bytes2unicode(" ".join(self.text)))
         self.results, terminate = computeResultAndTermination(step, results,
                                                               self.results)
         if not self.conn:
             # force the results to retry if the connection was lost
             self.results = RETRY
             terminate = True
-        return terminate
+        defer.returnValue(terminate)
 
     def lostRemote(self, conn=None):
         # the worker went away. There are several possible reasons for this,
@@ -615,7 +649,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             metrics.MetricCountEvent.log('active_builds', -1)
 
             yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                               u'finished')
+                                                               bytes2unicode(" ".join(text)))
             yield self.master.data.updates.finishBuild(self.buildid, self.results)
 
             # mark the build as finished
@@ -639,8 +673,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             if st.hasStatistic(name)]
         if initial_value is self._sentinel:
             return reduce(summary_fn, step_stats_list)
-        else:
-            return reduce(summary_fn, step_stats_list, initial_value)
+        return reduce(summary_fn, step_stats_list, initial_value)
 
     @defer.inlineCallbacks
     def getUrl(self):

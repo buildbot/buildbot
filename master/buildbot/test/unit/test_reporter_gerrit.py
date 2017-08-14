@@ -18,11 +18,15 @@ from __future__ import print_function
 from future.builtins import range
 
 import warnings
+from distutils.version import LooseVersion
 
 from mock import Mock
 from mock import call
 
 from twisted.internet import defer
+from twisted.internet import error
+from twisted.internet import reactor
+from twisted.python import failure
 from twisted.trial import unittest
 
 from buildbot.process.results import FAILURE
@@ -450,14 +454,14 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         gsp.spawnProcess = lambda _, *a, **k: spawnSkipFirstArg(*a, **k)
         yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
-            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'])
+            'ssh', ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version'], env=None)
         gsp.processVersion("2.6", lambda: None)
         spawnSkipFirstArg = Mock()
         yield gsp.sendCodeReview("project", "revision", {"message": "bla", "labels": {'Verified': 1}})
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
-             '--project project', "--message 'bla'", '--label Verified=1', 'revision'])
+             '--project project', "--message 'bla'", '--label Verified=1', 'revision'], env=None)
 
         # <=2.5 uses other syntax
         gsp.processVersion("2.4", lambda: None)
@@ -466,7 +470,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project',
-             "--message 'bla'", '--verified 1', 'revision'])
+             "--message 'bla'", '--verified 1', 'revision'], env=None)
 
         # now test the notify argument, even though _gerrit_notify
         # is private, work around that
@@ -477,7 +481,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review',
-             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'])
+             '--project project', '--notify OWNER', "--message 'bla'", '--label Verified=1', 'revision'],
+            env=None)
 
         # gerrit versions <= 2.5 uses other syntax
         gsp.processVersion('2.4', lambda: None)
@@ -486,4 +491,36 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         spawnSkipFirstArg.assert_called_once_with(
             'ssh',
             ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'review', '--project project', '--notify OWNER',
-             "--message 'bla'", '--verified 1', 'revision'])
+             "--message 'bla'", '--verified 1', 'revision'],
+            env=None)
+
+    @defer.inlineCallbacks
+    def test_callWithVersion_bytes_output(self):
+        gsp = yield self.setupGerritStatusPushSimple()
+        exp_argv = ['ssh', 'user@serv', '-p', '29418', 'gerrit', 'version']
+
+        def spawnProcess(pp, cmd, argv, env):
+            self.assertEqual([cmd, argv], [exp_argv[0], exp_argv])
+            pp.errReceived(b'test stderr\n')
+            pp.outReceived(b'gerrit version 2.14\n')
+            pp.outReceived(b'(garbage that should not cause a crash)\n')
+            so = error.ProcessDone(None)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+        gsp.callWithVersion(lambda: self.assertEqual(
+            gsp.gerrit_version, LooseVersion('2.14')))
+
+    def test_name_as_class_attribute(self):
+        class FooStatusPush(GerritStatusPush):
+            name = 'foo'
+
+        reporter = FooStatusPush('gerrit.server.com', 'password')
+        self.assertEqual(reporter.name, 'foo')
+
+    def test_name_as_kwarg(self):
+        reporter = GerritStatusPush('gerrit.server.com', 'password', name='foo')
+        self.assertEqual(reporter.name, 'foo')
+
+    def test_default_name(self):
+        reporter = GerritStatusPush('gerrit.server.com', 'password')
+        self.assertEqual(reporter.name, 'GerritStatusPush')

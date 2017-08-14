@@ -27,7 +27,6 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import ascii2unicode
-from buildbot.util import bytes2unicode
 from buildbot.util import deferredLocked
 
 
@@ -112,7 +111,7 @@ class HgPoller(base.PollingChangeSource):
         @d.addCallback
         def process(output):
             # all file names are on one line
-            output = bytes2unicode(output, self.encoding, "replace")
+            output = output.decode(self.encoding, "replace")
             date, author, files, comments = output.split(
                 os.linesep, 3)
 
@@ -279,8 +278,9 @@ class HgPoller(base.PollingChangeSource):
                        r'--template={rev}:{node}\n']
         results = yield utils.getProcessOutput(self.hgbin, revListArgs,
                                                path=self._absWorkdir(), env=os.environ, errortoo=False)
+        results = results.decode(self.encoding)
 
-        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
+        revNodeList = [rn.split(u':', 1) for rn in results.strip().split()]
 
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (len(revNodeList), revNodeList, self._absWorkdir()))

@@ -77,25 +77,25 @@ class AsyncMultiService(AsyncService, service.MultiService):
 
     def startService(self):
         service.Service.startService(self)
-        l = []
+        dl = []
         # if a service attaches another service during the reconfiguration
         # then the service will be started twice, so we don't use iter, but rather
         # copy in a list
         for svc in list(self):
             # handle any deferreds, passing up errors and success
-            l.append(defer.maybeDeferred(svc.startService))
-        return defer.gatherResults(l, consumeErrors=True)
+            dl.append(defer.maybeDeferred(svc.startService))
+        return defer.gatherResults(dl, consumeErrors=True)
 
     def stopService(self):
         service.Service.stopService(self)
-        l = []
+        dl = []
         services = list(self)
         services.reverse()
         for svc in services:
-            l.append(defer.maybeDeferred(svc.stopService))
+            dl.append(defer.maybeDeferred(svc.stopService))
         # unlike MultiService, consume errors in each individual deferred, and
         # pass the first error in a child service up to our caller
-        return defer.gatherResults(l, consumeErrors=True)
+        return defer.gatherResults(dl, consumeErrors=True)
 
     def addService(self, service):
         if service.name is not None:
@@ -108,8 +108,7 @@ class AsyncMultiService(AsyncService, service.MultiService):
             # It may be too late for that, but we will do our best
             service.privilegedStartService()
             return service.startService()
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
 
 class MasterService(AsyncMultiService):
@@ -156,7 +155,7 @@ class SharedService(AsyncMultiService):
         for arg in args:
             arg = unicode2bytes(str(arg))
             _hash.update(arg)
-        for k, v in kwargs.items():
+        for k, v in sorted(kwargs.items()):
             k = unicode2bytes(str(k))
             v = unicode2bytes(str(v))
             _hash.update(k)
@@ -213,9 +212,8 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                 pass
         yield AsyncMultiService.startService(self)
 
-    def checkConfig(self, name=None, *args, **kwargs):
-        if name is not None:
-            self.name = ascii2unicode(name)
+    def checkConfig(self, *args, **kwargs):
+        return defer.succeed(True)
 
     def reconfigService(self, name=None, *args, **kwargs):
         return defer.succeed(None)
@@ -470,11 +468,12 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
             for n in added_names:
                 child = new_by_name[n]
                 # setup service's objectid
-                class_name = '%s.%s' % (child.__class__.__module__,
-                                        child.__class__.__name__)
-                objectid = yield self.master.db.state.getObjectId(
-                    child.name, class_name)
-                child.objectid = objectid
+                if hasattr(child, 'objectid'):
+                    class_name = '%s.%s' % (child.__class__.__module__,
+                                            child.__class__.__name__)
+                    objectid = yield self.master.db.state.getObjectId(
+                        child.name, class_name)
+                    child.objectid = objectid
                 yield defer.maybeDeferred(child.setServiceParent, self)
 
         # As the services that were just added got

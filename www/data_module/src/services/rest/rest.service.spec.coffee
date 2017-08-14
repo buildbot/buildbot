@@ -75,3 +75,19 @@ describe 'Rest service', ->
         $httpBackend.flush()
         expect(gotResponse).not.toBeNull()
         expect(gotResponse).not.toEqual(response)
+
+    it 'should reject the promise when cancelled', inject ($rootScope) ->
+        $httpBackend.expectGET('/api/endpoint').respond({})
+
+        gotResponse = null
+        rejected = false
+        request = restService.get('endpoint')
+        request.then (response) ->
+            gotResponse = response
+        , (reason) ->
+            rejected = true
+
+        request.cancel()
+        $rootScope.$apply()
+        expect(gotResponse).toBeNull()
+        expect(rejected).toBe(true)

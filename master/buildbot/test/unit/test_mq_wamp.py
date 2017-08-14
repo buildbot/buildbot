@@ -23,7 +23,6 @@ import textwrap
 
 import mock
 
-from autobahn.wamp.types import EventDetails
 from autobahn.wamp.types import SubscribeOptions
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -31,6 +30,11 @@ from twisted.trial import unittest
 from buildbot.mq import wamp
 from buildbot.test.fake import fakemaster
 from buildbot.wamp import connector
+
+
+class FakeEventDetails(object):
+    def __init__(self, topic):
+        self.topic = topic
 
 
 class ComparableSubscribeOptions(SubscribeOptions):
@@ -67,7 +71,7 @@ class FakeWampConnector(object):
         # make sure the topic is compatible with what was subscribed
         assert self.topic_match(topic)
         self.last_data = data
-        details = EventDetails(1, topic=topic)
+        details = FakeEventDetails(topic=topic)
         self.qref_cb(json.loads(json.dumps(data)), details=details)
 
 

@@ -126,10 +126,14 @@ class V2RootResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
 
-    def getEndpoint(self, request):
+    @defer.inlineCallbacks
+    def getEndpoint(self, request, method, params):
         # note that trailing slashes are not allowed
-        request_postpath = [bytes2NativeString(p) for p in request.postpath]
-        return self.master.data.getEndpoint(tuple(request_postpath))
+        request_postpath = tuple(bytes2NativeString(p) for p in request.postpath)
+        yield self.master.www.assertUserAllowed(request, request_postpath,
+                                                method, params)
+        ret = yield self.master.data.getEndpoint(request_postpath)
+        defer.returnValue(ret)
 
     @contextmanager
     def handleErrors(self, writeError):
@@ -228,14 +232,12 @@ class V2RootResource(resource.Resource):
         with self.handleErrors(writeError):
             method, id, params = self.decodeJsonRPC2(request)
             jsonRpcReply['id'] = id
-            yield self.master.www.assertUserAllowed(request, tuple(request.postpath),
-                                                    method, params)
+            ep, kwargs = yield self.getEndpoint(request, method, params)
             userinfos = self.master.www.getUserInfos(request)
             if 'anonymous' in userinfos and userinfos['anonymous']:
                 owner = "anonymous"
             else:
                 owner = userinfos['email']
-            ep, kwargs = self.getEndpoint(request)
             params['owner'] = owner
 
             result = yield ep.control(method, params, kwargs)
@@ -373,9 +375,7 @@ class V2RootResource(resource.Resource):
             request.write(data)
 
         with self.handleErrors(writeError):
-            yield self.master.www.assertUserAllowed(request, tuple(request.postpath), request.method, {})
-
-            ep, kwargs = self.getEndpoint(request)
+            ep, kwargs = yield self.getEndpoint(request, bytes2NativeString(request.method), {})
 
             rspec = self.decodeResultSpec(request, ep)
             data = yield ep.get(rspec, kwargs)
@@ -498,7 +498,7 @@ class V2RootResource(resource.Resource):
                 err = None
                 reqOrigin = reqOrigin.lower()
                 if not any(o.match(bytes2NativeString(reqOrigin)) for o in self.origins):
-                    err = "invalid origin"
+                    err = b"invalid origin"
                 elif request.method == b'OPTIONS':
                     preflightMethod = request.getHeader(
                         b'access-control-request-method')

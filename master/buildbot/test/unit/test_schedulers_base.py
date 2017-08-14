@@ -43,8 +43,14 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
-                      properties={}, codebases={'': {}}):
+    def makeScheduler(self, name='testsched', builderNames=None,
+                      properties=None, codebases=None):
+        if builderNames is None:
+            builderNames = ['a', 'b']
+        if properties is None:
+            properties = {}
+        if codebases is None:
+            codebases = {'': {}}
         dbBuilder = list()
         builderid = 0
         for builderName in builderNames:

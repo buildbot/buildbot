@@ -52,7 +52,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
     def thdGetObjectId(self, conn, name, class_name):
         objects_tbl = self.db.model.objects
 
-        self.checkLength(objects_tbl.c.name, name)
+        name = self.ensureLength(objects_tbl.c.name, name)
         self.checkLength(objects_tbl.c.class_name, class_name)
 
         def select():
@@ -132,7 +132,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         except (TypeError, ValueError):
             raise TypeError("Error encoding JSON for %r" % (value,))
 
-        self.checkLength(object_state_tbl.c.name, name)
+        name = self.ensureLength(object_state_tbl.c.name, name)
 
         def update():
             q = object_state_tbl.update(

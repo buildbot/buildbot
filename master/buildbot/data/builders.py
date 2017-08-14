@@ -22,17 +22,21 @@ from buildbot.data import base
 from buildbot.data import types
 
 
-class BuilderEndpoint(base.Endpoint):
+class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
         /builders/n:builderid
+        /builders/i:buildername
         /masters/n:masterid/builders/n:builderid
     """
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
-        builderid = kwargs['builderid']
+        builderid = yield self.getBuilderId(kwargs)
+        if builderid is None:
+            defer.returnValue(None)
+
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
             defer.returnValue(None)
@@ -77,6 +81,9 @@ class Builder(base.ResourceType):
     plural = "builders"
     endpoints = [BuilderEndpoint, BuildersEndpoint]
     keyFields = ['builderid']
+    eventPathPatterns = """
+        /builders/:builderid
+    """
 
     class EntityType(types.Entity):
         builderid = types.Integer()
@@ -89,13 +96,21 @@ class Builder(base.ResourceType):
     def __init__(self, master):
         base.ResourceType.__init__(self, master)
 
+    @defer.inlineCallbacks
+    def generateEvent(self, _id, event):
+        builder = yield self.master.data.get(('builders', str(_id)))
+        self.produceEvent(builder, event)
+
     @base.updateMethod
     def findBuilderId(self, name):
         return self.master.db.builders.findBuilderId(name)
 
     @base.updateMethod
+    @defer.inlineCallbacks
     def updateBuilderInfo(self, builderid, description, tags):
-        return self.master.db.builders.updateBuilderInfo(builderid, description, tags)
+        ret = yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
+        yield self.generateEvent(builderid, "update")
+        defer.returnValue(ret)
 
     @base.updateMethod
     @defer.inlineCallbacks

@@ -104,6 +104,14 @@ class TestCMake(BuildStepMixin, TestCase):
         self.properties.setProperty('b', b_value, source='test')
         self.expect_and_run_command('-D%s=%s' % ('a', b_value))
 
+    def test_definitions_renderable(self):
+        b_value = 'real_b'
+
+        definitions = Property('b')
+        self.setupStep(CMake(definitions=definitions))
+        self.properties.setProperty('b', {'a': b_value}, source='test')
+        self.expect_and_run_command('-D%s=%s' % ('a', b_value))
+
     def test_generator(self):
         generator = 'Ninja'
 

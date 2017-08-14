@@ -53,8 +53,7 @@ are more suitable for use in MTR.
     def __eq__(self, other):
         if isinstance(other, EqConnectionPool):
             return self._eqKey == other._eqKey
-        else:
-            return False
+        return False
 
     def __ne__(self, other):
         return not self.__eq__(other)
@@ -149,8 +148,7 @@ class MtrLogObserver(LogLineObserver):
                   self._line_re5.search(stripLine) or
                   stripLine == "Test suite timeout! Terminating..." or
                   stripLine.startswith("mysql-test-run: *** ERROR: Not all tests completed") or
-                  (stripLine.startswith("------------------------------------------------------------")
-                   and self.testFail is not None)):
+                  (stripLine.startswith("-" * 60) and self.testFail is not None)):
                 self.closeTestFail()
             else:
                 self.addTestFailOutput(stripLine + "\n")
@@ -391,8 +389,7 @@ class MTR(Test):
     def registerInDB(self):
         if self.dbpool:
             return self.runInteractionWithRetry(self.doRegisterInDB)
-        else:
-            return defer.succeed(0)
+        return defer.succeed(0)
 
     # The real database work is done in a thread in a synchronous way.
     def doRegisterInDB(self, txn):

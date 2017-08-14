@@ -36,7 +36,8 @@ from buildbot.util import unicode2bytes
 
 
 class Tests(interfaces.InterfaceTests):
-
+    TIMESTAMP_STEP101 = 100000
+    TIMESTAMP_STEP102 = 200000
     backgroundData = [
         fakedb.Worker(id=47, name='linux'),
         fakedb.Buildset(id=20),
@@ -45,8 +46,8 @@ class Tests(interfaces.InterfaceTests):
         fakedb.Master(id=88),
         fakedb.Build(id=30, buildrequestid=41, number=7, masterid=88,
                      builderid=88, workerid=47),
-        fakedb.Step(id=101, buildid=30, number=1, name='one'),
-        fakedb.Step(id=102, buildid=30, number=2, name='two'),
+        fakedb.Step(id=101, buildid=30, number=1, name='one', started_at=TIMESTAMP_STEP101),
+        fakedb.Step(id=102, buildid=30, number=2, name='two', started_at=TIMESTAMP_STEP102),
     ]
 
     testLogLines = [
@@ -138,6 +139,11 @@ class Tests(interfaces.InterfaceTests):
     def test_signature_compressLog(self):
         @self.assertArgSpecMatches(self.db.logs.compressLog)
         def compressLog(self, logid, force=False):
+            pass
+
+    def test_signature_deleteOldLogChunks(self):
+        @self.assertArgSpecMatches(self.db.logs.deleteOldLogChunks)
+        def deleteOldLogChunks(self, older_than_timestamp):
             pass
 
     # method tests
@@ -465,13 +471,12 @@ class RealTests(Tests):
             row = res.fetchone()
             res.close()
             return dict(row)
-
         newRow = yield self.db.pool.do(thd)
         self.assertEqual(newRow, {
             'logid': 201,
             'first_line': 7,
             'last_line': 7,
-            'content': logs.dumps_lz4(line),
+            'content': logs.dumps_lz4(line.encode('utf-8')),
             'compressed': 3})
 
     @defer.inlineCallbacks
@@ -539,6 +544,34 @@ class RealTests(Tests):
             'type': u's',
             'slug': u'stdio',
             'complete': True})
+
+    @defer.inlineCallbacks
+    def test_deleteOldLogChunks_basic(self):
+        yield self.insertTestData(self.backgroundData)
+        logids = []
+        for stepid in (101, 102):
+            for i in range(stepid):
+                logid = yield self.db.logs.addLog(
+                    stepid=stepid, name=u'another' + str(i), slug=u'another' + str(i), type=u's')
+                yield self.db.logs.appendLog(logid, u'xyz\n')
+                logids.append(logid)
+
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+            (self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101) / 2)
+        self.assertEqual(deleted_chunks, 101)
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+            self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101)
+        self.assertEqual(deleted_chunks, 102)
+        deleted_chunks = yield self.db.logs.deleteOldLogChunks(
+            self.TIMESTAMP_STEP102 + self.TIMESTAMP_STEP101)
+        self.assertEqual(deleted_chunks, 0)
+        for logid in logids:
+            logdict = yield self.db.logs.getLog(logid)
+            self.assertEqual(logdict['type'], 'd')
+
+            # we make sure we can still getLogLines, it will just return empty value
+            lines = yield self.db.logs.getLogLines(logid, 0, logdict['num_lines'])
+            self.assertEqual(lines, '')
 
 
 class TestFakeDB(unittest.TestCase, Tests):

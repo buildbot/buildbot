@@ -27,7 +27,11 @@ class ReconnectingListener extends Run
                     $interval.cancel(interval)
                     interval = null
                     hasBeenConnected = true
-                    socketService.socket.onclose = ->
+                    socketService.socket.onclose = (evt) ->
+                        # ignore if we are navigating away from buildbot
+                        # see https://github.com/buildbot/buildbot/issues/3306
+                        if evt.code <= 1001  # CLOSE_GOING_AWAY or CLOSE_NORMAL
+                            return
                         reconnecting = true
                         $rootScope.$apply ->
                             # send event to connectionstatus directive

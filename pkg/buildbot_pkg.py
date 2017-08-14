@@ -18,11 +18,16 @@ from __future__ import print_function
 
 # Method to add build step taken from here
 # https://seasonofcode.com/posts/how-to-add-custom-build-steps-and-commands-to-setuppy.html
+import datetime
 import distutils.cmd
 import os
+import re
 import subprocess
 import sys
 from distutils.version import LooseVersion
+from subprocess import PIPE
+from subprocess import STDOUT
+from subprocess import Popen
 
 import setuptools.command.build_py
 import setuptools.command.egg_info
@@ -49,7 +54,44 @@ def check_output(cmd):
     return out
 
 
+def gitDescribeToPep440(version):
+    # git describe produce version in the form: v0.9.8-20-gf0f45ca
+    # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
+    # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
+
+    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    v = VERSION_MATCH.search(version)
+    if v:
+        major = int(v.group('major'))
+        minor = int(v.group('minor'))
+        patch = int(v.group('patch'))
+        if v.group('dev'):
+            patch += 1
+            dev = int(v.group('dev'))
+            return "{}.{}.{}-dev{}".format(major, minor, patch, dev)
+        if v.group('post'):
+            return "{}.{}.{}.post{}".format(major, minor, patch, v.group('post'))
+        return "{}.{}.{}".format(major, minor, patch)
+
+    return v
+
+
+def mTimeVersion(init_file):
+    cwd = os.path.dirname(os.path.abspath(init_file))
+    m = 0
+    for root, dirs, files in os.walk(cwd):
+        for f in files:
+            m = max(os.path.getmtime(os.path.join(root, f)), m)
+    d = datetime.datetime.fromtimestamp(m)
+    return d.strftime("%Y.%m.%d")
+
+
 def getVersion(init_file):
+    """
+    Return BUILDBOT_VERSION environment variable, content of VERSION file, git
+    tag or 'latest'
+    """
+
     try:
         return os.environ['BUILDBOT_VERSION']
     except KeyError:
@@ -59,32 +101,28 @@ def getVersion(init_file):
         cwd = os.path.dirname(os.path.abspath(init_file))
         fn = os.path.join(cwd, 'VERSION')
         with open(fn) as f:
-            version = f.read().strip()
-        return version
+            return f.read().strip()
     except IOError:
         pass
 
-    from subprocess import Popen, PIPE, STDOUT
-    import re
-
-    # accept version to be coded with 2 or 3 parts (X.Y or X.Y.Z),
-    # no matter the number of digits for X, Y and Z
-    VERSION_MATCH = re.compile(r'(\d+\.\d+(\.\d+)?(\w|-)*)')
-
     try:
-        p = Popen(['git', 'describe', '--tags', '--always'],
-                  stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
-            if not isinstance(out, str):
-                out = out.decode(sys.stdout.encoding)
-            v = VERSION_MATCH.search(out)
-            if v is not None:
-                return v.group(1)
+            v = gitDescribeToPep440(str(out))
+            if v:
+                return v
     except OSError:
         pass
-    return "999.0-version-not-found"
+
+    try:
+        # if we really can't find the version, we use the date of modification of the most recent file
+        # docker hub builds cannot use git describe
+        return mTimeVersion(init_file)
+    except Exception:
+        # bummer. lets report something
+        return "latest"
 
 
 # JS build strategy:
@@ -119,6 +157,7 @@ class BuildJsCommand(distutils.cmd.Command):
 
     description = 'run JS build'
     already_run = False
+
     def initialize_options(self):
         """Set default values for options."""
 
@@ -130,7 +169,7 @@ class BuildJsCommand(distutils.cmd.Command):
         if self.already_run:
             return
         package = self.distribution.packages[0]
-        if os.path.exists("gulpfile.js"):
+        if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
             yarn_version = check_output("yarn --version")
             npm_version = check_output("npm -v")
             print("yarn:", yarn_version, "npm: ", npm_version)
@@ -138,19 +177,23 @@ class BuildJsCommand(distutils.cmd.Command):
             assert npm_version != "", "need nodejs and npm installed in current PATH"
             assert LooseVersion(npm_version) >= LooseVersion(
                 "1.4"), "npm < 1.4 (%s)" % (npm_version)
+
+            commands = []
+
             # if we find yarn, then we use it as it is much faster
             if yarn_version != "":
-                npm_cmd = ['yarn', 'install']
+                commands.append(['yarn', 'install', '--pure-lockfile'])
             else:
-                npm_cmd = ['npm', 'install']
-            gulp_cmd = [os.path.join(npm_bin, "gulp"), 'prod', '--notests']
+                commands.append(['npm', 'install'])
 
-            if os.name == 'nt':
-                shell = True
-            else:
-                shell = False
+            if os.path.exists("gulpfile.js"):
+                commands.append([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+            elif os.path.exists("webpack.config.js"):
+                commands.append([os.path.join(npm_bin, "webpack"), '-p'])
 
-            for command in [npm_cmd, gulp_cmd]:
+            shell = bool(os.name == 'nt')
+
+            for command in commands:
                 self.announce(
                     'Running command: %s' % str(" ".join(command)),
                     level=distutils.log.INFO)
@@ -182,6 +225,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info):
     def run(self):
         self.run_command('build_js')
         setuptools.command.egg_info.egg_info.run(self)
+
 
 def setup_www_plugin(**kw):
     package = kw['packages'][0]

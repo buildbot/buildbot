@@ -24,7 +24,6 @@ from twisted.trial import unittest
 
 from buildbot.changes.mail import CVSMaildirSource
 
-
 #
 # Sample message from CVS version 1.11
 #

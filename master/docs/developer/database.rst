@@ -108,7 +108,7 @@ buildrequests
         returns ``None`` if there is no such buildrequest.  Note that build
         requests are not cached, as the values in the database are not fixed.
 
-    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None)
+    .. py:method:: getBuildRequests(buildername=None, complete=None, claimed=None, bsid=None, branch=None, repository=None, resultSpec=None)
 
         :param buildername: limit results to buildrequests for this builder
         :type buildername: string
@@ -119,6 +119,8 @@ buildrequests
         :param bsid: see below
         :param repository: the repository associated with the sourcestamps originating the requests
         :param branch: the branch associated with the sourcestamps originating the requests
+        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+            If possible, the db layer can optimize the SQL query using this information.
         :returns: list of brdicts, via Deferred
 
         Get a list of build requests matching the given characteristics.
@@ -152,10 +154,6 @@ buildrequests
 
         If ``claimed_at`` is not given, then the current time will be used.
 
-        As of 0.8.5, this method can no longer be used to re-claim build
-        requests.  All given ID's must be unclaimed.  Use
-        :py:meth:`reclaimBuildRequests` to reclaim.
-
         .. index:: single: MySQL; limitations
         .. index:: single: SQLite; limitations
 
@@ -166,20 +164,6 @@ buildrequests
             transactions (MySQL), this method will not properly roll back any
             partial claims made before an :py:exc:`AlreadyClaimedError` is
             generated.
-
-    .. py:method:: reclaimBuildRequests(brids)
-
-        :param brids: ids of buildrequests to reclaim
-        :type brids: list
-        :returns: Deferred
-        :raises: :py:exc:`AlreadyClaimedError`
-
-        Re-claim the given build requests, updating the timestamp, but checking
-        that the requests are owned by this master.  The resulting deferred will
-        fire normally on success, or fail with :py:exc:`AlreadyClaimedError` if
-        *any* of the build requests are already claimed by another master
-        instance, or don't exist.  In this case, none of the reclaims will take
-        effect.
 
     .. py:method:: unclaimBuildRequests(brids)
 
@@ -206,19 +190,6 @@ buildrequests
         instance.  This will fail with :py:exc:`NotClaimedError` if the build
         request is already completed or does not exist.  If ``complete_at`` is
         not given, the current time will be used.
-
-    .. py:method:: unclaimExpiredRequests(old)
-
-        :param old: number of seconds after which a claim is considered old
-        :type old: int
-        :returns: Deferred
-
-        Find any incomplete claimed builds which are older than ``old``
-        seconds, and clear their claim information.
-
-        This is intended to catch builds that were claimed by a master which
-        has since disappeared.  As a side effect, it will log a message if any
-        requests are unclaimed.
 
 builds
 ~~~~~~
@@ -276,11 +247,13 @@ builds
 
         Returns the last successful build from the current build number with the same repository/repository/codebase
 
-    .. py:method:: getBuilds(builderid=None, buildrequestid=None, complete=None)
+    .. py:method:: getBuilds(builderid=None, buildrequestid=None, complete=None, resultSpec=None)
 
         :param integer builderid: builder to get builds for
         :param integer buildrequestid: buildrequest to get builds for
         :param boolean complete: if not None, filters results based on completeness
+        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+            If possible, the db layer can optimize the SQL query using this information.
         :returns: list of build dictionaries as above, via Deferred
 
         Get a list of builds, in the format described above.
@@ -546,6 +519,16 @@ logs
         It should only be called for finished logs.
         This method may take some time to complete.
 
+    .. py:method:: deleteOldLogChunks(older_than_timestamp)
+
+        :param integer older_than_timestamp: the logs whose step's ``started_at`` is older than ``older_than_timestamp`` will be deleted.
+        :returns: Deferred
+
+        Delete old logchunks (helper for the ``logHorizon`` policy).
+        Old logs have their logchunks deleted from the database, but they keep their ``num_lines`` metadata.
+        They have their types changed to 'd', so that the UI can display something meaningful.
+
+
 buildsets
 ~~~~~~~~~
 
@@ -624,11 +607,14 @@ buildsets
         Note that buildsets are not cached, as the values in the database are
         not fixed.
 
-    .. py:method:: getBuildsets(complete=None)
+    .. py:method:: getBuildsets(complete=None, resultSpec=None)
 
         :param complete: if true, return only complete buildsets; if false,
             return only incomplete buildsets; if ``None`` or omitted, return all
             buildsets
+        :param resultSpec: resultSpec containing filters sorting and paging request from data/REST API.
+            If possible, the db layer can optimize the SQL query using this information.
+
         :returns: list of bsdicts, via Deferred
 
         Get a list of bsdicts matching the given criteria.
@@ -1471,15 +1457,17 @@ builders
     * ``name``  -- the builder name, a 20-character :ref:`identifier <type-identifier>`
     * ``masterids`` -- the IDs of the masters where this builder is configured (sorted by id)
 
-    .. py:method:: findBuilderId(name)
+    .. py:method:: findBuilderId(name, autoCreate=True)
 
         :param name: name of this builder
         :type name: 20-character :ref:`identifier <type-identifier>`
+        :param autoCreate: automatically create the builder if name not found
+        :type autoCreate: bool
         :returns: builder id via Deferred
 
         Return the builder ID for the builder with this builder name.
         If such a builder is already in the database, this returns the ID.
-        If not, the builder is added to the database.
+        If not and ``autoCreate`` is True, the builder is added to the database.
 
     .. py:method:: addBuilderMaster(builderid=None, masterid=None)
 
@@ -1565,10 +1553,10 @@ The DB Connector and Components
         For use by subclasses to check that 'value' will fit in 'col', where 'col' is a table column from the model.
         Ignore this check for database engines that either provide this error themselves (postgres) or that do not enforce maximum-length restrictions (sqlite)
 
-    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None)
+    .. py:method:: findSomethingId(self, tbl, whereclause, insert_values, _race_hook=None, autoCreate=True)
 
-        Find (using C{whereclause}) or add (using C{insert_values) a row to
-        C{table}, and return the resulting ID.
+        Find (using ``whereclause``) or add (using ``insert_values``) a row to
+        ``table``, and return the resulting ID. If ``autoCreate`` == False, we will not automatically insert the row.
 
     .. py:method:: hashColumns(*args)
 

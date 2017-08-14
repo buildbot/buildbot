@@ -6,9 +6,14 @@ class Logviewer extends Directive
         directive = ->
             data = null
             self =
-            num_lines: 0
-            auto_scroll: true
 
+            toggleAutoScroll: ->
+                if self.scope.jumpToLine == "end"
+                    self.scope.jumpToLine = "none"
+                    self.scope.scroll_position = null
+                else
+                    self.scope.jumpToLine = "end"
+                    self.scope.scroll_position = self.scope.log.num_lines
             setHeight: (elm) ->
                 height = $window.height() - elm.offset().top
                 elm.css({height: height + "px"})
@@ -22,6 +27,11 @@ class Logviewer extends Directive
                         if log.type == 'h'
                             restService.get("logs/#{log.logid}/contents").then (content) ->
                                 self.scope.content = $sce.trustAs($sce.HTML, content.logchunks[0].content)
+                self.scope.$watch "log.num_lines", (n, o) ->
+                    if self.scope.jumpToLine == "end"
+                        self.scope.scroll_position = n
+                    else if self.scope.jumpToLine != "none"
+                        self.scope.scroll_position = self.scope.jumpToLine
 
             lines:
                 get: (index, count) ->
@@ -78,7 +88,7 @@ class Logviewer extends Directive
             replace: true
             transclude: true
             restrict: 'E'
-            scope: {log:"="}
+            scope: {log:"=", jumpToLine:"="}
             templateUrl: "views/logviewer.html"
             controller: ["$scope", ($scope) ->
                 self = directive()

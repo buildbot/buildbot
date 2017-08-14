@@ -35,6 +35,7 @@ from twisted.trial import unittest
 from zope.interface import implementer
 
 from buildbot import config
+from buildbot import configurators
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import revlinks
@@ -63,9 +64,6 @@ global_defaults = dict(
     title='Buildbot',
     titleURL='http://buildbot.net',
     buildbotURL='http://localhost:8080/',
-    changeHorizon=None,
-    logHorizon=None,
-    buildHorizon=None,
     logCompressionLimit=4096,
     logCompressionMethod='gz',
     logEncoding='utf-8',
@@ -162,7 +160,9 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
     def tearDown(self):
         return self.tearDownDirs()
 
-    def install_config_file(self, config_file, other_files={}):
+    def install_config_file(self, config_file, other_files=None):
+        if other_files is None:
+            other_files = {}
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
@@ -272,7 +272,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
                     self.patch(config.MasterConfig, n,
                                mock.Mock(side_effect=lambda: None))
 
-    def install_config_file(self, config_file, other_files={}):
+    def install_config_file(self, config_file, other_files=None):
+        if other_files is None:
+            other_files = {}
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
@@ -372,7 +374,6 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.check_locks.called)
         self.assertTrue(rv.check_builders.called)
         self.assertTrue(rv.check_status.called)
-        self.assertTrue(rv.check_horizons.called)
         self.assertTrue(rv.check_ports.called)
 
     def test_preChangeGenerator(self):
@@ -484,7 +485,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
     def test_load_global_eventHorizon(self):
         with assertProducesWarning(
                 config.ConfigWarning,
-                message_pattern=r"`eventHorizon` is deprecated and will be removed in a future version."):
+                message_pattern=r"`eventHorizon` is deprecated and ignored"):
             self.do_test_load_global(
                 dict(eventHorizon=10))
 
@@ -495,12 +496,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 message_pattern=r"`buildbotNetUsageData` is not configured and defaults to basic."):
             self.do_test_load_global(
                 dict())
-
-    def test_load_global_logHorizon(self):
-        self.do_test_load_global(dict(logHorizon=10), logHorizon=10)
-
-    def test_load_global_buildHorizon(self):
-        self.do_test_load_global(dict(buildHorizon=10), buildHorizon=10)
 
     def test_load_global_logCompressionLimit(self):
         self.do_test_load_global(dict(logCompressionLimit=10),
@@ -1057,6 +1052,16 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         errMsg += "object should be an instance of buildbot.util.service.BuildbotService"
         self.assertConfigError(self.errors, errMsg)
 
+    def test_load_configurators_norminal(self):
+
+        class MyConfigurator(configurators.ConfiguratorBase):
+
+            def configure(self, config_dict):
+                config_dict['foo'] = 'bar'
+        c = dict(configurators=[MyConfigurator()])
+        self.cfg.run_configurators(self.filename, c)
+        self.assertEqual(c['foo'], 'bar')
+
 
 class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
@@ -1109,11 +1114,11 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
             return b
 
         def lock(name):
-            l = mock.Mock(spec=locks.MasterLock)
-            l.name = name
+            lock = mock.Mock(spec=locks.MasterLock)
+            lock.name = name
             if bare_builder_lock:
-                return l
-            return locks.LockAccess(l, "counting", _skipChecks=True)
+                return lock
+            return locks.LockAccess(lock, "counting", _skipChecks=True)
 
         b1, b2 = bldr('b1'), bldr('b2')
         self.cfg.builders = [b1, b2]
@@ -1252,13 +1257,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertNoConfigErrors(self.errors)
         st.checkConfig.assert_called_once_with(self.cfg.status)
-
-    def test_check_horizons(self):
-        self.cfg.logHorizon = 100
-        self.cfg.buildHorizon = 50
-        self.cfg.check_horizons()
-
-        self.assertConfigError(self.errors, "logHorizon must be less")
 
     def test_check_ports_protocols_set(self):
         self.cfg.protocols = {"pb": {"port": 10}}

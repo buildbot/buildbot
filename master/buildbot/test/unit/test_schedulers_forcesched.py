@@ -54,8 +54,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def tearDown(self):
         self.tearDownScheduler()
 
-    def makeScheduler(self, name='testsched', builderNames=['a', 'b'],
+    def makeScheduler(self, name='testsched', builderNames=None,
                       **kw):
+        if builderNames is None:
+            builderNames = ['a', 'b']
         sched = self.attachScheduler(
             ForceScheduler(name=name, builderNames=builderNames, **kw),
             self.OBJECTID, self.SCHEDULERID,
@@ -608,6 +610,9 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.assertRaisesConfigError("ForceScheduler 'testsched': builderNames must be a list of strings:",
                                      lambda: ForceScheduler(name='testsched', builderNames=[1234],
                                                             codebases=['bar'], username="foo"))
+
+    def test_listofunicode_builderNames(self):
+        ForceScheduler(name='testsched', builderNames=[u'a', u'b'])
 
     def test_listofmixed_builderNames(self):
         self.assertRaisesConfigError("ForceScheduler 'testsched': builderNames must be a list of strings:",

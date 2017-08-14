@@ -66,15 +66,15 @@ class Tests(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updates_plain(self):
-        l = yield self.makeLog('t')
+        _log = yield self.makeLog('t')
 
-        l.addContent(u'hello\n')
-        l.addContent(u'hello ')
-        l.addContent(u'cruel ')
-        l.addContent(u'world\nthis is a second line')  # unfinished
-        l.finish()
+        _log.addContent(u'hello\n')
+        _log.addContent(u'hello ')
+        _log.addContent(u'cruel ')
+        _log.addContent(u'world\nthis is a second line')  # unfinished
+        _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], {
+        self.assertEqual(self.master.data.updates.logs[_log.logid], {
             'content': [u'hello\n', u'hello cruel world\n',
                         u'this is a second line\n'],
             'finished': True,
@@ -84,99 +84,99 @@ class Tests(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_updates_different_encoding(self):
-        l = yield self.makeLog('t', logEncoding='latin-1')
-        l.addContent('$ and \xa2\n')  # 0xa2 is latin-1 encoding for CENT SIGN
-        l.finish()
+        _log = yield self.makeLog('t', logEncoding='latin-1')
+        _log.addContent('$ and \xa2\n')  # 0xa2 is latin-1 encoding for CENT SIGN
+        _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
                          [u'$ and \N{CENT SIGN}\n'])
 
     @defer.inlineCallbacks
     def test_updates_unicode_input(self):
-        l = yield self.makeLog('t', logEncoding='something-invalid')
-        l.addContent(u'\N{SNOWMAN}\n')
-        l.finish()
+        _log = yield self.makeLog('t', logEncoding='something-invalid')
+        _log.addContent(u'\N{SNOWMAN}\n')
+        _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid]['content'],
+        self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],
                          [u'\N{SNOWMAN}\n'])
 
     @defer.inlineCallbacks
     def test_subscription_plain(self):
-        l = yield self.makeLog('t')
+        _log = yield self.makeLog('t')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)))
+        _log.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
-        yield l.addContent(u'hello\n')
+        yield _log.addContent(u'hello\n')
         self.assertEqual(calls, [(None, u'hello\n')])
         calls = []
 
-        yield l.addContent(u'hello ')
+        yield _log.addContent(u'hello ')
         self.assertEqual(calls, [])
-        yield l.addContent(u'cruel ')
+        yield _log.addContent(u'cruel ')
         self.assertEqual(calls, [])
-        yield l.addContent(u'world\nthis is a second line\n')
+        yield _log.addContent(u'world\nthis is a second line\n')
         self.assertEqual(calls, [
             (None, u'hello cruel world\nthis is a second line\n')])
         calls = []
 
-        yield l.finish()
+        yield _log.finish()
         self.assertEqual(calls, [(None, None)])
 
     @defer.inlineCallbacks
     def test_subscription_unsubscribe(self):
-        l = yield self.makeLog('t')
+        _log = yield self.makeLog('t')
         sub_fn = mock.Mock()
-        sub = l.subscribe(sub_fn)
+        sub = _log.subscribe(sub_fn)
         sub.unsubscribe()
-        yield l.finish()
+        yield _log.finish()
         sub_fn.assert_not_called()
 
     @defer.inlineCallbacks
     def test_subscription_stream(self):
-        l = yield self.makeLog('s')
+        _log = yield self.makeLog('s')
         calls = []
-        l.subscribe(lambda stream, content: calls.append((stream, content)))
+        _log.subscribe(lambda stream, content: calls.append((stream, content)))
         self.assertEqual(calls, [])
 
-        yield l.addStdout(u'hello\n')
+        yield _log.addStdout(u'hello\n')
         self.assertEqual(calls, [('o', u'hello\n')])
         calls = []
 
-        yield l.addStdout(u'hello ')
+        yield _log.addStdout(u'hello ')
         self.assertEqual(calls, [])
-        yield l.addStdout(u'cruel ')
+        yield _log.addStdout(u'cruel ')
         self.assertEqual(calls, [])
-        yield l.addStderr(u'!!\n')
+        yield _log.addStderr(u'!!\n')
         self.assertEqual(calls, [('e', '!!\n')])
         calls = []
 
-        yield l.addHeader(u'**\n')
+        yield _log.addHeader(u'**\n')
         self.assertEqual(calls, [('h', '**\n')])
         calls = []
 
-        yield l.addStdout(u'world\nthis is a second line')  # unfinished
+        yield _log.addStdout(u'world\nthis is a second line')  # unfinished
         self.assertEqual(calls, [
             ('o', u'hello cruel world\n')])
         calls = []
 
-        yield l.finish()
+        yield _log.finish()
         self.assertEqual(calls, [
             ('o', u'this is a second line\n'),
             (None, None)])
 
     @defer.inlineCallbacks
     def test_updates_stream(self):
-        l = yield self.makeLog('s')
+        _log = yield self.makeLog('s')
 
-        l.addStdout(u'hello\n')
-        l.addStdout(u'hello ')
-        l.addStderr(u'oh noes!\n')
-        l.addStdout(u'cruel world\n')
-        l.addStderr(u'bad things!')  # unfinished
-        l.finish()
+        _log.addStdout(u'hello\n')
+        _log.addStdout(u'hello ')
+        _log.addStderr(u'oh noes!\n')
+        _log.addStdout(u'cruel world\n')
+        _log.addStderr(u'bad things!')  # unfinished
+        _log.finish()
 
-        self.assertEqual(self.master.data.updates.logs[l.logid], {
+        self.assertEqual(self.master.data.updates.logs[_log.logid], {
             'content': [u'ohello\n', u'eoh noes!\n', u'ohello cruel world\n',
                         u'ebad things!\n'],
             'finished': True,
@@ -186,17 +186,17 @@ class Tests(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_isFinished(self):
-        l = yield self.makeLog('s')
-        self.assertFalse(l.isFinished())
-        yield l.finish()
-        self.assertTrue(l.isFinished())
+        _log = yield self.makeLog('s')
+        self.assertFalse(_log.isFinished())
+        yield _log.finish()
+        self.assertTrue(_log.isFinished())
 
     @defer.inlineCallbacks
     def test_waitUntilFinished(self):
-        l = yield self.makeLog('s')
-        d = l.waitUntilFinished()
+        _log = yield self.makeLog('s')
+        d = _log.waitUntilFinished()
         self.assertFalse(d.called)
-        yield l.finish()
+        yield _log.finish()
         self.assertTrue(d.called)
 
 

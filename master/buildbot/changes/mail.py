@@ -416,7 +416,8 @@ class SVNCommitEmailMaildirSource(MaildirSource):
 #   https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test
 #
 #   You are subscribed to branch lp:~knielsen/maria/tmp-buildbot-test.
-#   To unsubscribe from this branch go to https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test/+edit-subscription.
+#   To unsubscribe from this branch go to
+#   https://code.launchpad.net/~knielsen/maria/tmp-buildbot-test/+edit-subscription.
 #
 # [end of mail]
 
@@ -532,8 +533,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
                                 comments=d['comments'],
                                 when=when, revision=rev,
                                 branch=branch, repository=repository or ''))
-        else:
-            return None
+        return None
 
 
 def parseLaunchpadDate(datestr, tz_sign, tz_hours, tz_minutes):

@@ -2,25 +2,23 @@
 # test goal: checks the the number of element present in home page
 # to test this part: two different builds need to be started
 
-
 forcePage = require('./pages/force.coffee')
 builderPage = require('./pages/builder.coffee')
 homePage = require('./pages/home.coffee')
-
 
 describe 'home page', () ->
     force = null
     builder = null
     home = null
 
-    beforeEach(() ->
+    beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
         home = new homePage()
-        builder.goDefault()
-    )
+        home.loginUser("my@email.com", "mypass")
+
     afterEach () ->
-        new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     it 'should go to the home page and check the different builder', () ->
         builderName = {

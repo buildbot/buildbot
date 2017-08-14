@@ -170,7 +170,7 @@ class RealDatabaseMixin(object):
         model.Model.metadata.create_all(
             bind=conn, tables=tables, checkfirst=True)
 
-    def setUpRealDatabase(self, table_names=[], basedir='basedir',
+    def setUpRealDatabase(self, table_names=None, basedir='basedir',
                           want_pool=True, sqlite_memory=True):
         """
 
@@ -185,6 +185,8 @@ class RealDatabaseMixin(object):
         @param sqlite_memory: (optional) False to avoid using an in-memory db
         @returns: Deferred
         """
+        if table_names is None:
+            table_names = []
         self.__want_pool = want_pool
 
         default_sqlite = 'sqlite://'
@@ -213,8 +215,7 @@ class RealDatabaseMixin(object):
     def tearDownRealDatabase(self):
         if self.__want_pool:
             return self.db_pool.do(self.__thd_clean_database)
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
     def insertTestData(self, rows):
         """Insert test data into the database for use during the test.

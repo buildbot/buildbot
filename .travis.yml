@@ -32,22 +32,12 @@ env:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  # codecov is the interface to codecov.io; see after_success
-  - pip install codecov
+  - pip install -r requirements-ci.txt
+  - pip install -r requirements-cidb.txt
   - "if [ $TWISTED = trunk ]; then pip install git+https://github.com/twisted/twisted ; fi"
   - "if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi"
   - "if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi"
 
-  # Install mysqlclient for tests that uses real MySQL
-  # Install psycopg2 and pg8000 for tests that uses real PostgreSQL
-  - |
-      pip install -e pkg \
-                  -e 'master[tls,test]' \
-                  -e 'worker[test]' \
-                  mysqlclient \
-                  psycopg2 \
-                  pg8000 \
-                  buildbot_www
 
 before_script:
   # create real MySQL database for tests

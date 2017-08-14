@@ -65,6 +65,7 @@ class Properties(util.ComparableMixin):
         # persisted if a build is rebuilt
         self.runtime = set()
         self.build = None  # will be set by the Build when starting
+        self._used_secrets = {}
         if kwargs:
             self.update(kwargs, "TEST")
 
@@ -103,8 +104,8 @@ class Properties(util.ComparableMixin):
 
     def asList(self):
         """Return the properties as a sorted list of (name, value, source)"""
-        l = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
-        return l
+        ret = sorted([(k, v[0], v[1]) for k, v in iteritems(self.properties)])
+        return ret
 
     def asDict(self):
         """Return the properties as a simple key:value dictionary,
@@ -161,6 +162,20 @@ class Properties(util.ComparableMixin):
     def render(self, value):
         renderable = IRenderable(value)
         return defer.maybeDeferred(renderable.getRenderingFor, self)
+
+    # as the secrets are used in the renderable, they can pretty much arrive anywhere
+    # in the log of state strings
+    # so we have the renderable record here which secrets are used that we must remove
+    def useSecret(self, secret_value, secret_name):
+        self._used_secrets[secret_value] = "<" + secret_name + ">"
+
+    # This method shall then be called to remove secrets from any text that could be logged somewhere
+    # and that could contain secrets
+    def cleanupTextFromSecrets(self, text):
+        # Better be correct and inefficient than efficient and wrong
+        for k, v in self._used_secrets.items():
+            text = text.replace(k, v)
+        return text
 
 
 class PropertiesMixin(object):
@@ -231,8 +246,7 @@ class _PropertyMap(object):
                 return self.temp_vals[prop]
             elif prop in properties:
                 return properties[prop]
-            else:
-                return repl
+            return repl
 
         def colon_tilde(mo):
             # %(prop:~repl)s
@@ -243,8 +257,7 @@ class _PropertyMap(object):
                 return self.temp_vals[prop]
             elif prop in properties and properties[prop]:
                 return properties[prop]
-            else:
-                return repl
+            return repl
 
         def colon_plus(mo):
             # %(prop:+repl)s
@@ -252,8 +265,7 @@ class _PropertyMap(object):
             prop, repl = mo.group(1, 2)
             if prop in properties or prop in self.temp_vals:
                 return repl
-            else:
-                return ''
+            return ''
 
         for regexp, fn in [
             (self.colon_minus_re, colon_minus),
@@ -427,17 +439,18 @@ class _SecretRenderer(object):
         self.secret_name = secret_name
 
     @defer.inlineCallbacks
-    def getRenderingFor(self, build):
-        secretsSrv = build.getBuild().master.namedServices.get("secrets")
+    def getRenderingFor(self, properties):
+        secretsSrv = properties.getBuild().master.namedServices.get("secrets")
         if not secretsSrv:
             error_message = "secrets service not started, need to configure" \
                             " SecretManager in c['services'] to use 'secrets'" \
                             "in Interpolate"
             raise KeyError(error_message)
-        credsservice = build.getBuild().master.namedServices['secrets']
+        credsservice = properties.getBuild().master.namedServices['secrets']
         secret_detail = yield credsservice.get(self.secret_name)
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secret_name)
+        properties.useSecret(secret_detail.value, self.secret_name)
         defer.returnValue(secret_detail.value)
 
 
@@ -462,8 +475,7 @@ class _SourceStampDict(util.ComparableMixin, object):
         ss = build.getBuild().getSourceStamp(self.codebase)
         if ss:
             return ss.asDict()
-        else:
-            return {}
+        return {}
 
 
 @implementer(IRenderable)
@@ -531,8 +543,7 @@ class Interpolate(util.ComparableMixin, object):
             return 'Interpolate(%r, *%r)' % (self.fmtstring, self.args)
         elif self.kwargs:
             return 'Interpolate(%r, **%r)' % (self.fmtstring, self.kwargs)
-        else:
-            return 'Interpolate(%r)' % (self.fmtstring,)
+        return 'Interpolate(%r)' % (self.fmtstring,)
 
     @staticmethod
     def _parse_prop(arg):
@@ -550,7 +561,7 @@ class Interpolate(util.ComparableMixin, object):
         return _thePropertyDict, prop, repl
 
     @staticmethod
-    def _parse_secrets(arg):
+    def _parse_secret(arg):
         try:
             secret, repl = arg.split(":", 1)
         except ValueError:
@@ -604,8 +615,7 @@ class Interpolate(util.ComparableMixin, object):
         if not fn:
             config.error("invalid Interpolate selector '%s'" % key)
             return None
-        else:
-            return fn(arg)
+        return fn(arg)
 
     @staticmethod
     def _splitBalancedParen(delim, arg):
@@ -688,12 +698,34 @@ class Interpolate(util.ComparableMixin, object):
             d = props.render(self.args)
             d.addCallback(lambda args:
                           self.fmtstring % tuple(args))
-            return d
         else:
             d = props.render(self.interpolations)
             d.addCallback(lambda res:
                           self.fmtstring % res)
-            return d
+        return d
+
+
+@implementer(IRenderable)
+class _ComparisonRenderer(util.ComparableMixin, object):
+    """
+    An instance of this class renders a comparison given by a comparator
+    function with v1 and v2
+
+    """
+
+    compare_attrs = ('fn',)
+
+    def __init__(self, v1, v2, cstr, comparator):
+        self.v1, self.v2, self.comparator, self.cstr = v1, v2, comparator, cstr
+
+    @defer.inlineCallbacks
+    def getRenderingFor(self, props):
+        v1 = yield props.render(self.v1)
+        v2 = yield props.render(self.v2)
+        defer.returnValue(self.comparator(v1, v2))
+
+    def __repr__(self):
+        return '%r %r %r' % (self.v1, self.cstr, self.v2)
 
 
 @implementer(IRenderable)
@@ -720,6 +752,27 @@ class Property(util.ComparableMixin):
         # Report on parent frame.
         _on_property_usage(key, stacklevel=1)
 
+    def __eq__(self, other):
+        return _ComparisonRenderer(self, other, "==", lambda v1, v2: v1 == v2)
+
+    def __ne__(self, other):
+        return _ComparisonRenderer(self, other, "!=", lambda v1, v2: v1 != v2)
+
+    def __lt__(self, other):
+        return _ComparisonRenderer(self, other, "<", lambda v1, v2: v1 < v2)
+
+    def __le__(self, other):
+        return _ComparisonRenderer(self, other, "<=", lambda v1, v2: v1 <= v2)
+
+    def __gt__(self, other):
+        return _ComparisonRenderer(self, other, ">", lambda v1, v2: v1 > v2)
+
+    def __ge__(self, other):
+        return _ComparisonRenderer(self, other, ">=", lambda v1, v2: v1 >= v2)
+
+    def __repr__(self):
+        return "Property({0})".format(self.key)
+
     def getRenderingFor(self, props):
         if self.defaultWhenFalse:
             d = props.render(props.getProperty(self.key))
@@ -728,14 +781,12 @@ class Property(util.ComparableMixin):
             def checkDefault(rv):
                 if rv:
                     return rv
-                else:
-                    return props.render(self.default)
-            return d
-        else:
-            if props.hasProperty(self.key):
-                return props.render(props.getProperty(self.key))
-            else:
                 return props.render(self.default)
+            return d
+
+        if props.hasProperty(self.key):
+            return props.render(props.getProperty(self.key))
+        return props.render(self.default)
 
 
 @implementer(IRenderable)

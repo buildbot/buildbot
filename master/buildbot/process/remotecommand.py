@@ -274,22 +274,27 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
     @metrics.countMethod('RemoteCommand.remoteUpdate()')
     @defer.inlineCallbacks
     def remoteUpdate(self, update):
+        def cleanup(data):
+            if self.step is None:
+                return data
+            return self.step.build.properties.cleanupTextFromSecrets(data)
+
         if self.debug:
             for k, v in iteritems(update):
                 log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
-            yield self.addStdout(update['stdout'])
+            yield self.addStdout(cleanup(update['stdout']))
         if "stderr" in update:
             # 'stderr': data
-            yield self.addStderr(update['stderr'])
+            yield self.addStderr(cleanup(update['stderr']))
         if "header" in update:
             # 'header': data
-            yield self.addHeader(update['header'])
+            yield self.addHeader(cleanup(update['header']))
         if "log" in update:
             # 'log': (logname, data)
             logname, data = update['log']
-            yield self.addToLog(logname, data)
+            yield self.addToLog(logname, cleanup(data))
         if "rc" in update:
             rc = self.rc = update['rc']
             log.msg("%s rc=%s" % (self, rc))
@@ -363,8 +368,7 @@ class RemoteShellCommand(RemoteCommand):
             def obfuscate(arg):
                 if isinstance(arg, tuple) and len(arg) == 3 and arg[0] == 'obfuscated':
                     return arg[2]
-                else:
-                    return arg
+                return arg
             self.fake_command = [obfuscate(c) for c in self.command]
 
         if env is not None:

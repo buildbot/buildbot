@@ -43,7 +43,6 @@ from buildbot.util import datetime2epoch
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 
-
 # Fake DB Rows
 
 
@@ -121,14 +120,12 @@ class Row(object):
     def __eq__(self, other):
         if self.__class__ != other.__class__:
             return False
-        else:
-            return self.values == other.values
+        return self.values == other.values
 
     def __ne__(self, other):
         if self.__class__ != other.__class__:
             return True
-        else:
-            return self.values != other.values
+        return self.values != other.values
 
     def __lt__(self, other):
         if self.__class__ != other.__class__:
@@ -169,8 +166,7 @@ class Row(object):
                 return b'\xf5'
             elif isinstance(x, text_type):
                 return x.encode('utf-8')
-            else:
-                return str(x).encode('utf-8')
+            return str(x).encode('utf-8')
 
         return hashlib.sha1(b'\0'.join(map(encode, args))).hexdigest()
 
@@ -757,8 +753,7 @@ class FakeChangeSourcesComponent(FakeDBComponent):
             # is active
             rv['masterid'] = self.changesource_masters.get(changesourceid)
             return defer.succeed(rv)
-        else:
-            return None
+        return None
 
     def getChangeSources(self, active=None, masterid=None):
         d = defer.DeferredList([
@@ -933,8 +928,7 @@ class FakeChangesComponent(FakeDBComponent):
             self.changes) if v['sourcestampid'] == ssid]
         if chdicts:
             return defer.succeed(chdicts[0])
-        else:
-            return defer.succeed(None)
+        return defer.succeed(None)
 
     def _chdict(self, row):
         chdict = row.copy()
@@ -1086,8 +1080,7 @@ class FakeSchedulersComponent(FakeDBComponent):
             # is active
             rv['masterid'] = self.scheduler_masters.get(schedulerid)
             return defer.succeed(rv)
-        else:
-            return None
+        return None
 
     def getSchedulers(self, active=None, masterid=None):
         d = defer.DeferredList([
@@ -1341,7 +1334,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         row = self.buildsets[bsid]
         return defer.succeed(self._row2dict(row))
 
-    def getBuildsets(self, complete=None):
+    def getBuildsets(self, complete=None, resultSpec=None):
         rv = []
         for bs in itervalues(self.buildsets):
             if complete is not None:
@@ -1351,6 +1344,8 @@ class FakeBuildsetsComponent(FakeDBComponent):
                     rv.append(self._row2dict(bs))
             else:
                 rv.append(self._row2dict(bs))
+        if resultSpec is not None:
+            rv = self.applyResultSpec(rv, resultSpec)
         return defer.succeed(rv)
 
     @defer.inlineCallbacks
@@ -1401,8 +1396,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         if key in self.buildsets:
             return defer.succeed(
                 self.buildsets[key]['properties'])
-        else:
-            return defer.succeed({})
+        return defer.succeed({})
 
     # fake methods
 
@@ -1796,17 +1790,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                                                   masterid=self.MASTER_ID, claimed_at=claimed_at)
         return defer.succeed(None)
 
-    def reclaimBuildRequests(self, brids, _reactor):
-        for brid in brids:
-            if brid in self.claims and self.claims[brid].masterid != self.db.master.masterid:
-                raise buildrequests.AlreadyClaimedError
-
-        # now that we've thrown any necessary exceptions, get started
-        for brid in brids:
-            self.claims[brid] = BuildRequestClaim(brid=brid,
-                                                  masterid=self.MASTER_ID, claimed_at=_reactor.seconds())
-        return defer.succeed(None)
-
     def unclaimBuildRequests(self, brids):
         for brid in brids:
             if brid in self.claims and self.claims[brid].masterid == self.db.master.masterid:
@@ -1828,17 +1811,6 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             self.reqs[brid].results = results
             self.reqs[brid].complete_at = complete_at
         return defer.succeed(None)
-
-    def unclaimExpiredRequests(self, old, _reactor=reactor):
-        old_epoch = _reactor.seconds() - old
-
-        for br in itervalues(self.reqs):
-            if br.complete == 1:
-                continue
-
-            claim_row = self.claims.get(br.id)
-            if claim_row and claim_row.claimed_at < old_epoch:
-                del self.claims[br.id]
 
     def _brdictFromRow(self, row):
         return buildrequests.BuildRequestsConnectorComponent._brdictFromRow(row, self.MASTER_ID)
@@ -1964,8 +1936,7 @@ class FakeBuildsComponent(FakeDBComponent):
     def getBuildProperties(self, bid):
         if bid in self.builds:
             return defer.succeed(self.builds[bid]['properties'])
-        else:
-            return defer.succeed({})
+        return defer.succeed({})
 
     def setBuildProperty(self, bid, name, value, source):
         assert bid in self.builds
@@ -2199,6 +2170,11 @@ class FakeLogsComponent(FakeDBComponent):
     def compressLog(self, logid, force=False):
         return defer.succeed(None)
 
+    def deleteOldLogChunks(self, older_than_timestamp):
+        # not implemented
+        self._deleted = older_than_timestamp
+        return defer.succeed(1)
+
 
 class FakeUsersComponent(FakeDBComponent):
 
@@ -2393,10 +2369,12 @@ class FakeBuildersComponent(FakeDBComponent):
                 self.builders_tags.setdefault(row.builderid,
                                               []).append(row.tagid)
 
-    def findBuilderId(self, name, _reactor=reactor):
+    def findBuilderId(self, name, autoCreate=True, _reactor=reactor):
         for m in itervalues(self.builders):
             if m['name'] == name:
                 return defer.succeed(m['id'])
+        if not autoCreate:
+            return defer.succeed(None)
         id = len(self.builders) + 1
         self.builders[id] = dict(
             id=id,

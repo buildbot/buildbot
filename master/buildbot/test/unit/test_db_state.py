@@ -86,6 +86,23 @@ class TestStateConnectorComponent(
         d.addCallback(check)
         return d
 
+    def test_getObjectId_new_big_name(self):
+        d = self.db.state.getObjectId('someobj' * 150, 'someclass')
+        expn = 'someobj' * 9 + 's132bf9b89b0cdbc040d1ebc69e0dbee85dff720a'
+
+        def check(objectid):
+            self.assertNotEqual(objectid, None)
+
+            def thd(conn):
+                q = self.db.model.objects.select()
+                rows = conn.execute(q).fetchall()
+                self.assertEqual(
+                    [(r.id, r.name, r.class_name) for r in rows],
+                    [(objectid, expn, 'someclass')])
+            return self.db.pool.do(thd)
+        d.addCallback(check)
+        return d
+
     def test_getState_missing(self):
         d = self.db.state.getState(10, 'nosuch')
         return self.assertFailure(d, KeyError)

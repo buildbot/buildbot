@@ -90,7 +90,7 @@ class HTTPClientService(service.SharedService):
     PREFER_TREQ = False
     MAX_THREADS = 5
 
-    def __init__(self, base_url, auth=None, headers=None):
+    def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False):
         assert not base_url.endswith(
             "/"), "baseurl should not end with /: " + base_url
         service.SharedService.__init__(self)
@@ -98,6 +98,8 @@ class HTTPClientService(service.SharedService):
         self._auth = auth
         self._headers = headers
         self._session = None
+        self.verify = verify
+        self.debug = debug
 
     def updateHeaders(self, headers):
         if self._headers is None:
@@ -134,8 +136,7 @@ class HTTPClientService(service.SharedService):
     def stopService(self):
         if self._session:
             return self._session.close()
-        else:
-            return self._pool.closeCachedConnections()
+        return self._pool.closeCachedConnections()
 
     def _prepareRequest(self, ep, kwargs):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
@@ -155,18 +156,23 @@ class HTTPClientService(service.SharedService):
             jsonBytes = unicode2bytes(jsonStr)
             kwargs['headers']['Content-Type'] = 'application/json'
             kwargs['data'] = jsonBytes
-
         return url, kwargs
 
     def _doTxRequest(self, method, ep, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
+        if self.debug:
+            log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
         def readContent(session, res):
             # this forces reading of the content inside the thread
             res.content
+            if self.debug:
+                log.debug("==> {code}: {content}", code=res.status_code, content=res.content)
             return res
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
+        if self.verify is False:
+            kwargs['verify'] = False
         d = self._session.request(method, url, **kwargs)
         d.addCallback(TxRequestsResponseWrapper)
         d.addCallback(IHttpResponse)

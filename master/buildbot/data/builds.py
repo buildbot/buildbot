@@ -74,12 +74,13 @@ class Db2DataMixin(object):
     }
 
 
-class BuildEndpoint(Db2DataMixin, base.Endpoint):
+class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = False
     pathPatterns = """
         /builds/n:buildid
         /builders/n:builderid/builds/n:number
+        /builders/i:buildername/builds/n:number
     """
 
     @defer.inlineCallbacks
@@ -87,7 +88,9 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         if 'buildid' in kwargs:
             dbdict = yield self.master.db.builds.getBuild(kwargs['buildid'])
         else:
-            bldr = kwargs['builderid']
+            bldr = yield self.getBuilderId(kwargs)
+            if bldr is None:
+                return
             num = kwargs['number']
             dbdict = yield self.master.db.builds.getBuildByNumber(bldr, num)
 
@@ -137,12 +140,13 @@ class BuildEndpoint(Db2DataMixin, base.Endpoint):
         defer.returnValue(res)
 
 
-class BuildsEndpoint(Db2DataMixin, base.Endpoint):
+class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
 
     isCollection = True
     pathPatterns = """
         /builds
         /builders/n:builderid/builds
+        /builders/i:buildername/builds
         /buildrequests/n:buildrequestid/builds
         /workers/n:workerid/builds
     """
@@ -152,11 +156,16 @@ class BuildsEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         # following returns None if no filter
         # true or false, if there is a complete filter
+        builderid = None
+        if 'builderid' in kwargs or 'buildername' in kwargs:
+            builderid = yield self.getBuilderId(kwargs)
+            if builderid is None:
+                defer.returnValue([])
         complete = resultSpec.popBooleanFilter("complete")
         buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
         resultSpec.fieldMapping = self.fieldMapping
         builds = yield self.master.db.builds.getBuilds(
-            builderid=kwargs.get('builderid'),
+            builderid=builderid,
             buildrequestid=kwargs.get('buildrequestid', buildrequestid),
             workerid=kwargs.get('workerid'),
             complete=complete,

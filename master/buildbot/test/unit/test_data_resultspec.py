@@ -31,8 +31,7 @@ from buildbot.data.resultspec import ReverseComparator
 def mklist(fld, *values):
     if isinstance(fld, tuple):
         return [dict(zip(fld, val)) for val in values]
-    else:
-        return [{fld: val} for val in values]
+    return [{fld: val} for val in values]
 
 
 class Filter(unittest.TestCase):
@@ -238,7 +237,7 @@ class ResultSpec(unittest.TestCase):
     def test_popProperties(self):
         expected = ['prop1', 'prop2']
         rs = resultspec.ResultSpec(properties=[
-            resultspec.Property('property', 'eq', expected)
+            resultspec.Property(b'property', 'eq', expected)
         ])
         self.assertEqual(len(rs.properties), 1)
         self.assertEqual(rs.popProperties(), expected)
@@ -322,7 +321,7 @@ class Comparator(unittest.TestCase):
         self.assertLess(NoneComparator(datetime.datetime(1, 1, 1)),
                         NoneComparator(datetime.datetime(1, 1, 2)))
         self.assertEqual(NoneComparator(datetime.datetime(1, 1, 1)),
-                        NoneComparator(datetime.datetime(1, 1, 1)))
+                         NoneComparator(datetime.datetime(1, 1, 1)))
         self.assertGreater(NoneComparator(datetime.datetime(1, 1, 2)),
                            NoneComparator(datetime.datetime(1, 1, 1)))
         self.assertEqual(NoneComparator(None),

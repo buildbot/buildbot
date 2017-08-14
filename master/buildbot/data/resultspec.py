@@ -114,8 +114,7 @@ class NoneComparator(object):
             return True
         elif other.value is None:
             return False
-        else:
-            return self.value < other.value
+        return self.value < other.value
 
     def __eq__(self, other):
         return self.value == other.value
@@ -130,8 +129,7 @@ class NoneComparator(object):
             return False
         elif other.value is None:
             return True
-        else:
-            return self.value < other.value
+        return self.value < other.value
 
 
 class ReverseComparator(object):
@@ -175,8 +173,8 @@ class ResultSpec(object):
     def __repr__(self):
         return ("ResultSpec(**{{'filters': {}, 'fields': {}, 'properties': {}, "
                 "'order': {}, 'limit': {}, 'offset': {}").format(
-                self.filters, self.fields, self.properties, self.order,
-                self.limit, self.offset) + "})"
+                    self.filters, self.fields, self.properties, self.order,
+                    self.limit, self.offset) + "})"
 
     def __eq__(self, b):
         for i in ['filters', 'fields', 'properties', 'order', 'limit', 'offset']:
@@ -190,7 +188,7 @@ class ResultSpec(object):
     def popProperties(self):
         values = []
         for p in self.properties:
-            if p.field == 'property' and p.op == 'eq':
+            if p.field == b'property' and p.op == 'eq':
                 self.properties.remove(p)
                 values = p.values
                 break
@@ -298,7 +296,7 @@ class ResultSpec(object):
                 log.msg("Warning: limited data api query is not backed by db because of following filters",
                         unmatched_filters, unmatched_order)
             self.filters = unmatched_filters
-            self.order = unmatched_order
+            self.order = tuple(unmatched_order)
             return query, None
         count_query = sa.select([sa.func.count()]).select_from(query.alias('query'))
         self.order = None

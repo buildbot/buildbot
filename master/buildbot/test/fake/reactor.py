@@ -30,7 +30,6 @@ from twisted.internet.task import Clock
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
-
 # The code here is based on the implementations in
 # https://twistedmatrix.com/trac/ticket/8295
 # https://twistedmatrix.com/trac/ticket/8296
@@ -85,7 +84,7 @@ class NonThreadPool(object):
         self.calls += 1
         try:
             result = func(*args, **kw)
-        except:  # pylint: disable=bare-except
+        except:  # noqa pylint: disable=bare-except
             # We catch *everything* here, since normally this code would be
             # running in a thread, where there is nothing that will catch
             # error.

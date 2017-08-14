@@ -176,7 +176,7 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.debug:
             log.msg('WorkerFileUploadCommand._writeBlock(): ' +
                     'allowed=%d readlen=%d' % (length, len(data)))
-        if len(data) == 0:
+        if not data:
             log.msg("EOF: callRemote(close)")
             return True
 
@@ -214,20 +214,23 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp()
-        fileobj = os.fdopen(fd, 'wb')
+        self.fp = os.fdopen(fd, "rb+")
+
         if self.compress == 'bz2':
             mode = 'w|bz2'
         elif self.compress == 'gz':
             mode = 'w|gz'
         else:
             mode = 'w'
-        archive = tarfile.open(name=self.tarname, mode=mode, fileobj=fileobj)
+        # TODO: Use 'with' when depending on Python 2.7
+        # Not possible with older versions:
+        # exceptions.AttributeError: 'TarFile' object has no attribute '__exit__'
+        archive = tarfile.open(mode=mode, fileobj=self.fp)
         archive.add(self.path, '')
         archive.close()
-        fileobj.close()
 
         # Transfer it
-        self.fp = open(self.tarname, 'rb')
+        self.fp.seek(0)
 
         self.sendStatus({'header': "sending %s" % self.path})
 
@@ -371,7 +374,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         if self.debug:
             log.msg('WorkerFileDownloadCommand._readBlock(): readlen=%d' %
                     len(data))
-        if len(data) == 0:
+        if not data:
             return True
 
         if self.bytes_remaining is not None:

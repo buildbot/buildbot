@@ -5,6 +5,9 @@ DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg http
 
 PIP?=pip
 
+VENV_NAME:=.venv$(VENV_PY_VERSION)
+VENV_PY_VERSION?=python
+
 # build rst documentation
 docs:
 	$(MAKE) -C master/docs
@@ -31,7 +34,7 @@ flake8:
 frontend:
 	$(PIP) install -e pkg
 	$(PIP) install mock
-	for i in base wsgi_dashboards codeparameter console_view waterfall_view nestedexample; do $(PIP) install -e www/$$i || exit 1; done
+	for i in base wsgi_dashboards codeparameter console_view grid_view waterfall_view nestedexample; do $(PIP) install -e www/$$i || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests:
@@ -60,27 +63,36 @@ docker-buildbot-master:
 docker-buildbot-master-ubuntu:
 	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
-.venv:
-		virtualenv .venv
-		.venv/bin/pip install -U pip
-		.venv/bin/pip install -e pkg \
-			-e 'master[tls,test,docs]' \
-			-e 'worker[test]' \
-			buildbot_www \
-			'git+https://github.com/tardyp/towncrier'
+$(VENV_NAME):
+	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
+	$(VENV_NAME)/bin/pip install -U pip setuptools
+	$(VENV_NAME)/bin/pip install -e pkg \
+		-e 'master[tls,test,docs]' \
+		-e 'worker[test]' \
+		buildbot_www packaging \
+		'git+https://github.com/tardyp/towncrier'
 
 # helper for virtualenv creation
-virtualenv: .venv
+virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 	@echo now you can type following command  to activate your virtualenv
-	@echo . .venv/bin/activate
+	@echo . $(VENV_NAME)/bin/activate
 
-# helper for release creation
-release: .venv
-	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
+release_notes: $(VENV_NAME)
+	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
 	yes | towncrier --version $(VERSION) --date `date -u  +%F`
 	git commit -m "relnotes for $(VERSION)"
+
+clean:
+	git clean -xdf
+# helper for release creation
+release:$(VENV_NAME)
+	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
+	test -d "../bbdocs/.git"  #  make release shoud be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
-	./common/maketarballs.sh
+	. .venv/bin/activate && ./common/maketarballs.sh
 	./common/smokedist.sh
-	make docs
+	export VERSION=$(VERSION) ; . .venv/bin/activate && make docs
+	rm -rf ../bbdocs/docs/$(VERSION)  # in case of re-run
+	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
+	cd ../bbdocs && make && git add . && git commit -m $(VERSION) && git push
 	echo twine upload --sign dist/*

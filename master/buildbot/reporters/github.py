@@ -33,6 +33,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2NativeString
+from buildbot.util.giturlparse import giturlparse
 
 HOSTED_BASE_URL = 'https://api.github.com'
 
@@ -57,7 +58,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             self.master, baseURL, headers={
                 'Authorization': 'token ' + token,
                 'User-Agent': 'Buildbot'
-            })
+            },
+            debug=self.debug, verify=self.verify)
         self.verbose = verbose
 
     def setDefaults(self, context, startDescription, endDescription):
@@ -135,12 +137,16 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         else:
             issue = None
 
-        if project:
+        if "/" in project:
             repoOwner, repoName = project.split('/')
         else:
-            repo = sourcestamps[0]['repository'].split('/')[-2:]
-            repoOwner = repo[0]
-            repoName = '.'.join(repo[1].split('.')[:-1])
+            giturl = giturlparse(sourcestamps[0]['repository'])
+            repoOwner = giturl.owner
+            repoName = giturl.repo
+
+        if self.verbose:
+            log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
+                repoOwner=repoOwner, repoName=repoName))
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
@@ -165,7 +171,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 )
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for'
+                        'Updated status with "{state}" for '
                         '{repoOwner}/{repoName} at {sha}, issue {issue}.'.format(
                             state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
             except Exception as e:

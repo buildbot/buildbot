@@ -15,8 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-
-import re
+from future.moves.urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
 from twisted.python import log
@@ -31,6 +30,7 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
+from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2NativeString
 
@@ -56,7 +56,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             baseURL = baseURL[:-1]
         self.baseURL = baseURL
         self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers={'PRIVATE-TOKEN': token})
+            self.master, baseURL, headers={'PRIVATE-TOKEN': token},
+            debug=self.debug, verify=self.verify)
         self.verbose = verbose
         self.project_ids = {}
 
@@ -91,6 +92,31 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             json=payload)
 
     @defer.inlineCallbacks
+    def getProjectId(self, sourcestamp):
+        # retrieve project id via cache
+        url = giturlparse(sourcestamp['repository'])
+        if url is None:
+            defer.returnValue(None)
+        project_full_name = u"%s/%s" % (url.owner, url.repo)
+        project_full_name = unicode2NativeString(project_full_name)
+
+        # gitlab needs project name to be fully url quoted to get the project id
+        project_full_name = urlquote_plus(project_full_name)
+
+        if project_full_name not in self.project_ids:
+            response = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
+            proj = yield response.json()
+            if response.code not in (200, ):
+                log.msg(
+                    'Unknown (or hidden) gitlab project'
+                    '{repo}: {message}'.format(
+                        repo=project_full_name, **proj))
+                defer.returnValue(None)
+            self.project_ids[project_full_name] = proj['id']
+
+        defer.returnValue(self.project_ids[project_full_name])
+
+    @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
 
@@ -106,43 +132,20 @@ class GitLabStatusPush(http.HttpStatusPushBase):
             }.get(build['results'], 'error')
             description = yield props.render(self.endDescription)
         else:
-            state = 'pending'
+            state = 'running'
             description = yield props.render(self.startDescription)
 
         context = yield props.render(self.context)
 
         sourcestamps = build['buildset']['sourcestamps']
-        project = sourcestamps[0]['project']
 
-        # default to master if not found
-        branch = sourcestamps[0].get('branch', 'master')
-
-        if project:
-            repoOwner, repoName = project.split('/')
-        else:
-            repo = sourcestamps[0]['repository'].split('/')[-2:]
-            repoOwner = repo[0]
-            repoName = '.'.join(repo[1].split('.')[:-1])
-
-        m = re.match(".*:(.*)", repoOwner)
-        if m is not None:
-            repoOwner = m.group(1)
-
-        # retrieve project id via cache
-        self.project_ids
-        project_full_name = "%s%%2F%s" % (repoOwner, repoName)
-        project_full_name = unicode2NativeString(project_full_name)
-
-        if project_full_name not in self.project_ids:
-            proj = yield self._http.get('/api/v3/projects/%s' % (project_full_name))
-            proj = yield proj.json()
-            self.project_ids[project_full_name] = proj['id']
-
-        proj_id = self.project_ids[project_full_name]
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
+            proj_id = yield self.getProjectId(sourcestamp)
+            if proj_id is None:
+                continue
             try:
-                branch = unicode2NativeString(branch)
+                branch = unicode2NativeString(sourcestamp['branch'])
                 sha = unicode2NativeString(sha)
                 state = unicode2NativeString(state)
                 target_url = unicode2NativeString(build['url'])
@@ -162,20 +165,20 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                     message = message.get('message', 'unspecified error')
                     log.msg(
                         'Could not send status "{state}" for '
-                        '{repoOwner}/{repoName} at {sha}: {message}'.format(
-                            state=state, repoOwner=repoOwner,
-                            repoName=repoName, sha=sha,
+                        '{repo} at {sha}: {message}'.format(
+                            state=state,
+                            repo=sourcestamp['repository'], sha=sha,
                             message=message))
                 elif self.verbose:
                     log.msg(
                         'Status "{state}" sent for '
-                        '{repoOwner}/{repoName} at {sha}.'.format(
-                            state=state, repoOwner=repoOwner,
-                            repoName=repoName, sha=sha))
+                        '{repo} at {sha}.'.format(
+                            state=state, repo=sourcestamp['repository'], sha=sha))
             except Exception as e:
                 log.err(
                     e,
-                    'Fail to send status "{state}" for '
-                    '{repoOwner}/{repoName} at {sha}'.format(
-                        state=state, repoOwner=repoOwner,
-                        repoName=repoName, sha=sha))
+                    'Failed to send status "{state}" for '
+                    '{repo} at {sha}'.format(
+                        state=state,
+                        repo=sourcestamp['repository'], sha=sha
+                    ))

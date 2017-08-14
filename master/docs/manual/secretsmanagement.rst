@@ -42,28 +42,37 @@ The following example shows a basic usage of secrets in Buildbot.
 
     # First we declare that the secrets are stored in a directory of the filesystem
     # each file contain one secret identified by the filename
-    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles")]
 
     # then in a buildfactory:
 
     # use a secret on a shell command via Interpolate
-    f1.addStep(ShellCommand(Interpolate("wget -u user -p %{secrets:userpassword}s %{prop:urltofetch}s")))
+    f1.addStep(ShellCommand(Interpolate("wget -u user -p %(secret:userpassword)s %(prop:urltofetch)s")))
 
 Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
 
 Secrets storages
 ----------------
 
-SecretInFile
-````````````
+SecretInAFile
+`````````````
 
 .. code-block:: python
 
-    c['secretsProviders'] = [util.SecretInFile(directory="/path/toSecretsFiles"]
+    c['secretsProviders'] = [util.SecretInAFile(dirname="/path/toSecretsFiles")]
 
 In the passed directory, every file contains a secret identified by the filename.
 
 e.g: a file ``user`` contains the text ``pa$$w0rd``.
+
+Arguments:
+
+``dirname``
+  (required) Absolute path to directory containing the files with a secret.
+
+``strip``
+  (optional) if ``True`` (the default), trailing newlines are removed from the
+  file contents.
 
 SecretInVault
 `````````````
@@ -84,6 +93,33 @@ The token is generated when the Vault instance is initialized for the first time
 In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
+
+How to populate secrets in a build
+----------------------------------
+
+To populate secrets in files during a build, 2 steps are used to create and delete the files on the worker.
+The files will be automatically deleted at the end of the build.
+
+.. code-block:: python
+
+        f = BuildFactory()
+        with f.withSecrets(secrets_list):
+            f.addStep(step_definition)
+ or
+
+.. code-block:: python
+
+        f = BuildFactory()
+        f.addSteps([list_of_step_definitions], withSecrets=[secrets_list])
+
+In both cases the secrets_list is a list of tuple (secret path, secret value).
+
+.. code-block:: python
+
+        secrets_list = [('/first/path', Interpolate('write something and %(secret:somethingmore)s')),
+                        ('/second/path', Interpolate('%(secret:othersecret)s')]
+
+The Interpolate class is used to render the value during the build execution.
 
 How to configure a Vault instance
 ---------------------------------

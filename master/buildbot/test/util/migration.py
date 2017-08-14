@@ -32,12 +32,12 @@ from buildbot.test.util import dirs
 from buildbot.test.util import querylog
 from buildbot.util import sautils
 
-
 # test_upgrade vs. migration tests
 #
 # test_upgrade is an integration test -- it tests the whole upgrade process,
 # including the code in model.py.  Migrate tests are unit tests, and test a
 # single db upgrade script.
+
 
 class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
 

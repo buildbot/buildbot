@@ -22,7 +22,6 @@ import logging
 
 from twisted.python import log
 
-
 # These routines provides a way to dump SQLAlchemy SQL commands and their
 # results into Twisted's log.
 # Logging wrappers are not re-entrant.

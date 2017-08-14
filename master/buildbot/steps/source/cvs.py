@@ -81,8 +81,7 @@ class CVS(Source):
         def checkPatched(patched):
             if patched:
                 return self.purge(False)
-            else:
-                return 0
+            return 0
         d.addCallback(self._getAttrGroupMember('mode', self.mode))
 
         if patch:

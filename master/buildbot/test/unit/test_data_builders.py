@@ -62,6 +62,14 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(builder, None)
         return d
 
+    def test_get_missing_with_name(self):
+        d = self.callGet(('builders', 'builderc'))
+
+        @d.addCallback
+        def check(builder):
+            self.assertEqual(builder, None)
+        return d
+
     def test_get_existing_with_master(self):
         d = self.callGet(('masters', 13, 'builders', 2))
 

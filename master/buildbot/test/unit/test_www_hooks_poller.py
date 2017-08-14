@@ -50,10 +50,10 @@ class TestPollingChangeHook(unittest.TestCase):
             dialects={'poller': options}, master=master)
         master.change_svc = ChangeManager()
         yield master.change_svc.setServiceParent(master)
-        self.changesrc = self.Subclass("example", 21)
+        self.changesrc = self.Subclass(21, name='example')
         yield self.changesrc.setServiceParent(master.change_svc)
 
-        self.otherpoller = self.Subclass("otherpoller", 22)
+        self.otherpoller = self.Subclass(22, name="otherpoller")
         yield self.otherpoller.setServiceParent(master.change_svc)
 
         anotherchangesrc = base.ChangeSource(name='notapoller')
@@ -69,7 +69,7 @@ class TestPollingChangeHook(unittest.TestCase):
     @defer.inlineCallbacks
     def test_no_args(self):
         yield self.setUpRequest({})
-        self.assertEqual(self.request.written, b"no changes found")
+        self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, True)
 
@@ -94,7 +94,7 @@ class TestPollingChangeHook(unittest.TestCase):
     @defer.inlineCallbacks
     def test_trigger_poll(self):
         yield self.setUpRequest({"poller": ["example"]})
-        self.assertEqual(self.request.written, b"no changes found")
+        self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, False)
 
@@ -110,13 +110,13 @@ class TestPollingChangeHook(unittest.TestCase):
     @defer.inlineCallbacks
     def test_allowlist_allow(self):
         yield self.setUpRequest({"poller": ["example"]}, options={"allowed": ["example"]})
-        self.assertEqual(self.request.written, b"no changes found")
+        self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, False)
 
     @defer.inlineCallbacks
     def test_allowlist_all(self):
         yield self.setUpRequest({}, options={"allowed": ["example"]})
-        self.assertEqual(self.request.written, b"no changes found")
+        self.assertEqual(self.request.written, b"no change found")
         self.assertEqual(self.changesrc.called, True)
         self.assertEqual(self.otherpoller.called, False)

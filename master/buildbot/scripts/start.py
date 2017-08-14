@@ -114,8 +114,12 @@ def launch(config):
             "--python=buildbot.tac"]
 
     # ProcessProtocol just ignores all output
-    reactor.spawnProcess(
+    proc = reactor.spawnProcess(
         protocol.ProcessProtocol(), sys.executable, argv, env=os.environ)
+
+    if platformType == "win32":
+        with open("twistd.pid", "w") as pidfile:
+            pidfile.write("{0}".format(proc.pid))
 
 
 def start(config):

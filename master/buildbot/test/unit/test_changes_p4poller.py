@@ -33,20 +33,24 @@ from buildbot.test.util import gpo
 from buildbot.util import datetime2epoch
 
 first_p4changes = \
-    """Change 1 on 2006/04/13 by slamb@testclient 'first rev'
+    b"""Change 1 on 2006/04/13 by slamb@testclient 'first rev'
 """
 
 second_p4changes = \
-    """Change 3 on 2006/04/13 by bob@testclient 'short desc truncated'
+    b"""Change 3 on 2006/04/13 by bob@testclient 'short desc truncated'
 Change 2 on 2006/04/13 by slamb@testclient 'bar'
 """
 
 third_p4changes = \
-    """Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
+    b"""Change 5 on 2006/04/13 by mpatel@testclient 'first rev'
+"""
+
+fourth_p4changes = \
+    b"""Change 6 on 2006/04/14 by mpatel@testclient 'bar \xd0\x91'
 """
 
 p4_describe_2 = \
-    """Change 2 by slamb@testclient on 2006/04/13 21:46:23
+    b"""Change 2 by slamb@testclient on 2006/04/13 21:46:23
 
 \tcreation
 
@@ -70,7 +74,7 @@ Affected files ...
 """
 
 p4_describe_4 = \
-    """Change 4 by mpatel@testclient on 2006/04/13 21:55:39
+    b"""Change 4 by mpatel@testclient on 2006/04/13 21:55:39
 
 \tThis is a multiline comment with tabs and spaces
 \t
@@ -235,7 +239,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                      p4base='//depot/myproject/',
                      split_file=lambda x: x.split('/', 1)))
         self.expectCommands(
-            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout('Perforce client error:\n...'))
+            gpo.Expect('p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(b'Perforce client error:\n...'))
 
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
@@ -251,7 +255,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
         )
         self.add_p4_describe_result(2, p4change[2])
-        self.add_p4_describe_result(3, 'Perforce client error:\n...')
+        self.add_p4_describe_result(3, b'Perforce client error:\n...')
 
         # tell poll() that it's already been called once
         self.changesource.last_change = 2
@@ -277,7 +281,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'p4', 'changes', '//depot/myproject/...@3,#head').stdout(second_p4changes),
         )
         # Add a character which cannot be decoded with utf-8
-        undecodableText = p4change[2].encode("utf-8") + b"\x81"
+        undecodableText = p4change[2] + b"\x81"
         self.add_p4_describe_result(2, undecodableText)
 
         # tell poll() that it's already been called once
@@ -286,6 +290,21 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         # call _poll, so we can catch the failure
         d = self.changesource._poll()
         return self.assertFailure(d, UnicodeError)
+
+    def test_poll_unicode_error2(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None,
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     encoding='ascii'))
+        # Trying to decode a certain character with ascii codec should fail.
+        self.expectCommands(
+            gpo.Expect(
+                'p4', 'changes', '-m', '1', '//depot/myproject/...').stdout(fourth_p4changes),
+        )
+
+        d = self.changesource._poll()
+        return d
 
     def test_acquire_ticket_auth(self):
         self.attachChangeSource(

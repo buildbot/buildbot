@@ -27,10 +27,11 @@ This server is configured with the ``www`` configuration key, which specifies a 
 ``plugins``
     This key gives a dictionary of additional UI plugins to load, along with configuration for those plugins.
     These plugins must be separately installed in the Python environment, e.g., ``pip install buildbot-waterfall-view``.
+    See :ref:`UI-Plugins`
     For example::
 
         c['www'] = {
-            'plugins': {'waterfall_view': {'num_builds': 50}}
+            'plugins': {'waterfall_view': True}
         }
 
 ``debug``
@@ -136,6 +137,96 @@ This server is configured with the ``www`` configuration key, which specifies a 
     In simple cases, the ``buildbotURL`` contains the hostname and port of the master, e.g., ``http://master.example.com:8010/``.
     In more complex cases, with multiple masters, web proxies, or load balancers, the correspondence may be less obvious.
 
+.. _UI-Plugins:
+
+UI plugins
+~~~~~~~~~~
+
+.. _WaterfallView:
+
+Waterfall View
+++++++++++++++
+
+Waterfall shows the whole buildbot activity in vertical time line.
+Builds are represented with boxes whose height vary according to their duration.
+Builds are sorted by builders in the horizontal axes, which allows you to see how builders are scheduled together.
+
+    .. code-block:: bash
+
+        pip install buildbot-waterfall-view
+
+    .. code-block:: python
+
+        c['www'] = {
+            'plugins': {'waterfall_view': True}
+        }
+
+
+.. note::
+
+    Waterfall is the emblematic view of Buildbot Eight.
+    It allowed to see the whole Buildbot activity very quickly.
+    Waterfall however had big scalability issues, and larger installs had to disable the page in order to avoid tens of seconds master hang because of a big waterfall page rendering.
+    The whole Buildbot Eight internal status API has been tailored in order to make Waterfall possible.
+    This is not the case anymore with Buildbot Nine, which has a more generic and scalable :ref:`Data_API` and :ref:`REST_API`.
+    This is the reason why Waterfall does not display the steps details anymore.
+    However nothing is impossible.
+    We could make a specific REST api available to generate all the data needed for waterfall on the server.
+    Please step-in if you want to help improve Waterfall view.
+
+.. _ConsoleView:
+
+Console View
+++++++++++++++
+
+Console view shows the whole buildbot activity arranged by changes as discovered by :ref:`Change-Sources` vertically and builders horizontally.
+If a builder has no build in the current time range, it will not be displayed.
+If no change is available for a build, then it will generate a fake change according to the ``got_revision`` property.
+
+Console view will also group the builders by tags.
+When there are several tags defined per builders, it will first group the builders by the tag that is defined for most builders.
+Then given those builders, it will group them again in another tag cluster.
+In order to keep the UI usable, you have to keep your tags short!
+
+    .. code-block:: bash
+
+        pip install buildbot-console-view
+
+    .. code-block:: python
+
+        c['www'] = {
+            'plugins': {'console_view': True}
+        }
+
+
+.. note::
+
+    Nine's Console View is the equivalent of Buildbot Eight's Console and tgrid views.
+    Unlike Waterfall, we think it is now feature equivalent and even better, with its live update capabilities.
+    Please submit an issue if you think there is an issue displaying your data, with screen shots of what happen and suggestion on what to improve.
+
+.. _GridView:
+
+Grid View
++++++++++
+
+Grid view shows the whole buildbot activity arranged by builders vertically and changes horizontally.
+It is equivalent to Buildbot Eight's grid view.
+
+By default, changes on all branches are displayed but only one branch may be filtered by the user.
+Builders can also be filtered by tags.
+This feature is similar to the one in the builder list.
+
+   .. code-block:: bash
+
+      pip install buildbot-grid-view
+
+   .. code-block:: python
+
+      c['www'] = {
+          'plugins': {'grid_view': True}
+      }
+
 .. _Web-Authentication:
 
 Authentication plugins
@@ -221,6 +312,13 @@ The available classes are described here:
     :param clientId: The client ID of your buildbot application
     :param clientSecret: The client secret of your buildbot application
     :param serverURL: The server URL if this is a GitHub Enterprise server.
+    :param apiVersion: The GitHub API version to use. One of ``3`` or ``4``
+                       (V3/REST or V4/GraphQL). Default=3.
+    :param getTeamsMembership: When ``True`` fetch all team memberships for each or the
+                               organizations the user belongs to. The teams will be included in the
+                               user's groups as ``org-name/team-name``.
+    :param debug: When ``True`` and using ``apiVersion=4`` show some additional log calls with the
+                  GraphQL queries and responses for debugging purposes.
 
     This class implements an authentication with GitHub_ single sign-on.
     It functions almost identically to the :py:class:`~buildbot.www.oauth2.GoogleAuth` class.
@@ -246,6 +344,28 @@ The available classes are described here:
             # ...
             'auth': util.GitHubAuth("clientid", "clientsecret", "https://git.corp.mycompany.com"),
         }
+
+    An example on fetching team membership could be:
+
+    .. code-block:: python
+
+        from buildbot.plugins import util
+        c['www'] = {
+            # ...
+            'auth': util.GitHubAuth("clientid", "clientsecret", apiVersion=4, getTeamsMembership=True),
+            'authz': util.Authz(
+                allowRules=[
+                  util.AnyControlEndpointMatcher(role="core-developers"),
+                ],
+                roleMatchers=[
+                  util.RolesFromGroups(groupPrefix='buildbot/')
+                ]
+              )
+        }
+
+  If the ``buildbot`` organization had two teams, for example, 'core-developers' and 'contributors',
+  with the above example, any user belonging to those teams would be granted the roles matching those
+  team names.
 
 .. _GitHub: http://developer.github.com/v3/oauth_authorizations/
 
@@ -457,7 +577,7 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             ssl_certificate_key /etc/nginx/ssl/server.key;
 
             # put a one day session timeout for websockets to stay longer
-            ssl_session_cache      shared:SSL:1440m;
+            ssl_session_cache      shared:SSL:10m;
             ssl_session_timeout  1440m;
 
             # please consult latest nginx documentation for current secure encryption settings
@@ -470,6 +590,13 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             add_header Strict-Transport-Security "max-age=31536000; includeSubdomains;";
             spdy_headers_comp 5;
 
+            proxy_set_header HOST $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+            proxy_set_header X-Forwarded-Proto  $scheme;
+            proxy_set_header X-Forwarded-Server  $host;
+            proxy_set_header X-Forwarded-Host  $host;
+
             # you could use / if you use domain based proxy instead of path based proxy
             location /buildbot/ {
                 proxy_pass http://127.0.0.1:5000/;
@@ -481,18 +608,21 @@ Here is an nginx configuration that is known to work (nginx 1.6.2):
             }
             # required for websocket
             location /buildbot/ws {
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade $http_upgrade;
-                  proxy_set_header Connection "upgrade";
-                  proxy_pass http://127.0.0.1:5000/ws;
-                  # raise the proxy timeout for the websocket
-                  proxy_read_timeout 6000s;
+                proxy_http_version 1.1;
+                proxy_set_header Upgrade $http_upgrade;
+                proxy_set_header Connection "upgrade";
+                proxy_pass http://127.0.0.1:5000/ws;
+                # raise the proxy timeout for the websocket
+                proxy_read_timeout 6000s;
             }
     }
 
 To run with Apache2, you'll need `mod_proxy_wstunnel <https://httpd.apache.org/docs/2.4/mod/mod_proxy_wstunnel.html>`_ in addition to `mod_proxy_http <https://httpd.apache.org/docs/2.4/mod/mod_proxy_http.html>`_. Serving HTTPS (`mod_ssl <https://httpd.apache.org/docs/2.4/mod/mod_ssl.html>`_) is advised to prevent issues with enterprise proxies (see :ref:`SSE`), even if you don't need the encryption itself.
 
-Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), directly at the top of the domain.
+Here is a configuration that is known to work (Apache 2.4.10 / Debian 8, Apache 2.4.25 / Debian 9, Apache 2.4.6 / CentOS 7), directly at the top of the domain.
+
+If you want to add access control directives, just put them in a
+``<Location />``.
 
 .. code-block:: none
 
@@ -501,12 +631,9 @@ Here is a configuration that is known to work (Apache 2.4.10 / Debian 8), direct
         ServerName buildbot.example
         ServerAdmin webmaster@buildbot.example
 
-        <Location /ws>
-          ProxyPass ws://127.0.0.1:8020/ws
-          ProxyPassReverse ws://127.0.0.1:8020/ws
-        </Location>
-
-        ProxyPass /ws !
+        # replace with actual port of your Buildbot master
+        ProxyPass /ws ws://127.0.0.1:8020/ws
+        ProxyPassReverse /ws ws://127.0.0.1:8020/ws
         ProxyPass / http://127.0.0.1:8020/
         ProxyPassReverse / http://127.0.0.1:8020/
 
@@ -683,6 +810,19 @@ You can grant roles from groups information provided by the Auth plugins, or if 
           util.RolesFromEmails(admins=["my@email.com"])
         ]
 
+.. py:class:: buildbot.www.authz.roles.RolesFromDomain(roledict)
+
+    :param roledict: dictionary with key=role, and value=list of domain strings
+
+    RolesFromDomain grants roles to users according to their email domains.
+    If a user tried to login with email ``foo@gmail.com``, then user will be granted the role 'admins'.
+
+    ex::
+
+        roleMatchers=[
+          util.RolesFromDomain(admins=["gmail.com"])
+        ]
+
 .. py:class:: buildbot.www.authz.roles.RolesFromOwner(roledict)
 
     :param roledict: dictionary with key=role, and value=list of email strings
@@ -744,7 +884,7 @@ More complex config with separation per branch:
             # defaultDeny=False: if user does not have the admin role, we continue parsing rules
             util.AnyEndpointMatcher(role="admins", defaultDeny=False),
 
-            StopBuildEndpointMatcher(role="owner"),
+            util.StopBuildEndpointMatcher(role="owner"),
 
             # *-try groups can start "try" builds
             util.ForceBuildEndpointMatcher(builder="try", role="*-try"),
@@ -765,7 +905,7 @@ More complex config with separation per branch:
     )
     c['www']['authz'] = authz
 
-Using GitHub authentication and allowing access to control endpoints for users in the "BuildBot" organization:
+Using GitHub authentication and allowing access to control endpoints for users in the "Buildbot" organization:
 
 .. code-block:: python
 

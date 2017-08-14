@@ -62,10 +62,9 @@ class FakeWorkerWorker(pb.Referenceable):
     def waitForDetach(self):
         if self._detached:
             return defer.succeed(None)
-        else:
-            d = defer.Deferred()
-            self._detach_deferreds.append(d)
-            return d
+        d = defer.Deferred()
+        self._detach_deferreds.append(d)
+        return d
 
     def setMasterPerspective(self, persp):
         self.master_persp = persp
@@ -262,11 +261,10 @@ class TestWorkerComm(unittest.TestCase):
 
         if not waitForBuilderList:
             return login_d
-        else:
-            d = defer.DeferredList([login_d, setBuilderList_d],
-                                   consumeErrors=True, fireOnOneErrback=True)
-            d.addCallback(lambda _: workerworker)
-            return d
+        d = defer.DeferredList([login_d, setBuilderList_d],
+                               consumeErrors=True, fireOnOneErrback=True)
+        d.addCallback(lambda _: workerworker)
+        return d
 
     def workerSideDisconnect(self, worker):
         """Disconnect from the worker side"""

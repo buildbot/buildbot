@@ -48,7 +48,7 @@ class SecretInAFile(SecretProviderBase):
                 if secretfile.endswith(suffix):
                     self.checkFileIsReadOnly(dirname, secretfile)
 
-    def loadSecrets(self, dirname, suffixes):
+    def loadSecrets(self, dirname, suffixes, strip):
         secrets = {}
         for secretfile in os.listdir(dirname):
             secretvalue = None
@@ -58,22 +58,25 @@ class SecretInAFile(SecretProviderBase):
                         secretvalue = source.read()
                     if suffix:
                         secretfile = secretfile[:-len(suffix)]
+                    if strip:
+                        secretvalue = secretvalue.rstrip("\r\n")
                     secrets[secretfile] = secretvalue
         return secrets
 
-    def checkConfig(self, dirname, suffixes=None):
+    def checkConfig(self, dirname, suffixes=None, strip=True):
         self._dirname = dirname
         if suffixes is None:
             suffixes = [""]
         self.checkSecretDirectoryIsAvailableAndReadable(dirname,
                                                         suffixes=suffixes)
 
-    def reconfigService(self, dirname, suffixes=None):
+    def reconfigService(self, dirname, suffixes=None, strip=True):
         self._dirname = dirname
         self.secrets = {}
         if suffixes is None:
             suffixes = [""]
-        self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes)
+        self.secrets = self.loadSecrets(self._dirname, suffixes=suffixes,
+                                        strip=strip)
 
     def get(self, entry):
         """

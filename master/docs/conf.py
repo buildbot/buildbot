@@ -90,6 +90,7 @@ else:
     with open('../buildbot/__init__.py') as f:
         exec(f.read(), gl)
     version = gl['version']
+
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -146,8 +147,10 @@ intersphinx_mapping = {
 }
 
 extlinks = {
-    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
     'pull': ('https://github.com/buildbot/buildbot/pull/%s', 'pull request '),
+    'issue': ('https://github.com/buildbot/buildbot/issues/%s', 'issue # '),
+    # deprecated. Use issue instead, and point to Github
+    'bug': ('http://trac.buildbot.net/ticket/%s', 'bug #'),
     # Renders as link with whole url, e.g.
     #   :src-link:`master`
     # renders as
@@ -223,10 +226,6 @@ html_static_path = ['_static']
 # If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
 # using the given strftime format.
 # html_last_updated_fmt = '%b %d, %Y'
-
-# If true, SmartyPants will be used to convert quotes and dashes to
-# typographically correct entities.
-html_use_smartypants = False
 
 # Custom sidebar templates, maps document names to template names.
 html_sidebars = {

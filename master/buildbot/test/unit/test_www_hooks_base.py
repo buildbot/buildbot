@@ -8,11 +8,12 @@ from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import bytes2NativeString
 from buildbot.www.change_hook import ChangeHookResource
+from buildbot.www.hooks.base import BaseHookHandler
 
 
-def _prepare_base_change_hook():
+def _prepare_base_change_hook(**options):
     return ChangeHookResource(dialects={
-        'base': True
+        'base': options
     }, master=fakeMasterForHooks())
 
 
@@ -61,3 +62,28 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
 
     def test_base_with_no_change(self):
         self._check_base_with_change({})
+
+
+class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
+    def setUp(self):
+        class CustomBase(BaseHookHandler):
+            def getChanges(self, request):
+                args = request.args
+                chdict = dict(
+                              revision=args.get(b'revision'),
+                              repository=args.get(b'_repository'),
+                              project=args.get(b'project'),
+                              codebase=args.get(b'codebase'))
+                return ([chdict], None)
+        self.changeHook = _prepare_base_change_hook(custom_class=CustomBase)
+
+    @defer.inlineCallbacks
+    def _check_base_with_change(self, payload):
+        self.request = _prepare_request(payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change['repository'], payload.get(b'_repository'))
+
+    def test_base_with_no_change(self):
+        self._check_base_with_change({'repository': 'foo'})

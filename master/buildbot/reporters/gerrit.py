@@ -37,6 +37,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
+from buildbot.util import bytes2NativeString
 from buildbot.util import service
 
 # Cache the version that the gerrit server is running for this many seconds
@@ -73,10 +74,9 @@ def _old_add_label(label, value):
         return ["--verified %d" % int(value)]
     elif label == GERRIT_LABEL_REVIEWED:
         return ["--code-review %d" % int(value)]
-    else:
-        warnings.warn('Gerrit older than 2.6 does not support custom labels. '
-                      'Setting %s is ignored.' % label)
-        return []
+    warnings.warn('Gerrit older than 2.6 does not support custom labels. '
+                  'Setting %s is ignored.' % label)
+    return []
 
 
 def _new_add_label(label, value):
@@ -203,16 +203,16 @@ class GerritStatusPush(service.BuildbotService):
             self.gerrit_version = None
 
         def outReceived(self, data):
-            vstr = "gerrit version "
+            vstr = b"gerrit version "
             if not data.startswith(vstr):
-                log.msg("Error: Cannot interpret gerrit version info:", data)
+                log.msg(b"Error: Cannot interpret gerrit version info: " + data)
                 return
-            vers = data[len(vstr):]
-            log.msg("gerrit version:", vers)
-            self.gerrit_version = LooseVersion(vers)
+            vers = data[len(vstr):].strip()
+            log.msg(b"gerrit version: " + vers)
+            self.gerrit_version = LooseVersion(bytes2NativeString(vers))
 
         def errReceived(self, data):
-            log.msg("gerriterr:", data)
+            log.msg(b"gerriterr: " + data)
 
         def processEnded(self, status_object):
             if status_object.value.exitCode:
@@ -236,10 +236,11 @@ class GerritStatusPush(service.BuildbotService):
 
     def callWithVersion(self, func):
         command = self._gerritCmd("version")
-        callback = lambda gerrit_version: self.processVersion(
-            gerrit_version, func)
 
-        self.spawnProcess(self.VersionPP(callback), command[0], command)
+        def callback(gerrit_version):
+            return self.processVersion(gerrit_version, func)
+
+        self.spawnProcess(self.VersionPP(callback), command[0], command, env=None)
 
     class LocalPP(ProcessProtocol):
 
@@ -294,7 +295,8 @@ class GerritStatusPush(service.BuildbotService):
             return
         yield self.getBuildDetails(build)
         if self.isBuildReported(build):
-            result = yield self.reviewCB(build['builder']['name'], build, build['results'], self.master, self.reviewArg)
+            result = yield self.reviewCB(build['builder']['name'], build, build['results'],
+                                         self.master, self.reviewArg)
             result = _handleLegacyResult(result)
             self.sendCodeReviews(build, result)
 
@@ -335,7 +337,8 @@ class GerritStatusPush(service.BuildbotService):
                         'result': result,
                         'resultText': resultText,
                         'text': build['state_string'],
-                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'], build['number']),
+                        'url': utils.getURLForBuild(self.master, build['builder']['builderid'],
+                                                    build['number']),
                         'build': build
                         }
             buildInfoList = sorted(
@@ -424,7 +427,7 @@ class GerritStatusPush(service.BuildbotService):
 
         command.append(revision)
         command = [str(s) for s in command]
-        self.spawnProcess(self.LocalPP(self), command[0], command)
+        self.spawnProcess(self.LocalPP(self), command[0], command, env=None)
 
     def spawnProcess(self, *arg, **kw):
         reactor.spawnProcess(*arg, **kw)
