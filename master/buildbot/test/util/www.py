@@ -101,9 +101,11 @@ class FakeRequest(object):
         self.responseText = text
 
     def setHeader(self, hdr, value):
+        assert isinstance(value, bytes)
         self.headers.setdefault(hdr, []).append(value)
 
     def getHeader(self, key):
+        assert isinstance(key, bytes)
         return self.input_headers.get(key)
 
     def processingFailed(self, f):
