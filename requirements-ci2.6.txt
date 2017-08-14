@@ -25,7 +25,7 @@ pyparsing==2.2.0
 singledispatch==3.4.0.3
 six==1.10.0
 Twisted==17.5.0
-wrapt==1.10.10
+wrapt==1.10.11
 zope.interface==4.4.2
 codecov==2.0.9
 coverage==4.4.1
