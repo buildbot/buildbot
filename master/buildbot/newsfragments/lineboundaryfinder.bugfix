@@ -1,0 +1,1 @@
+Fix performance issue when remote command does not send any line boundary (:issue:`3517`)
