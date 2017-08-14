@@ -83,7 +83,7 @@ Twisted==17.5.0
 txaio==2.8.1
 txgithub==15.0.0
 txrequests==0.9.5
-typing==3.6.1
+typing==3.6.2
 webcolors==1.7
 Werkzeug==0.12.2
 wrapt==1.10.10
