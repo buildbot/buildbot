@@ -1004,7 +1004,7 @@ TextParameter
 
 ::
 
-    StringParameter(name="comments",
+    TextParameter(name="comments",
         label="comments to be displayed to the user of the built binary",
         default="This is a development build", cols=60, rows=5)
 
