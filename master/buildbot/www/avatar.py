@@ -85,7 +85,7 @@ class AvatarResource(resource.Resource):
                 raise
             if res is not None:
                 request.setHeader(b'content-type', res[0])
-                request.setHeader(b'content-length', len(res[1]))
+                request.setHeader(b'content-length', unicode2bytes(str(len(res[1]))))
                 request.write(res[1])
                 return
         raise resource.Redirect(self.defaultAvatarUrl)
