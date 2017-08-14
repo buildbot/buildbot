@@ -101,6 +101,7 @@ class FakeRequest(object):
         self.responseText = text
 
     def setHeader(self, hdr, value):
+        assert isinstance(hdr, bytes)
         assert isinstance(value, bytes)
         self.headers.setdefault(hdr, []).append(value)
 
