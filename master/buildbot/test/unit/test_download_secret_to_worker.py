@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
+import stat
 
 from twisted.python.filepath import FilePath
 from twisted.trial import unittest
@@ -48,7 +49,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestC
                                      (os.path.join(self.temp_path, "pathB"), "something more")]))
         args1 = {
                     'maxsize': None,
-                    'mode': None,
+                    'mode': stat.S_IRUSR | stat.S_IWUSR,
                     'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
                     'blocksize': 32 * 1024,
                     'workerdest': os.path.join(self.temp_path, "pathA"),
@@ -56,7 +57,7 @@ class TestDownloadFileSecretToWorkerCommand(steps.BuildStepMixin, unittest.TestC
                     }
         args2 = {
                     'maxsize': None,
-                    'mode': None,
+                    'mode': stat.S_IRUSR | stat.S_IWUSR,
                     'reader': ExpectRemoteRef(remotetransfer.StringFileReader),
                     'blocksize': 32 * 1024,
                     'workerdest': os.path.join(self.temp_path, "pathB"),
