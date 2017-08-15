@@ -1,0 +1,1 @@
+Fix filtering for properties when SQL is involved in the backend (eq, ne, and contains operations).
