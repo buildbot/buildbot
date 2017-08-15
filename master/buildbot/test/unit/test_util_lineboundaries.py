@@ -139,7 +139,7 @@ class LBF(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_long_lines(self):
-        """long lines are splitted"""
+        """long lines are split"""
         for i in range(4):
             yield self.lbf.append('12' * 1000)
         # a split at 4096 + the remaining chars
@@ -147,7 +147,7 @@ class LBF(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_huge_lines(self):
-        """huge lines are splitted"""
+        """huge lines are split"""
         yield self.lbf.append('12' * 32768)
         yield self.lbf.flush()
         self.assertCallbacks([('12' * 2048 + '\n') * 16])
