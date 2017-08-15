@@ -18,13 +18,13 @@ from __future__ import print_function
 from future.utils import iteritems
 
 from docutils import nodes
+from docutils.parsers.rst import Directive
 from sphinx import addnodes
 from sphinx.domains import Domain
 from sphinx.domains import Index
 from sphinx.domains import ObjType
 from sphinx.roles import XRefRole
 from sphinx.util import ws_re
-from sphinx.util.compat import Directive
 from sphinx.util.docfields import DocFieldTransformer
 from sphinx.util.docfields import Field
 from sphinx.util.docfields import TypedField
