@@ -64,6 +64,10 @@ These are the same details set in either environment variables or passed as opti
 
 ``os_tenant_name``
 
+``os_user_domain``
+
+``os_project_domain``
+
 ``os_auth_url``
     The OpenStack authentication needed to create and delete instances.
     These are the same as the environment variables with uppercase names of the arguments.
