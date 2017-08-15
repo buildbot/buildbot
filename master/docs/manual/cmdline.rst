@@ -325,7 +325,7 @@ Darcs
 
 Git
     ``git branch -v`` lists all the branches available in the local repository along with the revision ID it points to and a short summary of the last commit.
-    The line containing the currently checked out branch begins with ``* `` (star and space) while all the others start with ``  `` (two spaces).
+    The line containing the currently checked out branch begins with "* " (star and space) while all the others start with "  " (two spaces).
     :command:`try` scans for this line and extracts the branch name and revision from it.
     Then it generates a diff against the base revision.
 
