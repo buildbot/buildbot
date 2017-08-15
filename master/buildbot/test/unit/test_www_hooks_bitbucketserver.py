@@ -16,8 +16,9 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import text_type
 
-from io import StringIO
+from io import BytesIO
 
 from twisted.internet import defer
 from twisted.trial import unittest
@@ -25,9 +26,10 @@ from twisted.trial import unittest
 import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.util import unicode2bytes
 from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT
 
-_CT_JSON = 'application/json'
+_CT_JSON = b'application/json'
 
 pushJsonPayload = u"""
 {
@@ -652,10 +654,12 @@ newTagJsonPayload = u"""
 def _prepare_request(payload, headers=None, change_dict=None):
     headers = headers or {}
     request = FakeRequest(change_dict)
-    request.uri = "/change_hook/bitbucketserver"
-    request.method = "POST"
-    request.content = StringIO(payload)
-    request.received_headers['Content-Type'] = _CT_JSON
+    request.uri = b"/change_hook/bitbucketserver"
+    request.method = b"POST"
+    if isinstance(payload, text_type):
+        payload = unicode2bytes(payload)
+    request.content = BytesIO(payload)
+    request.received_headers[b'Content-Type'] = _CT_JSON
     request.received_headers.update(headers)
     return request
 
@@ -860,8 +864,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     @defer.inlineCallbacks
     def testHookWithInvalidContentType(self):
         request = _prepare_request(
-            pushJsonPayload, headers={_HEADER_EVENT: 'repo:push'})
-        request.received_headers['Content-Type'] = 'invalid/content'
+            pushJsonPayload, headers={_HEADER_EVENT: b'repo:push'})
+        request.received_headers[b'Content-Type'] = b'invalid/content'
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
         self.assertEqual(request.written,

@@ -141,6 +141,7 @@ class GitLabHandler(BaseHookHandler):
         expected_secret = isinstance(self.options, dict) and self.options.get('secret')
         if expected_secret:
             received_secret = request.getHeader(_HEADER_GITLAB_TOKEN)
+            received_secret = bytes2NativeString(received_secret)
             if received_secret != expected_secret:
                 raise ValueError("Invalid secret")
         try:

@@ -248,7 +248,7 @@ class V2RootResource(resource.Resource):
 
             request.setHeader(b'content-type', JSON_ENCODED)
             if request.method == b"HEAD":
-                request.setHeader(b"content-length", len(data))
+                request.setHeader(b"content-length", unicode2bytes(str(len(data))))
                 request.write(b'')
             else:
                 data = unicode2bytes(data)
@@ -447,7 +447,7 @@ class V2RootResource(resource.Resource):
                                   sort_keys=True, indent=2)
 
             if request.method == b"HEAD":
-                request.setHeader(b"content-length", len(data))
+                request.setHeader(b"content-length", unicode2bytes(str(len(data))))
             else:
                 data = unicode2bytes(data)
                 request.write(data)

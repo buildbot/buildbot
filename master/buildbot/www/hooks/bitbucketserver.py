@@ -21,11 +21,13 @@ import json
 
 from twisted.python import log
 
+from buildbot.util import bytes2NativeString
+
 GIT_BRANCH_REF = "refs/heads/{}"
 GIT_MERGE_REF = "refs/pull-requests/{}/merge"
 GIT_TAG_REF = "refs/tags/{}"
 
-_HEADER_EVENT = 'X-Event-Key'
+_HEADER_EVENT = b'X-Event-Key'
 
 
 class BitbucketServerEventHandler(object):
@@ -42,6 +44,7 @@ class BitbucketServerEventHandler(object):
     def process(self, request):
         payload = self._get_payload(request)
         event_type = request.getHeader(_HEADER_EVENT)
+        event_type = bytes2NativeString(event_type)
         log.msg("Processing event {header}: {event}"
                 .format(header=_HEADER_EVENT, event=event_type))
         event_type = event_type.replace(":", "_")
@@ -54,7 +57,9 @@ class BitbucketServerEventHandler(object):
 
     def _get_payload(self, request):
         content = request.content.read()
-        content_type = request.getHeader('Content-Type')
+        content = bytes2NativeString(content)
+        content_type = request.getHeader(b'Content-Type')
+        content_type = bytes2NativeString(content_type)
         if content_type.startswith('application/json'):
             payload = json.loads(content)
         else:

@@ -74,7 +74,7 @@ class EventResource(resource.Resource):
 
     def finish(self, request, code, msg):
         request.setResponseCode(code)
-        request.setHeader('content-type', 'text/plain; charset=utf-8')
+        request.setHeader(b'content-type', b'text/plain; charset=utf-8')
         request.write(msg)
         return
 
