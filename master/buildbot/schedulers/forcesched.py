@@ -311,10 +311,10 @@ class InheritBuildParameter(ChoiceStringParameter):
 
     def updateFromKwargs(self, master, properties, changes, kwargs, **unused):
         arg = kwargs.get(self.fullName, [""])[0]
-        splitted_arg = arg.split(" ")[0].split("/")
-        if len(splitted_arg) != 2:
+        split_arg = arg.split(" ")[0].split("/")
+        if len(split_arg) != 2:
             raise ValidationError("bad build: %s" % (arg))
-        builder, num = splitted_arg
+        builder, num = split_arg
         builder_status = master.status.getBuilder(builder)
         if not builder_status:
             raise ValidationError("unknown builder: %s in %s" % (builder, arg))

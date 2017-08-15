@@ -67,6 +67,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
 
     # Postgres and MySQL will both allow bigger sizes than this.  The limit
     # for MySQL appears to be max_packet_size (default 1M).
+    # note that MAX_CHUNK_SIZE is equal to BUFFER_SIZE in buildbot_worker.runprocess
     MAX_CHUNK_SIZE = 65536  # a chunk may not be bigger than this
     MAX_CHUNK_LINES = 1000  # a chunk may not have more lines than this
     COMPRESSION_MODE = {"raw": {"id": 0, "dumps": lambda x: x, "read": lambda x: x},
