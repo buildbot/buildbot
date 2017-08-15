@@ -196,7 +196,9 @@ RemoteCommand
     Most of the constructor arguments are sent directly to the worker; see :ref:`shell-command-args` for the details of the formats.
     The ``collectStdout`` parameter is as described for the parent class.
 
-    If shell command contains passwords they can be hidden from log files by passing them as tuple in command argument.
+    If shell command contains passwords, they can be hidden from log files by using :doc:`../manual/secretsmanagement`.
+    This is the recommended procedure for new-style build steps. For legacy build steps password were hidden from the
+    log file by passing them as tuple in command argument.
     Eg. ``['print', ('obfuscated', 'password', 'dummytext')]`` is logged as ``['print', 'dummytext']``.
 
     This class is used by the :bb:step:`ShellCommand` step, and by steps that run multiple customized shell commands.
