@@ -529,11 +529,11 @@ Example::
 
 .. note::
 
-            In order to use this module, you need to install the ``python3-ldap`` module:
+            In order to use this module, you need to install the ``python3-ldap`` module (and an old version of pyASN1, see :issue:`3530`):
 
             .. code-block:: bash
 
-                pip install python3-ldap
+                pip install pyASN1==0.1.9 python3-ldap
 
 In the case of oauth2 authentications, you have to pass the userInfoProvider as keyword argument::
 
