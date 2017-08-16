@@ -42,7 +42,7 @@ class State extends Config
                 controller: 'gridController'
                 controllerAs: 'C'
                 templateUrl: 'grid_view/views/grid.html'
-                url: '/grid?branch&tag'
+                url: '/grid?branch&tag&result'
                 reloadOnSearch: false
                 data:
                     group: 'grid'

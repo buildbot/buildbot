@@ -22,6 +22,10 @@ class Grid extends Controller
         @tags = @$stateParams.tag ? []
         if not angular.isArray(@tags)
             @tags = [@tags]
+        @result = @$stateParams.result
+        # XXX: Angular ngOptions tag only works with string values. Force
+        # convert the result code to string.
+        @results = ({code: c + '', text: t} for c, t of resultsService.resultsTexts)
 
         settings = bbSettingsService.getSettingsGroup('Grid')
         @revisionLimit = settings.revisionLimit.value
@@ -126,6 +130,9 @@ class Grid extends Controller
                     build = buildByReqID[req.buildrequestid]
                     unless build?
                         continue
+                    if !isNaN(@result) and !isNaN(build.results)
+                        if parseInt(build.results) != parseInt(@result)
+                            continue
                     builder = @builders.get(build.builderid)
                     unless @isBuilderDisplayed(builder)
                         continue
@@ -136,6 +143,10 @@ class Grid extends Controller
 
     changeBranch: (branch) =>
         @branch = branch
+        @refresh()
+
+    changeResult: (result) =>
+        @result = result
         @refresh()
 
     toggleTag: (tag) =>
@@ -156,10 +167,12 @@ class Grid extends Controller
             @$stateParams.tag = undefined
         else
             @$stateParams.tag = @tags
+        @$stateParams.result = @result
 
         params =
             branch: @$stateParams.branch
             tag: @$stateParams.tag
+            result: @$stateParams.result
 
         # change URL without reloading page
         @$state.transitionTo(@$state.current, params, {notify: false})

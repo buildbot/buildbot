@@ -9,11 +9,14 @@
             |  changes
         |  to be in the system.
     .form-inline(ng-show="C.dataReady()")
-        label
-            | Branch &nbsp;
-        select.form-control(ng-model="C.branch", ng-change="C.changeBranch(C.branch)", ng-options="br for br in branches | orderBy")
-            option(value="")
-                | (all)
+        .form-group
+            label Branch
+            select.form-control(ng-model="C.branch", ng-change="C.changeBranch(C.branch)", ng-options="br for br in branches | orderBy")
+                option(value="") (all)
+        .form-group
+            label Results
+            select.form-control(ng-model="C.result", ng-change="C.changeResult(C.result)", ng-options="r.code as r.text for r in C.results")
+                option(value="") (all)
     table.table.table-condensed.table-striped.table-hover(ng-show="C.dataReady()")
         thead
             tr
