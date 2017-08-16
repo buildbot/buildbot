@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import builders
+from buildbot.data import resultspec
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import endpoint
@@ -106,6 +107,15 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return self.db.insertTestData([
             fakedb.Builder(id=1, name=u'buildera'),
             fakedb.Builder(id=2, name=u'builderb'),
+            fakedb.Builder(id=3, name=u'builderTagA'),
+            fakedb.Builder(id=4, name=u'builderTagB'),
+            fakedb.Builder(id=5, name=u'builderTagAB'),
+            fakedb.Tag(id=3, name=u"tagA"),
+            fakedb.Tag(id=4, name=u"tagB"),
+            fakedb.BuildersTags(builderid=3, tagid=3),
+            fakedb.BuildersTags(builderid=4, tagid=4),
+            fakedb.BuildersTags(builderid=5, tagid=3),
+            fakedb.BuildersTags(builderid=5, tagid=4),
             fakedb.Master(id=13),
             fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
         ])
@@ -120,7 +130,7 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         def check(builders):
             [self.validateData(b) for b in builders]
             self.assertEqual(sorted([b['builderid'] for b in builders]),
-                             [1, 2])
+                             [1, 2, 3, 4, 5])
         return d
 
     def test_get_masterid(self):
@@ -140,6 +150,45 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         def check(builders):
             self.assertEqual(sorted([b['builderid'] for b in builders]),
                              [])
+        return d
+
+    def test_get_contains_one_tag(self):
+        resultSpec = resultspec.ResultSpec(
+            filters=[resultspec.Filter('tags', 'contains', ["tagA"])])
+        d = self.callGet(('builders',))
+
+        @d.addCallback
+        def check(builders):
+            builders = resultSpec.apply(builders)
+            [self.validateData(b) for b in builders]
+            self.assertEqual(sorted([b['builderid'] for b in builders]),
+                             [3, 5])
+        return d
+
+    def test_get_contains_two_tags(self):
+        resultSpec = resultspec.ResultSpec(
+            filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagB"])])
+        d = self.callGet(('builders',))
+
+        @d.addCallback
+        def check(builders):
+            builders = resultSpec.apply(builders)
+            [self.validateData(b) for b in builders]
+            self.assertEqual(sorted([b['builderid'] for b in builders]),
+                             [3, 4, 5])
+        return d
+
+    def test_get_contains_two_tags_one_unknown(self):
+        resultSpec = resultspec.ResultSpec(
+            filters=[resultspec.Filter('tags', 'contains', ["tagA", "tagC"])])
+        d = self.callGet(('builders',))
+
+        @d.addCallback
+        def check(builders):
+            builders = resultSpec.apply(builders)
+            [self.validateData(b) for b in builders]
+            self.assertEqual(sorted([b['builderid'] for b in builders]),
+                             [3, 5])
         return d
 
 

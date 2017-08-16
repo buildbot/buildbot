@@ -46,7 +46,7 @@ class FieldBase(object):
     plural_operators = {
         'eq': lambda d, v: d in v,
         'ne': lambda d, v: d not in v,
-        'contains': lambda d, v: set(v) <= set(d),
+        'contains': lambda d, v: len(set(v).intersection(set(d))) > 0,
     }
 
     def __init__(self, field, op, values):

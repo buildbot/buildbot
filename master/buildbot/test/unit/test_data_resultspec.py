@@ -76,6 +76,16 @@ class Filter(unittest.TestCase):
         self.assertEqual(list(f.apply(mklist('num', 5, 10, 15))),
                          mklist('num', 10, 15))
 
+    def test_contains(self):
+        f = resultspec.Filter('num', 'contains', [10])
+        self.assertEqual(list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))),
+                         mklist('num', [10, 1]))
+
+    def test_contains_plural(self):
+        f = resultspec.Filter('num', 'contains', [10, 5])
+        self.assertEqual(list(f.apply(mklist('num', [5, 1], [10, 1], [15, 1]))),
+                         mklist('num', [5, 1], [10, 1]))
+
 
 class ResultSpec(unittest.TestCase):
 

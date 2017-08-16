@@ -1,0 +1,1 @@
+Make REST API's filter __contains use OR connector rather than AND according to what the documentation suggests.
