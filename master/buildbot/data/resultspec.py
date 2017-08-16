@@ -40,7 +40,8 @@ class FieldBase(object):
         'le': lambda d, v: d <= v[0],
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: v[0] in d,
+        'contains': lambda d, v: d.contains(v[0]) if isinstance(d, sa.Column) else v[0] in d,
+        # in SQL only support string values, because currently there are no queries against lists in SQL
     }
 
     plural_operators = {
