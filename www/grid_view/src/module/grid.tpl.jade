@@ -31,7 +31,7 @@
                     span(ng-show="C.tags.length > 0")
                         span.label.label-danger.clickable(ng-click="C.resetTags()", uib-tooltip="Reset tags filter") x
                 th.change(ng-repeat="ch in changes track by ch.changeid")
-                    changedetails(change="ch", compact="C.compactChanges")
+                    changedetails(change="ch", compact="!C.fullChanges")
         tbody
             tr(ng-repeat="b in builders | orderBy: 'name'")
                 th
