@@ -100,22 +100,42 @@ class BuildRequestCollapser(object):
 
 
 class TempSourceStamp(object):
-    # temporary fake sourcestamp; attributes are added below
+    # temporary fake sourcestamp
+
+    ATTRS = ('branch', 'revision', 'repository', 'project', 'codebase')
+
+    def __init__(self, ssdict):
+        self._ssdict = ssdict
+
+    def __getattr__(self, attr):
+        patch = self._ssdict.get('patch')
+        if attr == 'patch':
+            if patch:
+                return (patch['level'], patch['body'], patch['subdir'])
+            return None
+        elif attr == 'patch_info':
+            if patch:
+                return (patch['author'], patch['comment'])
+            return (None, None)
+        elif attr in self.ATTRS or attr == 'ssid':
+            return self._ssdict[attr]
+        raise AttributeError(attr)
+
+    def asSSDict(self):
+        return self._ssdict
+
+    PATCH_ATTRS = ('level', 'body', 'subdir', 'author', 'comment')
 
     def asDict(self):
         # This return value should match the kwargs to
         # SourceStampsConnectorComponent.findSourceStampId
-        result = vars(self).copy()
+        result = {}
+        for attr in self.ATTRS:
+            result[attr] = self._ssdict[attr]
 
-        del result['ssid']
-        del result['changes']
-
-        if 'patch' in result and result['patch'] is None:
-            result['patch'] = (None, None, None)
-        result['patch_level'], result['patch_body'], result[
-            'patch_subdir'] = result.pop('patch')
-        result['patch_author'], result[
-            'patch_comment'] = result.pop('patch_info')
+        patch = self._ssdict.get('patch') or {}
+        for attr in self.PATCH_ATTRS:
+            result['patch_%s' % attr] = patch.get(attr)
 
         assert all(
             isinstance(val, (text_type, type(None), int))
@@ -128,12 +148,17 @@ class TempChange(object):
     # temporary fake change
 
     def __init__(self, d):
-        for k, v in iteritems(d):
-            setattr(self, k, v)
-        self.properties = properties.Properties()
-        for k, v in iteritems(d['properties']):
-            self.properties.setProperty(k, v[0], v[1])
-        self.who = d['author']
+        self._chdict = d
+
+    def __getattr__(self, attr):
+        if attr == 'who':
+            return self._chdict['author']
+        elif attr == 'properties':
+            return properties.Properties.fromDict(self._chdict['properties'])
+        return self._chdict[attr]
+
+    def asChDict(self):
+        return self._chdict
 
 
 class BuildRequest(object):
@@ -223,20 +248,7 @@ class BuildRequest(object):
             'sourcestamps'], "buildset must have at least one sourcestamp"
         buildrequest.sources = {}
         for ssdata in bsdata['sourcestamps']:
-            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp()
-            ss.ssid = ssdata['ssid']
-            ss.branch = ssdata['branch']
-            ss.revision = ssdata['revision']
-            ss.repository = ssdata['repository']
-            ss.project = ssdata['project']
-            ss.codebase = ssdata['codebase']
-            if ssdata['patch']:
-                patch = ssdata['patch']
-                ss.patch = (patch['level'], patch['body'], patch['subdir'])
-                ss.patch_info = (patch['author'], patch['comment'])
-            else:
-                ss.patch = None
-                ss.patch_info = (None, None)
+            ss = buildrequest.sources[ssdata['codebase']] = TempSourceStamp(ssdata)
             changes = yield master.data.get(("sourcestamps", ss.ssid, "changes"))
             ss.changes = [TempChange(change) for change in changes]
 
