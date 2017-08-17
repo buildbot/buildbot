@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import itervalues
 
 import posixpath
 
@@ -100,8 +101,20 @@ class FakeBuild(properties.PropertiesMixin):
             return self.sources[codebase]
         return None
 
+    def getAllSourceStamps(self):
+        return list(itervalues(self.sources))
+
+    def allChanges(self):
+        for s in itervalues(self.sources):
+            for c in s.changes:
+                yield c
+
     def allFiles(self):
-        return []
+        files = []
+        for c in self.allChanges():
+            for f in c.files:
+                files.append(f)
+        return files
 
     def getBuilder(self):
         return self.builder
