@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import integer_types
 from future.utils import iteritems
 from future.utils import string_types
 
@@ -44,16 +45,20 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         super(BaseScheduler, self).__init__(name=name)
 
         ok = True
-        if not isinstance(builderNames, (list, tuple)):
-            ok = False
-        else:
+        if interfaces.IRenderable.providedBy(builderNames):
+            pass
+        elif isinstance(builderNames, (list, tuple)):
             for b in builderNames:
-                if not isinstance(b, string_types):
+                if not isinstance(b, string_types) and \
+                        not interfaces.IRenderable.providedBy(b):
                     ok = False
+        else:
+            ok = False
         if not ok:
             config.error(
                 "The builderNames argument to a scheduler must be a list "
-                "of Builder names.")
+                "of Builder names or an IRenderable object that will render"
+                "to a list of builder names.")
 
         self.builderNames = builderNames
 
@@ -352,9 +357,33 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
         else:
             properties = self.properties
 
+        # make a fresh copy that we actually can modify safely
+        properties = Properties.fromDict(properties.asDict())
+
+        # make extra info available from properties.render()
+        properties.master = self.master
+        properties.sourcestamps = []
+        properties.changes = []
+        for ss in sourcestamps:
+            if isinstance(ss, integer_types):
+                # fetch actual sourcestamp and changes from data API
+                properties.sourcestamps.append(
+                    (yield self.master.data.get(('sourcestamps', ss))))
+                properties.changes.extend(
+                    (yield self.master.data.get(('sourcestamps', ss, 'changes'))))
+            else:
+                # sourcestamp with no change, see addBuildsetForChanges
+                properties.sourcestamps.append(ss)
+
+        for c in properties.changes:
+            properties.updateFromProperties(Properties.fromDict(c['properties']))
+
         # apply the default builderNames
         if not builderNames:
             builderNames = self.builderNames
+
+        # dynamically get the builder list to schedule
+        builderNames = yield properties.render(builderNames)
 
         # Get the builder ids
         # Note that there is a data.updates.findBuilderId(name)

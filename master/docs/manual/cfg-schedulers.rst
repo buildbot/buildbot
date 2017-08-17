@@ -35,6 +35,83 @@ There are several common arguments for schedulers, although not all are availabl
 
 ``builderNames``
     This is the set of builders which this scheduler should trigger, specified as a list of names (strings).
+    This can also be an :class:`~IRenderable` object which will render to a list of builder names (or a list of :class:`~IRenderable` that will render to builder names).
+
+    .. note:: When ``builderNames`` is rendered, these additional :class:`~Properties` attributes are available:
+
+       ``master``
+           A reference to the :class:`~BuildMaster` object that owns this scheduler.
+           This can be used to access the data API.
+       ``sourcestamps``
+           The list of sourcestamps that triggered the scheduler.
+       ``changes``
+           The list of changes associated with the sourcestamps.
+       ``files``
+           The list of modified files associated with the changes.
+
+       Any property attached to the change(s) that triggered the scheduler will be combined and available when rendering `builderNames`.
+
+    Here is a simple example:
+
+    .. code-block:: python
+
+       from buildbot.plugins import util, schedulers
+
+       @util.renderer
+       def builderNames(props):
+           builders = set()
+           for f in props.files:
+               if f.endswith('.rst'):
+                   builders.add('check_docs')
+               if f.endswith('.c'):
+                   builders.add('check_code')
+           return list(builders)
+
+       c['schedulers'] = [
+           schedulers.AnyBranchScheduler(
+               name='all',
+               builderNames=builderNames,
+           )
+       ]
+
+    And a more complex one:
+
+    .. code-block:: python
+
+       import fnmatch
+
+       from twisted.internet import defer
+
+       from buildbot.plugins import util, schedulers
+
+       @util.renderer
+       @defer.inlineCallbacks
+       def builderNames(props):
+           # If "buildername_pattern" is defined with "buildbot sendchange",
+           # check if the builder name matches it.
+           pattern = props.getProperty('buildername_pattern')
+
+           # If "builder_tags" is defined with "buildbot sendchange",
+           # only schedule builders that have the specified tags.
+           tags = props.getProperty('builder_tags')
+
+           builders = []
+
+           for b in (yield props.master.data.get(('builders',))):
+               if pattern and not fnmatch.fnmatchcase(b['name'], pattern):
+                   continue
+               if tags and not set(tags.split()).issubset(set(b['tags'])):
+                   continue
+               builders.append(b['name'])
+
+           defer.returnValue(builders)
+
+       c['schedulers'] = [
+          schedulers.AnyBranchScheduler(
+             name='matrix',
+             builderNames=builderNames,
+          )
+       ]
 
 .. index:: Properties; from scheduler
 

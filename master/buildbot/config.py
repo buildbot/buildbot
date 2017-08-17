@@ -864,9 +864,15 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         # check that all builders are implemented on this master
         unscheduled_buildernames = set([b.name for b in self.builders])
         for s in itervalues(self.schedulers):
-            for n in s.listBuilderNames():
-                if n in unscheduled_buildernames:
-                    unscheduled_buildernames.remove(n)
+            builderNames = s.listBuilderNames()
+            if interfaces.IRenderable.providedBy(builderNames):
+                unscheduled_buildernames.clear()
+            else:
+                for n in builderNames:
+                    if interfaces.IRenderable.providedBy(n):
+                        unscheduled_buildernames.clear()
+                    elif n in unscheduled_buildernames:
+                        unscheduled_buildernames.remove(n)
         if unscheduled_buildernames:
             error("builder(s) %s have no schedulers to drive them"
                   % (', '.join(unscheduled_buildernames),))
@@ -879,7 +885,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         all_buildernames = set([b.name for b in self.builders])
 
         for s in itervalues(self.schedulers):
-            for n in s.listBuilderNames():
+            builderNames = s.listBuilderNames()
+            if interfaces.IRenderable.providedBy(builderNames):
+                continue
+            for n in builderNames:
+                if interfaces.IRenderable.providedBy(n):
+                    continue
                 if n not in all_buildernames:
                     error("Unknown builder '%s' in scheduler '%s'"
                           % (n, s.name))

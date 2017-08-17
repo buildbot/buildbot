@@ -51,13 +51,15 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             properties = {}
         if codebases is None:
             codebases = {'': {}}
-        dbBuilder = list()
-        builderid = 0
-        for builderName in builderNames:
-            builderid += 1
-            dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
 
-        self.master.db.insertTestData(dbBuilder)
+        if isinstance(builderNames, list):
+            dbBuilder = list()
+            builderid = 0
+            for builderName in builderNames:
+                builderid += 1
+                dbBuilder.append(fakedb.Builder(id=builderid, name=builderName))
+
+            self.master.db.insertTestData(dbBuilder)
 
         sched = self.attachScheduler(
             base.BaseScheduler(name=name, builderNames=builderNames,
@@ -78,6 +80,12 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
 
     def test_constructor_builderNames_unicode(self):
         self.makeScheduler(builderNames=[u'a'])
+
+    def test_constructor_builderNames_renderable(self):
+        @properties.renderer
+        def names(props):
+            return ['a']
+        self.makeScheduler(builderNames=names)
 
     def test_constructor_codebases_valid(self):
         codebases = {"codebase1":
@@ -555,6 +563,111 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             reason=u'whynot',
             scheduler=u'n',
             sourcestamps=[91])
+
+    @defer.inlineCallbacks
+    def test_addBuildsetForSourceStamp_combine_change_properties(self):
+        sched = self.makeScheduler()
+
+        self.master.db.insertTestData([
+            fakedb.SourceStamp(id=98, branch='stable'),
+            fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
+            fakedb.ChangeProperty(changeid=25, property_name='color',
+                                  property_value='["pink","Change"]'),
+        ])
+
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                                                             waited_for=False,
+                                                             sourcestamps=[98])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            waited_for=False,
+            builderids=[1, 2],
+            external_idstring=None,
+            properties={
+                u'scheduler': (u'testsched', u'Scheduler'),
+                u'color': (u'pink', u'Change')},
+            reason=u'whynot',
+            scheduler=u'testsched',
+            sourcestamps=[98])
+
+    @defer.inlineCallbacks
+    def test_addBuildsetForSourceStamp_renderable_builderNames(self):
+        @properties.renderer
+        def names(props):
+            if props.changes[0]['branch'] == 'stable':
+                return ['c']
+            elif props.changes[0]['branch'] == 'unstable':
+                return ['a', 'b']
+
+        sched = self.makeScheduler(name='n', builderNames=names)
+
+        self.master.db.insertTestData([
+            fakedb.Builder(id=1, name='a'),
+            fakedb.Builder(id=2, name='b'),
+            fakedb.Builder(id=3, name='c'),
+            fakedb.SourceStamp(id=98, branch='stable'),
+            fakedb.SourceStamp(id=99, branch='unstable'),
+            fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
+            fakedb.Change(changeid=26, sourcestampid=99, branch='unstable'),
+        ])
+
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                                                             waited_for=False,
+                                                             sourcestamps=[98])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            waited_for=False,
+            builderids=[3],
+            external_idstring=None,
+            properties={
+                u'scheduler': (u'n', u'Scheduler')},
+            reason=u'whynot',
+            scheduler=u'n',
+            sourcestamps=[98])
+
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'because',
+                                                             waited_for=False,
+                                                             sourcestamps=[99])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            waited_for=False,
+            builderids=[1, 2],
+            external_idstring=None,
+            properties={
+                u'scheduler': (u'n', u'Scheduler')},
+            reason=u'because',
+            scheduler=u'n',
+            sourcestamps=[99])
+
+    @defer.inlineCallbacks
+    def test_addBuildsetForSourceStamp_list_of_renderable_builderNames(self):
+        names = ['a', 'b', properties.Interpolate('%(prop:extra_builder)s')]
+        sched = self.makeScheduler(name='n', builderNames=names)
+
+        self.master.db.insertTestData([
+            fakedb.Builder(id=1, name='a'),
+            fakedb.Builder(id=2, name='b'),
+            fakedb.Builder(id=3, name='c'),
+            fakedb.SourceStamp(id=98, branch='stable'),
+            fakedb.Change(changeid=25, sourcestampid=98, branch='stable'),
+            fakedb.ChangeProperty(changeid=25, property_name='extra_builder',
+                                  property_value='["c","Change"]'),
+        ])
+
+        bsid, brids = yield sched.addBuildsetForSourceStamps(reason=u'whynot',
+                                                             waited_for=False,
+                                                             sourcestamps=[98])
+        self.assertEqual((bsid, brids), self.exp_bsid_brids)
+        self.master.data.updates.addBuildset.assert_called_with(
+            waited_for=False,
+            builderids=[1, 2, 3],
+            external_idstring=None,
+            properties={
+                u'scheduler': (u'n', u'Scheduler'),
+                u'extra_builder': (u'c', u'Change')},
+            reason=u'whynot',
+            scheduler=u'n',
+            sourcestamps=[98])
 
     def test_signature_addBuildsetForChanges(self):
         sched = self.makeScheduler(builderNames=['xxx'])
