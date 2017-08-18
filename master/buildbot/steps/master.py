@@ -21,8 +21,6 @@ from future.utils import text_type
 import os
 import pprint
 import re
-from builtins import bytes
-from builtins import str
 
 from twisted.internet import defer
 from twisted.internet import error
