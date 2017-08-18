@@ -1,0 +1,1 @@
+Fix the Perforce build step on Python 3 (:issue:`3493`)
