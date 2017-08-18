@@ -112,7 +112,8 @@ Filters can use any of the operators listed below, with query parameters of the 
 ``ge``
     select resources where the field's value is greater than or equal to ``{value}``
 ``contains``
-    select resources where the field's value contains ``{value}``
+    Select resources where the field's value contains ``{value}``.
+    If the parameter is provided multiple times, results containing at least one of the values are returned (so `foo__contains=x&foo__contains=y` would match resources where foo contains `x`, `y` or both).
 
 For example:
 
