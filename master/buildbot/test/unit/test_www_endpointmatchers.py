@@ -94,6 +94,11 @@ class AnyControlEndpointMatcher(EndpointBase):
         ret = yield self.matcher.match(("foo", "bar"), action="foo")
         self.assertMatch(ret)
 
+    @defer.inlineCallbacks
+    def test_checkConfig(self):
+        self.assertRaises(config.ConfigErrors, self.matcher.match,
+            'role'=["foo", "bar"])
+
 
 class ViewBuildsEndpointMatcherBranch(EndpointBase, ValidEndpointMixin):
 

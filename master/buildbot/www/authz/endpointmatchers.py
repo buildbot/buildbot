@@ -21,6 +21,7 @@ import inspect
 
 from twisted.internet import defer
 
+from buildbot import config
 from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import bytes2NativeString
 
@@ -31,6 +32,14 @@ class EndpointMatcherBase(object):
         self.role = role
         self.defaultDeny = defaultDeny
         self.owner = None
+        
+
+    def checkConfig(self, **kwargs):
+        '''
+        goal: check the configuration about the EndpointMatcherBase
+        '''
+        if 'role' is not in kwargs:
+            config.error("role needs to present in the configuration file")
 
     def setAuthz(self, authz):
         self.authz = authz
@@ -109,6 +118,11 @@ class AnyControlEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, **kwargs):
         EndpointMatcherBase.__init__(self, **kwargs)
+
+    def checkConfig(self, **kwargs):
+        if 'role' in kwargs:
+            if type(kwargs[role]) is not 'string':
+                config.error("role type needs to be a string")
 
     def match(self, ep, action="", options=None):
         if bytes2NativeString(action).lower() != "get":
