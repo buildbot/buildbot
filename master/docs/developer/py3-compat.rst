@@ -15,7 +15,8 @@ Yes:
 .. code-block:: python
 
     from __future__ import print_function
-    from builtins import str
+    from twisted.application import internet
+    from twisted.spread import pb
 
 No:
 
@@ -23,7 +24,6 @@ No:
 
     from twisted.application import internet
     from twisted.spread import pb
-    from builtins import str
     from __future__ import print_function
 
 Dictionaries
@@ -140,7 +140,7 @@ Basestring
 In Python2 there is a basestring type, which both str and unicode inherit.
 In Python3, only unicode should be of this type, while bytestrings are ``type(byte)``.
 
-For this reason, we use a builtin form python future.
+For this reason, we use an import from python future.
 Before:
 
 .. code-block:: python
@@ -153,14 +153,22 @@ After:
 
 .. code-block:: python
 
-    from builtins import str
+    from future.utils import text_type
     unicode_s = u"this is a unicode string"
     byte_s = b"this is a bytestring"
 
-    if(isinstance(unicode_s, str)):
+    if(isinstance(unicode_s, text_type)):
         print("This line will print")
-    if(isinstance(byte_s, str):
+    if(isinstance(unicode_s, bytes)):
         print("this line will not print")
+    if(isinstance(unicode_s, (text_type, bytes))):
+        print("This line will print")
+    if(isinstance(byte_s, text_type):
+        print("this line will not print")
+    if(isinstance(byte_s, bytes):
+        print("This line will print")
+    if(isinstance(byte_s, (text_type, bytes)):
+        print("This line will print")
 
 
 Print statements
