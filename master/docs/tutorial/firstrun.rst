@@ -193,7 +193,7 @@ You should now be able to go to http://localhost:8010, where you will see a web 
 .. image:: _images/index.png
    :alt: index page
 
-Click on the `Waterfall Display link <http://localhost:8010/waterfall>`_ and you get this:
+Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and you get this:
 
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
