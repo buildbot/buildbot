@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -68,16 +69,30 @@ class TestObfuscated(unittest.TestCase):
 
     def testObfuscatedCommand(self):
         cmd = ['echo', util.Obfuscated('password', '*******')]
+        cmd_bytes = [b'echo', util.Obfuscated(b'password', b'*******')]
+        cmd_unicode = [u'echo', util.Obfuscated(u'password', u'привет')]
 
         self.assertEqual(
             ['echo', 'password'], util.Obfuscated.get_real(cmd))
         self.assertEqual(
             ['echo', '*******'], util.Obfuscated.get_fake(cmd))
+        self.assertEqual(
+            [b'echo', b'password'], util.Obfuscated.get_real(cmd_bytes))
+        self.assertEqual(
+            [b'echo', b'*******'], util.Obfuscated.get_fake(cmd_bytes))
+        self.assertEqual(
+            [u'echo', u'password'], util.Obfuscated.get_real(cmd_unicode))
+        self.assertEqual(
+            [u'echo', u'привет'], util.Obfuscated.get_fake(cmd_unicode))
 
     def testObfuscatedNonString(self):
         cmd = ['echo', 1]
+        cmd_bytes = [b'echo', 2]
+        cmd_unicode = [u'привет', 3]
         self.assertEqual(['echo', '1'], util.Obfuscated.get_real(cmd))
-        self.assertEqual(['echo', '1'], util.Obfuscated.get_fake(cmd))
+        self.assertEqual([b'echo', '2'], util.Obfuscated.get_fake(cmd_bytes))
+        self.assertEqual([u'привет', u'3'],
+                         util.Obfuscated.get_fake(cmd_unicode))
 
     def testObfuscatedNonList(self):
         cmd = 1
