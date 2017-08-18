@@ -42,7 +42,7 @@ class State extends Config
                 controller: 'gridController'
                 controllerAs: 'C'
                 templateUrl: 'grid_view/views/grid.html'
-                url: '/grid?branch&tag'
+                url: '/grid?branch&tag&result'
                 reloadOnSearch: false
                 data:
                     group: 'grid'
@@ -54,14 +54,14 @@ class State extends Config
             caption: 'Grid related settings'
             items: [
                     type: 'bool'
-                    name: 'compactChanges'
-                    caption: 'Hide avatar and time ago from change details'
-                    defaultValue: true
+                    name: 'fullChanges'
+                    caption: 'Show avatar and time ago in change details'
+                    defaultValue: false
                 ,
                     type: 'bool'
-                    name: 'rightToLeft'
-                    caption: 'Show most recent changes on the left'
-                    defaultValue: true
+                    name: 'leftToRight'
+                    caption: 'Show most recent changes on the right'
+                    defaultValue: false
                 ,
                     type: 'integer'
                     name: 'revisionLimit'
