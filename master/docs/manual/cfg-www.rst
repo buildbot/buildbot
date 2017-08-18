@@ -529,7 +529,7 @@ Example::
 
 .. note::
 
-            In order to use this module, you need to install the ``python3-ldap`` module (and an old version of pyASN1, see :issue:`3530`):
+            In order to use this module, you need to install the ``python3-ldap`` module (and an old version of ``pyASN1``, see :issue:`3530`):
 
             .. code-block:: bash
 
