@@ -32,7 +32,9 @@ import sqlalchemy as sa
 from twisted.python import reflect
 from twisted.python import usage
 
+import buildbot
 from buildbot.scripts import base
+from buildbot.util import check_functional_environment
 
 # Note that the terms 'options' and 'config' are used interchangeably here - in
 # fact, they are interchanged several times.  Caveat legator.
@@ -744,6 +746,7 @@ class Options(usage.Options):
 
 def run():
     config = Options()
+    check_functional_environment(buildbot.config)
     try:
         config.parseOptions(sys.argv[1:])
     except usage.error as e:
