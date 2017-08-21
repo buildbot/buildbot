@@ -79,7 +79,7 @@ You will see a handful of lines of output from the master log, much like this:
 
 The important lines are the ones telling you that it is loading the new configuration at the top, and the one at the bottom saying that the update is complete.
 
-Now, if you go back to `the waterfall page <http://localhost:8010/waterfall>`_, you will see that the project's name is whatever you may have changed it to and when you click on the URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
+Now, if you go back to `the waterfall page <http://localhost:8010/#/waterfall>`_, you will see that the project's name is whatever you may have changed it to and when you click on the URL of the project name at the bottom of the page it should take you to the link you put in the configuration.
 
 Configuration Errors
 --------------------
@@ -140,14 +140,14 @@ Your First Build
 
 By now you're probably thinking: "All this time spent and still not done a single build? What was the name of this project again?"
 
-On the `waterfall <http://localhost:8010/waterfall>`_ page, click on the runtests link.
+On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
 You'll see a builder page, and an option that allow you to force a build:
 
 .. image:: _images/force-build.png
    :alt: force a build.
 
 Click *Start Build* - there's no need to fill in any of the fields in this case.
-Next, click on `view in waterfall <http://localhost:8010/waterfall?show=runtests>`_.
+Next, click on `view in waterfall <http://localhost:8010/#/waterfall?show=runtests>`_.
 
 You will now see:
 
@@ -343,7 +343,7 @@ Then run buildbot's ``try`` command as follows:
 
 This will do ``git diff`` for you and send the resulting patch to the server for build and test against the latest sources from Git.
 
-Now go back to the `waterfall <http://localhost:8010/waterfall>`_ page, click on the runtests link, and scroll down.
+Now go back to the `waterfall <http://localhost:8010/#/waterfall>`_ page, click on the runtests link, and scroll down.
 You should see that another build has been started with your change (and stdout for the tests should be chock-full of parse trees as a result).
 The "Reason" for the job will be listed as "'try' job", and the blamelist will be empty.
 
