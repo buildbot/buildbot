@@ -1413,6 +1413,11 @@ For example:
 
 If no line number range is specified, the pattern matches the whole file; if only one number is given it matches only on that line.
 
+The ``suppressionList=`` argument can be specified as a list of four-tuples as addition or instead of ``suppressionFile=``.
+The tuple should be ``[ FILE-RE, WARNING-RE, START, END ]``.
+If ``FILE-RE`` is ``None``, then the suppression applies to any file.
+``START`` and ``END`` can be specified as in suppression file, or ``None``.
+
 The default warningPattern regexp only matches the warning text, so line numbers and file names are ignored.
 To enable line number and file name matching, provide a different regexp and provide a function (callable) as the argument of ``warningExtractor=``.
 The function is called with three arguments: the :class:`BuildStep` object, the line in the log file with the warning, and the ``SRE_Match`` object of the regexp search for ``warningPattern``.

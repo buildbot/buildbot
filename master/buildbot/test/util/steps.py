@@ -73,20 +73,21 @@ def _dict_diff(d1, d2):
 
 def _describe_cmd_difference(exp, command):
     if exp.args == command.args:
-        return
-
+        return ""
+    text = ""
     missing_in_exp, missing_in_cmd, diff = _dict_diff(exp.args, command.args)
     if missing_in_exp:
-        log.msg(
-            'Keys in cmd missing from expectation: {0}'.format(missing_in_exp))
+        text += (
+            'Keys in cmd missing from expectation: {0}\n'.format(missing_in_exp))
     if missing_in_cmd:
-        log.msg(
-            'Keys in expectation missing from command: {0}'.format(missing_in_cmd))
+        text += (
+            'Keys in expectation missing from command: {0}\n'.format(missing_in_cmd))
     if diff:
         formatted_diff = [
             '"{0}": expected {1!r}, got {2!r}'.format(*d) for d in diff]
-        log.msg('Key differences between expectation and command: {0}'.format(
+        text += ('Key differences between expectation and command: {0}\n'.format(
             '\n'.join(formatted_diff)))
+    return text
 
 
 class BuildStepMixin(object):
@@ -404,9 +405,9 @@ class BuildStepMixin(object):
             # first check any ExpectedRemoteReference instances
             exp_tup = (exp.remote_command, exp.args)
             if exp_tup != got:
-                _describe_cmd_difference(exp, command)
+                text = _describe_cmd_difference(exp, command)
                 raise AssertionError(
-                    "Command contents different from expected; see logs")
+                    "Command contents different from expected; " + text)
 
         if exp.shouldRunBehaviors():
             # let the Expect object show any behaviors that are required

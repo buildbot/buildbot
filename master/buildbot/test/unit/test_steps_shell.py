@@ -755,19 +755,27 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             writer.remote_close()
             command.rc = 0
 
-        self.expectCommands(
-            # step will first get the remote suppressions file
-            Expect('uploadFile', dict(blocksize=32768, maxsize=None,
-                                      workersrc='supps', workdir='wkdir',
-                                      writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
-            + Expect.behavior(upload_behavior),
+        if supps_file is not None:
+            self.expectCommands(
+                # step will first get the remote suppressions file
+                Expect('uploadFile', dict(blocksize=32768, maxsize=None,
+                                          workersrc='supps', workdir='wkdir',
+                                          writer=ExpectRemoteRef(remotetransfer.StringFileWriter)))
+                + Expect.behavior(upload_behavior),
 
-            # and then run the command
-            ExpectShell(workdir='wkdir',
-                        command=["make"])
-            + ExpectShell.log('stdio', stdout=stdout)
-            + 0
-        )
+                # and then run the command
+                ExpectShell(workdir='wkdir',
+                            command=["make"])
+                + ExpectShell.log('stdio', stdout=stdout)
+                + 0
+            )
+        else:
+            self.expectCommands(
+                ExpectShell(workdir='wkdir',
+                            command=["make"])
+                + ExpectShell.log('stdio', stdout=stdout)
+                + 0
+            )
         if exp_exception:
             self.expectOutcome(result=EXCEPTION,
                                state_string="'make' (exception)")
@@ -917,6 +925,30 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             abc.c:200: warning: seen 2
             """)
         return self.do_test_suppressions(step, '', stdout, 2,
+                                         exp_warning_log)
+
+    def test_suppressions_suppressionsParameter(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+
+        supps = (
+                   ("abc.c", ".*", 100, 199),
+                   ("def.c", ".*", 22, 22),
+                )
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                                 suppressionList=supps,
+                                                 warningExtractor=warningExtractor)
+        stdout = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:150: warning: unseen
+            def.c:22: warning: unseen
+            abc.c:200: warning: seen 2
+            """)
+        exp_warning_log = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:200: warning: seen 2
+            """)
+        return self.do_test_suppressions(step, None, stdout, 2,
                                          exp_warning_log)
 
     def test_warnExtractFromRegexpGroups(self):
