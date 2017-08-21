@@ -69,6 +69,8 @@ class Properties(util.ComparableMixin):
         if kwargs:
             self.update(kwargs, "TEST")
         self._master = None
+        self._sourcestamps = None
+        self._changes = None
 
     @property
     def master(self):
@@ -79,6 +81,40 @@ class Properties(util.ComparableMixin):
     @master.setter
     def master(self, value):
         self._master = value
+
+    @property
+    def sourcestamps(self):
+        if self.build is not None:
+            return [b.asSSDict() for b in self.build.getAllSourceStamps()]
+        elif self._sourcestamps is not None:
+            return self._sourcestamps
+        raise AttributeError('neither build nor _sourcestamps are set')
+
+    @sourcestamps.setter
+    def sourcestamps(self, value):
+        self._sourcestamps = value
+
+    @property
+    def changes(self):
+        if self.build is not None:
+            return [c.asChDict() for c in self.build.allChanges()]
+        elif self._changes is not None:
+            return self._changes
+        raise AttributeError('neither build nor _changes are set')
+
+    @changes.setter
+    def changes(self, value):
+        self._changes = value
+
+    @property
+    def files(self):
+        if self.build is not None:
+            return self.build.allFiles()
+        files = []
+        # self.changes, not self._changes to raise AttributeError if unset
+        for chdict in self.changes:
+            files.extend(chdict['files'])
+        return files
 
     @classmethod
     def fromDict(cls, propDict):

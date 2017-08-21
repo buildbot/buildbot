@@ -1154,6 +1154,17 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_single_master()
         self.assertConfigError(self.errors, "have no schedulers to drive them")
 
+    def test_check_single_master_renderable_builderNames(self):
+        self.setup_basic_attrs()
+        b3 = mock.Mock()
+        b3.name = 'b3'
+        self.cfg.builders.append(b3)
+        sch2 = mock.Mock()
+        sch2.listBuilderNames = lambda: properties.Interpolate('%(prop:foo)s')
+        self.cfg.schedulers['sch2'] = sch2
+        self.cfg.check_single_master()
+        self.assertNoConfigErrors(self.errors)
+
     def test_check_schedulers_unknown_builder(self):
         self.setup_basic_attrs()
         del self.cfg.builders[1]  # remove b2, leaving b1
@@ -1165,6 +1176,15 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.setup_basic_attrs()
         del self.cfg.builders[1]  # remove b2, leaving b1
         self.cfg.multiMaster = True
+        self.cfg.check_schedulers()
+        self.assertNoConfigErrors(self.errors)
+
+    def test_check_schedulers_renderable_builderNames(self):
+        self.setup_basic_attrs()
+        sch2 = mock.Mock()
+        sch2.listBuilderNames = lambda: properties.Interpolate('%(prop:foo)s')
+        self.cfg.schedulers['sch2'] = sch2
+
         self.cfg.check_schedulers()
         self.assertNoConfigErrors(self.errors)
 

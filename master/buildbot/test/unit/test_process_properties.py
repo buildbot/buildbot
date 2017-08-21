@@ -27,6 +27,8 @@ from zope.interface import implementer
 
 from buildbot.interfaces import IProperties
 from buildbot.interfaces import IRenderable
+from buildbot.process.buildrequest import TempChange
+from buildbot.process.buildrequest import TempSourceStamp
 from buildbot.process.properties import FlattenList
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
@@ -1036,6 +1038,30 @@ class TestProperties(unittest.TestCase):
 
     def test_getBuild(self):
         self.assertIdentical(self.props.getBuild(), self.props.build)
+
+    def test_unset_sourcestamps(self):
+        self.assertRaises(AttributeError, lambda: self.props.sourcestamps)
+
+    def test_unset_changes(self):
+        self.assertRaises(AttributeError, lambda: self.props.changes)
+        self.assertRaises(AttributeError, lambda: self.props.files)
+
+    def test_build_attributes(self):
+        build = FakeBuild(self.props)
+        change = TempChange({'author': 'me', 'files': ['main.c']})
+        ss = TempSourceStamp({'branch': 'master'})
+        ss.changes = [change]
+        build.sources[''] = ss
+        self.assertEqual(self.props.sourcestamps[0]['branch'], 'master')
+        self.assertEqual(self.props.changes[0]['author'], 'me')
+        self.assertEqual(self.props.files[0], 'main.c')
+
+    def test_own_attributes(self):
+        self.props.sourcestamps = [{'branch': 'master'}]
+        self.props.changes = [{'author': 'me', 'files': ['main.c']}]
+        self.assertEqual(self.props.sourcestamps[0]['branch'], 'master')
+        self.assertEqual(self.props.changes[0]['author'], 'me')
+        self.assertEqual(self.props.files[0], 'main.c')
 
     def test_render(self):
         @implementer(IRenderable)
