@@ -16,7 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
-from future.utils import string_types
+from future.utils import text_type
 
 from twisted.internet import defer
 from twisted.internet import error
@@ -360,7 +360,7 @@ class RemoteShellCommand(RemoteCommand):
         if decodeRC is None:
             decodeRC = {0: SUCCESS}
         self.command = command  # stash .command, set it later
-        if isinstance(self.command, string_types):
+        if isinstance(self.command, (text_type, bytes)):
             # Single string command doesn't support obfuscation.
             self.fake_command = command
         else:

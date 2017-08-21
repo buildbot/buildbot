@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import string_types
+from future.utils import text_type
 
 import itertools
 import textwrap
@@ -70,7 +70,7 @@ class Obfuscated(object):
 
     @staticmethod
     def to_text(s):
-        if isinstance(s, string_types):
+        if isinstance(s, (text_type, bytes)):
             return s
         return str(s)
 
