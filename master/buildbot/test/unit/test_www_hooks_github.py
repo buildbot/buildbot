@@ -22,6 +22,7 @@ from future.utils import text_type
 
 import hmac
 from calendar import timegm
+from copy import deepcopy
 from hashlib import sha1
 from io import BytesIO
 from io import StringIO
@@ -29,6 +30,7 @@ from io import StringIO
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import unicode2bytes
@@ -39,6 +41,8 @@ from buildbot.www.hooks.github import GitHubEventHandler
 
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modified" and "removed", and change email
+# Added "head_commit"
+#   https://developer.github.com/v3/activity/events/types/#webhook-payload-example-26
 gitJsonPayload = """
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
@@ -82,6 +86,78 @@ gitJsonPayload = """
       "removed": ["removedFile"]
     }
   ],
+  "head_commit": {
+    "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "author": {
+      "email": "fred@flinstone.org",
+      "name": "Fred Flinstone"
+    },
+    "message": "update pricing a tad",
+    "timestamp": "2008-02-15T14:36:34-08:00",
+    "modified": ["modfile"],
+    "removed": ["removedFile"]
+  },
+  "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+  "ref": "refs/heads/master"
+}
+"""
+
+gitJsonPayloadCiSkipTemplate = """
+{
+  "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
+  "repository": {
+    "url": "http://github.com/defunkt/github",
+    "html_url": "http://github.com/defunkt/github",
+    "name": "github",
+    "full_name": "defunkt/github",
+    "description": "You're lookin' at it.",
+    "watchers": 5,
+    "forks": 2,
+    "private": 1,
+    "owner": {
+      "email": "fred@flinstone.org",
+      "name": "defunkt"
+    }
+  },
+  "commits": [
+    {
+      "id": "41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "distinct": true,
+      "url": "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
+      "author": {
+        "email": "fred@flinstone.org",
+        "name": "Fred Flinstone"
+      },
+      "message": "okay i give in",
+      "timestamp": "2008-02-15T14:57:17-08:00",
+      "added": ["filepath.rb"]
+    },
+    {
+      "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+      "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+      "author": {
+        "email": "fred@flinstone.org",
+        "name": "Fred Flinstone"
+      },
+      "message": "update pricing a tad %(skip)s",
+      "timestamp": "2008-02-15T14:36:34-08:00",
+      "modified": ["modfile"],
+      "removed": ["removedFile"]
+    }
+  ],
+  "head_commit": {
+    "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "author": {
+      "email": "fred@flinstone.org",
+      "name": "Fred Flinstone"
+    },
+    "message": "update pricing a tad %(skip)s",
+    "timestamp": "2008-02-15T14:36:34-08:00",
+    "modified": ["modfile"],
+    "removed": ["removedFile"]
+  },
   "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
   "ref": "refs/heads/master"
 }
@@ -130,6 +206,18 @@ gitJsonPayloadTag = """
       "removed": ["removedFile"]
     }
   ],
+  "head_commit": {
+    "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "author": {
+      "email": "fred@flinstone.org",
+      "name": "Fred Flinstone"
+    },
+    "message": "update pricing a tad",
+    "timestamp": "2008-02-15T14:36:34-08:00",
+    "modified": ["modfile"],
+    "removed": ["removedFile"]
+  },
   "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
   "ref": "refs/tags/v1.0.0"
 }
@@ -180,6 +268,19 @@ gitJsonPayloadTagUnicode = u"""
       "removed": ["removedFile"]
     }
   ],
+  "head_commit": {
+    "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "author": {
+      "name": "Julian Rüth",
+      "email": "julian.rueth@fsfe.org",
+      "username": "saraedum"
+    },
+    "message": "update pricing a tad",
+    "timestamp": "2008-02-15T14:36:34-08:00",
+    "modified": ["modfile"],
+    "removed": ["removedFile"]
+  },
   "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
   "ref": "refs/tags/v1.0.0"
 }
@@ -346,6 +447,35 @@ gitJsonPayloadPullRequest = """
 }
 """
 
+gitJsonPayloadCommit = {
+    "sha": "de8251ff97ee194a289832576287d6f8ad74e3d0",
+    "commit": {
+        "author": {
+            "name": "defunkt",
+            "email": "fred@flinstone.org",
+            "date": "2017-02-12T14:39:33Z"
+        },
+        "committer": {
+            "name": "defunkt",
+            "email": "fred@flinstone.org",
+            "date": "2017-02-12T14:51:05Z"
+        },
+        "message": "black magic",
+        "tree": {
+        },
+        "url": "...",
+        "comment_count": 0
+    },
+    "url": "...",
+    "html_url": "...",
+    "comments_url": "...",
+    "author": {},
+    "committer": {},
+    "parents": [],
+    "stats": {},
+    "files": []
+}
+
 gitPRproperties = {
     'github.head.sha': '05c588ba8cd510ecbe112d020f215facb17817a7',
     'github.state': 'open',
@@ -380,6 +510,8 @@ gitJsonPayloadEmpty = """
   },
   "commits": [
   ],
+  "head_commit": {
+  },
   "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
   "ref": "refs/heads/master"
 }
@@ -434,8 +566,19 @@ def _prepare_request(event, payload, _secret=None, headers=None):
 
 class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        self.changeHook = _prepare_github_change_hook(strict=False, github_property_whitelist=["github.*"])
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, github_property_whitelist=["github.*"])
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://api.github.com',
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}
@@ -666,10 +809,156 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertDictSubset(gitPRproperties, change["properties"])
 
     def test_git_with_pull_encoded(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull([gitJsonPayloadPullRequest])
 
     def test_git_with_pull_json(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
         self._check_git_with_pull(gitJsonPayloadPullRequest)
+
+    @defer.inlineCallbacks
+    def _check_git_push_with_skip_message(self, payload):
+        self.request = _prepare_request(b'push', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_git_push_with_skip_message(self):
+        gitJsonPayloadCiSkips = [
+            (gitJsonPayloadCiSkipTemplate % {'skip': '[ci skip]'}),
+            (gitJsonPayloadCiSkipTemplate % {'skip': '[skip ci]'}),
+            (gitJsonPayloadCiSkipTemplate % {'skip': '[  ci skip   ]'}),
+        ]
+
+        for payload in gitJsonPayloadCiSkips:
+            self._check_git_push_with_skip_message(payload)
+
+    @defer.inlineCallbacks
+    def _check_git_pull_request_with_skip_message(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_git_pull_request_with_skip_message(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        msgs = (
+            'black magic [ci skip]',
+            'black magic [skip ci]',
+            'black magic [  ci skip   ]',
+        )
+        for msg in msgs:
+            commit['commit']['message'] = msg
+            self._http.expect('get', api_endpoint, content_json=commit)
+            self._check_git_pull_request_with_skip_message(
+                gitJsonPayloadPullRequest)
+
+
+class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, skips=[r'\[ *bb *skip *\]'])
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://api.github.com',
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_push_with_skip_message(self, payload):
+        self.request = _prepare_request(b'push', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_push_with_skip_message(self):
+        gitJsonPayloadCiSkips = [
+            (gitJsonPayloadCiSkipTemplate % {'skip': '[bb skip]'}),
+            (gitJsonPayloadCiSkipTemplate % {'skip': '[  bb skip   ]'}),
+        ]
+
+        for payload in gitJsonPayloadCiSkips:
+            self._check_push_with_skip_message(payload)
+
+    @defer.inlineCallbacks
+    def _check_push_no_ci_skip(self, payload):
+        self.request = _prepare_request(b'push', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+
+    def test_push_no_ci_skip(self):
+        # user overrode the skip pattern already,
+        # so the default patterns should not work.
+        payload = gitJsonPayloadCiSkipTemplate % {'skip': '[ci skip]'}
+        self._check_push_no_ci_skip(payload)
+
+    @defer.inlineCallbacks
+    def _check_pull_request_with_skip_message(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+
+    def test_pull_request_with_skip_message(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        msgs = (
+            'black magic [bb skip]',
+            'black magic [  bb skip   ]',
+        )
+        for msg in msgs:
+            commit['commit']['message'] = msg
+            self._http.expect('get', api_endpoint, content_json=commit)
+            self._check_pull_request_with_skip_message(
+                gitJsonPayloadPullRequest)
+
+    @defer.inlineCallbacks
+    def _check_pull_request_no_skip(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+
+    def test_pull_request_no_skip(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+        commit = deepcopy(gitJsonPayloadCommit)
+        commit['commit']['message'] = 'black magic [skip bb]'  # pattern not matched
+
+        self._http.expect('get', api_endpoint, content_json=commit)
+        self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
+
+
+class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, github_api_endpoint='https://black.magic.io')
+        self.master = self.changeHook.master
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://black.magic.io',
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_pull_request(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+
+    def test_pull_request(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+        self._check_pull_request(gitJsonPayloadPullRequest)
 
 
 class TestChangeHookConfiguredWithStrict(unittest.TestCase):

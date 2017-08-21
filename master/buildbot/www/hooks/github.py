@@ -24,32 +24,53 @@ from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
+from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2NativeString
+from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-GitHub-Event'
 _HEADER_SIGNATURE = b'X-Hub-Signature'
 
+DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
+DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+
 
 class GitHubEventHandler(PullRequestMixin):
 
-    def __init__(self, secret, strict, codebase=None, github_property_whitelist=None, master=None):
+    def __init__(self, secret, strict,
+                 codebase=None,
+                 github_property_whitelist=None,
+                 master=None,
+                 skips=None,
+                 github_api_endpoint=None,
+                 debug=False,
+                 verify=False):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
         self.github_property_whitelist = github_property_whitelist
+        self.skips = skips
+        self.github_api_endpoint = github_api_endpoint
         self.master = master
         if github_property_whitelist is None:
             self.github_property_whitelist = []
+        if skips is None:
+            self.skips = DEFAULT_SKIPS_PATTERN
+        if github_api_endpoint is None:
+            self.github_api_endpoint = DEFAULT_GITHUB_API_URL
 
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
+        self.debug = debug
+        self.verify = verify
 
+    @defer.inlineCallbacks
     def process(self, request):
         payload = self._get_payload(request)
 
@@ -63,7 +84,8 @@ class GitHubEventHandler(PullRequestMixin):
         if handler is None:
             raise ValueError('Unknown event: {}'.format(event_type))
 
-        return handler(payload, event_type)
+        result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
+        defer.returnValue(result)
 
     def _get_payload(self, request):
         content = request.content.read()
@@ -128,6 +150,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes, 'git'
 
+    @defer.inlineCallbacks
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
@@ -135,14 +158,22 @@ class GitHubEventHandler(PullRequestMixin):
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
+        repo_full_name = payload['repository']['full_name']
+        head_sha = payload['pull_request']['head']['sha']
 
         log.msg('Processing GitHub PR #{}'.format(number),
                 logLevel=logging.DEBUG)
 
+        head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
+        if self._has_skip(head_msg):
+            log.msg("GitHub PR #{}, Ignoring: "
+                    "head commit message contains skip pattern".format(number))
+            defer.returnValue(([], 'git'))
+
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
             log.msg("GitHub PR #{} {}, ignoring".format(number, action))
-            return changes, 'git'
+            defer.returnValue((changes, 'git'))
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
@@ -170,7 +201,22 @@ class GitHubEventHandler(PullRequestMixin):
 
         log.msg("Received {} changes from GitHub PR #{}".format(
             len(changes), number))
-        return changes, 'git'
+        defer.returnValue((changes, 'git'))
+
+    @defer.inlineCallbacks
+    def _get_commit_msg(self, repo, sha):
+        '''
+        :param repo: the repo full name, ``{owner}/{project}``.
+            e.g. ``buildbot/buildbot``
+        '''
+        url = '/repos/{}/commits/{}'.format(repo, sha)
+        http = yield httpclientservice.HTTPClientService.getService(
+            self.master, self.github_api_endpoint,
+            debug=self.debug, verify=self.verify)
+        res = yield http.get(url)
+        data = yield res.json()
+        msg = data['commit']['message']
+        defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):
@@ -194,6 +240,11 @@ class GitHubEventHandler(PullRequestMixin):
         branch = match.group(2)
         if payload.get('deleted'):
             log.msg("Branch `{}' deleted, ignoring".format(branch))
+            return changes
+
+        # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
+        head_msg = payload['head_commit'].get('message', '')
+        if self._has_skip(head_msg):
             return changes
 
         for commit in payload['commits']:
@@ -233,6 +284,17 @@ class GitHubEventHandler(PullRequestMixin):
 
         return changes
 
+    def _has_skip(self, msg):
+        '''
+        The message contains the skipping keyword no not.
+
+        :return type: Bool
+        '''
+        for skip in self.skips:
+            if re.search(skip, msg):
+                return True
+        return False
+
 # for GitHub, we do another level of indirection because
 # we already had documented API that encouraged people to subclass GitHubEventHandler
 # so we need to be careful not breaking that API.
@@ -245,11 +307,18 @@ class GitHubHandler(BaseHookHandler):
         BaseHookHandler.__init__(self, master, options)
 
         klass = options.get('class', GitHubEventHandler)
+        klass_kwargs = {
+            'master': master,
+            'codebase': options.get('codebase', None),
+            'github_property_whitelist': options.get('github_property_whitelist', None),
+            'skips': options.get('skips', None),
+            'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'debug': options.get('debug', None) or False,
+            'verify': options.get('verify', None) or False,
+        }
         handler = klass(options.get('secret', None),
                         options.get('strict', False),
-                        options.get('codebase', None),
-                        options.get('github_property_whitelist', None),
-                        master=master)
+                        **klass_kwargs)
         self.handler = handler
 
     def getChanges(self, request):

@@ -117,6 +117,17 @@ The GitHub hook has the following parameters:
                 # Do some magic here
                 return [], 'git'
 
+``skips`` (default ``[r'\[ *skip *ci *\]', r'\[ *ci *skip *\]']``)
+    A list of regex pattern makes buildbot ignore the push event.
+    For instance, if user push 3 commits and the commit message of branch head
+    contains a key string ``[ci skip]``, buildbot will ignore this push event.
+
+    If you want to disable the skip checking, please set it to ``[]``.
+
+``github_api_endpoint`` (default ``https://api.github.com``)
+    If you have a self-host GitHub Enterprise installation, please set
+    this url properly.
+
 The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
