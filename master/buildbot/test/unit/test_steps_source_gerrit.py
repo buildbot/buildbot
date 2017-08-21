@@ -65,7 +65,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'branch', '-M', 'gerrit_branch'])
+                        command=['git', 'checkout', '-B', 'gerrit_branch'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])
@@ -109,7 +109,7 @@ class TestGerrit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
             ExpectShell(workdir='wkdir',
-                        command=['git', 'branch', '-M', 'refs/changes/34/1234/567'])
+                        command=['git', 'checkout', '-B', 'refs/changes/34/1234/567'])
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['git', 'rev-parse', 'HEAD'])

@@ -1,0 +1,1 @@
+The ``git`` source step now uses `git checkout -B` rather than `git branch -M` to create local branches

@@ -421,7 +421,7 @@ class Git(Source):
         # Rename the branch if needed.
         if res == RC_SUCCESS and self.branch != 'HEAD':
             # Ignore errors
-            yield self._dovccmd(['branch', '-M', self.branch], abandonOnFailure=False)
+            yield self._dovccmd(['checkout', '-B', self.branch], abandonOnFailure=False)
 
         defer.returnValue(res)
 
