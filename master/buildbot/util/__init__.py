@@ -416,11 +416,11 @@ def asyncSleep(delay):
 def check_functional_environment(config):
     try:
         locale.getdefaultlocale()
-    except KeyError:
+    except (KeyError, ValueError) as e:
         config.error("\n".join([
             "Your environment has incorrect locale settings. This means python cannot handle strings safely.",
             " Please check 'LANG', 'LC_CTYPE', 'LC_ALL' and 'LANGUAGE'"
-            " are either unset or set to a valid locale.",
+            " are either unset or set to a valid locale.", str(e)
         ]))
 
 
