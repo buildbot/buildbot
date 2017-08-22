@@ -68,8 +68,67 @@ In the master configuration, the provider is instantiated through a Buildbot ser
 Vault secrets provider accesses the Vault backend asking the key wanted by Buildbot and returns the contained text value.
 SecretInVAult provider allows Buildbot to read secrets in the Vault.
 
+Interpolate secret
+``````````````````
+
+.. code-block:: python
+
+    text = Interpolate("some text and %(secret:foo)s")
+
+Secret keys are replaced in a string by the secret value using the class Interpolate and the keyword secret.
+The secret is searched across the provider defined in the master configuration.
+
+
 Secret Obfuscation
 ``````````````````
 
-Secrets are never visible to the normal user via logs and thus are transmitted directly to the workers, using :class:`Obfuscated`.
-The class Obfuscated replaces secret string value by ``####`` characters when the secret value is logged.
+.. code-block:: python
+
+    text = Interpolate("some text and %(secret:foo)s")
+    # some text rendered
+    rendered = yield self.build.render(text)
+    cleantext = self.build.build_status.properties.cleanupTextFromSecrets(rendered)
+
+Secrets don't have to be visible to the normal user via logs and thus are transmitted directly to the workers.
+Secrets are rendered and can arrive anywhere in the logs.
+The function cleanupTextFromSecrets defined in the class Properties helps to replace the secret value by the key value.
+
+.. code-block:: python
+
+    print("the example value is:%s" % (cleantext))
+    >> the example value is: <secret>
+
+Secret is rendered and it is recorded in a dictionary, named ``_used_secrets``, where the key is the secret value and the value the secret key.
+Therefore anywhere logs are written having content with secrets, secret are replaced by the key value containing in ``_used_secrets``.
+
+How to use a secret in a BuildbotService
+````````````````````````````````````````
+
+Services configurations are loaded during a Buildbot start or modified during a Buildbot restart.
+Secrets are used like renderables in a service and are rendered during the configuration load.
+
+.. code-block:: python
+
+    class MyService(BuildbotService):
+      secrets = ['foo', 'other']
+      
+``secrets`` is a list containing all the secrets key used in the class. 
+When the service is loaded during the Buildbot reconfigService function, secrets are rendered and the value are updated.
+Everywhere the variable with the secret name (`foo` or `other` in the example) is used, the variable is replaced by the secret value.
+
+  .. code-block:: python
+
+      class MyService(object):
+        secrets = ['foo', 'other']
+
+        def returnSecretValue(self, secretkey):
+          return getatr(self, secretkey)
+
+      myService = MyService()
+
+After a Buildbot reconfigService:
+
+  .. code-block:: python
+
+      print("myService returns secret value:", myService.returnSecretValue("foo"))
+      >> myService returns secret value bar
