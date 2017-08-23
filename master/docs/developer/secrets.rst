@@ -91,7 +91,7 @@ Secret Obfuscation
 
 Secrets don't have to be visible to the normal user via logs and thus are transmitted directly to the workers.
 Secrets are rendered and can arrive anywhere in the logs.
-The function cleanupTextFromSecrets defined in the class Properties helps to replace the secret value by the key value.
+The function ``cleanupTextFromSecrets`` defined in the class Properties helps to replace the secret value by the key value.
 
 .. code-block:: python
 
@@ -111,8 +111,8 @@ Secrets are used like renderables in a service and are rendered during the confi
 
     class MyService(BuildbotService):
       secrets = ['foo', 'other']
-      
-``secrets`` is a list containing all the secrets key used in the class. 
+
+``secrets`` is a list containing all the secrets key used in the class.
 When the service is loaded during the Buildbot reconfigService function, secrets are rendered and the value are updated.
 Everywhere the variable with the secret name (`foo` or `other` in the example) is used, the variable is replaced by the secret value.
 
