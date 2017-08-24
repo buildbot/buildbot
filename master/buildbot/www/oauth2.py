@@ -248,7 +248,7 @@ class GitHubAuth(OAuth2Auth):
                 config.error(
                     'Retrieving team membership information using GitHubAuth is only '
                     'possible using GitHub api v4.')
-            self.apiResourceEndpoint = '{0}/api/v3'.format(self.serverURL)
+            self.resourceEndpoint = '{0}/api/v3'.format(self.serverURL)
         else:
             self.apiResourceEndpoint = '{0}/graphql'.format(self.serverURL)
         if getTeamsMembership:
