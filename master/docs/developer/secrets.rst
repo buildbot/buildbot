@@ -76,7 +76,7 @@ Interpolate secret
     text = Interpolate("some text and %(secret:foo)s")
 
 Secret keys are replaced in a string by the secret value using the class Interpolate and the keyword secret.
-The secret is searched across the provider defined in the master configuration.
+The secret is searched across the providers defined in the master configuration.
 
 
 Secret Obfuscation
@@ -96,15 +96,15 @@ The function ``cleanupTextFromSecrets`` defined in the class Properties helps to
 .. code-block:: python
 
     print("the example value is:%s" % (cleantext))
-    >> the example value is: <secret>
+    >> the example value is: <foo>
 
 Secret is rendered and it is recorded in a dictionary, named ``_used_secrets``, where the key is the secret value and the value the secret key.
-Therefore anywhere logs are written having content with secrets, secret are replaced by the key value containing in ``_used_secrets``.
+Therefore anywhere logs are written having content with secrets, the secrets are replaced by the value from ``_used_secrets``.
 
 How to use a secret in a BuildbotService
 ````````````````````````````````````````
 
-Services configurations are loaded during a Buildbot start or modified during a Buildbot restart.
+Service configurations are loaded during a Buildbot start or modified during a Buildbot restart.
 Secrets are used like renderables in a service and are rendered during the configuration load.
 
 .. code-block:: python
@@ -112,17 +112,16 @@ Secrets are used like renderables in a service and are rendered during the confi
     class MyService(BuildbotService):
       secrets = ['foo', 'other']
 
-``secrets`` is a list containing all the secrets key used in the class.
-When the service is loaded during the Buildbot reconfigService function, secrets are rendered and the value are updated.
-Everywhere the variable with the secret name (`foo` or `other` in the example) is used, the variable is replaced by the secret value.
+``secrets`` is a list containing all the secret keys that can be used as class attributes.
+When the service is loaded during the Buildbot reconfigService function, secrets are rendered and the values are updated.
+Everywhere the variable with the secret name (`foo` or `other` in the example) is used, the class attribute value is replaced by the secret value.
+This is similar to the "renderable" annotation, but will only works for BuildbotServices, and will only interpolate secrets.
+Others renderables can still be held in the service as attributes, and rendered dynamically at a later time.
 
   .. code-block:: python
 
       class MyService(object):
         secrets = ['foo', 'other']
-
-        def returnSecretValue(self, secretkey):
-          return getatr(self, secretkey)
 
       myService = MyService()
 
@@ -130,5 +129,5 @@ After a Buildbot reconfigService:
 
   .. code-block:: python
 
-      print("myService returns secret value:", myService.returnSecretValue("foo"))
+      print("myService returns secret value:", myService.foo))
       >> myService returns secret value bar
