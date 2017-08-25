@@ -112,9 +112,11 @@ class Grid extends Controller
         requestsByBSID = {}
         for req in @buildrequests
             (requestsByBSID[req.buildsetid] ?= []).push(req)
-        buildByReqID = {}
+        buildsByReqID = {}
         for build in @builds
-            buildByReqID[build.buildrequestid] = build
+            # There may be multiple builds for a given request
+            # (for example when a worker connection is lost).
+            (buildsByReqID[build.buildrequestid] ?= []).push(build)
 
         for builder in @builders
             builder.builds = {}
@@ -127,17 +129,21 @@ class Grid extends Controller
                 unless requests?
                     continue
                 for req in requests
-                    build = buildByReqID[req.buildrequestid]
-                    unless build?
+                    builds = buildsByReqID[req.buildrequestid] ? []
+                    if !isNaN(@result)
+                        i = 0
+                        while i < builds.length
+                            if parseInt(builds[i].results) != parseInt(@result)
+                                builds.splice(i, 1)
+                            else
+                                i += 1
+                    unless builds.length > 0
                         continue
-                    if !isNaN(@result) and !isNaN(build.results)
-                        if parseInt(build.results) != parseInt(@result)
-                            continue
-                    builder = @builders.get(build.builderid)
+                    builder = @builders.get(builds[0].builderid)
                     unless @isBuilderDisplayed(builder)
                         continue
                     buildersById[builder.builderid] = builder
-                    builder.builds[c.changeid] = build
+                    builder.builds[c.changeid] = builds
 
         @$scope.builders = (builder for own i, builder of buildersById)
 

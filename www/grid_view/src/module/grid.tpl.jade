@@ -45,6 +45,6 @@
                         span.builder-tag.label(ng-click="C.toggleTag(tag)", ng-class="C.isTagToggled(tag) ? 'label-success': 'label-default'")
                             | {{ tag }}
                 td(ng-repeat="ch in changes track by ch.changeid")
-                    a(ng-if="b.builds[ch.changeid]", ui-sref="build({builder: b.builderid, build: b.builds[ch.changeid].number})")
-                        span.badge-status(ng-class="results2class(b.builds[ch.changeid], 'pulse')")
-                            | {{ b.builds[ch.changeid].number }}
+                    a(ng-repeat="build in b.builds[ch.changeid] | orderBy: 'buildid'", ui-sref="build({builder: b.builderid, build: build.number})")
+                        span.badge-status(ng-class="results2class(build, 'pulse')")
+                            | {{ build.number }}
