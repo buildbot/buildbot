@@ -1,0 +1,1 @@
+Fix the Gerrit source step in the presence of multiple gerrit repos (:issue:`3460`).
