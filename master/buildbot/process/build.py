@@ -326,7 +326,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         if ready_or_failure is not True:
             yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
             if self.stopped:
-                self.buildFinished(["worker", "cancelled"], CANCELLED)
+                self.buildFinished(["worker", "cancelled"], self.results)
             else:
                 self.buildFinished(["worker", "not", "available"], RETRY)
             return
