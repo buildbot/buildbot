@@ -252,7 +252,6 @@ class TestBuild(unittest.TestCase):
 
         d = defer.Deferred()
         self.workerforbuilder.prepare = lambda _: d
-
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
@@ -266,7 +265,6 @@ class TestBuild(unittest.TestCase):
 
         d = defer.Deferred()
         self.workerforbuilder.prepare = lambda _: d
-        
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
