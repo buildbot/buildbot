@@ -1,0 +1,2 @@
+Removed encoding in p4 as it was causing double encoded bytestrings on Python 3.4
+
