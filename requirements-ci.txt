@@ -78,7 +78,7 @@ Tempita==0.5.2
 termcolor==1.1.0
 toml==0.9.2
 towncrier==17.8.0
-treq==17.7.0
+treq==17.8.0
 Twisted==17.5.0
 txaio==2.8.1
 txgithub==15.0.0
