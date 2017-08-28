@@ -3,7 +3,7 @@ appdirs==1.4.3
 asn1crypto==0.22.0
 astroid==1.5.3
 attrs==17.2.0
-autobahn==17.7.1
+autobahn==17.8.1
 Automat==0.6.0
 Babel==2.4.0
 backports.functools-lru-cache==1.4
