@@ -130,8 +130,8 @@ class Grid extends Controller
                     build = buildByReqID[req.buildrequestid]
                     unless build?
                         continue
-                    if !isNaN(@result) and !isNaN(build.results)
-                        if parseInt(build.results) != parseInt(@result)
+                    if @result? and @result != '' and !isNaN(@result)
+                        if build.results != parseInt(@result)
                             continue
                     builder = @builders.get(build.builderid)
                     unless @isBuilderDisplayed(builder)
