@@ -66,7 +66,8 @@ c['schedulers'].append(schedulers.ForceScheduler(
 
 factory = util.BuildFactory()
 factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"],
+                                   env={"PYTHONPATH": "."}))
 
 c['builders'] = []
 c['builders'].append(
@@ -110,7 +111,8 @@ c['schedulers'].append(schedulers.ForceScheduler(
 
 factory = util.BuildFactory()
 factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"],
+                                   env={"PYTHONPATH": "."}))
 
 c['builders'] = []
 c['builders'].append(
