@@ -79,7 +79,7 @@ Once this is configured on your buildmaster add the following hook on your serve
     [hooks]
     changegroup.buildbot = python:/path/to/hgbuildbot.py:hook
 
-You'll find :contrib-src:`master/contrib/hgbuildbot.py`, and its inline documentation, in the ``buildbot-contrib`` repository.
+You'll find :contrib-src:`master/contrib/hgbuildbot.py`, and its inline documentation, in the :contrib-src:`buildbot-contrib <../../>` repository.
 
 .. bb:chsrc:: GitHub
 
@@ -192,7 +192,7 @@ The BitBucket hook is as simple as GitHub one and it takes no options.
 .. code-block:: python
 
     c['www'] = dict(...,
-        change_hook_dialects={'bitbucket' : True},
+        change_hook_dialects={'bitbucket': True},
     )
 
 When this is setup you should add a `POST` service pointing to ``/change_hook/bitbucket`` relative to the root of the web status.

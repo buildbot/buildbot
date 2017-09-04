@@ -62,6 +62,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  os_user_domain=None,
                  os_project_domain=None,
                  block_devices=None,
+                 region=None,
                  image=None,
                  meta=None,
                  # Have a nova_args parameter to allow passing things directly
@@ -90,6 +91,8 @@ class OpenStackLatentWorker(AbstractLatentWorker):
             self.novaclient = self._constructClient(
                 client_version, os_username, os_user_domain, os_password, os_tenant_name, os_project_domain,
                 os_auth_url)
+            if region is not None:
+                self.novaclient.client.region_name = region
 
         if block_devices is not None:
             self.block_devices = [

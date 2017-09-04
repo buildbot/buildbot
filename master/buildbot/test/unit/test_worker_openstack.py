@@ -84,6 +84,11 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
         self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'test_opd')
 
+    def test_constructor_region(self):
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', region="test-region", **self.bs_image_args)
+        self.assertEqual(bs.novaclient.client.region_name, "test-region")
+
     def test_constructor_block_devices_default(self):
         block_devices = [{'uuid': 'uuid', 'volume_size': 10}]
         bs = openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,

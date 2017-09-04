@@ -120,6 +120,10 @@ These are the same details set in either environment variables or passed as opti
     Use ``1.1`` for the previous, deprecated, version.
     If using ``1.1``, note that an older version of novaclient will be needed so it won't switch to using ``2``.
 
+``region``
+    (optional)
+    A string specifying region where to instantiate the worker.
+
 Here is the simplest example of configuring an OpenStack latent worker.
 
 ::
