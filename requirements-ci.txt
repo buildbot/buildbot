@@ -64,7 +64,7 @@ pytz==2017.2
 PyYAML==3.12
 ramlfications==0.1.9
 requests==2.18.4
-s3transfer==0.1.10
+s3transfer==0.1.11
 scandir==1.5
 service-identity==17.0.0
 setuptools-trial==0.6.0
