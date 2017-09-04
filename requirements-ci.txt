@@ -9,8 +9,8 @@ Babel==2.5.0
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
-boto3==1.4.6
-botocore==1.6.8
+boto3==1.4.7
+botocore==1.7.3
 cffi==1.10.0
 click==6.7
 configparser==3.5.0
@@ -64,7 +64,7 @@ pytz==2017.2
 PyYAML==3.12
 ramlfications==0.1.9
 requests==2.18.4
-s3transfer==0.1.10
+s3transfer==0.1.11
 scandir==1.5
 service-identity==17.0.0
 setuptools-trial==0.6.0
@@ -80,7 +80,7 @@ toml==0.9.2
 towncrier==17.8.0
 treq==17.8.0
 Twisted==17.5.0
-txaio==2.8.1
+txaio==2.8.2
 txgithub==15.0.0
 txrequests==0.9.5
 typing==3.6.2
