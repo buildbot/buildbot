@@ -234,6 +234,42 @@ class TestBuild(unittest.TestCase):
 
         self.assertIn('stop it', step.interrupted)
 
+    def testBuildRetryWhenWorkerPrepareReturnFalse(self):
+        b = self.build
+
+        step = FakeBuildStep()
+        b.setStepFactories([FakeStepFactory(step)])
+
+        self.workerforbuilder.prepare = lambda _: False
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        self.assertEqual(b.results, RETRY)
+
+    def testBuildCancelledWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+        b = self.build
+
+        step = FakeBuildStep()
+        b.setStepFactories([FakeStepFactory(step)])
+
+        d = defer.Deferred()
+        self.workerforbuilder.prepare = lambda _: d
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.stopBuild('Cancel Build', CANCELLED)
+        d.callback(False)
+        self.assertEqual(b.results, CANCELLED)
+
+    def testBuildRetryWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
+        b = self.build
+
+        step = FakeBuildStep()
+        b.setStepFactories([FakeStepFactory(step)])
+
+        d = defer.Deferred()
+        self.workerforbuilder.prepare = lambda _: d
+        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        b.stopBuild('Cancel Build', RETRY)
+        d.callback(False)
+        self.assertEqual(b.results, RETRY)
+
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
         the build is stopped."""
