@@ -32,6 +32,10 @@ TEST_UUIDS = {
 }
 
 
+class FakeNovaClient():
+    region_name = ""
+
+
 # Parts used from novaclient
 class Client():
 
@@ -43,6 +47,7 @@ class Client():
         self.volume_snapshots = ItemManager()
         self.volume_snapshots._add_items([Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
         self.servers = Servers()
+        self.client = FakeNovaClient()
 
 
 class ItemManager():
