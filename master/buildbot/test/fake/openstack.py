@@ -47,6 +47,7 @@ class Client():
         self.volume_snapshots = ItemManager()
         self.volume_snapshots._add_items([Snapshot(TEST_UUIDS['snapshot'], 'CirrOS 0.3.4', 2)])
         self.servers = Servers()
+        self.session = session
         self.client = FakeNovaClient()
 
 
@@ -167,11 +168,13 @@ class PasswordLoader():
 
 class PasswordAuth():
 
-    def __init__(self, auth_url, password, project_name, username):
+    def __init__(self, auth_url, password, project_name, username, user_domain_name=None, project_domain_name=None):
         self.auth_url = auth_url
         self.password = password
         self.project_name = project_name
         self.username = username
+        self.user_domain_name = user_domain_name
+        self.project_domain_name = project_domain_name
 
 
 class Session():

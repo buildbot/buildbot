@@ -71,6 +71,19 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertEqual(bs.block_devices, None)
         self.assertIsInstance(bs.novaclient, novaclient.Client)
 
+    def test_constructor_minimal_keystone_v3(self):
+        bs = openstack.OpenStackLatentWorker(
+            'bot', 'pass', os_user_domain='test_oud', os_project_domain='test_opd',
+            **self.bs_image_args)
+        self.assertEqual(bs.workername, 'bot')
+        self.assertEqual(bs.password, 'pass')
+        self.assertEqual(bs.flavor, 1)
+        self.assertEqual(bs.image, 'image-uuid')
+        self.assertEqual(bs.block_devices, None)
+        self.assertIsInstance(bs.novaclient, novaclient.Client)
+        self.assertEqual(bs.novaclient.session.auth.user_domain_name, 'test_oud')
+        self.assertEqual(bs.novaclient.session.auth.project_domain_name, 'test_opd')
+
     def test_constructor_region(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', region="test-region", **self.bs_image_args)

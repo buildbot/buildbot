@@ -59,6 +59,8 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                  os_password,
                  os_tenant_name,
                  os_auth_url,
+                 os_user_domain=None,
+                 os_project_domain=None,
                  block_devices=None,
                  region=None,
                  image=None,
@@ -87,7 +89,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.client_version = client_version
         if client:
             self.novaclient = self._constructClient(
-                client_version, os_username, os_password, os_tenant_name,
+                client_version, os_username, os_user_domain, os_password, os_tenant_name, os_project_domain,
                 os_auth_url)
             if region is not None:
                 self.novaclient.client.region_name = region
@@ -102,12 +104,19 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         self.nova_args = nova_args if nova_args is not None else {}
 
     @staticmethod
-    def _constructClient(client_version, username, password, project_name,
+    def _constructClient(client_version, username, user_domain, password, project_name, project_domain,
                          auth_url):
         """Return a novaclient from the given args."""
         loader = loading.get_plugin_loader('password')
-        auth = loader.load_from_options(auth_url=auth_url, username=username,
-                                        password=password, project_name=project_name)
+
+        # These only work with v3
+        if user_domain is not None or project_domain is not None:
+            auth = loader.load_from_options(auth_url=auth_url, username=username, user_domain_name=user_domain,
+                                            password=password, project_name=project_name, project_domain_name=project_domain)
+        else:
+            auth = loader.load_from_options(auth_url=auth_url, username=username,
+                                            password=password, project_name=project_name)
+
         sess = session.Session(auth=auth)
         return client.Client(client_version, session=sess)
 
