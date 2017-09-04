@@ -40,8 +40,18 @@ class FieldBase(object):
         'le': lambda d, v: d <= v[0],
         'gt': lambda d, v: d > v[0],
         'ge': lambda d, v: d >= v[0],
-        'contains': lambda d, v: d.contains(v[0]) if isinstance(d, sa.Column) else v[0] in d,
-        # in SQL only support string values, because currently there are no queries against lists in SQL
+        'contains': lambda d, v: v[0] in d,
+    }
+
+    singular_operators_sql = {
+        'eq': lambda d, v: d == v[0],
+        'ne': lambda d, v: d != v[0],
+        'lt': lambda d, v: d < v[0],
+        'le': lambda d, v: d <= v[0],
+        'gt': lambda d, v: d > v[0],
+        'ge': lambda d, v: d >= v[0],
+        'contains': lambda d, v: d.contains(v[0])
+        # only support string values, because currently there are no queries against lists in SQL
     }
 
     plural_operators = {
@@ -55,7 +65,7 @@ class FieldBase(object):
         'ne': lambda d, v: d.notin_(v),
         'contains': lambda d, vs: sa.or_(*[d.contains(v) for v in vs]),
         # sqlalchemy v0.8's or_ cannot take generator arguments, so this has to be manually expanded
-        # in SQL only support string values, because currently there are no queries against lists in SQL
+        # only support string values, because currently there are no queries against lists in SQL
     }
 
     def __init__(self, field, op, values):
@@ -66,7 +76,10 @@ class FieldBase(object):
     def getOperator(self, sqlMode=False):
         v = self.values
         if len(v) == 1:
-            ops = self.singular_operators
+            if sqlMode:
+                ops = self.singular_operators_sql
+            else:
+                ops = self.singular_operators
         else:
             if sqlMode:
                 ops = self.plural_operators_sql
