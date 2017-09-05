@@ -233,7 +233,7 @@ class GitHubAuth(OAuth2Auth):
             # setup for enterprise github
             if serverURL.endswith("/"):
                 serverURL = serverURL[:-1]
-            # v3 is accessible directly at /api/v3 for enterprise, but directly for saas..
+            # v3 is accessible directly at /api/v3 for enterprise, but directly for SaaS..
             self.resourceEndpoint = serverURL + '/api/v3'
 
             self.authUri = '{0}/login/oauth/authorize'.format(serverURL)

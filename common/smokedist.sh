@@ -1,8 +1,12 @@
 #!/bin/bash
 
-
+if [ -z $1 ]; then
+    suffixes="whl tar.gz"
+else
+    suffixes=$1
+fi
 set -e
-for suffix in whl tar.gz
+for suffix in $suffixes
 do
     VE=sandbox.$suffix
     rm -rf $VE

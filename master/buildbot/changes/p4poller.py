@@ -156,7 +156,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
         self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None
-        if server_tz != None and self.server_tz == None:
+        if server_tz is not None and self.server_tz is None:
             raise P4PollerError("Failed to get timezone from server_tz string '{}'".format(server_tz))
 
         self._ticket_passwd = None

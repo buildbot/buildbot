@@ -125,8 +125,7 @@ class HyperLatentWorker(DockerBaseWorker):
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        image = yield build.render(self.image)
-        size = yield build.render(self.size)
+        image, size = yield build.render((self.image, self.size))
         yield self.deferToThread(self._thd_start_instance, image, size)
         defer.returnValue(True)
 
