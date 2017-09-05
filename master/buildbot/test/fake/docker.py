@@ -28,6 +28,7 @@ class Client(object):
         self.call_args_create_host_config = []
         self.called_class_name = None
         self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
+        self._pullable = ['alpine:latest']
         self._containers = {}
 
     def images(self):
@@ -50,6 +51,10 @@ class Client(object):
             for line in logs:
                 yield line
             self._images.append({'RepoTags': [tag + ':latest']})
+
+    def pull(self, image, *args, **kwargs):
+        if image in self._pullable:
+            self._images.append({'RepoTags': [image]})
 
     def containers(self, filters=None, *args, **kwargs):
         if filters is not None:

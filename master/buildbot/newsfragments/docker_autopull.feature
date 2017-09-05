@@ -1,0 +1,1 @@
+Added autopull for Docker images based on config. (:issue:`3071`)

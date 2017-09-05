@@ -37,6 +37,7 @@ authz
 autoconf
 autodetected
 automake
+autopull
 autoreconf
 backend
 backends

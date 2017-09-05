@@ -220,6 +220,12 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         id, name = self.successResultOf(bs.start_instance(self.build))
         self.assertEqual(name, 'customworker')
 
+    def test_start_instance_noimage_pull(self):
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'alpine:latest', autopull=True)
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'alpine:latest')
+
     def test_start_instance_noimage_renderabledockerfile(self):
         bs = self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'customworker',
