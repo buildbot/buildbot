@@ -117,7 +117,7 @@ class DockerLatentWorker(DockerBaseWorker):
 
     def checkConfig(self, name, password, docker_host, image=None, command=None,
                     volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                    masterFQDN=None, hostconfig=None, **kwargs):
+                    masterFQDN=None, hostconfig=None, autopull=False, **kwargs):
 
         DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
 
