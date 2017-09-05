@@ -19,7 +19,7 @@ describe 'change hook', () ->
                 $.post('change_hook/base', {
                     comments:'sd',
                     project:'pyflakes'
-                    repository:'git://github.com/buildbot/pyflakes.git'
+                    repository:'git://github.com/buildbot/hello-world.git'
                     author:'foo <foo@bar.com>'
                     revision: 'HEAD'
                     branch:'master'

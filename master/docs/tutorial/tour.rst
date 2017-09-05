@@ -43,10 +43,10 @@ Now, look for the section marked *PROJECT IDENTITY* which reads::
   # the 'title' string will appear at the top of this buildbot installation's
   # home pages (linked to the 'titleURL').
 
-  c['title'] = "Pyflakes"
-  c['titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
+  c['title'] = "Hello World CI"
+  c['titleURL'] = "https://buildbot.github.io/hello-world/"
 
-If you want, you can change either of these links to anything you want to see what happens when you change them. 
+If you want, you can change either of these links to anything you want to see what happens when you change them.
 
 After making a change go into the terminal and type:
 
@@ -93,8 +93,8 @@ Open up the config again and introduce a syntax error by removing the first sing
 
 .. code-block:: none
 
-  c[title'] = "Pyflakes
-  c[titleURL'] = "http://divmod.org/trac/wiki/DivmodPyflakes"
+  c[title'] = "Hello World CI"
+  c[titleURL'] = "https://buildbot.github.io/hello-world/"
 
 This creates a Python ``SyntaxError``.
 Now go ahead and reconfig the buildmaster:
@@ -324,14 +324,14 @@ To set this up, add the following lines to master.cfg::
 
 Then you can submit changes using the :bb:cmdline:`try` command.
 
-Let's try this out by making a one-line change to pyflakes, say, to make it trace the tree by default:
+Let's try this out by making a one-line change to hello-world, say, to make it trace the tree by default:
 
 .. code-block:: bash
 
-  git clone git://github.com/buildbot/pyflakes.git pyflakes-git
-  cd pyflakes-git/pyflakes
-  $EDITOR checker.py
-  # change "traceTree = False" on line 185 to "traceTree = True"
+  git clone git://github.com/buildbot/hello-world.git hello-world-git
+  cd hello-world-git/hello
+  $EDITOR __init__.py
+  # change 'return "hello " + who' on line 6 to 'return "greets " + who'
 
 Then run buildbot's ``try`` command as follows:
 
