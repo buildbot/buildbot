@@ -233,6 +233,8 @@ class GitHubAuth(OAuth2Auth):
             # setup for enterprise github
             if serverURL.endswith("/"):
                 serverURL = serverURL[:-1]
+            # v3 is accessible directly at /api/v3 for enterprise, but directly for saas..
+            self.resourceEndpoint = serverURL + '/api/v3'
 
             self.authUri = '{0}/login/oauth/authorize'.format(serverURL)
             self.tokenUri = '{0}/login/oauth/access_token'.format(serverURL)
@@ -248,9 +250,8 @@ class GitHubAuth(OAuth2Auth):
                 config.error(
                     'Retrieving team membership information using GitHubAuth is only '
                     'possible using GitHub api v4.')
-            self.resourceEndpoint = '{0}/api/v3'.format(self.serverURL)
         else:
-            self.apiResourceEndpoint = '{0}/graphql'.format(self.serverURL)
+            self.apiResourceEndpoint = self.serverURL + '/graphql'
         if getTeamsMembership:
             # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
             self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
