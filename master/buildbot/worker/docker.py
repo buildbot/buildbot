@@ -145,7 +145,7 @@ class DockerLatentWorker(DockerBaseWorker):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, docker_host, image=None, command=None,
                         volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                        masterFQDN=None, hostconfig=None, **kwargs):
+                        masterFQDN=None, hostconfig=None, autopull=False, **kwargs):
 
         yield DockerBaseWorker.reconfigService(self, name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
@@ -154,6 +154,7 @@ class DockerLatentWorker(DockerBaseWorker):
         self.command = command or []
         self.dockerfile = dockerfile
         self.hostconfig = hostconfig or {}
+        self.autopull = autopull
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -232,6 +233,11 @@ class DockerLatentWorker(DockerBaseWorker):
                                             tag=image):
                 for streamline in _handle_stream_line(line):
                     log.msg(streamline)
+
+        if ((not self._image_exists(docker_client, image))) and self.autopull:
+            log.msg("Image '%s' not found, pulling from registry" %
+                    image)
+            docker_client.pull(image)
 
         if (not self._image_exists(docker_client, image)):
             log.msg("Image '%s' not found" % image)
