@@ -47,7 +47,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                     <wc-status props="none" item="unversioned">
                     </wc-status>
                 </entry>
-                <entry path="svn_external_path/unversioned_file2">
+                <entry path="svn_external_path/unversioned_file2_uniçode">
                     <wc-status props="none" item="unversioned">
                     </wc-status>
                 </entry>
@@ -894,7 +894,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_st_xml)
             + 0,
             Expect('rmdir', {'dir':
-                             ['wkdir/svn_external_path/unversioned_file2'],
+                             ['wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
             + 0,
@@ -1091,7 +1091,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                              'timeout': 1200})
             + 0,
             Expect('rmdir', {'dir':
-                             'wkdir/svn_external_path/unversioned_file2',
+                             'wkdir/svn_external_path/unversioned_file2_uniçode',
                              'logEnviron': True,
                              'timeout': 1200})
             + 0,
@@ -1140,7 +1140,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
             + 0,
             Expect('rmdir', {'dir':
                              ['wkdir/svn_external_path/unversioned_file1',
-                              'wkdir/svn_external_path/unversioned_file2'],
+                              'wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
             + 0,
@@ -1308,7 +1308,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_st_xml)
             + 0,
             Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
-                                      'wkdir/svn_external_path/unversioned_file2'],
+                                      'wkdir/svn_external_path/unversioned_file2_uniçode'],
                                  logEnviron=True,
                                  timeout=1200))
             + 0,
@@ -1383,7 +1383,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_st_xml)
             + 0,
             Expect('rmdir', dict(dir=['wkdir/svn_external_path/unversioned_file1',
-                                      'wkdir/svn_external_path/unversioned_file2'],
+                                      'wkdir/svn_external_path/unversioned_file2_uniçode'],
                                  logEnviron=True,
                                  timeout=1200))
             + 0,
@@ -1841,7 +1841,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                               stdout=self.svn_st_xml)
             + 0,
             Expect('rmdir', {'dir':
-                             ['wkdir/svn_external_path/unversioned_file2'],
+                             ['wkdir/svn_external_path/unversioned_file2_uniçode'],
                              'logEnviron': True,
                              'timeout': 1200})
             + 1,
@@ -2024,6 +2024,25 @@ class TestGetUnversionedFiles(unittest.TestCase):
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(
             ["svn_external_path/unversioned_file"], unversioned_files)
+
+    def test_getUnversionedFiles_unicode(self):
+        svn_st_xml = """<?xml version="1.0"?>
+        <status>
+            <target path=".">
+                <entry
+                   path="Path/To/Content/Developers/François">
+                    <wc-status
+                       item="unversioned"
+                       props="none">
+                    </wc-status>
+                </entry>
+            </target>
+        </status>
+        """
+        unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
+        self.assertEqual(
+            ["Path/To/Content/Developers/François"], unversioned_files)
+
 
 
 class TestSvnUriCanonicalize(unittest.TestCase):

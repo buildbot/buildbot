@@ -353,7 +353,7 @@ class SVN(Source):
         def parseAndRemove(stdout):
             files = []
             for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
-                filename = self.workdir + '/' + str(filename)
+                filename = self.build.path_module.join(self.workdir, filename)
                 files.append(filename)
             if not files:
                 d = defer.succeed(0)
