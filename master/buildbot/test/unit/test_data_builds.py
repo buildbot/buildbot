@@ -142,6 +142,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.db.insertTestData([
             fakedb.Builder(id=77, name='builder77'),
             fakedb.Builder(id=78, name='builder78'),
+            fakedb.Builder(id=79, name='builder79'),
             fakedb.Master(id=88),
             fakedb.Worker(id=13, name='wrk'),
             fakedb.Buildset(id=8822),
@@ -152,6 +153,8 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                          buildrequestid=82, number=4),
             fakedb.Build(id=15, builderid=78, masterid=88, workerid=12,
                          buildrequestid=83, number=5, complete_at=1),
+            fakedb.Build(id=16, builderid=79, masterid=88, workerid=12,
+                         buildrequestid=84, number=6, complete_at=1),
         ])
 
     def tearDown(self):
@@ -162,7 +165,7 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builds = yield self.callGet(('builds',))
         [self.validateData(build) for build in builds]
         self.assertEqual(sorted([b['number'] for b in builds]),
-                         [3, 4, 5])
+                         [3, 4, 5, 6])
 
     @defer.inlineCallbacks
     def test_get_builder(self):
@@ -238,6 +241,22 @@ class BuildsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         for b in builds:
             self.validateData(b)
             self.assertIn('properties', b)
+
+    @defer.inlineCallbacks
+    def test_get_filter_eq(self):
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('builderid', 'eq', [78, 79])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        [self.validateData(b) for b in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [5, 6])
+
+    @defer.inlineCallbacks
+    def test_get_filter_ne(self):
+        resultSpec = MockedResultSpec(
+            filters=[resultspec.Filter('builderid', 'ne', [78, 79])])
+        builds = yield self.callGet(('builds',), resultSpec=resultSpec)
+        [self.validateData(b) for b in builds]
+        self.assertEqual(sorted([b['number'] for b in builds]), [3, 4])
 
 
 class Build(interfaces.InterfaceTests, unittest.TestCase):

@@ -55,13 +55,13 @@ class Tests(interfaces.InterfaceTests):
 
     threeBuilds = [
         fakedb.Build(id=50, buildrequestid=42, number=5, masterid=88,
-                     builderid=77, workerid=13, state_string="test",
+                     builderid=77, workerid=13, state_string="build 5",
                      started_at=TIME1),
         fakedb.Build(id=51, buildrequestid=41, number=6, masterid=88,
-                     builderid=88, workerid=13, state_string="test",
+                     builderid=88, workerid=13, state_string="build 6",
                      started_at=TIME2),
         fakedb.Build(id=52, buildrequestid=42, number=7, masterid=88,
-                     builderid=77, workerid=12, state_string="test",
+                     builderid=77, workerid=12, state_string="build 7",
                      started_at=TIME3, complete_at=TIME4, results=5),
     ]
 
@@ -69,18 +69,18 @@ class Tests(interfaces.InterfaceTests):
         50: {'id': 50, 'buildrequestid': 42, 'builderid': 77,
              'masterid': 88, 'number': 5, 'workerid': 13,
              'started_at': epoch2datetime(TIME1),
-             'complete_at': None, 'state_string': 'test',
+             'complete_at': None, 'state_string': 'build 5',
              'results': None},
         51: {'id': 51, 'buildrequestid': 41, 'builderid': 88,
              'masterid': 88, 'number': 6, 'workerid': 13,
              'started_at': epoch2datetime(TIME2),
-             'complete_at': None, 'state_string': 'test',
+             'complete_at': None, 'state_string': 'build 6',
              'results': None},
         52: {'id': 52, 'buildrequestid': 42, 'builderid': 77,
              'masterid': 88, 'number': 7, 'workerid': 12,
              'started_at': epoch2datetime(TIME3),
              'complete_at': epoch2datetime(TIME4),
-             'state_string': 'test',
+             'state_string': 'build 7',
              'results': 5},
     }
 
@@ -138,7 +138,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string=u'test', results=None))
+                                     state_string=u'build 5', results=None))
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -258,7 +258,7 @@ class Tests(interfaces.InterfaceTests):
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
-                                     state_string=u'test',
+                                     state_string=u'build 5',
                                      results=7))
 
     @defer.inlineCallbacks
@@ -380,6 +380,54 @@ class RealTests(Tests):
         bdicts2 = yield self.db.builds.getBuilds()
         ordered_bdicts = rs.apply(bdicts2)
         self.assertEqual(ordered_bdicts, bdicts)
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecFilterEqTwoValues(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('number', 'eq', [6, 7])])
+        rs.fieldMapping = {'number': 'builds.number'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[51], self.threeBdicts[52]])
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecFilterNeTwoValues(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('number', 'ne', [6, 7])])
+        rs.fieldMapping = {'number': 'builds.number'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[50]])
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecFilterContainsOneValue(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('state_string', 'contains', ['7'])])
+        rs.fieldMapping = {'state_string': 'builds.state_string'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[52]])
+
+    @defer.inlineCallbacks
+    def test_getBuilds_resultSpecFilterContainsTwoValues(self):
+        rs = resultspec.ResultSpec(
+            filters=[resultspec.Filter('state_string', 'contains', ['build 5', 'build 6'])])
+        rs.fieldMapping = {'state_string': 'builds.state_string'}
+        yield self.insertTestData(self.backgroundData + self.threeBuilds)
+        bdicts = yield self.db.builds.getBuilds(resultSpec=rs)
+        for bdict in bdicts:
+            validation.verifyDbDict(self, 'dbbuilddict', bdict)
+        self.assertEqual(sorted(bdicts, key=lambda bd: bd['id']),
+                         [self.threeBdicts[50], self.threeBdicts[51]])
 
 
 class TestFakeDB(unittest.TestCase, Tests):
