@@ -327,6 +327,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             yield self.buildPreparationFailure(ready_or_failure, "worker_prepare")
             if self.stopped:
                 self.buildFinished(["worker", "cancelled"], self.results)
+            elif ready_or_failure.check([interfaces.LatentWorkerCannotToSubstantiate]):
+                self.buildFinished(["worker", "cannot", "substanciate"], EXCEPTION)
             else:
                 self.buildFinished(["worker", "not", "available"], RETRY)
             return
