@@ -225,6 +225,10 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     (optional)
     Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/1.10.4/hostconfig/>`_ for all the supported options.
 
+``autopull``
+    (optional, defaults to false)
+    Automatically pulls image if requested image is not on docker host.
+
 Setting up Volumes
 ..................
 
