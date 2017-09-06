@@ -25,7 +25,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot import util
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
@@ -234,15 +233,6 @@ class P4(Source):
             command.extend(self.p4extra_args)
 
         command.extend(doCommand)
-
-        def encodeArg(arg):
-            if isinstance(arg, tuple):
-                # If a tuple, then the second element is the argument that will
-                # be used when executing the command.
-                return (arg[0], util.encodeString(arg[1]), arg[2])
-            return util.encodeString(arg)
-
-        command = [encodeArg(c) for c in command]
         return command
 
     def _dovccmd(self, command, collectStdout=False, initialStdin=None):
@@ -357,7 +347,6 @@ class P4(Source):
                     client_spec += "\t%s%s/...%s %s//%s/%s/...%s\n" % (qa, k, qa,
                                                                        qb, self.p4client, v, qb)
 
-        client_spec = client_spec.encode('utf-8')  # resolve unicode issues
         if debug_logging:
             log.msg(client_spec)
 
