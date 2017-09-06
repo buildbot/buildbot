@@ -69,7 +69,11 @@ def checkPidFile(pidfile):
                 raise OSError("Can't check status of PID {} from pidfile {}: {}".format(
                     pid, pidfile, why))
         else:
-            raise BusyError("'{}' exists - is this master still running?".format(pidfile))
+            # No exception if pid equal ppid, fixed it.
+            if pid == os.getppid():
+                os.remove(pidfile)
+            else:
+                raise BusyError("'{}' exists - is this master still running?".format(pidfile))
 
 
 def checkBasedir(config):
