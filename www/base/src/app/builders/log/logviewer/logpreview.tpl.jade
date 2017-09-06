@@ -15,6 +15,6 @@ div.logpreview.panel(ng-class="logpreview.log.name=='err.html' && 'panel-danger'
                   | #{' '} download
   div(ng-show="logpreview.fulldisplay")
     pre.select-content.log(ng-show="logpreview.log.type!='h'")
-      div(ng-repeat="line in logpreview.log.lines", style="height:18px")
+      .logline(ng-repeat="line in logpreview.log.lines")
           span.no-wrap(data-linenumber-content="{{line.number}}", class="{{line.class}}", ng-bind-html="line.content")
     div.panel-body(ng-if="logpreview.log.type=='h'", ng-bind-html="logpreview.log.content")
