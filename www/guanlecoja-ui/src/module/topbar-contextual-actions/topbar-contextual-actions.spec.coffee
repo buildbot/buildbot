@@ -35,7 +35,7 @@ describe 'topbar-contextual-actions', ->
         # need two digests to propagate
         scope.$digest()
         scope.$digest()
-        expect(elmBody.find("span").length).toEqual(2)
+        expect(elmBody.find(".form-group").length).toEqual(2)
         expect(elmBody.find("button").text()).toEqual("foobar")
 
         # make sure action is called on click

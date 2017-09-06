@@ -1,5 +1,5 @@
 form.navbar-form.navbar-left
-    span(ng-repeat="a in actions")
+    .form-group(ng-repeat="a in actions")
         button.btn.btn-default(type="button" ng-class="a.extra_class" ng-click="a.action()", title="{{a.help}}")
             i.fa(ng-if="a.icon", ng-class="'fa-' + a.icon")
             span(ng-if="a.icon&&a.caption") &nbsp;
