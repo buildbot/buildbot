@@ -25,7 +25,6 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot import interfaces
-from buildbot import util
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process.properties import Interpolate
