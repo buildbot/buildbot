@@ -85,12 +85,12 @@ Now that buildbot is installed, it's time to create the master:
 .. code-block:: bash
 
   buildbot create-master master
- 
+
 Buildbot's activity is controlled by a configuration file.
 We will use the sample configuration file unchanged:
 
 .. code-block:: bash
- 
+
   mv master/master.cfg.sample master/master.cfg
 
 Finally, start the master:
@@ -116,7 +116,7 @@ Creating a worker
 -----------------
 
 The worker will be executing the commands sent by the master.
-In this tutorial, we are using the pyflakes project as an example.
+In this tutorial, we are using the buildbot/hello-world project as an example.
 As a consequence of this, your worker will need access to the git_ command in order to checkout some code.
 Be sure that it is installed, or the builds will fail.
 
@@ -198,7 +198,7 @@ Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and y
 .. image:: _images/waterfall-empty.png
    :alt: empty waterfall.
 
-Your master is now quietly waiting for new commits to Pyflakes.
+Your master is now quietly waiting for new commits to hello-world.
 This doesn't happen very often though.
 In the next section, we'll see how to manually start a build.
 

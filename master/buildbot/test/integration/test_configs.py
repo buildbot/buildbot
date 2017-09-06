@@ -178,7 +178,7 @@ c['protocols'] = {'pb': {'port': 9989}}
 
 c['change_source'] = []
 c['change_source'].append(changes.GitPoller(
-        'git://github.com/buildbot/pyflakes.git',
+        'git://github.com/buildbot/hello-world.git',
         workdir='gitpoller-workdir', branch='master',
         pollinterval=300))
 
@@ -193,8 +193,9 @@ c['schedulers'].append(schedulers.ForceScheduler(
                             builderNames=["runtests"]))
 
 factory = util.BuildFactory()
-factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/hello-world.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "hello"],
+                                   env={"PYTHONPATH": "."}))
 
 c['builders'] = []
 c['builders'].append(
@@ -229,7 +230,7 @@ c['protocols'] = {'pb': {'port': 9989}}
 
 c['change_source'] = []
 c['change_source'].append(changes.GitPoller(
-        'git://github.com/buildbot/pyflakes.git',
+        'git://github.com/buildbot/hello-world.git',
         workdir='gitpoller-workdir', branch='master',
         pollinterval=300))
 
@@ -244,8 +245,9 @@ c['schedulers'].append(schedulers.ForceScheduler(
                             builderNames=["runtests"]))
 
 factory = util.BuildFactory()
-factory.addStep(steps.Git(repourl='git://github.com/buildbot/pyflakes.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "pyflakes"]))
+factory.addStep(steps.Git(repourl='git://github.com/buildbot/hello-world.git', mode='incremental'))
+factory.addStep(steps.ShellCommand(command=["trial", "hello"],
+                                   env={"PYTHONPATH": "."}))
 
 c['builders'] = []
 c['builders'].append(

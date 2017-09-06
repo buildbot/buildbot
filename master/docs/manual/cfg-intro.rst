@@ -41,7 +41,7 @@ For the configurations described in this section, a detailed knowledge of Python
 Python comments start with a hash character ``#``, tuples are defined with ``(parenthesis, pairs)``, and lists (arrays) are defined with ``[square, brackets]``.
 Tuples and lists are mostly interchangeable.
 Dictionaries (data structures which map *keys* to *values*) are defined with curly braces: ``{'key1': value1, 'key2': value2}``.
-Function calls (and object instantiation) can use named parameters, like ``steps.ShellCommand(command=["trial", "pyflakes"])``.
+Function calls (and object instantiation) can use named parameters, like ``steps.ShellCommand(command=["trial", "hello"])``.
 
 The config file starts with a series of ``import`` statements, which make various kinds of :class:`Step`\s and :class:`Status` targets available for later use.
 The main ``BuildmasterConfig`` dictionary is created, then it is populated with a variety of keys, described section-by-section in subsequent chapters.
