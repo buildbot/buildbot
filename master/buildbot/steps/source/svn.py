@@ -32,7 +32,8 @@ from buildbot.config import ConfigErrors
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
-from buildbot.util import unicode2bytes
+from buildbot.util import unicode2NativeString
+
 
 class SVN(Source):
 
@@ -353,7 +354,7 @@ class SVN(Source):
         def parseAndRemove(stdout):
             files = []
             for filename in self.getUnversionedFiles(stdout, self.keep_on_purge):
-                filename = unicode2bytes(self.build.path_module.join(self.workdir, filename))
+                filename = unicode2NativeString(self.build.path_module.join(self.workdir, filename))
                 files.append(filename)
             if not files:
                 d = defer.succeed(0)
