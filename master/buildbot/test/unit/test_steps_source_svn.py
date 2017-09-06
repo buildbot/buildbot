@@ -1,3 +1,4 @@
+# -*- coding: utf8 -*-
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -2041,7 +2042,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(
-            ["Path/To/Content/Developers/François"], unversioned_files)
+            [u"Path/To/Content/Developers/François"], unversioned_files)
 
 
 
