@@ -348,7 +348,6 @@ class P4(Source):
                     client_spec += "\t%s%s/...%s %s//%s/%s/...%s\n" % (qa, k, qa,
                                                                        qb, self.p4client, v, qb)
 
-        client_spec = client_spec.encode('utf-8')  # resolve unicode issues
         if debug_logging:
             log.msg(client_spec)
 
