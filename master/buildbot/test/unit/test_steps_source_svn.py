@@ -2045,7 +2045,6 @@ class TestGetUnversionedFiles(unittest.TestCase):
             [u"Path/To/Content/Developers/François"], unversioned_files)
 
 
-
 class TestSvnUriCanonicalize(unittest.TestCase):
     # svn.SVN.svnUriCanonicalize() test method factory
     #
