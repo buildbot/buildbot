@@ -276,7 +276,6 @@ class Tests(interfaces.InterfaceTests):
     def test_addURL_no_duplicate(self):
         yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
         yield defer.gatherResults([
-            # only a tiny sleep is required to see the problem.
             self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar'),
             self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar')])
 
