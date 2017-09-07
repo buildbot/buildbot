@@ -38,15 +38,15 @@ class Tests(unittest.TestCase):
                 "on this platform with {}".format(os_encoding)))
 
         good = [
-            u"linux", u"Linux", u"abc123", u"a" * 50,
+            u"linux", u"Linux", u"abc123", u"a" * 50, u'\N{SNOWMAN}'
         ]
         for g in good:
             log.msg('expect %r to be good' % (g,))
             self.assertTrue(identifiers.isIdentifier(50, g))
         bad = [
-            None, u'', b'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+            None, u'', b'linux', u'a/b', u"a.b.c.d",
             u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
-            u"123 no initial digits",
+            u"123 no initial digits", u'\N{SNOWMAN}.\N{SNOWMAN}',
         ]
         for b in bad:
             log.msg('expect %r to be bad' % (b,))
