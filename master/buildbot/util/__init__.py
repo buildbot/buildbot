@@ -210,12 +210,6 @@ def safeTranslate(s):
     return s.translate(badchars_map)
 
 
-def encodeString(s, encoding='utf-8'):
-    if isinstance(s, text_type):
-        return s.encode(encoding)
-    return s
-
-
 def none_or_str(x):
     if x is not None and not isinstance(x, str):
         return str(x)
