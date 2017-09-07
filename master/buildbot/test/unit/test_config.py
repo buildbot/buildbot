@@ -832,7 +832,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_workers_not_identifiers(self):
         for name in (u"123 no initial digits", u"spaces not allowed",
-                     u'a/b', u'\N{SNOWMAN}', u"a.b.c.d", u"a-b_c.d9",):
+                     u'a/b', u"a.b.c.d", u"a-b_c.d9",):
             self.cfg.load_workers(self.filename,
                                   dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is not an identifier")
