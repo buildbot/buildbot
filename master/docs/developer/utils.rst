@@ -815,7 +815,7 @@ This module makes it easy to manipulate identifiers.
     :param str: string to coerce to an identifier
     :returns: identifier of maximum length ``maxLength``
 
-    Coerce a string (assuming ASCII for bytestrings) into an identifier.
+    Coerce a string (assuming UTF-8 for bytestrings) into an identifier.
     This method will replace any invalid characters with ``_`` and truncate to the given length.
 
 .. py:function:: incrementIdentifier(maxLength, str)
