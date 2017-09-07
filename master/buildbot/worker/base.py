@@ -30,7 +30,7 @@ from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.worker import WorkerStatus
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
@@ -75,7 +75,7 @@ class AbstractWorker(service.BuildbotService, object):
                       can be used
         @type locks: dictionary
         """
-        self.name = name = ascii2unicode(name)
+        self.name = name = bytes2unicode(name)
 
         if properties is None:
             properties = {}
