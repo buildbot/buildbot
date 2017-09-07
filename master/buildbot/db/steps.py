@@ -152,11 +152,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 _racehook()
             urls = json.loads(row.urls_json)
 
-            url_exists = False
-            for url_item in urls:
-                url_exists = url_exists or (url_item.get('url') == url)
+            url_item = dict(name=name, url=url)
 
-            if not url_exists:
+            if url_item not in urls:
                 urls.append(dict(name=name, url=url))
                 q = tbl.update(whereclause=wc)
                 conn.execute(q, urls_json=json.dumps(urls))
