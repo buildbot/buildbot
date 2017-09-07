@@ -1,6 +1,6 @@
 class Builders extends Controller
     constructor: ($scope, $log, dataService, resultsService, bbSettingsService, $stateParams,
-        $location, dataGrouperService, $rootScope) ->
+        $location, dataGrouperService, $rootScope, $filter) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         $scope.connected2class = (worker) ->
@@ -102,12 +102,31 @@ class Builders extends Controller
 
         data = dataService.open().closeOnDestroy($scope)
 
-        $scope.builders = data.getBuilders()
-        $scope.masters = data.getMasters()
-
         # as there is usually lots of builders, its better to get the overall
         # list of workers, masters, and builds and then associate by builder
+        $scope.builders = data.getBuilders()
+        $scope.masters = data.getMasters()
         workers = data.getWorkers()
-        builds = data.getBuilds(limit: 200, order: '-started_at')
-        dataGrouperService.groupBy($scope.builders, workers, 'builderid', 'workers', 'configured_on')
-        dataGrouperService.groupBy($scope.builders, builds, 'builderid', 'builds')
+        builds = null
+
+        requeryBuilds = () ->
+            $scope.builders.forEach (builder) -> builder.builds = []
+
+            filteredBuilds = $filter('filter')($scope.builders, $scope.isBuilderFiltered) || []
+            builderIds = filteredBuilds.map (builder) -> builder.builderid
+            builderIds = [] if builderIds.length == $scope.builders.length
+
+            builds = data.getBuilds(limit: 200, order: '-started_at', builderid__eq: builderIds)
+            dataGrouperService.groupBy($scope.builders, workers, 'builderid', 'workers', 'configured_on')
+            dataGrouperService.groupBy($scope.builders, builds, 'builderid', 'builds')
+
+        if $scope.tags_filter.length == 0
+            requeryBuilds()
+        else
+            $scope.$watch "builders.$resolved", (resolved) -> requeryBuilds() if resolved
+
+        $scope.$watch "tags_filter", () ->
+            if builds && $scope.builders.$resolved
+                builds.close()
+                requeryBuilds()
+        , true
