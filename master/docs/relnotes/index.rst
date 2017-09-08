@@ -13,6 +13,11 @@ Release Notes
 Buildbot ``0.9.11`` ( ``2017-09-08`` )
 ======================================
 
+Incompatible Changes
+--------------------
+
+- Buildbot is not compatible with ``python3-ldap`` anymore. It now requires ``ldap3`` package for its ldap operations (issue:`3530`)
+
 Bug fixes
 ---------
 
@@ -34,6 +39,7 @@ Bug fixes
 - Fix secrets downloaded to worker with too wide permissions
 - Fix issue with stop build during latent worker substantiating, the build result
   was retried instead of cancelled.
+- ``pip install 'buildbot[bundle]' now installs ``grid_view`` plugin. This fixes issues with the tutorial.
 
 Improved Documentation
 ----------------------
