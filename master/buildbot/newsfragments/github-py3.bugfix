@@ -1,0 +1,1 @@
+Fix the GitHub change hook on Python 3 (:issue:`3452`).

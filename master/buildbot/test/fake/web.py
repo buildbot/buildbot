@@ -16,10 +16,11 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from io import BytesIO
+
 from mock import Mock
 
 from twisted.internet import defer
-from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
@@ -52,14 +53,14 @@ class FakeRequest(Mock):
     redirected_to = None
     failure = None
 
-    def __init__(self, args=None, content=''):
+    def __init__(self, args=None, content=b''):
         Mock.__init__(self)
 
         if args is None:
             args = {}
 
         self.args = args
-        self.content = NativeStringIO(content)
+        self.content = BytesIO(content)
         self.site = Mock()
         self.site.buildbot_service = Mock()
         self.uri = b'/'
