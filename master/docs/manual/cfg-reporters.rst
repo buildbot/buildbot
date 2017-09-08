@@ -803,6 +803,13 @@ GerritStatusPush can send a separate review for each build that completes, or a 
                   The possible values for `notify` can be found in your version of the
                   Gerrit documentation for the `gerrit review` command.
 
+   :param wantSteps: (optional, defaults to False) Extends the given ``build`` object with information about steps of the build.
+                     Use it only when necessary as this increases the overhead in term of CPU and memory on the master.
+
+   :param wantLogs: (optional, default to False) Extends the steps of the given ``build`` object with the full logs of the build.
+                    This requires ``wantSteps`` to be True.
+                    Use it only when mandatory as this increases the overhead in term of CPU and memory on the master greatly.
+
 .. note::
 
    By default, a single summary review is sent; that is, a default :py:func:`summaryCB` is provided, but no :py:func:`reviewCB` or :py:func:`startCB`.
