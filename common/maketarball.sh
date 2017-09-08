@@ -10,7 +10,7 @@ pkg=$1
         python setup.py bdist_wheel
     else
         # retry once to workaround instabilities
-        python setup.py sdist bdist_wheel || python setup.py sdist bdist_wheel
+        python setup.py sdist bdist_wheel || (git clean -xdf; python setup.py sdist bdist_wheel)
     fi
 )
 cp ${pkg}/dist/* dist/
