@@ -1085,6 +1085,7 @@ reschedulenextbuild
 resourceneedsreconfigs
 resourcetype
 restrmatcher
+restructuredtext
 resultdir
 resultsdeferred
 resultsmixin
