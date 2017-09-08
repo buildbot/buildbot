@@ -5,13 +5,17 @@
       li.previous(ng-class="{'disabled': build.number == 1}")
         a(ng-if="build.number > 1 ", ui-sref="build({build:prevbuild.number})")
             span.badge-status(ng-class="results2class(prevbuild, 'pulse')") &larr;
-            | &nbsp;Previous
-        span(ng-if="build.number == 1") &larr; Previous
+            span.nomobile &nbsp;Previous
+        span(ng-if="build.number == 1") &larr;
+            span.nomobile &nbsp;Previous
       li(ng-if="build.complete" title="{{ build.complete_at | dateformat:'LLL' }}") Finished {{ build.complete_at | timeago }}
       li.next(ng-class="{'disabled': last_build}")
-        a(ng-if="!last_build", ui-sref="build({build:nextbuild.number})") Next&nbsp;
+        a(ng-if="!last_build", ui-sref="build({build:nextbuild.number})")
+            span.nomobile Next&nbsp;
             span.badge-status(ng-class="results2class(nextbuild, 'pulse')") &rarr;
-        span(ng-if="last_build") Next &rarr;
+        span(ng-if="last_build")
+            span.nomobile Next&nbsp;
+            span &rarr;
   .row
       uib-tabset
           uib-tab(heading="Build steps")
