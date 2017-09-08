@@ -273,6 +273,18 @@ class Tests(interfaces.InterfaceTests):
                                 key=urlKey))
 
     @defer.inlineCallbacks
+    def test_addURL_no_duplicate(self):
+        yield self.insertTestData(self.backgroundData + [self.stepRows[2]])
+        yield defer.gatherResults([
+            self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar'),
+            self.db.steps.addURL(stepid=72, name=u'foo', url=u'bar')])
+
+        stepdict = yield self.db.steps.getStep(stepid=72)
+
+        self.assertEqual(stepdict['urls'],
+                         [{'name': u'foo', 'url': u'bar'}])
+
+    @defer.inlineCallbacks
     def test_finishStep(self):
         clock = task.Clock()
         clock.advance(TIME2)

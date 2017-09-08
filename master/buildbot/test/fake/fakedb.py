@@ -2063,7 +2063,9 @@ class FakeStepsComponent(FakeDBComponent):
         b = self.steps.get(stepid)
         if b:
             urls = json.loads(b['urls_json'])
-            urls.append(dict(name=name, url=url))
+            url_item = dict(name=name, url=url)
+            if url_item not in urls:
+                urls.append(url_item)
             b['urls_json'] = json.dumps(urls)
         return defer.succeed(None)
 

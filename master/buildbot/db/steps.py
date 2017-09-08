@@ -151,10 +151,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             if _racehook is not None:
                 _racehook()
             urls = json.loads(row.urls_json)
-            urls.append(dict(name=name, url=url))
 
-            q = tbl.update(whereclause=wc)
-            conn.execute(q, urls_json=json.dumps(urls))
+            url_item = dict(name=name, url=url)
+
+            if url_item not in urls:
+                urls.append(url_item)
+                q = tbl.update(whereclause=wc)
+                conn.execute(q, urls_json=json.dumps(urls))
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
