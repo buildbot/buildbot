@@ -11,41 +11,41 @@ Release Notes
 .. towncrier release notes start
 
 Buildbot ``0.9.11`` ( ``2017-09-08`` )
+======================================
+
 Bug fixes
 ---------
 
 - Fix issue with ``logviewer`` scrolling up indefinitely when loading logs
   (:issue:`3154`).
-- do not add the url if it already exists in the step. :issue:3554
-- Fix filtering for properties when SQL is involved in the backend (eq, ne, and
-  contains operations).
-- The ``git`` source step now uses `git checkout -B` rather than `git branch
-  -M` to create local branches
-- Fixed :ref:`Grid View <GridView>` settings. It is now possible to configure
-  "false" values.
+- do not add the url if it already exists in the step. (:issue:`3554`)
+- Fix filtering for ressource attributes when SQL is involved in the backend (eq, ne, and
+  contains operations, when there are several filters) (:issue:`3526`).
+- The ``git`` source step now uses `git checkout -B` rather than `git branch -M` to create local branches (:issue:`3537`)
+- Fixed :ref:`Grid View <GridView>` settings. It is now possible to configure "false" values.
 - Fix performance issue when remote command does not send any line boundary
   (:issue:`3517`)
-- Fix regression in GithHub oauth2 v3 api
+- Fix regression in GithHub oauth2 v3 api, when using enterprise edition.
 - Fix the Perforce build step on Python 3 (:issue:`3493`)
 - Make REST API's filter __contains use OR connector rather than AND according
   to what the documentation suggests.
-- corrected the example code for using secrets in all documentation, made
+- Fixed secret plugins registration, so that they are correctly available in ``import buildbot.plugins.secrets``.
   changes to all secrets plugin to be imported and used.
 - Fix secrets downloaded to worker with too wide permissions
-- now if you stop build during latent worker substantiating, the build result
-  will be cancelled instead of retry.
+- Fix issue with stop build during latent worker substantiating, the build result
+  was retried instead of cancelled.
 
 Improved Documentation
 ----------------------
 
-- +Fixed documentation regarding log obfuscation for passwords.
+- Fixed documentation regarding log obfuscation for passwords.
 - Improve documentation of REST API's __contains filter.
 
 Features
 --------
 
 - Added autopull for Docker images based on config. (:issue:`3071`)
-- Allow to expose logs to summary callback of GerritStatusPush.
+- Allow to expose logs to summary callback of :py:class:`GerritStatusPush`.
 - Implement GitHub change hook CI skipping (:issue:`3443`). Now buildbot will
   ignore the event, if the ``[ci skip]`` keyword (configurable) in commit
   message. For more info, please check out the ``skip`` parameter of
@@ -61,7 +61,7 @@ Features
   back several characters.
 - UI Improvements so that Buildbot build pages looks better on mobile.
 - :py:class:`~buildbot.worker.openstack.OpenStackLatentWorker` now supports
-  region attribute
+  region attribute.
 - The :ref:`Schedulers` ``builderNames`` parameter can now be a
   :class:`~IRenderable` object that will render to a list of builder names.
 - The :py:class:`~buildbot.www.ldapuserinfo.LdapUserInfo` now uses the
