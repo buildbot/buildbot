@@ -909,7 +909,7 @@ What you need in your config file is something like::
         codebases=[
             util.CodebaseParameter(
                 "",
-                name="Main repository",
+                label="Main repository",
                 # will generate a combo box
                 branch=util.ChoiceStringParameter(
                     name="branch",
