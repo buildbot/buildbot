@@ -39,7 +39,8 @@ Bug fixes
 - Fix secrets downloaded to worker with too wide permissions
 - Fix issue with stop build during latent worker substantiating, the build result
   was retried instead of cancelled.
-- ``pip install 'buildbot[bundle]' now installs ``grid_view`` plugin. This fixes issues with the tutorial.
+- ``pip install 'buildbot[bundle]'`` now installs ``grid_view`` plugin.
+  This fixes issues with the tutorial where ``grid_view`` is enabled by default.
 
 Improved Documentation
 ----------------------
