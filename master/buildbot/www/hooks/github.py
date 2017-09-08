@@ -28,7 +28,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
@@ -75,7 +75,7 @@ class GitHubEventHandler(PullRequestMixin):
         payload = self._get_payload(request)
 
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2NativeString(event_type)
+        event_type = bytes2unicode(event_type)
         log.msg("X-GitHub-Event: {}".format(
             event_type), logLevel=logging.DEBUG)
 
@@ -89,10 +89,10 @@ class GitHubEventHandler(PullRequestMixin):
 
     def _get_payload(self, request):
         content = request.content.read()
-        content = bytes2NativeString(content)
+        content = bytes2unicode(content)
 
         signature = request.getHeader(_HEADER_SIGNATURE)
-        signature = bytes2NativeString(signature)
+        signature = bytes2unicode(signature)
 
         if not signature and self._strict:
             raise ValueError('Request has no required signature')
@@ -120,7 +120,7 @@ class GitHubEventHandler(PullRequestMixin):
         if content_type == b'application/json':
             payload = json.loads(content)
         elif content_type == b'application/x-www-form-urlencoded':
-            payload = json.loads(request.args['payload'][0])
+            payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
 
