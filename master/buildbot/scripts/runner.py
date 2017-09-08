@@ -731,7 +731,6 @@ class Options(usage.Options):
     ]
 
     def opt_version(self):
-        import buildbot
         print("Buildbot version: %s" % buildbot.version)
         usage.Options.opt_version(self)
 

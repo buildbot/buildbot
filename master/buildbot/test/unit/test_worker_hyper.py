@@ -33,6 +33,8 @@ from buildbot.worker.hyper import HyperLatentWorker
 
 class FakeBuild(object):
     def render(self, r):
+        if isinstance(r, tuple):
+            return (self.render(i) for i in r)
         return "rendered:" + r
 
 

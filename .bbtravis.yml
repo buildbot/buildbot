@@ -16,17 +16,18 @@ label_mapping:
 env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
+  - HYPER_SIZE=m1
   matrix:
   # pylint, docs and coverage first as they're more likely to find issues
-  - TWISTED=latest SQLALCHEMY=latest TESTS=pylint
-  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-  - TWISTED=latest SQLALCHEMY=latest TESTS=isort
+  - TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
+  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8 HYPER_SIZE=s3
+  - TWISTED=latest SQLALCHEMY=latest TESTS=isort HYPER_SIZE=s3
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
-  - TWISTED=latest SQLALCHEMY=latest TESTS=js
-  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes
+  - TWISTED=latest SQLALCHEMY=latest TESTS=js HYPER_SIZE=m1
+  - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
   - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
   - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
@@ -55,19 +56,19 @@ env:
   - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
-  - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker
-  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker
-  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker
-  - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
+  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
+  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
+  - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
 
 matrix:
   fast_finish: true
   include:
     # Tests of buildbot-worker on python 2.6
     - python: "2.6"
-      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest
+      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest HYPER_SIZE=s3
     - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest
+      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest HYPER_SIZE=s3
 
     # python 3 tests
     - python: "3.4"
@@ -76,9 +77,9 @@ matrix:
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8 HYPER_SIZE=s3
     - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
@@ -86,7 +87,7 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  - condition: python != "2.6"
+  - condition: python != "2.6" and TESTS != "smokes"
     cmd: pip install -r requirements-ci.txt
   - condition: TESTS == "docs"
     cmd: pip install -r requirements-cidocs.txt
@@ -173,11 +174,15 @@ script:
 
   - title: maketarballs
     condition: TESTS == "smokes"
-    cmd: ./common/maketarballs.sh
+    cmd: make tarballs -j4
 
   - title: protractor tests
     condition: TESTS == "smokes"
-    cmd: ./common/smokedist.sh
+    cmd: ./common/smokedist.sh whl
+
+  - title: tarballs protractor tests
+    condition: TESTS == "smokes" and not TRAVIS_PULL_REQUEST
+    cmd: ./common/smokedist.sh tar.gz
 
 notifications:
   email: false
