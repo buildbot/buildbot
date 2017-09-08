@@ -32,7 +32,7 @@ from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
 # Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
 # Added "modified" and "removed", and change email
-gitJsonPayload = """
+gitJsonPayload = b"""
 {
   "before": "95790bf891e76fee5e1747ab589903a6a1f80f22",
   "after": "da1560886d4f094c3e6c9ef40349f7d38b5d27d7",
@@ -70,7 +70,7 @@ gitJsonPayload = """
   "total_commits_count": 2
 }
 """
-gitJsonPayloadTag = """
+gitJsonPayloadTag = b"""
 {
   "object_kind": "tag_push",
   "before": "0000000000000000000000000000000000000000",
@@ -113,7 +113,7 @@ gitJsonPayloadTag = """
    "total_commits_count": 2
 }
 """
-gitJsonPayloadMR = """
+gitJsonPayloadMR = b"""
 {
   "object_kind": "merge_request",
   "user": {
