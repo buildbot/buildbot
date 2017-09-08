@@ -59,6 +59,9 @@ deprecatedWorkerModuleAttribute(
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 
+class LatentWorkerCannotSubstantiate(Exception):
+    pass
+
 
 deprecatedWorkerModuleAttribute(
     locals(), LatentWorkerFailedToSubstantiate,
