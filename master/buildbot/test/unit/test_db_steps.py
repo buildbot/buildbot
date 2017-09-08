@@ -285,7 +285,7 @@ class Tests(interfaces.InterfaceTests):
             return url['name']
 
         # order is not guaranteed though
-        self.assertEqual([stepdict['urls']],
+        self.assertEqual(stepdict['urls'],
                          [{'name': u'foo', 'url': u'bar'}])
 
     @defer.inlineCallbacks
