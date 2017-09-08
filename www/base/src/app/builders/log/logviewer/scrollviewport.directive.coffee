@@ -184,6 +184,8 @@ class Scroll extends Directive
                     # load some lines to the DOM using the data source, making sure it is not already loaded
                     loadView = (topIndex, endIndex) ->
                         fetched = (b) -> not b._height?
+                        if isLoading
+                            return
                         while buffer[topIndex]? && fetched(buffer[topIndex]) && topIndex < endIndex
                             topIndex++
 
@@ -192,21 +194,16 @@ class Scroll extends Directive
 
                         if topIndex == endIndex # all is loaded
                             return
-
                         loading(true)
 
                         previousElemIndex = findElement(topIndex)
                         datasource.get(topIndex, endIndex - topIndex).then (d) ->
                             loading(false)
-                            savedScroll = viewport.scrollTop()
                             for item in d
                                 insertItem(previousElemIndex, topIndex, item)
                                 previousElemIndex = topIndex
                                 topIndex++
 
-                            # as we are manipulating the DOM, the scrollTop is updated to try to follow
-                            # the visible, so we must restore it after DOM manipulation
-                            viewport.scrollTop(savedScroll)
                             $timeout -> maybeUpdateView()
 
                     # find an element in the buffer, skipping undefined directly to padding element
