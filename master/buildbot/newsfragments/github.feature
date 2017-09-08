@@ -1,1 +1,0 @@
-:py:class:`~buildbot.reporters.github.GitHubStatusPush` now support reporting to ssh style URLs, ie `git@github.com:Owner/RepoName.git`
