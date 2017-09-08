@@ -221,69 +221,6 @@ gitJsonPayloadTag = b"""
 }
 """
 
-gitJsonPayloadTagUnicode = u"""
-{
-  "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
-  "repository": {
-    "url": "http://github.com/defunkt/github",
-    "html_url": "http://github.com/defunkt/github",
-    "name": "github",
-    "full_name": "defunkt/github",
-    "description": "You're lookin' at it.",
-    "watchers": 5,
-    "forks": 2,
-    "private": 1,
-    "owner": {
-      "email": "julian.rueth@fsfe.org",
-      "name": "Julian Rüth"
-    }
-  },
-  "commits": [
-    {
-      "id": "41a212ee83ca127e3c8cf465891ab7216a705f59",
-      "distinct": true,
-      "url": "http://github.com/defunkt/github/commit/41a212ee83ca127e3c8cf465891ab7216a705f59",
-      "author": {
-        "name": "Julian Rüth",
-        "email": "julian.rueth@fsfe.org",
-        "username": "saraedum"
-      },
-      "message": "okay i give in",
-      "timestamp": "2008-02-15T14:57:17-08:00",
-      "added": ["filepath.rb"]
-    },
-    {
-      "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
-      "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
-      "author": {
-        "name": "Julian Rüth",
-        "email": "julian.rueth@fsfe.org",
-        "username": "saraedum"
-      },
-      "message": "update pricing a tad",
-      "timestamp": "2008-02-15T14:36:34-08:00",
-      "modified": ["modfile"],
-      "removed": ["removedFile"]
-    }
-  ],
-  "head_commit": {
-    "id": "de8251ff97ee194a289832576287d6f8ad74e3d0",
-    "url": "http://github.com/defunkt/github/commit/de8251ff97ee194a289832576287d6f8ad74e3d0",
-    "author": {
-      "name": "Julian Rüth",
-      "email": "julian.rueth@fsfe.org",
-      "username": "saraedum"
-    },
-    "message": "update pricing a tad",
-    "timestamp": "2008-02-15T14:36:34-08:00",
-    "modified": ["modfile"],
-    "removed": ["removedFile"]
-  },
-  "after": "de8251ff97ee194a289832576287d6f8ad74e3d0",
-  "ref": "refs/tags/v1.0.0"
-}
-"""
-
 gitJsonPayloadNonBranch = b"""
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
@@ -626,17 +563,6 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         change = self.changeHook.master.addedChanges[0]
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
-        self.assertEqual(change["branch"], "v1.0.0")
-
-    @defer.inlineCallbacks
-    def test_git_with_push_tag_unicode(self):
-        self.request = _prepare_request(b'push', gitJsonPayloadTagUnicode)
-        yield self.request.test_render(self.changeHook)
-
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
-        self.assertEqual(change["author"],
-                         u"Julian Rüth <julian.rueth@fsfe.org>")
         self.assertEqual(change["branch"], "v1.0.0")
 
     # Test 'base' hook with attributes. We should get a json string
