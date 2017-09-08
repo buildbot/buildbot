@@ -281,10 +281,6 @@ class Tests(interfaces.InterfaceTests):
 
         stepdict = yield self.db.steps.getStep(stepid=72)
 
-        def urlKey(url):
-            return url['name']
-
-        # order is not guaranteed though
         self.assertEqual(stepdict['urls'],
                          [{'name': u'foo', 'url': u'bar'}])
 
