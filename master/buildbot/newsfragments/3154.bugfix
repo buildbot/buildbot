@@ -1,1 +1,0 @@
-Fix issue with ``logviewer`` scrolling up indefinitely when loading logs (:issue:`3154`). 

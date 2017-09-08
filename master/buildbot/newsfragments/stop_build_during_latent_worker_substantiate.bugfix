@@ -1,1 +1,0 @@
-now if you stop build during latent worker substantiating, the build result will be cancelled instead of retry.

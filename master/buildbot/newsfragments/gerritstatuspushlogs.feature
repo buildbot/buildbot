@@ -1,1 +1,0 @@
-Allow to expose logs to summary callback of GerritStatusPush.
