@@ -1,0 +1,1 @@
+buildbot.util.encodeString() has been removed.  buildbot.util.unicode2bytes() should be used instead.
