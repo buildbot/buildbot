@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.5.3"
+ANGULAR_TAG = "~1.6.3"
 gulp = require("gulp")
 path = require("path")
 shell = require("gulp-shell")
@@ -30,7 +30,7 @@ config =
         # JavaScript libraries (order matters)
         deps:
             "guanlecoja-ui":
-                version: '~1.6.2'
+                version: '~1.7.0'
                 files: ['vendors.js', 'scripts.js']
             moment:
                 version: "~2.6.0"

@@ -4,13 +4,13 @@ class Rest extends Service
             execute: (config) ->
                 $q (resolve, reject) ->
                     $http(config)
-                    .success (response) ->
+                    .then (response) ->
                         try
-                            data = angular.fromJson(response)
+                            data = angular.fromJson(response.data)
                             resolve(data)
                         catch e
                             reject(e)
-                    .error (reason) -> reject(reason)
+                    , (response) -> reject(response.data)
 
             get: (url, params = {}) ->
                 canceller = $q.defer()

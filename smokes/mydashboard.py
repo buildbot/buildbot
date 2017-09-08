@@ -14,6 +14,7 @@ mydashboardapp = Flask('test', root_path=os.path.dirname(__file__))
 # this allows to work on the template without having to restart Buildbot
 mydashboardapp.config['TEMPLATES_AUTO_RELOAD'] = True
 
+requests.adapters.DEFAULT_RETRIES = 5
 
 @mydashboardapp.route("/index.html")
 def main():
@@ -31,21 +32,25 @@ def main():
 
         build['results_text'] = statusToString(build['results'])
 
-    # Example on how to use requests to get some info from other web servers
-    code_frequency_url = "https://api.github.com/repos/buildbot/buildbot/stats/code_frequency"
-    results = requests.get(code_frequency_url)
-    while results.status_code == 202:
-        # while github calculates statistics, it returns code 202.
-        # this is no problem, we just sleep in our thread..
-        time.sleep(500)
-        results = requests.get(code_frequency_url)
-
-    # some post processing of the data from github
     graph_data = []
-    for i, data in enumerate(results.json()):
-        graph_data.append(
-            dict(x=data[0], y=data[1])
-        )
+    try:
+        # Example on how to use requests to get some info from other web servers
+        code_frequency_url = "https://api.github.com/repos/buildbot/buildbot/stats/code_frequency"
+        print("get:", code_frequency_url)
+        results = requests.get(code_frequency_url, timeout=5)
+        while results.status_code == 202:
+            # while github calculates statistics, it returns code 202.
+            # this is no problem, we just sleep in our thread..
+            print("retry after 202:", code_frequency_url, results.content)
+            time.sleep(500)
+            results = requests.get(code_frequency_url)
+        # some post processing of the data from github
+        for i, data in enumerate(results.json()):
+            graph_data.append(
+                dict(x=data[0], y=data[1])
+            )
+    except (requests.exceptions.Timeout, requests.exceptions.ConnectionError):
+        pass
 
     # mydashboard.html is a template inside the template directory
     return render_template('mydashboard.html', builders=builders, builds=builds,

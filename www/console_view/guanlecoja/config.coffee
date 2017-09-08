@@ -3,7 +3,7 @@
 #   This module contains all configuration for the build process
 #
 ### ###############################################################################################
-ANGULAR_TAG = "~1.5.3"
+ANGULAR_TAG = "~1.6.3"
 module.exports =
 
     ### ###########################################################################################
@@ -14,7 +14,7 @@ module.exports =
     bower:
         testdeps:
             "guanlecoja-ui":
-                version: '~1.6.0'
+                version: '~1.7.0'
                 files: ['vendors.js', 'scripts.js']
             "angular-mocks":
                 version: ANGULAR_TAG
