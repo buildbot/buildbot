@@ -19,7 +19,7 @@ Bug fixes
 - Fix issue with ``logviewer`` scrolling up indefinitely when loading logs
   (:issue:`3154`).
 - do not add the url if it already exists in the step. (:issue:`3554`)
-- Fix filtering for ressource attributes when SQL is involved in the backend (eq, ne, and
+- Fix filtering for REST resource attributes when SQL is involved in the backend (eq, ne, and
   contains operations, when there are several filters) (:issue:`3526`).
 - The ``git`` source step now uses `git checkout -B` rather than `git branch -M` to create local branches (:issue:`3537`)
 - Fixed :ref:`Grid View <GridView>` settings. It is now possible to configure "false" values.
