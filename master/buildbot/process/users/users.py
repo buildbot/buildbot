@@ -41,7 +41,7 @@ def createUserObject(master, author, src=None):
     @type master: master.Buildmaster instance
 
     @param authors: Change author if string or Authz instance
-    @type authors: string or status.web.authz instance
+    @type authors: string or www.authz instance
 
     @param src: source from which the User Object will be created
     @type src: string

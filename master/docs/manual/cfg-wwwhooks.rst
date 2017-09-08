@@ -104,12 +104,12 @@ The GitHub hook has the following parameters:
     If the value is a function (or any other callable), it will be called with the GitHub event payload as argument and the function must return the codebase value to use for the event.
 ``class`` (default `None`)
     A class to be used for processing incoming payloads.
-    If the value is `None` (default), the default class -- :py:class:`buildbot.status.web.hooks.github.GitHubEventHandler` -- will be used.
+    If the value is `None` (default), the default class -- :py:class:`buildbot.www.hooks.github.GitHubEventHandler` -- will be used.
     The default class handles `ping`, `push` and `pull_request` events only.
     If you'd like to handle other events (see `Event Types & Payloads <https://developer.github.com/v3/activity/events/types/>`_ for more information), you'd need to subclass ``GitHubEventHandler`` and add handler methods for the corresponding events.
     For example, if you'd like to handle `blah` events, your code should look something like this::
 
-        from buildbot.status.web.hooks.github import GitHubEventHandler
+        from buildbot.www.hooks.github import GitHubEventHandler
 
         class MyBlahHandler(GitHubEventHandler):
 

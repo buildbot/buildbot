@@ -237,7 +237,7 @@ or apply a regular expression, using the attribute name with a "``_re``" suffix:
     import re
     my_filter = util.ChangeFilter(category_re=re.compile('.*deve.*', re.I))
 
-:class:`buildbot.status.web.hooks.github.GitHubEventHandler` has a special
+:class:`buildbot.www.hooks.github.GitHubEventHandler` has a special
 ``github_distinct`` property that can be used to filter whether or not
 non-distinct changes should be considered. For example, if a commit is pushed to
 a branch that is not being watched and then later pushed to a watched branch, by
