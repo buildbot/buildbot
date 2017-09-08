@@ -32,9 +32,9 @@ from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
+from buildbot.process.results import EXCEPTION
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
-from buildbot.process.results import EXCEPTION
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
