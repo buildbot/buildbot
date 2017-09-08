@@ -155,7 +155,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             url_item = dict(name=name, url=url)
 
             if url_item not in urls:
-                urls.append(dict(name=name, url=url))
+                urls.append(url_item)
                 q = tbl.update(whereclause=wc)
                 conn.execute(q, urls_json=json.dumps(urls))
 

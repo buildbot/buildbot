@@ -285,9 +285,8 @@ class Tests(interfaces.InterfaceTests):
             return url['name']
 
         # order is not guaranteed though
-        self.assertEqual(sorted(stepdict['urls'], key=urlKey),
-                         sorted([{'name': u'foo', 'url': u'bar'}],
-                                key=urlKey))
+        self.assertEqual([stepdict['urls']],
+                         [{'name': u'foo', 'url': u'bar'}])
 
     @defer.inlineCallbacks
     def test_finishStep(self):
