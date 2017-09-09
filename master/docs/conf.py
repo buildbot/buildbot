@@ -157,11 +157,11 @@ extlinks = {
     #   "https://github.com/buildbot/buildbot/blob/master/master".
     # Explicit title can be used for customizing how link looks like:
     #   :src-link:`master's directory <master>`
-    'src-link': ('https://github.com/buildbot/buildbot/blob/master/%s', None),
+    'src-link': ('https://github.com/buildbot/buildbot/tree/master/%s', None),
     # "pretty" reference that looks like relative path in Buildbot source tree
     # by default.
-    'src': ('https://github.com/buildbot/buildbot/blob/master/%s', ''),
-    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/blob/master/%s', ''),
+    'src': ('https://github.com/buildbot/buildbot/tree/master/%s', ''),
+    'contrib-src': ('https://github.com/buildbot/buildbot-contrib/tree/master/%s', ''),
 }
 
 # Sphinx' link checker.

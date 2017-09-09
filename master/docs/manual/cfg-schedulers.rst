@@ -1038,7 +1038,7 @@ It adds the following arguments:
 
     * ``vertical``: all fields are displayed vertically, aligned in columns (as per the ``column`` attribute of the NestedParameter)
 
-    * ``tabs``: Each field gets its own `tab <http://getbootstrap.com/components/#nav-tabs>`_.
+    * ``tabs``: Each field gets its own `tab <https://getbootstrap.com/components/>`_.
         This can be used to declare complex build forms which won't fit into one screen.
         The children fields are usually other NestedParameters with vertical layout.
 

@@ -20,10 +20,10 @@ The best place to learn about AngularJS is `its own documentation <http://docs.a
 
 AngularJS strong points are:
 
-* A very powerful `MVC system <http://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when data changes
-* A `Testing Framework and philosophy <http://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
-* A `deferred system <http://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted
-* A `fast growing community and ecosystem <http://builtwith.angularjs.org/>`_
+* A very powerful `MVC system <https://docs.angularjs.org/guide/concepts>`_ allowing automatic update of the UI, when data changes
+* A `Testing Framework and philosophy <https://docs.angularjs.org/guide/dev_guide.e2e-testing>`_
+* A `deferred system <https://docs.angularjs.org/api/ng.$q>`_ similar to the one from Twisted
+* A `fast growing community and ecosystem <https://www.madewithangular.com/>`_
 
 On top of Angular we use nodeJS tools to ease development
 
@@ -32,7 +32,7 @@ On top of Angular we use nodeJS tools to ease development
 * Alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
 * `coffeescript <http://coffeescript.org/>`_, a very expressive language, preventing some of the major traps of JS
 * `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
-* `Bootstrap <http://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
+* `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 Modules we may or may not want to include:
