@@ -45,6 +45,8 @@ if [ ! -f $B/buildbot.tac ]
 then
     cp /usr/src/buildbot/docker/buildbot.tac $B
 fi
+# Fixed buildbot master not start error in docker
+rm -f $B/twistd.pid
 # wait for db to start by trying to upgrade the master
 until buildbot upgrade-master $B
 do
