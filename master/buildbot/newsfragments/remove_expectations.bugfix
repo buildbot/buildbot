@@ -1,1 +1,1 @@
-Removed :class:`IBuildStepStatus` mentions in interfaces.py and removed stepETAUpdates function.
+Removed :class:`IBuildStepStatus` mentions in interfaces.py and removed `stepETAUpdates()` function.
