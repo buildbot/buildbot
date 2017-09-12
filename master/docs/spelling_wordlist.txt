@@ -310,6 +310,7 @@ getChoices
 getfqdn
 getProperties
 getRecipients
+getSteps
 getters
 GiB
 github
