@@ -16,14 +16,14 @@ Buildbot ``0.9.11`` ( ``2017-09-08`` )
 Incompatible Changes
 --------------------
 
-- Buildbot is not compatible with ``python3-ldap`` anymore. It now requires ``ldap3`` package for its ldap operations (issue:`3530`)
+- Buildbot is not compatible with ``python3-ldap`` anymore. It now requires ``ldap3`` package for its ldap operations (:issue:`3530`)
 
 Bug fixes
 ---------
 
 - Fix issue with ``logviewer`` scrolling up indefinitely when loading logs
   (:issue:`3154`).
-- do not add the url if it already exists in the step. (:issue:`3554`)
+- Do not add the url if it already exists in the step. (:issue:`3554`)
 - Fix filtering for REST resource attributes when SQL is involved in the backend (eq, ne, and
   contains operations, when there are several filters) (:issue:`3526`).
 - The ``git`` source step now uses `git checkout -B` rather than `git branch -M` to create local branches (:issue:`3537`)
@@ -36,7 +36,7 @@ Bug fixes
   to what the documentation suggests.
 - Fixed secret plugins registration, so that they are correctly available in ``import buildbot.plugins.secrets``.
   changes to all secrets plugin to be imported and used.
-- Fix secrets downloaded to worker with too wide permissions
+- Fix secrets downloaded to worker with too wide permissions.
 - Fix issue with stop build during latent worker substantiating, the build result
   was retried instead of cancelled.
 - ``pip install 'buildbot[bundle]'`` now installs ``grid_view`` plugin.
@@ -73,7 +73,7 @@ Features
   :class:`~IRenderable` object that will render to a list of builder names.
 - The :py:class:`~buildbot.www.ldapuserinfo.LdapUserInfo` now uses the
   python3-ldap successor ldap3 (:issue:`3530`).
-- added support for static suppressions parameter for shell commands
+- Added support for static suppressions parameter for shell commands.
 
 
 Buildbot ``0.9.10`` ( ``2017-08-03`` )
