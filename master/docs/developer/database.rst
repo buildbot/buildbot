@@ -210,7 +210,7 @@ builds
 
     Builds are indexed by *buildid* and their contents represented as *builddicts* (build dictionaries), with the following keys:
 
-    * ``id`` (the build ID, globally unique)
+    * ``buildid`` (the build ID, globally unique)
     * ``number`` (the build number, unique only within the builder)
     * ``builderid`` (the ID of the builder that performed this build)
     * ``buildrequestid`` (the ID of the build request that caused this build)
