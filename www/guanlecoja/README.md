@@ -246,7 +246,8 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
-* 0.8.5: fix high CPU usage in dev mode. Use ChromeHeadless by default.
+* 0.8.6: fix high CPU usage in dev mode. Use ChromeHeadless by default.
+* 0.8.5: screwed-up release.
 * 0.8.4: Properly configure chrome headless if the CI environment is found.
 * 0.8.3: switch to chrome for testing. phantomjs has been deprecated.
 * 0.8.2: bump gulp-sass version for node 7.10 support.
