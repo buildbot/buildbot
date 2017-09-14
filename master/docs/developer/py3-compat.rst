@@ -146,7 +146,7 @@ Before:
 .. code-block:: python
 
     s = "this is a string"
-    if(isinstance(basestring)):
+    if(isinstance(s, basestring)):
         print "This line will run"
 
 After:
