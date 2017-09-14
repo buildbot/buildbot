@@ -89,7 +89,7 @@
     "node": ">4.4.0",
     "npm": ">2.0.0"
   },
-  "version": "0.8.5",
+  "version": "0.8.5.1",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}
