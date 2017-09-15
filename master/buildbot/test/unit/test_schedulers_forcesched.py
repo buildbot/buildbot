@@ -34,6 +34,7 @@ from buildbot.schedulers.forcesched import FixedParameter
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import IntParameter
 from buildbot.schedulers.forcesched import NestedParameter
+from buildbot.schedulers.forcesched import PatchParameter
 from buildbot.schedulers.forcesched import StringParameter
 from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
@@ -301,10 +302,40 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 properties=expProperties,
                 reason=u"A build was forced by 'user': because",
                 sourcestamps=[
-                    {'branch': 'a', 'project': 'p', 'repository': 'd',
-                        'revision': 'c', 'codebase': 'foo'},
                     {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
                         'revision': 'c2', 'codebase': 'bar'},
+                    {'branch': 'a', 'project': 'p', 'repository': 'd',
+                        'revision': 'c', 'codebase': 'foo'},
+                ])),
+        ])
+
+    @defer.inlineCallbacks
+    def test_codebase_with_patch(self):
+        sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())])
+        res = yield sched.force('user', builderNames=['a'], reason='because',
+                                foo_branch='a', foo_revision='c', foo_repository='d', foo_project='p',
+                                bar_branch='a2', bar_revision='c2', bar_repository='d2', bar_project='p2', bar_patch_body="xxx"
+                                )
+
+        bsid, brids = res
+        expProperties = {
+            u'owner': ('user', 'Force Build Form'),
+            u'reason': ('because', 'Force Build Form'),
+        }
+
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', dict(
+                builderNames=['a'],
+                waited_for=False,
+                properties=expProperties,
+                reason=u"A build was forced by 'user': because",
+                sourcestamps=[
+                    {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
+                        'revision': 'c2', 'codebase': 'bar',
+                        'patch_body': 'xxx', 'patch_author': '', 'patch_subdir': '.',
+                        'patch_comment': '', 'patch_level': 1},
+                    {'branch': 'a', 'project': 'p', 'repository': 'd',
+                        'revision': 'c', 'codebase': 'foo'},
                 ])),
         ])
 
