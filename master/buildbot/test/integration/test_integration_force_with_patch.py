@@ -13,12 +13,15 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import, print_function
+from __future__ import absolute_import
+from __future__ import print_function
 
-from buildbot.process.results import FAILURE, SUCCESS
+from twisted.internet import defer
+
+from buildbot.process.results import FAILURE
+from buildbot.process.results import SUCCESS
 from buildbot.steps.source.base import Source
 from buildbot.test.util.integration import RunMasterBase
-from twisted.internet import defer
 
 
 # a simple patch which adds a Makefile
