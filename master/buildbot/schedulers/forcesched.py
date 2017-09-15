@@ -77,7 +77,7 @@ class BaseParameter(object):
     BaseParameter provides a base implementation for property customization
     """
     spec_attributes = ["name", "fullName", "label", "tablabel", "type", "default", "required",
-                       "multiple", "regex", "hide"]
+                       "multiple", "regex", "hide", "maxsize"]
     name = ""
     parentName = None
     label = ""
@@ -89,6 +89,7 @@ class BaseParameter(object):
     regex = None
     debug = True
     hide = False
+    maxsize = None
 
     @property
     def fullName(self):
@@ -164,6 +165,11 @@ class BaseParameter(object):
                 if not self.regex.match(arg):
                     raise ValidationError("%s:'%s' does not match pattern '%s'"
                                           % (self.label, arg, self.regex.pattern))
+        if self.maxsize is not None:
+            for arg in args:
+                if len(arg) > self.maxsize:
+                    raise ValidationError("%s: is too large %d > %d"
+                                          % (self.label, len(arg), self.maxsize))
 
         try:
             arg = self.parse_from_args(args)
@@ -377,6 +383,7 @@ class FileParameter(BaseParameter):
     """A parameter which allows to download a whole file and store it as a property or patch
     """
     type = 'file'
+    maxsize = 1024 * 1024 * 10  # 10M
 
 
 class NestedParameter(BaseParameter):
@@ -459,8 +466,7 @@ class NestedParameter(BaseParameter):
     def getSpec(self):
         ret = BaseParameter.getSpec(self)
         # pylint: disable=not-an-iterable
-        ret['fields'] = sorted([field.getSpec() for field in self.fields],
-                               key=lambda x: x['name'])
+        ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
 
 
@@ -556,7 +562,7 @@ class CodebaseParameter(NestedParameter):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
-        fields = [val for val in fields_dict.values() if val]
+        fields = [val for k, val in sorted(iteritems(fields_dict), key=lambda x: x[0]) if val]
         if patch is not None:
             if patch.name != "patch":
                 config.error(
