@@ -30,10 +30,12 @@ from buildbot.schedulers.forcesched import BooleanParameter
 from buildbot.schedulers.forcesched import ChoiceStringParameter
 from buildbot.schedulers.forcesched import CodebaseParameter
 from buildbot.schedulers.forcesched import CollectedValidationError
+from buildbot.schedulers.forcesched import FileParameter
 from buildbot.schedulers.forcesched import FixedParameter
 from buildbot.schedulers.forcesched import ForceScheduler
 from buildbot.schedulers.forcesched import IntParameter
 from buildbot.schedulers.forcesched import NestedParameter
+from buildbot.schedulers.forcesched import PatchParameter
 from buildbot.schedulers.forcesched import StringParameter
 from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
@@ -47,6 +49,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
 
     OBJECTID = 19
     SCHEDULERID = 9
+    maxDiff = None
 
     def setUp(self):
         self.setUpScheduler()
@@ -301,10 +304,40 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                 properties=expProperties,
                 reason=u"A build was forced by 'user': because",
                 sourcestamps=[
-                    {'branch': 'a', 'project': 'p', 'repository': 'd',
-                        'revision': 'c', 'codebase': 'foo'},
                     {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
                         'revision': 'c2', 'codebase': 'bar'},
+                    {'branch': 'a', 'project': 'p', 'repository': 'd',
+                        'revision': 'c', 'codebase': 'foo'},
+                ])),
+        ])
+
+    @defer.inlineCallbacks
+    def test_codebase_with_patch(self):
+        sched = self.makeScheduler(codebases=['foo', CodebaseParameter('bar', patch=PatchParameter())])
+        res = yield sched.force('user', builderNames=['a'], reason='because',
+                                foo_branch='a', foo_revision='c', foo_repository='d', foo_project='p',
+                                bar_branch='a2', bar_revision='c2', bar_repository='d2', bar_project='p2', bar_patch_body="xxx"
+                                )
+
+        bsid, brids = res
+        expProperties = {
+            u'owner': ('user', 'Force Build Form'),
+            u'reason': ('because', 'Force Build Form'),
+        }
+
+        self.assertEqual(self.addBuildsetCalls, [
+            ('addBuildsetForSourceStampsWithDefaults', dict(
+                builderNames=['a'],
+                waited_for=False,
+                properties=expProperties,
+                reason=u"A build was forced by 'user': because",
+                sourcestamps=[
+                    {'branch': 'a2', 'project': 'p2', 'repository': 'd2',
+                        'revision': 'c2', 'codebase': 'bar',
+                        'patch_body': 'xxx', 'patch_author': '', 'patch_subdir': '.',
+                        'patch_comment': '', 'patch_level': 1},
+                    {'branch': 'a', 'project': 'p', 'repository': 'd',
+                        'revision': 'c', 'codebase': 'foo'},
                 ])),
         ])
 
@@ -409,35 +442,87 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_StringParameter(self):
         self.do_ParameterTest(value="testedvalue", expect="testedvalue",
                               klass=StringParameter,
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": "", "required": false, "label": "p1", "tablabel": "p1", '
-                              '"hide": false, "fullName": "p1", "type": "text", "size": 10}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "text", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+                              '"size": 10}')
 
     def test_StringParameter_Required(self):
         self.do_ParameterTest(value=" ", expect=CollectedValidationError,
                               expectKind=Exception,
                               klass=StringParameter, required=True)
 
+    def test_StringParameter_maxsize(self):
+        self.do_ParameterTest(value="xx" * 20, expect=CollectedValidationError,
+                              expectKind=Exception,
+                              klass=StringParameter, maxsize=10)
+
+    def test_FileParameter_maxsize(self):
+        self.do_ParameterTest(value="xx" * 20, expect=CollectedValidationError,
+                              expectKind=Exception,
+                              klass=FileParameter, maxsize=10)
+
+    def test_FileParameter(self):
+        self.do_ParameterTest(value="xx", expect="xx",
+                              klass=FileParameter,
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "file", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, '
+                              '"maxsize": 10485760}')
+
+    def test_PatchParameter(self):
+        self.do_ParameterTest(req=dict(p1_author='me', reason="because"), expect={
+                                   'author': 'me',
+                                   'body': '',
+                                   'comment': '',
+                                   'level': 1,
+                                   'subdir': '.'},
+                              klass=PatchParameter,
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+                              '"layout": "vertical", "columns": 1, "fields": [{"name": "body", '
+                              '"fullName": "p1_body", "label": "body", "tablabel": "body", '
+                              '"type": "file", "default": "", "required": false, "multiple": false, '
+                              '"regex": null, "hide": false, "maxsize": 10485760}, {"name": "level", '
+                              '"fullName": "p1_level", "label": "level", "tablabel": "level", '
+                              '"type": "int", "default": 1, "required": false, "multiple": false, '
+                              '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
+                              '{"name": "author", "fullName": "p1_author", "label": "author", '
+                              '"tablabel": "author", "type": "text", "default": "", '
+                              '"required": false, "multiple": false, "regex": null, "hide": false, '
+                              '"maxsize": null, "size": 10}, {"name": "comment", '
+                              '"fullName": "p1_comment", "label": "comment", "tablabel": "comment", '
+                              '"type": "text", "default": "", "required": false, "multiple": false, '
+                              '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
+                              '{"name": "subdir", "fullName": "p1_subdir", "label": "subdir", '
+                              '"tablabel": "subdir", "type": "text", "default": ".", '
+                              '"required": false, "multiple": false, "regex": null, "hide": false, '
+                              '"maxsize": null, "size": 10}]}')
+
     def test_IntParameter(self):
         self.do_ParameterTest(value="123", expect=123, klass=IntParameter,
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": 0, "required": false, "label": "p1", "tablabel": "p1", '
-                              '"hide": false, "fullName": "p1", "type": "int", "size": 10}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "int", "default": 0, "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+                              '"size": 10}')
 
     def test_FixedParameter(self):
         self.do_ParameterTest(value="123", expect="321", klass=FixedParameter,
                               default="321",
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": "321", "required": false, "label": "p1", "tablabel": "p1", '
-                              '"hide": true, "fullName": "p1", "type": "fixed"}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "fixed", "default": "321", '
+                              '"required": false, "multiple": false, "regex": null, "hide": true, '
+                              '"maxsize": null}')
 
     def test_BooleanParameter_True(self):
         req = dict(p1=True, reason='because')
         self.do_ParameterTest(value="123", expect=True, klass=BooleanParameter,
                               req=req,
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": "", "required": false, "label": "p1", "tablabel": "p1", '
-                              '"hide": false, "fullName": "p1", "type": "bool"}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "bool", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, '
+                              '"maxsize": null}')
 
     def test_BooleanParameter_False(self):
         req = dict(p2=True, reason='because')
@@ -449,39 +534,42 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
-                              '"name": "username", "default": "", "required": false, '
-                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
-                              '"fullName": "username", "type": "username", "size": 30}')
+                              expectJson='{"name": "username", "fullName": "username", '
+                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+                              '"default": "", "required": false, "multiple": false, "regex": null, '
+                              '"hide": false, "maxsize": null, "size": 30, '
+                              '"need_email": true}')
 
     def test_UserNameParameterIsValidMail(self):
         email = "test@buildbot.net"
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
-                              '"name": "username", "default": "", "required": false, '
-                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
-                              '"fullName": "username", "type": "username", "size": 30}')
+                              expectJson='{"name": "username", "fullName": "username", '
+                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+                              '"default": "", "required": false, "multiple": false, "regex": null, '
+                              '"hide": false, "maxsize": null, "size": 30, '
+                              '"need_email": true}')
 
     def test_UserNameParameterIsValidMailBis(self):
         email = "<test@buildbot.net>"
         self.do_ParameterTest(value=email, expect=email,
                               klass=UserNameParameter(),
                               name="username", label="Your name:",
-                              expectJson='{"regex": null, "need_email": true, "multiple": false, '
-                              '"name": "username", "default": "", "required": false, '
-                              '"label": "Your name:", "tablabel": "Your name:", "hide": false, '
-                              '"fullName": "username", "type": "username", "size": 30}')
+                              expectJson='{"name": "username", "fullName": "username", '
+                              '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
+                              '"default": "", "required": false, "multiple": false, "regex": null, '
+                              '"hide": false, "maxsize": null, "size": 30, '
+                              '"need_email": true}')
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',
                               klass=ChoiceStringParameter, choices=[
                                   't1', 't2'],
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": "", "required": false, "label": "p1", "strict": true, '
-                              '"tablabel": "p1", "hide": false, "fullName": "p1", "choices": ["t1", '
-                              '"t2"], "type": "list"}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "list", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+                              '"choices": ["t1", "t2"], "strict": true}')
 
     def test_ChoiceParameterError(self):
         self.do_ParameterTest(value='t3',
@@ -499,10 +587,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_ChoiceParameterMultiple(self):
         self.do_ParameterTest(value=['t1', 't2'], expect=['t1', 't2'],
                               klass=ChoiceStringParameter, choices=['t1', 't2'], multiple=True,
-                              expectJson='{"regex": null, "multiple": true, "name": "p1", '
-                              '"default": "", "required": false, "label": "p1", "strict": true, '
-                              '"tablabel": "p1", "hide": false, "fullName": "p1", "choices": ["t1", '
-                              '"t2"], "type": "list"}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "list", "default": "", "required": false, '
+                              '"multiple": true, "regex": null, "hide": false, "maxsize": null, '
+                              '"choices": ["t1", "t2"], "strict": true}')
 
     def test_ChoiceParameterMultipleError(self):
         self.do_ParameterTest(value=['t1', 't3'],
@@ -519,13 +607,13 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.do_ParameterTest(req=dict(p1_foo='123', reason="because"),
                               expect=dict(foo=123),
                               klass=NestedParameter, fields=fields,
-                              expectJson='{"regex": null, "multiple": false, "name": "p1", '
-                              '"default": "", "fields": [{"regex": null, "multiple": false, '
-                              '"name": "foo", "default": 0, "required": false, "label": "foo", '
-                              '"tablabel": "foo", "hide": false, "fullName": "p1_foo", '
-                              '"type": "int", "size": 10}], "required": false, "label": "p1", '
-                              '"tablabel": "p1", "hide": false, "fullName": "p1", "type": "nested", '
-                              '"columns": 1, "layout": "vertical"}')
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
+                              '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
+                              '"layout": "vertical", "columns": 1, "fields": [{"name": "foo", '
+                              '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", '
+                              '"type": "int", "default": 0, "required": false, "multiple": false, '
+                              '"regex": null, "hide": false, "maxsize": null, "size": 10}]}')
 
     def test_NestedNestedParameter(self):
         fields = [

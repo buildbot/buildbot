@@ -147,7 +147,7 @@ class BaseParameter(object):
 
         # delete white space for args
         for arg in args:
-            if not arg.strip():
+            if isinstance(arg, string_types) and not arg.strip():
                 args.remove(arg)
 
         if not args:
@@ -373,6 +373,12 @@ deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
                                 compat_name="BuildslaveChoiceParameter")
 
 
+class FileParameter(BaseParameter):
+    """A parameter which allows to download a whole file and store it as a property or patch
+    """
+    type = 'file'
+
+
 class NestedParameter(BaseParameter):
 
     """A 'parent' parameter for a set of related parameters. This provides a
@@ -517,6 +523,7 @@ class CodebaseParameter(NestedParameter):
                  revision=DefaultField,
                  repository=DefaultField,
                  project=DefaultField,
+                 patch=None,
 
                  **kwargs):
         """
@@ -550,6 +557,13 @@ class CodebaseParameter(NestedParameter):
             fields_dict[k] = v
 
         fields = [val for val in fields_dict.values() if val]
+        if patch is not None:
+            if patch.name != "patch":
+                config.error(
+                    "patch parameter of a codebase must be named 'patch'")
+            fields.append(patch)
+            if self.columns is None and 'columns' not in kwargs:
+                self.columns = 1
 
         NestedParameter.__init__(self, name=name, label=label,
                                  codebase=codebase,
@@ -570,11 +584,37 @@ class CodebaseParameter(NestedParameter):
         # convert the "property" to a sourcestamp
         ss = self.createSourcestamp(properties, kwargs)
         if ss is not None:
+            patch = ss.pop('patch', None)
+            if patch is not None:
+                for k, v in patch.items():
+                    ss['patch_' + k] = v
+
             sourcestamps[self.codebase] = ss
 
 
 def oneCodebase(**kw):
     return [CodebaseParameter('', **kw)]
+
+
+class PatchParameter(NestedParameter):
+    """A patch parameter contains pre-configure UI for all the needed components for a sourcestamp patch
+    """
+    columns = 1
+
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name', 'patch')
+        default_fields = [
+            FileParameter('body'),
+            IntParameter('level', default=1),
+            StringParameter('author', default=""),
+            StringParameter('comment', default=""),
+            StringParameter('subdir', default=".")
+        ]
+        fields = [
+            kwargs.pop(field.name, field)
+            for field in default_fields
+        ]
+        NestedParameter.__init__(self, name, fields=fields, **kwargs)
 
 
 class ForceScheduler(base.BaseScheduler):

@@ -373,8 +373,9 @@ setup_args = {
             ('buildbot.schedulers.forcesched', [
                 'AnyPropertyParameter', 'BooleanParameter',
                 'ChoiceStringParameter',
-                'CodebaseParameter', 'FixedParameter', 'InheritBuildParameter',
+                'CodebaseParameter', 'FileParameter', 'FixedParameter', 'InheritBuildParameter',
                 'IntParameter', 'NestedParameter', 'ParameterGroup',
+                'PatchParameter',
                 'StringParameter', 'TextParameter', 'UserNameParameter',
                 'WorkerChoiceParameter',
             ]),
