@@ -15,7 +15,7 @@
 
 from __future__ import absolute_import, print_function
 
-from buildbot.process.results import SUCCESS
+from buildbot.process.results import FAILURE, SUCCESS
 from buildbot.steps.source.base import Source
 from buildbot.test.util.integration import RunMasterBase
 from twisted.internet import defer
@@ -32,12 +32,14 @@ index 0000000..8a5cf80
 +\techo OK
 """
 
+
 class MySource(Source):
     """A source class which only applies the patch"""
     def startVC(self, branch, revision, patch):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
         d = defer.succeed(SUCCESS)
         if patch:
+            print(patch)
             d.addCallback(self.patch, patch)
         d.addCallback(self.finished)
         d.addErrback(self.failed)
@@ -53,6 +55,16 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
         # if makefile was not properly created, we would have a failure
         self.assertEqual(build['results'], SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_shell_no_patch(self):
+        yield self.setupConfig(masterConfig())
+        build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
+        self.assertEqual(build['buildid'], 1)
+        # if no patch, the source step is happy, but the make step cannot find makefile
+        self.assertEqual(build['steps'][0]['results'], SUCCESS)
+        self.assertEqual(build['steps'][1]['results'], FAILURE)
+        self.assertEqual(build['results'], FAILURE)
 
 
 # master configuration
