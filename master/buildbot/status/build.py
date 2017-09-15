@@ -103,11 +103,12 @@ class BuildStatus():
         return self.blamelist
 
     def getSteps(self):
-        """Return a list of IBuildStepStatus objects. For invariant builds
-        (those which always use the same set of Steps), this should be the
-        complete list, however some of the steps may not have started yet
-        (step.getTimes()[0] will be None). For variant builds, this may not
-        be complete (asking again later may give you more of them)."""
+        """Return a list of dictionary objects, each of which describes
+        a step. For invariant builds (those which always use the same set
+        of Steps), this should be the complete list, however some of the
+        steps may not have started yet (step.getTimes()[0] will be None).
+        For variant builds, this may not be complete (asking again later
+        may give you more of them)."""
         return self.steps
 
     def getTimes(self):

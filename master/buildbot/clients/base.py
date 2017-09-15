@@ -59,10 +59,6 @@ class StatusClient(pb.Referenceable):
     def remote_stepFinished(self, buildername, build, stepname, step, results):
         log.msg("stepFinished", buildername, stepname, results)
 
-    def remote_stepETAUpdate(self, buildername, build, stepname, step,
-                             eta, expectations):
-        log.msg("stepETA", buildername, stepname, eta)
-
     def remote_logStarted(self, buildername, build, stepname, step,
                           logname, log):
         log.msg("logStarted", buildername, stepname)
