@@ -38,7 +38,7 @@ class SsList(list):
 
 
 class SourceStampsConnectorComponent(base.DBConnectorComponent):
-    # Documentation is in developer/db.rst
+    # Documentation is in developer/database.rst
 
     @defer.inlineCallbacks
     def findSourceStampId(self, branch=None, revision=None, repository=None,
