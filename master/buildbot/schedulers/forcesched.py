@@ -147,7 +147,7 @@ class BaseParameter(object):
 
         # delete white space for args
         for arg in args:
-            if not arg.strip():
+            if isinstance(arg, string_types) and not arg.strip():
                 args.remove(arg)
 
         if not args:
@@ -561,6 +561,8 @@ class CodebaseParameter(NestedParameter):
                 config.error(
                     "patch parameter of a codebase must be named 'patch'")
             fields.append(patch)
+            if self.columns is None and 'columns' not in kwargs:
+                self.columns = 1
 
         NestedParameter.__init__(self, name=name, label=label,
                                  codebase=codebase,
@@ -596,6 +598,7 @@ def oneCodebase(**kw):
 class PatchParameter(NestedParameter):
     """A patch parameter contains pre-configure UI for all the needed components for a sourcestamp patch
     """
+    columns = 1
     def __init__(self, **kwargs):
         default_fields = [
             FileParameter('body'),
