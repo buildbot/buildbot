@@ -763,7 +763,7 @@ class IBuildStatus(Interface):
         unavailable."""
 
     def getSteps():
-        """Return a list of IBuildStepStatus objects. For invariant builds
+        """Return a list of dictionary objects. For invariant builds
         (those which always use the same set of Steps), this should always
         return the complete list, however some of the steps may not have
         started yet (step.getTimes()[0] will be None). For variant builds,
@@ -779,7 +779,7 @@ class IBuildStatus(Interface):
     # Afterwards they return None
 
     def getCurrentStep():
-        """Return an IBuildStepStatus object representing the currently
+        """Return a dictionary object representing the currently
         active step."""
 
     # Once you know the build has finished, the following methods are legal.
@@ -802,8 +802,9 @@ class IBuildStatus(Interface):
     def getLogs():
         """Return a list of logs that describe the build as a whole. Some
         steps will contribute their logs, while others are are less important
-        and will only be accessible through the IBuildStepStatus objects.
-        Each log is an object which implements the IStatusLog interface."""
+        and will only be accessible through dictionary obtained from
+        `getSteps`.  Each log is an object which implements the IStatusLog
+        interface."""
 
     def getTestResults():
         """Return a dictionary that maps test-name tuples to ITestResult
@@ -829,8 +830,9 @@ class IStatusEvent(Interface):
     happen to a Builder."""
 
     def getTimes():
-        """Returns a tuple of (start, end) like IBuildStepStatus, but end==0
-        indicates that this is a 'point event', which has no duration.
+        """Returns a tuple of (start, end) but end==0 indicates that this
+        is a 'point event', which has no duration.
+
         WorkerConnect/Disconnect are point events. Ping is not: it starts
         when requested and ends when the response (positive or negative) is
         returned"""
@@ -938,7 +940,7 @@ class IStatusReceiver(IPlugin):
         is received, all schedulers have already received the change."""
 
     def stepStarted(build, step):
-        """A step has just started. 'step' is the IBuildStepStatus which
+        """A step has just started. 'step' is a dictionary which
         represents the step: it can be queried for more information.
 
         This method may return an IStatusReceiver (it could even return
@@ -947,9 +949,7 @@ class IStatusReceiver(IPlugin):
         receiver will be automatically unsubscribed when the step finishes.
 
         Alternatively, the method may return a tuple of an IStatusReceiver
-        and an integer named 'updateInterval'. In addition to
-        logStarted/logFinished messages, it will also receive stepETAUpdate
-        messages about every updateInterval seconds."""
+        and an integer named 'updateInterval'."""
 
     def stepTextChanged(build, step, text):
         """The text for a step has been updated.
@@ -962,13 +962,6 @@ class IStatusReceiver(IPlugin):
 
         This is called when calling setText2() on the step status, and
         hands in text2 list."""
-
-    def stepETAUpdate(build, step, ETA, expectations):
-        """This is a periodic update on the progress this Step has made
-        towards completion. It gets an ETA (in seconds from the present) of
-        when the step ought to be complete, and a list of expectation tuples
-        (as returned by IBuildStepStatus.getExpectations) with more detailed
-        information."""
 
     def logStarted(build, step, log):
         """A new Log has been started, probably because a step has just
