@@ -28,6 +28,7 @@ from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import bytes2NativeString
 
+
 class Source(LoggingBuildStep, CompositeStepMixin):
 
     """This is a base class to generate a source tree in the worker.

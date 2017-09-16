@@ -1012,7 +1012,14 @@ All parameter types have a few common arguments:
 
     If this is true, then an error will be shown to user if there is no input in this field
 
+``maxsize`` (optional; default: None)
+
+    The maximum size of a field. 
+    Buildbot will ensure the field sent by the user is not too large.
+
 The parameter types are:
+
+.. bb:sched:: NestedParameter
 
 NestedParameter
 ###############
@@ -1190,6 +1197,8 @@ Example::
         builder1.factory.addStep(Trigger(name="Trigger tests",
                                         schedulerNames=Property("forced_tests")))
 
+.. bb:sched:: CodebaseParameter
+
 CodebaseParameter
 #################
 
@@ -1222,6 +1231,52 @@ This is a parameter group to specify a sourcestamp for a given codebase.
 
     A :ref:`parameter <ForceScheduler-Parameters>` specifying the project for the build.
     The default value is a string parameter.
+
+``patch`` (optional; default: None)
+
+    A :bb:sched:`PatchParameter` specifying that the user can upload a patch for this codebase.
+
+
+.. bb:sched:: FileParameter
+
+FileParameter
+#############
+
+This parameter allows the user to upload a file to a build. 
+The user can either write some text to a text area, or select a file from the browser.
+Note that the file is then stored inside a property, so a ``maxsize`` of 10 mega bytes has been set.
+You can still override that ``maxsize`` if you wish.
+
+.. bb:sched:: PatchParameter
+
+PatchParameter
+##############
+
+This parameter allows the user to specify a patch to be applied at the source step.
+The patch is stored withing the sourcestamp, and associated to a codebase.
+That is why :bb:sched:`PatchParameter` must be set inside a :bb:sched:`CodebaseParameter`.
+
+:bb:sched:`PatchParameter` is actually a :bb:sched:`NestedParameter` composed of following fields:
+
+.. code-block:: python
+
+    FileParameter('body'),
+    IntParameter('level', default=1),
+    StringParameter('author', default=""),
+    StringParameter('comment', default=""),
+    StringParameter('subdir', default=".")
+
+You can customize any of these fields by overwriting their field name e.g:
+
+.. code-block:: python
+
+    c['schedulers'] = [
+        schedulers.ForceScheduler(
+            name="force",
+            codebases=[util.CodebaseParameter("foo", patch=util.PatchParameter(
+                body=FileParameter('body', maxsize=10000)))],  # override the maximum size of a patch to 10k instead of 10M
+            builderNames=["testy"])]
+
 
 .. bb:sched:: InheritBuildParameter
 
