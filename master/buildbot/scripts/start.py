@@ -84,9 +84,14 @@ def launchNoDaemon(config):
 
     argv = ["twistd",
             "--no_save",
-            '--nodaemon',
+            "--nodaemon",
             "--logfile=twistd.log",  # windows doesn't use the same default
             "--python=buildbot.tac"]
+
+    if platformType != 'win32':
+        # windows doesn't use pidfile option.
+        argv.extend(["--pidfile="])
+
     sys.argv = argv
 
     # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use

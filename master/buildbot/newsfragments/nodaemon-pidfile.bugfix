@@ -1,0 +1,1 @@
+Add empty pidfile option to master and worker start script when `--nodaemon` option is on. (:issue:`3012`).
