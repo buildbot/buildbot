@@ -706,7 +706,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_allBranches_single(self):
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
-            gpo.Expect(b'git', b'ls-remote', self.REPOURL)
+            gpo.Expect(b'git', b'ls-remote', b'--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
@@ -819,7 +819,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_allBranches_multiple(self):
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
-            gpo.Expect(b'git', b'ls-remote', self.REPOURL)
+            gpo.Expect(b'git', b'ls-remote', b'--refs', self.REPOURL)
             .stdout(b'\n'.join([
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
@@ -920,7 +920,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_callableFilteredBranches(self):
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
-            gpo.Expect(b'git', b'ls-remote', self.REPOURL)
+            gpo.Expect(b'git', b'ls-remote', b'--refs', self.REPOURL)
             .stdout(b'\n'.join([
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241\trefs/heads/master',
                 b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\trefs/heads/release',
@@ -1010,7 +1010,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_branchFilter(self):
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
-            gpo.Expect(b'git', b'ls-remote', self.REPOURL)
+            gpo.Expect(b'git', b'ls-remote', b'--refs', self.REPOURL)
             .stdout(b'\n'.join([
                 b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                 b'refs/pull/410/merge',
@@ -1190,7 +1190,7 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_callableCategory(self):
         self.expectCommands(
             gpo.Expect(b'git', b'init', b'--bare', b'gitpoller-work'),
-            gpo.Expect(b'git', b'ls-remote', self.REPOURL)
+            gpo.Expect(b'git', b'ls-remote', b'--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
                     b'refs/heads/master\n'),
             gpo.Expect(b'git', b'fetch', self.REPOURL,
