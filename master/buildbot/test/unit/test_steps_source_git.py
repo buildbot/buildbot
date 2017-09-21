@@ -16,10 +16,12 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
 
+from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import RETRY
@@ -2415,3 +2417,44 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         )
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
+
+    def _test_invalidGit(self, _dovccmd):
+        def check(failure):
+            self.assertIsInstance(failure.value, WorkerTooOldError)
+            self.assertEqual(str(failure.value), "git is not installed on worker")
+
+        self.patch(self.stepClass, "_dovccmd", _dovccmd)
+        gitStep = self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean'))
+
+        gitStep._start_deferred = defer.Deferred()
+        gitStep.startVC("branch", "revision", "patch")
+        d = gitStep._start_deferred.addBoth(check)
+        return d
+
+    def test_noGitCommandInstalled(self):
+        @defer.inlineCallbacks
+        def _dovccmd(command, abandonOnFailure=True, collectStdout=False,
+                     initialStdin=None):
+            """
+            Simulate the case where there is no git command.
+            """
+            yield
+            defer.returnValue("command not found:")
+
+        return self._test_invalidGit(_dovccmd)
+
+    def test_gitCommandOutputShowsNoVersion(self):
+        @defer.inlineCallbacks
+        def _dovccmd(command, abandonOnFailure=True, collectStdout=False,
+                     initialStdin=None):
+            """
+            Instead of outputting something like "git version 2.11",
+            simulate truncated output which has no version string,
+            to exercise error handling.
+            """
+            yield
+            defer.returnValue("git ")
+
+        return self._test_invalidGit(_dovccmd)

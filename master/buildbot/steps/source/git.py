@@ -583,9 +583,13 @@ class Git(Source):
         stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
         gitInstalled = False
+        version = "0.0.0"
         if 'git' in stdout:
             gitInstalled = True
-        version = stdout.strip().split(' ')[2]
+            try:
+                version = stdout.strip().split(' ')[2]
+            except IndexError:
+                gitInstalled = False
         if LooseVersion(version) < LooseVersion("1.6.5"):
             self.supportsBranch = False
         if LooseVersion(version) < LooseVersion("1.7.8"):
