@@ -988,7 +988,7 @@ For example, a particular daily scheduler could be configured on multiple master
     It is Async, MultiService, and Reconfigurable, and designed to be eventually the base class for all buildbot services.
     This class makes it easy to manage (re)configured services.
 
-    The design separate the check of the config and the actual configuration/start.
+    The design separates the check of the config and the actual configuration/start.
     A service sibling is a configured object that has the same name of a previously started service.
     The sibling configuration will be used to configure the running service.
 
