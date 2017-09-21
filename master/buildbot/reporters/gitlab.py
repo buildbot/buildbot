@@ -68,8 +68,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         :param project_id: Project ID from GitLab
         :param branch: Branch name to create the status for.
         :param sha: Full sha to create the status for.
-        :param state: one of the following 'pending', 'success', 'error'
-                      or 'failure'.
+        :param state: one of the following 'pending', 'success', 'failed'
+                      or 'cancelled'.
         :param target_url: Target url to associate with this status.
         :param description: Short description of the status.
         :param context: Context of the result
@@ -126,10 +126,10 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                 WARNINGS: 'success',
                 FAILURE: 'failed',
                 SKIPPED: 'success',
-                EXCEPTION: 'error',
+                EXCEPTION: 'failed',
                 RETRY: 'pending',
-                CANCELLED: 'error'
-            }.get(build['results'], 'error')
+                CANCELLED: 'cancelled'
+            }.get(build['results'], 'failed')
             description = yield props.render(self.endDescription)
         else:
             state = 'running'
