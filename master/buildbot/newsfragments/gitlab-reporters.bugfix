@@ -1,0 +1,1 @@
+Fix :class:`reporters.gitlab` to use correct commit status codes.
