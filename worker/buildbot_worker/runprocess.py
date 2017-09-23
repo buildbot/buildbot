@@ -46,7 +46,7 @@ from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
 from buildbot_worker import util
-from buildbot_worker.compat import bytes2NativeString
+from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
@@ -58,7 +58,7 @@ def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
     def escape_arg(arg):
-        arg = bytes2NativeString(arg, unicode_encoding)
+        arg = bytes2unicode(arg, unicode_encoding)
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
@@ -78,7 +78,7 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     # So:
     #  - use pipes.quote on UNIX, handling '' as a special case
     #  - use our own custom function on Windows
-    cmd_list = bytes2NativeString(cmd_list, unicode_encoding)
+    cmd_list = bytes2unicode(cmd_list, unicode_encoding)
 
     if runtime.platformType == 'win32':
         return win32_batch_quote(cmd_list, unicode_encoding)
@@ -88,7 +88,7 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     def quote(e):
         if not e:
             return '""'
-        e = bytes2NativeString(e, unicode_encoding)
+        e = bytes2unicode(e, unicode_encoding)
         return pipes.quote(e)
     return " ".join([quote(e) for e in cmd_list])
 
@@ -210,14 +210,14 @@ class RunProcessPP(protocol.ProcessProtocol):
     def outReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.outReceived")
-        data = bytes2NativeString(
+        data = bytes2unicode(
             data, self.command.builder.unicode_encoding)
         self.command.addStdout(data)
 
     def errReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.errReceived")
-        data = bytes2NativeString(
+        data = bytes2unicode(
             data, self.command.builder.unicode_encoding)
         self.command.addStderr(data)
 
@@ -484,7 +484,7 @@ class RunProcess(object):
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
             if (runtime.platformType == 'win32' and
-                not (bytes2NativeString(self.command[0]).lower().endswith(".exe") and
+                not (bytes2unicode(self.command[0]).lower().endswith(".exe") and
                      os.path.isabs(self.command[0]))):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -498,7 +498,7 @@ class RunProcess(object):
             # isn't perfect
             display = shell_quote(self.fake_command, self.builder.unicode_encoding)
 
-        display = bytes2NativeString(display, self.builder.unicode_encoding)
+        display = bytes2unicode(display, self.builder.unicode_encoding)
 
         # $PWD usually indicates the current directory; spawnProcess may not
         # update this value, though, so we set it explicitly here.  This causes
@@ -613,7 +613,7 @@ class RunProcess(object):
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(bytes2NativeString(self.command))
+            tf.write(bytes2unicode(self.command))
         else:
             tf.write(win32_batch_quote(self.command))
         tf.close()
@@ -649,7 +649,7 @@ class RunProcess(object):
         for logname in msg:
             data = ""
             for m in msg[logname]:
-                m = bytes2NativeString(m, self.builder.unicode_encoding)
+                m = bytes2unicode(m, self.builder.unicode_encoding)
                 data += m
             if isinstance(logname, tuple) and logname[0] == 'log':
                 retval['log'] = (logname[1], data)
