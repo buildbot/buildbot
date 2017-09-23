@@ -56,22 +56,40 @@ def bytes2NativeString(x, encoding='utf-8'):
     return x
 
 
-def unicode2bytes(x, encoding='utf-8'):
+def unicode2bytes(x, encoding='utf-8', errors='strict'):
     """
     Convert a unicode string to C{bytes}.
 
     @param x: a unicode string, of type C{unicode} on Python 2,
               or C{str} on Python 3.
     @param encoding: an optional codec, default: 'utf-8'
+    @param errors: error handling scheme, default 'strict'
     @return: a string of type C{bytes}
     """
     if isinstance(x, text_type):
-        x = x.encode(encoding)
+        x = x.encode(encoding, errors)
     return x
+
+
+def bytes2unicode(x, encoding='utf-8', errors='strict'):
+    """
+    Convert a C{bytes} to a unicode string.
+
+    @param x: a unicode string, of type C{unicode} on Python 2,
+              or C{str} on Python 3.
+    @param encoding: an optional codec, default: 'utf-8'
+    @param errors: error handling scheme, default 'strict'
+    @return: a unicode string of type C{unicode} on Python 2, or
+             C{str} on Python 3.
+    """
+    if isinstance(x, (text_type, type(None))):
+        return x
+    return text_type(x, encoding, errors)
 
 
 __all__ = [
     "NativeStringIO",
     "bytes2NativeString",
+    "bytes2unicode",
     "unicode2bytes"
 ]
