@@ -485,7 +485,8 @@ class RunProcess(object):
             # Otherwise, we should run under COMSPEC (usually cmd.exe) to
             # handle path searching, etc.
             if (runtime.platformType == 'win32' and
-                not (bytes2unicode(self.command[0]).lower().endswith(".exe") and
+                not (bytes2unicode(self.command[0],
+                     self.builder.unicode_encoding).lower().endswith(".exe") and
                      os.path.isabs(self.command[0]))):
                 # allow %COMSPEC% to have args
                 argv = os.environ['COMSPEC'].split()
@@ -614,7 +615,7 @@ class RunProcess(object):
         # echo off hides this cheat from the log files.
         tf.write("@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(bytes2unicode(self.command))
+            tf.write(bytes2unicode(self.command, self.builder.unicode_encoding))
         else:
             tf.write(win32_batch_quote(self.command))
         tf.close()
