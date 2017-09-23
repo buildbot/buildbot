@@ -649,7 +649,7 @@ class RunProcess(object):
         """
         retval = {}
         for logname in msg:
-            data = ""
+            data = u""
             for m in msg[logname]:
                 m = bytes2unicode(m, self.builder.unicode_encoding)
                 data += m
