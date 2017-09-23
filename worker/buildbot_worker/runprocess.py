@@ -78,7 +78,8 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
     # So:
     #  - use pipes.quote on UNIX, handling '' as a special case
     #  - use our own custom function on Windows
-    cmd_list = bytes2unicode(cmd_list, unicode_encoding)
+    if isinstance(cmd_list, bytes):
+        cmd_list = bytes2unicode(cmd_list, unicode_encoding)
 
     if runtime.platformType == 'win32':
         return win32_batch_quote(cmd_list, unicode_encoding)
