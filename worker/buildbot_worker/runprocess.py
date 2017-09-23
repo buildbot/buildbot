@@ -101,7 +101,7 @@ class LogFileWatcher(object):
         self.name = name
         self.logfile = logfile
 
-        log.msg("LogFileWatcher created to watch %s" % logfile)
+        log.msg("LogFileWatcher created to watch {0}".format(logfile))
         # we are created before the ShellCommand starts. If the logfile we're
         # supposed to be watching already exists, record its size and
         # ctime/mtime so we can tell when it starts to change.
@@ -195,8 +195,8 @@ class RunProcessPP(protocol.ProcessProtocol):
 
         if self.command.useProcGroup:
             if self.debug:
-                log.msg(" recording pid %d as subprocess pgid"
-                        % (self.transport.pid,))
+                log.msg(" recording pid {0} as subprocess pgid".format(
+                    self.transport.pid))
             self.transport.pgid = self.transport.pid
 
         if self.pending_stdin:
@@ -364,7 +364,7 @@ class RunProcess(object):
                 if v is not None:
                     if not isinstance(v, string_types):
                         raise RuntimeError("'env' values must be strings or "
-                                           "lists; key '%s' is incorrect" % (key,))
+                                           "lists; key '{0}' is incorrect".format(key))
                     newenv[key] = p.sub(subst, v)
 
             self.environ = newenv
@@ -425,7 +425,7 @@ class RunProcess(object):
             self.logFileWatchers.append(w)
 
     def __repr__(self):
-        return "<%s '%s'>" % (self.__class__.__name__, self.fake_command)
+        return "<{0} '{1}'>".format(self.__class__.__name__, self.fake_command)
 
     def sendStatus(self, status):
         self.builder.sendUpdate(status)
@@ -455,8 +455,8 @@ class RunProcess(object):
             os.makedirs(self.workdir)
         log.msg("RunProcess._startCommand")
         if self.notreally:
-            self._addToBuffers('header', "command '%s' in dir %s" %
-                               (self.fake_command, self.workdir))
+            self._addToBuffers('header', "command '{0}' in dir {1}".format(
+                               self.fake_command, self.workdir))
             self._addToBuffers('header', "(not really)\n")
             self.finished(None, 0)
             return
@@ -512,28 +512,28 @@ class RunProcess(object):
         self._addToBuffers('header', display + "\n")
 
         # then comes the secondary information
-        msg = " in dir %s" % (self.workdir,)
+        msg = " in dir {0}".format(self.workdir)
         if self.timeout:
             if self.timeout == 1:
                 unit = "sec"
             else:
                 unit = "secs"
-            msg += " (timeout %d %s)" % (self.timeout, unit)
+            msg += " (timeout {0} {1})".format(self.timeout, unit)
         if self.maxTime:
             if self.maxTime == 1:
                 unit = "sec"
             else:
                 unit = "secs"
-            msg += " (maxTime %d %s)" % (self.maxTime, unit)
+            msg += " (maxTime {0} {1})".format(self.maxTime, unit)
         log.msg(" " + msg)
         self._addToBuffers('header', msg + "\n")
 
-        msg = " watching logfiles %s" % (self.logfiles,)
+        msg = " watching logfiles {0}".format(self.logfiles)
         log.msg(" " + msg)
         self._addToBuffers('header', msg + "\n")
 
         # then the obfuscated command array for resolving unambiguity
-        msg = " argv: %s" % (self.fake_command,)
+        msg = " argv: {0}".format(self.fake_command)
         log.msg(" " + msg)
         self._addToBuffers('header', msg + "\n")
 
@@ -542,16 +542,16 @@ class RunProcess(object):
             msg = " environment:\n"
             env_names = sorted(self.environ.keys())
             for name in env_names:
-                msg += "  %s=%s\n" % (name, self.environ[name])
-            log.msg(" environment:\n%s" % (pprint.pformat(self.environ),))
+                msg += "  {0}={1}\n".format(name, self.environ[name])
+            log.msg(" environment:\n{0}".format(pprint.pformat(self.environ)))
             self._addToBuffers('header', msg)
 
         if self.initialStdin:
-            msg = " writing %d bytes to stdin" % len(self.initialStdin)
+            msg = " writing {0} bytes to stdin".format(len(self.initialStdin))
             log.msg(" " + msg)
             self._addToBuffers('header', msg + "\n")
 
-        msg = " using PTY: %s" % bool(self.usePTY)
+        msg = " using PTY: {0}".format(bool(self.usePTY))
         log.msg(" " + msg)
         self._addToBuffers('header', msg + "\n")
 
@@ -766,7 +766,7 @@ class RunProcess(object):
 
     def finished(self, sig, rc):
         self.elapsedTime = util.now(self._reactor) - self.startTime
-        log.msg("command finished with signal %s, exit code %s, elapsedTime: %0.6f" % (
+        log.msg("command finished with signal {0}, exit code {1}, elapsedTime: {2:0.6f}".format(
             sig, rc, self.elapsedTime))
         for w in self.logFileWatchers:
             # this will send the final updates
@@ -777,7 +777,7 @@ class RunProcess(object):
         if self.sendRC:
             if sig is not None:
                 self.sendStatus(
-                    {'header': "process killed by signal %d\n" % sig})
+                    {'header': "process killed by signal {0}\n".format(sig)})
             self.sendStatus({'rc': rc})
         self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
         self._cancelTimers()
@@ -786,28 +786,29 @@ class RunProcess(object):
         if d:
             d.callback(rc)
         else:
-            log.msg("Hey, command %s finished twice" % self)
+            log.msg("Hey, command {0} finished twice".format(self))
 
     def failed(self, why):
         self._sendBuffers()
-        log.msg("RunProcess.failed: command failed: %s" % (why,))
+        log.msg("RunProcess.failed: command failed: {0}".format(why))
         self._cancelTimers()
         d = self.deferred
         self.deferred = None
         if d:
             d.errback(why)
         else:
-            log.msg("Hey, command %s finished twice" % self)
+            log.msg("Hey, command {0} finished twice".format(self))
 
     def doTimeout(self):
         self.ioTimeoutTimer = None
-        msg = "command timed out: %d seconds without output running %s" % (
-            self.timeout, self.fake_command)
+        msg = (
+            "command timed out: {0} seconds without output running {1}".format(
+            self.timeout, self.fake_command))
         self.kill(msg)
 
     def doMaxTimeout(self):
         self.maxTimeoutTimer = None
-        msg = "command timed out: %d seconds elapsed running %s" % (
+        msg = "command timed out: {0} seconds elapsed running {1}".format(
             self.maxTime, self.fake_command)
         self.kill(msg)
 
@@ -852,22 +853,22 @@ class RunProcess(object):
             sig = getattr(signal, "SIG" + interruptSignal, None)
 
             if sig is None:
-                log.msg("signal module is missing SIG%s" % interruptSignal)
+                log.msg("signal module is missing SIG{0}".format(interruptSignal))
             elif not hasattr(os, "kill"):
                 log.msg("os module is missing the 'kill' function")
             elif self.process.pgid is None:
                 log.msg("self.process has no pgid")
             else:
-                log.msg("trying to kill process group %d" %
-                        (self.process.pgid,))
+                log.msg("trying to kill process group {0}".format(
+                        self.process.pgid))
                 try:
                     os.killpg(self.process.pgid, sig)
-                    log.msg(" signal %s sent successfully" % sig)
+                    log.msg(" signal {0} sent successfully".format(sig))
                     self.process.pgid = None
                     hit = 1
                 except OSError:
-                    log.msg('failed to kill process group (ignored): %s' %
-                            (sys.exc_info()[1],))
+                    log.msg('failed to kill process group (ignored): {0}'.format(
+                            (sys.exc_info()[1])))
                     # probably no-such-process, maybe because there is no process
                     # group
                     pass
@@ -877,27 +878,27 @@ class RunProcess(object):
                 log.msg("interruptSignal==None, only pretending to kill child")
             elif self.process.pid is not None:
                 if interruptSignal == "TERM":
-                    log.msg("using TASKKILL PID /T to kill pid %s" %
-                            self.process.pid)
+                    log.msg("using TASKKILL PID /T to kill pid {0}".format(
+                            self.process.pid))
                     subprocess.check_call(
-                        "TASKKILL /PID %s /T" % self.process.pid)
-                    log.msg("taskkill'd pid %s" % self.process.pid)
+                        "TASKKILL /PID {0} /T".format(self.process.pid))
+                    log.msg("taskkill'd pid {0}".format(self.process.pid))
                     hit = 1
                 elif interruptSignal == "KILL":
-                    log.msg("using TASKKILL PID /F /T to kill pid %s" %
-                            self.process.pid)
+                    log.msg("using TASKKILL PID /F /T to kill pid {0}".format(
+                            self.process.pid))
                     subprocess.check_call(
-                        "TASKKILL /F /PID %s /T" % self.process.pid)
-                    log.msg("taskkill'd pid %s" % self.process.pid)
+                        "TASKKILL /F /PID {0} /T".format(self.process.pid))
+                    log.msg("taskkill'd pid {0}".format(self.process.pid))
                     hit = 1
 
         # try signalling the process itself (works on Windows too, sorta)
         if not hit:
             try:
-                log.msg("trying process.signalProcess('%s')" %
-                        (interruptSignal,))
+                log.msg("trying process.signalProcess('{0}')".format(
+                        interruptSignal))
                 self.process.signalProcess(interruptSignal)
-                log.msg(" signal %s sent successfully" % (interruptSignal,))
+                log.msg(" signal {0} sent successfully".format(interruptSignal))
                 hit = 1
             except OSError:
                 log.err("from process.signalProcess:")
