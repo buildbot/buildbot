@@ -158,24 +158,24 @@ class RunMasterBase(unittest.TestCase):
 
         # in order to allow trigger based integration tests
         # we wait until the first started build is finished
-        self.firstBuildRequestId = None
+        self.firstbsid = None
 
         def newCallback(_, data):
-            if self.firstBuildRequestId is None:
-                self.firstBuildRequestId = data['buildrequestid']
+            if self.firstbsid is None:
+                self.firstbsid = data['bsid']
                 newConsumer.stopConsuming()
 
         def finishedCallback(_, data):
-            if self.firstBuildRequestId == data['buildrequestid']:
+            if self.firstbsid == data['bsid']:
                 d.callback(data)
 
         newConsumer = yield self.master.mq.startConsuming(
             newCallback,
-            ('buildrequests', None, 'new'))
+            ('buildsets', None, 'new'))
 
         finishedConsumer = yield self.master.mq.startConsuming(
             finishedCallback,
-            ('buildrequests', None, 'complete'))
+            ('buildsets', None, 'complete'))
 
         if useChange is False:
             # use data api to force a build
@@ -185,7 +185,11 @@ class RunMasterBase(unittest.TestCase):
             yield self.master.data.updates.addChange(**useChange)
 
         # wait until we receive the build finished event
-        buildrequest = yield d
+        buildset = yield d
+        buildrequests = yield self.master.data.get(
+            ('buildrequests',),
+            filters=[resultspec.Filter('buildsetid', 'eq', [buildset['bsid']])])
+        buildrequest = buildrequests[-1]
         builds = yield self.master.data.get(
             ('builds',),
             filters=[resultspec.Filter('buildrequestid', 'eq', [buildrequest['buildrequestid']])])

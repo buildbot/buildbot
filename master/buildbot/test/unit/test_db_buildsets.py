@@ -321,14 +321,14 @@ class Tests(interfaces.InterfaceTests):
         d.addCallback(lambda _:
                       self.db.buildsets.completeBuildset(bsid=92, results=6,
                                                          _reactor=self.clock))
-        return self.assertFailure(d, KeyError)
+        return self.assertFailure(d, buildsets.AlreadyCompleteError)
 
     def test_completeBuildset_missing(self):
         d = self.insert_test_getBuildsets_data()
         d.addCallback(lambda _:
                       self.db.buildsets.completeBuildset(bsid=93, results=6,
                                                          _reactor=self.clock))
-        return self.assertFailure(d, KeyError)
+        return self.assertFailure(d, buildsets.AlreadyCompleteError)
 
     def test_completeBuildset(self):
         d = self.insert_test_getBuildsets_data()

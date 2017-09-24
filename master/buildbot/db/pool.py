@@ -28,6 +28,7 @@ from twisted.python import log
 from twisted.python import threadpool
 
 from buildbot.db.buildrequests import AlreadyClaimedError
+from buildbot.db.buildsets import AlreadyCompleteError
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 from buildbot.db.schedulers import SchedulerAlreadyClaimedError
 from buildbot.process import metrics
@@ -203,7 +204,7 @@ class DBThreadPool(object):
                     continue
                 # AlreadyClaimedError are normal especially in a multimaster
                 # configuration
-                except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError):
+                except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError, AlreadyCompleteError):
                     raise
                 except Exception as e:
                     log.err(e, 'Got fatal Exception on DB')

@@ -26,6 +26,7 @@ from twisted.python import log
 from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import base
 from buildbot.data import types
+from buildbot.db.buildsets import AlreadyCompleteError
 from buildbot.process.buildrequest import BuildRequestCollapser
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import worst_status
@@ -218,17 +219,18 @@ class Buildset(base.ResourceType):
         # nothing to do.
         #
         # NOTE: there's still a strong possibility of a race condition here,
-        # which would cause two buildset.$bsid.complete messages to be sent.
-        # That's an acceptable risk, and a necessary consequence of this
-        # denormalized representation of a buildset's state.
+        # which would cause buildset being completed twice.
+        # in this case, the db layer will detect that and raise AlreadyCompleteError
         if bsdict['complete']:
             return
 
         # mark it as completed in the database
         complete_at = epoch2datetime(int(_reactor.seconds()))
-        yield self.master.db.buildsets.completeBuildset(bsid,
-                                                        cumulative_results, complete_at=complete_at)
-
+        try:
+            yield self.master.db.buildsets.completeBuildset(bsid,
+                                                            cumulative_results, complete_at=complete_at)
+        except AlreadyCompleteError:
+            return
         # get the sourcestamps for the message
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
