@@ -1014,7 +1014,7 @@ All parameter types have a few common arguments:
 
 ``maxsize`` (optional; default: None)
 
-    The maximum size of a field. 
+    The maximum size of a field (in bytes). 
     Buildbot will ensure the field sent by the user is not too large.
 
 The parameter types are:
@@ -1244,7 +1244,7 @@ FileParameter
 
 This parameter allows the user to upload a file to a build. 
 The user can either write some text to a text area, or select a file from the browser.
-Note that the file is then stored inside a property, so a ``maxsize`` of 10 mega bytes has been set.
+Note that the file is then stored inside a property, so a ``maxsize`` of 10 megabytes has been set.
 You can still override that ``maxsize`` if you wish.
 
 .. bb:sched:: PatchParameter
