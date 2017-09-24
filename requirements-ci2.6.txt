@@ -23,7 +23,7 @@ pyflakes==1.6.0
 pylint==1.7.2
 pyparsing==2.2.0
 singledispatch==3.4.0.3
-six==1.10.0
+six==1.11.0
 Twisted==17.5.0
 wrapt==1.10.11
 zope.interface==4.4.2
