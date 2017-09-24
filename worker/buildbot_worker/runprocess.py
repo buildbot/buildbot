@@ -47,6 +47,7 @@ from twisted.python.win32 import quoteArguments
 
 from buildbot_worker import util
 from buildbot_worker.compat import bytes2unicode
+from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.exceptions import AbandonChain
 
 if runtime.platformType == 'posix':
@@ -88,10 +89,10 @@ def shell_quote(cmd_list, unicode_encoding='utf-8'):
 
     def quote(e):
         if not e:
-            return '""'
+            return u'""'
         e = bytes2unicode(e, unicode_encoding)
         return pipes.quote(e)
-    return " ".join([quote(e) for e in cmd_list])
+    return u" ".join([quote(e) for e in cmd_list])
 
 
 class LogFileWatcher(object):
@@ -182,7 +183,7 @@ class RunProcessPP(protocol.ProcessProtocol):
 
     def __init__(self, command):
         self.command = command
-        self.pending_stdin = ""
+        self.pending_stdin = b""
         self.stdin_finished = False
         self.killed = False
 
@@ -465,6 +466,7 @@ class RunProcess(object):
         self.pp = RunProcessPP(self)
 
         self.using_comspec = False
+        self.command = unicode2bytes(self.command, encoding=self.builder.unicode_encoding)
         if isinstance(self.command, bytes):
             if runtime.platformType == 'win32':
                 # allow %COMSPEC% to have args
@@ -510,52 +512,53 @@ class RunProcess(object):
 
         # self.stdin is handled in RunProcessPP.connectionMade
 
-        log.msg(" " + display)
-        self._addToBuffers('header', display + "\n")
+        log.msg(u" " + display)
+        self._addToBuffers(u'header', display + u"\n")
 
         # then comes the secondary information
-        msg = " in dir {0}".format(self.workdir)
+        msg = u" in dir {0}".format(self.workdir)
         if self.timeout:
             if self.timeout == 1:
-                unit = "sec"
+                unit = u"sec"
             else:
-                unit = "secs"
-            msg += " (timeout {0} {1})".format(self.timeout, unit)
+                unit = u"secs"
+            msg += u" (timeout {0} {1})".format(self.timeout, unit)
         if self.maxTime:
             if self.maxTime == 1:
-                unit = "sec"
+                unit = u"sec"
             else:
-                unit = "secs"
-            msg += " (maxTime {0} {1})".format(self.maxTime, unit)
-        log.msg(" " + msg)
-        self._addToBuffers('header', msg + "\n")
+                unit = u"secs"
+            msg += u" (maxTime {0} {1})".format(self.maxTime, unit)
+        log.msg(u" " + msg)
+        self._addToBuffers(u'header', msg + u"\n")
 
         msg = " watching logfiles {0}".format(self.logfiles)
         log.msg(" " + msg)
-        self._addToBuffers('header', msg + "\n")
+        self._addToBuffers('header', msg + u"\n")
 
         # then the obfuscated command array for resolving unambiguity
-        msg = " argv: {0}".format(self.fake_command)
-        log.msg(" " + msg)
-        self._addToBuffers('header', msg + "\n")
+        msg = u" argv: {0}".format(self.fake_command)
+        log.msg(u" " + msg)
+        self._addToBuffers('header', msg + u"\n")
 
         # then the environment, since it sometimes causes problems
         if self.logEnviron:
-            msg = " environment:\n"
+            msg = u" environment:\n"
             env_names = sorted(self.environ.keys())
             for name in env_names:
-                msg += "  {0}={1}\n".format(name, self.environ[name])
-            log.msg(" environment:\n{0}".format(pprint.pformat(self.environ)))
-            self._addToBuffers('header', msg)
+                msg += u"  {0}={1}\n".format(bytes2unicode(name, encoding=self.builder.unicode_encoding),
+                                             bytes2unicode(self.environ[name], encoding=self.builder.unicode_encoding))
+            log.msg(u" environment:\n{0}".format(pprint.pformat(self.environ)))
+            self._addToBuffers(u'header', msg)
 
         if self.initialStdin:
-            msg = " writing {0} bytes to stdin".format(len(self.initialStdin))
-            log.msg(" " + msg)
-            self._addToBuffers('header', msg + "\n")
+            msg = u" writing {0} bytes to stdin".format(len(self.initialStdin))
+            log.msg(u" " + msg)
+            self._addToBuffers(u'header', msg + u"\n")
 
-        msg = " using PTY: {0}".format(bool(self.usePTY))
-        log.msg(" " + msg)
-        self._addToBuffers('header', msg + "\n")
+        msg = u" using PTY: {0}".format(bool(self.usePTY))
+        log.msg(u" " + msg)
+        self._addToBuffers(u'header', msg + u"\n")
 
         # put data into stdin and close it, if necessary.  This will be
         # buffered until connectionMade is called
@@ -613,7 +616,7 @@ class RunProcess(object):
         tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
                                 delete=False)
         # echo off hides this cheat from the log files.
-        tf.write("@echo off\n")
+        tf.write(u"@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
             tf.write(bytes2unicode(self.command, self.builder.unicode_encoding))
         else:
