@@ -85,7 +85,7 @@ class BaseLock:
 
         # Find all waiters ahead of the requester in the wait queue
         for idx, waiter in enumerate(self.waiting):
-            if waiter[0] == requester:
+            if waiter[0] is requester:
                 w_index = idx
                 break
         else:
@@ -167,7 +167,7 @@ class BaseLock:
         d = defer.Deferred()
 
         # Are we already in the wait queue?
-        w = [i for i, w in enumerate(self.waiting) if w[0] == owner]
+        w = [i for i, w in enumerate(self.waiting) if w[0] is owner]
         if w:
             self.waiting[w[0]] = (owner, access, d)
         else:
@@ -178,7 +178,7 @@ class BaseLock:
         debuglog("%s stopWaitingUntilAvailable(%s)" % (self, owner))
         assert isinstance(access, LockAccess)
         assert (owner, access, d) in self.waiting
-        self.waiting = [w for w in self.waiting if w[0] != owner]
+        self.waiting = [w for w in self.waiting if w[0] is not owner]
 
     def isOwner(self, owner, access):
         return (owner, access) in self.owners
