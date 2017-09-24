@@ -1,0 +1,1 @@
+Twisted 17.9.0 is now the minimum dependency when using Python 3.  Fixes (:issue:`3319`), (:issue:`3375`), (:issue:`3633`).
