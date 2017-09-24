@@ -25,6 +25,7 @@ from twisted.python.failure import Failure
 from twisted.spread import pb
 
 from buildbot import util
+from buildbot.pbutil import decode
 from buildbot.process import metrics
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
@@ -189,6 +190,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         @type  updates: list of [object, int]
         @param updates: list of updates from the remote command
         """
+        updates = decode(updates)
         self.worker.messageReceivedFromWorker()
         max_updatenum = 0
         for (update, num) in updates:
