@@ -107,7 +107,7 @@ class BaseLock:
 
         assert isinstance(access, LockAccess)
         assert access.mode in ['counting', 'exclusive']
-        self.waiting = [w for w in self.waiting if w[0] != owner]
+        self.waiting = [w for w in self.waiting if w[0] is not owner]
         self.owners.append((owner, access))
         debuglog(" %s is claimed '%s'" % (self, access.mode))
 
