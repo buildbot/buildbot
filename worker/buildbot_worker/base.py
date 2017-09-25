@@ -31,7 +31,7 @@ import buildbot_worker
 from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
-from buildbot_worker.compat import bytes2NativeString
+from buildbot_worker.compat import bytes2unicode
 
 
 class UnknownCommand(pb.Error):
@@ -80,8 +80,8 @@ class WorkerForBuilderBase(service.Service):
     def setBuilddir(self, builddir):
         assert self.parent
         self.builddir = builddir
-        self.basedir = os.path.join(bytes2NativeString(self.bot.basedir),
-                                    bytes2NativeString(self.builddir))
+        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
+                                    bytes2unicode(self.builddir))
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
