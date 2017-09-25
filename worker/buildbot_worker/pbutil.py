@@ -19,6 +19,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 from twisted.cred import error
 from twisted.internet import protocol
@@ -26,6 +27,8 @@ from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
+
+from buildbot_worker.compat import bytes2unicode
 
 
 class ReconnectingPBClientFactory(PBClientFactory,
@@ -123,3 +126,19 @@ class ReconnectingPBClientFactory(PBClientFactory,
 
         # lose the current connection, which will trigger a retry
         broker.transport.loseConnection()
+
+
+def decode(data, encoding='utf-8', errors='strict'):
+    """We need to convert a dictionary where keys and values
+    are bytes, to unicode strings.  This happens when a
+    Python 2 master sends a dictionary back to a Python 3 worker.
+    """
+    data_type = type(data)
+
+    if data_type == bytes:
+        return bytes2unicode(data, encoding, errors)
+    if data_type in (dict, list, tuple):
+        if data_type == dict:
+            data = iteritems(data)
+        return data_type(map(decode, data))
+    return data
