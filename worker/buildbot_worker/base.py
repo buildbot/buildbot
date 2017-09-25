@@ -32,6 +32,7 @@ from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
 from buildbot_worker.compat import bytes2unicode
+from buildbot_worker.pbutil import decode
 
 
 class UnknownCommand(pb.Error):
@@ -131,6 +132,9 @@ class WorkerForBuilderBase(service.Service):
         .commandComplete() to notify the master-side RemoteCommand that I'm
         done.
         """
+        stepId = decode(stepId)
+        command = decode(command)
+        args = decode(args)
 
         self.activity()
 
@@ -141,10 +145,10 @@ class WorkerForBuilderBase(service.Service):
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand("unrecognized WorkerCommand '{0}'".format(command))
+            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
         self.command = factory(self, stepId, args)
 
-        log.msg(" startCommand:{0} [id {1}]".format(command, stepId))
+        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.remoteStep = stepref
         self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
