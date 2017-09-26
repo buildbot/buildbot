@@ -249,7 +249,7 @@ class BooleanParameter(BaseParameter):
     type = "bool"
 
     def getFromKwargs(self, kwargs):
-        return kwargs.get(self.fullName, None) == [True]
+        return kwargs.get(self.fullName, [self.default]) == [True]
 
 
 class UserNameParameter(StringParameter):
