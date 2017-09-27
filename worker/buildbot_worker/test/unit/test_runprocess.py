@@ -462,6 +462,25 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                           runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                                                 environ={"BUILD_NUMBER": 13}))
 
+    def test_spawnAsBatch(self):
+
+        def spawnProcess(processProtocol, executable, args=(), env=None,
+                      path=None, uid=None, gid=None, usePTY=False, childFDs=None):
+            self.assertTrue(args[0].lower().endswith("cmd.exe"),
+                            "{0} is not cmd.exe".format(args[0]))
+
+        self.patch(runprocess.reactor, "spawnProcess", spawnProcess)
+        tempEnviron = os.environ.copy()
+        if 'COMSPEC' not in tempEnviron:
+            tempEnviron['COMSPEC'] = "cmd.exe"
+        self.patch(os, "environ", tempEnviron)
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, "dir c:/", self.basedir)
+        s.pp = runprocess.RunProcessPP(s)
+        s.deferred = defer.Deferred()
+        d = s._spawnAsBatch(s.pp, s.command, "args", tempEnviron, "path", False)
+        return d
+
 
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
