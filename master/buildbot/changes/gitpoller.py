@@ -135,7 +135,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return str
 
     def _getBranches(self):
-        d = self._dovccmd('ls-remote', [self.repourl])
+        d = self._dovccmd('ls-remote', ['--refs', self.repourl])
 
         @d.addCallback
         def parseRemote(rows):
