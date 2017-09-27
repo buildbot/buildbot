@@ -35,9 +35,9 @@ from twisted.internet import reactor
 
 from buildbot.data import resultspec
 from buildbot.db import buildrequests
+from buildbot.db import buildsets
 from buildbot.db import changesources
 from buildbot.db import schedulers
-from buildbot.db import buildsets
 from buildbot.test.util import validation
 from buildbot.util import bytes2NativeString
 from buildbot.util import datetime2epoch
