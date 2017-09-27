@@ -39,7 +39,7 @@ class ShellMaster(RunMasterBase):
         yield self.setupConfig(masterConfig())
 
         # there is no event that is sent *after* the lock, so no way to
-        # reliabily synchronize without polling :-(
+        # reliably synchronize without polling :-(
         def unlockStep():
             for l in LockedStep.locks_steps:
                 if not l.d.called:
