@@ -26,6 +26,7 @@ from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
 from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util import bytes2NativeString
 
 
 class Source(LoggingBuildStep, CompositeStepMixin):
@@ -310,7 +311,7 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 # root is optional.
                 patch = s.patch
                 if patch:
-                    self.addCompleteLog("patch", patch[1])
+                    self.addCompleteLog("patch", bytes2NativeString(patch[1]))
             else:
                 log.msg(
                     "No sourcestamp found in build for codebase '%s'" % self.codebase)

@@ -54,3 +54,39 @@ _.each [ 'textfield' , 'intfield', 'textareafield', 'listfield', 'boolfield'],
             restrict: 'E'
             scope: false
             templateUrl: "views/#{fieldtype}.html"
+
+angular.module('common').directive 'filefield', ->
+    replace: false
+    restrict: 'E'
+    scope: false
+    # the template uses custom file input styling using trick from
+    # https://tympanus.net/codrops/2015/09/15/styling-customizing-file-inputs-smart-way/
+    # which basically uses label(for="<id>") to capture the click event and the ugly input(type="file") is just hidden
+    templateUrl: "views/filefield.html"
+    controller: [ "$scope", ($scope) ->
+        # If user selects a big file, then the UI will be completly blocked
+        # while browser tries to display it in the textarea
+        # so to avoid that we go through a safe value, and play the double binding game
+        $scope.$watch "field.value", (value) ->
+            if value?.length > 10000
+                $scope.field.safevalue = false
+            else
+                $scope.field.safevalue = value
+
+        $scope.$watch "field.safevalue", (value) ->
+            if value? and value != false
+                $scope.field.value = value
+    ]
+angular.module('common').directive 'fileread', ->
+    scope: {
+        fileread: "="
+    },
+    # load the file's text via html5 FileReader API
+    # note that for simplicity, we don't bother supporting older browsers
+    link: (scope, element, attributes) ->
+        element.bind "change", (changeEvent) ->
+            reader = new FileReader();
+            reader.onload = (e) ->
+                scope.$apply ->
+                    scope.fileread = e.target.result
+            reader.readAsText(changeEvent.target.files[0])

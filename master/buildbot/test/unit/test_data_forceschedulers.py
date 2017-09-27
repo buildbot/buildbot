@@ -26,21 +26,11 @@ from buildbot.test.util import endpoint
 expected_default = {
     'all_fields': [{'columns': 1,
                     'default': '',
-                    'fields': [{'default': 'force build',
-                                'fullName': 'reason',
-                                'hide': False,
-                                'label': 'reason',
-                                'multiple': False,
-                                'name': 'reason',
-                                'regex': None,
-                                'required': False,
-                                'size': 20,
-                                'tablabel': 'reason',
-                                'type': 'text'},
-                               {'default': '',
+                    'fields': [{'default': '',
                                 'fullName': 'username',
                                 'hide': False,
                                 'label': 'Your name:',
+                                'maxsize': None,
                                 'multiple': False,
                                 'name': 'username',
                                 'need_email': True,
@@ -48,11 +38,24 @@ expected_default = {
                                 'required': False,
                                 'size': 30,
                                 'tablabel': 'Your name:',
-                                'type': 'username'}],
+                                'type': 'username'},
+                               {'default': 'force build',
+                                'fullName': 'reason',
+                                'hide': False,
+                                'label': 'reason',
+                                'maxsize': None,
+                                'multiple': False,
+                                'name': 'reason',
+                                'regex': None,
+                                'required': False,
+                                'size': 20,
+                                'tablabel': 'reason',
+                                'type': 'text'}],
                     'fullName': None,
                     'hide': False,
                     'label': '',
                     'layout': 'vertical',
+                    'maxsize': None,
                     'multiple': False,
                     'name': '',
                     'regex': None,
@@ -66,6 +69,7 @@ expected_default = {
                                 'hide': False,
                                 'label': 'Branch:',
                                 'multiple': False,
+                                'maxsize': None,
                                 'name': 'branch',
                                 'regex': None,
                                 'required': False,
@@ -76,6 +80,7 @@ expected_default = {
                                 'fullName': 'project',
                                 'hide': False,
                                 'label': 'Project:',
+                                'maxsize': None,
                                 'multiple': False,
                                 'name': 'project',
                                 'regex': None,
@@ -87,6 +92,7 @@ expected_default = {
                                 'fullName': 'repository',
                                 'hide': False,
                                 'label': 'Repository:',
+                                'maxsize': None,
                                 'multiple': False,
                                 'name': 'repository',
                                 'regex': None,
@@ -98,6 +104,7 @@ expected_default = {
                                 'fullName': 'revision',
                                 'hide': False,
                                 'label': 'Revision:',
+                                'maxsize': None,
                                 'multiple': False,
                                 'name': 'revision',
                                 'regex': None,
@@ -109,6 +116,7 @@ expected_default = {
                     'hide': False,
                     'label': '',
                     'layout': 'vertical',
+                    'maxsize': None,
                     'multiple': False,
                     'name': '',
                     'regex': None,
@@ -126,6 +134,7 @@ class ForceschedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = forceschedulers.ForceSchedulerEndpoint
     resourceTypeClass = forceschedulers.ForceScheduler
+    maxDiff = None
 
     def setUp(self):
         self.setUpEndpoint()
@@ -153,6 +162,7 @@ class ForceSchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
     endpointClass = forceschedulers.ForceSchedulersEndpoint
     resourceTypeClass = forceschedulers.ForceScheduler
+    maxDiff = None
 
     def setUp(self):
         self.setUpEndpoint()

@@ -77,7 +77,7 @@ class BaseParameter(object):
     BaseParameter provides a base implementation for property customization
     """
     spec_attributes = ["name", "fullName", "label", "tablabel", "type", "default", "required",
-                       "multiple", "regex", "hide"]
+                       "multiple", "regex", "hide", "maxsize"]
     name = ""
     parentName = None
     label = ""
@@ -89,6 +89,7 @@ class BaseParameter(object):
     regex = None
     debug = True
     hide = False
+    maxsize = None
 
     @property
     def fullName(self):
@@ -147,7 +148,7 @@ class BaseParameter(object):
 
         # delete white space for args
         for arg in args:
-            if not arg.strip():
+            if isinstance(arg, string_types) and not arg.strip():
                 args.remove(arg)
 
         if not args:
@@ -164,6 +165,11 @@ class BaseParameter(object):
                 if not self.regex.match(arg):
                     raise ValidationError("%s:'%s' does not match pattern '%s'"
                                           % (self.label, arg, self.regex.pattern))
+        if self.maxsize is not None:
+            for arg in args:
+                if len(arg) > self.maxsize:
+                    raise ValidationError("%s: is too large %d > %d"
+                                          % (self.label, len(arg), self.maxsize))
 
         try:
             arg = self.parse_from_args(args)
@@ -373,6 +379,13 @@ deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
                                 compat_name="BuildslaveChoiceParameter")
 
 
+class FileParameter(BaseParameter):
+    """A parameter which allows to download a whole file and store it as a property or patch
+    """
+    type = 'file'
+    maxsize = 1024 * 1024 * 10  # 10M
+
+
 class NestedParameter(BaseParameter):
 
     """A 'parent' parameter for a set of related parameters. This provides a
@@ -453,8 +466,7 @@ class NestedParameter(BaseParameter):
     def getSpec(self):
         ret = BaseParameter.getSpec(self)
         # pylint: disable=not-an-iterable
-        ret['fields'] = sorted([field.getSpec() for field in self.fields],
-                               key=lambda x: x['name'])
+        ret['fields'] = [field.getSpec() for field in self.fields]
         return ret
 
 
@@ -517,6 +529,7 @@ class CodebaseParameter(NestedParameter):
                  revision=DefaultField,
                  repository=DefaultField,
                  project=DefaultField,
+                 patch=None,
 
                  **kwargs):
         """
@@ -549,7 +562,14 @@ class CodebaseParameter(NestedParameter):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
-        fields = [val for val in fields_dict.values() if val]
+        fields = [val for k, val in sorted(iteritems(fields_dict), key=lambda x: x[0]) if val]
+        if patch is not None:
+            if patch.name != "patch":
+                config.error(
+                    "patch parameter of a codebase must be named 'patch'")
+            fields.append(patch)
+            if self.columns is None and 'columns' not in kwargs:
+                self.columns = 1
 
         NestedParameter.__init__(self, name=name, label=label,
                                  codebase=codebase,
@@ -570,11 +590,37 @@ class CodebaseParameter(NestedParameter):
         # convert the "property" to a sourcestamp
         ss = self.createSourcestamp(properties, kwargs)
         if ss is not None:
+            patch = ss.pop('patch', None)
+            if patch is not None:
+                for k, v in patch.items():
+                    ss['patch_' + k] = v
+
             sourcestamps[self.codebase] = ss
 
 
 def oneCodebase(**kw):
     return [CodebaseParameter('', **kw)]
+
+
+class PatchParameter(NestedParameter):
+    """A patch parameter contains pre-configure UI for all the needed components for a sourcestamp patch
+    """
+    columns = 1
+
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name', 'patch')
+        default_fields = [
+            FileParameter('body'),
+            IntParameter('level', default=1),
+            StringParameter('author', default=""),
+            StringParameter('comment', default=""),
+            StringParameter('subdir', default=".")
+        ]
+        fields = [
+            kwargs.pop(field.name, field)
+            for field in default_fields
+        ]
+        NestedParameter.__init__(self, name, fields=fields, **kwargs)
 
 
 class ForceScheduler(base.BaseScheduler):
