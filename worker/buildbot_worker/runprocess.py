@@ -254,7 +254,6 @@ class RunProcess(object):
     shell.
     """
 
-    notreally = False
     BACKUP_TIMEOUT = 5
     interruptSignal = "KILL"
     CHUNK_LIMIT = 128 * 1024
@@ -456,12 +455,6 @@ class RunProcess(object):
         if not os.path.isdir(self.workdir):
             os.makedirs(self.workdir)
         log.msg("RunProcess._startCommand")
-        if self.notreally:
-            self._addToBuffers('header', "command '{0}' in dir {1}".format(
-                               self.fake_command, self.workdir))
-            self._addToBuffers('header', "(not really)\n")
-            self.finished(None, 0)
-            return
 
         self.pp = RunProcessPP(self)
 
