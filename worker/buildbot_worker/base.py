@@ -31,7 +31,8 @@ import buildbot_worker
 from buildbot_worker import monkeypatches
 from buildbot_worker.commands import base
 from buildbot_worker.commands import registry
-from buildbot_worker.compat import bytes2NativeString
+from buildbot_worker.compat import bytes2unicode
+from buildbot_worker.pbutil import decode
 
 
 class UnknownCommand(pb.Error):
@@ -67,7 +68,7 @@ class WorkerForBuilderBase(service.Service):
         self.setName(name)
 
     def __repr__(self):
-        return "<WorkerForBuilder '%s' at %d>" % (self.name, id(self))
+        return "<WorkerForBuilder '{0}' at {1}>".format(self.name, id(self))
 
     def setServiceParent(self, parent):
         service.Service.setServiceParent(self, parent)
@@ -80,8 +81,8 @@ class WorkerForBuilderBase(service.Service):
     def setBuilddir(self, builddir):
         assert self.parent
         self.builddir = builddir
-        self.basedir = os.path.join(bytes2NativeString(self.bot.basedir),
-                                    bytes2NativeString(self.builddir))
+        self.basedir = os.path.join(bytes2unicode(self.bot.basedir),
+                                    bytes2unicode(self.builddir))
         if not os.path.isdir(self.basedir):
             os.makedirs(self.basedir)
 
@@ -103,8 +104,8 @@ class WorkerForBuilderBase(service.Service):
         self.remote.notifyOnDisconnect(self.lostRemote)
 
     def remote_print(self, message):
-        log.msg("WorkerForBuilder.remote_print(%s): message from master: %s" %
-                (self.name, message))
+        log.msg("WorkerForBuilder.remote_print({0}): message from master: {1}".format(
+                self.name, message))
 
     def lostRemote(self, remote):
         log.msg("lost remote")
@@ -131,6 +132,9 @@ class WorkerForBuilderBase(service.Service):
         .commandComplete() to notify the master-side RemoteCommand that I'm
         done.
         """
+        stepId = decode(stepId)
+        command = decode(command)
+        args = decode(args)
 
         self.activity()
 
@@ -141,10 +145,10 @@ class WorkerForBuilderBase(service.Service):
         try:
             factory = registry.getFactory(command)
         except KeyError:
-            raise UnknownCommand("unrecognized WorkerCommand '%s'" % command)
+            raise UnknownCommand(u"unrecognized WorkerCommand '{0}'".format(command))
         self.command = factory(self, stepId, args)
 
-        log.msg(" startCommand:%s [id %s]" % (command, stepId))
+        log.msg(u" startCommand:{0} [id {1}]".format(command, stepId))
         self.remoteStep = stepref
         self.remoteStep.notifyOnDisconnect(self.lostRemoteStep)
         d = self.command.doStart()
@@ -154,7 +158,7 @@ class WorkerForBuilderBase(service.Service):
 
     def remote_interruptCommand(self, stepId, why):
         """Halt the current step."""
-        log.msg("asked to interrupt current command: %s" % why)
+        log.msg("asked to interrupt current command: {0}".format(why))
         self.activity()
         if not self.command:
             # TODO: just log it, a race could result in their interrupting a
@@ -170,7 +174,7 @@ class WorkerForBuilderBase(service.Service):
         silence it, and then forget about it."""
         if not self.command:
             return
-        log.msg("stopCommand: halting current command %s" % self.command)
+        log.msg("stopCommand: halting current command {0}".format(self.command))
         self.command.doInterrupt()  # shut up! and die!
         self.command = None  # forget you!
 
@@ -266,8 +270,8 @@ class BotBase(service.MultiService):
             b = self.builders.get(name, None)
             if b:
                 if b.builddir != builddir:
-                    log.msg("changing builddir for builder %s from %s to %s"
-                            % (name, b.builddir, builddir))
+                    log.msg("changing builddir for builder {0} from {1} to {2}".format(
+                            name, b.builddir, builddir))
                     b.setBuilddir(builddir)
             else:
                 b = self.WorkerForBuilder(name)
@@ -292,9 +296,9 @@ class BotBase(service.MultiService):
         for dir in os.listdir(self.basedir):
             if os.path.isdir(os.path.join(self.basedir, dir)):
                 if dir not in wanted_dirs:
-                    log.msg("I have a leftover directory '%s' that is not "
+                    log.msg("I have a leftover directory '{0}' that is not "
                             "being used by the buildmaster: you can delete "
-                            "it now" % dir)
+                            "it now".format(dir))
 
         defer.returnValue(retval)
 
@@ -365,7 +369,7 @@ class WorkerBase(service.MultiService):
         # first, apply all monkeypatches
         monkeypatches.patch_all()
 
-        log.msg("Starting Worker -- version: %s" % buildbot_worker.version)
+        log.msg("Starting Worker -- version: {0}".format(buildbot_worker.version))
 
         if self.umask is not None:
             os.umask(self.umask)
@@ -388,6 +392,6 @@ class WorkerBase(service.MultiService):
 
         try:
             with open(filename, "w") as f:
-                f.write("%s\n" % hostname)
+                f.write("{0}\n".format(hostname))
         except Exception:
             log.msg("failed - ignoring")

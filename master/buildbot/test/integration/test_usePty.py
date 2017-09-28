@@ -16,6 +16,9 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from distutils.version import LooseVersion
+
+from twisted import __version__ as twistedVersion
 from twisted.internet import defer
 
 from buildbot.test.util.decorators import skipUnlessPlatformIs
@@ -35,6 +38,16 @@ class ShellMaster(RunMasterBase):
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "in a terminal", onlyStdout=True)
         self.assertTrue(res)
+
+        # Twisted versions less than 17.1.0 would issue a warning:
+        #    "Argument strings and environment keys/values passed to reactor.spawnProcess
+        #    "should be str, not unicode."
+        # This warning was unnecessary. Even in the old versions of Twisted, the
+        # unicode arguments were encoded.  This warning was removed in Twisted here:
+        #
+        # https://github.com/twisted/twisted/commit/23fa3cc05549251ea4118e4e03354d58df87eaaa
+        if LooseVersion(twistedVersion) < LooseVersion("17.1.0"):
+            self.flushWarnings()
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks

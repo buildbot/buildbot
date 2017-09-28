@@ -19,11 +19,14 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.spread import pb
 from twisted.spread.pb import PBClientFactory
+
+from buildbot.util import bytes2unicode
 
 
 class NewCredPerspective(pb.Avatar):
@@ -156,3 +159,19 @@ class ReconnectingPBClientFactory(PBClientFactory,
         # probably authorization
         self.stopTrying()  # logging in harder won't help
         log.err(why)
+
+
+def decode(data, encoding='utf-8', errors='strict'):
+    """We need to convert a dictionary where keys and values
+    are bytes, to unicode strings.  This happens when a
+    Python 2 worker sends a dictionary back to a Python 3 master.
+    """
+    data_type = type(data)
+
+    if data_type == bytes:
+        return bytes2unicode(data, encoding, errors)
+    if data_type in (dict, list, tuple):
+        if data_type == dict:
+            data = iteritems(data)
+        return data_type(map(decode, data))
+    return data

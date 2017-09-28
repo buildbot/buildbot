@@ -25,6 +25,7 @@ from twisted.internet import reactor
 from twisted.python import log
 from twisted.spread import pb
 
+from buildbot.pbutil import decode
 from buildbot.worker.protocols import base
 
 
@@ -199,7 +200,7 @@ class Connection(base.Connection, pb.Avatar):
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
                 info = yield self.mind.callRemote('getWorkerInfo')
-            defer.returnValue(info)
+            defer.returnValue(decode(info))
         except _NoSuchMethod:
             yield self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
@@ -237,7 +238,7 @@ class Connection(base.Connection, pb.Avatar):
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
-            defer.returnValue(info)
+            defer.returnValue(decode(info))
 
     def remoteSetBuilderList(self, builders):
         d = self.mind.callRemote('setBuilderList', builders)

@@ -33,6 +33,7 @@ from twisted.trial import unittest
 import buildbot_worker
 from buildbot_worker import base
 from buildbot_worker import pb
+from buildbot_worker.commands.base import Command
 from buildbot_worker.test.fake.remote import FakeRemote
 from buildbot_worker.test.fake.runprocess import Expect
 from buildbot_worker.test.util import command
@@ -160,6 +161,8 @@ class TestBot(unittest.TestCase):
                 self.assertEqual(
                     id(workerforbuilders['my']), id(builders['mybld']))
                 workerforbuilders['your'] = builders['yourbld']
+                self.assertTrue(repr(workerforbuilders['your']).startswith(
+                                 "<WorkerForBuilder 'yourbld' at "))
             d.addCallback(check)
             return d
         d.addCallback(add_your)
@@ -264,6 +267,10 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
     def test_print(self):
         return self.wfb.callRemote("print", "Hello, WorkerForBuilder.")
+
+    def test_printWithCommand(self):
+        self.wfb.original.command = Command("builder", "1", ["arg1", "arg2"])
+        return self.wfb.callRemote("print", "Hello again, WorkerForBuilder.")
 
     def test_setMaster(self):
         # not much to check here - what the WorkerForBuilder does with the
@@ -395,6 +402,18 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
                                        "13", "shell", dict())
 
         yield self.assertFailure(do_start(), ValueError)
+
+    @defer.inlineCallbacks
+    def test_startCommand_invalid_command(self):
+        # set up a fake step to receive updates
+        st = FakeStep()
+
+        def do_start():
+            return self.wfb.callRemote("startCommand", FakeRemote(st),
+                                       "13", "invalid command", dict())
+
+        unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
+        self.assertEqual(str(unknownCommand), "unrecognized WorkerCommand 'invalid command'")
 
 
 class TestBotFactory(unittest.TestCase):
