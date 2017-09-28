@@ -40,7 +40,7 @@ markdown2==2.3.4
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.1.15
+moto==1.1.19
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
