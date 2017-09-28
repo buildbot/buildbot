@@ -42,6 +42,10 @@ class BsProps(dict):
     pass
 
 
+class AlreadyCompleteError(RuntimeError):
+    pass
+
+
 class BuildsetsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
@@ -149,7 +153,8 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                                complete_at=complete_at)
 
             if res.rowcount != 1:
-                raise KeyError
+                # happens when two buildrequests finish at the same time
+                raise AlreadyCompleteError()
         return self.db.pool.do(thd)
 
     def getBuildset(self, bsid):

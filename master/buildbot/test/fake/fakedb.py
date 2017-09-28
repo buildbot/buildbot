@@ -35,6 +35,7 @@ from twisted.internet import reactor
 
 from buildbot.data import resultspec
 from buildbot.db import buildrequests
+from buildbot.db import buildsets
 from buildbot.db import changesources
 from buildbot.db import schedulers
 from buildbot.test.util import validation
@@ -1321,7 +1322,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
         if bsid not in self.buildsets or self.buildsets[bsid]['complete']:
-            raise KeyError
+            raise buildsets.AlreadyCompleteError()
         self.buildsets[bsid]['results'] = results
         self.buildsets[bsid]['complete'] = 1
         self.buildsets[bsid]['complete_at'] = \
