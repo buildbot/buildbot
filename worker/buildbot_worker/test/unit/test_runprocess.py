@@ -462,7 +462,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
                           runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
                                                 environ={"BUILD_NUMBER": 13}))
 
-    def test_spawnAsBatch(self):
+    def _test_spawnAsBatch(self, cmd, comspec):
 
         def spawnProcess(processProtocol, executable, args=(), env=None,
                       path=None, uid=None, gid=None, usePTY=False, childFDs=None):
@@ -472,14 +472,20 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         self.patch(runprocess.reactor, "spawnProcess", spawnProcess)
         tempEnviron = os.environ.copy()
         if 'COMSPEC' not in tempEnviron:
-            tempEnviron['COMSPEC'] = "cmd.exe"
+            tempEnviron['COMSPEC'] = comspec
         self.patch(os, "environ", tempEnviron)
         b = FakeWorkerForBuilder(self.basedir)
-        s = runprocess.RunProcess(b, "dir c:/", self.basedir)
+        s = runprocess.RunProcess(b, cmd, self.basedir)
         s.pp = runprocess.RunProcessPP(s)
         s.deferred = defer.Deferred()
         d = s._spawnAsBatch(s.pp, s.command, "args", tempEnviron, "path", False)
         return d
+
+    def test_spawnAsBatchCommandString(self):
+        return self._test_spawnAsBatch("dir c:/", "cmd.exe")
+
+    def test_spawnAsBatchCommandList(self):
+        return self._test_spawnAsBatch(stdoutCommand('hello'), "cmd.exe /c")
 
 
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
@@ -810,6 +816,15 @@ class TestLogging(BasedirMixin, unittest.TestCase):
         data = "x" * (runprocess.RunProcess.BUFFER_SIZE + 1)
         s._addToBuffers('stdout', data)
         self.assertEqual(len(b.updates), 1)
+
+    def testSendLog(self):
+        b = FakeWorkerForBuilder(self.basedir)
+        s = runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir)
+        s._addToBuffers(('log', 'stdout'), 'hello ')
+        s._sendBuffers()
+        self.assertEqual(b.updates, [
+            {'log': ('stdout', 'hello ')},
+        ])
 
 
 class TestLogFileWatcher(BasedirMixin, unittest.TestCase):
