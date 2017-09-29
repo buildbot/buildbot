@@ -70,17 +70,16 @@
   },
   "dependencies": {
     "coffee-script": "~1.10.0",
+    "gulp-livereload": "~3.8.0",
     "gulp-ng-classify": "~4.0.0",
     "gulp-sass": "^3.1.0",
-    "gulp-livereload": "~3.8.0",
     "gulp-util": "~3.0.6",
-    "gulp-watch": "~4.3.11",
     "jasmine-core": "^2.4.1",
     "karma": "~0.13.9",
+    "karma-chrome-launcher": "~2.1.0",
     "karma-coffee-preprocessor": "~0.3.0",
     "karma-coverage": "^0.5.1",
     "karma-jasmine": "~0.3.6",
-    "karma-chrome-launcher": "~2.1.0",
     "karma-sourcemap-loader": "^0.3.5"
   },
   "main": "./main",
@@ -89,7 +88,7 @@
     "node": ">4.4.0",
     "npm": ">2.0.0"
   },
-  "version": "0.8.6",
+  "version": "0.8.7",
   "license": "MIT",
   "readmeFilename": "README.md",
   "scripts": {}
