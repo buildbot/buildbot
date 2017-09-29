@@ -201,6 +201,7 @@ class EC2LatentWorker(AbstractLatentWorker):
                 )
 
         self.ec2 = self.session.resource('ec2')
+        self.ec2_client = self.session.client('ec2')
 
         # Make a keypair
         #
@@ -231,7 +232,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         # create security group
         if security_name:
             try:
-                self.ec2.SecurityGroup(security_name).load()
+                self.ec2_client.describe_security_groups(GroupNames=[security_name])
             except ClientError as e:
                 if 'InvalidGroup.NotFound' in str(e):
                     self.security_group = self.ec2.create_security_group(
