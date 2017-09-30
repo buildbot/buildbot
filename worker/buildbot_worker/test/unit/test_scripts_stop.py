@@ -86,7 +86,7 @@ class TestStopWorker(misc.FileIOMixin,
         mocked_kill.assert_has_calls([mock.call(self.PID, signal.SIGTERM),
                                       mock.call(self.PID, 0)])
 
-        self.assertStdoutEqual("worker process %s is dead\n" % self.PID)
+        self.assertStdoutEqual("worker process {0} is dead\n".format(self.PID))
 
     @compat.skipUnlessPlatformIs("posix")
     def test_stop_timeout(self):

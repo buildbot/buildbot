@@ -149,8 +149,8 @@ class Command(object):
 
         missingArgs = [arg for arg in self.requiredArgs if arg not in args]
         if missingArgs:
-            raise ValueError("%s is missing args: %s" %
-                             (self.__class__.__name__, ", ".join(missingArgs)))
+            raise ValueError("{0} is missing args: {1}".format(
+                             self.__class__.__name__, ", ".join(missingArgs)))
         self.setup(args)
 
     def setup(self, args):
@@ -201,8 +201,8 @@ class Command(object):
 
     def _abandonOnFailure(self, rc):
         if not isinstance(rc, int):
-            log.msg("weird, _abandonOnFailure was given rc=%s (%s)" %
-                    (rc, type(rc)))
+            log.msg("weird, _abandonOnFailure was given rc={0} ({1})".format(
+                    rc, type(rc)))
         assert isinstance(rc, int)
         if rc != 0:
             raise AbandonChain(rc)

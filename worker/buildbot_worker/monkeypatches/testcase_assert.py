@@ -37,14 +37,14 @@ def _assertRaisesRegexp(self, expected_exception, expected_regexp,
         exception = ex
 
     if exception is None:
-        self.fail("%s not raised" % str(expected_exception.__name__))
+        self.fail("{0} not raised".format(str(expected_exception.__name__)))
 
     if isinstance(expected_regexp, string_types):
         expected_regexp = re.compile(expected_regexp)
 
     if not expected_regexp.search(str(exception)):
-        self.fail('"%s" does not match "%s"' %
-                  (expected_regexp.pattern, str(exception)))
+        self.fail('"{0}" does not match "{1}"'.format(
+                  expected_regexp.pattern, str(exception)))
 
 
 def patch():

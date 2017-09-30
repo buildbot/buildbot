@@ -25,4 +25,4 @@ class AbandonChain(Exception):
     the failing ShellCommand."""
 
     def __repr__(self):
-        return "<AbandonChain rc=%s>" % self.args[0]
+        return "<AbandonChain rc={0}>".format(self.args[0])

@@ -30,7 +30,7 @@ class TransferCommand(Command):
 
     def finished(self, res):
         if self.debug:
-            log.msg('finished: stderr=%r, rc=%r' % (self.stderr, self.rc))
+            log.msg('finished: stderr={0!r}, rc={1!r}'.format(self.stderr, self.rc))
 
         # don't use self.sendStatus here, since we may no longer be running
         # if we have been interrupted
@@ -94,15 +94,15 @@ class WorkerFileUploadCommand(TransferCommand):
 
             self.fp = open(self.path, 'rb')
             if self.debug:
-                log.msg("Opened '%s' for upload" % self.path)
+                log.msg("Opened '{0}' for upload".format(self.path))
         except Exception:
             self.fp = None
-            self.stderr = "Cannot open file '%s' for upload" % self.path
+            self.stderr = "Cannot open file '{0}' for upload".format(self.path)
             self.rc = 1
             if self.debug:
-                log.msg("Cannot open file '%s' for upload" % self.path)
+                log.msg("Cannot open file '{0}' for upload".format(self.path))
 
-        self.sendStatus({'header': "sending %s" % self.path})
+        self.sendStatus({'header': "sending {0}".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -166,8 +166,8 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = 'Maximum filesize reached, truncating file \'%s\'' \
-                    % self.path
+                self.stderr = 'Maximum filesize reached, truncating file \'{0}\''.format(
+                    self.path)
                 self.rc = 1
             data = ''
         else:
@@ -175,7 +175,7 @@ class WorkerFileUploadCommand(TransferCommand):
 
         if self.debug:
             log.msg('WorkerFileUploadCommand._writeBlock(): ' +
-                    'allowed=%d readlen=%d' % (length, len(data)))
+                    'allowed={0} readlen={1}'.format(length, len(data)))
         if not data:
             log.msg("EOF: callRemote(close)")
             return True
@@ -210,7 +210,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
                                  self.workdir,
                                  os.path.expanduser(self.dirname))
         if self.debug:
-            log.msg("path: %r" % self.path)
+            log.msg("path: {0!r}".format(self.path))
 
         # Create temporary archive
         fd, self.tarname = tempfile.mkstemp()
@@ -232,7 +232,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         # Transfer it
         self.fp.seek(0)
 
-        self.sendStatus({'header': "sending %s" % self.path})
+        self.sendStatus({'header': "sending {0}".format(self.path)})
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -300,7 +300,7 @@ class WorkerFileDownloadCommand(TransferCommand):
         try:
             self.fp = open(self.path, 'wb')
             if self.debug:
-                log.msg("Opened '%s' for download" % self.path)
+                log.msg("Opened '{0}' for download".format(self.path))
             if self.mode is not None:
                 # note: there is a brief window during which the new file
                 # will have the worker's default (umask) mode before we
@@ -315,10 +315,10 @@ class WorkerFileDownloadCommand(TransferCommand):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            self.stderr = "Cannot open file '%s' for download" % self.path
+            self.stderr = "Cannot open file '{0}' for download".format(self.path)
             self.rc = 1
             if self.debug:
-                log.msg("Cannot open file '%s' for download" % self.path)
+                log.msg("Cannot open file '{0}' for download".format(self.path))
 
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
@@ -361,8 +361,8 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         if length <= 0:
             if self.stderr is None:
-                self.stderr = "Maximum filesize reached, truncating file '%s'" \
-                    % self.path
+                self.stderr = "Maximum filesize reached, truncating file '{0}'".format(
+                    self.path)
                 self.rc = 1
             return True
         else:

@@ -211,7 +211,7 @@ class LoggingMixin(object):
                 if msg is not None and r.search(msg):
                     return
             self.fail(
-                "%r not matched in log output.\n%s " % (regexp, self._logEvents))
+                "{0!r} not matched in log output.\n{1} ".format(regexp, self._logEvents))
 
     def assertWasQuiet(self):
         self.assertEqual(self._logEvents, [])

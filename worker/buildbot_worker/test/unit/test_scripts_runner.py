@@ -37,8 +37,8 @@ class OptionsMixin(object):
             msg = []
             for k in exp:
                 if opts[k] != exp[k]:
-                    msg.append(" %s: expected %r, got %r" %
-                               (k, exp[k], opts[k]))
+                    msg.append(" {0}: expected {1!r}, got {2!r}".format(
+                               k, exp[k], opts[k]))
             self.fail("did not get expected options\n" + ("\n".join(msg)))
 
 

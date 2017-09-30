@@ -131,7 +131,7 @@ class _FDDetector(object):
     def _getImplementation(self):
         """
         Check if /dev/fd works, if so, use that.  Otherwise, check if
-        /proc/%d/fd exists, if so use that.
+        /proc/pid/fd exists, if so use that.
 
         Otherwise, ask resource.getrlimit, if that throws an exception, then
         fallback to _fallbackFDImplementation.
@@ -143,7 +143,7 @@ class _FDDetector(object):
             return self._fallbackFDImplementation
         except Exception:  # changed in Buildbot to avoid bare 'except'
             try:
-                self.listdir("/proc/%d/fd" % (self.getpid(),))
+                self.listdir("/proc/{0}/fd".format(self.getpid()))
                 return self._procFDImplementation
             except Exception:  # changed in Buildbot to avoid bare 'except'
                 try:
@@ -176,7 +176,7 @@ class _FDDetector(object):
         Simple implementation for systems where /proc/pid/fd exists (we assume
         it works).
         """
-        dname = "/proc/%d/fd" % (os.getpid(),)
+        dname = "/proc/{0}/fd".format(os.getpid())
         return [int(fd) for fd in os.listdir(dname)]
 
     def _resourceFDImplementation(self):

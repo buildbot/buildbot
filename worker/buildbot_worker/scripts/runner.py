@@ -159,13 +159,13 @@ class CreateWorkerOptions(MakerBase):
             master, port = master_arg.split(":")
 
         if len(master) < 1:
-            raise usage.UsageError("invalid <master> argument '%s'" %
-                                   master_arg)
+            raise usage.UsageError("invalid <master> argument '{0}'".format(
+                                   master_arg))
         try:
             port = int(port)
         except ValueError:
-            raise usage.UsageError("invalid master port '%s', "
-                                   "needs to be a number" % port)
+            raise usage.UsageError("invalid master port '{0}', "
+                                   "needs to be a number".format(port))
 
         return master, port
 
@@ -190,8 +190,8 @@ class CreateWorkerOptions(MakerBase):
             try:
                 self[argument] = int(self[argument])
             except ValueError:
-                raise usage.UsageError("%s parameter needs to be a number"
-                                       % argument)
+                raise usage.UsageError("{0} parameter needs to be a number".format(
+                                       argument))
 
         if not re.match(r'^\d+$', self['log-count']) and \
                 self['log-count'] != 'None':
@@ -228,7 +228,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        print("worker version: %s" % buildbot_worker.version)
+        print("worker version: {0}".format(buildbot_worker.version))
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -244,7 +244,7 @@ def run():
     try:
         config.parseOptions()
     except usage.error as e:
-        print("%s:  %s" % (sys.argv[0], e))
+        print("{0}:  {1}".format(sys.argv[0], e))
         print()
         c = getattr(config, 'subOptions', config)
         print(str(c))

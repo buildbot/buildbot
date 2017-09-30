@@ -46,9 +46,9 @@ class MakeDirectory(base.Command):
                 os.makedirs(dirname)
             self.sendStatus({'rc': 0})
         except OSError as e:
-            log.msg("MakeDirectory %s failed" % dirname, e)
+            log.msg("MakeDirectory {0} failed: {1}".format(dirname, e))
             self.sendStatus(
-                {'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -185,7 +185,7 @@ class CopyDirectory(base.Command):
             if os.path.exists(todir):
                 # I don't think this happens, but just in case..
                 log.msg(
-                    "cp target '%s' already exists -- cp will not do what you think!" % todir)
+                    "cp target '{0}' already exists -- cp will not do what you think!".format(todir))
 
             command = ['cp', '-R', '-P', '-p', '-v', fromdir, todir]
             c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
@@ -215,9 +215,9 @@ class StatFile(base.Command):
             self.sendStatus({'stat': tuple(stat)})
             self.sendStatus({'rc': 0})
         except OSError as e:
-            log.msg("StatFile %s failed" % filename, e)
+            log.msg("StatFile {0} failed: {1}".format(filename, e))
             self.sendStatus(
-                {'header': '%s: %s: %s' % (self.header, e.strerror, filename)})
+                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, filename)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -236,9 +236,9 @@ class GlobPath(base.Command):
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
         except OSError as e:
-            log.msg("GlobPath %s failed" % pathname, e)
+            log.msg("GlobPath {0} failed: {1}".format(pathname, e))
             self.sendStatus(
-                {'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
+                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -257,9 +257,9 @@ class ListDir(base.Command):
             self.sendStatus({'files': files})
             self.sendStatus({'rc': 0})
         except OSError as e:
-            log.msg("ListDir %s failed" % dirname, e)
+            log.msg("ListDir {0} failed: {1}".format(dirname, e))
             self.sendStatus(
-                {'header': '%s: %s: %s' % (self.header, e.strerror, dirname)})
+                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, dirname)})
             self.sendStatus({'rc': e.errno})
 
 
@@ -277,7 +277,7 @@ class RemoveFile(base.Command):
             os.remove(pathname)
             self.sendStatus({'rc': 0})
         except OSError as e:
-            log.msg("remove file %s failed" % pathname, e)
+            log.msg("remove file {0} failed: {1}".format(pathname, e))
             self.sendStatus(
-                {'header': '%s: %s: %s' % (self.header, e.strerror, pathname)})
+                {'header': '{0}: {1}: {2}'.format(self.header, e.strerror, pathname)})
             self.sendStatus({'rc': e.errno})
