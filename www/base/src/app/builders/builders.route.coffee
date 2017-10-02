@@ -35,4 +35,9 @@ class State extends Config
                 name:'show_old_builders'
                 caption:'Show old builders'
                 default_value: false
+            ,
+                type:'integer'
+                name:'buildFetchLimit'
+                caption:'Maximum number of builds to fetch'
+                default_value: 200
             ]

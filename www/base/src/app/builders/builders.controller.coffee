@@ -21,6 +21,8 @@ class Builders extends Controller
         $scope.$watch('settings', ->
             bbSettingsService.save()
         , true)
+        buildFetchLimit = $scope.settings.buildFetchLimit.value
+
         $scope.getAllTags = ->
             all_tags = []
             for builder in $scope.builders
@@ -116,7 +118,7 @@ class Builders extends Controller
             builderIds = filteredBuilds.map (builder) -> builder.builderid
             builderIds = [] if builderIds.length == $scope.builders.length
 
-            builds = data.getBuilds(limit: 200, order: '-started_at', builderid__eq: builderIds)
+            builds = data.getBuilds(limit: buildFetchLimit, order: '-started_at', builderid__eq: builderIds)
             dataGrouperService.groupBy($scope.builders, workers, 'builderid', 'workers', 'configured_on')
             dataGrouperService.groupBy($scope.builders, builds, 'builderid', 'builds')
 
