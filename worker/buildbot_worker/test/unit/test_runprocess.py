@@ -47,15 +47,15 @@ def catCommand():
 
 
 def stdoutCommand(output):
-    return [sys.executable, '-c', 'import sys; sys.stdout.write("%s\\n")' % output]
+    return [sys.executable, '-c', 'import sys; sys.stdout.write("{0}\\n")'.format(output)]
 
 
 def stderrCommand(output):
-    return [sys.executable, '-c', 'import sys; sys.stderr.write("%s\\n")' % output]
+    return [sys.executable, '-c', 'import sys; sys.stderr.write("{0}\\n")'.format(output)]
 
 
 def sleepCommand(dur):
-    return [sys.executable, '-c', 'import time; time.sleep(%d)' % dur]
+    return [sys.executable, '-c', 'import time; time.sleep({0})'.format(dur)]
 
 
 def scriptCommand(function, *args):
@@ -436,7 +436,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         def check(ign):
             headers = "".join([list(update.values())[0]
                                for update in b.updates if list(update) == ["header"]])
-            self.assertFalse(re.match('\bPYTHONPATH=a%s' % (os.pathsep), headers),
+            self.assertFalse(re.match('\bPYTHONPATH=a{0}'.format(os.pathsep), headers),
                              "got:\n" + headers)
         d.addCallback(check)
         return d
@@ -520,7 +520,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         self.tearDownBasedir()
 
     def newPidfile(self):
-        pidfile = os.path.abspath("test-%d.pid" % len(self.pidfiles))
+        pidfile = os.path.abspath("test-{0}.pid".format(len(self.pidfiles)))
         if os.path.exists(pidfile):
             os.unlink(pidfile)
         self.pidfiles.append(pidfile)
@@ -533,7 +533,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
         def poll():
             if reactor.seconds() > until:
-                d.errback(RuntimeError("pidfile %s never appeared" % pidfile))
+                d.errback(RuntimeError("pidfile {0} never appeared".format(pidfile)))
                 return
             if os.path.exists(pidfile):
                 try:
@@ -553,10 +553,10 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         try:
             os.kill(pid, 0)
         except OSError:
-            self.fail("pid %d still alive" % (pid,))
+            self.fail("pid {0} still alive".format(pid))
 
     def assertDead(self, pid, timeout=5):
-        log.msg("checking pid %r" % (pid,))
+        log.msg("checking pid {0!r}".format(pid))
 
         def check():
             try:
@@ -577,7 +577,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
             time.sleep(0.01)
             if check():
                 return
-        self.fail("pid %d still alive after %ds" % (pid, timeout))
+        self.fail("pid {0} still alive after {1}s".format(pid, timeout))
 
     # tests
 

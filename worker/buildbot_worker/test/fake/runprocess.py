@@ -55,14 +55,14 @@ class Expect(object):
         elif isinstance(other, failure.Failure):
             self.result = ('e', other)
         else:
-            raise ValueError("invalid expectation '%r'" % (other,))
+            raise ValueError("invalid expectation '{0!r}'".format(other))
         return self
 
     def __str__(self):
         other_kwargs = self.kwargs.copy()
         del other_kwargs['command']
         del other_kwargs['workdir']
-        return "Command: %s\n  workdir: %s\n  kwargs: %s\n  result: %s\n" % (
+        return "Command: {0}\n  workdir: {1}\n  kwargs: {2}\n  result: {3}\n".format(
             self.kwargs['command'], self.kwargs['workdir'],
             other_kwargs, self.result)
 
@@ -97,7 +97,7 @@ class FakeRunProcess(object):
         have not taken place, this will raise the appropriate AssertionError.
         """
         if cls._expectations:
-            raise AssertionError("%d expected instances not created" % len(cls._expectations))
+            raise AssertionError("{0} expected instances not created".format(len(cls._expectations)))
         del cls._expectations
 
     def __init__(self, builder, command, workdir, **kwargs):
@@ -113,7 +113,7 @@ class FakeRunProcess(object):
                               logEnviron=True, logfiles={}, usePTY=False)
 
         if not self._expectations:
-            raise AssertionError("unexpected instantiation: %s" % (kwargs,))
+            raise AssertionError("unexpected instantiation: {0}".format(kwargs))
         exp = self._exp = self._expectations.pop()
         if exp.kwargs != kwargs:
             msg = []
@@ -123,14 +123,14 @@ class FakeRunProcess(object):
                     if key in default_values:
                         if default_values[key] == kwargs[key]:
                             continue  # default values are expected
-                        msg.append('%s: expected default (%r),\n  got %r' %
-                                   (key, default_values[key], kwargs[key]))
+                        msg.append('{0}: expected default ({1!r}),\n  got {2!r}'.format(
+                                   key, default_values[key], kwargs[key]))
                     else:
-                        msg.append('%s: unexpected arg, value = %r' % (key, kwargs[key]))
+                        msg.append('{0}: unexpected arg, value = {1!r}'.format(key, kwargs[key]))
                 elif key not in kwargs:
-                    msg.append('%s: did not get expected arg' % (key,))
+                    msg.append('{0}: did not get expected arg'.format(key))
                 elif exp.kwargs[key] != kwargs[key]:
-                    msg.append('%s: expected %r,\n  got %r' % (key, exp.kwargs[key], kwargs[key]))
+                    msg.append('{0}: expected {1!r},\n  got {2!r}'.format(key, exp.kwargs[key], kwargs[key]))
             if msg:
                 msg.insert(
                     0,

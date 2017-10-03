@@ -44,7 +44,7 @@ class TailProcess(protocol.ProcessProtocol):
         self.lw.dataReceived(unicode2bytes(data))
 
     def errReceived(self, data):
-        print("ERR: '%s'" % (data,))
+        print("ERR: '{0}'".format(data))
 
 
 class LogWatcher(LineOnlyReceiver):

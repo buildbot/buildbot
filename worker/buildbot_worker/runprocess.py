@@ -777,7 +777,7 @@ class RunProcess(object):
                 self.sendStatus(
                     {'header': "process killed by signal {0}\n".format(sig)})
             self.sendStatus({'rc': rc})
-        self.sendStatus({'header': "elapsedTime=%0.6f\n" % self.elapsedTime})
+        self.sendStatus({'header': "elapsedTime={0:0.6f}\n".format(self.elapsedTime)})
         self._cancelTimers()
         d = self.deferred
         self.deferred = None

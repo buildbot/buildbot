@@ -98,7 +98,7 @@ class RmdirRecursive(unittest.TestCase):
         except Exception:
             # this test will probably fail anyway
             e = sys.exc_info()[0]
-            raise unittest.SkipTest("could not clean before test: %s" % (e,))
+            raise unittest.SkipTest("could not clean before test: {0}".format(e))
 
         # fill it with some files
         os.mkdir(os.path.join(self.target))

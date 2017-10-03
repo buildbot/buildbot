@@ -35,6 +35,6 @@ def usesFlushLoggedErrors(test):
 def skipUnlessPlatformIs(platform):
     def closure(test):
         if runtime.platformType != platform:
-            test.skip = "not a %s platform" % platform
+            test.skip = "not a {0} platform".format(platform)
         return test
     return closure

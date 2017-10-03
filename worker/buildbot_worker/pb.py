@@ -79,13 +79,13 @@ class BotFactory(ReconnectingPBClientFactory):
         self.port = port
 
     def startedConnecting(self, connector):
-        log.msg("Connecting to %s:%s" % (self.buildmaster_host, self.port))
+        log.msg("Connecting to {0}:{1}".format(self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.startedConnecting(self, connector)
         self.connector = connector
 
     def gotPerspective(self, perspective):
-        log.msg("Connected to %s:%s; worker is ready" %
-                (self.buildmaster_host, self.port))
+        log.msg("Connected to {0}:{1}; worker is ready".format(
+                self.buildmaster_host, self.port))
         ReconnectingPBClientFactory.gotPerspective(self, perspective)
         self.perspective = perspective
         try:
@@ -96,8 +96,8 @@ class BotFactory(ReconnectingPBClientFactory):
                 self.keepaliveInterval = 10 * 60
         self.activity()
         if self.keepaliveInterval:
-            log.msg("sending application-level keepalives every %d seconds"
-                    % self.keepaliveInterval)
+            log.msg("sending application-level keepalives every {0} seconds".format(
+                    self.keepaliveInterval))
             self.startTimers()
 
     def clientConnectionFailed(self, connector, reason):
@@ -105,14 +105,14 @@ class BotFactory(ReconnectingPBClientFactory):
         why = reason
         if reason.check(error.ConnectionRefusedError):
             why = "Connection Refused"
-        log.msg("Connection to %s:%s failed: %s" %
-                (self.buildmaster_host, self.port, why))
+        log.msg("Connection to {0}:{1} failed: {2}".format(
+                self.buildmaster_host, self.port, why))
         ReconnectingPBClientFactory.clientConnectionFailed(self,
                                                            connector, reason)
 
     def clientConnectionLost(self, connector, reason):
-        log.msg("Lost connection to %s:%s" %
-                (self.buildmaster_host, self.port))
+        log.msg("Lost connection to {0}:{1}".format(
+                self.buildmaster_host, self.port))
         self.connector = None
         self.stopTimers()
         self.perspective = None
@@ -201,8 +201,8 @@ class Worker(WorkerBase, service.MultiService):
             log.msg("Setting up SIGHUP handler to initiate shutdown")
             signal.signal(signal.SIGHUP, self._handleSIGHUP)
         elif self.allow_shutdown == 'file':
-            log.msg("Watching %s's mtime to initiate shutdown" %
-                    self.shutdown_file)
+            log.msg("Watching {0}'s mtime to initiate shutdown".format(
+                    self.shutdown_file))
             if os.path.exists(self.shutdown_file):
                 self.shutdown_mtime = os.path.getmtime(self.shutdown_file)
             self.shutdown_loop = loop = task.LoopingCall(self._checkShutdownFile)
@@ -223,8 +223,8 @@ class Worker(WorkerBase, service.MultiService):
     def _checkShutdownFile(self):
         if os.path.exists(self.shutdown_file) and \
                 os.path.getmtime(self.shutdown_file) > self.shutdown_mtime:
-            log.msg("Initiating shutdown because %s was touched" %
-                    self.shutdown_file)
+            log.msg("Initiating shutdown because {0} was touched".format(
+                    self.shutdown_file))
             self.gracefulShutdown()
 
             # In case the shutdown fails, update our mtime so we don't keep

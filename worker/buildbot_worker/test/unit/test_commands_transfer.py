@@ -63,7 +63,7 @@ class FakeMasterMethods(object):
                 f = failure.Failure(RuntimeError("out of space"))
                 return defer.fail(f)
         if self.count_writes:
-            self.add_update('write %d' % len(data))
+            self.add_update('write {0}'.format(len(data)))
         elif not self.written:
             self.add_update('write(s)')
             self.written = True
@@ -78,7 +78,7 @@ class FakeMasterMethods(object):
 
     def remote_read(self, length):
         if self.count_reads:
-            self.add_update('read %d' % length)
+            self.add_update('read {0}'.format(length))
         elif not self.read:
             self.add_update('read(s)')
             self.read = True
@@ -99,7 +99,7 @@ class FakeMasterMethods(object):
             return defer.fail(failure.Failure(RuntimeError("out of space")))
 
     def remote_utime(self, accessed_modified):
-        self.add_update('utime - %s' % accessed_modified[0])
+        self.add_update('utime - {0}'.format(accessed_modified[0]))
 
     def remote_close(self):
         self.add_update('close')
@@ -146,7 +146,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datafile},
+                {'header': 'sending {0}'.format(self.datafile)},
                 'write 64', 'write 64', 'write 52', 'close',
                 {'rc': 0}
             ])
@@ -169,10 +169,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datafile},
+                {'header': 'sending {0}'.format(self.datafile)},
                 'write 64', 'write 36', 'close',
                 {'rc': 1,
-                 'stderr': "Maximum filesize reached, truncating file '%s'" % self.datafile}
+                 'stderr': "Maximum filesize reached, truncating file '{0}'".format(self.datafile)}
             ])
         d.addCallback(check)
         return d
@@ -192,10 +192,10 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         def check(_):
             df = self.datafile + "-nosuch"
             self.assertUpdates([
-                {'header': 'sending %s' % df},
+                {'header': 'sending {0}'.format(df)},
                 'close',
                 {'rc': 1,
-                 'stderr': "Cannot open file '%s' for upload" % df}
+                 'stderr': "Cannot open file '{0}' for upload".format(df)}
             ])
         d.addCallback(check)
         return d
@@ -218,7 +218,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datafile},
+                {'header': 'sending {0}'.format(self.datafile)},
                 'write 64', 'close',
                 {'rc': 1}
             ])
@@ -252,7 +252,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datafile},
+                {'header': 'sending {0}'.format(self.datafile)},
                 'write(s)', 'close', {'rc': 1}
             ])
         dl.addCallback(check)
@@ -276,9 +276,9 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datafile},
+                {'header': 'sending {0}'.format(self.datafile)},
                 'write 64', 'write 64', 'write 52',
-                'close', 'utime - %s' % timestamp[0],
+                'close', 'utime - {0}'.format(timestamp[0]),
                 {'rc': 0}
             ])
         d.addCallback(check)
@@ -324,7 +324,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datadir},
+                {'header': 'sending {0}'.format(self.datadir)},
                 'write(s)', 'unpack',  # note no 'close"
                 {'rc': 0}
             ])
@@ -373,7 +373,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
 
         def check(_):
             self.assertUpdates([
-                {'header': 'sending %s' % self.datadir},
+                {'header': 'sending {0}'.format(self.datadir)},
                 'write(s)', 'unpack',
                 {'rc': 1}
             ])
@@ -477,8 +477,8 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             self.assertUpdates([
                 'close',
                 {'rc': 1,
-                 'stderr': "Cannot open file '%s' for download"
-                 % os.path.join(self.basedir, '.', 'dir')}
+                 'stderr': "Cannot open file '{0}' for download".format(
+                 os.path.join(self.basedir, '.', 'dir'))}
             ])
         d.addCallback(check)
         return d
@@ -501,8 +501,8 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             self.assertUpdates([
                 'read(s)', 'close',
                 {'rc': 1,
-                 'stderr': "Maximum filesize reached, truncating file '%s'"
-                 % os.path.join(self.basedir, '.', 'data')}
+                 'stderr': "Maximum filesize reached, truncating file '{0}'".format(
+                 os.path.join(self.basedir, '.', 'data'))}
             ])
             datafile = os.path.join(self.basedir, 'data')
             self.assertTrue(os.path.exists(datafile))
