@@ -260,6 +260,7 @@ eg
 Eg
 emacs
 emption
+encodeString
 Encodings
 endsWith
 entityType
