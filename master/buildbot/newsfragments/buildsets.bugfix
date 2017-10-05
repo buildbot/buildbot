@@ -1,1 +1,0 @@
-Fixed KeyError in the log when two buildrequests of the same buildset are finished at the same time (:issue:`3591`)
