@@ -1,1 +1,0 @@
-Fix for SVN.purge fails when modified files contain non-ascii characters (:issue:`3576`)

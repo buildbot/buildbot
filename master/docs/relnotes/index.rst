@@ -10,6 +10,40 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.12`` ( ``2017-10-05`` )
+======================================
+
+Bug fixes
+---------
+
+- Fix for SVN.purge fails when modified files contain non-ascii characters
+  (:issue:`3576`)
+- Fixed KeyError in the log when two buildrequests of the same buildset are
+  finished at the same time (:issue:`3591`)
+- Fix the GitHub change hook on Python 3 (:issue:`3452`).
+- Fix :class:`reporters.gitlab` to use correct commit status codes.
+- Fixed deadlock issue, when locks are taken at least 3 times by the 3
+  Buildstep with same configuration (:issue:`3650`)
+- Fix the Gerrit source step in the presence of multiple Gerrit repos
+  (:issue:`3460`).
+- Add empty pidfile option to master and worker start script when `--nodaemon`
+  option is on. (:issue:`3012`).
+
+Features
+--------
+
+- Add possibility to specify a :bb:sched:`PatchParameter` for any
+  :bb:sched:`CodebaseParameter` in a :bb:sched:`ForceScheduler` (part of
+  :issue:`3110`).
+- Latent Workers will no longer continually retry if they cannot substantiate
+
+Deprecations and Removals
+-------------------------
+
+- buildbot.util.encodeString() has been removed. buildbot.util.unicode2bytes()
+  should be used instead.
+
+
 Buildbot ``0.9.11`` ( ``2017-09-08`` )
 ======================================
 

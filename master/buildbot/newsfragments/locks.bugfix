@@ -1,1 +1,0 @@
-Fixed deadlock issue, when locks are taken at least 3 times by the 3 Buildstep with same configuration (:issue:`3650`)
