@@ -19,6 +19,8 @@ from __future__ import print_function
 import mock
 
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
+from twisted.cred.credentials import UsernamePassword
+from twisted.cred.error import UnauthorizedLogin
 from twisted.internet import defer
 from twisted.trial import unittest
 from twisted.web.error import Error
@@ -182,6 +184,22 @@ class UserPasswordAuth(www.WwwTestMixin, unittest.TestCase):
                          b"user_bytes": b"password"}
         self.auth = auth.UserPasswordAuth(login)
         self.assertEqual(self.auth.checkers[0].users, correct_login)
+
+
+class CallableAuth(www.WwwTestMixin, unittest.TestCase):
+
+    def auth_function(self, us, ps):
+        return us == 'fellow' and ps == 'correct'
+
+    @defer.inlineCallbacks
+    def test_callable(self):
+        self.auth = auth.CallableAuth(self.auth_function)
+        cred_good = UsernamePassword('fellow', 'correct')
+        result_good = yield self.auth.checkers[0].requestAvatarId(cred_good)
+        self.assertEqual(result_good, 'fellow')
+        cred_bad = UsernamePassword('bandid', 'incorrect')
+        defer_bad = self.auth.checkers[0].requestAvatarId(cred_bad)
+        self.assertFailure(defer_bad, UnauthorizedLogin)
 
 
 class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):

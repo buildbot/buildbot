@@ -19,7 +19,10 @@ from __future__ import print_function
 import re
 
 from twisted.cred.checkers import FilePasswordDB
+from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
+from twisted.cred.credentials import IUsernamePassword
+from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -178,6 +181,29 @@ class UserPasswordAuth(TwistedICredAuthBase):
             [DigestCredentialFactory(b"md5", b"buildbot"),
              BasicCredentialFactory(b"buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
+            **kwargs)
+
+
+@implementer(ICredentialsChecker)
+class PasswordCallableChecker(object):
+
+    def __init__(self, callable):
+        self.credentialInterfaces = IUsernamePassword,
+        self.callable = callable
+
+    def requestAvatarId(self, cred):
+        if self.callable(cred.username, cred.password):
+            return defer.succeed(cred.username)
+        return defer.fail(UnauthorizedLogin())
+
+
+class CallableAuth(TwistedICredAuthBase):
+
+    def __init__(self, callable, **kwargs):
+        TwistedICredAuthBase.__init__(
+            self,
+            [BasicCredentialFactory(b"buildbot")],
+            [PasswordCallableChecker(callable)],
             **kwargs)
 
 
