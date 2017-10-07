@@ -141,6 +141,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             repoOwner, repoName = project.split('/')
         else:
             giturl = giturlparse(sourcestamps[0]['repository'])
+            if not giturl:
+                return
             repoOwner = giturl.owner
             repoName = giturl.repo
 
