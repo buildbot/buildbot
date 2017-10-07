@@ -682,6 +682,8 @@ class Contact(service.AsyncService):
             return
 
         properties = Properties()
+        properties.master = self.master
+
         if props:
             # split props into name:value dict
             pdict = {}

@@ -75,6 +75,8 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
         results = build['results']
         if build['complete']:
             state = SUCCESSFUL if results == SUCCESS else FAILED
