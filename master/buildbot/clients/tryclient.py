@@ -163,14 +163,14 @@ class SVNExtractor(SourceStampExtractor):
         for line in res.split("\n"):
             m = re.search(r'^Status against revision:\s+(\d+)', line)
             if m:
-                self.baserev = int(m.group(1))
+                self.baserev = m.group(1)
                 return
         output(
             "Could not find 'Status against revision' in SVN output: %s" % res)
         sys.exit(1)
 
     def getPatch(self, res):
-        d = self.dovc(["diff", "-r%d" % self.baserev])
+        d = self.dovc(["diff", "-r%s" % self.baserev])
         d.addCallback(self.readPatch, self.patchlevel)
         return d
 

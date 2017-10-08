@@ -15,9 +15,10 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import integer_types
 from future.utils import iteritems
 from future.utils import itervalues
-from future.utils import text_type
+from future.utils import string_types
 
 import calendar
 
@@ -138,7 +139,7 @@ class TempSourceStamp(object):
             result['patch_%s' % attr] = patch.get(attr)
 
         assert all(
-            isinstance(val, (text_type, type(None), int))
+            isinstance(val, string_types + integer_types + (type(None),))
             for attr, val in iteritems(result)
         ), result
         return result
