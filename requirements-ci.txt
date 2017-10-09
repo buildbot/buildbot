@@ -10,8 +10,8 @@ backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
 boto3==1.4.7
-botocore==1.7.16
-cffi==1.11.0
+botocore==1.7.25
+cffi==1.11.2
 click==6.7
 configparser==3.5.0
 constantly==15.1.0
@@ -40,15 +40,15 @@ markdown2==2.3.4
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.1.19
+moto==1.1.21
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
 pbr==3.1.1
 pep8==1.7.0
-Pillow==4.2.1
-pyaml==17.8.0
-pyasn1==0.3.6
+Pillow==4.3.0
+pyaml==17.10.0
+pyasn1==0.3.7
 pyasn1-modules==0.1.4
 pycodestyle==2.3.1
 pycparser==2.18
@@ -56,7 +56,7 @@ pyenchant==1.6.11
 pyflakes==1.6.0
 pyjade==4.0.0
 PyJWT==1.5.3
-pylint==1.7.2
+pylint==1.7.4
 pyOpenSSL==17.3.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
@@ -65,7 +65,7 @@ PyYAML==3.12
 ramlfications==0.1.9
 requests==2.18.4
 s3transfer==0.1.11
-scandir==1.5
+scandir==1.6
 service-identity==17.0.0
 setuptools-trial==0.6.0
 singledispatch==3.4.0.3
@@ -73,7 +73,7 @@ six==1.11.0
 snowballstemmer==1.2.1
 SQLAlchemy==1.1.14
 sqlalchemy-migrate==0.11.0
-sqlparse==0.2.3
+sqlparse==0.2.4
 Tempita==0.5.2
 termcolor==1.1.0
 toml==0.9.3.1
@@ -95,4 +95,4 @@ codecov==2.0.9
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==0.9.11
+buildbot-www==0.9.12
