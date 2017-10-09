@@ -161,10 +161,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
         bldrid = yield self.getBuilderId()
         unclaimed = yield self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
-            [resultspec.Filter('claimed', 'eq', [False])])
+            [resultspec.Filter('claimed', 'eq', [False])],
+            order=['submitted_at'], limit=1)
         if unclaimed:
-            unclaimed = sorted([brd['submitted_at'] for brd in unclaimed])
-            defer.returnValue(unclaimed[0])
+            defer.returnValue(unclaimed[0]['submitted_at'])
         else:
             defer.returnValue(None)
 
