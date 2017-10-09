@@ -186,14 +186,15 @@ class UserPasswordAuth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.auth.checkers[0].users, correct_login)
 
 
-class CallableAuth(www.WwwTestMixin, unittest.TestCase):
+class CustomAuth(www.WwwTestMixin, unittest.TestCase):
 
-    def auth_function(self, us, ps):
-        return us == 'fellow' and ps == 'correct'
+    class MockCustomAuth(auth.CustomAuth):
+        def check_credentials(self, us, ps):
+            return us == 'fellow' and ps == 'correct'
 
     @defer.inlineCallbacks
     def test_callable(self):
-        self.auth = auth.CallableAuth(self.auth_function)
+        self.auth = self.MockCustomAuth()
         cred_good = UsernamePassword('fellow', 'correct')
         result_good = yield self.auth.checkers[0].requestAvatarId(cred_good)
         self.assertEqual(result_good, 'fellow')

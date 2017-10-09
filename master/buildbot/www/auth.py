@@ -17,6 +17,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import re
+from abc import ABCMeta
+from abc import abstractmethod
 
 from twisted.cred.checkers import FilePasswordDB
 from twisted.cred.checkers import ICredentialsChecker
@@ -185,26 +187,25 @@ class UserPasswordAuth(TwistedICredAuthBase):
 
 
 @implementer(ICredentialsChecker)
-class PasswordCallableChecker(object):
+class CustomAuth(TwistedICredAuthBase):
+    __metaclass__ = ABCMeta
+    credentialInterfaces = IUsernamePassword
 
-    def __init__(self, callable):
-        self.credentialInterfaces = IUsernamePassword,
-        self.callable = callable
-
-    def requestAvatarId(self, cred):
-        if self.callable(cred.username, cred.password):
-            return defer.succeed(cred.username)
-        return defer.fail(UnauthorizedLogin())
-
-
-class CallableAuth(TwistedICredAuthBase):
-
-    def __init__(self, callable, **kwargs):
+    def __init__(self, **kwargs):
         TwistedICredAuthBase.__init__(
             self,
             [BasicCredentialFactory(b"buildbot")],
-            [PasswordCallableChecker(callable)],
+            [self],
             **kwargs)
+
+    def requestAvatarId(self, cred):
+        if self.check_credentials(cred.username, cred.password):
+            return defer.succeed(cred.username)
+        return defer.fail(UnauthorizedLogin())
+
+    @abstractmethod
+    def check_credentials(username, password):
+        return False
 
 
 def _redirect(master, request):

@@ -266,27 +266,23 @@ The available classes are described here:
             'auth': util.UserPasswordAuth({"homer": "doh!"}),
         }
 
-.. py:class:: buildbot.www.auth.CallableAuth(callable)
+.. py:class:: buildbot.www.auth.CustomAuth()
 
-    :param callable: callable taking user and password as arguments and returning bool value: ``True`` for the accepted login
-                     and ``False`` for the failed login.
-
-    This authentication class allows you to use any callable that gets username and password as arguments and check if the user
-    can login. You may use it e.g. to check the credentials against external database or file.
+    This authentication class means to be overridden with a custom ``check_credentials`` method that gets username and password
+    as arguments and check if the user can login. You may use it e.g. to check the credentials against an external database or file.
 
     ::
-    
-        def check_credentials(user, password):
-            if user == 'snow' and password == 'white':
-                return True
-            else:
-                return False
+        from buildbot.plugins import util
+
+        class MyAuth(util.CustomAuth):
+            def check_credentials(user, password):
+                if user == 'snow' and password == 'white':
+                    return True
+                else:
+                    return False
 
         from buildbot.plugins import util
-        c['www'] = {
-            # ...
-            'auth': util.CallableAuth(check_credentials),
-        }
+        c['www']['auth'] = MyAuth()
 
 .. py:class:: buildbot.www.auth.HTPasswdAuth(passwdFile)
 
