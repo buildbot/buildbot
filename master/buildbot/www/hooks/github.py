@@ -48,10 +48,12 @@ class GitHubEventHandler(PullRequestMixin):
                  master=None,
                  skips=None,
                  github_api_endpoint=None,
+                 token=None,
                  debug=False,
                  verify=False):
         self._secret = secret
         self._strict = strict
+        self._token = token
         self._codebase = codebase
         self.github_property_whitelist = github_property_whitelist
         self.skips = skips
@@ -209,9 +211,15 @@ class GitHubEventHandler(PullRequestMixin):
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         '''
+        headers = {
+            'User-Agent': 'Buildbot'
+        }
+        if self._token:
+            headers['Authorization'] = 'token ' + self._token
+
         url = '/repos/{}/commits/{}'.format(repo, sha)
         http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.github_api_endpoint,
+            self.master, self.github_api_endpoint, headers=headers,
             debug=self.debug, verify=self.verify)
         res = yield http.get(url)
         data = yield res.json()
@@ -313,6 +321,7 @@ class GitHubHandler(BaseHookHandler):
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,
         }
