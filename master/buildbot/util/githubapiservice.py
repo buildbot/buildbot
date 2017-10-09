@@ -328,7 +328,12 @@ class GithubApiService(SharedService):
                 end_cursor = None
 
             for node in data['repository']['pullRequest']['commits']['nodes']:
-                change_author_login = node['commit']['author']['user']['login']
+                try:
+                    change_author_login = node['commit']['author']['user']['login']
+                except:
+                    # This is commit committed using a git client not properly configured
+                    # which does not map to a GitHub user account email address
+                    change_author_login = node['commit']['author']['name']
 
                 change_author = u'{} <{}>'.format(node['commit']['author']['name'],
                                                   node['commit']['author']['email'])
