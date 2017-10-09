@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import copy
 import random
 from datetime import datetime
 
@@ -472,21 +473,28 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         timer = metrics.Timer('BuildRequestDistributor._activityLoop()')
         timer.start()
-
+        pending_builders = []
         while True:
             yield self.activity_lock.acquire()
-
-            # lock pending_builders, pop an element from it, and release
-            yield self.pending_builders_lock.acquire()
-
-            # bail out if we shouldn't keep looping
-            if not self.running or not self._pending_builders:
-                self.pending_builders_lock.release()
+            if not self.running:
                 self.activity_lock.release()
                 break
 
-            bldr_name = self._pending_builders.pop(0)
-            self.pending_builders_lock.release()
+            if not pending_builders:
+                # lock pending_builders, pop an element from it, and release
+                yield self.pending_builders_lock.acquire()
+
+                # bail out if we shouldn't keep looping
+                if not self._pending_builders:
+                    self.pending_builders_lock.release()
+                    self.activity_lock.release()
+                    break
+                # take that builder list, and run it until the end
+                pending_builders = copy.copy(self._pending_builders)
+                self._pending_builders = []
+                self.pending_builders_lock.release()
+
+            bldr_name = pending_builders.pop(0)
 
             # get the actual builder object
             bldr = self.botmaster.builders.get(bldr_name)
