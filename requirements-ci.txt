@@ -73,7 +73,7 @@ six==1.11.0
 snowballstemmer==1.2.1
 SQLAlchemy==1.1.14
 sqlalchemy-migrate==0.11.0
-sqlparse==0.2.3
+sqlparse==0.2.4
 Tempita==0.5.2
 termcolor==1.1.0
 toml==0.9.3.1
