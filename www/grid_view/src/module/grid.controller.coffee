@@ -130,7 +130,7 @@ class Grid extends Controller
                     continue
                 for req in requests
                     builds = buildsByReqID[req.buildrequestid] ? []
-                    if !isNaN(@result)
+                    if @result? and @result != '' and !isNaN(@result)
                         i = 0
                         while i < builds.length
                             if parseInt(builds[i].results) != parseInt(@result)
@@ -139,11 +139,7 @@ class Grid extends Controller
                                 i += 1
                     unless builds.length > 0
                         continue
-                    if @result? and @result != '' and !isNaN(@result)
-                        if build.results != parseInt(@result)
-                            continue
-                    builder = @builders.get(build.builderid)
-
+                    builder = @builders.get(builds[0].builderid)
                     unless @isBuilderDisplayed(builder)
                         continue
                     buildersById[builder.builderid] = builder
