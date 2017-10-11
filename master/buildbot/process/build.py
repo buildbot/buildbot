@@ -136,10 +136,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def getAllSourceStamps(self):
         return list(self.sources)
 
-    def allChanges(self):
-        for s in self.sources:
+    @staticmethod
+    def allChangesFromSources(sources):
+        for s in sources:
             for c in s.changes:
                 yield c
+
+    def allChanges(self):
+        return Build.allChangesFromSources(self.sources)
 
     def allFiles(self):
         # return a list of all source files that were changed
@@ -190,25 +194,23 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         return self.workerforbuilder.worker.workername
     deprecatedWorkerClassMethod(locals(), getWorkerName)
 
-    def setupProperties(self):
-        props = interfaces.IProperties(self)
-
-        # give the properties a reference back to this build
-        props.build = self
+    @staticmethod
+    def setupProperties(props, requests, builder):
 
         # start with global properties from the configuration
-        props.updateFromProperties(self.master.config.properties)
+        props.updateFromProperties(builder.master.config.properties)
 
         # from the SourceStamps, which have properties via Change
-        for change in self.allChanges():
+        sources = requests[0].mergeSourceStampsWith(requests[1:])
+        for change in Build.allChangesFromSources(sources):
             props.updateFromProperties(change.properties)
 
         # and finally, get any properties from requests (this is the path
         # through which schedulers will send us properties)
-        for rq in self.requests:
+        for rq in requests:
             props.updateFromProperties(rq.properties)
 
-        self.builder.setupProperties(props)
+        builder.setupProperties(props)
 
     def setupOwnProperties(self):
         # now set some properties of our own, corresponding to the
@@ -225,19 +227,22 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
 
-    def setupWorkerForBuilder(self, workerforbuilder):
-        self.path_module = workerforbuilder.worker.path_module
+    @staticmethod
+    def setupWorkerProperties(props, builder, workerforbuilder):
+        path_module = workerforbuilder.worker.path_module
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
         worker_properties = workerforbuilder.worker.properties
-        self.getProperties().updateFromProperties(worker_properties)
+        props.updateFromProperties(worker_properties)
         if workerforbuilder.worker.worker_basedir:
-            builddir = self.path_module.join(
+            builddir = path_module.join(
                 bytes2NativeString(workerforbuilder.worker.worker_basedir),
-                bytes2NativeString(self.builder.config.workerbuilddir))
-            self.setProperty("builddir", builddir, "Worker")
+                bytes2NativeString(builder.config.workerbuilddir))
+            props.setProperty("builddir", builddir, "Worker")
 
+    def setupWorkerForBuilder(self, workerforbuilder):
+        self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
         self._registerOldWorkerAttr("workername")
         self.build_status.setWorkername(self.workername)

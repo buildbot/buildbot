@@ -276,7 +276,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def _startBuildFor(self, workerforbuilder, buildrequests):
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
-        build.setupProperties()
+
+        props = build.getProperties()
+
+        # give the properties a reference back to this build
+        props.build = build
+
+        Build.setupProperties(props, build.requests, build.builder)
+        Build.setupWorkerProperties(props, build.builder, workerforbuilder)
+
         log.msg("starting build %s using worker %s" %
                 (build, workerforbuilder))
 
