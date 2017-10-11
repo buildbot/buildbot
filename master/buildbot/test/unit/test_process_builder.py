@@ -344,6 +344,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         self.assertIdentical(new, old)
 
+    @defer.inlineCallbacks
     def test_canStartWithWorkerForBuilder_old_api(self):
         bldr = builder.Builder('bldr')
         bldr.config = mock.Mock()
@@ -355,7 +356,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             with mock.patch(
                     'buildbot.process.build.Build.canStartWithWorkerForBuilder',
                     mock.Mock(return_value='dummy')):
-                dummy = bldr.canStartWithSlavebuilder(mock.Mock())
+                dummy = yield bldr.canStartWithSlavebuilder(mock.Mock(), mock.Mock())
                 self.assertEqual(dummy, 'dummy')
 
     def test_addLatentWorker_old_api(self):
