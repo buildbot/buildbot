@@ -264,15 +264,26 @@ class Builder(util_service.ReconfigurableServiceMixin,
     deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     @defer.inlineCallbacks
-    def canStartWithWorkerForBuilder(self, workerforbuilder, buildrequests):
+    def canStartWithWorkerForBuilder(self, workerforbuilder, buildrequests=None):
         locks = self.config.locks
         if IRenderable.providedBy(locks):
+            if buildrequests is None:
+                raise RuntimeError("buildrequests parameter must be specified "
+                                   " when using renderable builder locks. Not "
+                                   "specifying buildrequests is deprecated")
+
             # collect properties that would be set for a build if we
             # started it now and render locks using it
             props = Properties()
             Build.setupProperties(props, buildrequests, self)
             Build.setupWorkerProperties(props, self, workerforbuilder)
             locks = yield props.render(locks)
+
+        # Make sure we don't warn and throw an exception at the same time
+        if buildrequests is None:
+            warnings.warn(
+                "Not passing corresponding buildrequests to "
+                "Builder.canStartWithWorkerForBuilder is deprecated")
 
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in locks]
