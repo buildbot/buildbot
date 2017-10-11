@@ -275,8 +275,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
             # collect properties that would be set for a build if we
             # started it now and render locks using it
             props = Properties()
-            Build.setupProperties(props, buildrequests, self)
-            Build.setupWorkerProperties(props, self, workerforbuilder)
+            Build.setupPropertiesKnownBeforeBuildStarts(props, buildrequests,
+                                                        self, workerforbuilder)
             locks = yield props.render(locks)
 
         # Make sure we don't warn and throw an exception at the same time
@@ -307,8 +307,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # give the properties a reference back to this build
         props.build = build
 
-        Build.setupProperties(props, build.requests, build.builder)
-        Build.setupWorkerProperties(props, build.builder, workerforbuilder)
+        Build.setupPropertiesKnownBeforeBuildStarts(
+            props, build.requests, build.builder, workerforbuilder)
 
         log.msg("starting build %s using worker %s" %
                 (build, workerforbuilder))

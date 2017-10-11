@@ -433,13 +433,10 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 'buildbot.process.build.Build.canStartWithWorkerForBuilder',
                 mock.Mock(return_value='dummy')):
             with mock.patch(
-                    'buildbot.process.build.Build.setupProperties',
+                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
                     mock.Mock()):
-                with mock.patch(
-                        'buildbot.process.build.Build.setupWorkerProperties',
-                        mock.Mock()):
-                    dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock(), [mock.Mock()])
-                    self.assertEqual(dummy, 'dummy')
+                dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock(), [mock.Mock()])
+                self.assertEqual(dummy, 'dummy')
 
         self.assertTrue(renderedLocks[0])
 

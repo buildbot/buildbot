@@ -195,7 +195,11 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     @staticmethod
-    def setupProperties(props, requests, builder):
+    def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
+                                              workerforbuilder):
+        # Note that this function does not setup the 'builddir' worker property
+        # It's not possible to know it until before the actual worker has
+        # attached.
 
         # start with global properties from the configuration
         props.updateFromProperties(builder.master.config.properties)
@@ -205,12 +209,19 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         for change in Build.allChangesFromSources(sources):
             props.updateFromProperties(change.properties)
 
-        # and finally, get any properties from requests (this is the path
-        # through which schedulers will send us properties)
+        # get any properties from requests (this is the path through which
+        # schedulers will send us properties)
         for rq in requests:
             props.updateFromProperties(rq.properties)
 
+        # get builder properties
         builder.setupProperties(props)
+
+        # get worker properties
+        # navigate our way back to the L{buildbot.worker.Worker}
+        # object that came from the config, and get its properties
+        worker_properties = workerforbuilder.worker.properties
+        props.updateFromProperties(worker_properties)
 
     def setupOwnProperties(self):
         # now set some properties of our own, corresponding to the
@@ -226,17 +237,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             props.setProperty("repository", source.repository, "Build")
             props.setProperty("codebase", source.codebase, "Build")
             props.setProperty("project", source.project, "Build")
-
-    @staticmethod
-    def setupWorkerProperties(props, builder, workerforbuilder):
-        # Note that this function does not setup the 'builddir' worker property
-        # It's not possible to know it until before the actual worker has
-        # attached.
-
-        # navigate our way back to the L{buildbot.worker.Worker}
-        # object that came from the config, and get its properties
-        worker_properties = workerforbuilder.worker.properties
-        props.updateFromProperties(worker_properties)
 
     def setupWorkerBuildirProperty(self, workerforbuilder):
         path_module = workerforbuilder.worker.path_module
