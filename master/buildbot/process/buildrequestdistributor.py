@@ -270,7 +270,7 @@ class BasicBuildChooser(BuildChooserBase):
 
             self.workerpool.remove(worker)
 
-            canStart = yield self.bldr.canStartWithWorkerForBuilder(worker)
+            canStart = yield self.bldr.canStartWithWorkerForBuilder(worker, [buildrequest])
             if canStart:
                 defer.returnValue(worker)
                 return

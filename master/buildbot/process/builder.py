@@ -27,9 +27,11 @@ from zope.interface import implementer
 
 from buildbot import interfaces
 from buildbot.data import resultspec
+from buildbot.interfaces import IRenderable
 from buildbot.process import buildrequest
 from buildbot.process import workerforbuilder
 from buildbot.process.build import Build
+from buildbot.process.properties import Properties
 from buildbot.process.results import RETRY
 from buildbot.util import service as util_service
 from buildbot.util import ascii2unicode
@@ -261,10 +263,21 @@ class Builder(util_service.ReconfigurableServiceMixin,
         return [wfb for wfb in self.workers if wfb.isAvailable()]
     deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
-    def canStartWithWorkerForBuilder(self, workerforbuilder):
+    @defer.inlineCallbacks
+    def canStartWithWorkerForBuilder(self, workerforbuilder, buildrequests):
+        locks = self.config.locks
+        if IRenderable.providedBy(locks):
+            # collect properties that would be set for a build if we
+            # started it now and render locks using it
+            props = Properties()
+            Build.setupProperties(props, buildrequests, self)
+            Build.setupWorkerProperties(props, self, workerforbuilder)
+            locks = yield props.render(locks)
+
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
-                 for access in self.config.locks]
-        return Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
+                 for access in locks]
+        can_start = Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
+        defer.returnValue(can_start)
     deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
                                 compat_name="canStartWithSlavebuilder")
 
@@ -273,6 +286,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
         return defer.succeed(True)
 
+    @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
         build = self.config.factory.newBuild(buildrequests)
         build.setBuilder(self)
@@ -289,7 +303,8 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 (build, workerforbuilder))
 
         # set up locks
-        build.setLocks(self.config.locks)
+        locks = yield build.render(self.config.locks)
+        yield build.setLocks(locks)
 
         if self.config.env:
             build.setWorkerEnvironment(self.config.env)
@@ -325,7 +340,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
-        return defer.succeed(True)
+        defer.returnValue(True)
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
