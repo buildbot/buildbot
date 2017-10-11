@@ -229,17 +229,25 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     @staticmethod
     def setupWorkerProperties(props, builder, workerforbuilder):
-        path_module = workerforbuilder.worker.path_module
+        # Note that this function does not setup the 'builddir' worker property
+        # It's not possible to know it until before the actual worker has
+        # attached.
 
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
         worker_properties = workerforbuilder.worker.properties
         props.updateFromProperties(worker_properties)
+
+    def setupWorkerBuildirProperty(self, workerforbuilder):
+        path_module = workerforbuilder.worker.path_module
+
+        # navigate our way back to the L{buildbot.worker.Worker}
+        # object that came from the config, and get its properties
         if workerforbuilder.worker.worker_basedir:
             builddir = path_module.join(
                 bytes2NativeString(workerforbuilder.worker.worker_basedir),
-                bytes2NativeString(builder.config.workerbuilddir))
-            props.setProperty("builddir", builddir, "Worker")
+                bytes2NativeString(self.builder.config.workerbuilddir))
+            self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder):
         self.path_module = workerforbuilder.worker.path_module
@@ -361,6 +369,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             return
 
         self.conn = workerforbuilder.worker.conn
+
+        # To retrieve the builddir property, the worker must be attached as we
+        # depend on its path_module. Latent workers become attached only after
+        # preparing them, so we can't setup the builddir property earlier like
+        # the rest of properties
+        self.setupWorkerBuildirProperty(workerforbuilder)
         self.setupWorkerForBuilder(workerforbuilder)
         self.subs = self.conn.notifyOnDisconnect(self.lostRemote)
 
