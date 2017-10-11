@@ -82,7 +82,14 @@ Other optional keys may be set on each ``BuilderConfig``:
     See :ref:`canStartBuild-Functions` for a concrete example.
 
 ``locks``
-    This argument specifies a list of locks that apply to this builder; see :ref:`Interlocks`.
+    A list of ``Locks`` (instances of :class:`buildbot.locks.WorkerLock` or :class:`buildbot.locks.MasterLock`) that should be acquired before starting a :class:`Build` from this :class:`Builder`.
+    Alternatively this could be a renderable that returns this list depending on properties of related to a build that is just about to be created.
+    This lets you defer picking the locks to acquire until it is known which :class:`Worker` a build would get assigned to.
+    The properties available to the renderable include all properties that are set to the build before its first step excluding the properties that come from the build itself and the ``builddir`` property that comes from worker.
+    The ``Locks`` will be released when the build is complete.
+    Note that this is a list of actual :class:`Lock` instances, not names.
+    Also note that all Locks must have unique names.
+    See :ref:`Interlocks`.
 
 ``env``
     A Builder may be given a dictionary of environment variables in this parameter.
