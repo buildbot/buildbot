@@ -10,13 +10,22 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.12.post1`` ( ``2017-10-10`` )
+============================================
+
+This is a release which only exists for the ``buildbot_grid_view`` package.
+
+Bug fixes
+---------
+- Fix Grid View plugin broken because of merge resolution mistake ( :issue:`3603` and :issue:`3688`.)
+
 Buildbot ``0.9.12`` ( ``2017-10-05`` )
 ======================================
 
 Bug fixes
 ---------
 
-- Fixed many issues related to connecting masters and workers with different major version of Python (:issue:`3416`). 
+- Fixed many issues related to connecting masters and workers with different major version of Python (:issue:`3416`).
 - Fixed KeyError in the log when two buildrequests of the same buildset are finished at the same time (:issue:`3472`, :issue:`3591`)
 - Fix for SVN.purge fails when modified files contain non-ascii characters (:issue:`3576`)
 - Fix the GitHub change hook on Python 3 (:issue:`3452`).
