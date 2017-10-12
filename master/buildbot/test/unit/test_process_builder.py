@@ -471,6 +471,46 @@ class TestGetOldestRequestTime(BuilderMixin, unittest.TestCase):
         self.assertEqual(rqtime, None)
 
 
+class TestGetNewestCompleteTime(BuilderMixin, unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        self.setUpBuilderMixin()
+
+        # a collection of rows that would otherwise clutter up every test
+        master_id = fakedb.FakeBuildRequestsComponent.MASTER_ID
+        self.base_rows = [
+            fakedb.SourceStamp(id=21),
+            fakedb.Buildset(id=11, reason='because'),
+            fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
+            fakedb.Builder(id=77, name='bldr1'),
+            fakedb.Builder(id=78, name='bldr2'),
+            fakedb.BuildRequest(id=111, submitted_at=1000, complete_at=1000,
+                                builderid=77, buildsetid=11),
+            fakedb.BuildRequest(id=222, submitted_at=2000, complete_at=4000,
+                                builderid=77, buildsetid=11),
+            fakedb.BuildRequest(id=333, submitted_at=3000, complete_at=3000,
+                                builderid=77, buildsetid=11),
+            fakedb.BuildRequest(id=444, submitted_at=2500,
+                                builderid=78, buildsetid=11),
+            fakedb.BuildRequestClaim(brid=444, masterid=master_id,
+                                     claimed_at=2501),
+        ]
+        yield self.db.insertTestData(self.base_rows)
+
+    @defer.inlineCallbacks
+    def test_gnct_completed(self):
+        yield self.makeBuilder(name='bldr1')
+        rqtime = yield self.bldr.getNewestCompleteTime()
+        self.assertEqual(rqtime, epoch2datetime(4000))
+
+    @defer.inlineCallbacks
+    def test_gnct_no_completed(self):
+        yield self.makeBuilder(name='bldr2')
+        rqtime = yield self.bldr.getNewestCompleteTime()
+        self.assertEqual(rqtime, None)
+
+
 class TestReconfig(BuilderMixin, unittest.TestCase):
 
     """Tests that a reconfig properly updates all attributes"""
