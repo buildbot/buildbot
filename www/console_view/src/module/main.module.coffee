@@ -277,7 +277,8 @@ class Console extends Controller
                     change = @makeFakeChange(codebase, revision, build.started_at)
 
         if not change?
-            change = @makeFakeChange("unknown codebase", "unknown revision")
+            revision = "unknown revision #{build.builderid}-#{build.buildid}"
+            change = @makeFakeChange("unknown codebase", revision, build.started_at)
 
         change.buildersById[build.builderid].builds.push(build)
 

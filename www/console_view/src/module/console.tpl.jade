@@ -4,8 +4,8 @@
             i.fa.fa-circle-o-notch.fa-spin.fa-2x
             p loading
     div(ng-show="c.changes.$resolved && c.filtered_changes.length==0")
-        p No changes. Console view needs changesource to be setup, and 
-            a(href="#changes") changes 
+        p No changes. Console view needs changesource to be setup, and
+            a(href="#changes") changes
             | to be in the system.
 
     table.table.table-striped.table-bordered(ng-hide="c.filtered_changes.length==0" ng-class="{'table-fixedwidth': c.isBigTable()}")
@@ -21,7 +21,7 @@
             td.row-header
             td(ng-repeat="tag in tag_line" colspan="{{tag.colspan}}")
                 span(uib-tooltip='{{ tag.tag }}' ng-style='{width: tag.colspan*50}') {{tag.tag}}
-        tr(ng-repeat="change in c.filtered_changes | orderBy: ['-changeid'] track by change.changeid")
+        tr(ng-repeat="change in c.filtered_changes | orderBy: ['-when_timestamp'] track by change.changeid")
             td
                 changedetails(change="change")
             td.column(ng-repeat="builder in change.builders"
