@@ -165,6 +165,21 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if unclaimed:
             unclaimed = sorted([brd['submitted_at'] for brd in unclaimed])
             defer.returnValue(unclaimed[0])
+
+    @defer.inlineCallbacks
+    def getNewestCompleteTime(self):
+        """Returns the complete_at of the latest completed build request for
+        this builder, or None if there are no such build requests.
+
+        @returns: datetime instance or None, via Deferred
+        """
+        bldrid = yield self.getBuilderId()
+        completed = yield self.master.data.get(
+            ('builders', bldrid, 'buildrequests'),
+            [resultspec.Filter('complete', 'eq', [False])],
+            order=['-complete_at'], limit=1)
+        if completed:
+            defer.returnValue(completed[0]['complete_at'])
         else:
             defer.returnValue(None)
 

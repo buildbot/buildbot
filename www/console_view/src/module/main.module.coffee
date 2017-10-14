@@ -103,8 +103,10 @@ class Console extends Controller
         @sortBuildersByTags(@all_builders)
 
         @changesBySSID ?= {}
+        @changesByRevision ?= {}
         for change in @changes
             @changesBySSID[change.sourcestamp.ssid] = change
+            @changesByRevision[change.revision] = change
             @populateChange(change)
 
 
@@ -271,10 +273,14 @@ class Console extends Controller
             rev = build.properties.got_revision[0]
             # got_revision can be per codebase or just the revision string
             if typeof(rev) == "string"
-                change = @makeFakeChange("", rev, build.started_at)
+                change = @changesByRevision[rev]
+                if not change?
+                    change = @makeFakeChange("", rev, build.started_at)
             else
                 for codebase, revision of rev
-                    change = @makeFakeChange(codebase, revision, build.started_at)
+                    change = @changesByRevision[rev]
+                    if not change?
+                        change = @makeFakeChange(codebase, revision, build.started_at)
 
         if not change?
             revision = "unknown revision #{build.builderid}-#{build.buildid}"
