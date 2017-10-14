@@ -175,6 +175,26 @@ A simple ``prioritizeBuilders`` implementation might look like this::
 
     c['prioritizeBuilders'] = prioritizeBuilders
 
+If the change frequency is higher than the turn-around of the builders,
+the following approach might be helpful:
+
+.. code-block:: python
+
+    def prioritizeBuilders(buildmaster, builders):
+        """Prioritize builders. First, prioritize inactive builders.
+        Second, consider the last time a job was completed (no job is infinite past).
+        Third, consider the time the oldest request has been queued.
+        This provides a simple round-robin scheme that works with collapsed builds."""
+
+        def isBuilding(b):
+            return bool(b.building) or bool(b.old_building)
+
+        builders.sort(key = lambda b: (isBuilding(b), b.getNewestCompleteTime(), b.getOldestRequestTime()))
+        return builders
+
+    c['prioritizeBuilders'] = prioritizeBuilders
+
+
 .. index:: Builds; priority
 
 .. _Build-Priority-Functions:
