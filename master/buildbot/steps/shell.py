@@ -387,7 +387,14 @@ class Configure(ShellCommand):
 
 
 class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
-    renderables = ['suppressionFile']
+    renderables = [
+                    'suppressionFile',
+                    'suppressionList',
+                    'warningPattern',
+                    'directoryEnterPattern',
+                    'directoryLeavePattern',
+                    'maxWarnCount',
+    ]
 
     warnCount = 0
     warningPattern = '(?i).*warning[: ].*'
