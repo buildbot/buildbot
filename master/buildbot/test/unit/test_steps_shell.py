@@ -743,8 +743,12 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
 
     def do_test_suppressions(self, step, supps_file='', stdout='',
                              exp_warning_count=0, exp_warning_log='',
-                             exp_exception=False):
+                             exp_exception=False, props=None):
         self.setupStep(step)
+
+        if props is not None:
+            for key in props:
+                self.build.setProperty(key, props[key], "")
 
         # Invoke the expected callbacks for the suppression file upload.  Note
         # that this assumes all of the remote_* are synchronous, but can be
@@ -950,6 +954,32 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             """)
         return self.do_test_suppressions(step, None, stdout, 2,
                                          exp_warning_log)
+
+    def test_suppressions_suppressionsRenderableParameter(self):
+        def warningExtractor(step, line, match):
+            return line.split(':', 2)
+
+        supps = (
+                   ("abc.c", ".*", 100, 199),
+                   ("def.c", ".*", 22, 22),
+        )
+
+        step = shell.WarningCountingShellCommand(command=['make'],
+                                                 suppressionList=properties.Property("suppressionsList"),
+                                                 warningExtractor=warningExtractor)
+
+        stdout = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:150: warning: unseen
+            def.c:22: warning: unseen
+            abc.c:200: warning: seen 2
+            """)
+        exp_warning_log = textwrap.dedent(u"""\
+            abc.c:99: warning: seen 1
+            abc.c:200: warning: seen 2
+            """)
+        return self.do_test_suppressions(step, None, stdout, 2,
+                                         exp_warning_log, props={"suppressionsList": supps})
 
     def test_warnExtractFromRegexpGroups(self):
         step = shell.WarningCountingShellCommand(command=['make'])
