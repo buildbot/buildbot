@@ -18,19 +18,18 @@ from __future__ import print_function
 
 import hmac
 import json
-import logging
 import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2unicode
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-GitHub-Event'
@@ -38,6 +37,8 @@ _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
 DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+
+log = Logger()
 
 
 class GitHubEventHandler(PullRequestMixin):
@@ -47,9 +48,13 @@ class GitHubEventHandler(PullRequestMixin):
                  github_property_whitelist=None,
                  master=None,
                  skips=None,
-                 github_api_endpoint=None,
+                 oauth_token=None,
+                 github_api_endpoint='https://api.github.com',
                  debug=False,
-                 verify=False):
+                 verify=False,
+                 integration_id=None,
+                 private_key=None,
+                 installation_id=None):
         self._secret = secret
         self._strict = strict
         self._codebase = codebase
@@ -67,8 +72,14 @@ class GitHubEventHandler(PullRequestMixin):
         if self._strict and not self._secret:
             raise ValueError('Strict mode is requested '
                              'while no secret is provided')
+        self.github_api_endpoint = github_api_endpoint
         self.debug = debug
         self.verify = verify
+        self.oauth_token = oauth_token
+        self.integration_id = integration_id
+        self.private_key = private_key
+        self.installation_id = installation_id
+        self._github_api_service = None
 
     @defer.inlineCallbacks
     def process(self, request):
@@ -76,8 +87,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        log.msg("X-GitHub-Event: {}".format(
-            event_type), logLevel=logging.DEBUG)
+        log.debug("X-GitHub-Event: {event_type}", event_type=event_type)
 
         handler = getattr(self, 'handle_{}'.format(event_type), None)
 
@@ -124,7 +134,7 @@ class GitHubEventHandler(PullRequestMixin):
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
 
-        log.msg("Payload: {}".format(payload), logLevel=logging.DEBUG)
+        log.debug("Payload: {payload}", payload=payload)
 
         return payload
 
@@ -146,7 +156,7 @@ class GitHubEventHandler(PullRequestMixin):
         changes = self._process_change(payload, user, repo, repo_url, project,
                                        event, properties)
 
-        log.msg("Received {} changes from github".format(len(changes)))
+        log.info("Received {num_changes} changes from github", num_changes=len(changes))
 
         return changes, 'git'
 
@@ -158,25 +168,60 @@ class GitHubEventHandler(PullRequestMixin):
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
-        repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
 
-        log.msg('Processing GitHub PR #{}'.format(number),
-                logLevel=logging.DEBUG)
-
-        head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
-        if self._has_skip(head_msg):
-            log.msg("GitHub PR #{}, Ignoring: "
-                    "head commit message contains skip pattern".format(number))
-            defer.returnValue(([], 'git'))
+        log.debug('Processing GitHub PR #{pr_num}', pr_num=number)
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
-            log.msg("GitHub PR #{} {}, ignoring".format(number, action))
+            log.info("GitHub PR #{pr_num} {action}, ignoring", pr_num=number, action=action)
             defer.returnValue((changes, 'git'))
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
+        files = None
+        change_author = None
+        user_login = payload['pull_request']['user']['login']
+        repo_owner = payload['pull_request']['base']['user']['login']
+        repo_name = payload['pull_request']['base']['repo']['name']
+        comments = [
+            u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
+                number, commits, 's' if commits != 1 else '', title, comments)
+        ]
+        owners = set()
+        github_api_service = yield self.get_github_api_service()
+        if github_api_service is not None:
+            _comments = []
+            files = yield github_api_service.get_pull_request_changed_files(repo_owner, repo_name, number)
+            pr_change_details = yield github_api_service.get_pull_request_changes(repo_owner, repo_name, number)
+            for sha in pr_change_details:
+                details = pr_change_details[sha]
+                if sha == head_sha and self._has_skip(details['message']):
+                    log.info("GitHub PR #{pr_num}, Ignoring: head commit message "
+                             "contains skip pattern", pr_num=number)
+                    defer.returnValue(([], 'git'))
+                if details['author']:
+                    owners.add(details['author'])
+                if details['login'] and details['login'] == user_login:
+                    change_author = details['author']
+                _comments.append(u'  * {}: {}'.format(sha, details['title'].strip()))
+                if details['body']:
+                    _comments.extend([u' ' * 46 + l for l in details['body'].split(u'\n') if l])
+
+            if _comments:
+                comments.append(u'Individual Commit Messages:\n')
+                comments.extend(_comments)
+
+        if change_author is None:
+            # The owner should be the pull request owner, not the
+            # event sender
+            change_author = user_login
+
+        if owners:
+            properties['owners'] = list(owners)
+
+        log.warn('OWNERS: {owners}', owners=owners)
+
         change = {
             'revision': payload['pull_request']['head']['sha'],
             'when_timestamp': dateparse(payload['pull_request']['created_at']),
@@ -185,12 +230,13 @@ class GitHubEventHandler(PullRequestMixin):
             'repository': payload['repository']['html_url'],
             'project': payload['pull_request']['base']['repo']['full_name'],
             'category': 'pull',
-            # TODO: Get author name based on login id using txgithub module
-            'author': payload['sender']['login'],
-            'comments': u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
-                number, commits, 's' if commits != 1 else '', title, comments),
+            'author': change_author,
+            'comments': u'\n'.join(comments),
             'properties': properties,
         }
+
+        if files is not None:
+            change['files'] = files
 
         if callable(self._codebase):
             change['codebase'] = self._codebase(payload)
@@ -199,24 +245,9 @@ class GitHubEventHandler(PullRequestMixin):
 
         changes.append(change)
 
-        log.msg("Received {} changes from GitHub PR #{}".format(
-            len(changes), number))
+        log.info("Received {num_changes} changes from GitHub PR #{pr_num}",
+                 num_changes=len(changes), pr_num=number)
         defer.returnValue((changes, 'git'))
-
-    @defer.inlineCallbacks
-    def _get_commit_msg(self, repo, sha):
-        '''
-        :param repo: the repo full name, ``{owner}/{project}``.
-            e.g. ``buildbot/buildbot``
-        '''
-        url = '/repos/{}/commits/{}'.format(repo, sha)
-        http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.github_api_endpoint,
-            debug=self.debug, verify=self.verify)
-        res = yield http.get(url)
-        data = yield res.json()
-        msg = data['commit']['message']
-        defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):
@@ -234,12 +265,12 @@ class GitHubEventHandler(PullRequestMixin):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `{}': Not a branch".format(refname))
+            log.info("Ignoring refname '{refname}': Not a branch", refname=refname)
             return changes
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `{}' deleted, ignoring".format(branch))
+            log.info("Branch '{branch}' deleted, ignoring", branch=branch)
             return changes
 
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
@@ -254,11 +285,11 @@ class GitHubEventHandler(PullRequestMixin):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: {}".format(commit['id'][:8]))
+            log.info("New revision: {revision}", revision=commit['id'][:8])
 
             change = {
                 'author': u'{} <{}>'.format(commit['author']['name'],
-                                           commit['author']['email']),
+                                            commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
                 'revision': commit['id'],
@@ -295,6 +326,24 @@ class GitHubEventHandler(PullRequestMixin):
                 return True
         return False
 
+    @defer.inlineCallbacks
+    def get_github_api_service(self):
+        if self._github_api_service is None:
+            log.info('Instantiating GH API Service')
+            if self.oauth_token or (self.integration_id and self.private_key and self.installation_id):
+                self._github_api_service = yield githubapiservice.GithubApiService.getService(
+                    self.master,
+                    oauth_token=self.oauth_token,
+                    integration_id=self.integration_id,
+                    private_key=self.private_key,
+                    installation_id=self.installation_id,
+                    api_root_url=self.github_api_endpoint,
+                    debug=self.debug,
+                    verify=self.verify
+                )
+        log.info('Returning GH API Service: {service}', service=self._github_api_service)
+        defer.returnValue(self._github_api_service)
+
 # for GitHub, we do another level of indirection because
 # we already had documented API that encouraged people to subclass GitHubEventHandler
 # so we need to be careful not breaking that API.
@@ -312,9 +361,13 @@ class GitHubHandler(BaseHookHandler):
             'codebase': options.get('codebase', None),
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
+            'oauth_token': options.get('oauth_token', None),
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,
+            'integration_id': options.get('integration_id', None),
+            'private_key': options.get('private_key', None),
+            'installation_id': options.get('installation_id', None)
         }
         handler = klass(options.get('secret', None),
                         options.get('strict', False),
