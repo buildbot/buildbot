@@ -505,7 +505,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, github_property_whitelist=["github.*"])
         self.master = self.changeHook.master
-        fake_headers =  {'User-Agent': 'Buildbot'}
+        fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
@@ -866,8 +866,8 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, token=_token)
         self.master = self.changeHook.master
-        fake_headers =  {'User-Agent': 'Buildbot',
-                'Authorization': 'token ' + _token }
+        fake_headers = {'User-Agent': 'Buildbot',
+                'Authorization': 'token ' + _token}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
@@ -897,7 +897,7 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, github_api_endpoint='https://black.magic.io')
         self.master = self.changeHook.master
-        fake_headers =  {'User-Agent': 'Buildbot'}
+        fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://black.magic.io', headers=fake_headers,
             debug=False, verify=False)
@@ -929,8 +929,8 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase):
             strict=False, github_api_endpoint='https://black.magic.io',
             token=_token)
         self.master = self.changeHook.master
-        fake_headers =  {'User-Agent': 'Buildbot',
-                'Authorization': 'token ' + _token }
+        fake_headers = {'User-Agent': 'Buildbot',
+                'Authorization': 'token ' + _token}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://black.magic.io', headers=fake_headers,
             debug=False, verify=False)
