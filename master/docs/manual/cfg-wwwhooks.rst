@@ -128,6 +128,9 @@ The GitHub hook has the following parameters:
     If you have a self-host GitHub Enterprise installation, please set
     this url properly.
 
+``token``
+    If your GitHub or GitHub Enterprise instance does not allow anonymous communication, you need to provide an access token.  Instructions can be found here <https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/>
+
 The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
