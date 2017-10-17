@@ -858,6 +858,38 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
         self._check_pull_request_no_skip(gitJsonPayloadPullRequest)
 
 
+class TestChangeHookConfiguredWithAuth(unittest.TestCase):
+
+    @defer.inlineCallbacks
+    def setUp(self):
+        _token = '7e076f41-b73a-4045-a817'
+        self.changeHook = _prepare_github_change_hook(
+            strict=False, token=_token)
+        self.master = self.changeHook.master
+        fake_headers =  {'User-Agent': 'Buildbot',
+                'Authorization': 'token ' + _token }
+        self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
+            self.master, self, 'https://api.github.com', headers=fake_headers,
+            debug=False, verify=False)
+        yield self.master.startService()
+
+    @defer.inlineCallbacks
+    def tearDown(self):
+        yield self.master.stopService()
+
+    @defer.inlineCallbacks
+    def _check_pull_request(self, payload):
+        self.request = _prepare_request(b'pull_request', payload)
+        yield self.request.test_render(self.changeHook)
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+
+    def test_pull_request(self):
+        api_endpoint = '/repos/defunkt/github/commits/05c588ba8cd510ecbe112d020f215facb17817a7'
+
+        self._http.expect('get', api_endpoint, content_json=gitJsonPayloadCommit)
+        self._check_pull_request(gitJsonPayloadPullRequest)
+
+
 class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
 
     @defer.inlineCallbacks
