@@ -253,7 +253,7 @@ class GitHubAuth(OAuth2Auth):
         else:
             self.apiResourceEndpoint = self.serverURL + '/graphql'
         if getTeamsMembership:
-            # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/
+            # GraphQL name aliases must comply with /^[_a-zA-Z][_a-zA-Z0-9]*$/ # pylint: disable=wrong-spelling-in-comment
             self._orgname_slug_sub_re = re.compile(r'[^_a-zA-Z0-9]')
             self.getUserTeamsGraphqlTplC = jinja2.Template(
                 self.getUserTeamsGraphqlTpl.strip())
