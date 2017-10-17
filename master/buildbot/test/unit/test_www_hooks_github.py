@@ -505,8 +505,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, github_property_whitelist=["github.*"])
         self.master = self.changeHook.master
+        fake_headers =  {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.github.com',
+            self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
 
@@ -785,8 +786,9 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, skips=[r'\[ *bb *skip *\]'])
         self.master = self.changeHook.master
+        fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://api.github.com',
+            self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
 
@@ -863,8 +865,9 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, github_api_endpoint='https://black.magic.io')
         self.master = self.changeHook.master
+        fake_headers =  {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://black.magic.io',
+            self.master, self, 'https://black.magic.io', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
 
