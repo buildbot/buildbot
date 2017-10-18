@@ -10,13 +10,13 @@ backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
 boto3==1.4.7
-botocore==1.7.25
+botocore==1.7.28
 cffi==1.11.2
 click==6.7
 configparser==3.5.0
 constantly==15.1.0
 cookies==2.2.1
-cryptography==2.0.3
+cryptography==2.1.1
 decorator==4.1.2
 dicttoxml==1.7.4
 docutils==0.14
@@ -40,7 +40,7 @@ markdown2==2.3.4
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.1.21
+moto==1.1.22
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
@@ -49,7 +49,7 @@ pep8==1.7.0
 Pillow==4.3.0
 pyaml==17.10.0
 pyasn1==0.3.7
-pyasn1-modules==0.1.4
+pyasn1-modules==0.1.5
 pycodestyle==2.3.1
 pycparser==2.18
 pyenchant==1.6.11

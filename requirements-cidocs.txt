@@ -1,7 +1,7 @@
 Sphinx==1.6.4
 sphinx-jinja==0.3.0
 sphinxcontrib-blockdiag==1.5.5
-sphinxcontrib-spelling==2.3.0
+sphinxcontrib-spelling==4.0.1
 sphinxcontrib-websupport==1.0.1
 Pygments==2.2.0
 towncrier==17.8.0
