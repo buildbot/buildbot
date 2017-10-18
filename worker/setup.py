@@ -136,7 +136,7 @@ else:
 try:
     # If setuptools is installed, then we'll add setuptools-specific arguments
     # to the setup args.
-    import setuptools  # @UnusedImport
+    import setuptools  # @UnusedImport # noqa F401
 except ImportError:
     pass
 else:

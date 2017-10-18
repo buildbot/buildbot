@@ -131,6 +131,7 @@ def define_plugin_entries(groups):
 
     return result
 
+
 __file__ = inspect.getframeinfo(inspect.currentframe()).filename
 
 with open(os.path.join(os.path.dirname(__file__), 'README.rst')) as long_d_f:
