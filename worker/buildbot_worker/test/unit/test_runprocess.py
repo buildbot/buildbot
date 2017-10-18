@@ -169,6 +169,26 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    def test_incrementalDecoder(self):
+        b = FakeWorkerForBuilder(self.basedir)
+        b.unicode_encoding = "utf-8"
+        s = runprocess.RunProcess(
+            b, stderrCommand("hello"), self.basedir, sendStderr=True)
+        pp = runprocess.RunProcessPP(s)
+        # u"\N{SNOWMAN} when encoded to utf-8 bytes is b"\xe2\x98\x83"
+        pp.outReceived(b"\xe2")
+        pp.outReceived(b"\x98\x83")
+        pp.errReceived(b"\xe2")
+        pp.errReceived(b"\x98\x83")
+        d = s.start()
+
+        def check(ign):
+            self.assertTrue({'stderr': u"\N{SNOWMAN}"} in b.updates)
+            self.assertTrue({'stdout': u"\N{SNOWMAN}"} in b.updates)
+            self.assertTrue({'rc': 0} in b.updates, b.show())
+        d.addCallback(check)
+        return d
+
     def testKeepStderr(self):
         b = FakeWorkerForBuilder(self.basedir)
         s = runprocess.RunProcess(
