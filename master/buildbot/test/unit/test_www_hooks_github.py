@@ -39,7 +39,7 @@ from buildbot.www.hooks.github import GitHubEventHandler
 # Sample GITHUB commit payload from http://help.github.com/post-receive-hooks/
 # Added "modified" and "removed", and change email
 # Added "head_commit"
-#   https://developer.github.com/v3/activity/events/types/#webhook-payload-example-26
+#   https://developer.github.com/v3/activity/events/types/#webhook-payload-example-26 # pylint: disable=wrong-spelling-in-comment
 gitJsonPayload = b"""
 {
   "before": "5aef35982fb2d34e9d9d4502f6ede1072793222d",
