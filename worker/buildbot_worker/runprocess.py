@@ -32,6 +32,7 @@ import stat
 import subprocess
 import sys
 import traceback
+from codecs import getincrementaldecoder
 from collections import deque
 from tempfile import NamedTemporaryFile
 
@@ -186,6 +187,10 @@ class RunProcessPP(protocol.ProcessProtocol):
         self.pending_stdin = b""
         self.stdin_finished = False
         self.killed = False
+        decoderFactory = getincrementaldecoder(
+            self.command.builder.unicode_encoding)
+        self.stdoutDecode = decoderFactory(errors='replace')
+        self.stderrDecode = decoderFactory(errors='replace')
 
     def setStdin(self, data):
         assert not self.connected
@@ -212,16 +217,14 @@ class RunProcessPP(protocol.ProcessProtocol):
     def outReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.outReceived")
-        data = bytes2unicode(
-            data, self.command.builder.unicode_encoding)
-        self.command.addStdout(data)
+        decodedData = self.stdoutDecode.decode(data)
+        self.command.addStdout(decodedData)
 
     def errReceived(self, data):
         if self.debug:
             log.msg("RunProcessPP.errReceived")
-        data = bytes2unicode(
-            data, self.command.builder.unicode_encoding)
-        self.command.addStderr(data)
+        decodedData = self.stderrDecode.decode(data)
+        self.command.addStderr(decodedData)
 
     def processEnded(self, status_object):
         if self.debug:
