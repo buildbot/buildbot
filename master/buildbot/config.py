@@ -38,6 +38,7 @@ from zope.interface import implementer
 from buildbot import interfaces
 from buildbot import locks
 from buildbot import util
+from buildbot.interfaces import IRenderable
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
@@ -911,7 +912,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 lock_dict[lock.name] = lock
 
         for b in self.builders:
-            if b.locks:
+            if b.locks and not IRenderable.providedBy(b.locks):
                 for lock in b.locks:
                     check_lock(lock)
 

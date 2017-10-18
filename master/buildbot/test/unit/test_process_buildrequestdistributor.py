@@ -138,7 +138,7 @@ class TestBRDBase(unittest.TestCase):
             reactor.callLater(0, d.callback, True)
             return d
         bldr.maybeStartBuild = maybeStartBuild
-        bldr.canStartWithWorkerForBuilder = lambda _: True
+        bldr.canStartWithWorkerForBuilder = lambda _, __: True
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.workers = []
@@ -516,7 +516,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         workers_attempted = []
 
-        def _canStartWithWorkerForBuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
             workers_attempted.append(workerforbuilder.name)
             return True
         self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
@@ -573,7 +573,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         workers_attempted = []
 
-        def _canStartWithWorkerForBuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
             workers_attempted.append(workerforbuilder.name)
             allowed = workerforbuilder.name in ['test-worker2', 'test-worker1']
             return defer.succeed(allowed)   # a deferred here!
@@ -621,7 +621,7 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         workers_attempted = []
 
-        def _canStartWithWorkerForBuilder(workerforbuilder):
+        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
             workers_attempted.append(workerforbuilder.name)
             return (workerforbuilder.name == 'test-worker3')
         self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder

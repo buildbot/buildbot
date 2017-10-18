@@ -374,7 +374,7 @@ class TestBuild(unittest.TestCase):
         b.getProperties = Mock()
         b.setProperty = Mock()
 
-        b.setupWorkerForBuilder(self.workerforbuilder)
+        b.setupWorkerBuildirProperty(self.workerforbuilder)
 
         expected_path = '/srv/buildbot/worker/test'
 
