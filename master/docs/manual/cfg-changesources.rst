@@ -937,7 +937,7 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``slug``
     The name of the Bitbucket repository.
 
-``branch``
+``branches``
     A single branch or a list of branches which should be processed.
     If it is ``None`` (the default) all pull requests are used.
 
@@ -969,6 +969,17 @@ The :bb:chsrc:`BitbucketPullrequestPoller` accepts the following arguments:
 ``encoding``
     Set encoding will be used to parse author's name and commit message.
     Default encoding is ``'utf-8'``.
+
+``username``
+    The username to authenticate with. This, together with app_password, allows the poller to access private repositories.
+
+``app_password``
+    The application password to authenticate with. This, together with username, allows the poller to access private repositories.
+    This is sent via basic HTTP(S) authentication.
+    To enable this, you need to go to your Bitbucket Settings -> App passwords.
+    Click "Create app password".
+    Give the new password a label, eg 'buildbot'.
+    Give the consumer Pull requests:Read access at least.
 
 A minimal configuration for the Bitbucket pull request poller might look like this:
 
