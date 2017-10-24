@@ -51,9 +51,19 @@ PENDING = 'pending'
 RUNNING = 'running'
 SHUTTINGDOWN = 'shutting-down'
 TERMINATED = 'terminated'
-SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
 FULFILLED = 'fulfilled'
 PRICE_TOO_LOW = 'price-too-low'
+CAPACITY_NOT_AVAILABLE = 'capacity-not-available'
+CAPACITY_OVERSUBSCRIBED = 'capacity-oversubscribed'
+
+SPOT_REQUEST_PENDING_STATES = ['pending-evaluation', 'pending-fulfillment']
+
+# If the spot request can't be fulfilled due to underbidding or capacity
+# issues it will enter one of these states. EC2LatentWorker will then
+# terminate the request and retry with another worker.
+CANNOT_FULFILL_STATES = (
+    PRICE_TOO_LOW, CAPACITY_NOT_AVAILABLE, CAPACITY_OVERSUBSCRIBED
+)
 
 
 class EC2LatentWorker(AbstractLatentWorker):
@@ -392,6 +402,17 @@ class EC2LatentWorker(AbstractLatentWorker):
             opts = args[0]
         return dict((k, v) for k, v in iteritems(opts) if v is not None)
 
+    def _tag_instance(self):
+        if not self.tags:
+            return
+
+        self.instance.create_tags(
+            Tags=[
+                {"Key": k, "Value": v}
+                for k, v in iteritems(self.tags)
+            ]
+        )
+
     def _start_instance(self):
         image = self.get_image()
         launch_opts = dict(
@@ -413,9 +434,7 @@ class EC2LatentWorker(AbstractLatentWorker):
         self.instance = reservations[0]
         instance_id, start_time = self._wait_for_instance()
         if None not in [instance_id, image.id, start_time]:
-            if self.tags:
-                self.instance.create_tags(Tags=[{"Key": k, "Value": v}
-                                                for k, v in self.tags.items()])
+            self._tag_instance()
             return [instance_id, image.id, start_time]
         else:
             self.failed_to_start(self.instance.id, self.instance.state['Name'])
@@ -524,6 +543,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             raise LatentWorkerFailedToSubstantiate()
         instance_id = request['InstanceId']
         self.instance = self.ec2.Instance(instance_id)
+        self._tag_instance()
         image = self.get_image()
         instance_id, start_time = self._wait_for_instance()
         return instance_id, image.id, start_time
@@ -588,11 +608,11 @@ class EC2LatentWorker(AbstractLatentWorker):
                     (self.__class__.__name__, self.workername,
                      request['SpotInstanceRequestId'], minutes, seconds))
             return request, True
-        elif request_status == PRICE_TOO_LOW:
+        elif request_status in CANNOT_FULFILL_STATES:
             self.ec2.meta.client.cancel_spot_instance_requests(
                 SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
-            log.msg('%s %s spot request rejected, spot price too low' %
-                    (self.__class__.__name__, self.workername))
+            log.msg('%s %s spot request rejected (status: %s)' %
+                    (self.__class__.__name__, self.workername, request_status))
             raise LatentWorkerFailedToSubstantiate(
                 request['SpotInstanceRequestId'], request_status)
         else:
