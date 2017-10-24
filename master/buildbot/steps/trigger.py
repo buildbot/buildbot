@@ -192,6 +192,7 @@ class Trigger(BuildStep):
     @defer.inlineCallbacks
     def worstStatus(self, overall_results, rclist, unimportant_brids):
         for was_cb, results in rclist:
+            brids_dict = {}
             if isinstance(results, tuple):
                 results, brids_dict = results
 
