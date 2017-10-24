@@ -10,7 +10,7 @@ backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
 boto3==1.4.7
-botocore==1.7.28
+botocore==1.7.33
 cffi==1.11.2
 click==6.7
 configparser==3.5.0
@@ -21,7 +21,7 @@ decorator==4.1.2
 dicttoxml==1.7.4
 docutils==0.14
 enum34==1.1.6
-flake8==3.4.1
+flake8==3.5.0
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.16.0
@@ -40,7 +40,7 @@ markdown2==2.3.4
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.1.22
+moto==1.1.23
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
