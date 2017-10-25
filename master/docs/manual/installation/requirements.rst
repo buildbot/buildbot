@@ -13,7 +13,7 @@ At a bare minimum, you'll need the following for both the buildmaster and a work
 Python: https://www.python.org
 
   Buildbot master works with Python 2.7 or Python-3.4+.
-  Buildbot worker works with Python 2.6-2.7, or Python 3.4+.
+  Buildbot worker works with Python 2.7, or Python 3.4+.
 
   .. note::
 
@@ -56,7 +56,6 @@ sqlite3: http://www.sqlite.org
   The minimum version is 3.4.0, below which parallel database queries and schema introspection fail.
 
   Please note that Python ships with sqlite3 by default since Python 2.6.
-  Python2.6 for Windows ships with sqlite 3.6.2, thus you will not be able to run buildbot with sqlite on Windows and Python 2.6.
 
   If you configure a different database engine, then SQLite is not required.
   however note that Buildbot's own unit tests require SQLite.
