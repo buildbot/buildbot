@@ -29,8 +29,7 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=js HYPER_SIZE=m1
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
-  - TWISTED=14.0.2 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=15.4.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
   # Configuration when SQLite database is persistent between running tests
@@ -52,23 +51,15 @@ env:
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
-  - TWISTED=15.5.0 SQLALCHEMY=0.8.0 TESTS=trial
-  - TWISTED=15.5.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=16.1.0 SQLALCHEMY=0.8.0 TESTS=trial
+  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
-  - TWISTED=10.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
-  - TWISTED=11.1.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
-  - TWISTED=12.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
-  - TWISTED=13.2.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
+  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
 
 matrix:
   fast_finish: true
   include:
-    # Tests of buildbot-worker on python 2.6
-    - python: "2.6"
-      env: TWISTED=14.0.2 TESTS=trial_worker SQLALCHEMY=latest HYPER_SIZE=s3
-    - python: "2.6"
-      env: TWISTED=15.4.0 TESTS=trial_worker SQLALCHEMY=latest HYPER_SIZE=s3
 
     # python 3 tests
     - python: "3.4"
@@ -87,12 +78,10 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  - condition: python != "2.6" and TESTS != "smokes"
+  - condition: TESTS != "smokes"
     cmd: pip install -r requirements-ci.txt
   - condition: TESTS == "docs"
     cmd: pip install -r requirements-cidocs.txt
-  - condition: python == "2.6"
-    cmd: pip install -r requirements-ci2.6.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
     cmd: pip install -r requirements-cidb.txt
   - |
