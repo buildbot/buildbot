@@ -1,0 +1,1 @@
+``buildbot`` and ``buildbot-worker`` packages now required Twisted versions >= 16.1.0.  Earlier versions of Twisted are not supported. 
