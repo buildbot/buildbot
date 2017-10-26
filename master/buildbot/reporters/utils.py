@@ -111,7 +111,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
              for build in builds])
         if wantLogs:
             for s in flatten(buildsteps, types=(list, UserList)):
-                s['logs'] = yield master.data.get(("steps", s['stepid'], 'logs'))
+                logs = yield master.data.get(("steps", s['stepid'], 'logs'))
+                s['logs'] = list(logs)
                 for l in s['logs']:
                     l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
 
@@ -129,7 +130,7 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
             build['properties'] = properties
 
         if wantSteps:
-            build['steps'] = steps
+            build['steps'] = list(steps)
 
         if wantPreviousBuild:
             build['prev_build'] = prev
