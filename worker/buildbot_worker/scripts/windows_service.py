@@ -234,7 +234,7 @@ class BBService(win32serviceutil.ServiceFramework):
             hstop = self.hWaitStop
 
             cmd = '{0} --spawn {1} start --nodaemon {2}'.format(
-                self.runner_prefix, hstop, bbdir)
+                self.runner_prefix, int(hstop), bbdir)
             # print "cmd is", cmd
             h, t, output = self.createProcess(cmd)
             child_infos.append((bbdir, h, t, output))
