@@ -82,7 +82,7 @@ virtualenv: $(VENV_NAME)   # usage: make virtualenv VENV_PY_VERSION=python3.4
 		-e 'master[tls,test,docs]' \
 		-e 'worker[test]' \
 		buildbot_www packaging \
-		'git+https://github.com/tardyp/towncrier'
+		'towncrier>=17.8.0'
 
 release_notes: $(VENV_NAME)
 	test ! -z "$(VERSION)"  #  usage: make release_notes VERSION=0.9.2
