@@ -391,7 +391,7 @@ setup_args = {
             ('buildbot.steps.shellsequence', ['ShellArg']),
             ('buildbot.www.avatar', ['AvatarGravatar']),
             ('buildbot.www.auth', [
-                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
+                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth', 'GitLabAuth', 'BitbucketAuth']),
