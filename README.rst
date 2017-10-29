@@ -6,9 +6,11 @@
  The Continuous Integration Framework
 --------------------------------------
 
-Buildbot is based on original work from `Brian Warner
-<mailto:warner-buildbot @ lothar . com>`_, and currently maintained by
-`Dustin J. Mitchell <dustin@buildbot.net>`_. Visit us on http://buildbot.net !
+Buildbot is based on original work from `Brian Warner <mailto:warner-buildbot @
+lothar . com>`_, and currently maintained by `the Botherders
+<https://github.com/buildbot/botherders>`_.
+
+Visit us on http://buildbot.net !
 
 |travis-badge|_ |codecov-badge|_ |readthedocs-badge|_
 
