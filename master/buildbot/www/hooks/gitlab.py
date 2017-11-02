@@ -154,8 +154,10 @@ class GitLabHandler(BaseHookHandler):
         # newer version of gitlab have a object_kind parameter,
         # which allows not to use the http header
         event_type = payload.get('object_kind', event_type)
-        project = request.args.get('project', [''])[0]
-        codebase = request.args.get('codebase', [None])[0]
+        project = request.args.get(b'project', [''])[0]
+        project = bytes2unicode(project)
+        codebase = request.args.get(b'codebase', [None])[0]
+        codebase = bytes2unicode(codebase)
         if event_type in ("push", "tag_push", "Push Hook"):
             user = payload['user_name']
             repo = payload['repository']['name']
