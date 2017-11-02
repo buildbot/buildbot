@@ -86,7 +86,6 @@ setup_args = {
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
         'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.6',
         'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.4',
@@ -130,7 +129,7 @@ if sys.platform == "win32":
 if sys.version_info[0] >= 3:
     twisted_ver = ">= 17.9.0"
 else:
-    twisted_ver = ">= 10.2.0"
+    twisted_ver = ">= 16.1.0"
 
 
 try:

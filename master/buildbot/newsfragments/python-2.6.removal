@@ -1,0 +1,1 @@
+The ``buildbot`` and ``buildbot-worker`` packages now requires Python 2.7 or Python 3.4+ -- Python 2.6 is no longer supported.

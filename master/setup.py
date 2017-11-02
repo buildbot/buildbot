@@ -430,10 +430,10 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-py_26 = sys.version_info[0] > 2 or (
-    sys.version_info[0] == 2 and sys.version_info[1] >= 6)
-if not py_26:
-    raise RuntimeError("Buildbot master requires at least Python-2.6")
+py_27 = sys.version_info[0] > 2 or (
+    sys.version_info[0] == 2 and sys.version_info[1] >= 7)
+if not py_27:
+    raise RuntimeError("Buildbot master requires at least Python-2.7")
 
 # pip<1.4 doesn't have the --pre flag, and will thus attempt to install alpha
 # and beta versions of Buildbot.  Prevent that from happening.
@@ -456,7 +456,7 @@ if 'a' in version or 'b' in version:
 if sys.version_info[0] >= 3:
     twisted_ver = ">= 17.9.0"
 else:
-    twisted_ver = ">= 14.0.1"
+    twisted_ver = ">= 16.1.0"
 autobahn_ver = ">= 0.16.0"
 txaio_ver = ">= 2.2.2"
 
