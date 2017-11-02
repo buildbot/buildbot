@@ -52,10 +52,10 @@ class OAuth2LoginResource(auth.LoginResource):
 
     @defer.inlineCallbacks
     def renderLogin(self, request):
-        code = request.args.get(b"code", [""])[0]
-        token = request.args.get(b"token", [""])[0]
+        code = request.args.get(b"code", [b""])[0]
+        token = request.args.get(b"token", [b""])[0]
         if not token and not code:
-            url = request.args.get("redirect", [None])[0]
+            url = request.args.get(b"redirect", [None])[0]
             url = yield self.auth.getLoginURL(url)
             raise resource.Redirect(url)
         else:
@@ -69,7 +69,7 @@ class OAuth2LoginResource(auth.LoginResource):
             session = request.getSession()
             session.user_info = details
             session.updateSession(request)
-            state = request.args.get("state", [""])[0]
+            state = request.args.get(b"state", [b""])[0]
             if state:
                 for redirect in parse_qs(state).get('redirect', []):
                     raise resource.Redirect(self.auth.homeUri + "#" + redirect)

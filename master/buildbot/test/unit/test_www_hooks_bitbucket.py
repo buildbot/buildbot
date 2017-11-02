@@ -28,7 +28,7 @@ from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
 
-gitJsonPayload = """{
+gitJsonPayload = b"""{
     "canon_url": "https://bitbucket.org",
     "commits": [
         {
@@ -66,7 +66,7 @@ gitJsonPayload = """{
     "user": "marcus"
 }"""
 
-mercurialJsonPayload = """{
+mercurialJsonPayload = b"""{
     "canon_url": "https://bitbucket.org",
     "commits": [
         {
@@ -104,7 +104,7 @@ mercurialJsonPayload = """{
     "user": "marcus"
 }"""
 
-gitJsonNoCommitsPayload = """{
+gitJsonNoCommitsPayload = b"""{
     "canon_url": "https://bitbucket.org",
     "commits": [
     ],
@@ -121,7 +121,7 @@ gitJsonNoCommitsPayload = """{
     "user": "marcus"
 }"""
 
-mercurialJsonNoCommitsPayload = """{
+mercurialJsonNoCommitsPayload = b"""{
     "canon_url": "https://bitbucket.org",
     "commits": [
     ],
@@ -150,12 +150,12 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     @inlineCallbacks
     def testGitWithChange(self):
-        change_dict = {'payload': [gitJsonPayload]}
+        change_dict = {b'payload': [gitJsonPayload]}
 
         request = FakeRequest(change_dict)
-        request.received_headers[_HEADER_EVENT] = "repo:push"
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.received_headers[_HEADER_EVENT] = b"repo:push"
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
 
@@ -187,11 +187,11 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     @inlineCallbacks
     def testGitWithNoCommitsPayload(self):
-        change_dict = {'payload': [gitJsonNoCommitsPayload]}
+        change_dict = {b'payload': [gitJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
 
@@ -200,12 +200,12 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     @inlineCallbacks
     def testMercurialWithChange(self):
-        change_dict = {'payload': [mercurialJsonPayload]}
+        change_dict = {b'payload': [mercurialJsonPayload]}
 
         request = FakeRequest(change_dict)
-        request.received_headers[_HEADER_EVENT] = "repo:push"
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.received_headers[_HEADER_EVENT] = b"repo:push"
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
 
@@ -237,11 +237,11 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     @inlineCallbacks
     def testMercurialWithNoCommitsPayload(self):
-        change_dict = {'payload': [mercurialJsonNoCommitsPayload]}
+        change_dict = {b'payload': [mercurialJsonNoCommitsPayload]}
 
         request = FakeRequest(change_dict)
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
 
@@ -264,12 +264,12 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
     @inlineCallbacks
     def testGitWithChangeAndProject(self):
         change_dict = {
-            'payload': [gitJsonPayload],
-            'project': ['project-name']}
+            b'payload': [gitJsonPayload],
+            b'project': [b'project-name']}
 
         request = FakeRequest(change_dict)
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
 
