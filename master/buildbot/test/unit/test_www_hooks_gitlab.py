@@ -280,7 +280,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithProjectToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {'project': ['MyProject']}
+        self.request.args = {b'project': [b'MyProject']}
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
@@ -290,7 +290,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithCodebaseToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.args = {b'codebase': [b'MyCodebase']}
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
@@ -300,7 +300,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithPushTag(self):
         self.request = FakeRequest(content=gitJsonPayloadTag)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.args = {b'codebase': [b'MyCodebase']}
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
@@ -337,7 +337,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithMR(self):
         self.request = FakeRequest(content=gitJsonPayloadMR)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.args = {b'codebase': [b'MyCodebase']}
         self.request.received_headers[_HEADER_EVENT] = b"Merge Request Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
@@ -359,7 +359,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
     def test_missing_secret(self):
         self.request = FakeRequest(content=gitJsonPayloadTag)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {'codebase': ['MyCodebase']}
+        self.request.args = {b'codebase': [b'MyCodebase']}
         self.request.method = b"POST"
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         yield self.request.test_render(self.changeHook)
