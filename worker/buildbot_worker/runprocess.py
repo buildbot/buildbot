@@ -490,7 +490,9 @@ class RunProcess(object):
                 argv = os.environ['COMSPEC'].split()
                 if '/c' not in argv:
                     argv += ['/c']
-                argv += list(self.command)
+                cmd_list = list(self.command)
+                cmd_list[0] = shell_quote(cmd_list[0], self.builder.unicode_encoding)
+                argv += list(cmd_list)
                 self.using_comspec = True
             else:
                 argv = self.command
