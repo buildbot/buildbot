@@ -251,8 +251,8 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
     @inlineCallbacks
     def testWithNoJson(self):
         request = FakeRequest()
-        request.uri = '/change_hook/bitbucket'
-        request.method = 'POST'
+        request.uri = b'/change_hook/bitbucket'
+        request.method = b'POST'
 
         yield request.test_render(self.change_hook)
         self.assertEqual(len(self.change_hook.master.addedChanges), 0)
