@@ -23,7 +23,7 @@ from dateutil.parser import parse as dateparse
 
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-Event-Key'
@@ -42,11 +42,12 @@ class BitBucketHandler(BaseHookHandler):
         """
 
         event_type = request.getHeader(_HEADER_EVENT)
-        event_type = bytes2NativeString(event_type)
-        payload = json.loads(request.args['payload'][0])
-        repo_url = '%s%s' % (
+        event_type = bytes2unicode(event_type)
+        payload = json.loads(bytes2unicode(request.args[b'payload'][0]))
+        repo_url = u'{}{}'.format(
             payload['canon_url'], payload['repository']['absolute_url'])
-        project = request.args.get('project', [''])[0]
+        project = request.args.get(b'project', [b''])[0]
+        project = bytes2unicode(project)
 
         changes = []
         for commit in payload['commits']:
@@ -57,16 +58,16 @@ class BitBucketHandler(BaseHookHandler):
                 'revision': commit['raw_node'],
                 'when_timestamp': dateparse(commit['utctimestamp']),
                 'branch': commit['branch'],
-                'revlink': '%scommits/%s' % (repo_url, commit['raw_node']),
+                'revlink': u'{}commits/{}'.format(repo_url, commit['raw_node']),
                 'repository': repo_url,
                 'project': project,
                 'properties': {
                     'event': event_type,
                 },
             })
-            log.msg('New revision: %s' % (commit['node'],))
+            log.msg('New revision: {}'.format(commit['node']))
 
-        log.msg('Received %s changes from bitbucket' % (len(changes),))
+        log.msg('Received {} changes from bitbucket'.format(len(changes)))
         return (changes, payload['repository']['scm'])
 
 

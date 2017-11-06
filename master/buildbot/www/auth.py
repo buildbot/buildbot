@@ -30,7 +30,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
@@ -182,7 +182,8 @@ class UserPasswordAuth(TwistedICredAuthBase):
 
 
 def _redirect(master, request):
-    url = request.args.get("redirect", ["/"])[0]
+    url = request.args.get(b"redirect", [b"/"])[0]
+    url = bytes2unicode(url)
     return resource.Redirect(master.config.buildbotURL + "#" + url)
 
 
@@ -197,7 +198,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=bytes2NativeString(self.username))
+        session.user_info = dict(username=bytes2unicode(self.username))
         yield self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 
