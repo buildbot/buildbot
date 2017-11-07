@@ -34,6 +34,9 @@ setup_www_plugin(
     url='http://buildbot.net/',
     license='GNU GPL',
     packages=['buildbot_badges'],
+    install_requires=[
+        'klein'
+    ],
     package_data={
         '': [
             'VERSION',

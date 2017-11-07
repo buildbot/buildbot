@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import json
 import os
 
 from klein import Klein
@@ -58,6 +57,7 @@ class Api(object):
             with open(fn) as f:
                 request.setHeader('Content-Type', 'image/png')
                 defer.returnValue(f.read())
+
 
 # create the interface for the setuptools entry point
 ep = Application(__name__, "Buildbot badges", ui=False)
