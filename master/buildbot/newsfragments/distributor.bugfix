@@ -1,0 +1,1 @@
+Improve buildrequest distributor to ensure all builders are processed. With previous version, builder list could be re-prioritized, while running the distributor, meaning some builders would never be run in case of master high load. (:issue:`3661`)

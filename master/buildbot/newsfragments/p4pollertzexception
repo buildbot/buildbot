@@ -1,1 +1,0 @@
-When p4poller's server_tz string is set, but the dateutil cannot resolve it to a valid timezone offset, p4poller now throws an exception instead of continuing with UTC zone.
