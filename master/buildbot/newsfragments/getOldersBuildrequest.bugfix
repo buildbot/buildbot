@@ -1,1 +1,0 @@
-Improve ``getOldestRequestTime`` function of buildrequest distributor to do sorting and paging in the database layer.

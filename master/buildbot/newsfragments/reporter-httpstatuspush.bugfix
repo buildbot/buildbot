@@ -1,1 +1,0 @@
-Fixed null value of steps and logs in reporter HttpStatusPush api. Fixes (:issue:`3180`)
