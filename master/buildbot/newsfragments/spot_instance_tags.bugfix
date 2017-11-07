@@ -1,0 +1,1 @@
+EC2LatentBuilder now correctly sets tags on spot instances. Fixes (:issue:`3739`).
