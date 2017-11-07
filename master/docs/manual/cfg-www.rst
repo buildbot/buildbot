@@ -227,6 +227,27 @@ This feature is similar to the one in the builder list.
           'plugins': {'grid_view': True}
       }
 
+.. _Badges:
+
+PNG Badges
+++++++++++
+
+Buildbot badges plugin produces an image in png format with information about the last build for the given builder name
+
+
+   .. code-block:: bash
+
+      pip install buildbot-badges
+
+   .. code-block:: python
+
+      c['www'] = {
+          'plugins': {'badges': True}
+      }
+
+You can the access your builder's badges using urls like ``http://<buildbotURL>/badges/<buildername>/<size>``, where size can be ``normal``, ``large``, ``small``.
+
+
 .. _Web-Authentication:
 
 Authentication plugins
