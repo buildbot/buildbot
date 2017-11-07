@@ -10,14 +10,6 @@ Release Notes
 
 .. towncrier release notes start
 
-Buildbot ``0.9.13`` ( ``2017-11-07`` )
-======================================
-
-Features
---------
-
-- Added flag to Docker Latent Worker to always pull images
-
 
 Buildbot ``0.9.13`` ( ``2017-11-07`` )
 ======================================
@@ -62,6 +54,7 @@ Features
   authentication for GitHub instances that do not allow anonymous access
 - Added support for renderable builder locks. Previously only steps could have
   renderable locks.
+- Added flag to Docker Latent Worker to always pull images
 
 
 Buildbot ``0.9.12.post1`` ( ``2017-10-10`` )
