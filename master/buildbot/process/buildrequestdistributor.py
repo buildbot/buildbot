@@ -490,6 +490,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                     self.activity_lock.release()
                     break
                 # take that builder list, and run it until the end
+                # we make a copy of it, as it could be modified meanwhile
                 pending_builders = copy.copy(self._pending_builders)
                 self._pending_builders = []
                 self.pending_builders_lock.release()
