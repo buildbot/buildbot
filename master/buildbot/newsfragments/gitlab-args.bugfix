@@ -1,1 +1,0 @@
-Arguments passed to GitLab push notifications now work with Python 3.  Fixes (:issue:`3720`).

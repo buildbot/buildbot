@@ -10,6 +10,60 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.13`` ( ``2017-11-07`` )
+======================================
+
+Features
+--------
+
+- Added flag to Docker Latent Worker to always pull images
+
+
+Buildbot ``0.9.13`` ( ``2017-11-07`` )
+======================================
+
+Deprecations and Removals
+-------------------------
+
+Following will help Buildbot to leverage new feature of twisted to implement important features like worker protocol encryption.
+
+- The ``buildbot`` and ``buildbot-worker`` packages now requires Python 2.7 or
+  Python 3.4+ -- Python 2.6 is no longer supported.
+- ``buildbot`` and ``buildbot-worker`` packages now required Twisted versions
+  >= 16.1.0. Earlier versions of Twisted are not supported.
+
+Bug fixes
+---------
+
+- Fix Console View forced builds stacking at top (issue:`3461`)
+- Improve buildrequest distributor to ensure all builders are processed. With
+  previous version, builder list could be re-prioritized, while running the
+  distributor, meaning some builders would never be run in case of master high
+  load. (:issue:`3661`)
+- Improve ``getOldestRequestTime`` function of buildrequest distributor to do
+  sorting and paging in the database layer (:issue:`3661`).
+- Arguments passed to GitLab push notifications now work with Python 3 (:issue:`3720`).
+- Web hooks change sources which use twisted.web.http.Request have been fixed to use bytes, not
+  native strings. This ensures web hooks work on Python 3. Please report any issues on web hooks in python3, as it is hard for us to test end to end.
+- Fixed null value of steps and logs in reporter HttpStatusPush api. Fixes
+  (:issue:`3180`)
+- EC2LatentBuilder now correctly sets tags on spot instances (:issue:`3739`).
+- Fixed operation of the Try scheduler for a code checked out from Subversion.
+- Fix buildbot worker startup when running as a windows service
+
+Features
+--------
+
+- Make parameters for
+  :py:class:`~buildbot.steps.shell.WarningCountingShellCommand` renderable.
+  These are `suppressionList`, `warningPattern`, `directoryEnterPattern`,
+  `directoryLeavePattern` and `maxWarnCount`.
+- :py:class:`~buildbot.www.hooks.github.GitHubEventHandler` now supports
+  authentication for GitHub instances that do not allow anonymous access
+- Added support for renderable builder locks. Previously only steps could have
+  renderable locks.
+
+
 Buildbot ``0.9.12.post1`` ( ``2017-10-10`` )
 ============================================
 

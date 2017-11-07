@@ -1,1 +1,0 @@
-Pollers which use twisted.web.http.Request have been fixed to use bytes, not unicode.  This fixes pollers on Python 3.
