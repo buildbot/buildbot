@@ -13,6 +13,15 @@ Release Notes
 Buildbot ``0.9.13`` ( ``2017-11-07`` )
 ======================================
 
+Features
+--------
+
+- Added flag to Docker Latent Worker to always pull images
+
+
+Buildbot ``0.9.13`` ( ``2017-11-07`` )
+======================================
+
 Deprecations and Removals
 -------------------------
 
