@@ -83,6 +83,10 @@ The entrypoint containing a Resource, nothing forbids plugin writers to add more
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
 You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
 
+It is also possible to make a web plugin which only adds http endpoint, and has no javscript UI.
+For that the ``Application`` endpoint object should have ``ui=False`` argument.
+You can look at the :src:`www/badges` plugin for an example of a ui-less plugin.
+
 .. _Routing:
 
 Routing

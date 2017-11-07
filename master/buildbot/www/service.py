@@ -267,7 +267,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             raise RuntimeError("could not find buildbot-www; is it installed?")
 
         root = self.apps.get('base').resource
-        for key, plugin in iteritems(new_config.www.get('plugins', {})):
+        known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
+        for key, plugin in list(iteritems(new_config.www.get('plugins', {}))):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError(
@@ -276,7 +277,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             app.setMaster(self.master)
             app.setConfiguration(plugin)
             root.putChild(unicode2bytes(key), app.resource)
-        known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
+            if not app.ui:
+                del new_config.www['plugins'][key]
         for plugin_name in set(self.apps.names) - known_plugins:
             log.msg("NOTE: www plugin %r is installed but not "
                     "configured" % (plugin_name,))
