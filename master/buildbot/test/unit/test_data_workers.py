@@ -20,6 +20,7 @@ import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
+from buildbot.data import exceptions
 
 from buildbot.data import workers
 from buildbot.test.fake import fakedb
@@ -175,6 +176,18 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         def check(worker):
             self.assertEqual(worker, None)
         return d
+
+    @defer.inlineCallbacks
+    def test_actions(self):
+        for action in ("stop", "pause", "unpause", "kill"):
+            yield self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
+            self.master.mq.assertProductions(
+                [(('control', 'worker', '2', action), {'reason': 'no reason'})])
+
+    @defer.inlineCallbacks
+    def test_bad_actions(self):
+        with self.assertRaises(exceptions.InvalidControlException):
+            yield self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
 
 
 class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):

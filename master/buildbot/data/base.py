@@ -88,7 +88,11 @@ class Endpoint(object):
         raise NotImplementedError
 
     def control(self, action, args, kwargs):
-        raise exceptions.InvalidControlException
+        # we convert the action into a mixedCase method name
+        action_method = getattr(self, "action" + action.capitalize())
+        if action_method is None:
+            raise exceptions.InvalidControlException("action: {} is not supported".format(action))
+        return action_method(args, kwargs)
 
     def __repr__(self):
         return "endpoint for " + self.pathPatterns

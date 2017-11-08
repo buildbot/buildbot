@@ -111,13 +111,6 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                     data['properties'] = filtered_properties
         defer.returnValue(data)
 
-    def control(self, action, args, kwargs):
-        # we convert the action into a mixedCase method name
-        action_method = getattr(self, "action" + action.capitalize())
-        if action_method is None:
-            raise ValueError("action: {} is not supported".format(action))
-        return action_method(args, kwargs)
-
     @defer.inlineCallbacks
     def actionStop(self, args, kwargs):
         buildid = kwargs.get('buildid')
