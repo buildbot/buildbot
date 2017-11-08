@@ -29,10 +29,22 @@ from twisted.trial import unittest
 from buildbot import pbmanager
 
 
+class FakeMaster(object):
+    initLock = defer.DeferredLock()
+
+    def addService(self, svc):
+        pass
+
+    @property
+    def master(self):
+        return self
+
+
 class TestPBManager(unittest.TestCase):
 
     def setUp(self):
         self.pbm = pbmanager.PBManager()
+        self.pbm.setServiceParent(FakeMaster())
         self.pbm.startService()
         self.connections = []
 
