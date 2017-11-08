@@ -506,7 +506,7 @@ class TestAbstractWorker(unittest.TestCase):
         yield worker.startService()
 
         yield worker.shutdownRequested()
-        self.assertEqual(worker.worker_status.getGraceful(), True)
+        self.assertEqual(worker._graceful, True)
 
     @defer.inlineCallbacks
     def test_missing_timer_missing(self):
