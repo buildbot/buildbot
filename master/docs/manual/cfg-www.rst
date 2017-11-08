@@ -266,6 +266,24 @@ The available classes are described here:
             'auth': util.UserPasswordAuth({"homer": "doh!"}),
         }
 
+.. py:class:: buildbot.www.auth.CustomAuth()
+
+    This authentication class means to be overridden with a custom ``check_credentials`` method that gets username and password
+    as arguments and check if the user can login. You may use it e.g. to check the credentials against an external database or file.
+
+    ::
+        from buildbot.plugins import util
+
+        class MyAuth(util.CustomAuth):
+            def check_credentials(user, password):
+                if user == 'snow' and password == 'white':
+                    return True
+                else:
+                    return False
+
+        from buildbot.plugins import util
+        c['www']['auth'] = MyAuth()
+
 .. py:class:: buildbot.www.auth.HTPasswdAuth(passwdFile)
 
     :param passwdFile: An :file:`.htpasswd` file to read

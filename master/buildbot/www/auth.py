@@ -17,9 +17,14 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import re
+from abc import ABCMeta
+from abc import abstractmethod
 
 from twisted.cred.checkers import FilePasswordDB
+from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
+from twisted.cred.credentials import IUsernamePassword
+from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -179,6 +184,28 @@ class UserPasswordAuth(TwistedICredAuthBase):
              BasicCredentialFactory(b"buildbot")],
             [InMemoryUsernamePasswordDatabaseDontUse(**dict(users))],
             **kwargs)
+
+
+@implementer(ICredentialsChecker)
+class CustomAuth(TwistedICredAuthBase):
+    __metaclass__ = ABCMeta
+    credentialInterfaces = IUsernamePassword
+
+    def __init__(self, **kwargs):
+        TwistedICredAuthBase.__init__(
+            self,
+            [BasicCredentialFactory(b"buildbot")],
+            [self],
+            **kwargs)
+
+    def requestAvatarId(self, cred):
+        if self.check_credentials(cred.username, cred.password):
+            return defer.succeed(cred.username)
+        return defer.fail(UnauthorizedLogin())
+
+    @abstractmethod
+    def check_credentials(username, password):
+        return False
 
 
 def _redirect(master, request):
