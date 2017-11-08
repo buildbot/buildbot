@@ -89,7 +89,7 @@ class Endpoint(object):
 
     def control(self, action, args, kwargs):
         # we convert the action into a mixedCase method name
-        action_method = getattr(self, "action" + action.capitalize())
+        action_method = getattr(self, "action" + action.capitalize(), None)
         if action_method is None:
             raise exceptions.InvalidControlException("action: {} is not supported".format(action))
         return action_method(args, kwargs)

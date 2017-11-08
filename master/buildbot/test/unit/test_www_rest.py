@@ -741,7 +741,7 @@ class V2RootResource_JSONRPC2(www.WwwTestMixin, unittest.TestCase):
     def test_invalid_action(self):
         yield self.render_control_resource(self.rsrc, b'/test', action='nosuch')
         self.assertJsonRpcError(
-            message='invalid control action',
+            message='action: nosuch is not supported',
             jsonrpccode=JSONRPC_CODES['method_not_found'],
             responseCode=501)
 
