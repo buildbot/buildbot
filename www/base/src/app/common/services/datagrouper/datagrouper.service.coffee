@@ -9,7 +9,7 @@ class dataGrouperService extends Factory('common')
                 # @param joinid: the id that should be present in both collection items,
                 #                and meant to match them
                 # @param attribute: the collection1 item's attribute where to store collection2 groups
-                # @param joinlist: optionnal attribute of collection2 items if the collection2
+                # @param joinlist: optional attribute of collection2 items if the collection2
                 #                  is pointing to several item of collection1
                 temp_dict = {}
                 onNew = collection1.onNew

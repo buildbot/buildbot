@@ -59,7 +59,7 @@ describe 'Scale service', ->
         # Out of domain
         expect(idToX(8)).toBeUndefined()
 
-    it 'should return a build lenght to height scale', ->
+    it 'should return a build length to height scale', ->
         # gap: 5, range: 100
         idToY = scale.getY(groups, 5, 100)
         # Check gap size

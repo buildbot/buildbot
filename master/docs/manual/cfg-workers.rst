@@ -133,7 +133,7 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
 Local Workers
 ~~~~~~~~~~~~~
 For smaller setups, you may want to just run the workers on the same machine as the master.
-To simplify the maintainance, you may even want to run them in the same process.
+To simplify the maintenance, you may even want to run them in the same process.
 
 This is what LocalWorker is for.
 Instead of configuring a ``worker.Worker``, you have to configure a ``worker.LocalWorker``.

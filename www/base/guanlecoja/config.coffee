@@ -24,7 +24,7 @@ config =
         build: 'buildbot_www/static'
 
     ### ###########################################################################################
-    #   Bower dependancies configuration
+    #   Bower dependencies configuration
     ### ###########################################################################################
     bower:
         # JavaScript libraries (order matters)

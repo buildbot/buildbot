@@ -31,7 +31,7 @@ On top of Angular we use nodeJS tools to ease development
   In production mode, the build system minifies html, css and js, so that the final app is only 3 files to download (+img)
 * Alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
 * `coffeescript <http://coffeescript.org/>`_, a very expressive language, preventing some of the major traps of JS
-* `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
+* `pug template language  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
 * `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
@@ -99,7 +99,7 @@ Typically, a route regitration will look like following example.
 
     # ng-classify declaration. Declares a config class
     class State extends Config
-        # Dependancy injection: we inject $stateProvider and glMenuServiceProvider
+        # Dependency injection: we inject $stateProvider and glMenuServiceProvider
         constructor: ($stateProvider, glMenuServiceProvider) ->
 
             # Name of the state

@@ -19,7 +19,7 @@ Stats Service
    The instance of the running service is initialized in the master configuration file (see :bb:cfg:`stats-service` for more information).
    The running service is accessible everywhere in Buildbot via the :class:`BuildMaster`.
    The service is available at ``self.master.namedServices['<service-name>']``.
-   It takes the following intialization arguments:
+   It takes the following initialization arguments:
 
    ``storage_backends``
      A list of storage backends.
@@ -191,7 +191,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 .. py:class:: buildbot.statistics.capture.CapturePropertyBase
 
    This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
-   Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
+   Cannot be initialized directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is initialized with the following arguments:
 
    ``property_name``
@@ -287,7 +287,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
    ``callback``
      The callback function that is used by subclass of this class to post-process data before formatting it and sending it to the appropriate storage backends.
      A default callback is provided for this.
-     Each subclass must provide a deafault callback that is used in initialization of this class should the user not provide a callback.
+     Each subclass must provide a default callback that is used in initialization of this class should the user not provide a callback.
 
    .. py:method:: consume(self, routingKey, msg)
 
@@ -469,7 +469,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 .. py:class:: buildbot.statistics.capture.CaptureDataBase
 
    This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
-   Cannot be initialzed directly as it contains an abstract method and raises ``TypeError`` if tried.
+   Cannot be initialized directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is initialized with the following arguments:
 
    ``data_name``

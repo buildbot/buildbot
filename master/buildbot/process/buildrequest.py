@@ -68,7 +68,7 @@ class BuildRequestCollapser(object):
         for brid in self.brids:
             # Get the BuildRequest object
             br = yield self.master.data.get(('buildrequests', brid))
-            # Retreive the buildername
+            # Retrieve the buildername
             builderid = br['builderid']
             bldrdict = yield self.master.data.get(('builders', builderid))
             # Get the builder object
@@ -331,7 +331,7 @@ class BuildRequest(object):
             for other in others:
                 if codebase in other.sources:
                     all_sources.append(other.sources[codebase])
-            assert all_sources, "each codebase should have atleast one sourcestamp"
+            assert all_sources, "each codebase should have at least one sourcestamp"
 
             # TODO: select the sourcestamp that best represents the merge,
             # preferably the latest one.  This used to be accomplished by

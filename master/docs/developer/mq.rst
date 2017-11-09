@@ -87,10 +87,10 @@ For a filter to match a routing key, it must have the same length, and each elem
         :param function check_callback: a callback which check if the event has already happened
         :returns: a Deferred that fires when the event has been received, and contain tuple (routing_key, value) representing the event
 
-        This method is a helper which returns a defer that fire when a certain event has occured.
+        This method is a helper which returns a defer that fire when a certain event has occurred.
         This is useful for waiting the end of a build or disconnection of a worker.
         You shall make sure when using this method that this event will happen in the future, and take care of race conditions.
-        For that caller must provide a check_callback which will check of the event has already occured.
+        For that caller must provide a check_callback which will check of the event has already occurred.
         The whole race-condition-free process is:
 
         * Register to event

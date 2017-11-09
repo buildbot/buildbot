@@ -1253,7 +1253,7 @@ PatchParameter
 ##############
 
 This parameter allows the user to specify a patch to be applied at the source step.
-The patch is stored withing the sourcestamp, and associated to a codebase.
+The patch is stored within the sourcestamp, and associated to a codebase.
 That is why :bb:sched:`PatchParameter` must be set inside a :bb:sched:`CodebaseParameter`.
 
 :bb:sched:`PatchParameter` is actually a :bb:sched:`NestedParameter` composed of following fields:

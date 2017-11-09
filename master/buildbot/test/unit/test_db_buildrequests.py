@@ -674,7 +674,7 @@ class Tests(interfaces.InterfaceTests):
 
 
 class TestFakeDB(unittest.TestCase, Tests):
-    # Compatiblity with some checks in the "real" tests.
+    # Compatibility with some checks in the "real" tests.
 
     class db_engine:
 
