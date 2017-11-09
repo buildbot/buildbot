@@ -124,3 +124,40 @@ class TestPBManager(unittest.TestCase):
             self.assertEqual(len(self.pbm.dispatchers), 0)
         d.addCallback(check_dispatcher_gone)
         return d
+
+    @defer.inlineCallbacks
+    def test_requestAvatarId_noinitLock(self):
+        portstr = "tcp:0:interface=127.0.0.1"
+        reg = self.pbm.register(
+            portstr, "boris", "pass", self.perspectiveFactory)
+
+        disp = self.pbm.dispatchers[portstr]
+
+        d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+        self.assertTrue(d.called,
+            "requestAvatarId should have been called since the lock is free")
+
+        yield reg.unregister()
+
+    @defer.inlineCallbacks
+    def test_requestAvatarId_initLock(self):
+        portstr = "tcp:0:interface=127.0.0.1"
+        reg = self.pbm.register(
+            portstr, "boris", "pass", self.perspectiveFactory)
+
+        disp = self.pbm.dispatchers[portstr]
+
+        try:
+            # simulate a reconfig/restart in progress
+            yield self.pbm.master.initLock.acquire()
+            # try to authenticate while the lock is locked
+            d = disp.requestAvatarId(credentials.UsernamePassword(b'boris', b'pass'))
+            self.assertFalse(d.called,
+                "requestAvatarId should block until the lock is released")
+        finally:
+            # release the lock, it should allow for auth to proceed
+            yield self.pbm.master.initLock.release()
+
+        self.assertTrue(d.called,
+            "requestAvatarId should have been called after the lock was released")
+        yield reg.unregister()
