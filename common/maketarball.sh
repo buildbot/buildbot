@@ -6,7 +6,7 @@ pkg=$1
     rm -rf MANIFEST dist
     if [ ${pkg} == "master" ]; then
         python setup.py sdist
-        # wheels must be build separatly in order to properly omit tests
+        # wheels must be build separately in order to properly omit tests
         python setup.py bdist_wheel
     else
         # retry once to workaround instabilities

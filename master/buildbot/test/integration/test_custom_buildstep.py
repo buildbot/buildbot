@@ -266,7 +266,7 @@ class RunSteps(unittest.TestCase):
             # 'stdout\n\xe2\x98\x83\nstderr\n',
             u'ostdout\no\N{SNOWMAN}\nestderr\n',
             u'obs':
-            # if slowDB, the observer wont see anything before the end of this
+            # if slowDB, the observer won't see anything before the end of this
             # instant step
             u'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',

@@ -42,7 +42,7 @@ Each data type contain in a collection is wrapped in a javascript object.
 This allows to create some custom enhancements to the data model.
 For example the Change wrapper decodes the author name and email from the "author" field.
 
-Each wrapper class also has specific access method, which allow to access more data from the REST hierachy.
+Each wrapper class also has specific access method, which allow to access more data from the REST hierarchy.
 
 .. blockdiag::
 

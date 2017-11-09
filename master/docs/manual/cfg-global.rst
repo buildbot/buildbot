@@ -91,7 +91,7 @@ Buildbot uses a message-queueing system to handle communication within the maste
 Messages are used to indicate events within the master, and components that are interested in those events arrange to receive them.
 
 The message queueing implementation is configured as a dictionary in the ``mq`` option.
-The ``type`` key describes the type of MQ implemetation to be used.
+The ``type`` key describes the type of MQ implementation to be used.
 Note that the implementation type cannot be changed in a reconfig.
 
 The available implemenetation types are described in the following sections.

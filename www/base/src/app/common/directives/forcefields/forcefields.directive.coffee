@@ -64,7 +64,7 @@ angular.module('common').directive 'filefield', ->
     # which basically uses label(for="<id>") to capture the click event and the ugly input(type="file") is just hidden
     templateUrl: "views/filefield.html"
     controller: [ "$scope", ($scope) ->
-        # If user selects a big file, then the UI will be completly blocked
+        # If user selects a big file, then the UI will be completely blocked
         # while browser tries to display it in the textarea
         # so to avoid that we go through a safe value, and play the double binding game
         $scope.$watch "field.value", (value) ->

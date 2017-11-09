@@ -513,10 +513,10 @@ class UserOptions(base.SubcommandOptions):
         ["op", None, None,
          "User management operation: add, remove, update, get"],
         ["bb_username", None, None,
-         "Username to set for a given user. Only availabe on 'update', "
+         "Username to set for a given user. Only available on 'update', "
          "and bb_password must be given as well."],
         ["bb_password", None, None,
-         "Password to set for a given user. Only availabe on 'update', "
+         "Password to set for a given user. Only available on 'update', "
          "and bb_username must be given as well."],
         ["ids", None, None,
          "User's identifiers, used to find users in 'remove' and 'get' "
@@ -667,7 +667,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
         ["quiet", "q", "Do not emit the commands being run"],
         ["force", "f",
             "Force log recompression (useful when changing compression algorithm)"],
-        # when this command has several maintainance jobs, we should make
+        # when this command has several maintenance jobs, we should make
         # them optional here. For now there is only one.
     ]
     optParameters = [
@@ -680,7 +680,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     This command takes an existing buildmaster working directory and
     do some optimization on the database.
 
-    This command is frontend for various database maintainance jobs:
+    This command is frontend for various database maintenance jobs:
 
     - optimiselogs: This optimization groups logs into bigger chunks
       to apply higher level of compression.

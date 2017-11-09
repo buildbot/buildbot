@@ -35,7 +35,7 @@ describe 'menuService', ->
         expect(menuService.getItems()[1]).toBe(item2)
         expect(menuService.getItems()[1].order).toBe(99)
 
-        # test current propery
+        # test current property
         _menuServiceProvider.current = 'testitem1'
         expect(menuService.getCurrent()).toBe('testitem1')
         _menuServiceProvider.current = 'testitem2'

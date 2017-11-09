@@ -27,7 +27,7 @@ config =
         build: 'buildbot_codeparameter/static'
 
     ### ###########################################################################################
-    #   Bower dependancies configuration
+    #   Bower dependencies configuration
     ### ###########################################################################################
     bower:
         deps:

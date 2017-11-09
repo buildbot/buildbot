@@ -76,7 +76,7 @@ Image Creation
 
 Our build master will need the name of an image to perform its builds.
 Each time a new build will be requested, the same base image will be used again and again, actually discarding the result of the previous build.
-If you need some persistant storage between builds, you can `use Volumes <setting up volumes>`_.
+If you need some persistent storage between builds, you can `use Volumes <setting up volumes>`_.
 
 Each Docker image has a single purpose.
 Our worker image will be running a buildbot worker.
@@ -204,7 +204,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``version``
     (optional, default to the highest version known by docker-py)
-    This will indicates wich API version must be used to communicate with Docker.
+    This will indicates which API version must be used to communicate with Docker.
 
 ``tls``
     (optional)

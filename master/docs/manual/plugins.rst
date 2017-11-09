@@ -58,7 +58,7 @@ Buildbot maintains a list of plugins at http://trac.buildbot.net/wiki/Plugins.
 Developing Plugins
 ==================
 
-:ref:`Plugin-Module` contains all necesary information for you to develop new plugins.
+:ref:`Plugin-Module` contains all necessary information for you to develop new plugins.
 Please edit http://trac.buildbot.net/wiki/Plugins to add a link to your plugin!
 
 Plugins of note

@@ -493,7 +493,7 @@ This extra information is provided by, appropriately enough, user info providers
 These can be passed to :py:class:`~buildbot.www.auth.RemoteUserAuth` and as an element of ``avatar_methods``.
 
 This can also be passed to oauth2 authentication plugins.
-In this case the username provided by oauth2 will be used, and all other informations will be taken from ldap (Full Name, email, and groups):
+In this case the username provided by oauth2 will be used, and all other information will be taken from ldap (Full Name, email, and groups):
 
 Currently only one provider is available:
 

@@ -31,7 +31,7 @@ WorkerManager
 
 .. py:class:: WorkerManager(master)
 
-    Handle Worker registrations for mulitple protocols
+    Handle Worker registrations for multiple protocols
 
     .. py:method:: register(worker)
 

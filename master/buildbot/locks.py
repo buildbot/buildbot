@@ -264,7 +264,7 @@ class BaseLockId(util.ComparableMixin):
         return LockAccess(self, mode)
 
     def defaultAccess(self):
-        """ For buildbot 0.7.7 compability: When user doesn't specify an access
+        """ For buildbot 0.7.7 compatibility: When user doesn't specify an access
             mode, this one is chosen.
         """
         return self.access('counting')

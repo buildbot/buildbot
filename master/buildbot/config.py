@@ -519,7 +519,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         if 'debugPassword' in config_dict:
             log.msg(
-                "the 'debugPassword' parameter is unused and can be removed from the configuration flie")
+                "the 'debugPassword' parameter is unused and can be removed from the configuration file")
 
         if 'manhole' in config_dict:
             # we don't check that this is a manhole instance, since that

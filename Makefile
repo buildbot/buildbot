@@ -106,7 +106,7 @@ clean:
 # helper for release creation
 release: virtualenv
 	test ! -z "$(VERSION)"  #  usage: make release VERSION=0.9.2
-	test -d "../bbdocs/.git"  #  make release shoud be done with bbdocs populated at the same level as buildbot dir
+	test -d "../bbdocs/.git"  #  make release should be done with bbdocs populated at the same level as buildbot dir
 	GPG_TTY=`tty` git tag -a -sf v$(VERSION) -m "TAG $(VERSION)"
 	make -j4 tarballs
 	./common/smokedist.sh

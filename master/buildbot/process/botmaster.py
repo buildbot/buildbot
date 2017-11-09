@@ -276,7 +276,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     def getLockFromLockAccess(self, access):
         # Convert a lock-access object into an actual Lock instance.
         if not isinstance(access, locks.LockAccess):
-            # Buildbot 0.7.7 compability: user did not specify access
+            # Buildbot 0.7.7 compatibility: user did not specify access
             access = access.defaultAccess()
         lock = self.getLockByID(access.lockid)
         return lock

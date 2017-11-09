@@ -966,7 +966,7 @@ class LoggingBuildStep(BuildStep):
         self.lazylogfiles = lazylogfiles
         if log_eval_func and not callable(log_eval_func):
             config.error(
-                "the 'log_eval_func' paramater must be a callable")
+                "the 'log_eval_func' parameter must be a callable")
         self.log_eval_func = log_eval_func
         self.addLogObserver('stdio', OutputProgressObserver("output"))
 

@@ -218,7 +218,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
 .. py:class:: Notifier():
 
-    This is a helper for firing mulitple deferreds with the same result.
+    This is a helper for firing multiple deferreds with the same result.
 
     .. py:method:: wait()
 
@@ -811,7 +811,7 @@ This module makes it easy to manipulate identifiers.
 
     :param maxLength: maximum length of the identifier
     :param str: string to coerce to an identifier
-    :returns: identifer of maximum length ``maxLength``
+    :returns: identifier of maximum length ``maxLength``
 
     Coerce a string (assuming ASCII for bytestrings) into an identifier.
     This method will replace any invalid characters with ``_`` and truncate to the given length.
@@ -820,7 +820,7 @@ This module makes it easy to manipulate identifiers.
 
     :param maxLength: maximum length of the identifier
     :param str: identifier to increment
-    :returns: identifer of maximum length ``maxLength``
+    :returns: identifier of maximum length ``maxLength``
     :raises: ValueError if no suitable identifier can be constructed
 
     "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.

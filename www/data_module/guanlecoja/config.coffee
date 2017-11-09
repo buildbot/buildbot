@@ -50,7 +50,7 @@ config =
     sourcemaps: true
     output_scripts: "buildbot-data.js"
     ### ###########################################################################################
-    #   Bower dependancies configuration
+    #   Bower dependencies configuration
     ### ###########################################################################################
     bower:
         testdeps:

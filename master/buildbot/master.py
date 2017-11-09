@@ -329,7 +329,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
     def sendBuildbotNetUsageData(self):
         if "TRIAL_PYTHONPATH" in os.environ and self.config.buildbotNetUsageData is not None:
             raise RuntimeError(
-                "Shoud not enable buildbotNetUsageData in trial tests!")
+                "Should not enable buildbotNetUsageData in trial tests!")
         sendBuildbotNetUsageData(self)
 
     @defer.inlineCallbacks

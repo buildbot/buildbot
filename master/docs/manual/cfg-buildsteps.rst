@@ -2162,8 +2162,8 @@ For :bb:step:`FileUpload`, the ``urlText=`` argument allows you to specify the u
 
 .. bb:step:: DirectoryUpload
 
-Transfering Directories
-+++++++++++++++++++++++
+Transferring Directories
+++++++++++++++++++++++++
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
@@ -2249,8 +2249,8 @@ The `uploadDone` method is called once for each uploaded file and can be used to
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
 
-Transfering Strings
--------------------
+Transferring Strings
+--------------------
 
 .. py:class:: buildbot.steps.transfer.StringDownload
 .. py:class:: buildbot.steps.transfer.JSONStringDownload

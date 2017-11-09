@@ -63,7 +63,7 @@ class TestStatsServicesBase(unittest.TestCase):
 class DummyStatsStorageBase(StatsStorageBase):
 
     """
-    A dummy class to test intialization of StatsStorageBase.
+    A dummy class to test initialization of StatsStorageBase.
     """
 
     def thd_postStatsValue(self, *args, **kwargs):

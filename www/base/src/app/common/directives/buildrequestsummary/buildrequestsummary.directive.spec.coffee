@@ -4,7 +4,7 @@ describe 'buildrequest summary controller', ->
     $scope = $rootScope = $q = $timeout = null
     goneto = createController = null
     dataService = null
-    # overrride "$state"
+    # override "$state"
     beforeEach module(($provide) ->
         $provide.value "$state",
                         go: (args...) -> goneto = args
