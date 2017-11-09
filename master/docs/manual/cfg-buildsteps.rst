@@ -2163,7 +2163,7 @@ For :bb:step:`FileUpload`, the ``urlText=`` argument allows you to specify the u
 .. bb:step:: DirectoryUpload
 
 Transferring Directories
-+++++++++++++++++++++++
+++++++++++++++++++++++++
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
