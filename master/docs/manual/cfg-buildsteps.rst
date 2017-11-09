@@ -2250,7 +2250,7 @@ The `uploadDone` method is called once for each uploaded file and can be used to
 .. bb:step:: JSONPropertiesDownload
 
 Transferring Strings
--------------------
+--------------------
 
 .. py:class:: buildbot.steps.transfer.StringDownload
 .. py:class:: buildbot.steps.transfer.JSONStringDownload
