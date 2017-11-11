@@ -35,12 +35,14 @@ setup_www_plugin(
     license='GNU GPL',
     packages=['buildbot_badges'],
     install_requires=[
-        'klein'
+        'klein',
+        'CairoSVG==1.0.22',  # cairoSVG 2+ is not py2 compatible
+        'cairocffi', 'Jinja2'
     ],
     package_data={
         '': [
-            'VERSION',
-        ]
+            'VERSION', 'templates/*.svg.j2'
+        ],
     },
     entry_points="""
         [buildbot.www]

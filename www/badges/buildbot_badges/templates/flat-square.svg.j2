@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="{{ left.width + right.width }}" height="20">
+  <rect width="{{ left.width + right.width }}" height="20" fill="{{ left.color }}"/>
+  <rect x="{{ left.width }}" width="{{ right.width }}" height="20" fill="{{ right.color }}"/>
+  <rect x="{{ left.width }}" width="4" height="20" fill="{{ right.color }}"/>
+  <rect width="{{ left.width + right.width }}" height="20" fill-opacity=".1"/>
+  <g fill="#fff" text-anchor="middle" font-family="{{config.font_face}},Verdana,Geneva,sans-serif" font-size="{{config.font_size}}">
+    <text x="{{ left.width/2+1 }}" y="14">{{ left.text }}</text>
+    <text x="{{ left.width+right.width/2-1 }}" y="14">{{ right.text }}</text>
+  </g>
+</svg>
