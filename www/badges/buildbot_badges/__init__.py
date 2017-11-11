@@ -35,7 +35,7 @@ class Api(object):
     default = {  # note that these defaults are documented in cfg-www.rst
         "left_text": "Build Status",
         "left_color": "#555",
-        "style": "flat",
+        "style": "plastic",
         "template_name": "{style}.svg.j2",
         "font_face": "DejaVu Sans",
         "font_size": 11,
@@ -134,6 +134,7 @@ class Api(object):
 
         template = self.env.get_template(config['template_name'].format(**config))
         return template.render(left=left, right=right, config=config)
+
 
 # create the interface for the setuptools entry point
 ep = Application(__name__, "Buildbot badges", ui=False)

@@ -232,8 +232,8 @@ This feature is similar to the one in the builder list.
 Badges
 ++++++
 
-Buildbot badges plugin produces an image in svg or png format with information about the last build for the given builder name.
-PNG generation is based on the cairo svg engine, it requires a bit more CPU to generate.
+Buildbot badges plugin produces an image in SVG or PNG format with information about the last build for the given builder name.
+PNG generation is based on the CAIRO_ SVG engine, it requires a bit more CPU to generate.
 
 
    .. code-block:: bash
@@ -247,7 +247,7 @@ PNG generation is based on the cairo svg engine, it requires a bit more CPU to g
       }
 
 You can the access your builder's badges using urls like ``http://<buildbotURL>/badges/<buildername>.svg``.
-The default templates are very much configurables via the following options.
+The default templates are very much configurable via the following options.
 
 .. code-block:: python
 
@@ -279,6 +279,8 @@ Those options can be configured either using the plugin configuration:
 
 Or via the URL arguments like ``http://<buildbotURL>/badges/<buildername>.svg?left_color=222``.
 Custom templates can also be specified in a ``template`` directory nearby the ``master.cfg``.
+
+.. _CAIRO: https://www.cairographics.org/
 
 .. _Web-Authentication:
 
