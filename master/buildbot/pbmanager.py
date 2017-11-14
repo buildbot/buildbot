@@ -22,7 +22,6 @@ from twisted.cred import credentials
 from twisted.cred import error
 from twisted.cred import portal
 from twisted.internet import defer
-from twisted.python import failure
 from twisted.python import log
 from twisted.spread import pb
 from zope.interface import implementer
@@ -195,18 +194,20 @@ class Dispatcher(service.AsyncService):
 
     # ICredentialsChecker
 
+    @defer.inlineCallbacks
     def requestAvatarId(self, creds):
         username = bytes2NativeString(creds.username)
-        if username in self.users:
-            password, _ = self.users[username]
-            d = defer.maybeDeferred(creds.checkPassword, unicode2bytes(password))
-
-            @d.addCallback
-            def check(matched):
+        try:
+            yield self.master.initLock.acquire()
+            if username in self.users:
+                password, _ = self.users[username]
+                matched = yield defer.maybeDeferred(
+                    creds.checkPassword, unicode2bytes(password))
                 if not matched:
                     log.msg("invalid login from user '%s'" % creds.username)
-                    return failure.Failure(error.UnauthorizedLogin())
-                return creds.username
-            return d
-        log.msg("invalid login from unknown user '%s'" % creds.username)
-        return defer.fail(error.UnauthorizedLogin())
+                    raise error.UnauthorizedLogin()
+                defer.returnValue(creds.username)
+            log.msg("invalid login from unknown user '%s'" % creds.username)
+            raise error.UnauthorizedLogin()
+        finally:
+            yield self.master.initLock.release()

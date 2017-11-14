@@ -1,0 +1,1 @@
+Worker authentication is now delayed via a DeferredLock until Buildbot configuration is finished. This fixes UnauthorizedLogin errors during buildbot restart (:issue:`3462`).
