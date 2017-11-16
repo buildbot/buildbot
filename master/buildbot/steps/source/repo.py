@@ -123,6 +123,7 @@ class Repo(Source):
                  manifestOverrideUrl=None,
                  repoDownloads=None,
                  depth=0,
+                 syncQuietly=False,
                  **kwargs):
         """
         @type  manifestURL: string
@@ -153,6 +154,9 @@ class Repo(Source):
         @type depth: integer
         @param depth: optional depth parameter to repo init.
                           If specified, create a shallow clone with given depth.
+
+        @type syncQuietly: bool.
+        @param syncQuietly: true, then suppress verbose output from repo sync.
         """
         self.manifestURL = manifestURL
         self.manifestBranch = manifestBranch
@@ -166,6 +170,7 @@ class Repo(Source):
             repoDownloads = []
         self.repoDownloads = repoDownloads
         self.depth = depth
+        self.syncQuietly = syncQuietly
         Source.__init__(self, **kwargs)
 
         assert self.manifestURL is not None
@@ -311,6 +316,8 @@ class Repo(Source):
             command.append('-j' + str(self.jobs))
         if not self.syncAllBranches:
             command.append('-c')
+        if self.syncQuietly:
+            command.append('-q')
         self.step_status.setText(["repo sync"])
         self.stdio_log.addHeader("synching manifest %s from branch %s from %s\n"
                                  % (self.manifestFile, self.manifestBranch, self.manifestURL))

@@ -1308,6 +1308,7 @@ swartz
 symlink
 syncallbranches
 syncmail
+syncQuietly
 syntaxerror
 sys
 tac
