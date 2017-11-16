@@ -369,7 +369,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': u'contributor',
-            'branch': None,
+            'branch': u'default',
             'category': None,
             'codebase': None,
             'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -394,7 +394,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': u'contributor',
-            'branch': None,
+            'branch': u'default',
             'category': None,
             'codebase': None,
             'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -422,7 +422,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': u'contributor',
-            'branch': None,
+            'branch': u'default',
             'category': None,
             'codebase': None,
             'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -442,7 +442,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         self.assertEqual(self.master.data.updates.changesAdded, [
             {
                 'author': u'contributor',
-                'branch': None,
+                'branch': u'default',
                 'category': None,
                 'codebase': None,
                 'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -457,7 +457,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
             },
             {
                 'author': u'contributor',
-                'branch': None,
+                'branch': u'default',
                 'category': None,
                 'codebase': None,
                 'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -502,7 +502,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': u'contributor',
-            'branch': None,
+            'branch': u'default',
             'category': None,
             'codebase': None,
             'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
@@ -531,7 +531,7 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         yield self.changesource.poll()
         self.assertEqual(self.master.data.updates.changesAdded, [{
             'author': u'contributor',
-            'branch': None,
+            'branch': u'default',
             'category': None,
             'codebase': None,
             'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
