@@ -69,6 +69,16 @@ describe 'dataquery service', ->
             expect(result).toContain(testArray[1])
             expect(result).toContain(testArray[2])
 
+        it 'should filter the array (two eq)', ->
+            result = wrappedDataQuery.filter(testArray, 'buildid__eq': [1, 2])
+            expect(result.length).toBe(2)
+            expect(result).toContain(testArray[1])
+            expect(result).toContain(testArray[2])
+
+        it 'should treat empty eq criteria as no restriction' ->
+            result = wrappedDataQuery.filter(testArray, 'buildid__eq': [])
+            expect(result.length).toBe(3)
+
         it 'should filter the array (ne - not equal)', ->
             result = wrappedDataQuery.filter(testArray, 'complete__ne': true)
             expect(result.length).toBe(1)
