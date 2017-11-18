@@ -974,6 +974,36 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
 
+Here's a complete example of posting build results as a github comment:
+
+.. code-block:: python
+
+    @renderer
+    @defer.inlineCallbacks
+    def getresults(props):
+        all_logs=[]
+        master = props.master
+        steps = yield props.master.data.get(('builders', props.getProperty('buildername'), 'builds', props.getProperty('buildnumber'), 'steps'))
+        for step in steps:
+            if step['results'] == util.Results.index('failure'):
+                logs = yield master.data.get(("steps", step['stepid'], 'logs'))
+                for l in logs:
+                    all_logs.append('Step : {0} Result : {1}'.format(step['name'], util.Results[step['results']]))
+                    all_logs.append('```')
+                    l['stepname'] = step['name']
+                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                    step_logs = l['content']['content'].split('\n')
+                    include = False
+                    for i, sl in enumerate(step_logs):
+                        all_logs.append(sl[1:])
+                    all_logs.append('```')
+        defer.returnValue('\n'.join(all_logs))
+
+    gc = GitHubCommentPush(token='githubAPIToken',
+                           endDescription=getresults,
+                           context=Interpolate('buildbot/%(prop:buildername)s'))
+    c['services'].append(gc)
+
 .. bb:reporter:: BitbucketServerStatusPush
 
 BitbucketServerStatusPush
