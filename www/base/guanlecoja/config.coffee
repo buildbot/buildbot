@@ -41,12 +41,16 @@ config =
             "font-awesome":
                 version: "~4.1.0"
                 files: []
+                files: []            
             "bootstrap":
                 version: "~3.1.1"
                 files: []
             'buildbot-data':
                 version: '~2.2.0'
                 files: 'dist/buildbot-data.js'
+            "angular-bootstrap-multiselect":
+                version: "https://github.com/bentorfs/angular-bootstrap-multiselect.git#^1.1.6"
+                files: 'dist/angular-bootstrap-multiselect.js'
 
         testdeps:
             "angular-mocks":

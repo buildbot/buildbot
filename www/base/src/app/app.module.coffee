@@ -7,4 +7,5 @@ class App extends App
         'RecursionHelper'
         'guanlecoja.ui'
         'bbData'
+        'btorfs.multiselect'
     ]
