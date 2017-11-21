@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
-from future.utils import text_type
 
 import os
 import re
@@ -28,9 +27,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.util import ascii2unicode
 from buildbot.util import bytes2unicode
-from buildbot.util import unicode2bytes
 from buildbot.util.state import StateMixin
 
 
@@ -91,8 +88,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.workdir = workdir
         self.usetimestamps = usetimestamps
         self.category = category if callable(
-            category) else ascii2unicode(category)
-        self.project = ascii2unicode(project)
+            category) else bytes2unicode(category)
+        self.project = bytes2unicode(project)
         self.changeCount = 0
         self.lastRev = {}
 
@@ -332,10 +329,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             timestamp, author, files, comments = [r[1] for r in results]
 
             yield self.master.data.updates.addChange(
-                author=author, revision=ascii2unicode(rev), files=files,
+                author=author, revision=bytes2unicode(rev), files=files,
                 comments=comments, when_timestamp=timestamp,
-                branch=ascii2unicode(self._removeHeads(branch)),
-                project=self.project, repository=ascii2unicode(self.repourl),
+                branch=bytes2unicode(self._removeHeads(branch)),
+                project=self.project, repository=bytes2unicode(self.repourl),
                 category=self.category, src=u'git')
 
     def _dovccmd(self, command, args, path=None):
