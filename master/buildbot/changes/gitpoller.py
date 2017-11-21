@@ -339,15 +339,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 category=self.category, src=u'git')
 
     def _dovccmd(self, command, args, path=None):
-        def encodeArg(arg):
-            if isinstance(arg, list):
-                return [encodeArg(a) for a in arg]
-            elif isinstance(arg, text_type):
-                return arg.encode("ascii")
-            return arg
-        d = utils.getProcessOutputAndValue(encodeArg(self.gitbin),
-                                           encodeArg([command] + args),
-                                           path=encodeArg(path), env=os.environ)
+        d = utils.getProcessOutputAndValue(self.gitbin,
+            [command] + args, path=path, env=os.environ)
 
         def _convert_nonzero_to_failure(res,
                                         command,
