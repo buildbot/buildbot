@@ -88,8 +88,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.workdir = workdir
         self.usetimestamps = usetimestamps
         self.category = category if callable(
-            category) else bytes2unicode(category)
-        self.project = bytes2unicode(project)
+            category) else bytes2unicode(category, encoding=self.encoding)
+        self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
 
@@ -234,8 +234,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             # git use octal char sequences in quotes when non ASCII
             match = re.match('^"(.*)"$', file)
             if match:
-                file = bytes2unicode(match.groups()[0], 'unicode_escape')
-            return bytes2unicode(file)
+                file = bytes2unicode(match.groups()[0], encoding=self.encoding,
+                                     errors='unicode_escape')
+            return bytes2unicode(file, encoding=self.encoding)
 
         @d.addCallback
         def process(git_output):
@@ -286,10 +287,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                     rebuild = True
 
         # get the change list
-        revListArgs = ([b'--format=%H', r'%s' % newRev] +
-                       [b'^' + unicode2bytes(rev, 'ascii', 'ignore')
+        revListArgs = (['--format=%H', r'%s' % newRev] +
+                       ['^' + rev
                         for rev in sorted(itervalues(self.lastRev))] +
-                       [b'--'])
+                       ['--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)
 
@@ -329,10 +330,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             timestamp, author, files, comments = [r[1] for r in results]
 
             yield self.master.data.updates.addChange(
-                author=author, revision=bytes2unicode(rev), files=files,
-                comments=comments, when_timestamp=timestamp,
+                author=author,
+                revision=bytes2unicode(rev, encoding=self.encoding),
+                files=files, comments=comments, when_timestamp=timestamp,
                 branch=bytes2unicode(self._removeHeads(branch)),
-                project=self.project, repository=bytes2unicode(self.repourl),
+                project=self.project,
+                repository=bytes2unicode(self.repourl, encoding=self.encoding),
                 category=self.category, src=u'git')
 
     def _dovccmd(self, command, args, path=None):
