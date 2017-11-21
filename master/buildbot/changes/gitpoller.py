@@ -104,7 +104,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
-            log.msg("gitpoller: using workdir '%s'" % self.workdir)
+            log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
         d = self.getState('lastRev', {})
 
@@ -157,7 +157,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        return "refs/buildbot/%s/%s" % (urlquote(self.repourl, ''),
+        return u"refs/buildbot/{}/{}".format(urlquote(self.repourl, ''),
                                         self._removeHeads(branch))
 
     @defer.inlineCallbacks
@@ -177,7 +177,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 branches = [b for b in branches if self._headsFilter(b)]
 
         refspecs = [
-            '+%s:%s' % (self._removeHeads(branch), self._trackerBranch(branch))
+            u'+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
             for branch in branches
         ]
 
@@ -189,7 +189,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             return
 
         revs = {}
-        log.msg('gitpoller: processing changes from "%s"' % (self.repourl,))
+        log.msg('gitpoller: processing changes from "{}"'.format(self.repourl))
         for branch in branches:
             try:
                 rev = yield self._dovccmd(
@@ -197,8 +197,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 revs[branch] = bytes2unicode(rev, self.encoding)
                 yield self._process_changes(revs[branch], branch)
             except Exception:
-                log.err(_why="trying to poll branch %s of %s"
-                        % (branch, self.repourl))
+                log.err(_why="trying to poll branch {} of {}".format(
+                        branch, self.repourl))
 
         self.lastRev.update(revs)
         yield self.setState('lastRev', self.lastRev)
@@ -220,7 +220,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                     stamp = int(git_output)
                 except Exception as e:
                     log.msg(
-                        'gitpoller: caught exception converting output \'%s\' to timestamp' % git_output)
+                        'gitpoller: caught exception converting output \'{}\' to timestamp'.format(git_output))
                     raise e
                 return stamp
             return None
@@ -276,18 +276,18 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 existingRev = self.lastRev.get(branch)
                 if existingRev is None:
                     # This branch was completely unknown, rebuild
-                    log.msg('gitpoller: rebuilding %s for new branch "%s"' %
-                            (newRev, branch))
+                    log.msg('gitpoller: rebuilding {} for new branch "{}"'.format(
+                            newRev, branch))
                     rebuild = True
                 elif existingRev != newRev:
                     # This branch is known, but it now points to a different
                     # commit than last time we saw it, rebuild.
-                    log.msg('gitpoller: rebuilding %s for updated branch "%s"' %
-                            (newRev, branch))
+                    log.msg('gitpoller: rebuilding {} for updated branch "{}"'.format(
+                            newRev, branch))
                     rebuild = True
 
         # get the change list
-        revListArgs = (['--format=%H', r'%s' % newRev] +
+        revListArgs = (['--format=%H', '{}'.format(newRev)] +
                        ['^' + rev
                         for rev in sorted(itervalues(self.lastRev))] +
                        ['--'])
@@ -305,8 +305,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.lastRev[branch] = newRev
 
         if self.changeCount:
-            log.msg('gitpoller: processing %d changes: %s from "%s" branch "%s"'
-                    % (self.changeCount, revList, self.repourl, branch))
+            log.msg('gitpoller: processing {} changes: {} from "{}" branch "{}"'.format(
+                    self.changeCount, revList, self.repourl, branch))
 
         for rev in revList:
             dl = defer.DeferredList([
@@ -352,10 +352,10 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             stderr = bytes2unicode(stderr, self.encoding)
             if code != 0:
                 if code == 128:
-                    raise GitError('command %s %s in %s on repourl %s failed with exit code %d: %s'
-                                   % (command, args, path, self.repourl, code, stderr))
-                raise EnvironmentError('command %s %s in %s on repourl %s failed with exit code %d: %s'
-                                       % (command, args, path, self.repourl, code, stderr))
+                    raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                   command, args, path, self.repourl, code, stderr))
+                raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                       command, args, path, self.repourl, code, stderr))
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure,
                       command,
