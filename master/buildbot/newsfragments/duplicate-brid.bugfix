@@ -1,0 +1,1 @@
+Fix duplicate build requests results in :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when querying the database  (:issue:`3712`).
