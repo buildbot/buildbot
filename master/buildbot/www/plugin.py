@@ -25,7 +25,7 @@ from buildbot.util import bytes2NativeString
 
 class Application(object):
 
-    def __init__(self, modulename, description):
+    def __init__(self, modulename, description, ui=True):
         self.description = description
         self.version = pkg_resources.resource_string(
             modulename, "/VERSION").strip()
@@ -33,6 +33,7 @@ class Application(object):
         self.static_dir = pkg_resources.resource_filename(
             modulename, "/static")
         self.resource = static.File(self.static_dir)
+        self.ui = ui
 
     def setMaster(self, master):
         self.master = master

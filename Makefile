@@ -8,7 +8,7 @@ VENV_NAME:=.venv$(VENV_PY_VERSION)
 PIP?=$(VENV_NAME)/bin/pip
 VENV_PY_VERSION?=python
 
-WWW_PKGS := pkg www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards
+WWW_PKGS := pkg www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := nestedexample codeparameter
 ALL_PKGS := master worker $(WWW_PKGS)
 
