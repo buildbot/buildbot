@@ -73,8 +73,8 @@ class BitbucketServerEventHandler(object):
     def handle_repo_push(self, payload):
         changes = []
         project = payload['repository']['project']['name']
-        repo_url = payload['repository']['links']['self'][0]['href']
-        repo_url = repo_url.rstrip('browse')
+        repo_url = payload['repository']['links']['self']['href']
+        web_url = payload['repository']['links']['html']['href']
 
         for payload_change in payload['push']['changes']:
             if payload_change['new']:
@@ -93,9 +93,9 @@ class BitbucketServerEventHandler(object):
 
             change = {
                 'revision': commit_hash,
-                'revlink': '{}commits/{}'.format(repo_url, commit_hash),
+                'revlink': '{}/commits/{}'.format(web_url, commit_hash),
                 'repository': repo_url,
-                'author': '{} <{}>'.format(payload['actor']['displayName'],
+                'author': '{} <{}>'.format(payload['actor']['display_name'],
                                            payload['actor']['username']),
                 'comments': 'Bitbucket Server commit {}'.format(commit_hash),
                 'branch': branch,
@@ -110,7 +110,7 @@ class BitbucketServerEventHandler(object):
 
             changes.append(change)
 
-        return (changes, payload['repository']['scmId'])
+        return (changes, payload['repository']['scm'])
 
     def handle_pullrequest_created(self, payload):
         return self.handle_pullrequest(
@@ -140,13 +140,13 @@ class BitbucketServerEventHandler(object):
 
     def handle_pullrequest(self, payload, refname, category):
         pr_number = int(payload['pullrequest']['id'])
-        repo_url = payload['repository']['links']['self'][0]['href']
+        repo_url = payload['repository']['links']['self']['href']
         repo_url = repo_url.rstrip('browse')
         change = {
             'revision': payload['pullrequest']['fromRef']['commit']['hash'],
             'revlink': payload['pullrequest']['link'],
             'repository': repo_url,
-            'author': '{} <{}>'.format(payload['actor']['displayName'],
+            'author': '{} <{}>'.format(payload['actor']['display_name'],
                                        payload['actor']['username']),
             'comments': 'Bitbucket Server Pull Request #{}'.format(pr_number),
             'branch': refname,
@@ -160,7 +160,7 @@ class BitbucketServerEventHandler(object):
         elif self._codebase is not None:
             change['codebase'] = self._codebase
 
-        return [change], payload['repository']['scmId']
+        return [change], payload['repository']['scm']
 
     def getChanges(self, request):
         return self.process(request)
