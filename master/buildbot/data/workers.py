@@ -19,9 +19,9 @@ from __future__ import print_function
 from twisted.internet import defer
 
 from buildbot.data import base
+from buildbot.data import exceptions
 from buildbot.data import types
 from buildbot.util import identifiers
-from buildbot.data import exceptions
 
 
 class Db2DataMixin(object):
@@ -54,7 +54,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
         /builders/n:builderid/workers/n:workerid
         /builders/n:builderid/workers/i:name
     """
-    
+
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
         sldict = yield self.master.db.workers.getWorker(
@@ -78,6 +78,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
         else:
             raise exceptions.exceptions.InvalidPathError("worker not found")
 
+
 class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     isCollection = True
@@ -95,6 +96,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
             builderid=kwargs.get('builderid'),
             masterid=kwargs.get('masterid'))
         defer.returnValue([self.db2data(w) for w in workers_dicts])
+
 
 class Worker(base.ResourceType):
 

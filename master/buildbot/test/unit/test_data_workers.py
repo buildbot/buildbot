@@ -20,8 +20,8 @@ import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from buildbot.data import exceptions
 
+from buildbot.data import exceptions
 from buildbot.data import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster

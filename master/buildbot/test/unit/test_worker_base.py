@@ -550,6 +550,7 @@ class TestAbstractWorker(unittest.TestCase):
         worker.controlWorker(("worker", 1, "unpause"), {'reason': "none"})
         self.assertEqual(worker._paused, False)
 
+
 class TestAbstractLatentWorker(unittest.SynchronousTestCase):
 
     def setUp(self):
