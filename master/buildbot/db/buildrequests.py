@@ -83,6 +83,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None, resultSpec=None):
+
+        def deduplicateBrdict(brdicts):
+            return list(({b['buildrequestid']: b for b in brdicts}).values())
+
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
             claims_tbl = self.db.model.buildrequest_claims
@@ -116,14 +120,13 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 q = q.where(sstamps_tbl.c.repository == repository)
 
             if resultSpec is not None:
-                return resultSpec.thd_execute(
+                return deduplicateBrdict(resultSpec.thd_execute(
                     conn, q,
-                    lambda r: self._brdictFromRow(r, self.db.master.masterid))
+                    lambda r: self._brdictFromRow(r, self.db.master.masterid)))
 
             res = conn.execute(q)
 
-            return [self._brdictFromRow(row, self.db.master.masterid)
-                    for row in res.fetchall()]
+            return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()])
         return self.db.pool.do(thd)
 
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
