@@ -115,3 +115,7 @@ release: virtualenv
 	cp -r master/docs/_build/html ../bbdocs/docs/$(VERSION)
 	. .venv/bin/activate && cd ../bbdocs && make && git add . && git commit -m $(VERSION) && git push
 	echo twine upload --sign dist/*
+
+pyinstaller: virtualenv
+	$(PIP) install pyinstaller
+	$(VENV_NAME)/bin/pyinstaller -F pyinstaller/buildbot-worker.spec

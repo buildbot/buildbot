@@ -110,7 +110,7 @@ class RunMasterBase(unittest.TestCase):
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
-            config_dict['workers'] = [workerclass("local1", "localpw")]
+            config_dict['workers'] = [workerclass("local1", "localpw", missing_timeout=0)]
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
@@ -140,11 +140,13 @@ class RunMasterBase(unittest.TestCase):
                 self.w = SandboxedWorker(
                     "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
                     sandboxed_worker_path)
+                self.addCleanup(self.w.shutdownWorker)
+
         elif self.proto == 'null':
             self.w = None
+
         if self.w is not None:
-            self.w.startService()
-            self.addCleanup(self.w.stopService)
+            self.w.setServiceParent(m)
 
         @defer.inlineCallbacks
         def dump():
