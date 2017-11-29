@@ -61,7 +61,7 @@ class GitHubBuildBot(resource.Resource):
         """
 
         # All responses are application/json
-        request.setHeader("Content-Type", "application/json")
+        request.setHeader(b"Content-Type", b"application/json")
 
         content = request.content.read()
 
@@ -72,7 +72,7 @@ class GitHubBuildBot(resource.Resource):
         # requests from learning about why they failed to POST data
         # to us.
         if self.secret is not None:
-            signature = request.getHeader("X-Hub-Signature")
+            signature = request.getHeader(b"X-Hub-Signature")
 
             if signature is None:
                 logging.error("Rejecting request.  Signature is missing.")
@@ -101,7 +101,7 @@ class GitHubBuildBot(resource.Resource):
                     request.setResponseCode(BAD_REQUEST)
                     return json.dumps({"error": "Bad Request."})
 
-        event_type = request.getHeader("X-GitHub-Event")
+        event_type = request.getHeader(b"X-GitHub-Event")
         logging.debug("X-GitHub-Event: %r", event_type)
 
         handler = getattr(self, 'handle_%s' % event_type, None)
@@ -114,7 +114,7 @@ class GitHubBuildBot(resource.Resource):
             return json.dumps({"error": "Bad Request."})
 
         try:
-            content_type = request.getHeader("Content-Type")
+            content_type = request.getHeader(b"Content-Type")
 
             if content_type == "application/json":
                 payload = json.loads(content)
