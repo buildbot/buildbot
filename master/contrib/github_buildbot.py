@@ -23,10 +23,6 @@ import os
 import re
 import sys
 from hashlib import sha1
-from httplib import ACCEPTED
-from httplib import BAD_REQUEST
-from httplib import INTERNAL_SERVER_ERROR
-from httplib import OK
 from optparse import OptionParser
 
 from twisted.cred import credentials
@@ -39,6 +35,13 @@ try:
     import json
 except ImportError:
     import simplejson as json
+
+
+
+ACCEPTED = 202
+BAD_REQUEST = 400
+INTERNAL_SERVER_ERROR = 500
+OK = 200
 
 
 class GitHubBuildBot(resource.Resource):
