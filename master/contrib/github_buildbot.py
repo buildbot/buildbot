@@ -83,7 +83,7 @@ class GitHubBuildBot(resource.Resource):
                 return json.dumps({"error": "Bad Request."})
 
             try:
-                hash_type, hexdigest = signature.split("=")
+                hash_type, hexdigest = signature.split(b"=")
 
             except ValueError:
                 logging.error("Rejecting request.  Bad signature format.")
@@ -93,7 +93,7 @@ class GitHubBuildBot(resource.Resource):
             else:
                 # sha1 is hard coded into github's source code so it's
                 # unlikely this will ever change.
-                if hash_type != "sha1":
+                if hash_type != b"sha1":
                     logging.error("Rejecting request.  Unexpected hash type.")
                     request.setResponseCode(BAD_REQUEST)
                     return json.dumps({"error": "Bad Request."})
@@ -105,9 +105,9 @@ class GitHubBuildBot(resource.Resource):
                     return json.dumps({"error": "Bad Request."})
 
         event_type = request.getHeader(b"X-GitHub-Event")
-        logging.debug("X-GitHub-Event: %r", event_type)
+        logging.debug(b"X-GitHub-Event: " + event_type)
 
-        handler = getattr(self, 'handle_%s' % event_type, None)
+        handler = getattr(self, u'handle_' + event_type.decode("ascii"), None)
 
         if handler is None:
             logging.info(
@@ -119,9 +119,9 @@ class GitHubBuildBot(resource.Resource):
         try:
             content_type = request.getHeader(b"Content-Type")
 
-            if content_type == "application/json":
+            if content_type == b"application/json":
                 payload = json.loads(content)
-            elif content_type == "application/x-www-form-urlencoded":
+            elif content_type == b"application/x-www-form-urlencoded":
                 payload = json.loads(request.args["payload"][0])
             else:
                 logging.info(
@@ -130,7 +130,7 @@ class GitHubBuildBot(resource.Resource):
                 request.setResponseCode(BAD_REQUEST)
                 return json.dumps({"error": "Bad Request."})
 
-            logging.debug("Payload: %r", payload)
+            logging.debug("Payload: " + payload)
             repo = payload['repository']['full_name']
             repo_url = payload['repository']['html_url']
             changes = handler(payload, repo, repo_url)
