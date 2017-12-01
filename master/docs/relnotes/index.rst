@@ -10,6 +10,117 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2017.12.01`` ( ``2017-12-01`` )
+==========================================
+
+Bug fixes
+---------
+
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
+
+Buildbot ``2017.12.01`` ( ``2017-12-01`` )
+==========================================
+
+Bug fixes
+---------
+
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
+
+Buildbot ``2017.12.01`` ( ``2017-12-01`` )
+==========================================
+
+Bug fixes
+---------
+
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
+
+Buildbot ``2017.12.01`` ( ``2017-12-01`` )
+==========================================
+
+Bug fixes
+---------
+
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
 
 Buildbot ``0.9.13`` ( ``2017-11-07`` )
 ======================================

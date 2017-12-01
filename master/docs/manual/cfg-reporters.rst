@@ -973,12 +973,13 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param list builders: only send update for specified builders
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
+    :returns: string for comment, must be less than 65536 bytes.
 
 Here's a complete example of posting build results as a github comment:
 
 .. code-block:: python
 
-    @renderer
+    @util.renderer
     @defer.inlineCallbacks
     def getresults(props):
         all_logs=[]
