@@ -89,7 +89,7 @@ GitHub hook
 .. note::
 
    There is a standalone HTTP server available for receiving GitHub notifications as well: :contrib-src:`master/contrib/github_buildbot.py`.
-   This script may be useful in cases where you cannot expose the WebStatus for public consumption.
+   This script may be useful in cases where you cannot expose the WebStatus for public consumption. Alternatively, you can setup a reverse proxy :ref:`Reverse_Proxy_Config` 
 
 The GitHub hook has the following parameters:
 
@@ -135,7 +135,8 @@ The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
 
-    c['www'] = dict(...,
+    c['www'] = dict(    
+        'base': True
         change_hook_dialects={'github': {}},
     )
 
@@ -161,7 +162,6 @@ The parameters are:
                 change_hook_dialects={
                     'github': {
                         'secret': 'MY-SECRET',
-                        'strict': True,
                     },
                 },
             )
