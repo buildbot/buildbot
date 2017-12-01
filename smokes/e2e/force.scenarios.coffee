@@ -8,14 +8,17 @@ homePage = require('./pages/home.coffee')
 describe 'force', () ->
     force = null
     builder = null
+    home = null
 
-    beforeEach(() ->
+    beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
-        builder.goDefault()
-    )
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
+
     afterEach () ->
         new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     lastbuild = null
     it 'should create a build', () ->

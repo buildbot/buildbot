@@ -10,16 +10,17 @@ homePage = require('./pages/home.coffee')
 describe 'previousnextlink', () ->
     force = null
     builder = null
+    home = null
 
-    beforeEach(() ->
+    beforeEach () ->
         builder = new builderPage('runtests', 'force')
         force =  new forcePage()
-    )
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
+
     afterEach () ->
         new homePage().waitAllBuildsFinished()
-
-    it 'has afterEach working', () ->
-        return
+        home.logOut()
 
     it 'should navigate in the builds history by using the previous next links', () ->
         builder.go()
@@ -44,11 +45,17 @@ describe 'previousnextlink', () ->
 describe 'forceandstop', () ->
     force = null
     builder = null
+    home = null
 
-    beforeEach(() ->
+    beforeEach () ->
         builder = new builderPage('slowruntests', 'force')
         force =  new forcePage()
-    )
+        home = new homePage()
+        home.loginUser("homer@email.com", "doh!")
+
+    afterEach () ->
+        new homePage().waitAllBuildsFinished()
+        home.logOut()
 
     it 'should create a build with a dedicated reason and stop it during execution', () ->
 
