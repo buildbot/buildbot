@@ -174,7 +174,6 @@ class FakeMaster(service.MasterService):
         self.config = config.MasterConfig()
         self.caches = FakeCaches()
         self.pbmanager = pbmanager.FakePBManager()
-        self.initLock = defer.DeferredLock()
         self.basedir = 'basedir'
         self.botmaster = FakeBotMaster()
         self.botmaster.setServiceParent(self)
