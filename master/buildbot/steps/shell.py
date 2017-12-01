@@ -38,6 +38,7 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
+from buildbot.process.results import worst_status
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import command_to_string
 from buildbot.util import flatten
@@ -611,12 +612,12 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
             "warnings-count", old_count + self.warnCount, "WarningCountingShellCommand")
 
     def evaluateCommand(self, cmd):
-        if (cmd.didFail() or
-                (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount)):
-            return FAILURE
-        if self.warnCount:
-            return WARNINGS
-        return SUCCESS
+        result = cmd.results()
+        if (self.maxWarnCount is not None and self.warnCount > self.maxWarnCount):
+            result = worst_status(result, FAILURE)
+        elif self.warnCount:
+            result = worst_status(result, WARNINGS)
+        return result
 
 
 class Compile(WarningCountingShellCommand):
