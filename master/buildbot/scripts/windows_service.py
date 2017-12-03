@@ -205,7 +205,7 @@ class BBService(win32serviceutil.ServiceFramework):
                        "Stopping the service.")
             return False
         if save_dirs:
-            dir_string = os.pathsep.join(self.dirs).encode("mbcs")
+            dir_string = os.pathsep.join(self.dirs)
             win32serviceutil.SetServiceCustomOption(self, "directories",
                                                     dir_string)
         return True
