@@ -9,8 +9,8 @@ Babel==2.5.1
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
-boto3==1.4.7
-botocore==1.7.47
+boto3==1.4.8
+botocore==1.8.2
 cffi==1.11.2
 click==6.7
 configparser==3.5.0
@@ -40,7 +40,7 @@ markdown2==2.3.5
 MarkupSafe==1.0
 mccabe==0.6.1
 mock==2.0.0
-moto==1.1.24
+moto==1.1.25
 olefile==0.44
 packaging==16.8
 pathlib2==2.3.0
@@ -48,8 +48,8 @@ pbr==3.1.1
 pep8==1.7.1
 Pillow==4.3.0
 pyaml==17.10.0
-pyasn1==0.3.7
-pyasn1-modules==0.1.5
+pyasn1==0.4.2
+pyasn1-modules==0.2.1
 pycodestyle==2.3.1
 pycparser==2.18
 pyenchant==1.6.11
@@ -57,7 +57,7 @@ pyflakes==1.6.0
 pyjade==4.0.0
 PyJWT==1.5.3
 pylint==1.7.4
-pyOpenSSL==17.3.0
+pyOpenSSL==17.4.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
 pytz==2017.3
