@@ -742,7 +742,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         return self.runStep()
 
     def test_warn_with_decoderc(self):
-        self.setupStep(shell.WarningCountingShellCommand(command=['make'], decodeRC={3:WARNINGS}))
+        self.setupStep(shell.WarningCountingShellCommand(command=['make'], decodeRC={3: WARNINGS}))
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=["make"],
