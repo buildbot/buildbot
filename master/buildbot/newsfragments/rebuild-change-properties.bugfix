@@ -1,0 +1,1 @@
+Rebuilding with the same revision now takes new change properties into account instead of re-using the original build change properties (:issue:`3701`).
