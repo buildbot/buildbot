@@ -136,7 +136,6 @@ The simplest way to use GitHub hook is as follows:
 .. code-block:: python
 
     c['www'] = dict(    
-        'base': True
         change_hook_dialects={'github': {}},
     )
 
