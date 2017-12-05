@@ -6,7 +6,7 @@
           th Builds
           th
             span(ng-init="help=false", ng-click="help=!help")
-                i.fa.fa-question-circle(style="position:relative")
+                i.fa.fa-question-circle.clickable(style="position:relative")
                     .popover.bottom.anim-popover(ng-if="help",
                        style="display:block;min-width:600px;left:-300px;top:30px")
                         h5.popover-title
@@ -35,7 +35,7 @@
                 span.label.label-success
                   | {{ tags_filter.length }} tags
             span(ng-show="tags_filter.length > 0")
-                span.label.label-danger(ng-click="tags_filter = []") x
+                span.label.clickable.label-danger(ng-click="tags_filter = []") x
           th(style="width:20%px;") Workers
       tr(ng-repeat='builder in builders | filter: isBuilderFiltered | orderBy: "name"')
           td(style="width:200px")
@@ -48,7 +48,7 @@
                       | {{ build.number }}
           td(style="width:20%;")
             span(ng-repeat="tag in builder.tags")
-                span.label(ng-click="toggleTag(tag)", ng-class="isTagFiltered(tag) ? 'label-success': 'label-default'")
+                span.label.clickable(ng-click="toggleTag(tag)", ng-class="isTagFiltered(tag) ? 'label-success': 'label-default'")
                   | {{ tag }}
                 | &nbsp;
           td(style="width:20%;")
