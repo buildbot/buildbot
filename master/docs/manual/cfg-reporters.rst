@@ -175,6 +175,13 @@ MailNotifier arguments
     ``warnings``
         Equivalent to (``warnings``, ``failing``).
 
+    Set these shortcuts as actual strings in the configuration::
+
+        from buildbot.plugins import reporters
+        mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                    mode="warnings")
+        c['services'].append(mn)
+
     (list of strings).
     A combination of:
 
