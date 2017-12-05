@@ -1,0 +1,1 @@
+Fixed inconsistent use of `pointer` style mouse cursor by removing it from the `.label` css rule and instead creating a new `.clickable` css rule which is used only in places which are clickable and would not otherwise automatically get the `pointer` icon, for example it is not needed for hyperlinks. (:issue:`3795`).

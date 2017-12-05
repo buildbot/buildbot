@@ -26,7 +26,7 @@
                     span(ng-show="C.tags.length == 0")
                         | Tags
                     span(ng-show="C.tags.length < 5", ng-repeat="tag in C.tags")
-                        span.builder-tag.label.label-success(ng-click="C.toggleTag(tag)")
+                        span.builder-tag.label.clickable.label-success(ng-click="C.toggleTag(tag)")
                           | {{ tag }}
                     span(ng-show="C.tags.length >= 5")
                         span.label.label-success
@@ -42,7 +42,7 @@
                         | {{ b.name }}
                 td
                     span(ng-repeat="tag in b.tags")
-                        span.builder-tag.label(ng-click="C.toggleTag(tag)", ng-class="C.isTagToggled(tag) ? 'label-success': 'label-default'")
+                        span.builder-tag.label.clickable(ng-click="C.toggleTag(tag)", ng-class="C.isTagToggled(tag) ? 'label-success': 'label-default'")
                             | {{ tag }}
                 td(ng-repeat="ch in changes track by ch.changeid")
                     a(ng-repeat="build in b.builds[ch.changeid] | orderBy: 'buildid'", ui-sref="build({builder: b.builderid, build: build.number})")
