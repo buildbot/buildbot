@@ -50,6 +50,7 @@ def skip_ec2(f):
 if boto3 is None:
     mock_ec2 = skip_ec2
 
+
 def anyImageId(c):
     for image in c.describe_images()['Images']:
         return image['ImageId']
@@ -504,7 +505,6 @@ class TestEC2LatentWorker(unittest.TestCase):
     @mock_ec2
     def test_get_image_location(self):
         c, r = self.botoSetup('latent_buildbot_slave')
-        amis = list(r.images.all())
         bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
                                  identifier='publickey',
                                  secret_identifier='privatekey',
