@@ -25,7 +25,7 @@ flake8==3.5.0
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.16.0
-futures==3.2.0
+futures==3.2.0; python_version == "2.7"
 idna==2.6
 imagesize==0.7.1
 incremental==17.5.0
