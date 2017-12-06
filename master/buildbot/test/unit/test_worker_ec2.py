@@ -56,6 +56,7 @@ def anyImageId(c):
         return image['ImageId']
     return 'foo'
 
+
 class TestEC2LatentWorker(unittest.TestCase):
     ec2_connection = None
 
