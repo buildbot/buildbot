@@ -1,0 +1,1 @@
+Compile step now properly takes the decodeRC parameter in account (:issue:`3774`)
