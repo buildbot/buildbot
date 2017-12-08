@@ -10,6 +10,46 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.14`` ( ``2017-12-08`` )
+======================================
+
+Bug fixes
+---------
+
+- Compile step now properly takes the decodeRC parameter in account
+  (:issue:`3774`)
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Fixed inconsistent use of `pointer` style mouse cursor by removing it from
+  the `.label` css rule and instead creating a new `.clickable` css rule which
+  is used only in places which are clickable and would not otherwise
+  automatically get the `pointer` icon, for example it is not needed for
+  hyper-links. (:issue:`3795`).
+- Rebuilding with the same revision now takes new change properties into
+  account instead of re-using the original build change properties
+  (:issue:`3701`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+- Fixes python3 encoding issues with Windows Service (:issue:`3796`)
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- In progress worker control API. Worker can now be stopped and paused using the UI.
+  Note that there is no UI yet to look the status of those actions (:issue:`3429`).
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
 
 Buildbot ``0.9.13`` ( ``2017-11-07`` )
 ======================================

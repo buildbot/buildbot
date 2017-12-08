@@ -1,1 +1,0 @@
-On 'Builders' page reload builds when tags change.

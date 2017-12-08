@@ -1,1 +1,0 @@
-:py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch names with UTF-8 characters (:issue:`3769`).
