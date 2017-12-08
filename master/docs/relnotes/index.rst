@@ -34,12 +34,15 @@ Bug fixes
 - Worker authentication is now delayed via a DeferredLock until Buildbot
   configuration is finished. This fixes UnauthorizedLogin errors during
   buildbot restart (:issue:`3462`).
+- Fixes python3 encoding issues with Windows Service (:issue:`3796`)
 
 Features
 --------
 
 - new :ref`badges` plugin which reimplement the buildbot eight png badge
   system.
+- In progress worker control API. Worker can now be stopped and paused using the UI.
+  Note that there is no UI yet to look the status of those actions (:issue:`3429`).
 - Make maximum number of builds fetched on the builders page configurable.
 - Include `context` in the log message for `GitHubStatusPush`
 - On 'Builders' page reload builds when tags change.
