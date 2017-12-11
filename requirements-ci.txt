@@ -56,7 +56,7 @@ pyenchant==2.0.0
 pyflakes==1.6.0
 pyjade==4.0.0
 PyJWT==1.5.3
-pylint==1.7.4
+pylint==1.7.5
 pyOpenSSL==17.5.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
