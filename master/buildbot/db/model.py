@@ -73,9 +73,11 @@ class Model(base.DBConnectorComponent):
     buildrequests = sautils.Table(
         'buildrequests', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('buildsetid', sa.Integer, sa.ForeignKey("buildsets.id"),
+        sa.Column('buildsetid', sa.Integer,
+                  sa.ForeignKey('buildsets.id', ondelete='CASCADE'),
                   nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('priority', sa.Integer, nullable=False,
                   server_default=sa.DefaultClause("0")),
@@ -104,9 +106,11 @@ class Model(base.DBConnectorComponent):
     # claim is made by the master referenced by masterid.
     buildrequest_claims = sautils.Table(
         'buildrequest_claims', metadata,
-        sa.Column('brid', sa.Integer, sa.ForeignKey('buildrequests.id'),
+        sa.Column('brid', sa.Integer,
+                  sa.ForeignKey('buildrequests.id', ondelete='CASCADE'),
                   nullable=False),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   index=True, nullable=True),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
@@ -116,7 +120,8 @@ class Model(base.DBConnectorComponent):
     # This table contains the build properties
     build_properties = sautils.Table(
         'build_properties', metadata,
-        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id'),
+        sa.Column('buildid', sa.Integer,
+                  sa.ForeignKey('builds.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('name', sa.String(256), nullable=False),
         # JSON encoded value
@@ -129,7 +134,8 @@ class Model(base.DBConnectorComponent):
         'builds', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id')),
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE')),
         # note that there is 1:N relationship here.
         # In case of worker loss, build has results RETRY
         # and buildrequest is unclaimed.
@@ -137,13 +143,16 @@ class Model(base.DBConnectorComponent):
         # (buildrequests -> buildsets -> builds).
         sa.Column('buildrequestid', sa.Integer,
                   sa.ForeignKey(
-                      'buildrequests.id', use_alter=True, name='buildrequestid'),
+                      'buildrequests.id', use_alter=True,
+                      name='buildrequestid', ondelete='CASCADE'),
                   nullable=False),
         # worker which performed this build
         # keep nullable to support worker-free builds
-        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id')),
+        sa.Column('workerid', sa.Integer,
+                  sa.ForeignKey('workers.id', ondelete='CASCADE')),
         # master which controlled this build
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   nullable=False),
         # start/complete times
         sa.Column('started_at', sa.Integer, nullable=False),
@@ -159,7 +168,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
         sa.Column('name', sa.String(50), nullable=False),
-        sa.Column('buildid', sa.Integer, sa.ForeignKey('builds.id')),
+        sa.Column('buildid', sa.Integer,
+                  sa.ForeignKey('builds.id', ondelete='CASCADE')),
         sa.Column('started_at', sa.Integer),
         sa.Column('complete_at', sa.Integer),
         sa.Column('state_string', sa.Text, nullable=False),
@@ -176,7 +186,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('name', sa.Text, nullable=False),
         sa.Column('slug', sa.String(50), nullable=False),
-        sa.Column('stepid', sa.Integer, sa.ForeignKey('steps.id')),
+        sa.Column('stepid', sa.Integer,
+                  sa.ForeignKey('steps.id', ondelete='CASCADE')),
         sa.Column('complete', sa.SmallInteger, nullable=False),
         sa.Column('num_lines', sa.Integer, nullable=False),
         # 's' = stdio, 't' = text, 'h' = html, 'd' = deleted
@@ -185,7 +196,8 @@ class Model(base.DBConnectorComponent):
 
     logchunks = sautils.Table(
         'logchunks', metadata,
-        sa.Column('logid', sa.Integer, sa.ForeignKey('logs.id')),
+        sa.Column('logid', sa.Integer,
+                  sa.ForeignKey('logs.id', ondelete='CASCADE')),
         # 0-based line number range in this chunk (inclusive); note that for
         # HTML logs, this counts lines of HTML, not lines of rendered output
         sa.Column('first_line', sa.Integer, nullable=False),
@@ -201,7 +213,8 @@ class Model(base.DBConnectorComponent):
     # This table contains input properties for buildsets
     buildset_properties = sautils.Table(
         'buildset_properties', metadata,
-        sa.Column('buildsetid', sa.Integer, sa.ForeignKey('buildsets.id'),
+        sa.Column('buildsetid', sa.Integer,
+                  sa.ForeignKey('buildsets.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
@@ -234,7 +247,8 @@ class Model(base.DBConnectorComponent):
         # optional parent build, we use use_alter to prevent circular reference
         # http://docs.sqlalchemy.org/en/latest/orm/relationships.html#rows-that-point-to-themselves-mutually-dependent-rows
         sa.Column('parent_buildid', sa.Integer,
-                  sa.ForeignKey('builds.id', use_alter=True, name='parent_buildid')),
+                  sa.ForeignKey('builds.id', use_alter=True,
+                                name='parent_buildid', ondelete='CASCADE')),
         # text describing what is the relationship with the build
         # could be 'triggered from', 'rebuilt from', 'inherited from'
         sa.Column('parent_relationship', sa.Text),
@@ -262,9 +276,11 @@ class Model(base.DBConnectorComponent):
     # exactly one claim succeeds.
     changesource_masters = sautils.Table(
         'changesource_masters', metadata,
-        sa.Column('changesourceid', sa.Integer, sa.ForeignKey('changesources.id'),
+        sa.Column('changesourceid', sa.Integer,
+                  sa.ForeignKey('changesources.id', ondelete='CASCADE'),
                   nullable=False, primary_key=True),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -294,8 +310,10 @@ class Model(base.DBConnectorComponent):
         'connected_workers', metadata,
         sa.Column('id', sa.Integer, primary_key=True, nullable=False),
         sa.Column('masterid', sa.Integer,
-                  sa.ForeignKey('masters.id'), nullable=False),
-        sa.Column('workerid', sa.Integer, sa.ForeignKey('workers.id'),
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
+                  nullable=False),
+        sa.Column('workerid', sa.Integer,
+                  sa.ForeignKey('workers.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -304,7 +322,8 @@ class Model(base.DBConnectorComponent):
     # Files touched in changes
     change_files = sautils.Table(
         'change_files', metadata,
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
+        sa.Column('changeid', sa.Integer,
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('filename', sa.String(1024), nullable=False),
     )
@@ -312,7 +331,8 @@ class Model(base.DBConnectorComponent):
     # Properties for changes
     change_properties = sautils.Table(
         'change_properties', metadata,
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid'),
+        sa.Column('changeid', sa.Integer,
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('property_name', sa.String(256), nullable=False),
         # JSON-encoded tuple of (value, source)
@@ -324,10 +344,12 @@ class Model(base.DBConnectorComponent):
     # and committer, for example.
     change_users = sautils.Table(
         "change_users", metadata,
-        sa.Column("changeid", sa.Integer, sa.ForeignKey('changes.changeid'),
+        sa.Column('changeid', sa.Integer,
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
                   nullable=False),
         # uid for the author of the change with the given changeid
-        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'),
+        sa.Column('uid', sa.Integer,
+                  sa.ForeignKey('users.uid', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -376,14 +398,15 @@ class Model(base.DBConnectorComponent):
 
         # the sourcestamp this change brought the codebase to
         sa.Column('sourcestampid', sa.Integer,
-                  sa.ForeignKey('sourcestamps.id')),
+                  sa.ForeignKey('sourcestamps.id', ondelete='CASCADE')),
 
         # The parent of the change
         # Even if for the moment there's only 1 parent for a change, we use plural here because
         # somedays a change will have multiple parent. This way we don't need
         # to change the API
-        sa.Column('parent_changeids', sa.Integer, sa.ForeignKey(
-            'changes.changeid'), nullable=True),
+        sa.Column('parent_changeids', sa.Integer,
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
+                  nullable=True),
     )
 
     # sourcestamps
@@ -429,7 +452,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('revision', sa.String(256)),
 
         # the patch to apply to generate this source code
-        sa.Column('patchid', sa.Integer, sa.ForeignKey('patches.id')),
+        sa.Column('patchid', sa.Integer,
+                  sa.ForeignKey('patches.id', ondelete='CASCADE')),
 
         # the repository from which this source should be checked out
         sa.Column('repository', sa.String(length=512), nullable=False,
@@ -452,10 +476,10 @@ class Model(base.DBConnectorComponent):
         'buildset_sourcestamps', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('buildsetid', sa.Integer,
-                  sa.ForeignKey('buildsets.id'),
+                  sa.ForeignKey('buildsets.id', ondelete='CASCADE'),
                   nullable=False),
         sa.Column('sourcestampid', sa.Integer,
-                  sa.ForeignKey('sourcestamps.id'),
+                  sa.ForeignKey('sourcestamps.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -485,9 +509,11 @@ class Model(base.DBConnectorComponent):
     # see bug #1053.
     scheduler_masters = sautils.Table(
         'scheduler_masters', metadata,
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id'),
+        sa.Column('schedulerid', sa.Integer,
+                  sa.ForeignKey('schedulers.id', ondelete='CASCADE'),
                   nullable=False, primary_key=True),
-        sa.Column('masterid', sa.Integer, sa.ForeignKey('masters.id'),
+        sa.Column('masterid', sa.Integer,
+                  sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -498,8 +524,10 @@ class Model(base.DBConnectorComponent):
     # the change.
     scheduler_changes = sautils.Table(
         'scheduler_changes', metadata,
-        sa.Column('schedulerid', sa.Integer, sa.ForeignKey('schedulers.id')),
-        sa.Column('changeid', sa.Integer, sa.ForeignKey('changes.changeid')),
+        sa.Column('schedulerid', sa.Integer,
+                  sa.ForeignKey('schedulers.id', ondelete='CASCADE')),
+        sa.Column('changeid', sa.Integer,
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE')),
         # true (nonzero) if this change is important to this scheduler
         sa.Column('important', sa.Integer),
     )
@@ -545,9 +573,11 @@ class Model(base.DBConnectorComponent):
     builders_tags = sautils.Table(
         'builders_tags', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
-        sa.Column('builderid', sa.Integer, sa.ForeignKey('builders.id'),
+        sa.Column('builderid', sa.Integer,
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
                   nullable=False),
-        sa.Column('tagid', sa.Integer, sa.ForeignKey('tags.id'),
+        sa.Column('tagid', sa.Integer,
+                  sa.ForeignKey('tags.id', ondelete='CASCADE'),
                   nullable=False),
     )
 
@@ -570,7 +600,8 @@ class Model(base.DBConnectorComponent):
     object_state = sautils.Table(
         "object_state", metadata,
         # object for which this value is set
-        sa.Column("objectid", sa.Integer, sa.ForeignKey('objects.id'),
+        sa.Column('objectid', sa.Integer,
+                  sa.ForeignKey('objects.id', ondelete='CASCADE'),
                   nullable=False),
         # name for this value (local to the object)
         sa.Column("name", sa.String(length=255), nullable=False),
@@ -602,7 +633,8 @@ class Model(base.DBConnectorComponent):
     users_info = sautils.Table(
         "users_info", metadata,
         # unique user id number
-        sa.Column("uid", sa.Integer, sa.ForeignKey('users.uid'),
+        sa.Column('uid', sa.Integer,
+                  sa.ForeignKey('users.uid', ondelete='CASCADE'),
                   nullable=False),
 
         # type of user attribute, such as 'git'
