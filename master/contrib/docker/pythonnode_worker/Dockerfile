@@ -9,7 +9,8 @@ MAINTAINER  Buildbot maintainers
 # This will make apt-get install without question
 ARG         DEBIAN_FRONTEND=noninteractive
 
-user root
+USER root
+
 # Install required npm packages
 RUN  curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
         apt-get update && apt-get install -y -o APT::Install-Recommends=false -o APT::Install-Suggests=false \
@@ -17,4 +18,4 @@ RUN  curl -sL https://deb.nodesource.com/setup_6.x | bash - && \
         git && \
     rm -rf /var/lib/apt/lists/*
 
-user buildbot
+USER buildbot
