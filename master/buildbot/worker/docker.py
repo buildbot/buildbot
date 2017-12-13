@@ -92,7 +92,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
     def getContainerName(self):
-        return ('%s-%s' % ('buildbot' + self.masterhash, self.workername)).replace("_", "-")
+        return ('buildbot-{worker}-{hash}'.format(worker=self.workername, hash=self.masterhash)).replace("_", "-")
 
     @property
     def shortid(self):
@@ -213,11 +213,15 @@ class DockerLatentWorker(DockerBaseWorker):
 
     def _thd_start_instance(self, image, dockerfile, volumes):
         docker_client = self._getDockerClient()
+        container_name = self.getContainerName()
         # cleanup the old instances
         instances = docker_client.containers(
             all=1,
-            filters=dict(name=self.getContainerName()))
+            filters=dict(name=container_name))
+        container_name = "/{0}".format(container_name)
         for instance in instances:
+            if container_name not in instance['Names']:
+                continue
             try:
                 docker_client.remove_container(instance['Id'], v=True, force=True)
             except NotFound:

@@ -1,0 +1,1 @@
+Fixes issue with Buildbot DockerLatentWorker, where Buildbot can kill running workers by mistake based on the form the worker name (:issue:`3800`)
