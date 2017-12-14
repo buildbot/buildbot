@@ -1,5 +1,5 @@
 .gl-page-with-sidebar(ng-class="{'active': page.sidebarActive, 'pinned': page.sidebarPinned}")
-    .sidebar.sidebar-blue(ng-mouseenter='page.enterSidebar()',ng-mouseleave='page.leaveSidebar()')
+    .sidebar.sidebar-blue(ng-mouseenter='page.enterSidebar()',ng-mouseleave='page.leaveSidebar()',ng-click='page.sidebarActive=true')
         ul
             li.sidebar-main
                 a(href='javascript:')

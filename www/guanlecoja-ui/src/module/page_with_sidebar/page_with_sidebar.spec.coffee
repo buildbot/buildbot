@@ -37,13 +37,15 @@ describe 'page with sidebar', ->
         scope.page.toggleGroup(g)
         expect(scope.page.activeGroup).toBe(g)
 
-        scope.page.enterSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.leaveSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.enterSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.leaveSidebar()
+        # Changed sidebar to activate on mouse-click, so these tests don't apply anymore
+        # scope.page.enterSidebar()
+        # expect(scope.page.sidebarActive).toBe(true)
+        # scope.page.leaveSidebar()
+        # expect(scope.page.sidebarActive).toBe(true)
+        # scope.page.enterSidebar()
+        # expect(scope.page.sidebarActive).toBe(true)
+        # scope.page.leaveSidebar()
+        
         $timeout.flush()
         expect(scope.page.sidebarActive).toBe(true)
         scope.page.sidebarPinned = false
