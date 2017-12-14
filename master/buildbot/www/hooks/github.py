@@ -27,7 +27,7 @@ from twisted.internet import defer
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2unicode
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2bytes
 from buildbot.util.logger import Logger
 from buildbot.www.hooks.base import BaseHookHandler
@@ -72,6 +72,19 @@ class GitHubEventHandler(PullRequestMixin):
                              'while no secret is provided')
         self.debug = debug
         self.verify = verify
+        self._github = None
+
+    @defer.inlineCallbacks
+    def get_github_api_service(self):
+        if self._github is None:
+            self._github = yield githubapiservice.GithubApiService.getService(
+                self.master,
+                oauth_token=self._token,
+                api_root_url=self.github_api_endpoint,
+                debug=self.debug,
+                verify=self.verify
+            )
+        defer.returnValue(self._github)
 
     @defer.inlineCallbacks
     def process(self, request):
@@ -212,19 +225,15 @@ class GitHubEventHandler(PullRequestMixin):
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         '''
-        headers = {
-            'User-Agent': 'Buildbot'
-        }
-        if self._token:
-            headers['Authorization'] = 'token ' + self._token
-
         url = '/repos/{}/commits/{}'.format(repo, sha)
-        http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.github_api_endpoint, headers=headers,
-            debug=self.debug, verify=self.verify)
-        res = yield http.get(url)
-        data = yield res.json()
-        msg = data['commit']['message']
+        gh_api_service = yield self.get_github_api_service()
+        response = yield gh_api_service.get(url)
+        data = yield response.json()
+        msg = None
+        if 'commit' in data:
+            # Because we can get:
+            #  {u'documentation_url': u'https://developer.github.com/v3', u'message': u'Not Found'}
+            msg = data['commit']['message']
         defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
@@ -299,6 +308,8 @@ class GitHubEventHandler(PullRequestMixin):
 
         :return type: Bool
         '''
+        if not msg:
+            return False
         for skip in self.skips:
             if re.search(skip, msg):
                 return True
@@ -321,7 +332,7 @@ class GitHubHandler(BaseHookHandler):
             'codebase': options.get('codebase', None),
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
-            'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'github_api_endpoint': options.get('github_api_endpoint', None),
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,
