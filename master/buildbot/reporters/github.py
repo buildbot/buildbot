@@ -30,12 +30,10 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2NativeString
 from buildbot.util.giturlparse import giturlparse
 from buildbot.util.logger import Logger
-
-HOSTED_BASE_URL = 'https://api.github.com'
 
 log = Logger()
 
@@ -51,18 +49,14 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
-        if baseURL is None:
-            baseURL = HOSTED_BASE_URL
-        if baseURL.endswith('/'):
-            baseURL = baseURL[:-1]
-
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers={
-                'Authorization': 'token ' + token,
-                'User-Agent': 'Buildbot'
-            },
-            debug=self.debug, verify=self.verify)
         self.verbose = verbose
+        self._github = yield githubapiservice.GithubApiService.getService(
+            self.master,
+            oauth_token=token,
+            api_root_url=baseURL,
+            debug=self.debug,
+            verify=self.verify
+        )
 
     def setDefaults(self, context, startDescription, endDescription):
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
@@ -98,7 +92,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['context'] = context
 
-        return self._http.post(
+        return self._github.post(
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload)
 
@@ -213,6 +207,6 @@ class GitHubCommentPush(GitHubStatusPush):
         """
         payload = {'body': description}
 
-        return self._http.post(
+        return self._github.post(
             '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
             json=payload)
