@@ -183,6 +183,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
     def startChangeSource(self):
         yield self.changesource.setServiceParent(self.master)
         yield self.attachChangeSource(self.changesource)
+        self.patch(self.changesource._github, '_http', self._http)
 
     def assertDictSubset(self, expected_dict, response_dict):
         expected = {}
