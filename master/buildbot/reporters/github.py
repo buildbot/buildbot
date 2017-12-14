@@ -19,7 +19,6 @@ from __future__ import print_function
 import re
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
@@ -34,8 +33,11 @@ from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2NativeString
 from buildbot.util.giturlparse import giturlparse
+from buildbot.util.logger import Logger
 
 HOSTED_BASE_URL = 'https://api.github.com'
+
+log = Logger()
 
 
 class GitHubStatusPush(http.HttpStatusPushBase):
@@ -146,8 +148,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             repoName = giturl.repo
 
         if self.verbose:
-            log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
-                repoOwner=repoOwner, repoName=repoName))
+            log.info("Updating github status: repoOwner={repoOwner}, repoName={repoName}",
+                     repoOwner=repoOwner, repoName=repoName)
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
@@ -171,18 +173,17 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     description=description
                 )
                 if self.verbose:
-                    log.msg(
+                    log.info(
                         'Updated status with "{state}" for {repoOwner}/{repoName} '
-                        'at {sha}, context "{context}", issue {issue}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName,
-                            sha=sha, issue=issue, context=context))
-            except Exception as e:
-                log.err(
-                    e,
-                    'Failed to update "{state}" for {repoOwner}/{repoName} '
-                    'at {sha}, context "{context}", issue {issue}.'.format(
+                        'at {sha}, context "{context}", issue {issue}.',
                         state=state, repoOwner=repoOwner, repoName=repoName,
-                        sha=sha, issue=issue, context=context))
+                        sha=sha, issue=issue, context=context)
+            except Exception as e:
+                log.failure(
+                    'Failed to update "{state}" for {repoOwner}/{repoName} '
+                    'at {sha}, context "{context}", issue {issue}.',
+                    state=state, repoOwner=repoOwner, repoName=repoName,
+                    sha=sha, issue=issue, context=context, failure=e)
 
 
 class GitHubCommentPush(GitHubStatusPush):

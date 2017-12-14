@@ -18,19 +18,18 @@ from __future__ import print_function
 
 import hmac
 import json
-import logging
 import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-GitHub-Event'
@@ -38,6 +37,8 @@ _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
 DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+
+log = Logger()
 
 
 class GitHubEventHandler(PullRequestMixin):
@@ -78,8 +79,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        log.msg("X-GitHub-Event: {}".format(
-            event_type), logLevel=logging.DEBUG)
+        log.debug("X-GitHub-Event: {event_type}", event_type=event_type)
 
         handler = getattr(self, 'handle_{}'.format(event_type), None)
 
@@ -126,7 +126,7 @@ class GitHubEventHandler(PullRequestMixin):
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
 
-        log.msg("Payload: {}".format(payload), logLevel=logging.DEBUG)
+        log.debug("Payload: {payload}", payload=payload)
 
         return payload
 
@@ -148,7 +148,8 @@ class GitHubEventHandler(PullRequestMixin):
         changes = self._process_change(payload, user, repo, repo_url, project,
                                        event, properties)
 
-        log.msg("Received {} changes from github".format(len(changes)))
+        log.info("Received {num_changes} changes from github",
+                 num_changes=len(changes))
 
         return changes, 'git'
 
@@ -163,18 +164,18 @@ class GitHubEventHandler(PullRequestMixin):
         repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
 
-        log.msg('Processing GitHub PR #{}'.format(number),
-                logLevel=logging.DEBUG)
+        log.debug('Processing GitHub PR #{number}', number=number)
 
         head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
         if self._has_skip(head_msg):
-            log.msg("GitHub PR #{}, Ignoring: "
-                    "head commit message contains skip pattern".format(number))
+            log.info("GitHub PR #{number}, Ignoring: head commit "
+                     "message contains skip pattern.", number=number)
             defer.returnValue(([], 'git'))
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
-            log.msg("GitHub PR #{} {}, ignoring".format(number, action))
+            log.info("GitHub PR #{number} {action}, ignoring,",
+                     number=number, action=action)
             defer.returnValue((changes, 'git'))
 
         properties = self.extractProperties(payload['pull_request'])
@@ -201,8 +202,8 @@ class GitHubEventHandler(PullRequestMixin):
 
         changes.append(change)
 
-        log.msg("Received {} changes from GitHub PR #{}".format(
-            len(changes), number))
+        log.info("Received {num_events} changes from GitHub PR #{number}",
+                num_events=len(changes), number=number)
         defer.returnValue((changes, 'git'))
 
     @defer.inlineCallbacks
@@ -242,12 +243,12 @@ class GitHubEventHandler(PullRequestMixin):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `{}': Not a branch".format(refname))
+            log.info("Ignoring refname '{refname}': Not a branch,", refname=refname)
             return changes
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `{}' deleted, ignoring".format(branch))
+            log.info("Branch '{branch}' deleted, ignoring.", branch=branch)
             return changes
 
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
@@ -262,7 +263,7 @@ class GitHubEventHandler(PullRequestMixin):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: {}".format(commit['id'][:8]))
+            log.info("New revision: {sha}", sha=commit['id'][:8])
 
             change = {
                 'author': u'{} <{}>'.format(commit['author']['name'],
