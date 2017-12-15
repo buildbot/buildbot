@@ -262,6 +262,7 @@ The default templates are very much configurable via the following options.
             "exception": "#007ec6",  # blue
             "failure": "#e05d44",    # red
             "retry": "#007ec6",      # blue
+            "running": "#007ec6",    # blue
             "skipped": "a4a61d",     # yellowgreen
             "success": "#4c1",       # brightgreen
             "unknown": "#9f9f9f",    # lightgrey
