@@ -5,7 +5,7 @@
                 a(href='javascript:')
                     | {{page.appTitle}}
                     span.menu-icon.fa.fa-bars(ng-hide="page.sidebarActive", ng-click='page.sidebarActive=!page.sidebarActive')
-                    span.menu-icon.fa.fa-thumb-tack(ng-show="page.sidebarActive", ng-click="page.sidebarPinned=!page.sidebarPinned", ng-class="{'fa-45': !page.sidebarPinned}")
+                    span.menu-icon.fa.fa-thumb-tack(ng-show="page.sidebarActive", ng-click="page.toggleSidebarPinned()", ng-class="{'fa-45': !page.sidebarPinned}")
             li.sidebar-title
                 span NAVIGATION
             div(ng-repeat="group in page.groups")

@@ -3,6 +3,8 @@ class GlMenu extends Provider
         @groups = {}
         @defaultGroup = null
         @footer = []
+        @pinnedByDefault = true
+        @pinnedChangedCallback = null # callback for application to detect when user has pinned/unpinned the menu
 
     appTitle: "set AppTitle using GlMenuServiceProvider.setAppTitle"
 
@@ -20,6 +22,12 @@ class GlMenu extends Provider
 
     setAppTitle: (title) ->
         @appTitle = title
+
+    setPinned: (value) ->
+        @pinnedByDefault = value
+
+    setPinnedChangedCallback: (callback) ->
+        @pinnedChangedCallback = callback
 
     $get: ["$state", ($state) ->
         for state in $state.get()[1...]
@@ -54,5 +62,7 @@ class GlMenu extends Provider
             getDefaultGroup: -> self.defaultGroup
             getFooter: -> self.footer
             getAppTitle: -> self.appTitle
+            getPinnedByDefault: -> self.pinnedByDefault
+            getPinnedChangedCallback: -> self.pinnedChangedCallback
         }
     ]

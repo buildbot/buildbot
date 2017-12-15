@@ -12,13 +12,22 @@ class GlPageWithSidebar extends Directive
 
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout, @$window) ->
-        @sidebarPinned = false; # originally used "@$window.innerWidth > 800". Ideally this would be driven off a user setting that remembered whether it was pinned last time
+        @sidebarPinned = glMenuService.getPinnedByDefault();
+        @pinnedChangedCallback = glMenuService.getPinnedChangedCallback();
+        console.log( "_glPageWithSidebar @sidebarPinned", @sidebarPinned )
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
         @activeGroup = glMenuService.getDefaultGroup()
         @inSidebar = false
         @sidebarActive = @sidebarPinned
+
+    toggleSidebarPinned: () ->
+        @sidebarPinned=!@sidebarPinned
+        # callback for application to listen to changes in whether the menu is pinned so 
+        #  it can persist this setting.
+        if @pinnedChangedCallback
+            @pinnedChangedCallback(@sidebarPinned)
 
     toggleGroup: (group) ->
         if @activeGroup!=group
