@@ -27,6 +27,7 @@ from buildbot.data import resultspec
 from buildbot.process.results import Results
 from buildbot.www.plugin import Application
 from xml.sax.saxutils import escape
+from buildbot.util import bytes2NativeString
 
 
 class Api(object):
@@ -68,7 +69,8 @@ class Api(object):
                 config[k] = v
 
         for k, v in request.args.items():
-            config[k] = escape(v[0])
+            k = bytes2NativeString(k)
+            config[k] = escape(bytes2NativeString(v[0]))
         return config
 
     @app.route("/<string:builder>.png", methods=['GET'])
