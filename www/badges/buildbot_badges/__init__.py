@@ -23,7 +23,6 @@ import jinja2
 from klein import Klein
 from twisted.internet import defer
 
-from buildbot.data import resultspec
 from buildbot.process.results import Results
 from buildbot.www.plugin import Application
 from xml.sax.saxutils import escape
@@ -44,6 +43,7 @@ class Api(object):
             "exception": "#007ec6",  # blue
             "failure": "#e05d44",    # red
             "retry": "#007ec6",      # blue
+            "running": "#007ec6",    # blue
             "skipped": "a4a61d",     # yellowgreen
             "success": "#4c1",       # brightgreen
             "unknown": "#9f9f9f",    # lightgrey
@@ -87,17 +87,19 @@ class Api(object):
         request.setHeader('content-type', 'image/svg+xml')
         request.setHeader('cache-control', 'no-cache')
 
-        # get the last completed build for that builder using the data api
+        # get the last build for that builder using the data api
         last_build = yield self.ep.master.data.get(
             ("builders", builder, "builds"),
-            limit=1, order=['-number'],
-            filters=[resultspec.Filter('complete', 'eq', [True])])
+            limit=1, order=['-number'])
 
         # get the status text corresponding to results code
         results_txt = "unknown"
         if last_build:
             results = last_build[0]['results']
-            if results >= 0 and results < len(Results):
+            complete = last_build[0]['complete']
+            if not complete:
+                results_txt = "running"
+            elif results >= 0 and results < len(Results):
                 results_txt = Results[results]
 
         svgdata = self.makesvg(results_txt, results_txt, left_text=config['left_text'], config=config)
