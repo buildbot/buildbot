@@ -123,7 +123,7 @@ class DockerLatentWorker(DockerBaseWorker):
         DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
 
         if not client:
-            config.error("The python module 'docker-py>=1.4' is needed to use a"
+            config.error("The python module 'docker>=2.0' is needed to use a"
                          " DockerLatentWorker")
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"

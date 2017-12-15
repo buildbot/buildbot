@@ -97,7 +97,7 @@ class HyperLatentWorker(DockerBaseWorker):
         DockerBaseWorker.checkConfig(self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
 
         if not Hyper:
-            config.error("The python modules 'docker-py>=1.4' and 'hyper_sh' are needed to use a"
+            config.error("The python modules 'docker>=2.0' and 'hyper_sh' are needed to use a"
                          " HyperLatentWorker")
 
         if not IRenderable.providedBy(hyper_size) and hyper_size not in self.ALLOWED_SIZES:
