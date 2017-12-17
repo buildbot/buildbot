@@ -210,7 +210,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     (optional)
     This allow to use TLS when connecting with the Docker socket.
     This should be a ``docker.tls.TLSConfig`` object.
-    See `docker-py's own documentation <https://docker-py.readthedocs.io/en/1.10.4/tls/>`_ for more details on how to initialise this object.
+    See `docker-py's own documentation <https://docker-py.readthedocs.io/en/stable/tls.html>`_ for more details on how to initialise this object.
 
 ``followStartupLogs``
     (optional, defaults to false)
@@ -223,7 +223,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``hostconfig``
     (optional)
-    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/1.10.4/hostconfig/>`_ for all the supported options.
+    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
 
 ``autopull``
     (optional, defaults to false)
