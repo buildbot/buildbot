@@ -31,6 +31,7 @@ def test_unicode(migrate_engine):
 
     test_unicode = sautils.Table(
         'test_unicode', submeta,
+        sa.Column('id', sa.Integer, primary_key=True, autoincrement=True),
         sa.Column('u', sa.Unicode(length=100)),
         sa.Column('b', sa.LargeBinary),
     )
