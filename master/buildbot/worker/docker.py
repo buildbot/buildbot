@@ -37,7 +37,7 @@ try:
     from docker import client
     from docker.errors import NotFound
     _hush_pyflakes = [docker, client]
-    docker_py_version = float(docker.__version__.rsplit(".",1)[0])
+    docker_py_version = float(docker.__version__.rsplit(".", 1)[0])
 except ImportError:
     docker = None
     client = None
@@ -256,7 +256,7 @@ class DockerLatentWorker(DockerBaseWorker):
         volumes, binds = self._thd_parse_volumes(volumes)
         host_conf = self.hostconfig.copy()
         host_conf['binds'] = binds
-        if docker_py_version >= 2.2: 
+        if docker_py_version >= 2.2:
             host_conf['init'] = True
         host_conf = docker_client.create_host_config(**host_conf)
 
