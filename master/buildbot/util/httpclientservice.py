@@ -143,9 +143,13 @@ class HTTPClientService(service.SharedService):
         url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth
-        headers = kwargs.get('headers', {})
-        if self._headers is not None:
-            headers.update(self._headers)
+
+        # First grab a copy of instantiation passed headers
+        headers = self._headers.copy() if self._headers else {}
+        # Now update/overwrite those headers with any headers passed
+        # explicitly in this request
+        headers.update(kwargs.get('headers', {}))
+        # Reassign headers to kwargs
         kwargs['headers'] = headers
 
         # we manually do the json encoding in order to automatically convert timestamps
