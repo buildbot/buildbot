@@ -23,12 +23,6 @@ class GlMenu extends Provider
     setAppTitle: (title) ->
         @appTitle = title
 
-    setPinned: (value) ->
-        @pinnedByDefault = value
-
-    setPinnedChangedCallback: (callback) ->
-        @pinnedChangedCallback = callback
-
     $get: ["$state", ($state) ->
         for state in $state.get()[1...]
             group = state.data.group
@@ -62,7 +56,5 @@ class GlMenu extends Provider
             getDefaultGroup: -> self.defaultGroup
             getFooter: -> self.footer
             getAppTitle: -> self.appTitle
-            getPinnedByDefault: -> self.pinnedByDefault
-            getPinnedChangedCallback: -> self.pinnedChangedCallback
         }
     ]

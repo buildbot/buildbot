@@ -12,9 +12,7 @@ class GlPageWithSidebar extends Directive
 
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout, @$window) ->
-        @sidebarPinned = glMenuService.getPinnedByDefault();
-        @pinnedChangedCallback = glMenuService.getPinnedChangedCallback();
-        console.log( "_glPageWithSidebar @sidebarPinned", @sidebarPinned )
+        @sidebarPinned = @$window.localStorage.sidebarPinned != "false"  # note -- localstorage only stores strings, so converts the bool to a string upon saving it.
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
@@ -24,10 +22,7 @@ class _glPageWithSidebar extends Controller
 
     toggleSidebarPinned: () ->
         @sidebarPinned=!@sidebarPinned
-        # callback for application to listen to changes in whether the menu is pinned so 
-        #  it can persist this setting.
-        if @pinnedChangedCallback
-            @pinnedChangedCallback(@sidebarPinned)
+        @$window.localStorage.sidebarPinned = @sidebarPinned
 
     toggleGroup: (group) ->
         if @activeGroup!=group
