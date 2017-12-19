@@ -38,7 +38,7 @@ describe 'page with sidebar', ->
         scope.page.toggleGroup(g)
         expect(scope.page.activeGroup).toBe(g)
 
-        # sidebar should get binned state from localStorage.sidebarPinned
+        # sidebar should get pinned state from localStorage.sidebarPinned
         expect(scope.page.sidebarPinned).toBe(false)
 
         $timeout.flush()

@@ -3,8 +3,6 @@ class GlMenu extends Provider
         @groups = {}
         @defaultGroup = null
         @footer = []
-        @pinnedByDefault = true
-        @pinnedChangedCallback = null # callback for application to detect when user has pinned/unpinned the menu
 
     appTitle: "set AppTitle using GlMenuServiceProvider.setAppTitle"
 
