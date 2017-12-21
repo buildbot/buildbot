@@ -63,7 +63,7 @@ class Waterfall extends Controller
         @all_builders = @dataAccessor.getBuilders(order: 'name')
         @$scope.builders = @builders = []
         @buildLimit = @c.limit
-        @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
+        @$scope.builds = @builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-started_at'})
 
         d3Service.get().then (@d3) =>
 
@@ -158,7 +158,7 @@ class Waterfall extends Controller
             # no need to query again
             return
         @buildLimit = @builds.length + @c.limit
-        builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-complete_at'})
+        builds = @dataAccessor.getBuilds({limit: @buildLimit, order: '-started_at'})
         builds.onChange = (builds) =>
             @builds.close()  # force close the old collection's auto-update
             @builds = builds
