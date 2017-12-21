@@ -75,7 +75,7 @@ describe 'dataquery service', ->
             expect(result).toContain(testArray[1])
             expect(result).toContain(testArray[2])
 
-        it 'should treat empty eq criteria as no restriction' ->
+        it 'should treat empty eq criteria as no restriction', ->
             result = wrappedDataQuery.filter(testArray, 'buildid__eq': [])
             expect(result.length).toBe(3)
 
