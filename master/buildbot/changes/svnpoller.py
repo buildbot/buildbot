@@ -122,8 +122,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.histmax = histmax
         self._prefix = None
         self.category = category if callable(
-            category) else util.ascii2unicode(category)
-        self.project = util.ascii2unicode(project)
+            category) else util.bytes2unicode(category)
+        self.project = util.bytes2unicode(project)
 
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
@@ -411,14 +411,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                                for f in files],
                         comments=comments,
                         revision=revision,
-                        branch=util.ascii2unicode(branch),
+                        branch=util.bytes2unicode(branch),
                         revlink=revlink,
                         category=self.category,
-                        repository=util.ascii2unicode(
+                        repository=util.bytes2unicode(
                             branches[branch].get('repository', self.repourl)),
-                        project=util.ascii2unicode(
+                        project=util.bytes2unicode(
                             branches[branch].get('project', self.project)),
-                        codebase=util.ascii2unicode(
+                        codebase=util.bytes2unicode(
                             branches[branch].get('codebase', None)))
                     changes.append(chdict)
 

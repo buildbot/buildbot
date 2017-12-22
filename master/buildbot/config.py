@@ -1015,7 +1015,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             error(
                 "builder names must not start with an underscore: '%s'" % name)
         try:
-            self.name = util.ascii2unicode(name)
+            self.name = util.bytes2unicode(name, encoding="ascii")
         except UnicodeDecodeError:
             error("builder names must be unicode or ASCII")
 
