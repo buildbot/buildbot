@@ -228,10 +228,6 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     return text_type(x, encoding, errors)
 
 
-def ascii2unicode(x, errors='strict'):
-    return bytes2unicode(x, encoding='ascii', errors=errors)
-
-
 def bytes2NativeString(x, encoding='utf-8', errors='strict'):
     """
     Convert C{bytes} to a native C{str}.
