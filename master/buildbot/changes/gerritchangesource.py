@@ -164,8 +164,8 @@ class GerritChangeSourceBase(base.ChangeSource):
             event_change = event["change"]
             return self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
-                'project': util.ascii2unicode(event_change["project"]),
-                'repository': u"%s/%s" % (
+                'project': util.bytes2unicode(event_change["project"]),
+                'repository': u"{}/{}".format(
                     self.gitBaseURL, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],

@@ -65,7 +65,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         self.actuateAt = None
         self.actuateAtTimer = None
 
-        self.reason = util.ascii2unicode(reason % {'name': name})
+        self.reason = util.bytes2unicode(reason % {'name': name})
         self.branch = branch
         self.change_filter = ChangeFilter.fromSchedulerConstructorArgs(
             change_filter=change_filter)

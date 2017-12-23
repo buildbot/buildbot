@@ -152,7 +152,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.p4bin = p4bin
         self.split_file = split_file
         self.encoding = encoding
-        self.project = util.ascii2unicode(project)
+        self.project = util.bytes2unicode(project)
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
         self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None

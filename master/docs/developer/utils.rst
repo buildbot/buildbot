@@ -152,13 +152,15 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     If ``obj`` is not None, return its string representation.
 
-.. py:function:: ascii2unicode(str):
+.. py:function:: bytes2unicode(bytestr, encoding='utf-8', errors='strict'):
 
-    :param str: string
-    :returns: string as unicode, assuming ascii
+    :param bytestr: bytes
+    :param encoding: unicode encoding to pass to :py:func:`str.encode`, default ``utf-8``.
+    :param errors: error handler to pass to :py:func:`str.encode`, default ``strict``.
+    :returns: string as unicode
 
-    This function is intended to implement automatic conversions for user convenience.
-    If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
+    This function is intended to convert bytes to unicode for user convenience.
+    If given a bytestring, it returns the string decoded using ``encoding``.
     If given a unicode string, it returns it directly.
 
 .. py:function:: string2boolean(str):
@@ -213,7 +215,7 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param maybe_list: list, tuple, byte string, or unicode
     :returns: unicode
 
-    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
+    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`bytes2unicode`.
     This is useful for configuration parameters that may be strings or lists of strings.
 
 .. py:class:: Notifier():

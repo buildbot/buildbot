@@ -28,8 +28,8 @@ from twisted.spread import pb
 from buildbot import pbutil
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.util import ascii2unicode
 from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
 
@@ -241,7 +241,7 @@ class Try_Jobdir(TryBase):
                            repository=parsed_job['repository'])
         reason = u"'try' job"
         if parsed_job['who']:
-            reason += u" by user %s" % ascii2unicode(parsed_job['who'])
+            reason += u" by user {}".format(bytes2unicode(parsed_job['who']))
         properties = parsed_job['properties']
         requested_props = Properties()
         requested_props.update(properties, "try build")
@@ -249,7 +249,7 @@ class Try_Jobdir(TryBase):
         return self.addBuildsetForSourceStamps(
             sourcestamps=[sourcestamp],
             reason=reason,
-            external_idstring=ascii2unicode(parsed_job['jobid']),
+            external_idstring=bytes2unicode(parsed_job['jobid']),
             builderNames=builderNames,
             properties=requested_props)
 
@@ -401,10 +401,10 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         reason = u"'try' job"
 
         if who:
-            reason += u" by user %s" % ascii2unicode(who)
+            reason += u" by user {}".format(bytes2unicode(who))
 
         if comment:
-            reason += u" (%s)" % ascii2unicode(comment)
+            reason += u" ({})".format(bytes2unicode(comment))
 
         sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,

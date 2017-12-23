@@ -228,10 +228,6 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     return text_type(x, encoding, errors)
 
 
-def ascii2unicode(x, errors='strict'):
-    return bytes2unicode(x, encoding='ascii', errors=errors)
-
-
 def bytes2NativeString(x, encoding='utf-8', errors='strict'):
     """
     Convert C{bytes} to a native C{str}.
@@ -429,8 +425,8 @@ def stripUrlPassword(url):
 
 def join_list(maybeList):
     if isinstance(maybeList, (list, tuple)):
-        return u' '.join(ascii2unicode(s) for s in maybeList)
-    return ascii2unicode(maybeList)
+        return u' '.join(bytes2unicode(s) for s in maybeList)
+    return bytes2unicode(maybeList)
 
 
 def command_to_string(command):
@@ -456,7 +452,7 @@ def command_to_string(command):
         if isinstance(w, (bytes, string_types)):
             # If command was bytes, be gentle in
             # trying to covert it.
-            w = ascii2unicode(w, "replace")
+            w = bytes2unicode(w, errors="replace")
             stringWords.append(w)
     words = stringWords
 
