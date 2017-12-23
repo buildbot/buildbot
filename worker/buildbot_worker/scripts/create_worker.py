@@ -19,9 +19,8 @@ from __future__ import print_function
 
 import os
 
-
 workerTACTemplate = [
-"""
+    """
 import os
 
 from buildbot_worker.bot import Worker
@@ -40,7 +39,7 @@ if basedir == '.':
 # directory; do not edit it.
 application = service.Application('buildbot-worker')
 """,
-"""
+    """
 from twisted.python.logfile import LogFile
 from twisted.python.log import ILogObserver, FileLogObserver
 logfile = LogFile.fromFullPath(
@@ -48,7 +47,7 @@ logfile = LogFile.fromFullPath(
     maxRotatedFiles=maxRotatedFiles)
 application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 """,
-"""
+    """
 buildmaster_host = %(host)r
 port = %(port)d
 workername = %(name)r

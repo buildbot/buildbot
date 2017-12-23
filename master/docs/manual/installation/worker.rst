@@ -131,7 +131,7 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
 
     This is a number that indicates the maximum number of time the worker will make connection attempts.
     After that amount, the worker process will stop.
-    This option is useful for :ref:`Latent-Workers` to avoid consuming ressources in case of misconfiguration or master failure.
+    This option is useful for :ref:`Latent-Workers` to avoid consuming resources in case of misconfiguration or master failure.
 
     For VM based latent workers, the user is responsible for halting the system when Buildbot worker has exited.
     This feature is heavily OS dependent, and cannot be managed by Buildbot worker.
