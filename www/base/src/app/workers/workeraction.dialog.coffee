@@ -10,6 +10,7 @@ class State extends Config
         states.forEach (state) ->
             $stateProvider.state state.name,
                 url: "/actions",
+                data: group: null
                 ### @ngInject ###
                 onEnter: ($stateParams, $state, $uibModal) ->
                     modal = {}
