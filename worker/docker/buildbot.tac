@@ -31,8 +31,9 @@ keepalive = 600
 umask = None
 maxdelay = 300
 allow_shutdown = None
+maxretries = 10
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
            keepalive, umask=umask, maxdelay=maxdelay,
-           allow_shutdown=allow_shutdown)
+           allow_shutdown=allow_shutdown, maxRetries=maxretries)
 s.setServiceParent(application)

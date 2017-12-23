@@ -127,6 +127,18 @@ To use these, just include them on the ``buildbot-worker create-worker`` command
     This is a number that indicates the maximum amount of time the worker will wait between connection attempts, expressed in seconds.
     The default (300) causes the worker to wait at most 5 minutes before trying to connect to the buildmaster again.
 
+.. option:: --maxretries
+
+    This is a number that indicates the maximum number of time the worker will make connection attempts.
+    After that amount, the worker process will stop.
+    This option is useful for :ref:`Latent-Workers` to avoid consuming ressources in case of misconfiguration or master failure.
+
+    For VM based latent workers, the user is responsible for halting the system when Buildbot worker has exited.
+    This feature is heavily OS dependent, and cannot be managed by Buildbot worker.
+    For example with systemd_, one can add ``ExecStopPost=shutdown now`` to the Buildbot worker service unit configuration.
+
+    .. _systemd: https://www.freedesktop.org/software/systemd/man/systemd.service.html
+
 .. option:: --log-size
 
     This is the size in bytes when to rotate the Twisted log files.
