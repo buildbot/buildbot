@@ -55,6 +55,10 @@ class SecretsConfig(RunMasterBase):
         self.assertNotIn("different_value", repr(build))
 
 
+class SecretsConfigPB(SecretsConfig):
+    proto = "pb"
+
+
 # master configuration
 def masterConfig():
     c = {}

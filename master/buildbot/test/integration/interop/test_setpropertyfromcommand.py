@@ -48,6 +48,10 @@ class SetPropertyFromCommand(RunMasterBase):
             build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
 
 
+class SetPropertyFromCommandPB(SetPropertyFromCommand):
+    proto = "pb"
+
+
 # master configuration
 
 num_reconfig = 0
