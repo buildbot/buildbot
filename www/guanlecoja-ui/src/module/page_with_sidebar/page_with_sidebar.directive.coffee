@@ -12,7 +12,14 @@ class GlPageWithSidebar extends Directive
 
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout, @$window) ->
-        @sidebarPinned = @$window.localStorage.sidebarPinned != "false"  # note -- localstorage only stores strings, so converts the bool to a string upon saving it.
+        
+        # by default, pin sidebar only if window is wide enough (collapse by default if narrow)
+        @sidebarPinned = @$window.innerWidth > 800      
+        # If user has previously pinned or unpinned the sidebar, use the saved value from localStorage
+        sidebarWasPinned = @$window.localStorage.sidebarPinned
+        if ( sidebarWasPinned == "true" || sidebarWasPinned == "false" ) # note -- localstorage only stores strings,  converts bools to string.
+            @sidebarPinned = sidebarWasPinned != "false"
+        
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
