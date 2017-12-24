@@ -131,3 +131,17 @@ tl;dr is:
     animation-iteration-count: infinite;
     animation-timing-function: linear;
 }
+.nut-spin {
+  animation: nut-spin .5s infinite linear;
+}
+@keyframes nut-spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+  100% {
+    transform: rotate(0deg);
+  }
+}

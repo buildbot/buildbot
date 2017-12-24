@@ -1,5 +1,5 @@
 class Step extends Controller
-    constructor: ($log, $scope, $location, dataService, dataUtilsService, $stateParams, glBreadcrumbService, publicFieldsFilter) ->
+    constructor: ($log, $scope, $location, dataService, dataUtilsService, faviconService, $stateParams, glBreadcrumbService, publicFieldsFilter) ->
         data = dataService.open().closeOnDestroy($scope)
         builderid = dataUtilsService.numberOrString($stateParams.builder)
         buildnumber = dataUtilsService.numberOrString($stateParams.build)
@@ -10,6 +10,7 @@ class Step extends Controller
                 $scope.build = build = builds[0]
                 build.getSteps(stepnumber).then (steps) ->
                     step = steps[0]
+                    faviconService.setFavIcon(step)
                     glBreadcrumbService.setBreadcrumb [
                         caption: "Builders"
                         sref: "builders"

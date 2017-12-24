@@ -1,7 +1,9 @@
 .container
   .row
     .well
-        h2 About this&nbsp;
+        h2
+          img.nut-spin(src="img/icon.svg", width="64px")
+          | &nbsp;About this&nbsp;
           a(href="http://buildbot.net") buildbot
           | &nbsp;running for&nbsp;
           a(ng-href="{{config.titleURL}}") {{config.title}}

@@ -45,3 +45,15 @@ class Results extends Constant('common')
             CANCELLED: 6
         }
 invert_constant('RESULTS', 'RESULTS_TEXT')
+
+class ResultsColor extends Constant('common')
+    constructor: ->
+        return {
+            SUCCESS: '#8d4'
+            WARNINGS: '#fa3'
+            FAILURE: '#e88'
+            SKIPPED: '#AADDEE'
+            EXCEPTION: '#c6c'
+            RETRY: '#ecc'
+            CANCELLED: '#ecc'
+        }
