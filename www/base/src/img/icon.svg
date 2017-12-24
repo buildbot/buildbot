@@ -1,0 +1,13 @@
+<svg width="284" height="299" xmlns="http://www.w3.org/2000/svg" fill-rule="evenodd" aria-label="Nut" role="img">
+  <defs>
+      <linearGradient id="a"
+            x1="0" x2="0" y1="-0.5" y2="1">
+        <stop offset="0%" stop-color="#8da6d8"/>
+        <stop offset="100%" stop-color="#2e5cb8"/>
+      </linearGradient></defs>
+      <path d="M0 205.6v-44L103.9 255v44L0 205.6z" fill="#24478F"/>
+<path d="M103.9 255l141.9-34.2v44l-142 34.2v-44z" fill="#2e5cb8"/>
+<path d="M245.8 220.8v44l38-127.5v-44l-38 127.5z" fill="#193366"/>
+<path d="M180 0l103.8 93.3-38 127.5-142 34.2L0 161.6 38 34.2 180 0zm-3.8 74.1c32.8 17 44 54.7 25 84.2-18.8 29.4-60.8 39.5-93.6 22.5s-44-54.7-25-84.1C101.3 67.2 143.3 57 176.1 74z" stroke-linecap="round" stroke-width="1" stroke="#000" fill="#8da6d8"/>
+<path d="M76.2 145a56 56 0 0 1 6.3-48.3c19-29.5 61-39.6 93.7-22.6 28 14.6 40.3 44.3 31.4 71a63 63 0 0 0-31.4-35.8c-32.8-17-74.8-6.9-93.7 22.6a58.6 58.6 0 0 0-6.3 13.1z" fill="url(#a)"/>
+</svg>
