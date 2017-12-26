@@ -1,11 +1,10 @@
 language: node_js
 
 node_js:
-  - 0.11
+  - 8
 
 before_install:
-  - npm install -g gulp
-
+  - yarn global add gulp
 script:
   - gulp default
   - gulp prod
