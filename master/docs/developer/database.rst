@@ -665,6 +665,8 @@ workers
     * ``id``
     * ``name`` - the name of the worker
     * ``workerinfo`` - worker information as dictionary
+    * ``paused`` - boolean indicating worker is paused and shall not take new builds
+    * ``graceful`` - boolean indicating worker will be shutdown as soon as build finished
     * ``connected_to`` - a list of masters, by ID, to which this worker is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same worker may appear to be connected to multiple masters simultaneously.
     * ``configured_on`` - a list of master-builder pairs, on which this worker is configured.

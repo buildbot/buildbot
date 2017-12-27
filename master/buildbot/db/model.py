@@ -290,6 +290,8 @@ class Model(base.DBConnectorComponent):
         sa.Column("id", sa.Integer, primary_key=True),
         sa.Column("name", sa.String(50), nullable=False),
         sa.Column("info", JsonObject, nullable=False),
+        sa.Column("paused", sa.SmallInteger, nullable=False, server_default="0"),
+        sa.Column("graceful", sa.SmallInteger, nullable=False, server_default="0"),
     )
 
     # link workers to all builder/master pairs for which they are
