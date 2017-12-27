@@ -140,7 +140,9 @@ disable=
   no-self-argument,
   no-value-for-parameter,
   interface-not-implemented,
-  bad-continuation
+  bad-continuation,
+  keyword-arg-before-vararg,
+  inconsistent-return-statements  # (implicit return None)
 
 [REPORTS]
 

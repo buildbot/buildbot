@@ -363,7 +363,7 @@ def in_reactor(f):
         from twisted.internet import reactor, defer
         result = []
 
-        def async():
+        def _async():
             d = defer.maybeDeferred(f, *args, **kwargs)
 
             @d.addErrback
@@ -374,7 +374,7 @@ def in_reactor(f):
             def do_stop(r):
                 result.append(r)
                 reactor.stop()
-        reactor.callWhenRunning(async)
+        reactor.callWhenRunning(_async)
         reactor.run()
         return result[0]
     wrap.__doc__ = f.__doc__
