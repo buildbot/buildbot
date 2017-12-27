@@ -31,6 +31,8 @@ class Db2DataMixin(object):
             'workerid': dbdict['id'],
             'name': dbdict['name'],
             'workerinfo': dbdict['workerinfo'],
+            'paused': dbdict['paused'],
+            'graceful': dbdict['graceful'],
             'connected_to': [
                 {'masterid': id}
                 for id in dbdict['connected_to']],
@@ -117,6 +119,8 @@ class Worker(base.ResourceType):
             masterid=types.Integer(),
             builderid=types.Integer()))
         workerinfo = types.JsonObject()
+        paused = types.Boolean()
+        graceful = types.Boolean()
     entityType = EntityType(name)
 
     @base.updateMethod

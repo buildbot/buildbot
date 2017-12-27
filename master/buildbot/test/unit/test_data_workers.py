@@ -76,6 +76,8 @@ def w1(builderid=None, masterid=None):
         'workerid': 1,
         'name': 'linux',
         'workerinfo': {},
+        'paused': False,
+        'graceful': False,
         'connected_to': [
             {'masterid': 13},
         ],
@@ -91,6 +93,8 @@ def w2(builderid=None, masterid=None):
         'workerid': 2,
         'name': 'windows',
         'workerinfo': {'a': 'b'},
+        'paused': False,
+        'graceful': False,
         'connected_to': [
             {'masterid': 14},
         ],
