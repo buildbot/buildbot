@@ -744,6 +744,15 @@ workers
         Unregister all the workers configured to a master for given builders.
         This shall happen when master disabled or before reconfiguration
 
+    .. py:method:: setWorkerState(workerid, paused, graceful)
+
+        :param integer workerid: the ID of the worker whose state is being changed
+        :param integer paused: the paused state
+        :param integer graceful: the graceful state
+        :returns: Deferred
+
+        Change the state of a worker (see definition of states above in worker dict description)
+
 changes
 ~~~~~~~
 
