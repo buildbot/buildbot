@@ -130,7 +130,7 @@ script:
 
   - title: interop tests
     condition: TESTS == "interop"
-    cmd: SANDBOXED_WORKER_PATH=/tmp/workerenv/bin/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop
+    cmd: SANDBOXED_WORKER_PATH=/tmp/workerenv/bin/buildbot-worker coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test.integration.interop
 
   - title: worker tests
     condition: TESTS == "trial_worker"
