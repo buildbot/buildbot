@@ -128,6 +128,11 @@ class Tests(interfaces.InterfaceTests):
         def deconfigureAllWorkersForMaster(self, masterid):
             pass
 
+    def test_signature_setWorkerState(self):
+        @self.assertArgSpecMatches(self.db.workers.setWorkerState)
+        def setWorkerState(self, workerid, paused, graceful):
+            pass
+
     @defer.inlineCallbacks
     def test_findWorkerId_insert(self):
         id = yield self.db.workers.findWorkerId(name=u"xyz")
@@ -470,6 +475,36 @@ class Tests(interfaces.InterfaceTests):
 
         w = yield self.db.workers.getWorker(self.W1_ID)
         self.assertEqual(w['connected_to'], [])
+
+    @defer.inlineCallbacks
+    def test_setWorkerState_existing(self):
+        yield self.insertTestData(self.baseRows + self.worker1_rows)
+
+        yield self.db.workers.setWorkerState(
+            workerid=self.W1_ID, paused=False, graceful=True)
+
+        w = yield self.db.workers.getWorker(self.W1_ID)
+        self.assertEqual(w, {
+            'id': self.W1_ID,
+            'name': self.W1_NAME,
+            'workerinfo': self.W1_INFO,
+            'paused': False,
+            'graceful': True,
+            'configured_on': [],
+            'connected_to': []})
+
+        yield self.db.workers.setWorkerState(
+            workerid=self.W1_ID, paused=True, graceful=False)
+
+        w = yield self.db.workers.getWorker(self.W1_ID)
+        self.assertEqual(w, {
+            'id': self.W1_ID,
+            'name': self.W1_NAME,
+            'workerinfo': self.W1_INFO,
+            'paused': True,
+            'graceful': False,
+            'configured_on': [],
+            'connected_to': []})
 
     @defer.inlineCallbacks
     def test_workerConfigured(self):

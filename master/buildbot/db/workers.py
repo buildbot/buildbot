@@ -237,3 +237,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                                        (tbl.c.masterid == masterid))
             conn.execute(q)
         return self.db.pool.do(thd)
+
+    def setWorkerState(self, workerid, paused, graceful):
+        def thd(conn):
+            tbl = self.db.model.workers
+            q = tbl.update(whereclause=(tbl.c.id == workerid))
+            conn.execute(q, paused=int(paused), graceful=int(graceful))
+        return self.db.pool.do(thd)
