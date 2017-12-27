@@ -1523,6 +1523,11 @@ class FakeWorkersComponent(FakeDBComponent):
         else:
             workers = list(itervalues(self.workers))
 
+        if paused is not None:
+            workers = [w for w in workers if w['paused'] == paused]
+        if graceful is not None:
+            workers = [w for w in workers if w['graceful'] == graceful]
+
         return defer.succeed([
             self._mkdict(worker, builderid, masterid)
             for worker in workers])

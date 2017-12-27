@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.data import exceptions
+from buildbot.data import resultspec
 from buildbot.data import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -182,6 +183,13 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         return d
 
     @defer.inlineCallbacks
+    def test_setWorkerState(self):
+        yield self.master.data.updates.setWorkerState(2, True, False)
+        worker = yield self.callGet(('workers', 2))
+        self.validateData(worker)
+        self.assertEqual(worker['paused'], True)
+
+    @defer.inlineCallbacks
     def test_actions(self):
         for action in ("stop", "pause", "unpause", "kill"):
             yield self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
@@ -251,6 +259,19 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(sorted(workers, key=configuredOnKey),
                              sorted([w2(masterid=13, builderid=41)], key=configuredOnKey))
         return d
+
+    @defer.inlineCallbacks
+    def test_setWorkerStateFindByPaused(self):
+        yield self.master.data.updates.setWorkerState(2, True, False)
+        resultSpec = resultspec.OptimisedResultSpec(
+            filters=[resultspec.Filter('paused', 'eq', [True])])
+
+        workers = yield self.callGet(('workers',), resultSpec=resultSpec)
+        print(workers)
+        self.assertEqual(len(workers), 1)
+        worker = workers[0]
+        self.validateData(worker)
+        self.assertEqual(worker['paused'], True)
 
 
 class Worker(interfaces.InterfaceTests, unittest.TestCase):
