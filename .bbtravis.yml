@@ -13,6 +13,7 @@ label_mapping:
   python: py
   TESTS: t
   DB_TYPE: db
+  WORKER_PYTHON: wp
 env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
@@ -31,6 +32,9 @@ env:
 
   - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
+
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
+  - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.4
 
   # Configuration when SQLite database is persistent between running tests
   # (by default in other tests in-memory SQLite database is used which is
@@ -74,6 +78,7 @@ matrix:
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
 # Dependencies installation commands
 install:
@@ -84,6 +89,10 @@ install:
     cmd: pip install -r requirements-cidocs.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
     cmd: pip install -r requirements-cidb.txt
+  - condition: TESTS == "interop"
+    cmd: |
+      virtualenv -p python$WORKER_PYTHON /tmp/workerenv
+      /tmp/workerenv/bin/pip install -e worker
   - |
       # pip installs for backward compat
       set -e
@@ -118,6 +127,10 @@ script:
   - title: master and worker tests
     condition: TESTS == "trial"
     cmd: trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
+
+  - title: interop tests
+    condition: TESTS == "interop"
+    cmd: SANDBOXED_WORKER_PATH=/tmp/workerenv/bin/buildbot-worker coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test.integration.interop
 
   - title: worker tests
     condition: TESTS == "trial_worker"
