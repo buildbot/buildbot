@@ -22,7 +22,10 @@ config =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www/static'
-
+    files:
+        images: [
+            'src/**/*.{png,jpg,gif,ico,svg}'
+        ]
     ### ###########################################################################################
     #   Bower dependencies configuration
     ### ###########################################################################################
@@ -41,7 +44,7 @@ config =
             "font-awesome":
                 version: "~4.1.0"
                 files: []
-                files: []            
+                files: []
             "bootstrap":
                 version: "~3.1.1"
                 files: []
