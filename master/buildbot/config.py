@@ -848,6 +848,10 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
                 continue
 
+            if _service.name in self.services:
+                error('Duplicate service name %r' % _service.name)
+                continue
+
             self.services[_service.name] = _service
 
     def check_single_master(self):
