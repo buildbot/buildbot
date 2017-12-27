@@ -105,7 +105,7 @@ class Tests(interfaces.InterfaceTests):
 
     def test_signature_getWorkers(self):
         @self.assertArgSpecMatches(self.db.workers.getWorkers)
-        def getWorkers(self, masterid=None, builderid=None):
+        def getWorkers(self, masterid=None, builderid=None, paused=None, graceful=None):
             pass
 
     def test_signature_workerConnected(self):
@@ -159,7 +159,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               connected_to=[], configured_on=[]))
 
     @defer.inlineCallbacks
@@ -173,7 +173,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=32)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=32, name='two', workerinfo={'a': 'b'},
+                         dict(id=32, name='two', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               connected_to=[11], configured_on=[]))
 
     @defer.inlineCallbacks
@@ -192,7 +192,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=32)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=32, name='two', workerinfo={'a': 'b'},
+                         dict(id=32, name='two', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               connected_to=[10, 11], configured_on=[
                                   {'builderid': 20, 'masterid': 10},
                                   {'builderid': 20, 'masterid': 11},
@@ -204,7 +204,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(name='zero')
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               connected_to=[], configured_on=[]))
 
     @defer.inlineCallbacks
@@ -216,7 +216,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=[
                                   {'masterid': 10, 'builderid': 20}],
                               connected_to=[]))
@@ -231,7 +231,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=30)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=[
                                   {'masterid': 10, 'builderid': 20}],
                               connected_to=[10]))
@@ -244,7 +244,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict['configured_on'] = sorted(
             workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=sorted([
                                   {'masterid': 10, 'builderid': 20},
                                   {'masterid': 10, 'builderid': 21},
@@ -259,7 +259,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict['configured_on'] = sorted(
             workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=sorted([
                                   {'masterid': 10, 'builderid': 20},
                                   {'masterid': 11, 'builderid': 20},
@@ -271,7 +271,7 @@ class Tests(interfaces.InterfaceTests):
         workerdict = yield self.db.workers.getWorker(workerid=30, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
                          ], connected_to=[]))
@@ -283,7 +283,7 @@ class Tests(interfaces.InterfaceTests):
                                                      builderid=20, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
                          ], connected_to=[]))
@@ -295,7 +295,7 @@ class Tests(interfaces.InterfaceTests):
                                                      builderid=20, masterid=11)
         validation.verifyDbDict(self, 'workerdict', workerdict)
         self.assertEqual(workerdict,
-                         dict(id=30, name='zero', workerinfo={'a': 'b'},
+                         dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                               configured_on=[
                                   {'masterid': 11, 'builderid': 20},
                          ], connected_to=[]))
@@ -307,9 +307,9 @@ class Tests(interfaces.InterfaceTests):
         [validation.verifyDbDict(self, 'workerdict', workerdict)
          for workerdict in workerdicts]
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=30, name='zero', workerinfo={'a': 'b'},
+            dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=[], connected_to=[]),
-            dict(id=31, name='one', workerinfo={'a': 'b'},
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=[], connected_to=[]),
         ], key=workerKey))
 
@@ -322,13 +322,13 @@ class Tests(interfaces.InterfaceTests):
             workerdict['configured_on'] = sorted(
                 workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=30, name='zero', workerinfo={'a': 'b'},
+            dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 10, 'builderid': 20},
                      {'masterid': 10, 'builderid': 21},
                      {'masterid': 11, 'builderid': 20},
                  ], key=configuredOnKey), connected_to=[10]),
-            dict(id=31, name='one', workerinfo={'a': 'b'},
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 11, 'builderid': 20},
                      {'masterid': 11, 'builderid': 22},
@@ -354,12 +354,12 @@ class Tests(interfaces.InterfaceTests):
             workerdict['configured_on'] = sorted(
                 workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=30, name='zero', workerinfo={'a': 'b'},
+            dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 10, 'builderid': 20},
                      {'masterid': 11, 'builderid': 20},
                  ], key=configuredOnKey), connected_to=[10]),
-            dict(id=31, name='one', workerinfo={'a': 'b'},
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 11, 'builderid': 20},
                  ], key=configuredOnKey), connected_to=[11]),
@@ -374,7 +374,7 @@ class Tests(interfaces.InterfaceTests):
             workerdict['configured_on'] = sorted(
                 workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=30, name='zero', workerinfo={'a': 'b'},
+            dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 10, 'builderid': 20},
                      {'masterid': 10, 'builderid': 21},
@@ -390,11 +390,11 @@ class Tests(interfaces.InterfaceTests):
             workerdict['configured_on'] = sorted(
                 workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=30, name='zero', workerinfo={'a': 'b'},
+            dict(id=30, name='zero', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 11, 'builderid': 20},
                  ], key=configuredOnKey), connected_to=[]),
-            dict(id=31, name='one', workerinfo={'a': 'b'},
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 11, 'builderid': 20},
                      {'masterid': 11, 'builderid': 22},
@@ -411,7 +411,7 @@ class Tests(interfaces.InterfaceTests):
             workerdict['configured_on'] = sorted(
                 workerdict['configured_on'], key=configuredOnKey)
         self.assertEqual(sorted(workerdicts, key=workerKey), sorted([
-            dict(id=31, name='one', workerinfo={'a': 'b'},
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=False,
                  configured_on=sorted([
                      {'masterid': 11, 'builderid': 22},
                  ], key=configuredOnKey), connected_to=[11]),
@@ -431,6 +431,8 @@ class Tests(interfaces.InterfaceTests):
             'id': self.W1_ID,
             'name': self.W1_NAME,
             'workerinfo': NEW_INFO,
+            'paused': False,
+            'graceful': False,
             'configured_on': [],
             'connected_to': [11]})
 

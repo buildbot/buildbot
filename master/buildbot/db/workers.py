@@ -39,6 +39,8 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             insert_values=dict(
                 name=name,
                 info={},
+                paused=0,
+                graceful=0,
             ))
 
     def _deleteFromConfiguredWorkers_thd(self, conn, buildermasterids, workerid=None):
@@ -127,7 +129,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             defer.returnValue(workers[0])
 
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
-                   builderid=None):
+                   builderid=None, paused=None, graceful=None):
         def thd(conn):
             workers_tbl = self.db.model.workers
             conn_tbl = self.db.model.connected_workers
@@ -143,6 +145,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             j = j.outerjoin(bm_tbl)
             q = sa.select(
                 [workers_tbl.c.id, workers_tbl.c.name, workers_tbl.c.info,
+                 workers_tbl.c.paused, workers_tbl.c.graceful,
                  bm_tbl.c.builderid, bm_tbl.c.masterid],
                 from_obj=[j],
                 order_by=[workers_tbl.c.id])
@@ -155,6 +158,10 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(bm_tbl.c.masterid == masterid)
             if builderid is not None:
                 q = q.where(bm_tbl.c.builderid == builderid)
+            if paused is not None:
+                q = q.where(workers_tbl.c.paused == int(paused))
+            if graceful is not None:
+                q = q.where(workers_tbl.c.graceful == int(graceful))
 
             rv = {}
             res = None
@@ -169,7 +176,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                         'name': row.name,
                         'configured_on': cfgs,
                         'connected_to': [],
-                        'workerinfo': row.info}
+                        'workerinfo': row.info,
+                        'paused': bool(row.paused),
+                        'graceful': bool(row.graceful)}
                     rv[lastId] = res
                 if row.builderid and row.masterid:
                     cfgs.append({'builderid': row.builderid,
