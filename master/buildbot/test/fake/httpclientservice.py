@@ -22,6 +22,7 @@ import json as jsonmodule
 import mock
 
 from twisted.internet import defer
+from twisted.web.http_headers import Headers
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
@@ -37,9 +38,10 @@ log = Logger()
 @implementer(IHttpResponse)
 class ResponseWrapper(object):
 
-    def __init__(self, code, content):
+    def __init__(self, code, content, headers):
         self._content = content
         self._code = code
+        self.headers = headers
 
     def content(self):
         content = unicode2bytes(self._content)
@@ -68,7 +70,8 @@ class HTTPClientService(service.SharedService):
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
-
+        if headers is not None:
+            headers = Headers(rawHeaders={hk: [hv] for (hk, hv) in headers.items()})
         self._headers = headers
         self._session = None
         self._expected = []
@@ -77,8 +80,17 @@ class HTTPClientService(service.SharedService):
 
     def updateHeaders(self, headers):
         if self._headers is None:
-            self._headers = {}
-        self._headers.update(headers)
+            self._headers = Headers()
+        if isinstance(headers, Headers):
+            passed_headers = headers.getAllRawHeaders()
+        else:
+            passed_headers = headers.items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            self._headers.setRawHeaders(name, value)
 
     @classmethod
     def getFakeService(cls, master, case, *args, **kwargs):
@@ -107,13 +119,22 @@ class HTTPClientService(service.SharedService):
         if content_json is not None:
             content = jsonmodule.dumps(content_json, default=toJson)
 
-        final_headers = self._headers.copy() if self._headers else {}
+        final_headers = self._headers.copy() if self._headers else Headers()
         if headers:
-            final_headers.update(headers)
+            if isinstance(headers, Headers):
+                passed_headers = headers.getAllRawHeaders()
+            else:
+                passed_headers = headers.items()
+            for name, value in passed_headers:
+                if not isinstance(value, (list, tuple)):
+                    value = [value]
+                elif isinstance(value, tuple):
+                    value = list(value)
+                final_headers.setRawHeaders(name, value)
 
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
-            content=content, headers=final_headers))
+            content=content, headers=final_headers or None))
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),
@@ -122,11 +143,19 @@ class HTTPClientService(service.SharedService):
     def _prepareRequest(self, ep, kwargs):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
         # First grab a copy of instantiation passed headers
-        headers = self._headers.copy() if self._headers else {}
+        headers = self._headers.copy() if self._headers else Headers()
         # Now update/overwrite those headers with any headers passed
         # explicitly in this request
-        headers.update(kwargs.get('headers', {}))
-        # Reassign headers to kwargs
+        if isinstance(kwargs.get('headers', {}), Headers):
+            passed_headers = kwargs.get('headers').getAllRawHeaders()
+        else:
+            passed_headers = kwargs.get('headers', {}).items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            headers.setRawHeaders(name, value)
         kwargs['headers'] = headers
         return ep, kwargs
 
@@ -152,9 +181,9 @@ class HTTPClientService(service.SharedService):
                 "method={!r}, ep={!r}, headers={!r}, params={!r}, data={!r}, json={!r}".format(
                     method, ep, headers, params, data, json))
         expect = self._expected.pop(0)
-        if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
-                expect['data'] != data or expect['json'] != json or
-                expect['headers'] != headers):
+        if (expect['method'] != method or expect['ep'] != ep or  # pylint: disable=too-many-boolean-expressions
+                expect['params'] != params or expect['data'] != data or
+                expect['json'] != json or expect['headers'] != headers):
             raise AssertionError(
                 "expecting:\n"
                 "method={!r}, ep={!r}, headers={!r}, params={!r}, data={!r}, json={!r}\n"
@@ -166,8 +195,11 @@ class HTTPClientService(service.SharedService):
                 ))
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",
-                      method=method, ep=ep, code=expect['code'], content=expect['content'])
-        return defer.succeed(ResponseWrapper(expect['code'], expect['content']))
+                      method=method, ep=ep, code=expect['code'],
+                      content=expect['content'])
+        return defer.succeed(ResponseWrapper(expect['code'],
+                                             expect['content'],
+                                             expect['headers']))
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
