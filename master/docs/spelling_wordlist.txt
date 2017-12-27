@@ -276,6 +276,7 @@ failover
 failsafe
 fakedb
 fallback
+favicon
 favour
 fileIsImportant
 filename
