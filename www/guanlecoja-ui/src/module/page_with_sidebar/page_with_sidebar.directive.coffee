@@ -12,13 +12,24 @@ class GlPageWithSidebar extends Directive
 
 class _glPageWithSidebar extends Controller
     constructor: (@$scope, glMenuService, @$timeout, @$window) ->
-        @sidebarPinned = @$window.innerWidth > 800
+        
+        # by default, pin sidebar only if window is wide enough (collapse by default if narrow)
+        @sidebarPinned = @$window.innerWidth > 800      
+        # If user has previously pinned or unpinned the sidebar, use the saved value from localStorage
+        sidebarWasPinned = @$window.localStorage.sidebarPinned
+        if ( sidebarWasPinned == "true" || sidebarWasPinned == "false" ) # note -- localstorage only stores strings,  converts bools to string.
+            @sidebarPinned = sidebarWasPinned != "false"
+        
         @groups = glMenuService.getGroups()
         @footer = glMenuService.getFooter()
         @appTitle = glMenuService.getAppTitle()
         @activeGroup = glMenuService.getDefaultGroup()
         @inSidebar = false
         @sidebarActive = @sidebarPinned
+
+    toggleSidebarPinned: () ->
+        @sidebarPinned=!@sidebarPinned
+        @$window.localStorage.sidebarPinned = @sidebarPinned
 
     toggleGroup: (group) ->
         if @activeGroup!=group
@@ -27,7 +38,6 @@ class _glPageWithSidebar extends Controller
             @activeGroup=null
 
     enterSidebar: ->
-        @sidebarActive = true
         @inSidebar = true
 
     hideSidebar: ->

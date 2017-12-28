@@ -2,7 +2,7 @@ describe 'page with sidebar', ->
     beforeEach (module("guanlecoja.ui"))
     elmBody = scope = rootScope = null
 
-    injected = ($rootScope, $compile, glMenuService) ->
+    injected = ($rootScope, $compile, glMenuService, $window) ->
         rootScope = $rootScope
         elmBody = angular.element(
           '<gl-page-with-sidebar></gl-page-with-sidebar>'
@@ -13,6 +13,7 @@ describe 'page with sidebar', ->
         ,
             name: 'g2'
         ]
+        $window.localStorage.sidebarPinned = "false"
         glMenuService.getGroups = -> groups
         glMenuService.getDefaultGroup = -> groups[1]
         scope = $rootScope;
@@ -37,13 +38,9 @@ describe 'page with sidebar', ->
         scope.page.toggleGroup(g)
         expect(scope.page.activeGroup).toBe(g)
 
-        scope.page.enterSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.leaveSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.enterSidebar()
-        expect(scope.page.sidebarActive).toBe(true)
-        scope.page.leaveSidebar()
+        # sidebar should get pinned state from localStorage.sidebarPinned
+        expect(scope.page.sidebarPinned).toBe(false)
+
         $timeout.flush()
         expect(scope.page.sidebarActive).toBe(true)
         scope.page.sidebarPinned = false
