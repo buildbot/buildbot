@@ -146,6 +146,8 @@ The stored list of notifications.
 
 ## ChangeLog
 
+* 1.8.0: body is no more height:100%, in order to make full height page, user need to use height: 100vh.
+         left-bar pinned preference is now stored in the browser.
 * 1.7.0: topbar is now responsive. It will collapse on mobile.
 * 1.6.3: Adds setDefaultGroup(group) to glMenuServiceProvider. This option allows to expand a menu by default
 * 1.6.2: Fix width issues of content which push some content off-screen for certain monitor size
