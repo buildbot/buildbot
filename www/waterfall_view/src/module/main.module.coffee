@@ -31,9 +31,9 @@ class Waterfall extends Controller
         #  class needs to removed upon exiting the waterfall via the $destroy
         #  event below.)
         body = @$rootElement.find("body")
-        body.addClass("waterfall")
+        body.addClass("hundredpercent")
         @$scope.$on("$destroy", ()=>
-            body.removeClass("waterfall")
+            body.removeClass("hundredpercent")
         );
 
         glTopbarContextualActionsService.setContextualActions(actions)
