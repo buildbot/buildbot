@@ -423,6 +423,34 @@ class Tests(interfaces.InterfaceTests):
         ], key=workerKey))
 
     @defer.inlineCallbacks
+    def test_getWorkers_with_paused(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        yield self.db.workers.setWorkerState(31, paused=True, graceful=False)
+        workerdicts = yield self.db.workers.getWorkers(
+            paused=True)
+        for workerdict in workerdicts:
+            validation.verifyDbDict(self, 'workerdict', workerdict)
+            workerdict['configured_on'] = []
+        self.assertEqual(workerdicts, [
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=True, graceful=False,
+                 configured_on=[], connected_to=[11]),
+        ])
+
+    @defer.inlineCallbacks
+    def test_getWorkers_with_graceful(self):
+        yield self.insertTestData(self.baseRows + self.multipleMasters)
+        yield self.db.workers.setWorkerState(31, paused=False, graceful=True)
+        workerdicts = yield self.db.workers.getWorkers(
+            graceful=True)
+        for workerdict in workerdicts:
+            validation.verifyDbDict(self, 'workerdict', workerdict)
+            workerdict['configured_on'] = []
+        self.assertEqual(workerdicts, [
+            dict(id=31, name='one', workerinfo={'a': 'b'}, paused=False, graceful=True,
+                 configured_on=[], connected_to=[11]),
+        ])
+
+    @defer.inlineCallbacks
     def test_workerConnected_existing(self):
         yield self.insertTestData(self.baseRows + self.worker1_rows)
 
