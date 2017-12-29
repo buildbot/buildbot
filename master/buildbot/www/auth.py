@@ -189,7 +189,7 @@ class UserPasswordAuth(TwistedICredAuthBase):
 @implementer(ICredentialsChecker)
 class CustomAuth(TwistedICredAuthBase):
     __metaclass__ = ABCMeta
-    credentialInterfaces = IUsernamePassword
+    credentialInterfaces = [IUsernamePassword]
 
     def __init__(self, **kwargs):
         TwistedICredAuthBase.__init__(
