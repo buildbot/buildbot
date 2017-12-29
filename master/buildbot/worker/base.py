@@ -395,6 +395,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.stopMissingTimer()
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def messageReceivedFromWorker(self):
         now = time.time()
@@ -496,6 +497,7 @@ class AbstractWorker(service.BuildbotService, object):
     def shutdownRequested(self):
         self._graceful = True
         self.maybeShutdown()
+        self.updateState()
 
     def addWorkerForBuilder(self, wfb):
         self.workerforbuilders[wfb.builder_name] = wfb
@@ -560,14 +562,19 @@ class AbstractWorker(service.BuildbotService, object):
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
 
+    def updateState(self):
+        self.master.data.updates.setWorkerState(self.workerid, self._paused, self._graceful)
+
     def pause(self):
         """Stop running new builds on the worker."""
         self._paused = True
+        self.updateState()
 
     def unpause(self):
         """Restart running new builds on the worker."""
         self._paused = False
         self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def isPaused(self):
         return self._paused
