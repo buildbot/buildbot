@@ -10,7 +10,7 @@ class WaterfallView extends App
 
 class Waterfall extends Controller
     self = null
-    constructor: (@$scope, $q, $timeout, @$window, @$log,
+    constructor: (@$rootElement, @$scope, $q, $timeout, @$window, @$log,
                   @$uibModal, dataService, d3Service, @dataProcessorService,
                   scaleService, @bbSettingsService, glTopbarContextualActionsService) ->
         self = this
@@ -23,6 +23,19 @@ class Waterfall extends Controller
             icon: "search-minus"
             action: @zoomMinus
         ]
+
+        # 'waterfall' class needs to be dynamically added to the body in order 
+        #  to support waterfall-specific styling of the body.  (this is a bit
+        #  awkward since the body is provided by guanlecoja-ui and is the same
+        #  element as you switch between different plugin pages, therefore the
+        #  class needs to removed upon exiting the waterfall via the $destroy
+        #  event below.)
+        body = @$rootElement.find("body")
+        body.addClass("hundredpercent")
+        @$scope.$on("$destroy", ()=>
+            body.removeClass("hundredpercent")
+        );
+
         glTopbarContextualActionsService.setContextualActions(actions)
 
         # Show the loading spinner

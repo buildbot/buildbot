@@ -1,0 +1,1 @@
+Upgrading to `guanlecoja-ui` version 1.8.0, fixing two issues.  Fixed issue where the console view would jump to the top of page when opening the build summary dialog (#3657).  Also improved sidebar behaviour by remembering previous pinned vs. collapsed state.
