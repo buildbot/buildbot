@@ -80,6 +80,29 @@ def getVersion(init_file):
     except IOError:
         pass
 
+    # When source is exported via `git archive`, the following line is modified
+    # and placeholders are expanded to the "archived" revision:
+    #
+    #     %ct: committer date, UNIX timestamp
+    #     %d: ref names, like the --decorate option of git-log
+    #
+    # See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
+    git_archive_id = '$Format:%ct %d$'
+
+    if not git_archive_id.startswith('$Format:'):
+        # source was modified by git archive, try to parse the version from
+        # the value of git_archive_id
+
+        match = re.search(r'tag:\s*v([^,)]+)', git_archive_id)
+        if match:
+            # archived revision is tagged, use the tag
+            return match.group(1)
+
+        # archived revision is not tagged, use the commit date
+        tstamp = git_archive_id.strip().split()[0]
+        d = datetime.datetime.fromtimestamp(int(tstamp))
+        return d.strftime('%Y.%m.%d')
+
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]

@@ -557,6 +557,7 @@ getworkerinfo
 gf
 gib
 giger
+gitattributes
 github
 gitlab
 gitorious
