@@ -331,7 +331,7 @@ The available classes are described here:
         from buildbot.plugins import util
 
         class MyAuth(util.CustomAuth):
-            def check_credentials(user, password):
+            def check_credentials(self, user, password):
                 if user == 'snow' and password == 'white':
                     return True
                 else:
