@@ -523,9 +523,6 @@ class AbstractWorker(service.BuildbotService, object):
         this worker will not start.
         """
 
-        if self.quarantine_timer:
-            return False
-
         # If we're waiting to shutdown gracefully or paused, then we shouldn't
         # accept any new jobs.
         if self._graceful or self._paused:
@@ -581,6 +578,8 @@ class AbstractWorker(service.BuildbotService, object):
     def putInQuarantine(self):
         if self.quarantine_timer:  # already in quarantine
             return
+
+        self.pause()
         self.quarantine_timer = self.master.reactor.callLater(
             self.quarantine_timeout, self.exitQuarantine)
         log.msg("{} has been put in quarantine for {}s".format(
@@ -593,12 +592,13 @@ class AbstractWorker(service.BuildbotService, object):
 
     def exitQuarantine(self):
         self.quarantine_timer = None
-        self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.unpause()
 
     def stopQuarantineTimer(self):
         if self.quarantine_timer is not None:
             self.quarantine_timer.cancel()
             self.quarantine_timer = None
+            self.unpause()
 
 
 class Worker(AbstractWorker):
