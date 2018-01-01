@@ -19,6 +19,7 @@ from __future__ import print_function
 
 from subprocess import check_call
 
+from twisted.internet import defer
 from twisted.internet import protocol
 from twisted.internet import reactor
 
@@ -26,11 +27,20 @@ from buildbot.util.service import AsyncService
 
 
 class WorkerProcessProtocol(protocol.ProcessProtocol):
+    def __init__(self):
+        self.finished_deferred = defer.Deferred()
+
     def outReceived(self, data):
         print(data)
 
     def errReceived(self, data):
         print(data)
+
+    def processEnded(self, _):
+        self.finished_deferred.callback(None)
+
+    def waitForFinish(self):
+        return self.finished_deferred
 
 
 class SandboxedWorker(AsyncService):
@@ -49,11 +59,22 @@ class SandboxedWorker(AsyncService):
         check_call([self.sandboxed_worker_path, "create-worker", '-q', self.workerdir,
                     self.masterhost + ":" + str(self.port), self.workername, self.workerpasswd])
 
-        processProtocol = WorkerProcessProtocol()
+        self.processprotocol = processProtocol = WorkerProcessProtocol()
         # we need to spawn the worker asynchronously though
         self.process = reactor.spawnProcess(
             processProtocol, self.sandboxed_worker_path, args=['bbw', 'start', '--nodaemon', self.workerdir])
 
+        self.worker = self.master.workers.getWorkerByName(self.workername)
+        return AsyncService.startService(self)
+
+    @defer.inlineCallbacks
+    def shutdownWorker(self):
+        # on windows, we killing a process does not work well.
+        # we use the graceful shutdown feature of buildbot-worker instead to kill the worker
+        # but we must do that before the master is stopping.
+        yield self.worker.shutdown()
+        # wait for process to disappear
+        yield self.processprotocol.waitForFinish()
+
     def stopService(self):
-        self.process.signalProcess("TERM")
-        self.process.loseConnection()
+        return AsyncService.stopService(self)
