@@ -31,6 +31,8 @@ class Db2DataMixin(object):
             'workerid': dbdict['id'],
             'name': dbdict['name'],
             'workerinfo': dbdict['workerinfo'],
+            'paused': dbdict['paused'],
+            'graceful': dbdict['graceful'],
             'connected_to': [
                 {'masterid': id}
                 for id in dbdict['connected_to']],
@@ -92,9 +94,13 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
 
     @defer.inlineCallbacks
     def get(self, resultSpec, kwargs):
+        paused = resultSpec.popBooleanFilter('paused')
+        graceful = resultSpec.popBooleanFilter('graceful')
         workers_dicts = yield self.master.db.workers.getWorkers(
             builderid=kwargs.get('builderid'),
-            masterid=kwargs.get('masterid'))
+            masterid=kwargs.get('masterid'),
+            paused=paused,
+            graceful=graceful)
         defer.returnValue([self.db2data(w) for w in workers_dicts])
 
 
@@ -117,6 +123,8 @@ class Worker(base.ResourceType):
             masterid=types.Integer(),
             builderid=types.Integer()))
         workerinfo = types.JsonObject()
+        paused = types.Boolean()
+        graceful = types.Boolean()
     entityType = EntityType(name)
 
     @base.updateMethod
@@ -160,6 +168,16 @@ class Worker(base.ResourceType):
         bs['last_connection'] = last_connection
         bs['notify'] = notify
         self.produceEvent(bs, 'missing')
+
+    @base.updateMethod
+    @defer.inlineCallbacks
+    def setWorkerState(self, workerid, paused, graceful):
+        yield self.master.db.workers.setWorkerState(
+            workerid=workerid,
+            paused=paused,
+            graceful=graceful)
+        bs = yield self.master.data.get(('workers', workerid))
+        self.produceEvent(bs, 'state_updated')
 
     @base.updateMethod
     def deconfigureAllWorkersForMaster(self, masterid):

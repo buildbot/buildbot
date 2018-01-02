@@ -393,9 +393,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            u'building')
 
-        # This worker looks sane!
-        worker.resetQuarantine()
-
         # start the sequence of steps
         self.startNextStep()
 
@@ -675,6 +672,14 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             yield self.master.data.updates.setBuildStateString(self.buildid,
                                                                bytes2unicode(" ".join(text)))
             yield self.master.data.updates.finishBuild(self.buildid, self.results)
+
+            if self.results == EXCEPTION:
+                # When a build has an exception, put the worker in quarantine for a few seconds
+                # to make sure we try next build with another worker
+                self.workerforbuilder.worker.putInQuarantine()
+            elif self.results != RETRY:
+                # This worker looks sane if status is neither retry or exception
+                self.workerforbuilder.worker.resetQuarantine()
 
             # mark the build as finished
             self.workerforbuilder.buildFinished()

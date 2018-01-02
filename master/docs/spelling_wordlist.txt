@@ -473,6 +473,7 @@ MiB
 minified
 minifies
 mis
+misbehaving
 mixin
 Mixins
 mkdir
@@ -621,6 +622,7 @@ Pywin
 qcow
 qmail
 queuedir
+queried
 queueing
 Queueing
 Raml

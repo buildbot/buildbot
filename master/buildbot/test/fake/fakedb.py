@@ -429,6 +429,8 @@ class Worker(Row):
         id=None,
         name='some:worker',
         info={"a": "b"},
+        paused=0,
+        graceful=0,
     )
 
     id_column = 'id'
@@ -1448,6 +1450,8 @@ class FakeWorkersComponent(FakeDBComponent):
                 self.workers[row.id] = dict(
                     id=row.id,
                     name=row.name,
+                    paused=0,
+                    graceful=0,
                     info=row.info)
             elif isinstance(row, ConfiguredWorker):
                 row.id = row.buildermasterid * 10000 + row.workerid
@@ -1497,7 +1501,7 @@ class FakeWorkersComponent(FakeDBComponent):
         # by builderid and masterid
         return defer.succeed(self._mkdict(worker, builderid, masterid))
 
-    def getWorkers(self, masterid=None, builderid=None):
+    def getWorkers(self, masterid=None, builderid=None, paused=None, graceful=None):
         if masterid is not None or builderid is not None:
             builder_masters = self.db.builders.builder_masters
             workers = []
@@ -1518,6 +1522,11 @@ class FakeWorkersComponent(FakeDBComponent):
                 workers.append(worker)
         else:
             workers = list(itervalues(self.workers))
+
+        if paused is not None:
+            workers = [w for w in workers if w['paused'] == paused]
+        if graceful is not None:
+            workers = [w for w in workers if w['graceful'] == graceful]
 
         return defer.succeed([
             self._mkdict(worker, builderid, masterid)
@@ -1569,6 +1578,12 @@ class FakeWorkersComponent(FakeDBComponent):
                 break
         return defer.succeed(None)
 
+    def setWorkerState(self, workerid, paused, graceful):
+        worker = self.workers.get(workerid)
+        if worker is not None:
+            worker['paused'] = int(paused)
+            worker['graceful'] = int(graceful)
+
     def _configuredOn(self, workerid, builderid=None, masterid=None):
         cfg = []
         for cs in itervalues(self.configured):
@@ -1597,6 +1612,8 @@ class FakeWorkersComponent(FakeDBComponent):
             'id': w['id'],
             'workerinfo': w['info'],
             'name': w['name'],
+            'paused': bool(w.get('paused')),
+            'graceful': bool(w.get('graceful')),
             'configured_on': self._configuredOn(w['id'], builderid, masterid),
             'connected_to': self._connectedTo(w['id'], masterid),
         }

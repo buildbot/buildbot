@@ -1,7 +1,7 @@
 .modal-content
     .modal-header
         // put the header in the body in order to correctly display error popup
-        h4(ng-if="multiple") 
+        h4(ng-show="multiple")
             .col-sm-4 Worker actions for...
             .col-sm-8
                 multiselect(ng-model="worker_selection" options="select_options" show-select-all="true" show-unselect-all="true" show-search="true")
@@ -16,7 +16,7 @@
                 textarea.form-control(rows="15", ng-model="reason")
     .modal-footer
       button.btn.btn-default(ng-click="cancel()") Cancel
-      button.btn.btn-primary(ng-click="action('stop')") Graceful Shutdown
-      button.btn.btn-primary(ng-click="action('kill')") Force Shutdown
-      button.btn.btn-primary(ng-click="action('pause')") Pause
-      button.btn.btn-primary(ng-click="action('unpause')") Unpause
+      button.btn.btn-primary(ng-click="action('stop')",ng-class="{disabled: stop_disabled}") Graceful Shutdown
+      button.btn.btn-primary(ng-click="action('kill')",ng-class="{disabled: stop_disabled}") Force Shutdown
+      button.btn.btn-primary(ng-click="action('pause')",ng-class="{disabled: pause_disabled}") Pause
+      button.btn.btn-primary(ng-click="action('unpause')",ng-class="{disabled: unpause_disabled}") Unpause

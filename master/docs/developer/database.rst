@@ -665,6 +665,8 @@ workers
     * ``id``
     * ``name`` - the name of the worker
     * ``workerinfo`` - worker information as dictionary
+    * ``paused`` - boolean indicating worker is paused and shall not take new builds
+    * ``graceful`` - boolean indicating worker will be shutdown as soon as build finished
     * ``connected_to`` - a list of masters, by ID, to which this worker is currently connected.
       This list will typically contain only one master, but in unusual circumstances the same worker may appear to be connected to multiple masters simultaneously.
     * ``configured_on`` - a list of master-builder pairs, on which this worker is configured.
@@ -741,6 +743,15 @@ workers
 
         Unregister all the workers configured to a master for given builders.
         This shall happen when master disabled or before reconfiguration
+
+    .. py:method:: setWorkerState(workerid, paused, graceful)
+
+        :param integer workerid: the ID of the worker whose state is being changed
+        :param integer paused: the paused state
+        :param integer graceful: the graceful state
+        :returns: Deferred
+
+        Change the state of a worker (see definition of states above in worker dict description)
 
 changes
 ~~~~~~~

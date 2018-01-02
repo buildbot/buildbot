@@ -395,6 +395,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.stopMissingTimer()
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def messageReceivedFromWorker(self):
         now = time.time()
@@ -496,6 +497,7 @@ class AbstractWorker(service.BuildbotService, object):
     def shutdownRequested(self):
         self._graceful = True
         self.maybeShutdown()
+        self.updateState()
 
     def addWorkerForBuilder(self, wfb):
         self.workerforbuilders[wfb.builder_name] = wfb
@@ -522,9 +524,6 @@ class AbstractWorker(service.BuildbotService, object):
         L{maybeStartBuildsForWorker} to be called at that time, or builds on
         this worker will not start.
         """
-
-        if self.quarantine_timer:
-            return False
 
         # If we're waiting to shutdown gracefully or paused, then we shouldn't
         # accept any new jobs.
@@ -563,14 +562,19 @@ class AbstractWorker(service.BuildbotService, object):
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
 
+    def updateState(self):
+        self.master.data.updates.setWorkerState(self.workerid, self._paused, self._graceful)
+
     def pause(self):
         """Stop running new builds on the worker."""
         self._paused = True
+        self.updateState()
 
     def unpause(self):
         """Restart running new builds on the worker."""
         self._paused = False
         self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def isPaused(self):
         return self._paused
@@ -581,6 +585,8 @@ class AbstractWorker(service.BuildbotService, object):
     def putInQuarantine(self):
         if self.quarantine_timer:  # already in quarantine
             return
+
+        self.pause()
         self.quarantine_timer = self.master.reactor.callLater(
             self.quarantine_timeout, self.exitQuarantine)
         log.msg("{} has been put in quarantine for {}s".format(
@@ -593,12 +599,13 @@ class AbstractWorker(service.BuildbotService, object):
 
     def exitQuarantine(self):
         self.quarantine_timer = None
-        self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.unpause()
 
     def stopQuarantineTimer(self):
         if self.quarantine_timer is not None:
             self.quarantine_timer.cancel()
             self.quarantine_timer = None
+            self.unpause()
 
 
 class Worker(AbstractWorker):

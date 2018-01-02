@@ -203,8 +203,10 @@ class RunSteps(unittest.TestCase):
         self.buildrequest = \
             yield buildrequest.BuildRequest.fromBrdict(self.master, self.brdict)
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        return self.builder.stopService()
+        yield self.worker.stopService()
+        yield self.builder.stopService()
 
     @defer.inlineCallbacks
     def do_test_step(self):

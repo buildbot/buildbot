@@ -410,6 +410,8 @@ dbdict['workerdict'] = DictValidator(
             builderid=IntValidator(),
         )
     ),
+    paused=BooleanValidator(),
+    graceful=BooleanValidator(),
     connected_to=ListValidator(IntValidator()),
     workerinfo=JsonValidator(),
 )
