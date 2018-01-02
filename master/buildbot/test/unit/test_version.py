@@ -18,19 +18,38 @@ from __future__ import print_function
 
 from twisted.trial import unittest
 
-from buildbot import gitDescribeToPep440
+
+class VersioningUtilsTests(unittest.SynchronousTestCase):
+    # Version utils are copied in three packages.
+    # this unit test is made to be able to test the three versions
+    # with the same test
+    module_under_test = "buildbot"
+
+    def setUp(self):
+        self.m = __import__(self.module_under_test)
+
+    def test_gitDescribeToPep440devVersion(self):
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.8-20-gf0f45ca"), "0.9.9-dev20")
+
+    def test_gitDescribeToPep440tag(self):
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.8"), "0.9.8")
+
+    def test_gitDescribeToPep440p1tag(self):
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1"), "0.9.9.post1")
+
+    def test_gitDescribeToPep440p1dev(self):
+        self.assertEqual(self.m.gitDescribeToPep440("v0.9.9.post1-20-gf0f45ca"), "0.9.10-dev20")
+
+    def test_getVersionFromArchiveIdNoTag(self):
+        self.assertEqual(self.m.getVersionFromArchiveId("1514651968  (git-archive-version)"), "2017.12.30")
+
+    def test_getVersionFromArchiveIdtag(self):
+        self.assertEqual(self.m.getVersionFromArchiveId('1514808197  (HEAD -> master, tag: v1.0.0)'), "1.0.0")
 
 
-class GitDescribeToPep440(unittest.SynchronousTestCase):
+class VersioningUtilsTests_PKG(VersioningUtilsTests):
+    module_under_test = "buildbot_pkg"
 
-    def test_devVersion(self):
-        self.assertEqual(gitDescribeToPep440("v0.9.8-20-gf0f45ca"), "0.9.9-dev20")
 
-    def test_tag(self):
-        self.assertEqual(gitDescribeToPep440("v0.9.8"), "0.9.8")
-
-    def test_p1tag(self):
-        self.assertEqual(gitDescribeToPep440("v0.9.9.post1"), "0.9.9.post1")
-
-    def test_p1dev(self):
-        self.assertEqual(gitDescribeToPep440("v0.9.9.post1-20-gf0f45ca"), "0.9.10-dev20")
+class VersioningUtilsTests_WORKER(VersioningUtilsTests):
+    module_under_test = "buildbot_worker"
