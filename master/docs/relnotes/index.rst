@@ -16,38 +16,44 @@ Buildbot ``0.9.15`` ( ``2018-01-02`` )
 Bug fixes
 ---------
 
-- Fix url arguments in Buildbot Badges for python3.
 - Fix builder page not showing any build (:issue:`3820`)
+- Fix double Workers button in the menu. (:issue:`3818`)
+- Fix bad icons in the worker action dialog.
+- Fix url arguments in Buildbot :ref:`Badges` for python3.
 - Upgrading to `guanlecoja-ui` version 1.8.0, fixing two issues. Fixed issue
   where the console view would jump to the top of page when opening the build
-  summary dialog (#3657). Also improved sidebar behaviour by remembering
+  summary dialog (:issue:`3657`). Also improved sidebar behaviour by remembering
   previous pinned vs. collapsed state.
-- Fixes issue with Buildbot DockerLatentWorker, where Buildbot can kill running
-  workers by mistake based on the form the worker name (:issue:`3800`)
-- Fixes issue with Buildbot DockerLatentWorker creating zombies
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker`, where Buildbot can kill running
+  workers by mistake based on the form the worker name (:issue:`3800`).
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker` not reaping zombies process within its container environment.
 - Update requirement text to use the modern "docker" module from the older
   "docker-py" module name
 - When multiple :bb:cfg:`reporter` or :bb:cfg:`services` are configured with
   the same name, an error is now displayed instead of silently discarding all
   but the last one :issue:`3813`.
-- Fix double Workers button in the menu. (:issue:`3818`) Fix bad icons in the
-  worker action dialog.
+- Fixed exception when using :py:class:`buildbot.www.auth.CustomAuth`
 
 Features
 --------
 
+- New Buildbot SVG icons for web UI. The web UI now uses a colored favicon
+  according to build results (:issue:`3785`).
+- ``paused`` and ``graceful`` :ref:`Worker-states` are now stored in the
+  database.
+- :ref:`Worker-states` are now displayed in the web UI.
+- Quarantine timers is now using the ``paused`` worker state.
+- Quarantine timer is now enabled when a build finish on ``EXCEPTION`` state.
+- Standalone binaries for buildbot-worker package are now published for windows and linux (``amd64``).
+  This allows to run a buildbot-worker without having a python environment.
+- New ``buildbot-worker create-worker --maxretries`` for :ref:`Latent-Workers`
+  to quit if the master is or becomes unreachable.
 - Badges can now display `running` as status.
 - The database schema now supports cascade deletes for all objects instead of
   raising an error when deleting a record which has other records pointing to
   it via foreign keys.
-- New Buildbot SVG icons for web UI. The web UI now uses a colored favicon
-  according to build results (:issue:`3785`).
-- New ``buildbot-worker create-worker --maxretries`` for :ref:`Latent-Workers`
-  to quit if the master is or becomes unreachable.
-- ``paused`` and ``graceful`` :ref:`Worker-states` are now stored in the
-  database. :ref:`Worker-states` are now displayed in the UI. Quarantine timers
-  is now using the ``paused`` worker state. Quarantine timer is now enabled
-  when a build finish on ``EXCEPTION`` state.
+- Buildbot can properly find its version if installed from a git archive tarball generated from a tag.
+- Enhanced the test suite to add worker/master protocol interoperability tests between python3 and python2.
 
 Deprecations and Removals
 -------------------------
