@@ -1,1 +1,0 @@
-buildbot.util.ascii2unicode() is removed.  buildbot.util.bytes2unicode() should be used instead.
