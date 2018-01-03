@@ -205,7 +205,7 @@ def createWorker(config):
 
     asd = config['allow-shutdown']
     if asd:
-        config['allow-shutdown'] = repr(asd)
+        config['allow-shutdown'] = repr(str(asd))
 
     if config['no-logrotate']:
         workerTAC = "".join([workerTACTemplate[0]] + workerTACTemplate[2:])
