@@ -21,7 +21,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from __future__ import unicode_literals
-from future.utils import PY3
 from future.utils import string_types
 
 import errno
@@ -29,7 +28,6 @@ import os
 import re
 import shutil
 import sys
-from io import BytesIO
 from io import StringIO
 
 import mock
@@ -225,16 +223,7 @@ class StdoutAssertionsMixin(object):
     """
 
     def setUpStdoutAssertions(self):
-        #
-        # sys.stdout is implemented differently
-        # in Python 2 and Python 3, so we need to
-        # override it differently.
-        # In Python 2, sys.stdout is a byte stream.
-        # In Python 3, sys.stdout is a text stream.
-        if PY3:
-            self.stdout = StringIO()
-        else:
-            self.stdout = BytesIO()
+        self.stdout = StringIO()
         self.patch(sys, 'stdout', self.stdout)
 
     def assertWasQuiet(self):
