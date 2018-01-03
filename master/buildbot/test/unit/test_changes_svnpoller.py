@@ -1,3 +1,4 @@
+# coding: utf-8
 # This file is part of Buildbot.  Buildbot is free software: you can
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
@@ -156,7 +157,7 @@ sample_logentries[2] = b"""\
 <date>2006-10-01T19:35:10.215692Z</date>
 <paths>
 <path
-   action="M">/sample/branch/main.c</path>
+   action="M">/sample/branch/c\xcc\xa7main.c</path>
 </paths>
 <msg>commit_on_branch</msg>
 </logentry>
@@ -379,7 +380,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['project'], '')
         self.assertEqual(changes[0]['repository'], base)
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], ["main.c"])
+        self.assertEqual(changes[1]['files'], [u"çmain.c"])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], '')
         self.assertEqual(changes[1]['repository'], base)
@@ -388,7 +389,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], None)
         self.assertEqual(changes[0]['revision'], '4')
-        self.assertEqual(changes[0]['files'], ["version.c"])
+        self.assertEqual(changes[0]['files'], [u"version.c"])
 
         # r5 should *not* create a change as it's a branch deletion
         changes = s.create_changes([logentries[5]])
@@ -399,7 +400,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], 'branch')
         self.assertEqual(changes[0]['revision'], '6')
-        self.assertEqual(changes[0]['files'], ["version.c"])
+        self.assertEqual(changes[0]['files'], [u"version.c"])
 
     def makeInfoExpect(self, password='bbrocks'):
         args = ['svn', 'info', '--xml', '--non-interactive', sample_base,
@@ -443,7 +444,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['codebase'], "overridden-codebase")
 
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], ["main.c"])
+        self.assertEqual(changes[1]['files'], [u'çmain.c'])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], "overridden-project")
         self.assertEqual(changes[1]['repository'], "overridden-repository")
@@ -489,7 +490,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'category': None,
                 'codebase': None,
                 'comments': u'make_branch',
-                'files': [''],
+                'files': [u''],
                 'project': '',
                 'properties': {},
                 'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
@@ -514,7 +515,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'category': None,
                 'codebase': None,
                 'comments': u'commit_on_branch',
-                'files': ['main.c'],
+                'files': [u'çmain.c'],
                 'project': '',
                 'properties': {},
                 'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',
@@ -528,7 +529,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
                 'category': None,
                 'codebase': None,
                 'comments': u'revised_to_2',
-                'files': ['version.c'],
+                'files': [u'version.c'],
                 'project': '',
                 'properties': {},
                 'repository': 'file:///usr/home/warner/stuff/Projects/Buildbot/trees/misc/_trial_temp/test_vc/repositories/SVN-Repository/sample',

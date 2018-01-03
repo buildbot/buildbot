@@ -30,7 +30,6 @@ from twisted.python import log
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 
 # these split_file_* functions are available for use as values to the
@@ -355,11 +354,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             for p in pathlist.getElementsByTagName("path"):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
-                path = "".join([t.data for t in p.childNodes])
-                # Convert the path from unicode to bytes
-                path = path.encode("ascii")
-                # Convert path from bytes to native string.  Needed for Python 3.
-                path = bytes2NativeString(path, "ascii")
+                path = u"".join([t.data for t in p.childNodes])
                 if path.startswith("/"):
                     path = path[1:]
                 if kind == "dir" and not path.endswith("/"):
