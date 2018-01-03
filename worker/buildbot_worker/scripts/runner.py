@@ -239,9 +239,9 @@ def run():
         config.parseOptions()
     except usage.error as e:
         print("{}:  {}".format(sys.argv[0], e))
-        print()
+        print("")
         c = getattr(config, 'subOptions', config)
-        print(str(c))
+        print("{}".format(c))
         sys.exit(1)
 
     subconfig = config.subOptions
