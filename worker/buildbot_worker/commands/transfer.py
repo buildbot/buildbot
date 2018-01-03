@@ -112,10 +112,10 @@ class WorkerFileUploadCommand(TransferCommand):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            d1 = self.writer.callRemote("close")
+            d1 = self.writer.callRemote(b"close")
 
             def _utime_ok(res):
-                return self.writer.callRemote("utime", accessed_modified)
+                return self.writer.callRemote(b"utime", accessed_modified)
             if self.keepstamp:
                 d1.addCallback(_utime_ok)
             return d1
@@ -126,7 +126,7 @@ class WorkerFileUploadCommand(TransferCommand):
                 self.fp.close()
             self.fp = None
             # call remote's close(), but keep the existing failure
-            d1 = self.writer.callRemote("close")
+            d1 = self.writer.callRemote(b"close")
 
             def eb(f2):
                 log.msg("ignoring error from remote close():")
@@ -184,7 +184,7 @@ class WorkerFileUploadCommand(TransferCommand):
         if self.remaining is not None:
             self.remaining = self.remaining - len(data)
             assert self.remaining >= 0
-        d = self.writer.callRemote('write', data)
+        d = self.writer.callRemote(b'write', data)
         d.addCallback(lambda res: False)
         return d
 
@@ -239,7 +239,7 @@ class WorkerDirectoryUploadCommand(WorkerFileUploadCommand):
         self._reactor.callLater(0, self._loop, d)
 
         def unpack(res):
-            d1 = self.writer.callRemote("unpack")
+            d1 = self.writer.callRemote(b"unpack")
 
             def unpack_err(f):
                 self.rc = 1
@@ -326,7 +326,7 @@ class WorkerFileDownloadCommand(TransferCommand):
 
         def _close(res):
             # close the file, but pass through any errors from _loop
-            d1 = self.reader.callRemote('close')
+            d1 = self.reader.callRemote(b'close')
             d1.addErrback(log.err, 'while trying to close reader')
             d1.addCallback(lambda ignored: res)
             return d1
@@ -367,7 +367,7 @@ class WorkerFileDownloadCommand(TransferCommand):
                 self.rc = 1
             return True
         else:
-            d = self.reader.callRemote('read', length)
+            d = self.reader.callRemote(b'read', length)
             d.addCallback(self._writeData)
             return d
 

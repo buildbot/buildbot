@@ -45,7 +45,7 @@ class UsersClient(object):
 
         @d.addCallback
         def call_commandline(remote):
-            d = remote.callRemote("commandline", op, bb_username,
+            d = remote.callRemote(b"commandline", op, bb_username,
                                   bb_password, ids, info)
 
             @d.addCallback

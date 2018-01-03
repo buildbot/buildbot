@@ -198,7 +198,7 @@ class WorkerForBuilderBase(service.Service):
         if self.remoteStep:
             update = [data, 0]
             updates = [update]
-            d = self.remoteStep.callRemote("update", updates)
+            d = self.remoteStep.callRemote(b"update", updates)
             d.addCallback(self.ackUpdate)
             d.addErrback(self._ackFailed, "WorkerForBuilder.sendUpdate")
 
@@ -230,7 +230,7 @@ class WorkerForBuilderBase(service.Service):
             return
         if self.remoteStep:
             self.remoteStep.dontNotifyOnDisconnect(self.lostRemoteStep)
-            d = self.remoteStep.callRemote("complete", failure)
+            d = self.remoteStep.callRemote(b"complete", failure)
             d.addCallback(self.ackComplete)
             d.addErrback(self._ackFailed, "sendComplete")
             self.remoteStep = None

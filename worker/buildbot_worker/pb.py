@@ -139,7 +139,7 @@ class BotFactory(ReconnectingPBClientFactory):
             # Send the keepalive request.  If an error occurs
             # was already dropped, so just log and ignore.
             log.msg("sending app-level keepalive")
-            d = self.perspective.callRemote("keepalive")
+            d = self.perspective.callRemote(b"keepalive")
             d.addErrback(log.err, "error sending keepalive")
         self.keepaliveTimer = self._reactor.callLater(self.keepaliveInterval,
                                                       doKeepalive)
@@ -255,7 +255,7 @@ class Worker(WorkerBase, service.MultiService):
 
         log.msg(
             "Telling the master we want to shutdown after any running builds are finished")
-        d = self.bf.perspective.callRemote("shutdown")
+        d = self.bf.perspective.callRemote(b"shutdown")
 
         def _shutdownfailed(err):
             if err.check(AttributeError):
