@@ -19,6 +19,8 @@ from __future__ import unicode_literals
 
 from twisted.internet import defer
 
+from buildbot_worker.compat import bytes2unicode
+
 
 class FakeRemote(object):
 
@@ -31,7 +33,7 @@ class FakeRemote(object):
         self.method_prefix = method_prefix
 
     def callRemote(self, meth, *args, **kwargs):
-        fn = getattr(self.original, self.method_prefix + meth)
+        fn = getattr(self.original, self.method_prefix + bytes2unicode(meth))
         return defer.maybeDeferred(fn, *args, **kwargs)
 
     def notifyOnDisconnect(self, what):
