@@ -63,7 +63,7 @@ class TestBot(unittest.TestCase):
         return d
 
     def test_getCommands(self):
-        d = self.bot.callRemote("getCommands")
+        d = self.bot.callRemote(b"getCommands")
 
         def check(cmds):
             # just check that 'shell' is present..
@@ -72,7 +72,7 @@ class TestBot(unittest.TestCase):
         return d
 
     def test_getVersion(self):
-        d = self.bot.callRemote("getVersion")
+        d = self.bot.callRemote(b"getVersion")
 
         def check(vers):
             self.assertEqual(vers, buildbot_worker.version)
@@ -89,7 +89,7 @@ class TestBot(unittest.TestCase):
         with open(os.path.join(infodir, "environ"), "w") as f:
             f.write("something else")
 
-        d = self.bot.callRemote("getWorkerInfo")
+        d = self.bot.callRemote(b"getWorkerInfo")
 
         def check(info):
             self.assertEqual(info, dict(
@@ -102,7 +102,7 @@ class TestBot(unittest.TestCase):
         return d
 
     def test_getWorkerInfo_nodir(self):
-        d = self.bot.callRemote("getWorkerInfo")
+        d = self.bot.callRemote(b"getWorkerInfo")
 
         def check(info):
             self.assertEqual(set(info.keys()), set(
@@ -111,7 +111,7 @@ class TestBot(unittest.TestCase):
         return d
 
     def test_setBuilderList_empty(self):
-        d = self.bot.callRemote("setBuilderList", [])
+        d = self.bot.callRemote(b"setBuilderList", [])
 
         def check(builders):
             self.assertEqual(builders, {})
@@ -119,7 +119,7 @@ class TestBot(unittest.TestCase):
         return d
 
     def test_setBuilderList_single(self):
-        d = self.bot.callRemote("setBuilderList", [('mybld', 'myblddir')])
+        d = self.bot.callRemote(b"setBuilderList", [('mybld', 'myblddir')])
 
         def check(builders):
             self.assertEqual(list(builders), ['mybld'])
@@ -135,7 +135,7 @@ class TestBot(unittest.TestCase):
         workerforbuilders = {}
 
         def add_my(_):
-            d = self.bot.callRemote("setBuilderList", [
+            d = self.bot.callRemote(b"setBuilderList", [
                 ('mybld', 'myblddir')])
 
             def check(builders):
@@ -148,7 +148,7 @@ class TestBot(unittest.TestCase):
         d.addCallback(add_my)
 
         def add_your(_):
-            d = self.bot.callRemote("setBuilderList", [
+            d = self.bot.callRemote(b"setBuilderList", [
                 ('mybld', 'myblddir'), ('yourbld', 'yourblddir')])
 
             def check(builders):
@@ -169,7 +169,7 @@ class TestBot(unittest.TestCase):
         d.addCallback(add_your)
 
         def remove_my(_):
-            d = self.bot.callRemote("setBuilderList", [
+            d = self.bot.callRemote(b"setBuilderList", [
                 ('yourbld', 'yourblddir2')])  # note new builddir
 
             def check(builders):
@@ -189,7 +189,8 @@ class TestBot(unittest.TestCase):
         d.addCallback(remove_my)
 
         def add_and_remove(_):
-            d = self.bot.callRemote("setBuilderList", [
+            d = self.bot.callRemote(b"setBuilderList", [
+
                 ('theirbld', 'theirblddir')])
 
             def check(builders):
@@ -209,7 +210,7 @@ class TestBot(unittest.TestCase):
     def test_shutdown(self):
         d1 = defer.Deferred()
         self.patch(reactor, "stop", lambda: d1.callback(None))
-        d2 = self.bot.callRemote("shutdown")
+        d2 = self.bot.callRemote(b"shutdown")
         # don't return until both the shutdown method has returned, and
         # reactor.stop has been called
         return defer.gatherResults([d1, d2])
@@ -267,20 +268,20 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         return d
 
     def test_print(self):
-        return self.wfb.callRemote("print", "Hello, WorkerForBuilder.")
+        return self.wfb.callRemote(b"print", "Hello, WorkerForBuilder.")
 
     def test_printWithCommand(self):
         self.wfb.original.command = Command("builder", "1", ["arg1", "arg2"])
-        return self.wfb.callRemote("print", "Hello again, WorkerForBuilder.")
+        return self.wfb.callRemote(b"print", "Hello again, WorkerForBuilder.")
 
     def test_setMaster(self):
         # not much to check here - what the WorkerForBuilder does with the
         # master is not part of the interface (and, in fact, it does very
         # little)
-        return self.wfb.callRemote("setMaster", mock.Mock())
+        return self.wfb.callRemote(b"setMaster", mock.Mock())
 
     def test_startBuild(self):
-        return self.wfb.callRemote("startBuild")
+        return self.wfb.callRemote(b"startBuild")
 
     def test_startCommand(self):
         # set up a fake step to receive updates
@@ -299,7 +300,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
+            return self.wfb.callRemote(b"startCommand", FakeRemote(st),
                                        "13", "shell", dict(
                 command=['echo', 'hello'],
                 workdir='workdir'))
@@ -333,7 +334,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
+            return self.wfb.callRemote(b"startCommand", FakeRemote(st),
                                        "13", "shell", dict(
                 command=['sleep', '10'],
                 workdir='workdir'))
@@ -348,7 +349,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
 
         # and then interrupt the step
         def do_interrupt(_):
-            return self.wfb.callRemote("interruptCommand", "13", "tl/dr")
+            return self.wfb.callRemote(b"interruptCommand", "13", "tl/dr")
         d.addCallback(do_interrupt)
 
         d.addCallback(lambda _: st.wait_for_finish())
@@ -380,7 +381,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         d = defer.succeed(None)
 
         def do_start(_):
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
+            return self.wfb.callRemote(b"startCommand", FakeRemote(st),
                                        "13", "shell", dict(
                 command=['sleep', '10'],
                 workdir='workdir'))
@@ -399,7 +400,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         st = FakeStep()
 
         def do_start():
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
+            return self.wfb.callRemote(b"startCommand", FakeRemote(st),
                                        "13", "shell", dict())
 
         yield self.assertFailure(do_start(), ValueError)
@@ -410,7 +411,7 @@ class TestWorkerForBuilder(command.CommandTestMixin, unittest.TestCase):
         st = FakeStep()
 
         def do_start():
-            return self.wfb.callRemote("startCommand", FakeRemote(st),
+            return self.wfb.callRemote(b"startCommand", FakeRemote(st),
                                        "13", "invalid command", dict())
 
         unknownCommand = yield self.assertFailure(do_start(), base.UnknownCommand)
