@@ -291,15 +291,11 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
                          "incorrect master host and/or port")
 
 
-class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
+class TestOptions(unittest.TestCase):
 
     """
     Test buildbot_worker.scripts.runner.Options class.
     """
-
-    def setUp(self):
-        self.setUpStdoutAssertions()
-
     def parse(self, *args):
         opts = runner.Options()
         opts.parseOptions(args)
@@ -311,9 +307,12 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
                                self.parse)
 
     def test_version(self):
+        from buildbot_worker.compat import NativeStringIO
+        stdout = NativeStringIO()
+        self.patch(sys, 'stdout', stdout)
         exception = self.assertRaises(SystemExit, self.parse, '--version')
         self.assertEqual(exception.code, 0, "unexpected exit code")
-        self.assertInStdout('worker version:')
+        self.assertIn(str('worker version:'), stdout.getvalue())
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())

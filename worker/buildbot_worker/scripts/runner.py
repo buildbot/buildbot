@@ -222,7 +222,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        print("worker version: {}".format(buildbot_worker.version))
+        print(str("worker version: {}".format(buildbot_worker.version)))
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
