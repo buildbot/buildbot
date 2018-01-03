@@ -291,7 +291,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.assertTrue({'stdout': nl(repr(args))} in b.updates, b.show())
+            self.assertTrue({'stdout':
+                nl(repr([str(arg) for arg in args]))} in b.updates, b.show())
             self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d
