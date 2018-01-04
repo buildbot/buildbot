@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from six import string_types
+
 from twisted.internet import defer
 from twisted.python import failure
 
@@ -31,6 +33,7 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
+from six.moves import http_client  # pylint: disable=ungrouped-imports
 
 log = Logger()
 
@@ -135,6 +138,8 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         if duration is not None:
             payload['duration'] = duration
 
+        payload = {'verifications': {name: payload}}
+
         if self._verbose:
             log.debug(
                 'Sending Gerrit status for {change_id}/{revision_id}: data={data}',
@@ -214,7 +219,9 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
         changes = yield self.getGerritChanges(props)
         for change in changes:
             try:
-                yield self.createStatus(
+                # NOTE: The response object we receive here is documented here:
+                #   https://docs.buildbot.net/current/developer/utils.html#buildbot.util.service.IHTTPResponse
+                response = yield self.createStatus(
                     change['change_id'],
                     change['revision_id'],
                     name,
@@ -226,6 +233,16 @@ class GerritVerifyStatusPush(http.HttpStatusPushBase):
                     reporter=reporter,
                     category=category,
                     duration=duration)
+
+                # The verify-status plugin will return 204 NO CONTENT
+                # on success.
+                if response.code != http_client.NO_CONTENT:
+                    content = yield response.content()
+                    if content and not isinstance(content, string_types):
+                        content = content.decode('utf-8')
+
+                    raise ValueError('Expected 204 NO CONTENT. Response was {}: {}'.format(response.code, content))
+
             except Exception:
                 log.failure(
                     'Failed to send status!', failure=failure.Failure())

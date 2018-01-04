@@ -1,0 +1,2 @@
+The GerritVerifyStatusPush has been fixed to send a request body that's properly formatted to Gerrit. This error was
+previously ignored because the http response code sent by Gerrit was not being checked.
