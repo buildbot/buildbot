@@ -599,5 +599,8 @@ class EC2LatentWorker(AbstractLatentWorker):
             log.msg('%s %s failed to fulfill spot request %s with status %s' %
                     (self.__class__.__name__, self.workername,
                      request['SpotInstanceRequestId'], request_status))
+            # try to cancel, just for good measure
+            self.ec2.meta.client.cancel_spot_instance_requests(
+                SpotInstanceRequestIds=[request['SpotInstanceRequestId']])
             raise LatentWorkerFailedToSubstantiate(
                 request['SpotInstanceRequestId'], request_status)
