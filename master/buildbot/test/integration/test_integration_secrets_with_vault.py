@@ -38,9 +38,10 @@ class SecretsConfig(RunMasterBase):
         if rv != 0:
             raise SkipTest(
                 "Vault integration need docker environment to be setup")
-        os.system("docker exec -it vault_for_buildbot /bin/sh -c "
-                  "'export VAULT_ADDR=http://127.0.0.1:8200/\n"
-                  "vault write secret/key value=word'")
+        rv = os.system("docker exec vault_for_buildbot /bin/sh -c "
+                       "'export VAULT_ADDR=http://127.0.0.1:8200/\n"
+                       "vault write secret/key value=word'")
+        self.assertEqual(rv, 0)
 
     def tearDown(self):
         os.system("docker rm -f vault_for_buildbot")
