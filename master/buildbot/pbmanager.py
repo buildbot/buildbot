@@ -26,6 +26,7 @@ from twisted.python import log
 from twisted.spread import pb
 from zope.interface import implementer
 
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
@@ -196,11 +197,14 @@ class Dispatcher(service.AsyncService):
 
     @defer.inlineCallbacks
     def requestAvatarId(self, creds):
+        p = Properties()
+        p.master = self.master
         username = bytes2unicode(creds.username)
         try:
             yield self.master.initLock.acquire()
             if username in self.users:
                 password, _ = self.users[username]
+                password = yield p.render(password)
                 matched = yield defer.maybeDeferred(
                     creds.checkPassword, unicode2bytes(password))
                 if not matched:
