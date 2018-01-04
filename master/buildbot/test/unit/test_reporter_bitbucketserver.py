@@ -23,6 +23,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.bitbucketserver import HTTP_CREATED
@@ -53,7 +54,7 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
             'serv', auth=('username', 'passwd'),
             debug=None, verify=None)
         self.sp = sp = BitbucketServerStatusPush(
-            "serv", "username", "passwd", **kwargs)
+            "serv", Interpolate("username"), Interpolate("passwd"), **kwargs)
         yield sp.setServiceParent(self.master)
         yield self.master.startService()
 
@@ -197,7 +198,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
             self.master, self, 'serv', auth=('username', 'passwd'), debug=None,
             verify=None)
         self.cp = BitbucketServerPRCommentPush(
-            "serv", "username", "passwd", verbose=verbose, **kwargs)
+            "serv", Interpolate("username"), Interpolate("passwd"), verbose=verbose, **kwargs)
         self.cp.setServiceParent(self.master)
         self.cp.messageFormatter = Mock(spec=self.cp.messageFormatter)
         self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
