@@ -81,7 +81,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                      "svnuser", "svnpasswd", "project",
                      "pollInterval", "histmax",
                      "svnbin", "category", "cachepath", "pollAtLaunch")
-
+    secrets = ("svnuser", "svnpasswd")
     parent = None  # filled in when we're added
     last_change = None
     loop = None
@@ -102,7 +102,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
 
         base.PollingChangeSource.__init__(self, name=name,
                                           pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+                                          pollAtLaunch=pollAtLaunch,
+                                          svnuser=svnuser, svnpasswd=svnpasswd)
 
         if repourl.endswith("/"):
             repourl = repourl[:-1]  # strip the trailing slash

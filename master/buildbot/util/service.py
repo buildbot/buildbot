@@ -210,7 +210,10 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         accumulateClassList(self.__class__, 'secrets', secrets)
         for k, v in sibling._config_kwargs.items():
             if k in secrets:
+                # for non reconfigurable services, we force the attribute
                 v = yield p.render(v)
+                setattr(sibling, k, v)
+                setattr(self, k, v)
             kwargs[k] = v
 
         d = yield self.reconfigService(*sibling._config_args,
