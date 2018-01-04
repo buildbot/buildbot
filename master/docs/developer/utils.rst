@@ -1058,6 +1058,34 @@ For example, a particular daily scheduler could be configured on multiple master
         We want to reuse the service started at master startup and just reconfigure it.
         This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigService()
 
+    .. py:method:: renderSecrets(self, *args)
+
+        Utility method which renders a list of parameters which can be interpolated as a secret.
+        This is meant for services which have their secrets parameter configurable as positional arguments.
+        If there are several argument, the secrets are interpolated in parallel, and a list of result is returned via deferred.
+        If there is one argument, the result is directly returned.
+
+        .. note::
+
+            For keyword arguments, a simpler method is to use the ``secrets`` class variable, which items
+            will be automatically interpolated just before reconfiguration.
+
+        .. code-block:: python
+
+                def reconfigService(self, user, password, ...)
+                    user, password = yield self.renderSecrets(user, password)
+
+        .. code-block:: python
+
+                def reconfigService(self, token, ...)
+                    token = yield self.renderSecrets(token)
+
+        .. code-block:: python
+
+                secrets = ("user", "password")
+                def reconfigService(self, user=None, password=None, ...):
+                    # nothing to do user and password will be automatically interpolated
+
 
     Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
 
@@ -1136,7 +1164,7 @@ For example, a particular daily scheduler could be configured on multiple master
         :param headers: The headers to pass to every requests for this url
         :param debug: log every requests and every response.
         :param verify: disable the SSL verification.
-        
+
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.

@@ -239,6 +239,17 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
     def reconfigService(self, name=None, *args, **kwargs):
         return defer.succeed(None)
 
+    def renderSecrets(self, *args):
+        # Properties import to resolve cyclic import issue
+        from buildbot.process.properties import Properties
+        p = Properties()
+        p.master = self.master
+
+        if len(args) == 1:
+            return p.render(args[0])
+
+        return defer.gatherResults([p.render(s) for s in args], consumeErrors=True)
+
 
 class ClusteredBuildbotService(BuildbotService):
 

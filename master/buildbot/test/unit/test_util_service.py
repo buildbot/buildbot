@@ -26,6 +26,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.util import service
+from buildbot.process.properties import Interpolate
 
 
 class DeferredStartStop(service.AsyncService):
@@ -716,6 +717,21 @@ class BuildbotServiceManager(unittest.TestCase):
                 'kwargs': {'a': 2},
                 'name': 'basic'}],
             'name': 'services'})
+
+    @defer.inlineCallbacks
+    def testRenderSecrets(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test = yield service.renderSecrets(Interpolate('test_string'))
+        self.assertEqual(test, 'test_string')
+
+    @defer.inlineCallbacks
+    def testRenderSecrets2Args(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test, test2 = yield service.renderSecrets(Interpolate('test_string'), 'ok_for_non_renderable')
+        self.assertEqual(test, 'test_string')
+        self.assertEqual(test2, 'ok_for_non_renderable')
 
 
 class UnderTestSharedService(service.SharedService):
