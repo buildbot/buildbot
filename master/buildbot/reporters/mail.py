@@ -85,6 +85,7 @@ class Domain(util.ComparableMixin):
 
 @implementer(interfaces.IEmailSender)
 class MailNotifier(NotifierBase):
+    secrets = ["smtpUser", "smtpPassword"]
 
     def checkConfig(self, fromaddr, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None, addLogs=False,
