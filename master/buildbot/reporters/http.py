@@ -90,6 +90,7 @@ class HttpStatusPushBase(service.BuildbotService):
 
 class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
+    secrets = ['user', 'password', "auth"]
 
     def checkConfig(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
         if user is not None and auth is not None:

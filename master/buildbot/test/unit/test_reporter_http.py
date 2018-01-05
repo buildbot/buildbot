@@ -23,6 +23,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.process.results import SUCCESS
+from buildbot.process.properties import Interpolate
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
@@ -73,7 +74,7 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             "serv", auth=("username", "passwd"))
-        self.sp = sp = HttpStatusPush("serv", auth=("username", "passwd"), **kwargs)
+        self.sp = sp = HttpStatusPush("serv", auth=("username", Interpolate("passwd")), **kwargs)
         yield sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
