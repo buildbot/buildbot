@@ -45,6 +45,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
     def reconfigService(self, token,
                         startDescription=None, endDescription=None,
                         context=None, baseURL=None, verbose=False, **kwargs):
+
+        token = yield self.renderSecrets(token)
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
