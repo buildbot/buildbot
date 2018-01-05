@@ -20,7 +20,7 @@ description: |
             :param list builderids: names of the builderids for which build requests should be created
             :param unicode external_idstring: arbitrary identifier to recognize this buildset later
             :param int parent_buildid: optional build id that is the parent for this buildset
-            :param unicode parent_relationship: relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
+            :param unicode parent_relationship: relationship identifier for the parent, this is a configured relationship between the parent build, and the childs buildsets
             :returns: (buildset id, dictionary mapping builder ids to build request ids) via Deferred
 
             .. warning:
@@ -61,7 +61,7 @@ properties:
         type: integer
     parent_relationship?:
         description: |
-            relationship identifier for the parent, this is is configured relationship between the parent build, and the childs buildsets
+            relationship identifier for the parent, this is a configured relationship between the parent build, and the childs buildsets
         type: string
     reason:
         description: the reason this buildset was scheduled

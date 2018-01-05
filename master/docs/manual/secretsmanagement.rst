@@ -92,7 +92,7 @@ The token is generated when the Vault instance is initialized for the first time
 
 In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
-For more informations about Vault please visit: _`Vault`: https://www.vaultproject.io/
+For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
 How to populate secrets in a build
 ----------------------------------

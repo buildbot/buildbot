@@ -44,7 +44,7 @@ been modified to perform source checkouts from the Subversion repository.
 Changes are displayed with a bit more pizazz, and a links= argument was
 added to allow things like ViewCVS links to be added to the display
 (although it is not yet clear how this argument should be used: the
-interface remains subject to change untill it has been documented).
+interface remains subject to change until it has been documented).
 
 *** display ShellCommand logs with HTML
 

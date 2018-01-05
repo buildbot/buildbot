@@ -718,7 +718,7 @@ So instead of seeing `build #253 of ...`, you would see something like `build co
 Revisions that are stored as hashes are shortened to 7 characters in length, as multiple revisions can be contained in one build and may exceed the IRC message length limit.
 
 Two additional arguments can be set to control how fast the IRC bot tries to reconnect when it encounters connection issues.
-``lostDelay`` is the number of of seconds the bot will wait to reconnect when the connection is lost, where as ``failedDelay`` is the number of seconds until the bot tries to reconnect when the connection failed.
+``lostDelay`` is the number of seconds the bot will wait to reconnect when the connection is lost, where as ``failedDelay`` is the number of seconds until the bot tries to reconnect when the connection failed.
 ``lostDelay`` defaults to a random number between 1 and 5, while ``failedDelay`` defaults to a random one between 45 and 60.
 Setting random defaults like this means multiple IRC bots are less likely to deny each other by flooding the server.
 

@@ -47,7 +47,7 @@ class Bzr(Source):
                              " baseURL")
 
         if repourl is None and baseURL is None:
-            raise ValueError("you must privide at least one of repourl and"
+            raise ValueError("you must provide at least one of repourl and"
                              " baseURL")
 
         if baseURL is not None and defaultBranch is None:

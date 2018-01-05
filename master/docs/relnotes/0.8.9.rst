@@ -127,7 +127,7 @@ Features
    * shows sourcestamp information for builders that use multiple codebases (instead of the generic
      "multiple rev" placeholder that was shown before).
 
-* The waterfall and atom/rss feeds can be filtered with the ``project`` url paramter.
+* The waterfall and atom/rss feeds can be filtered with the ``project`` url parameter.
 
 * The WebStatus ``Authorization`` support now includes a ``view`` action which can be used to restrict read-only access to the Buildbot instance.
 
@@ -250,7 +250,7 @@ Fixes
 
 * The WebStatus no longer incorrectly refers to fields that might not be visible.
 
-* The GerritChangeSource now sets a default author, fixing an exception that occured when Gerrit didn't report an owner name/email.
+* The GerritChangeSource now sets a default author, fixing an exception that occurred when Gerrit didn't report an owner name/email.
 
 * Respects the ``RETRY`` status when an interrupt occurs.
 

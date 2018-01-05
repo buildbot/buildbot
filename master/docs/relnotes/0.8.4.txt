@@ -66,7 +66,7 @@ via a Deferred, and that result is now a DateTime object.
 
 *** The BuildRequestStatus methods `getSubmitTime` and `getSourceStamp` now
 return their results via a Deferred.  The `asDict` method omits these values,
-as it retuns synchronously.
+as it returns synchronously.
 
 *** Buildbot now uses temporary tables, which can cause problems with
 replication in MySQL.  See "Database Specification" in the manual for more

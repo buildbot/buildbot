@@ -148,7 +148,7 @@ However, de-facto general purpose libraries have emerged.
     _(res).each((a) -> a + 1))
 
 * Require.js is used as technical solution for plugin loading.
-  It should not be used appart from this.
+  It should not be used apart from this.
 
 * Moment.js is used for manipulating dates and displaying them to the user in a human readable form (e.g "one month ago").
   It can be used anywhere it is useful.
