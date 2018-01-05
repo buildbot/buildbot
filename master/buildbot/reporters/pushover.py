@@ -77,7 +77,7 @@ class PushoverNotifier(NotifierBase):
                         schedulers=None, branches=None,
                         priorities=None, otherParams=None,
                         watchedWorkers=None, messageFormatterMissingWorker=None):
-
+        user_key, api_token = yield self.renderSecrets(user_key, api_token)
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter(template_type='html',
                 template_filename='default_notification.txt')
