@@ -848,6 +848,10 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
                 continue
 
+            if _service.name in self.services:
+                error('Duplicate service name %r' % _service.name)
+                continue
+
             self.services[_service.name] = _service
 
     def check_single_master(self):
@@ -1015,7 +1019,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             error(
                 "builder names must not start with an underscore: '%s'" % name)
         try:
-            self.name = util.ascii2unicode(name)
+            self.name = util.bytes2unicode(name, encoding="ascii")
         except UnicodeDecodeError:
             error("builder names must be unicode or ASCII")
 

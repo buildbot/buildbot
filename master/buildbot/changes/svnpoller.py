@@ -30,7 +30,6 @@ from twisted.python import log
 
 from buildbot import util
 from buildbot.changes import base
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 
 # these split_file_* functions are available for use as values to the
@@ -122,8 +121,8 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         self.histmax = histmax
         self._prefix = None
         self.category = category if callable(
-            category) else util.ascii2unicode(category)
-        self.project = util.ascii2unicode(project)
+            category) else util.bytes2unicode(category)
+        self.project = util.bytes2unicode(project)
 
         self.cachepath = cachepath
         if self.cachepath and os.path.exists(self.cachepath):
@@ -355,11 +354,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             for p in pathlist.getElementsByTagName("path"):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
-                path = "".join([t.data for t in p.childNodes])
-                # Convert the path from unicode to bytes
-                path = path.encode("ascii")
-                # Convert path from bytes to native string.  Needed for Python 3.
-                path = bytes2NativeString(path, "ascii")
+                path = u"".join([t.data for t in p.childNodes])
                 if path.startswith("/"):
                     path = path[1:]
                 if kind == "dir" and not path.endswith("/"):
@@ -411,14 +406,14 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                                for f in files],
                         comments=comments,
                         revision=revision,
-                        branch=util.ascii2unicode(branch),
+                        branch=util.bytes2unicode(branch),
                         revlink=revlink,
                         category=self.category,
-                        repository=util.ascii2unicode(
+                        repository=util.bytes2unicode(
                             branches[branch].get('repository', self.repourl)),
-                        project=util.ascii2unicode(
+                        project=util.bytes2unicode(
                             branches[branch].get('project', self.project)),
-                        codebase=util.ascii2unicode(
+                        codebase=util.bytes2unicode(
                             branches[branch].get('codebase', None)))
                     changes.append(chdict)
 

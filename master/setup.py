@@ -204,6 +204,7 @@ setup_args = {
         "buildbot.test.fake",
         "buildbot.test.fuzz",
         "buildbot.test.integration",
+        "buildbot.test.integration.interop",
         "buildbot.test.regressions",
         "buildbot.test.unit",
     ]),

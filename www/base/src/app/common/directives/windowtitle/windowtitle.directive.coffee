@@ -1,9 +1,10 @@
 class WindowTitle extends Directive('common')
-    constructor: ($rootScope, $timeout, $stateParams, $window) -> return {
+    constructor: ($rootScope, $timeout, $stateParams, $window, faviconService) -> return {
         restrict: 'A'
         link: ->
             listener = (event, toState) ->
                 $timeout ->
+                    faviconService.setFavIcon()
                     if toState.data and toState.data.pageTitle
                         if typeof(toState.data.pageTitle) == "function"
                             $window.document.title = toState.data.pageTitle($stateParams)

@@ -1,7 +1,9 @@
 class Workers extends Controller
-    constructor: ($scope, dataService, bbSettingsService, resultsService, dataGrouperService, $stateParams) ->
+    constructor: ($scope, dataService, bbSettingsService, resultsService, dataGrouperService, $stateParams, $state, glTopbarContextualActionsService, glBreadcrumbService) ->
         $scope.capitalize = _.capitalize
         _.mixin($scope, resultsService)
+
+
         $scope.getUniqueBuilders = (worker) ->
             builders = {}
             masters = {}
@@ -26,8 +28,35 @@ class Workers extends Controller
         $scope.masters = data.getMasters()
         $scope.workers = data.getWorkers()
         $scope.workers.onChange =  (workers) ->
+            breadcrumb = [
+                    caption: "Workers"
+                    sref: "workers"
+            ]
+            actions = []
             if $stateParams.worker?
-                $scope.worker = workers.get(+$stateParams.worker)
+                $scope.worker = worker = workers.get(+$stateParams.worker)
+
+                breadcrumb.push
+                    caption: worker.name
+                    sref: "worker({worker:#{worker.workerid}})"
+
+                actions.push
+                    caption: "Actions..."
+                    extra_class: "btn-default"
+                    action: ->
+                        $state.go("worker.actions")
+            else
+                actions.push
+                    caption: "Actions..."
+                    extra_class: "btn-default"
+                    action: ->
+                        $state.go("workers.actions")
+            # reinstall breadcrumb when coming back from forcesched
+            setupGl = ->
+                glTopbarContextualActionsService.setContextualActions(actions)
+                glBreadcrumbService.setBreadcrumb(breadcrumb)
+            $scope.$on '$stateChangeSuccess', setupGl
+            setupGl()
             $scope.worker_infos = []
             for worker in workers
                 worker.num_connections = worker.connected_to.length

@@ -10,6 +10,98 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.15`` ( ``2018-01-02`` )
+======================================
+
+Bug fixes
+---------
+
+- Fix builder page not showing any build (:issue:`3820`)
+- Fix double Workers button in the menu. (:issue:`3818`)
+- Fix bad icons in the worker action dialog.
+- Fix url arguments in Buildbot :ref:`Badges` for python3.
+- Upgrading to `guanlecoja-ui` version 1.8.0, fixing two issues. Fixed issue
+  where the console view would jump to the top of page when opening the build
+  summary dialog (:issue:`3657`). Also improved sidebar behaviour by remembering
+  previous pinned vs. collapsed state.
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker`, where Buildbot can kill running
+  workers by mistake based on the form the worker name (:issue:`3800`).
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker` not reaping zombies process within its container environment.
+- Update requirement text to use the modern "docker" module from the older
+  "docker-py" module name
+- When multiple :bb:cfg:`reporter` or :bb:cfg:`services` are configured with
+  the same name, an error is now displayed instead of silently discarding all
+  but the last one :issue:`3813`.
+- Fixed exception when using :py:class:`buildbot.www.auth.CustomAuth`
+
+Features
+--------
+
+- New Buildbot SVG icons for web UI. The web UI now uses a colored favicon
+  according to build results (:issue:`3785`).
+- ``paused`` and ``graceful`` :ref:`Worker-states` are now stored in the
+  database.
+- :ref:`Worker-states` are now displayed in the web UI.
+- Quarantine timers is now using the ``paused`` worker state.
+- Quarantine timer is now enabled when a build finish on ``EXCEPTION`` state.
+- Standalone binaries for buildbot-worker package are now published for windows and linux (``amd64``).
+  This allows to run a buildbot-worker without having a python environment.
+- New ``buildbot-worker create-worker --maxretries`` for :ref:`Latent-Workers`
+  to quit if the master is or becomes unreachable.
+- Badges can now display `running` as status.
+- The database schema now supports cascade deletes for all objects instead of
+  raising an error when deleting a record which has other records pointing to
+  it via foreign keys.
+- Buildbot can properly find its version if installed from a git archive tarball generated from a tag.
+- Enhanced the test suite to add worker/master protocol interoperability tests between python3 and python2.
+
+Deprecations and Removals
+-------------------------
+
+- buildbot.util.ascii2unicode() is removed. buildbot.util.bytes2unicode()
+  should be used instead.
+
+
+Buildbot ``0.9.14`` ( ``2017-12-08`` )
+======================================
+
+Bug fixes
+---------
+
+- Compile step now properly takes the decodeRC parameter in account
+  (:issue:`3774`)
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Fixed inconsistent use of `pointer` style mouse cursor by removing it from
+  the `.label` css rule and instead creating a new `.clickable` css rule which
+  is used only in places which are clickable and would not otherwise
+  automatically get the `pointer` icon, for example it is not needed for
+  hyper-links. (:issue:`3795`).
+- Rebuilding with the same revision now takes new change properties into
+  account instead of re-using the original build change properties
+  (:issue:`3701`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+- Fixes python3 encoding issues with Windows Service (:issue:`3796`)
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- In progress worker control API. Worker can now be stopped and paused using the UI.
+  Note that there is no UI yet to look the status of those actions (:issue:`3429`).
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
 
 Buildbot ``0.9.13`` ( ``2017-11-07`` )
 ======================================

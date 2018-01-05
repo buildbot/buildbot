@@ -425,6 +425,12 @@ class FakeUpdates(service.AsyncService):
     def schedulerEnable(self, schedulerid, v):
         return self.master.db.schedulers.enable(schedulerid, v)
 
+    def setWorkerState(self, workerid, paused, graceful):
+        return self.master.db.workers.setWorkerState(
+            workerid=workerid,
+            paused=paused,
+            graceful=graceful)
+
 
 class FakeDataConnector(service.AsyncMultiService):
     # FakeDataConnector delegates to the real DataConnector so it can get all

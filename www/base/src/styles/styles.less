@@ -8,6 +8,19 @@
   display: none !important;
 }
 
+// Dashboards which use SVG to draw contents such as waterfall may require
+//  setting  body height to 100vh. (100% of viewport height)
+//  e.g. Waterfall uses this, otherwise the contents do not appear. 
+// The controller dynamically adds and removes this class to body
+//   when entering and leaving Waterfall.
+//
+//  (note: adding height:100vh to a div also would solve this problem 
+//   except that causes the dialogs to make the SVG disappear due to 
+//   the dialog setting the body to overflow:hidden via modal-open rule.)
+body.hundredpercent {
+  height: 100vh;
+}
+
 /* modal dialog customizations */
 @media screen {
   .modal-xlg {
@@ -75,7 +88,7 @@
   }
 }
 
-.label {
+.clickable {
   cursor: pointer
 }
 
@@ -182,3 +195,8 @@ span:hover>.mouse-over-only  {display: inline;}
         flex-grow: 4
     }
 }
+
+/* glyphicon to font awesome translation, for angular-bootstrap-multiselect */
+.glyphicon { font-family: 'FontAwesome'; }
+.glyphicon-ok:before { content: @fa-var-check; }
+.glyphicon-remove:before { content: @fa-var-times; }

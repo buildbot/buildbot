@@ -119,6 +119,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
 
         if build['complete']:
             state = {

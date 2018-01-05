@@ -126,6 +126,43 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
                           notify_on_missing='bob@example.com')
     ]
 
+
+.. _Worker-states:
+
+Workers States
+++++++++++++++
+
+There are some times when a worker misbehaves because of issues with its configuration.
+In those cases, you may want to pause the worker, or maybe completely shut it down.
+
+There are three actions that you may take (in the worker's web page *Actions* dialog)
+
+- *Pause*: If a worker is paused, it won't accept new builds. The action of pausing a worker will not affect any build ongoing.
+
+- *Graceful Shutdown*: If a worker is in graceful shutdown mode, it won't accept new builds, but will finish the current builds.
+  When all of its build are finished, the :command:`buildbot-worker` process will terminate.
+
+- *Force Shutdown*: If a worker is in force shutdown mode, it will terminate immediately, and the build he was currently doing will be put to retry state.
+
+Those actions will put the worker in two states
+
+- *paused*: the worker is paused if it is connected but doesn't accept new builds.
+- *graceful*: the worker is graceful if it doesn't accept new builds, and will shutdown when builds are finished.
+
+
+A worker might be put to ``paused`` state automatically if buildbot detects a misbehavior.
+This is called the *quarantine timer*.
+
+Quarantine timer is an exponential back-off mechanism for workers.
+This avoids a misbehaving worker to eat the build queue by quickly finishing builds in ``EXCEPTION`` state.
+When misbehavior is detected, the timer will pause the worker for 10 second, and then that time will double at each misbehavior detection, until the worker finishes a build.
+
+The first case of misbehavior is for a latent worker to not start properly.
+The second case of misbehavior is for a build to end with an ``EXCEPTION`` status.
+
+Worker states are stored in the database, can be queried via :ref:`REST_API` and visible in the UI's workers page.
+
+
 .. index:: Workers; local
 
 .. _Local-Workers:

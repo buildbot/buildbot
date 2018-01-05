@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 from future.utils import itervalues
 
+import os
 import sys
 from io import StringIO
 
@@ -36,6 +37,7 @@ from buildbot.master import BuildMaster
 from buildbot.plugins import worker
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import statusToString
+from buildbot.test.util.sandboxed_worker import SandboxedWorker
 
 try:
     from buildbot_worker.bot import Worker
@@ -108,7 +110,7 @@ class RunMasterBase(unittest.TestCase):
             elif self.proto == 'null':
                 proto = {"null": {}}
                 workerclass = worker.LocalWorker
-            config_dict['workers'] = [workerclass("local1", "localpw")]
+            config_dict['workers'] = [workerclass("local1", "localpw", missing_timeout=0)]
             config_dict['protocols'] = proto
 
         m = yield getMaster(self, reactor, config_dict)
@@ -128,14 +130,23 @@ class RunMasterBase(unittest.TestCase):
             # along with the master
             worker_dir = FilePath(self.mktemp())
             worker_dir.createDirectory()
-            self.w = Worker(
-                "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
-                False)
+            sandboxed_worker_path = os.environ.get(
+                "SANDBOXED_WORKER_PATH", None)
+            if sandboxed_worker_path is None:
+                self.w = Worker(
+                    "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
+                    False)
+            else:
+                self.w = SandboxedWorker(
+                    "127.0.0.1", workerPort, "local1", "localpw", worker_dir.path,
+                    sandboxed_worker_path)
+                self.addCleanup(self.w.shutdownWorker)
+
         elif self.proto == 'null':
             self.w = None
+
         if self.w is not None:
-            self.w.startService()
-            self.addCleanup(self.w.stopService)
+            self.w.setServiceParent(m)
 
         @defer.inlineCallbacks
         def dump():

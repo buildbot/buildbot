@@ -258,6 +258,12 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         id, name = self.successResultOf(bs.start_instance(self.build))
         self.assertEqual(name, 'customworker')
 
+    def test_start_worker_but_already_created_with_same_name(self):
+        bs = self.setupWorker(
+            'existing', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'busybox:latest')
+
 
 class testDockerPyStreamLogs(unittest.TestCase):
 

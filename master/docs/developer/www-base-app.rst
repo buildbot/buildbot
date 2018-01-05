@@ -38,7 +38,7 @@ On top of Angular we use nodeJS tools to ease development
 Modules we may or may not want to include:
 
 * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
-* `ngGrid <https://angular-ui.github.io/ui-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
+* `Angular UI Grid <http://ui-grid.info/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
 * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
 * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
   Having it inside allows for all kind of hacks we may want to avoid
@@ -82,6 +82,10 @@ The scripts.js files can register itself as a dependency to the main "app" modul
 The entrypoint containing a Resource, nothing forbids plugin writers to add more REST apis in ``/<pluginname>/api``.
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
 You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
+
+It is also possible to make a web plugin which only adds http endpoint, and has no javascript UI.
+For that the ``Application`` endpoint object should have ``ui=False`` argument.
+You can look at the :src:`www/badges` plugin for an example of a ui-less plugin.
 
 .. _Routing:
 

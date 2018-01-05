@@ -21,7 +21,7 @@ import time
 from zope.interface import implementer
 
 from buildbot import interfaces
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
 
@@ -76,10 +76,10 @@ class WorkerStatus:
         return len([t for t in self.connect_times if t > then])
 
     def setAdmin(self, admin):
-        self.admin = ascii2unicode(admin)
+        self.admin = bytes2unicode(admin)
 
     def setHost(self, host):
-        self.host = ascii2unicode(host)
+        self.host = bytes2unicode(host)
 
     def setAccessURI(self, access_uri):
         self.access_uri = access_uri

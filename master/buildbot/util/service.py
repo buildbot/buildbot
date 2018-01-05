@@ -28,7 +28,7 @@ from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
 
 from buildbot import util
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 
@@ -174,7 +174,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
     def __init__(self, *args, **kwargs):
         name = kwargs.pop("name", None)
         if name is not None:
-            self.name = ascii2unicode(name)
+            self.name = bytes2unicode(name)
         self.checkConfig(*args, **kwargs)
         if self.name is None:
             raise ValueError(
@@ -510,7 +510,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         for svc in reconfigurable_services:
             if not svc.name:
                 raise ValueError(
-                    "%r: child %r should have a defined name attribute", self, svc)
+                    "{}: child {} should have a defined name attribute".format(self, svc))
             config_sibling = new_by_name.get(svc.name)
             try:
                 yield svc.reconfigServiceWithSibling(config_sibling)

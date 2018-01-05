@@ -741,6 +741,19 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.expectLogfile("warnings (1)", "warning: I might fail\n")
         return self.runStep()
 
+    def test_warn_with_decoderc(self):
+        self.setupStep(shell.WarningCountingShellCommand(command=['make'], decodeRC={3: WARNINGS}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=["make"],
+                        )
+            + ExpectShell.log('stdio', stdout='I might fail with rc')
+            + 3
+        )
+        self.expectOutcome(result=WARNINGS)
+        self.expectProperty("warnings-count", 0)
+        return self.runStep()
+
     def do_test_suppressions(self, step, supps_file='', stdout='',
                              exp_warning_count=0, exp_warning_log='',
                              exp_exception=False, props=None):

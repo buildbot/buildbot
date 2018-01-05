@@ -37,6 +37,7 @@ try:
     from docker import client
     from docker.errors import NotFound
     _hush_pyflakes = [docker, client]
+    docker_py_version = float(docker.__version__.rsplit(".", 1)[0])
 except ImportError:
     docker = None
     client = None
@@ -92,7 +93,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
 
     def getContainerName(self):
-        return ('%s-%s' % ('buildbot' + self.masterhash, self.workername)).replace("_", "-")
+        return ('buildbot-{worker}-{hash}'.format(worker=self.workername, hash=self.masterhash)).replace("_", "-")
 
     @property
     def shortid(self):
@@ -123,7 +124,7 @@ class DockerLatentWorker(DockerBaseWorker):
         DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
 
         if not client:
-            config.error("The python module 'docker-py>=1.4' is needed to use a"
+            config.error("The python module 'docker>=2.0' is needed to use a"
                          " DockerLatentWorker")
         if not image and not dockerfile:
             config.error("DockerLatentWorker: You need to specify at least"
@@ -213,11 +214,15 @@ class DockerLatentWorker(DockerBaseWorker):
 
     def _thd_start_instance(self, image, dockerfile, volumes):
         docker_client = self._getDockerClient()
+        container_name = self.getContainerName()
         # cleanup the old instances
         instances = docker_client.containers(
             all=1,
-            filters=dict(name=self.getContainerName()))
+            filters=dict(name=container_name))
+        container_name = "/{0}".format(container_name)
         for instance in instances:
+            if container_name not in instance['Names']:
+                continue
             try:
                 docker_client.remove_container(instance['Id'], v=True, force=True)
             except NotFound:
@@ -251,6 +256,8 @@ class DockerLatentWorker(DockerBaseWorker):
         volumes, binds = self._thd_parse_volumes(volumes)
         host_conf = self.hostconfig.copy()
         host_conf['binds'] = binds
+        if docker_py_version >= 2.2:
+            host_conf['init'] = True
         host_conf = docker_client.create_host_config(**host_conf)
 
         instance = docker_client.create_container(

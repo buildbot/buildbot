@@ -236,6 +236,7 @@ class MailNotifier(NotifierBase):
             extraHeaders = self.extraHeaders
             if len(builds) == 1:
                 props = Properties.fromDict(builds[0]['properties'])
+                props.master = self.master
                 extraHeaders = yield props.render(extraHeaders)
 
             for k, v in iteritems(extraHeaders):

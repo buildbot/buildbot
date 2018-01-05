@@ -19,8 +19,8 @@ from __future__ import print_function
 
 import os
 
-
-workerTACTemplate = ["""\
+workerTACTemplate = [
+    """
 import os
 
 from buildbot_worker.bot import Worker
@@ -39,19 +39,15 @@ if basedir == '.':
 # directory; do not edit it.
 application = service.Application('buildbot-worker')
 """,
-                     """
-try:
-    from twisted.python.logfile import LogFile
-    from twisted.python.log import ILogObserver, FileLogObserver
-    logfile = LogFile.fromFullPath(
-        os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
-        maxRotatedFiles=maxRotatedFiles)
-    application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
-except ImportError:
-    # probably not yet twisted 8.2.0 and beyond, can't set log yet
-    pass
+    """
+from twisted.python.logfile import LogFile
+from twisted.python.log import ILogObserver, FileLogObserver
+logfile = LogFile.fromFullPath(
+    os.path.join(basedir, "twistd.log"), rotateLength=rotateLength,
+    maxRotatedFiles=maxRotatedFiles)
+application.setComponent(ILogObserver, FileLogObserver(logfile).emit)
 """,
-                     """
+    """
 buildmaster_host = %(host)r
 port = %(port)d
 workername = %(name)r
@@ -61,10 +57,12 @@ umask = %(umask)s
 maxdelay = %(maxdelay)d
 numcpus = %(numcpus)s
 allow_shutdown = %(allow-shutdown)s
+maxretries = %(maxretries)s
 
 s = Worker(buildmaster_host, port, workername, passwd, basedir,
            keepalive, umask=umask, maxdelay=maxdelay,
-           numcpus=numcpus, allow_shutdown=allow_shutdown)
+           numcpus=numcpus, allow_shutdown=allow_shutdown,
+           maxRetries=maxretries)
 s.setServiceParent(application)
 """]
 

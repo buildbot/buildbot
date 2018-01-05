@@ -45,6 +45,10 @@ class CommandMixinMaster(RunMasterBase):
         self.assertEqual(build['results'], results.SUCCESS)
 
 
+class CommandMixinMasterPB(CommandMixinMaster):
+    proto = "pb"
+
+
 class TestCommandMixinStep(BuildStep, CommandMixin):
 
     def __init__(self, *args, **kwargs):

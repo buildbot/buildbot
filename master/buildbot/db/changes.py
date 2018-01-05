@@ -221,6 +221,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             changes_tbl = self.db.model.changes
             q = changes_tbl.select(
                 whereclause=(changes_tbl.c.sourcestampid == sourcestampid))
+            # if there are multiple changes for this ssid, get the most recent one
+            q = q.order_by(changes_tbl.c.changeid.desc())
+            q = q.limit(1)
             rp = conn.execute(q)
             row = rp.fetchone()
             if not row:

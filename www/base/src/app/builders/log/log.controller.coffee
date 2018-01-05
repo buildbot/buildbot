@@ -1,5 +1,5 @@
 class Log extends Controller
-    constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService) ->
+    constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService, faviconService) ->
         data = dataService.open().closeOnDestroy($scope)
         $scope.jumpToLine = "end"
         if $stateParams.jump_to_line?
@@ -14,6 +14,7 @@ class Log extends Controller
                 $scope.build = build
                 build.getSteps(stepnumber).onNew = (step) ->
                     $scope.step = step
+                    faviconService.setFavIcon(step)
                     step.getLogs(slug).onNew = (log) ->
                         $scope.log = log
                         glBreadcrumbService.setBreadcrumb [

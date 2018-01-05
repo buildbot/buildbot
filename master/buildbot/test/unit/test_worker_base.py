@@ -506,7 +506,7 @@ class TestAbstractWorker(unittest.TestCase):
         yield worker.startService()
 
         yield worker.shutdownRequested()
-        self.assertEqual(worker.worker_status.getGraceful(), True)
+        self.assertEqual(worker._graceful, True)
 
     @defer.inlineCallbacks
     def test_missing_timer_missing(self):
@@ -525,6 +525,30 @@ class TestAbstractWorker(unittest.TestCase):
         yield worker.stopService()
         self.assertEqual(worker.missing_timer, None)
         self.assertEqual(len(self.master.data.updates.missingWorkers), 0)
+
+    @defer.inlineCallbacks
+    def test_worker_actions_stop(self):
+        worker = self.createWorker(attached=False)
+        yield worker.startService()
+        worker.controlWorker(("worker", 1, "stop"), {'reason': "none"})
+        self.assertEqual(worker._graceful, True)
+
+    @defer.inlineCallbacks
+    def test_worker_actions_kill(self):
+        worker = self.createWorker(attached=False)
+        yield worker.startService()
+        worker.controlWorker(("worker", 1, "kill"), {'reason': "none"})
+        self.assertEqual(worker.conn, None)
+
+    @defer.inlineCallbacks
+    def test_worker_actions_pause(self):
+        worker = self.createWorker(attached=False)
+        yield worker.startService()
+        worker.controlWorker(("worker", 1, "pause"), {'reason': "none"})
+        self.assertEqual(worker._paused, True)
+
+        worker.controlWorker(("worker", 1, "unpause"), {'reason': "none"})
+        self.assertEqual(worker._paused, False)
 
 
 class TestAbstractLatentWorker(unittest.SynchronousTestCase):

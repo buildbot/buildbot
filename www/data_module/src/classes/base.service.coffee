@@ -24,7 +24,7 @@ class Base extends Factory
                 @$accessor = a
 
             update: (o) ->
-                angular.merge(this, o)
+                angular.extend(this, o)
 
             get: (args...) ->
                 dataService.get(@_endpoint, @_id, args...)

@@ -228,10 +228,6 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     return text_type(x, encoding, errors)
 
 
-def ascii2unicode(x, errors='strict'):
-    return bytes2unicode(x, encoding='ascii', errors=errors)
-
-
 def bytes2NativeString(x, encoding='utf-8', errors='strict'):
     """
     Convert C{bytes} to a native C{str}.
@@ -367,7 +363,7 @@ def in_reactor(f):
         from twisted.internet import reactor, defer
         result = []
 
-        def async():
+        def _async():
             d = defer.maybeDeferred(f, *args, **kwargs)
 
             @d.addErrback
@@ -378,7 +374,7 @@ def in_reactor(f):
             def do_stop(r):
                 result.append(r)
                 reactor.stop()
-        reactor.callWhenRunning(async)
+        reactor.callWhenRunning(_async)
         reactor.run()
         return result[0]
     wrap.__doc__ = f.__doc__
@@ -429,8 +425,8 @@ def stripUrlPassword(url):
 
 def join_list(maybeList):
     if isinstance(maybeList, (list, tuple)):
-        return u' '.join(ascii2unicode(s) for s in maybeList)
-    return ascii2unicode(maybeList)
+        return u' '.join(bytes2unicode(s) for s in maybeList)
+    return bytes2unicode(maybeList)
 
 
 def command_to_string(command):
@@ -456,7 +452,7 @@ def command_to_string(command):
         if isinstance(w, (bytes, string_types)):
             # If command was bytes, be gentle in
             # trying to covert it.
-            w = ascii2unicode(w, "replace")
+            w = bytes2unicode(w, errors="replace")
             stringWords.append(w)
     words = stringWords
 

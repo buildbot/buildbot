@@ -22,7 +22,10 @@ config =
     dir:
         # The build folder is where the app resides once it's completely built
         build: 'buildbot_www/static'
-
+    files:
+        images: [
+            'src/**/*.{png,jpg,gif,ico,svg}'
+        ]
     ### ###########################################################################################
     #   Bower dependencies configuration
     ### ###########################################################################################
@@ -30,7 +33,7 @@ config =
         # JavaScript libraries (order matters)
         deps:
             "guanlecoja-ui":
-                version: '~1.7.1'
+                version: '~1.8.0'
                 files: ['vendors.js', 'scripts.js']
             moment:
                 version: "~2.6.0"
@@ -41,12 +44,16 @@ config =
             "font-awesome":
                 version: "~4.1.0"
                 files: []
+                files: []
             "bootstrap":
                 version: "~3.1.1"
                 files: []
             'buildbot-data':
-                version: '~2.2.0'
+                version: '~2.2.2'
                 files: 'dist/buildbot-data.js'
+            "angular-bootstrap-multiselect":
+                version: "https://github.com/bentorfs/angular-bootstrap-multiselect.git#^1.1.6"
+                files: 'dist/angular-bootstrap-multiselect.js'
 
         testdeps:
             "angular-mocks":

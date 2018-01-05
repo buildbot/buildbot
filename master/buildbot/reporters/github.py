@@ -103,6 +103,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
 
         if build['complete']:
             state = {
@@ -171,15 +172,17 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 )
                 if self.verbose:
                     log.msg(
-                        'Updated status with "{state}" for '
-                        '{repoOwner}/{repoName} at {sha}, issue {issue}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
+                        'Updated status with "{state}" for {repoOwner}/{repoName} '
+                        'at {sha}, context "{context}", issue {issue}.'.format(
+                            state=state, repoOwner=repoOwner, repoName=repoName,
+                            sha=sha, issue=issue, context=context))
             except Exception as e:
                 log.err(
                     e,
-                    'Failed to update "{state}" for '
-                    '{repoOwner}/{repoName} at {sha}, issue {issue}'.format(
-                        state=state, repoOwner=repoOwner, repoName=repoName, sha=sha, issue=issue))
+                    'Failed to update "{state}" for {repoOwner}/{repoName} '
+                    'at {sha}, context "{context}", issue {issue}.'.format(
+                        state=state, repoOwner=repoOwner, repoName=repoName,
+                        sha=sha, issue=issue, context=context))
 
 
 class GitHubCommentPush(GitHubStatusPush):

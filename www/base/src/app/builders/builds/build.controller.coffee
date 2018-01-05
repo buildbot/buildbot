@@ -1,5 +1,5 @@
 class Build extends Controller
-    constructor: ($rootScope, $scope, $location, $stateParams, $state,
+    constructor: ($rootScope, $scope, $location, $stateParams, $state, faviconService,
                   dataService, dataUtilsService, recentStorage, publicFieldsFilter,
                   glBreadcrumbService, glTopbarContextualActionsService, resultsService, $window) ->
         _.mixin($scope, resultsService)
@@ -44,6 +44,7 @@ class Build extends Controller
             actions = []
             if not $scope.build?
                 return
+            faviconService.setFavIcon($scope.build)
             if $scope.build.complete
                 if $scope.is_rebuilding
                     actions.push

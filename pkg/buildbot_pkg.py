@@ -86,6 +86,34 @@ def mTimeVersion(init_file):
     return d.strftime("%Y.%m.%d")
 
 
+def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
+    """ Extract the tag if a source is from git archive.
+
+        When source is exported via `git archive`, the git_archive_id init value is modified
+        and placeholders are expanded to the "archived" revision:
+
+            %ct: committer date, UNIX timestamp
+            %d: ref names, like the --decorate option of git-log
+
+        See man gitattributes(5) and git-log(1) (PRETTY FORMATS) for more details.
+    """
+    # mangle the magic string to make sure it is not replaced by git archive
+    if not git_archive_id.startswith('$For''mat:'):
+        # source was modified by git archive, try to parse the version from
+        # the value of git_archive_id
+
+        match = re.search(r'tag:\s*v([^,)]+)', git_archive_id)
+        if match:
+            # archived revision is tagged, use the tag
+            return gitDescribeToPep440(match.group(1))
+
+        # archived revision is not tagged, use the commit date
+        tstamp = git_archive_id.strip().split()[0]
+        d = datetime.datetime.fromtimestamp(int(tstamp))
+        return d.strftime('%Y.%m.%d')
+    return None
+
+
 def getVersion(init_file):
     """
     Return BUILDBOT_VERSION environment variable, content of VERSION file, git
@@ -104,6 +132,10 @@ def getVersion(init_file):
             return f.read().strip()
     except IOError:
         pass
+
+    version = getVersionFromArchiveId()
+    if version is not None:
+        return version
 
     try:
         p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
@@ -182,7 +214,8 @@ class BuildJsCommand(distutils.cmd.Command):
 
             # if we find yarn, then we use it as it is much faster
             if yarn_version != "":
-                commands.append(['yarn', 'install', '--pure-lockfile'])
+                # --mutex allows to build in parallel
+                commands.append(['yarn', 'install', '--pure-lockfile', '--mutex', 'file:/tmp/.yarn-mutex'])
             else:
                 commands.append(['npm', 'install'])
 

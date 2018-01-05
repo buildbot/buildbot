@@ -82,7 +82,7 @@ class BaseBasicScheduler(base.BaseScheduler):
         self._stable_timers = defaultdict(lambda: None)
         self._stable_timers_lock = defer.DeferredLock()
 
-        self.reason = util.ascii2unicode(reason % {
+        self.reason = util.bytes2unicode(reason % {
             'name': name, 'classname': self.__class__.__name__
         })
 
