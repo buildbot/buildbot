@@ -22,8 +22,8 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.reporters import irc
 from buildbot.process.properties import Interpolate
+from buildbot.reporters import irc
 from buildbot.reporters import words
 from buildbot.test.util import config
 from buildbot.util import service

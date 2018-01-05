@@ -22,8 +22,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
-from buildbot.process.results import SUCCESS
 from buildbot.process.properties import Interpolate
+from buildbot.process.results import SUCCESS
 from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
@@ -74,7 +74,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
             "serv", auth=("username", "passwd"))
-        self.sp = sp = HttpStatusPush("serv", auth=("username", Interpolate("passwd")), **kwargs)
+        self.sp = sp = HttpStatusPush("serv", auth=(
+            "username", Interpolate("passwd")), **kwargs)
         yield sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -122,7 +123,8 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     def test_wantKwargsCheck(self):
         yield self.createReporter(builders='Builder0', wantProperties=True, wantSteps=True,
                                   wantPreviousBuild=True, wantLogs=True)
-        self._http.expect("post", "", json=BuildLookAlike(keys=['steps', 'prev_build']))
+        self._http.expect("post", "", json=BuildLookAlike(
+            keys=['steps', 'prev_build']))
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
