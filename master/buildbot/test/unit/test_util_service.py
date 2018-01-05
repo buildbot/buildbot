@@ -733,6 +733,13 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertEqual(test, 'test_string')
         self.assertEqual(test2, 'ok_for_non_renderable')
 
+    @defer.inlineCallbacks
+    def testRenderSecretsWithTuple(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test = yield service.renderSecrets(('user', Interpolate('test_string')))
+        self.assertEqual(test, ('user', 'test_string'))
+
 
 class UnderTestSharedService(service.SharedService):
     def __init__(self, arg1=None):
