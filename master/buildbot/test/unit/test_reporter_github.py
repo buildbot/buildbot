@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.github import HOSTED_BASE_URL
@@ -30,8 +31,6 @@ from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.test.util.reporter import ReporterTestMixin
-
-URLtestcount = 0
 
 
 class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
@@ -58,7 +57,7 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         yield sp.setServiceParent(self.master)
 
     def setService(self):
-        self.sp = GitHubStatusPush('XXYYZZ')
+        self.sp = GitHubStatusPush(Interpolate('XXYYZZ'))
         return self.sp
 
     def tearDown(self):
@@ -120,15 +119,10 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
 class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
     # project must be in the form <owner>/<project>
     TEST_PROJECT = u'buildbot'
+    TEST_REPO = u'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
-        global URLtestcount
-        if (URLtestcount == 0):
-            ReporterTestMixin.TEST_REPO = u'https://github.com/buildbot1/buildbot1.git'
-        else:
-            ReporterTestMixin.TEST_REPO = u'git@github.com:buildbot2/buildbot2.git'
-        URLtestcount = 1
 
         # ignore config error if txrequests is not installed
         self.patch(config, '_errors', Mock())
@@ -162,6 +156,8 @@ class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_ssh(self):
+        self.TEST_REPO = u'git@github.com:buildbot2/buildbot2.git'
+
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
