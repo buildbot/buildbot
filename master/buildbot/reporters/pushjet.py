@@ -51,7 +51,6 @@ class PushjetNotifier(NotifierBase):
                     schedulers=None, branches=None,
                     levels=None, base_url='https://api.pushjet.io',
                     watchedWorkers=None, messageFormatterMissingWorker=None):
-
         super(PushjetNotifier, self).checkConfig(mode, tags, builders,
                                                  buildSetSummary, messageFormatter,
                                                  subject, False, False,
@@ -69,7 +68,7 @@ class PushjetNotifier(NotifierBase):
                         schedulers=None, branches=None,
                         levels=None, base_url='https://api.pushjet.io',
                         watchedWorkers=None, messageFormatterMissingWorker=None):
-
+        secret = yield self.renderSecrets(secret)
         if messageFormatter is None:
             messageFormatter = DefaultMessageFormatter(template_type='html',
                 template_filename='default_notification.txt')
