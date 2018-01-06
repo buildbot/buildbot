@@ -787,7 +787,7 @@ class IBuildStatus(Interface):
         active step."""
 
     # Once you know the build has finished, the following methods are legal.
-    # Before ths build has finished, they all return None.
+    # Before this build has finished, they all return None.
 
     def getWorkername():
         """Return the name of the worker which handled this build."""

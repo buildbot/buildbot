@@ -37,7 +37,7 @@ class TestRaml(unittest.TestCase):
             self.api.endpoints.keys())
 
     def test_endpoints_uri_parameters(self):
-        # comparaison of OrderedDict do not take in account order :(
+        # comparison of OrderedDict do not take in account order :(
         # this is why we compare str repr, to make sure the endpoints are in
         # the right order
         self.assertEqual(str(self.api.endpoints[

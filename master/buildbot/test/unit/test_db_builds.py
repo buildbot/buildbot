@@ -357,7 +357,7 @@ class RealTests(Tests):
         ordered_bdicts = rs.apply(bdicts)
         self.assertEqual(ordered_bdicts, bdicts)
 
-        # assert applying a oposite order at the data layer will give different
+        # assert applying an opposite order at the data layer will give different
         # results
         rs = resultspec.ResultSpec(order=['started_at'])
         ordered_bdicts = rs.apply(bdicts)
