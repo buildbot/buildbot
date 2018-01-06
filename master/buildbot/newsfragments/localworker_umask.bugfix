@@ -1,0 +1,1 @@
+Fix umask set to 0 when using LocalWorker (:issue:`3878`)
