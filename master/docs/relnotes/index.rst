@@ -10,6 +10,19 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.15.post1`` ( ``2018-01-07`` )
+============================================
+
+Bug fixes
+---------
+
+- Fix worker reconnection fails (:issue:`3875`, :issue:`3876`)
+- Fix umask set to 0 when using LocalWorker (:issue:`3878`)
+- Fix (:issue:`3865`) so that now
+  :py:class:`~buildbot.changes.svnpoller.SVNPoller` works with paths that
+  contain valid UTF-8 characters which are not ASCII.
+
+
 Buildbot ``0.9.15`` ( ``2018-01-02`` )
 ======================================
 

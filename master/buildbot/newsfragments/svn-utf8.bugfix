@@ -1,1 +1,0 @@
-Fix (:issue:`3865`) so that now :py:class:`~buildbot.changes.svnpoller.SVNPoller` works with paths that contain valid UTF-8 characters which are not ASCII.
