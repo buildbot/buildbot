@@ -176,7 +176,7 @@ script:
 
   - title: maketarballs
     condition: TESTS == "smokes"
-    cmd: make tarballs -j4
+    cmd: make tarballs 
 
   - title: protractor tests
     condition: TESTS == "smokes"
