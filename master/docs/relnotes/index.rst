@@ -18,6 +18,7 @@ Bug fixes
 
 - Fix worker reconnection fails (:issue:`3875`, :issue:`3876`)
 - Fix umask set to 0 when using LocalWorker (:issue:`3878`)
+- Fix Buildbot reconfig, when badge plugin is installed (:issue:`3879`)
 - Fix (:issue:`3865`) so that now
   :py:class:`~buildbot.changes.svnpoller.SVNPoller` works with paths that
   contain valid UTF-8 characters which are not ASCII.
