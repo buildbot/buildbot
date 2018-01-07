@@ -244,6 +244,9 @@ class GitHubEventHandler(PullRequestMixin):
         if not match:
             log.msg("Ignoring refname `{}': Not a branch".format(refname))
             return changes
+        category = None  # None is the legacy category for when hook only supported push
+        if match.group(1) == "tags":
+            category = "tag"
 
         branch = match.group(2)
         if payload.get('deleted'):
@@ -254,8 +257,10 @@ class GitHubEventHandler(PullRequestMixin):
         head_msg = payload['head_commit'].get('message', '')
         if self._has_skip(head_msg):
             return changes
-
-        for commit in payload['commits']:
+        commits = payload['commits']
+        if payload.get('created'):
+            commits = [payload['head_commit']]
+        for commit in commits:
             files = []
             for kind in ('added', 'modified', 'removed'):
                 files.extend(commit.get(kind, []))
@@ -279,6 +284,7 @@ class GitHubEventHandler(PullRequestMixin):
                     'github_distinct': commit.get('distinct', True),
                     'event': event,
                 },
+                'category': category
             }
             # Update with any white-listed github event properties
             change['properties'].update(properties)

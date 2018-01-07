@@ -450,7 +450,75 @@ gitJsonPayloadEmpty = b"""
   "ref": "refs/heads/master"
 }
 """
+gitJsonPayloadCreateTag = b"""
+{
+  "ref": "refs/tags/v0.9.15.post1",
+  "before": "0000000000000000000000000000000000000000",
+  "after": "ffe1e9affb2b5399369443194c02068032f9295e",
+  "created": true,
+  "deleted": false,
+  "forced": false,
+  "base_ref": null,
+  "compare": "https://github.com/buildbot/buildbot/compare/v0.9.15.post1",
+  "commits": [
 
+  ],
+  "head_commit": {
+    "id": "57df618a4a450410c1dee440c7827ee105f5a226",
+    "tree_id": "f9768673dc968b5c8fcbb15f119ce237b50b3252",
+    "distinct": true,
+    "message": "...",
+    "timestamp": "2018-01-07T16:30:52+01:00",
+    "url": "https://github.com/buildbot/buildbot/commit/...",
+    "author": {
+      "name": "User",
+      "email": "userid@example.com",
+      "username": "userid"
+    },
+    "committer": {
+      "name": "GitHub",
+      "email": "noreply@github.com",
+      "username": "web-flow"
+    },
+    "added": [
+
+    ],
+    "removed": [
+      "master/buildbot/newsfragments/bit_length.bugfix",
+      "master/buildbot/newsfragments/localworker_umask.bugfix",
+      "master/buildbot/newsfragments/svn-utf8.bugfix"
+    ],
+    "modified": [
+      ".bbtravis.yml",
+      "circle.yml",
+      "master/docs/relnotes/index.rst"
+    ]
+  },
+  "repository": {
+    "html_url": "https://github.com/buildbot/buildbot",
+    "name": "buildbot",
+    "full_name": "buildbot"
+  },
+  "pusher": {
+    "name": "userid",
+    "email": "userid@example.com"
+  },
+  "organization": {
+    "login": "buildbot",
+    "url": "https://api.github.com/orgs/buildbot",
+    "description": "Continous integration and delivery framework"
+  },
+  "sender": {
+    "login": "userid",
+    "gravatar_id": "",
+    "type": "User",
+    "site_admin": false
+  },
+  "ref_name": "v0.9.15.post1",
+  "distinct_commits": [
+
+  ]
+}"""
 _HEADER_CT = b'Content-Type'
 _CT_ENCODED = b'application/x-www-form-urlencoded'
 _CT_JSON = b'application/json'
@@ -564,6 +632,19 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change["author"],
                          "Fred Flinstone <fred@flinstone.org>")
         self.assertEqual(change["branch"], "v1.0.0")
+        self.assertEqual(change["category"], "tag")
+
+    @defer.inlineCallbacks
+    def test_git_with_push_newtag(self):
+        self.request = _prepare_request(b'push', gitJsonPayloadCreateTag)
+        yield self.request.test_render(self.changeHook)
+
+        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
+        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(change["author"],
+                         "User <userid@example.com>")
+        self.assertEqual(change["branch"], "v0.9.15.post1")
+        self.assertEqual(change["category"], "tag")
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.

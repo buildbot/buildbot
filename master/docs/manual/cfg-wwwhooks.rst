@@ -55,7 +55,7 @@ create a file ``changehook.passwd`` with content:
 
     user:password
 
-``change_hook_auth`` should be a list of :py:class:`ICredentialsChecker`. 
+``change_hook_auth`` should be a list of :py:class:`ICredentialsChecker`.
 See the details of available options in `Twisted documentation <https://twistedmatrix.com/documents/current/core/howto/cred.html>`_.
 
 .. bb:chsrc:: Mercurial
@@ -89,7 +89,7 @@ GitHub hook
 .. note::
 
    There is a standalone HTTP server available for receiving GitHub notifications as well: :contrib-src:`master/contrib/github_buildbot.py`.
-   This script may be useful in cases where you cannot expose the WebStatus for public consumption. Alternatively, you can setup a reverse proxy :ref:`Reverse_Proxy_Config` 
+   This script may be useful in cases where you cannot expose the WebStatus for public consumption. Alternatively, you can setup a reverse proxy :ref:`Reverse_Proxy_Config`
 
 The GitHub hook has the following parameters:
 
@@ -135,7 +135,7 @@ The simplest way to use GitHub hook is as follows:
 
 .. code-block:: python
 
-    c['www'] = dict(    
+    c['www'] = dict(
         change_hook_dialects={'github': {}},
     )
 
@@ -166,9 +166,23 @@ The parameters are:
             )
 
 :guilabel:`Which events would you like to trigger this webhook?`
-    Leave the default -- ``Just the push [tag]  events`` -- other kind of events are not currently supported.
+    Click -- ``Let me select individual events``, then select ``Push`` and ``Pull request`` -- other kind of events are not currently supported.
 
 And then press the ``Add Webhook`` button.
+
+
+Github hook create 3 kinds of changes, distinguishable by their ``category`` field:
+
+- ``None``: This change is a push to a branch.
+    Use ``util.ChangeFilter(category=None, repository="http://github.com/<org>/<project>")``
+- ``'tag'``: This change is a push to a tag.
+    Use ``util.ChangeFilter(category='tag', repository="http://github.com/<org>/<project>")``
+- ``'pull'``: This change is from a pull-request creation or update.
+    Use ``util.ChangeFilter(category='pull', repository="http://github.com/<org>/<project>")``
+   In this case, the :bb:step:`GitHub` step must be used instead of the standard :bb:step:`Git` in order to be able to pull GitHub's magic refs.
+   With this method, the :bb:step:`GitHub` step will always checkout the branch merged with latest master.
+   This allows to test the result of the merge instead of the just the source branch.
+   Note that you can use the :bb:step:`GitHub` for all categories of event.
 
 .. warning::
 
@@ -180,9 +194,6 @@ Then change the the ``Payload URL`` of your GitHub webhook to ``https://user:pas
 
 Patches are welcome to implement: https://developer.github.com/webhooks/securing/
 
-.. note::
-
-   When using a :ref:`ChangeFilter<Change-Filters>` with a GitHub webhook ensure that your filter matches all desired requests as fields such as ``repository`` and ``project`` may differ in different events.
 
 .. bb:chsrc:: BitBucket
 
