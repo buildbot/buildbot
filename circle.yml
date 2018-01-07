@@ -20,7 +20,7 @@ dependencies:
 test:
   override:
     - make docs
-    - make tarballs -j4
+    - make tarballs 
     # pyinstaller: build the buildbotworker in a special virtualenv
     # circle ci pythons do not include the necessary dynamic libraries for pyinstaller
     - virtualenv -p /usr/bin/python3.4 .venv/
