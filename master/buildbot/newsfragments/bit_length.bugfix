@@ -1,0 +1,1 @@
+Fix worker reconnection fails (:issue:`3875`, :issue:`3876`)

@@ -83,7 +83,10 @@ class BotFactory(ReconnectingPBClientFactory):
 
     def retry(self, connector=None):
         ReconnectingPBClientFactory.retry(self, connector=connector)
-        if self.retries > self.maxRetries and self.maxRetriesCallback:
+        log.msg("Retry attempt {}/{}".format(
+            self.retries, self.maxRetries if self.maxRetries is not None else "inf"))
+        if self.maxRetries is not None and self.retries > self.maxRetries and self.maxRetriesCallback:
+            log.msg("Giving up retrying!")
             self.maxRetriesCallback()
 
     def startedConnecting(self, connector):
@@ -192,7 +195,7 @@ class Worker(WorkerBase, service.MultiService):
             self.shutdown_mtime = 0
 
         self.allow_shutdown = allow_shutdown
-        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay.bit_length,
+        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay,
             maxRetries=self.maxRetries, maxRetriesCallback=self.gracefulShutdown)
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
