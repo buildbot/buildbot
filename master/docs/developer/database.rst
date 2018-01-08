@@ -23,7 +23,7 @@ database connectors is available at ``master.db``, so, for example, the state
 connector's ``getState`` method is ``master.db.state.getState``.
 
 The connectors all use `SQLAlchemy Core
-<http://www.sqlalchemy.org/docs/index.html>`_ to achieve (almost)
+<http://docs.sqlalchemy.org/en/latest/index.html>`_ to achieve (almost)
 database-independent operation.  Note that the SQLAlchemy ORM is not used in
 Buildbot.  Database queries are carried out in threads, and report their
 results back to the main thread via Twisted Deferreds.
@@ -1585,7 +1585,7 @@ Direct Database Access
 .. py:module:: buildbot.db.pool
 
 The connectors all use `SQLAlchemy Core
-<http://www.sqlalchemy.org/docs/index.html>`_ as a wrapper around database
+<http://docs.sqlalchemy.org/en/latest/index.html>`_ as a wrapper around database
 client drivers.  Unfortunately, SQLAlchemy is a synchronous library, so some
 extra work is required to use it in an asynchronous context like Buildbot.
 This is accomplished by deferring all database operations to threads, and

@@ -27,7 +27,7 @@ All keys are optional::
     }
 
 The ``db_url`` key indicates the database engine to use.
-The format of this parameter is completely documented at http://www.sqlalchemy.org/docs/dialects/, but is generally of the form::
+The format of this parameter is completely documented at http://docs.sqlalchemy.org/en/latest/dialects/, but is generally of the form::
 
      "driver://[username:password@]host:port/database[?args]"
 
