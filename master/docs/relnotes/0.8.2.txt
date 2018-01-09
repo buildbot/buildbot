@@ -51,7 +51,7 @@ virtualization platform supported by libvirt.
 
 Change pages on the webstatus now have buttons to cancel any pending
 builds that include that change (across all builders). The corresponding
-authz privledge to control access to this feature is 'stopChange'.
+authz privilege to control access to this feature is 'stopChange'.
 
 ** New Change source
 

@@ -49,7 +49,7 @@ class ansicodesService extends Factory('common')
                     if ansi_classes.length != 3
                         return {}
                     if ansi_classes[1] == '5'
-                        css_classes = { } # (simplification) alway reset color
+                        css_classes = { } # (simplification) always reset color
                         css_classes[fgbg[ansi_classes[0]] + '-' + ansi_classes[2]] = true
                 else
                     for i in ansi_classes

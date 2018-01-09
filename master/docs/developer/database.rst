@@ -1635,7 +1635,7 @@ object, ``conn``.
     overloading to implement pythonic SQL statements, and `is` operator is not overloadable,
     we need to keep the `==` operators. In order to solve this issue, buildbot
     uses `buildbot.db.NULL` constant, which is `None`.
-    So instead of writting `tbl.c.value == None`, please write `tbl.c.value == NULL`)
+    So instead of writing `tbl.c.value == None`, please write `tbl.c.value == NULL`)
 
 
 .. py:class:: DBThreadPool

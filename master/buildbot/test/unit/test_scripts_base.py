@@ -127,7 +127,7 @@ class TestTacFallback(dirs.DirsMixin, unittest.TestCase):
 
     def test_getConfigFileFromTac_usingFile(self):
         """
-        Wehn L{getConfigFileFromTac} is passed a C{basedir}
+        When L{getConfigFileFromTac} is passed a C{basedir}
         containing a C{buildbot.tac} which references C{__file__},
         that reference points to C{buildbot.tac}.
         """

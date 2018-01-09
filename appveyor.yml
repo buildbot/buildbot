@@ -19,7 +19,7 @@ install:
   - "python -m pip install pypiwin32"
 
   # TODO: There is no binary wheel for pysqlite and building on Windows is
-  # painful. Let's just substitude sqlite3.dll with never version.
+  # painful. Let's just substitute sqlite3.dll with never version.
   - ps: |
             [Net.ServicePointManager]::SecurityProtocol = 'Ssl3, Tls, Tls11, Tls12'
             Start-FileDownload 'https://www.sqlite.org/2016/sqlite-dll-win32-x86-3110000.zip'

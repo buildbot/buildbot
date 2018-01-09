@@ -151,7 +151,7 @@ The invocation happens in a separate thread to prevent blocking the build master
             return x.created
 
         candidate_images = sorted(images, key=key_fn)
-        # Return the oldest candiate image.
+        # Return the oldest candidate image.
         return candidate_images[0]
 
     c['workers'] = [

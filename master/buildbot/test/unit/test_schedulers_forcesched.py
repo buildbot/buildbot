@@ -388,10 +388,10 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             if gotSpec != expectSpec:
                 try:
                     import xerox
-                    formated = self.formatJsonForTest(gotJson)
+                    formatted = self.formatJsonForTest(gotJson)
                     print(
-                        "You may update the test with (copied to clipboard):\n" + formated)
-                    xerox.copy(formated)
+                        "You may update the test with (copied to clipboard):\n" + formatted)
+                    xerox.copy(formatted)
                     input()
                 except ImportError:
                     print("Note: for quick fix, pip install xerox")

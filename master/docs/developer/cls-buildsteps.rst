@@ -653,8 +653,8 @@ This class can only be used in new-style steps.
 
     .. py:method:: makeRemoteShellCommand(collectStdout=False, collectStderr=False, \**overrides)
 
-        :param collectStdout: if true, the command's stdout wil be available in ``cmd.stdout`` on completion
-        :param collectStderr: if true, the command's stderr wil be available in ``cmd.stderr`` on completion
+        :param collectStdout: if true, the command's stdout will be available in ``cmd.stdout`` on completion
+        :param collectStderr: if true, the command's stderr will be available in ``cmd.stderr`` on completion
         :param overrides: overrides arguments that might have been passed to :py:meth:`setupShellMixin`
         :returns: :py:class:`~buildbot.process.remotecommand.RemoteShellCommand` instance via Deferred
 

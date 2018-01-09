@@ -423,7 +423,7 @@ This might be useful if you only run workers on the same machine, and they are a
 .. note::
 
    In Buildbot versions <=0.8.8 you might see ``slavePortnum`` option.
-   This option contains same value as ``c['protocols']['pb']['port']`` but not recomended to use.
+   This option contains same value as ``c['protocols']['pb']['port']`` but not recommended to use.
 
 .. index:: Properties; global
 

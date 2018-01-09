@@ -66,13 +66,13 @@ checkout is desired), the build will use a trunk checkout. Previously this
 would probably cause an error. It is not clear how this situation might
 arise.
 
-** Compability With Other Tools
+** Compatibility With Other Tools
 
 The mercurial commit hook (buildbot.changes.hgbuildbot) in the previous
 version doesn't work with hg-1.0 or later (it uses an API function that was
 present in the hg-0.9.5 release, but was removed from hg-1.0). This
 incompability has been fixed: the new version of buildbot should be
-compatible with hg-1.0 and newer (and it probably retains compability with
+compatible with hg-1.0 and newer (and it probably retains compatibility with
 hg-0.9.5 and earlier too). (#328)
 
 The Git tool has traditionally provided two ways to run each command, either

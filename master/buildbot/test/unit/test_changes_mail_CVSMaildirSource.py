@@ -39,7 +39,7 @@ Category: None
 CVSROOT: :ext:cvshost.example.com:/cvsroot
 Files: base/module/src/make GNUmakefile,1.362,1.363
 Project: MyModuleName
-Update of /cvsroot/base/moduel/src/make
+Update of /cvsroot/base/module/src/make
 In directory cvshost:/tmp/cvs-serv10922
 
 Modified Files:
