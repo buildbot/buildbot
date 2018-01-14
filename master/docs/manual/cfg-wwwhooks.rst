@@ -171,18 +171,20 @@ The parameters are:
 And then press the ``Add Webhook`` button.
 
 
-Github hook create 3 kinds of changes, distinguishable by their ``category`` field:
+Github hook creates 3 kinds of changes, distinguishable by their ``category`` field:
 
 - ``None``: This change is a push to a branch.
     Use ``util.ChangeFilter(category=None, repository="http://github.com/<org>/<project>")``
+
 - ``'tag'``: This change is a push to a tag.
     Use ``util.ChangeFilter(category='tag', repository="http://github.com/<org>/<project>")``
+
 - ``'pull'``: This change is from a pull-request creation or update.
     Use ``util.ChangeFilter(category='pull', repository="http://github.com/<org>/<project>")``
-   In this case, the :bb:step:`GitHub` step must be used instead of the standard :bb:step:`Git` in order to be able to pull GitHub's magic refs.
-   With this method, the :bb:step:`GitHub` step will always checkout the branch merged with latest master.
-   This allows to test the result of the merge instead of the just the source branch.
-   Note that you can use the :bb:step:`GitHub` for all categories of event.
+    In this case, the :bb:step:`GitHub` step must be used instead of the standard :bb:step:`Git` in order to be able to pull GitHub's magic refs.
+    With this method, the :bb:step:`GitHub` step will always checkout the branch merged with latest master.
+    This allows to test the result of the merge instead of just the source branch.
+    Note that you can use the :bb:step:`GitHub` for all categories of event.
 
 .. warning::
 
