@@ -214,8 +214,7 @@ class BuildJsCommand(distutils.cmd.Command):
 
             # if we find yarn, then we use it as it is much faster
             if yarn_version != "":
-                # --mutex allows to build in parallel
-                commands.append(['yarn', 'install', '--pure-lockfile', '--mutex', 'file:/tmp/.yarn-mutex'])
+                commands.append(['yarn', 'install', '--pure-lockfile'])
             else:
                 commands.append(['npm', 'install'])
 
