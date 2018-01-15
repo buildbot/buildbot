@@ -2,15 +2,15 @@ alabaster==0.7.10
 appdirs==1.4.3
 asn1crypto==0.24.0
 astroid==1.6.0
-attrs==17.3.0
+attrs==17.4.0
 autobahn==17.10.1
 Automat==0.6.0
 Babel==2.5.1
 backports.functools-lru-cache==1.4
 blockdiag==1.5.3
 boto==2.48.0
-boto3==1.5.6
-botocore==1.8.20
+boto3==1.5.7
+botocore==1.8.21
 cffi==1.11.2
 click==6.7
 configparser==3.5.0
@@ -54,7 +54,7 @@ pycodestyle==2.3.1
 pycparser==2.18
 pyenchant==2.0.0
 pyflakes==1.6.0
-pyinstaller
+pyinstaller==3.3.1
 pyjade==4.0.0
 PyJWT==1.5.3
 pylint==1.8.1
@@ -72,7 +72,7 @@ setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.11.0
 snowballstemmer==1.2.1
-SQLAlchemy==1.1.15
+SQLAlchemy==1.2.0
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.4
 Tempita==0.5.2
@@ -86,7 +86,7 @@ txgithub==15.0.0
 txrequests==0.9.5
 typing==3.6.2
 webcolors==1.7
-Werkzeug==0.13
+Werkzeug==0.14.1
 wrapt==1.10.11
 xmltodict==0.11.0
 zope.interface==4.4.3
