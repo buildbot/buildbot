@@ -59,7 +59,7 @@ env:
   - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial_worker HYPER_SIZE=s3
+  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial_worker
 
 matrix:
   fast_finish: true
@@ -72,7 +72,7 @@ matrix:
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
     - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8 HYPER_SIZE=s3
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
     - python: "3.5"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
