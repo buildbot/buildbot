@@ -683,7 +683,7 @@ This module contains a few utilities that are not included with SQLAlchemy.
     :param table: table into which insert should be performed
     :param select: select query from which data should be drawn
 
-    This class is taken directly from SQLAlchemy's `compiler.html <http://www.sqlalchemy.org/docs/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_, and allows a Pythonic representation of ``INSERT INTO .. SELECT ..`` queries.
+    This class is taken directly from SQLAlchemy's `compiler.html <http://docs.sqlalchemy.org/en/latest/core/compiler.html#compiling-sub-elements-of-a-custom-expression-construct>`_, and allows a Pythonic representation of ``INSERT INTO .. SELECT ..`` queries.
 
 .. py:function:: sa_version()
 
@@ -1136,7 +1136,7 @@ For example, a particular daily scheduler could be configured on multiple master
         :param headers: The headers to pass to every requests for this url
         :param debug: log every requests and every response.
         :param verify: disable the SSL verification.
-        
+
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.
