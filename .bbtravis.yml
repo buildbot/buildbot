@@ -21,8 +21,8 @@ env:
   matrix:
   # pylint, docs and coverage first as they're more likely to find issues
   - TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
-  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8 HYPER_SIZE=s3
-  - TWISTED=latest SQLALCHEMY=latest TESTS=isort HYPER_SIZE=s3
+  - TWISTED=latest SQLALCHEMY=latest TESTS=flake8 
+  - TWISTED=latest SQLALCHEMY=latest TESTS=isort 
   - TWISTED=latest SQLALCHEMY=latest TESTS=docs
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
