@@ -414,6 +414,7 @@ setup_args = {
             ('buildbot.www.hooks.gitlab', ['gitlab']),
             ('buildbot.www.hooks.gitorious', ['gitorious']),
             ('buildbot.www.hooks.poller', ['poller']),
+            ('buildbot.www.hooks.bitbucketcloud', ['bitbucketcloud']),
             ('buildbot.www.hooks.bitbucketserver', ['bitbucketserver'])
         ])
     ]), {
