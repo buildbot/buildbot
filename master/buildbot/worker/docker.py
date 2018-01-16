@@ -41,6 +41,7 @@ try:
 except ImportError:
     docker = None
     client = None
+    docker_py_version = 0.0
 
 
 def _handle_stream_line(line):
