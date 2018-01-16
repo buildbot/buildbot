@@ -210,13 +210,14 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         accumulateClassList(self.__class__, 'secrets', secrets)
         for k, v in sibling._config_kwargs.items():
             if k in secrets:
-                value = yield p.render(v)
-                setattr(self, k, value)
-                kwargs.update({k: value})
-            else:
-                kwargs.update({k: v})
+                # for non reconfigurable services, we force the attribute
+                v = yield p.render(v)
+                setattr(sibling, k, v)
+                setattr(self, k, v)
+            kwargs[k] = v
+
         d = yield self.reconfigService(*sibling._config_args,
-                                       **sibling._config_kwargs)
+                                       **kwargs)
         defer.returnValue(d)
 
     def configureService(self):
@@ -237,6 +238,17 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
 
     def reconfigService(self, name=None, *args, **kwargs):
         return defer.succeed(None)
+
+    def renderSecrets(self, *args):
+        # Properties import to resolve cyclic import issue
+        from buildbot.process.properties import Properties
+        p = Properties()
+        p.master = self.master
+
+        if len(args) == 1:
+            return p.render(args[0])
+
+        return defer.gatherResults([p.render(s) for s in args], consumeErrors=True)
 
 
 class ClusteredBuildbotService(BuildbotService):

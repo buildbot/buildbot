@@ -52,9 +52,10 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
 
     @defer.inlineCallbacks
     def createGerritStatus(self, **kwargs):
-        auth = kwargs.pop('auth', ('log', 'pass'))
+        auth = kwargs.pop('auth', ('log', Interpolate('pass')))
+
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, "gerrit", auth=auth,
+            self.master, self, "gerrit", auth=('log', 'pass'),
             debug=None, verify=None)
         self.sp = sp = GerritVerifyStatusPush("gerrit", auth=auth, **kwargs)
         sp.sessionFactory = Mock(return_value=Mock())

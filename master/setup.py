@@ -366,7 +366,7 @@ setup_args = {
             ('buildbot.process.logobserver', ['LogLineObserver']),
             ('buildbot.process.properties', [
                 'FlattenList', 'Interpolate', 'Property', 'Transform',
-                'WithProperties', 'renderer']),
+                'WithProperties', 'renderer', 'Secret']),
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),

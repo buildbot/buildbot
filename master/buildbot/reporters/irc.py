@@ -201,6 +201,7 @@ class IRC(service.BuildbotService):
                      "channels", "pm_to_nicks", "allowForce", "useSSL",
                      "useRevisions", "tags", "useColors",
                      "lostDelay", "failedDelay", "allowShutdown")
+    secrets = ['password']
 
     def checkConfig(self, host, nick, channels, pm_to_nicks=None, port=6667,
                     allowForce=False, tags=None, password=None, notify_events=None,

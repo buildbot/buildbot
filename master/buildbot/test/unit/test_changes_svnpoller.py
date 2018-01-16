@@ -24,6 +24,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import svnpoller
+from buildbot.process.properties import Interpolate
 from buildbot.test.util import changesource
 from buildbot.test.util import gpo
 
@@ -567,6 +568,19 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             self.makeLogExpect(password=None).stdout(make_changes_output(1)),
             self.makeLogExpect(password=None).stdout(make_changes_output(2)),
             self.makeLogExpect(password=None).stdout(make_changes_output(4)),
+        )
+        s.poll()
+
+    def test_poll_interpolated_password(self):
+        s = self.attachSVNPoller(sample_base, split_file=split_file,
+                                 svnuser='dustin', svnpasswd=Interpolate('pa$$'))
+
+        self.expectCommands(
+            self.makeInfoExpect(password='pa$$').stdout(sample_info_output),
+            self.makeLogExpect(password='pa$$').stdout(make_changes_output(1)),
+            self.makeLogExpect(password='pa$$').stdout(make_changes_output(1)),
+            self.makeLogExpect(password='pa$$').stdout(make_changes_output(2)),
+            self.makeLogExpect(password='pa$$').stdout(make_changes_output(4)),
         )
         s.poll()
 

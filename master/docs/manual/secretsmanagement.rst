@@ -36,10 +36,28 @@ The secret manager returns the specific provider results related to the provider
 How to use secrets in Buildbot
 ------------------------------
 
+Secret can be used in Buildbot via the :class:`~IRenderable` mechanism.
+Two :class:`~IRenderable` actually implement secrets.
+:ref:`Interpolate` can be used if you need to mix secrets and other interpolation in the same argument.
+:ref:`Interpolate` can be used if your secret is directly used as a component argument.
+
+.. _Secret:
+
+Secret
+``````
+    :ref:`Secret` is a simple renderable which directly renders a secret.
+
+    .. code-block:: python
+
+        Secret("secretName")
+
+As argument to steps
+````````````````````
 The following example shows a basic usage of secrets in Buildbot.
 
 .. code-block:: python
 
+    from buildbot.plugins import secrets, util
     # First we declare that the secrets are stored in a directory of the filesystem
     # each file contain one secret identified by the filename
     c['secretsProviders'] = [secrets.SecretInAFile(dirname="/path/toSecretsFiles")]
@@ -47,12 +65,32 @@ The following example shows a basic usage of secrets in Buildbot.
     # then in a buildfactory:
 
     # use a secret on a shell command via Interpolate
-    f1.addStep(ShellCommand(Interpolate("wget -u user -p %(secret:userpassword)s %(prop:urltofetch)s")))
+    f1.addStep(ShellCommand(util.Interpolate("wget -u user -p '%(secret:userpassword)s' '%(prop:urltofetch)s'")))
+    # .. or non shell form:
+    f1.addStep(ShellCommand(["wget", "-u", "user", "-p", util.Secret("userpassword"), util.Interpolate("%(prop:urltofetch)s")]))
 
 Secrets are also interpolated in the build like properties are, and will be used in a command line for example.
 
+As argument to services
+```````````````````````
+
+You can use secrets to configure services.
+All services arguments are not compatible with secrets.
+See their individual documentation for details.
+
+.. code-block:: python
+
+    # First we declare that the secrets are stored in a directory of the filesystem
+    # each file contain one secret identified by the filename
+    c['secretsProviders'] = [secrets.SecretInAFile(dirname="/path/toSecretsFiles")]
+
+    # then for a reporter:
+    c['services'] = [GitHubStatusPush(token=util.Secret("githubToken"))]
+
 Secrets storages
 ----------------
+
+.. _SecretInAFile:
 
 SecretInAFile
 `````````````
@@ -73,6 +111,8 @@ Arguments:
 ``strip``
   (optional) if ``True`` (the default), trailing newlines are removed from the
   file contents.
+
+.. _SecretInAVault:
 
 SecretInVault
 `````````````
