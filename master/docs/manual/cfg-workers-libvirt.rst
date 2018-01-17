@@ -33,7 +33,7 @@ Setting up libvirt
 We won't show you how to set up libvirt as it is quite different on each platform, but there are a few things you should keep in mind.
 
 * If you are using the system libvirt (libvirt and buildbot master are on same server), your buildbot master user will need to be in the libvirtd group.
-* If libvirt and buildbot master are on different servers, the user connecting to libvirt over ssh will need to be in the libvirtd group. Also need to setup authorisation via ssh-keys (without password entering).   
+* If libvirt and buildbot master are on different servers, the user connecting to libvirt over ssh will need to be in the libvirtd group. Also need to setup authorisation via ssh-keys (without password promt).   
 * If you are using KVM, your buildbot master user will need to be in the KVM group.
 * You need to think carefully about your virtual network *first*.
   Will NAT be enough?
