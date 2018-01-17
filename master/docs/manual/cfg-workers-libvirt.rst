@@ -32,7 +32,8 @@ Setting up libvirt
 
 We won't show you how to set up libvirt as it is quite different on each platform, but there are a few things you should keep in mind.
 
-* If you are using the system libvirt, your buildbot master user will need to be in the libvirtd group.
+* If you are using the system libvirt (libvirt and buildbot master are on same server), your buildbot master user will need to be in the libvirtd group.
+* If libvirt and buildbot master are on different servers, the user connecting to libvirt over ssh will need to be in the libvirtd group. Also need to setup authorisation via ssh-keys (without password entering).   
 * If you are using KVM, your buildbot master user will need to be in the KVM group.
 * You need to think carefully about your virtual network *first*.
   Will NAT be enough?
@@ -107,3 +108,77 @@ If you don't, buildbot won't be able to find a VM to start.
 ``xml``
     If a VM isn't predefined in virt-manager, then you can instead provide XML like that used with ``virsh define``.
     The VM will be created automatically when needed, and destroyed when not needed any longer.
+    
+.. note:: The ``hd_image`` and ``base_image`` must be on same machine with buildbot master.
+
+Configuring Master to use libvirt on remote server
+---------------------------------------------------
+
+If you want to use libvirt on remote server configure remote libvirt server and buildbot server following way.
+
+1. Define user to connect to remote machine using ssh. Configure connection of such user to remote libvirt server (see https://wiki.libvirt.org/page/SSHSetup) without password promt.
+2. Add user to libvirtd group on remote libvirt server ``sudo usermod -G libvirtd -a <user>``.
+
+Configure remote libvirt server:
+
+1. Create virtial machine for buildbot and configure it. 
+2. Change virtual machine image file to new name, which will be used as temporary image and deleted after virtual machine stops. Execute command ``sudo virsh edit <VM name>``. In xml file locate ``devices/disk/source`` and change file path to new name. The file must not be exist, it will create via hook script.
+3. Add hook script to ``/etc/libvirt/hooks/qemu`` to recreate VM image each start:
+
+.. code-block:: python
+
+   #!/usr/bin/python
+
+   # Script /etc/libvirt/hooks/qemu
+   # Don't forget to execute service libvirt-bin restart
+   # Also see https://www.libvirt.org/hooks.html
+
+   # This script make clean VM for each start using base image
+
+   import os
+   import subprocess
+   import sys
+
+   images_path = '/var/lib/libvirt/images/'
+   
+   # build-vm - VM name in virsh list --all
+   # vm_base_image.qcow2 - base image file name, must be exist in path /var/lib/libvirt/images/
+   # vm_temp_image.qcow2 - temporary image. Must not be exist in path /var/lib/libvirt/images/, but defined in VM config file
+   domains = {
+       'build-vm' : ['vm_base_image.qcow2', 'vm_temp_image.qcow2'],
+   }
+
+   def delete_image_clone(vir_domain):
+       domain = domains[vir_domain]
+       if domain is not None:
+	        os.remove(images_path + domain[1])
+
+   def create_image_clone(vir_domain):
+       domain = domains[vir_domain]
+       if domain is not None:
+	        cmd = ['/usr/bin/qemu-img', 'create', '-b', images_path + domain[0], '-f', 'qcow2', images_path + domain[1]]
+	        subprocess.call(cmd)
+
+   if __name__ == "__main__":
+       vir_domain, action = sys.argv[1:3]
+
+       if action in ["prepare"]:
+	        create_image_clone(vir_domain)
+
+       if action in ["release"]:
+	        delete_image_clone(vir_domain)
+
+Configure buildbot server:
+
+1. On buildbot server in virtual environment install libvirt-python package: ``pip install libvirt-python``
+2. Create worker using remote ssh connection.
+
+::
+
+    from buildbot.plugins import worker, util
+    c['workers'] = [
+        worker.LibVirtWorker('minion1', 'sekrit',
+                             util.Connection("qemu+ssh://<user>@<ip address or DNS name>:<port>/session"),
+                             '/home/buildbot/images/minion1')
+    ]
+
