@@ -1,0 +1,3 @@
+Fixed Builder page should show revisions (:issue:`3903`).
+Fixed Owner column is always empty on Builder page (:issue:`3904`).
+Partially fix Builder page should show the worker information  (:issue:`3546`).
