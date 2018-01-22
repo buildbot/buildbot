@@ -537,6 +537,7 @@ getprocessoutputandvalue
 getprocessoutputandvaluewithinput
 getpwnam
 getrenderingfor
+getresponsibleusersforbuild
 getresults
 getrlimit
 getrootobject

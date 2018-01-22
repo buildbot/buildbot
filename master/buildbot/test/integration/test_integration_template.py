@@ -37,8 +37,9 @@ class ShellMaster(RunMasterBase):
                       revision="HEAD",
                       project="none"
                       )
-        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
+        build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True, wantProperties=True)
         self.assertEqual(build['buildid'], 1)
+        self.assertEqual(build['properties']['owners'], ([u'me@foo.com'], u'Build'))
 
 
 # master configuration
