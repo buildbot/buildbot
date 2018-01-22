@@ -36,6 +36,11 @@ class State extends Config
                 caption:'Show old builders'
                 default_value: false
             ,
+                type:'bool'
+                name:'show_workers_name'
+                caption:'Show workers name'
+                default_value: false
+            ,
                 type:'integer'
                 name:'buildFetchLimit'
                 caption:'Maximum number of builds to fetch'
