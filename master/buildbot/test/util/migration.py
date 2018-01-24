@@ -103,5 +103,9 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                               "table %s does not have the utf8 charset" % tbl)
         d.addCallback(lambda _: self.db.pool.do(check_table_charsets_thd))
 
-        d.addCallback(lambda _: self.db.pool.do(verify_thd_cb))
+        def verify_thd(engine):
+            with sautils.withoutSqliteForeignKeys(engine):
+                verify_thd_cb(engine)
+
+        d.addCallback(lambda _: self.db.pool.do(verify_thd))
         return d

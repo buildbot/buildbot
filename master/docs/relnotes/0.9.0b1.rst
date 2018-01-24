@@ -225,7 +225,7 @@ Fixes
 
 * The build properties are now stored in the database in the ``build_properties`` table.
 
-* The list of changes in the build page now displays all the changes since the last sucessful build.
+* The list of changes in the build page now displays all the changes since the last successful build.
 
 * GitHub change hook now correctly responds to ping events.
 * ``buildbot.steps.http`` steps now correctly have ``url`` parameter renderable

@@ -100,7 +100,7 @@ class PollingChangeSource(ReconfigurablePollingChangeSource):
     # because the unit tests keep doing shortcuts for the Service life cycle (i.e by no calling startService)
     # instead of porting everything at once, we make a class to support legacy
 
-    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False):
+    def checkConfig(self, name=None, pollInterval=60 * 10, pollAtLaunch=False, **kwargs):
         ReconfigurablePollingChangeSource.checkConfig(self, name=name, pollInterval=60 * 10, pollAtLaunch=False)
         self.pollInterval = pollInterval
         self.pollAtLaunch = pollAtLaunch

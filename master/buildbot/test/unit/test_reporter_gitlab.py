@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.gitlab import HOSTED_BASE_URL
@@ -48,7 +49,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
             self.master, self,
             HOSTED_BASE_URL, headers={'PRIVATE-TOKEN': 'XXYYZZ'},
             debug=None, verify=None)
-        self.sp = sp = GitLabStatusPush('XXYYZZ')
+        self.sp = sp = GitLabStatusPush(Interpolate('XXYYZZ'))
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
 

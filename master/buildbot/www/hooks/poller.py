@@ -20,6 +20,8 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from buildbot.changes.base import PollingChangeSource
+from buildbot.util import bytes2unicode
+from buildbot.util import unicode2bytes
 from buildbot.www.hooks.base import BaseHookHandler
 
 
@@ -27,13 +29,13 @@ class PollingHandler(BaseHookHandler):
 
     def getChanges(self, req):
         change_svc = req.site.master.change_svc
-        poll_all = "poller" not in req.args
+        poll_all = b"poller" not in req.args
 
         allow_all = True
         allowed = []
-        if isinstance(self.options, dict) and "allowed" in self.options:
+        if isinstance(self.options, dict) and b"allowed" in self.options:
             allow_all = False
-            allowed = self.options["allowed"]
+            allowed = self.options[b"allowed"]
 
         pollers = []
 
@@ -42,16 +44,19 @@ class PollingHandler(BaseHookHandler):
                 continue
             if not hasattr(source, "name"):
                 continue
-            if not poll_all and source.name not in req.args['poller']:
+            if (not poll_all and
+               unicode2bytes(source.name) not in req.args[b'poller']):
                 continue
-            if not allow_all and source.name not in allowed:
+            if not allow_all and unicode2bytes(source.name) not in allowed:
                 continue
             pollers.append(source)
 
         if not poll_all:
-            missing = set(req.args['poller']) - set(s.name for s in pollers)
+            missing = (set(req.args[b'poller']) -
+                      set(unicode2bytes(s.name) for s in pollers))
             if missing:
-                raise ValueError("Could not find pollers: %s" % ",".join(missing))
+                raise ValueError("Could not find pollers: {}".format(
+                    bytes2unicode(b",".join(missing))))
 
         for p in pollers:
             p.force()

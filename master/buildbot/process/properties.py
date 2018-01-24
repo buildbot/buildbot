@@ -192,9 +192,9 @@ class Properties(util.ComparableMixin):
     has_key = hasProperty
 
     def setProperty(self, name, value, source, runtime=False):
-        name = util.ascii2unicode(name)
+        name = util.bytes2unicode(name)
         json.dumps(value)  # Let the exception propagate ...
-        source = util.ascii2unicode(source)
+        source = util.bytes2unicode(source)
 
         self.properties[name] = (value, source)
         if runtime:

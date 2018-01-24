@@ -1052,6 +1052,20 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         errMsg += "object should be an instance of buildbot.util.service.BuildbotService"
         self.assertConfigError(self.errors, errMsg)
 
+    def test_load_services_duplicate(self):
+
+        class MyService(service.BuildbotService):
+            name = 'myservice'
+
+            def reconfigService(self, x=None):
+                self.x = x
+
+        self.cfg.load_services(self.filename, dict(
+            services=[MyService(x='a'), MyService(x='b')]))
+
+        self.assertConfigError(
+            self.errors, 'Duplicate service name %r' % MyService.name)
+
     def test_load_configurators_norminal(self):
 
         class MyConfigurator(configurators.ConfiguratorBase):

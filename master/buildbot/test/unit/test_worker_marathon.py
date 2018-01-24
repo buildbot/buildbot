@@ -96,7 +96,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         worker.masterFQDN = "master"
         self._http.expect(
             method='delete',
-            ep='/v2/apps/buildbot-worker/buildbotmasterhash-bot')
+            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
@@ -109,7 +109,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbotmasterhash-bot',
+                'id': u'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
@@ -133,7 +133,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         worker.masterFQDN = "master"
         self._http.expect(
             method='delete',
-            ep='/v2/apps/buildbot-worker/buildbotmasterhash-bot')
+            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
@@ -146,7 +146,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbotmasterhash-bot',
+                'id': u'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
@@ -165,7 +165,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         worker = self.makeWorker()
         self._http.expect(
             method='delete',
-            ep='/v2/apps/buildbot-worker/buildbotmasterhash-bot')
+            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
@@ -178,7 +178,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbotmasterhash-bot',
+                'id': u'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
@@ -190,7 +190,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
             content_json={'message': 'image not found'})
         self._http.expect(
             method='delete',
-            ep='/v2/apps/buildbot-worker/buildbotmasterhash-bot')
+            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         d = worker.substantiate(None, FakeBuild())
         self.reactor.advance(.1)
         self.failureResultOf(d)
@@ -213,7 +213,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         worker.masterFQDN = "master"
         self._http.expect(
             method='delete',
-            ep='/v2/apps/buildbot-worker/buildbotmasterhash-bot')
+            ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
         self._http.expect(
             method='post',
             ep='/v2/apps',
@@ -226,7 +226,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbotmasterhash-bot',
+                'id': u'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',

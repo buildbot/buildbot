@@ -26,7 +26,7 @@ from twisted.python import log
 from twisted.web import client
 
 from buildbot.changes import base
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import deferredLocked
 from buildbot.util import epoch2datetime
@@ -67,8 +67,8 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
         self.lastPoll = time.time()
         self.useTimestamps = useTimestamps
         self.category = category if callable(
-            category) else ascii2unicode(category)
-        self.project = ascii2unicode(project)
+            category) else bytes2unicode(category)
+        self.project = bytes2unicode(project)
         self.initLock = defer.DeferredLock()
 
     def describe(self):
@@ -144,16 +144,16 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                     yield self._setCurrentRev(nr, revision)
                     # emit the change
                     yield self.master.data.updates.addChange(
-                        author=ascii2unicode(author),
-                        revision=ascii2unicode(revision),
-                        revlink=ascii2unicode(revlink),
+                        author=bytes2unicode(author),
+                        revision=bytes2unicode(revision),
+                        revlink=bytes2unicode(revlink),
                         comments=u'pull-request #%d: %s\n%s' % (
                             nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
-                        branch=self.branch,
+                        branch=bytes2unicode(branch),
                         category=self.category,
                         project=self.project,
-                        repository=ascii2unicode(repo),
+                        repository=bytes2unicode(repo),
                         src=u'bitbucket',
                     )
 

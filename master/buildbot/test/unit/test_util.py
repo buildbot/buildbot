@@ -266,22 +266,19 @@ class Flatten(unittest.TestCase):
 class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
-        rv = util.ascii2unicode(u'\N{SNOWMAN}')
+        rv = util.bytes2unicode(u'\N{SNOWMAN}', encoding='ascii')
         self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', text_type))
 
     def test_ascii(self):
-        rv = util.ascii2unicode('abcd')
+        rv = util.bytes2unicode('abcd', encoding='ascii')
         self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
-                          util.ascii2unicode(b'a\x85'))
+                          util.bytes2unicode(b'a\x85', encoding='ascii'))
 
     def test_None(self):
-        self.assertEqual(util.ascii2unicode(None), None)
-
-
-class Bytes2Unicode(unittest.TestCase):
+        self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
 
     def test_bytes2unicode(self):
         rv1 = util.bytes2unicode(b'abcd')
@@ -336,15 +333,15 @@ class StringToBoolean(unittest.TestCase):
             self.assertEqual(util.string2boolean(s), b, repr(s))
 
     def test_ascii(self):
-        rv = util.ascii2unicode(b'abcd')
+        rv = util.bytes2unicode(b'abcd', encoding='ascii')
         self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
         self.assertRaises(UnicodeDecodeError, lambda:
-                          util.ascii2unicode(b'a\x85'))
+                          util.bytes2unicode(b'a\x85', encoding='ascii'))
 
     def test_None(self):
-        self.assertEqual(util.ascii2unicode(None), None)
+        self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
 
 
 class AsyncSleep(unittest.TestCase):

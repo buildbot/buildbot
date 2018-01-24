@@ -65,6 +65,9 @@ class ChangeSourceMixin(object):
         except AttributeError:
             self.changesource.setServiceParent(self.master)
 
+        # configure the service to let secret manager render the secrets
+        d = self.changesource.configureService()
+        d.addErrback(lambda _: None)
         # also, now that changesources are ClusteredServices, setting up
         # the clock here helps in the unit tests that check that behavior
         self.changesource.clock = task.Clock()

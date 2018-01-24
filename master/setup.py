@@ -204,6 +204,7 @@ setup_args = {
         "buildbot.test.fake",
         "buildbot.test.fuzz",
         "buildbot.test.integration",
+        "buildbot.test.integration.interop",
         "buildbot.test.regressions",
         "buildbot.test.unit",
     ]),
@@ -365,7 +366,7 @@ setup_args = {
             ('buildbot.process.logobserver', ['LogLineObserver']),
             ('buildbot.process.properties', [
                 'FlattenList', 'Interpolate', 'Property', 'Transform',
-                'WithProperties', 'renderer']),
+                'WithProperties', 'renderer', 'Secret']),
             ('buildbot.process.properties', [
                 'CommandlineUserManager']),
             ('buildbot.revlinks', ['RevlinkMatch']),
@@ -391,7 +392,7 @@ setup_args = {
             ('buildbot.steps.shellsequence', ['ShellArg']),
             ('buildbot.www.avatar', ['AvatarGravatar']),
             ('buildbot.www.auth', [
-                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth']),
+                'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
             ('buildbot.www.ldapuserinfo', ['LdapUserInfo']),
             ('buildbot.www.oauth2', [
                 'GoogleAuth', 'GitHubAuth', 'GitLabAuth', 'BitbucketAuth']),
@@ -413,6 +414,7 @@ setup_args = {
             ('buildbot.www.hooks.gitlab', ['gitlab']),
             ('buildbot.www.hooks.gitorious', ['gitorious']),
             ('buildbot.www.hooks.poller', ['poller']),
+            ('buildbot.www.hooks.bitbucketcloud', ['bitbucketcloud']),
             ('buildbot.www.hooks.bitbucketserver', ['bitbucketserver'])
         ])
     ]), {

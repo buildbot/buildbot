@@ -14,34 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import twisted
-
-from twisted.python import versions
-
-
-def patch_bug4881():
-    # this patch doesn't apply (or even import!) on Windows
-    import sys
-    if sys.platform == 'win32':
-        return
-
-    # this bug was only present in Twisted-10.2.0
-    if twisted.version == versions.Version(twisted.version.package, 10, 2, 0):
-        from buildbot_worker.monkeypatches import bug4881
-        bug4881.patch()
-
-
-def patch_bug5079():
-    # this bug will hopefully be patched in Twisted-12.0.0
-    if twisted.version < versions.Version(twisted.version.package, 12, 0, 0):
-        from buildbot_worker.monkeypatches import bug5079
-        bug5079.patch()
-
-
 def patch_all(for_tests=False):
     if for_tests:
         from buildbot_worker.monkeypatches import testcase_assert
         testcase_assert.patch()
-
-    patch_bug4881()
-    patch_bug5079()

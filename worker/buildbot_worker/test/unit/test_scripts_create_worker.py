@@ -493,6 +493,7 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
         "keepalive": 4,
         "maxdelay": 2,
         "numcpus": None,
+        "maxretries": None,
 
         # arguments
         "host": "masterhost",
@@ -622,7 +623,9 @@ class TestCreateWorker(misc.StdoutAssertionsMixin, unittest.TestCase):
             umask=options["umask"],
             numcpus=options["numcpus"],
             maxdelay=options["maxdelay"],
-            allow_shutdown=options["allow-shutdown"])
+            allow_shutdown=options["allow-shutdown"],
+            maxRetries=options["maxretries"],
+            )
 
         # check that Worker instance attached to application
         self.assertEqual(worker_mock.method_calls,

@@ -71,7 +71,7 @@ def assertProducesWarnings(filter_category, num_warnings=None,
 
     if num_warnings is not None:
         assert len(warns) == num_warnings, \
-            "Number of of occurred warnings is not correct. " \
+            "Number of occurred warnings is not correct. " \
             "Expected {num} warnings, received {num_received}:\n" \
             "{warns}".format(
                 num=num_warnings,

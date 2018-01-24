@@ -2,22 +2,28 @@
     .row
         table.table.table-hover.table-striped.table-condensed
             tr
+                th State
                 th Masters
                 th WorkerName
                 th Recent Builds
                 th(ng-if="settings.showWorkerBuilders.value") Builders
                 th(ng-repeat="info in worker_infos") {{ capitalize(info) }}
-                    
+
             tr(ng-repeat='worker in workers | orderBy: ["-num_connections", "name"]',
                ng-hide="maybeHideWorker(worker)")
-                td 
+                td
+                    a(ui-sref='worker.actions({worker: worker.workerid})')
+                        i.fa.fa-pause(ng-if="worker.paused", title="paused") &nbsp;
+                        i.fa.fa-stop(ng-if="worker.graceful", title="graceful shutdown")
+                        i.fa.fa-smile-o(ng-if="!worker.paused && !worker.graceful && worker.num_connections")
+                td
                     div(ng-hide="worker.num_connections")
                         i.fa.fa-times.text-danger(title="disconnected")
                     div(ng-repeat="masterid in worker.connected_to")
                         a(ui-sref="master({master:masterid.masterid})")
                             span.badge-status.results_SUCCESS(title="{{ masters.get(masterid.masterid).name }}")
                                 | {{ masterid.masterid }}
-                td 
+                td
                     a(ui-sref='worker({worker: worker.workerid})')
                         | {{worker.name}}
                 td

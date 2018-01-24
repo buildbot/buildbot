@@ -22,6 +22,7 @@ from twisted.application import internet
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.process.properties import Interpolate
 from buildbot.reporters import irc
 from buildbot.reporters import words
 from buildbot.test.util import config
@@ -241,7 +242,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             port=1234,
             allowForce=True,
             tags=['tags'],
-            password='pass',
+            password=Interpolate('pass'),
             notify_events={'successToFailure': 1, },
             showBlameList=False,
             useRevisions=True,

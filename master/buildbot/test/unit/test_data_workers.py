@@ -21,6 +21,8 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.data import exceptions
+from buildbot.data import resultspec
 from buildbot.data import workers
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -75,6 +77,8 @@ def w1(builderid=None, masterid=None):
         'workerid': 1,
         'name': 'linux',
         'workerinfo': {},
+        'paused': False,
+        'graceful': False,
         'connected_to': [
             {'masterid': 13},
         ],
@@ -90,6 +94,8 @@ def w2(builderid=None, masterid=None):
         'workerid': 2,
         'name': 'windows',
         'workerinfo': {'a': 'b'},
+        'paused': False,
+        'graceful': False,
         'connected_to': [
             {'masterid': 14},
         ],
@@ -176,6 +182,25 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(worker, None)
         return d
 
+    @defer.inlineCallbacks
+    def test_setWorkerState(self):
+        yield self.master.data.updates.setWorkerState(2, True, False)
+        worker = yield self.callGet(('workers', 2))
+        self.validateData(worker)
+        self.assertEqual(worker['paused'], True)
+
+    @defer.inlineCallbacks
+    def test_actions(self):
+        for action in ("stop", "pause", "unpause", "kill"):
+            yield self.callControl(action, {}, ('masters', 13, 'builders', 40, 'workers', 2))
+            self.master.mq.assertProductions(
+                [(('control', 'worker', '2', action), {'reason': 'no reason'})])
+
+    @defer.inlineCallbacks
+    def test_bad_actions(self):
+        with self.assertRaises(exceptions.InvalidControlException):
+            yield self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
+
 
 class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
@@ -234,6 +259,19 @@ class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             self.assertEqual(sorted(workers, key=configuredOnKey),
                              sorted([w2(masterid=13, builderid=41)], key=configuredOnKey))
         return d
+
+    @defer.inlineCallbacks
+    def test_setWorkerStateFindByPaused(self):
+        yield self.master.data.updates.setWorkerState(2, True, False)
+        resultSpec = resultspec.OptimisedResultSpec(
+            filters=[resultspec.Filter('paused', 'eq', [True])])
+
+        workers = yield self.callGet(('workers',), resultSpec=resultSpec)
+        print(workers)
+        self.assertEqual(len(workers), 1)
+        worker = workers[0]
+        self.validateData(worker)
+        self.assertEqual(worker['paused'], True)
 
 
 class Worker(interfaces.InterfaceTests, unittest.TestCase):

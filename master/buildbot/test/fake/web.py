@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import text_type
 
 from io import BytesIO
 
@@ -92,14 +93,28 @@ class FakeRequest(Mock):
 
     # cribed from twisted.web.test._util._render
     def test_render(self, resource):
+        for arg in self.args:
+            if not isinstance(arg, bytes):
+                raise ValueError("self.args: {!r},  contains "
+                    "values which are not bytes".format(self.args))
+
+        if self.uri and not isinstance(self.uri, bytes):
+                raise ValueError("self.uri: {!r} is {}, not bytes".format(
+                    self.uri, type(self.uri)))
+
+        if self.method and not isinstance(self.method, bytes):
+                raise ValueError("self.method: {!r} is {}, not bytes".format(
+                    self.method, type(self.method)))
+
         result = resource.render(self)
         if isinstance(result, bytes):
             self.write(result)
             self.finish()
             return self.deferred
-        elif isinstance(result, str):
-            raise ValueError("%r should return bytes, not string: %r" % (resource.render, result))
+        elif isinstance(result, text_type):
+            raise ValueError("{!r} should return bytes, not {}: {!r}".format(
+                resource.render, type(result), result))
         elif result is server.NOT_DONE_YET:
             return self.deferred
         else:
-            raise ValueError("Unexpected return value: %r" % (result))
+            raise ValueError("Unexpected return value: {!r}".format(result))

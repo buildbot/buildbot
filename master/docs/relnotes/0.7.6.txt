@@ -25,7 +25,7 @@ the default root URL with another copy of the /waterfall resource.
 
 *** Compatibility: Python-2.3 or newer, Twisted-2.0 or newer
 
-No compatiblity losses here, buildbot-0.7.6 is compatible with the same
+No compatibility losses here, buildbot-0.7.6 is compatible with the same
 versions of python and twisted that 0.7.5 was.
 
 Buildbot is tested on a regular basis (http://buildbot.buildbot.net) against

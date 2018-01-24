@@ -9,7 +9,7 @@ div.changedetails(style="width:100%;")
             | {{ change.comments.split("\n")[0] }}
         span(ng-if="!compact" uib-tooltip="{{change.when_timestamp | dateformat:'LLL'}}")
             | ({{ change.when_timestamp | timeago }})
-        i.fa.fa-chevron-circle-right.rotate(ng-class="{'fa-rotate-90':change.show_details}")
+        i.fa.fa-chevron-circle-right.rotate.clickable(ng-class="{'fa-rotate-90':change.show_details}")
     div.anim-changedetails(ng-show="change.show_details")
         table.table.table-striped.table-condensed(ng-show="change.show_details")
           tr(ng-if="change.category")

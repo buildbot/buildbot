@@ -4,7 +4,7 @@ describe 'buildrequest controller', ->
     dataService = $scope = $httpBackend = $rootScope = null
     $timeout = createController = $stateParams = null
     goneto  = null
-    # overrride "$state"
+    # override "$state"
     beforeEach module(($provide) ->
         $provide.value "$state", go: (args...) -> goneto = args
         $provide.value "$stateParams", buildrequest: 1

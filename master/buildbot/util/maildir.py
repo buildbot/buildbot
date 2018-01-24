@@ -44,7 +44,7 @@ class NoSuchMaildir(Exception):
     pass
 
 
-class MaildirService(service.AsyncMultiService):
+class MaildirService(service.BuildbotService):
     pollinterval = 10  # only used if we don't have DNotify
 
     def __init__(self, basedir=None):

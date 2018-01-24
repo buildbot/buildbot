@@ -45,6 +45,10 @@ class CompositeStepMixinMaster(RunMasterBase):
         self.assertEqual(build['results'], results.SUCCESS)
 
 
+class CompositeStepMixinMasterPb(CompositeStepMixinMaster):
+    proto = "pb"
+
+
 class TestCompositeMixinStep(BuildStep, CompositeStepMixin):
 
     def __init__(self, *args, **kwargs):

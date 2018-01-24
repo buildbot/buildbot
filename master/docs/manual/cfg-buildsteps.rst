@@ -623,7 +623,7 @@ This step takes the following arguments:
 
 ``login``
     Password to use while performing login to the remote CVS server.
-    Default is ``None`` meaning that no login needs to be peformed.
+    Default is ``None`` meaning that no login needs to be performed.
 
 .. bb:step:: Bzr
 
@@ -1130,7 +1130,7 @@ The :bb:step:`ShellCommand` arguments are:
     This option is not available on Windows.
 
     In general, you do not want to use a pseudo-terminal.
-    This is is *only* useful for running commands that require a terminal - for example, testing a command-line application that will only accept passwords read from a terminal.
+    This is *only* useful for running commands that require a terminal - for example, testing a command-line application that will only accept passwords read from a terminal.
     Using a pseudo-terminal brings lots of compatibility problems, and prevents Buildbot from distinguishing the standard error (red) and standard output (black) streams.
 
     In previous versions, the advantage of using a pseudo-terminal was that ``grandchild`` processes were more likely to be cleaned up if the build was interrupted or times out.
@@ -2162,8 +2162,8 @@ For :bb:step:`FileUpload`, the ``urlText=`` argument allows you to specify the u
 
 .. bb:step:: DirectoryUpload
 
-Transfering Directories
-+++++++++++++++++++++++
+Transferring Directories
+++++++++++++++++++++++++
 
 .. py:class:: buildbot.steps.transfer.DirectoryUpload
 
@@ -2249,8 +2249,8 @@ The `uploadDone` method is called once for each uploaded file and can be used to
 .. bb:step:: JSONStringDownload
 .. bb:step:: JSONPropertiesDownload
 
-Transfering Strings
--------------------
+Transferring Strings
+--------------------
 
 .. py:class:: buildbot.steps.transfer.StringDownload
 .. py:class:: buildbot.steps.transfer.JSONStringDownload

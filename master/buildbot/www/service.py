@@ -259,15 +259,9 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # was not made.
         return self._getPort().getHost().port
 
-    def setupSite(self, new_config):
-        self.reconfigurableResources = []
-
-        # we're going to need at least the base plugin (buildbot-www)
-        if 'base' not in self.apps:
-            raise RuntimeError("could not find buildbot-www; is it installed?")
-
-        root = self.apps.get('base').resource
-        for key, plugin in iteritems(new_config.www.get('plugins', {})):
+    def configPlugins(self, root, new_config):
+        known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
+        for key, plugin in list(iteritems(new_config.www.get('plugins', {}))):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError(
@@ -276,11 +270,21 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             app.setMaster(self.master)
             app.setConfiguration(plugin)
             root.putChild(unicode2bytes(key), app.resource)
-        known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
+            if not app.ui:
+                del new_config.www['plugins'][key]
         for plugin_name in set(self.apps.names) - known_plugins:
             log.msg("NOTE: www plugin %r is installed but not "
                     "configured" % (plugin_name,))
 
+    def setupSite(self, new_config):
+        self.reconfigurableResources = []
+
+        # we're going to need at least the base plugin (buildbot-www)
+        if 'base' not in self.apps:
+            raise RuntimeError("could not find buildbot-www; is it installed?")
+
+        root = self.apps.get('base').resource
+        self.configPlugins(root, new_config)
         # /
         root.putChild(b'', wwwconfig.IndexResource(
             self.master, self.apps.get('base').static_dir))
@@ -337,6 +341,8 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.reconfigurableResources.append(resource)
 
     def reconfigSite(self, new_config):
+        root = self.apps.get('base').resource
+        self.configPlugins(root, new_config)
         new_config.www['auth'].reconfigAuth(self.master, new_config)
         cookie_expiration_time = new_config.www.get('cookie_expiration_time')
         if cookie_expiration_time is not None:

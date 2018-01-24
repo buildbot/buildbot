@@ -175,6 +175,13 @@ MailNotifier arguments
     ``warnings``
         Equivalent to (``warnings``, ``failing``).
 
+    Set these shortcuts as actual strings in the configuration::
+
+        from buildbot.plugins import reporters
+        mn = reporters.MailNotifier(fromaddr="buildbot@example.org",
+                                    mode="warnings")
+        c['services'].append(mn)
+
     (list of strings).
     A combination of:
 
@@ -264,10 +271,12 @@ MailNotifier arguments
 ``smtpUser``
     (string).
     The user name to use when authenticating with the ``relayhost``.
+    Can be a :ref:`Secret`.
 
 ``smtpPassword``
     (string).
     The password that will be used when authenticating with the ``relayhost``.
+    Can be a :ref:`Secret`.
 
 ``lookup``
     (implementer of :class:`IEmailLookup`).
@@ -453,9 +462,11 @@ The following additional parameters are accepted by this class:
 
 ``user_key``
     The user key from the Pushover website. It is used to identify the notification recipient.
+    Can be a :ref:`Secret`.
 
 ``api_token``
     API token for a custom application from the Pushover website.
+    Can be a :ref:`Secret`.
 
 ``priorities``
     Dictionary of Pushover notification priorities. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between -2...2, specifying notification priority. In case a mode is missing from this dictionary, the default value of 0 is used.
@@ -484,6 +495,7 @@ The Pushjet specific parameters are:
 
 ``secret``
     This is a secret token for your Pushjet service. See http://docs.pushjet.io/docs/creating-a-new-service to learn how to create a new Pushjet service and get its secret token.
+    Can be a :ref:`Secret`.
 
 ``levels``
     Dictionary of Pushjet notification levels. The keys of the dictionary can be ``change``, ``failing``, ``passing``, ``warnings``, ``exception`` and are equivalent to the ``mode`` strings. The values are integers between 0...5, specifying notification priority. In case a mode is missing from this dictionary, the default value set by Pushover is used.
@@ -567,6 +579,7 @@ The following parameters are accepted by this class:
     (optional)
     The global password used to register the bot to the IRC server.
     If provided, it will be sent to Nickserv to claim the nickname: some IRC servers will not allow clients to send private messages until they have logged in with a password.
+    Can be a :ref:`Secret`.
 
 ``notify_events``
     (optional)
@@ -711,7 +724,7 @@ So instead of seeing `build #253 of ...`, you would see something like `build co
 Revisions that are stored as hashes are shortened to 7 characters in length, as multiple revisions can be contained in one build and may exceed the IRC message length limit.
 
 Two additional arguments can be set to control how fast the IRC bot tries to reconnect when it encounters connection issues.
-``lostDelay`` is the number of of seconds the bot will wait to reconnect when the connection is lost, where as ``failedDelay`` is the number of seconds until the bot tries to reconnect when the connection failed.
+``lostDelay`` is the number of seconds the bot will wait to reconnect when the connection is lost, where as ``failedDelay`` is the number of seconds until the bot tries to reconnect when the connection failed.
 ``lostDelay`` defaults to a random number between 1 and 5, while ``failedDelay`` defaults to a random one between 45 and 60.
 Setting random defaults like this means multiple IRC bots are less likely to deny each other by flooding the server.
 
@@ -851,7 +864,7 @@ It requires either `txrequests`_ or `treq`_ to be installed to allow interaction
 
     :param string serverUrl: the url where to do the http post
     :param string user: the BasicAuth user to post as
-    :param string password: the BasicAuth user's password
+    :param string password: the BasicAuth user's password (can be a :ref:`Secret`).
     :param auth: the authentication method to use.
         Refer to the documentation of the requests library for more information.
     :param function format_fn: a function that takes the build as parameter and returns a dictionary to be pushed to the server (as json).
@@ -921,7 +934,7 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
 
 .. py:class:: GitHubStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False, builders=None)
 
-    :param string token: token used for authentication.
+    :param string token: token used for authentication. (can be a :ref:`Secret`)
     :param rendereable string startDescription: Custom start message (default: 'Build started.')
     :param rendereable string endDescription: Custom end message (default: 'Build done.')
     :param rendereable string context: Passed to GitHub to differentiate between statuses.
@@ -965,7 +978,7 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
 
 .. py:class:: GitHubCommentPush(token, startDescription=None, endDescription=None, baseURL=None, verbose=False, builders=None)
 
-    :param string token: token used for authentication.
+    :param string token: token used for authentication. (can be a :ref:`Secret`)
     :param rendereable string startDescription: Custom start message (default: None)
     :param rendereable string endDescription: Custom end message (default: 'Build done.')
     :param string baseURL: specify the github api endpoint if you work with GitHub Enterprise
@@ -973,6 +986,37 @@ You can create a token from you own `GitHub - Profile - Applications - Register 
     :param list builders: only send update for specified builders
     :param boolean verify: disable ssl verification for the case you use temporary self signed certificates
     :param boolean debug: logs every requests and their response
+    :returns: string for comment, must be less than 65536 bytes.
+
+Here's a complete example of posting build results as a github comment:
+
+.. code-block:: python
+
+    @util.renderer
+    @defer.inlineCallbacks
+    def getresults(props):
+        all_logs=[]
+        master = props.master
+        steps = yield props.master.data.get(('builders', props.getProperty('buildername'), 'builds', props.getProperty('buildnumber'), 'steps'))
+        for step in steps:
+            if step['results'] == util.Results.index('failure'):
+                logs = yield master.data.get(("steps", step['stepid'], 'logs'))
+                for l in logs:
+                    all_logs.append('Step : {0} Result : {1}'.format(step['name'], util.Results[step['results']]))
+                    all_logs.append('```')
+                    l['stepname'] = step['name']
+                    l['content'] = yield master.data.get(("logs", l['logid'], 'contents'))
+                    step_logs = l['content']['content'].split('\n')
+                    include = False
+                    for i, sl in enumerate(step_logs):
+                        all_logs.append(sl[1:])
+                    all_logs.append('```')
+        defer.returnValue('\n'.join(all_logs))
+
+    gc = GitHubCommentPush(token='githubAPIToken',
+                           endDescription=getresults,
+                           context=Interpolate('buildbot/%(prop:buildername)s'))
+    c['services'].append(gc)
 
 .. bb:reporter:: BitbucketServerStatusPush
 
@@ -1005,8 +1049,8 @@ As a result, we recommend you use https in your base_url rather than http.
 .. py:class:: BitbucketServerStatusPush(base_url, user, password, key=None, statusName=None, startDescription=None, endDescription=None, verbose=False, builders=None)
 
     :param string base_url: The base url of the Bitbucket Server host, up to and optionally including the first `/` of the path.
-    :param string user: The Bitbucket Server user to post as.
-    :param string password: The Bitbucket Server user's password.
+    :param string user: The Bitbucket Server user to post as. (can be a :ref:`Secret`)
+    :param string password: The Bitbucket Server user's password. (can be a :ref:`Secret`)
     :param renderable string key: Passed to Bitbucket Server to differentiate between statuses.
         A static string can be passed or :class:`Interpolate` for dynamic substitution.
         The default key is `%(prop:buildername)s`.
@@ -1043,8 +1087,8 @@ BitbucketServerPRCommentPush
 .. py:class:: BitBucketServerPRCommentPush(base_url, user, password, messageFormatter=None, verbose=False, debug=None, verify=None, mode=('failing', 'passing', 'warnings'), tags=None, builders=None, schedulers=None, branches=None, buildSetSummary=False):
 
     :param string base_url: The base url of the Bitbucket server host
-    :param string user: The Bitbucket server user to post as.
-    :param string password: The Bitbucket server user's password.
+    :param string user: The Bitbucket server user to post as. (can be a :ref:`Secret`)
+    :param string password: The Bitbucket server user's password. (can be a :ref:`Secret`)
     :param messageFormatter: This is an optional instance of :class:`MessageFormatter` that can be used to generate a custom comment.
     :param boolean verbose: If True, logs a message for each successful status push.
     :param boolean debug: logs every requests and their response
@@ -1102,8 +1146,8 @@ After creating the consumer, you will then be able to see the OAuth key and secr
 
 .. py:class:: BitbucketStatusPush(oauth_key, oauth_secret, base_url='https://api.bitbucket.org/2.0/repositories', oauth_url='https://bitbucket.org/site/oauth2/access_token', builders=None)
 
-    :param string oauth_key: The OAuth consumer key
-    :param string oauth_secret: The OAuth consumer secret
+    :param string oauth_key: The OAuth consumer key. (can be a :ref:`Secret`)
+    :param string oauth_secret: The OAuth consumer secret. (can be a :ref:`Secret`)
     :param string base_url: Bitbucket's Build Status API URL
     :param string oauth_url: Bitbucket's OAuth API URL
     :param list builders: only send update for specified builders
@@ -1135,7 +1179,7 @@ It uses private token auth, and the token owner is required to have at least dev
 
 .. py:class:: GitLabStatusPush(token, startDescription=None, endDescription=None, context=None, baseURL=None, verbose=False)
 
-    :param string token: Private token of user permitted to update status for commits
+    :param string token: Private token of user permitted to update status for commits. (can be a :ref:`Secret`)
     :param string startDescription: Description used when build starts
     :param string endDescription: Description used when build ends
     :param string context: Name of your build system, eg. continuous-integration/buildbot
@@ -1172,7 +1216,7 @@ It uses API token auth, and the token owner is required to have at least message
                                 builder_room_map=None, builder_user_map=None,
                                 wantProperties=False, wantSteps=False, wantPreviousBuild=False, wantLogs=False)
 
-    :param string auth_token: Private API token with access to the "Send Message" and "Send Notification" scopes.
+    :param string auth_token: Private API token with access to the "Send Message" and "Send Notification" scopes. (can be a :ref:`Secret`)
     :param string endpoint: (optional) URL of your Hipchat server. Defaults to https://api.hipchat.com
     :param dictionary builder_room_map: (optional) If specified, will forward events about a builder (based on name) to the corresponding room ID.
     :param dictionary builder_user_map: (optional) If specified, will forward events about a builder (based on name) to the corresponding user ID.
@@ -1290,7 +1334,7 @@ Most parameters are :index:`renderables <renderable>`
     verbose=False, **kwargs)
 
     :param string baseURL: Gerrit HTTP base URL
-    :param string auth: a requests authentication configuration.
+    :param string auth: a requests authentication configuration. (can be a :ref:`Secret`)
        if Gerrit is configured with ``BasicAuth``, then it shall be ``('login', 'password')``
        if Gerrit is configured with ``DigestAuth``, then it shall be ``requests.auth.HTTPDigestAuth('login', 'password')`` from the requests module.
     :param renderable string startDescription: the comment sent when the build is starting.

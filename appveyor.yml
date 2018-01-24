@@ -18,12 +18,8 @@ install:
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "python -m pip install pypiwin32"
 
-  # AppVeyor has SQLite 3.6.21, and Buildbot prefers at least 3.7,
-  # install third-party SQLite.
-  #- "%PYTHON%\\python.exe -m pip install pysqlite"
-
   # TODO: There is no binary wheel for pysqlite and building on Windows is
-  # painful. Let's just substitude sqlite3.dll with never version.
+  # painful. Let's just substitute sqlite3.dll with never version.
   - ps: |
             [Net.ServicePointManager]::SecurityProtocol = 'Ssl3, Tls, Tls11, Tls12'
             Start-FileDownload 'https://www.sqlite.org/2016/sqlite-dll-win32-x86-3110000.zip'
@@ -32,16 +28,18 @@ install:
 
   - "python -m pip install -U pip"
   - "python -m pip install -r requirements-ci.txt"
-  - "python -m pip install -e pkg"
-  - "python -m pip install -e master[tls,test]"
-  - "python -m pip install -e worker"
-  - "python -m pip install coverage codecov"
   - "python -m pip list"
 
 build: false
 
 test_script:
   - "coverage run --rcfile=common/coveragerc -m twisted.trial --reporter=text --rterrors buildbot.test buildbot_worker.test"
+  - ps: |
+          echo $ENV:PYTHON
+          if ($env:PYTHON -imatch 'C:\\Python27') {
+            iex 'pyinstaller -F pyinstaller/buildbot-worker.spec'
+            iex 'appveyor PushArtifact dist\\buildbot-worker.exe'
+          }
 
 on_success:
   - "coverage xml --rcfile=common/coveragerc -o coverage.xml -i"
@@ -62,3 +60,16 @@ on_failure:
 # For detail see: https://www.appveyor.com/docs/how-to/rdp-to-build-worker
 #on_finish:
 #- ps: $blockRdp = $true; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
+deploy:
+  release: $(APPVEYOR_REPO_TAG_NAME)
+  description: 'windows binary for buildbot-worker'
+  provider: GitHub
+  auth_token:
+    secure: HQNlcAyaY9Jznbl77rfNatZG62Gg+qFY7emzj5n3Wu16fkr8dLlFNTKOJlfXO5uK
+  artifact: "buildbot-worker.exe"
+  draft: false
+  prerelease: false
+  on:
+    appveyor_repo_tag: true        # deploy on tag push only
+    PYTHON: "C:\\Python27"

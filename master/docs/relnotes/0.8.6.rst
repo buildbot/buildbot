@@ -102,7 +102,7 @@ Deprecations, Removals, and Non-Compatible Changes
   ``--revision`` when ``alwaysUseLatest`` is set to ``False`` when in the
   ``full`` mode. See :bug:`2194`
 
-* Master Side :bb:step:`SVN` Step paramater svnurl has been renamed repourl, to
+* Master Side :bb:step:`SVN` Step parameter svnurl has been renamed repourl, to
   be consistent with other master-side source steps.
 
 * Master Side :bb:step:`Mercurial` step parameter ``baseURL`` has been merged

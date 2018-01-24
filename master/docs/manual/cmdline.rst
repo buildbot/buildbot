@@ -153,7 +153,7 @@ cleanupdb
 
     buildbot cleanupdb {BASEDIR|CONFIG_FILE} [-q]
 
-This command is frontend for various database maintainance jobs:
+This command is frontend for various database maintenance jobs:
 
 - optimiselogs: This optimization groups logs into bigger chunks
   to apply higher level of compression.
@@ -358,7 +358,7 @@ Sending properties
 ##################
 
 You can set properties to send with your change using either the option `--property=key=value` option, which sets a single property, or the option `--properties=key1=value1,key2=value2...` option, which sets multiple comma-separated properties.
-Either of these can be sepcified multiple times.
+Either of these can be specified multiple times.
 Note that the option `--properties` option uses commas to split on properties, so if your property value itself contains a comma, you'll need to use the option `--property` option to set it.
 
 .. _try--diff:

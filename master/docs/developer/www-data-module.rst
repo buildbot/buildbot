@@ -32,7 +32,7 @@ Even a query to a single resource returns a collection.
 A collection is an Array subclass which has extra capabilities:
 
 - It listen to the event stream and is able to maintain itself up-to-date
-- It implements client side query in order to garantee up-to-date filtering, ordering and limiting queries.
+- It implements client side query in order to guarantee up-to-date filtering, ordering and limiting queries.
 - It has a fast access to each item it contains via its id.
 - It has its own event handlers so that client code can react when the Collection is changing
 
@@ -42,7 +42,7 @@ Each data type contain in a collection is wrapped in a javascript object.
 This allows to create some custom enhancements to the data model.
 For example the Change wrapper decodes the author name and email from the "author" field.
 
-Each wrapper class also has specific access method, which allow to access more data from the REST hierachy.
+Each wrapper class also has specific access method, which allow to access more data from the REST hierarchy.
 
 .. blockdiag::
 

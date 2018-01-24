@@ -135,7 +135,7 @@ class HTTPStep(BuildStep):
             r = yield self.session.request(**requestkwargs)
         except requests.exceptions.ConnectionError as e:
             log.addStderr(
-                'An exception occured while performing the request: %s' % e)
+                'An exception occurred while performing the request: %s' % e)
             self.finished(FAILURE)
             return
 

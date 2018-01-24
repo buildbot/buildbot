@@ -24,9 +24,10 @@ class DataQuery extends Factory
 
 
             isFiltered: (v) ->
-                cmp = false
+                cmpByOp = {}
                 for fieldAndOperator, value of @filters
                     [field, operator] = fieldAndOperator.split('__')
+                    cmp = false
                     switch operator
                         when 'ne' then cmp = v[field] != value
                         when 'lt' then cmp = v[field] <  value
@@ -35,11 +36,16 @@ class DataQuery extends Factory
                         when 'ge' then cmp = v[field] >= value
                         else cmp = v[field] == value or
                             (angular.isArray(v[field]) and value in v[field]) or
+                            (angular.isArray(value) and value.length == 0) or
+                            (angular.isArray(value) and v[field] in value) or
                             # private fields added by the data service
                             v["_#{field}"] == value or
-                            (angular.isArray(v["_#{field}"]) and value in v["_#{field}"])
-                    if !cmp then return false
-                 return true
+                            (angular.isArray(v["_#{field}"]) and value in v["_#{field}"]) or
+                            (angular.isArray(value) and v["_#{field}"] in value)
+                    cmpByOp[fieldAndOperator] = cmpByOp[fieldAndOperator] || cmp
+                for own op, v of cmpByOp
+                    return false if !v
+                return true
 
             filter: (array) ->
                 i = 0

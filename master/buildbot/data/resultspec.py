@@ -440,3 +440,10 @@ class ResultSpec(object):
             rv.offset, rv.total = offset, total
             rv.limit = limit
             return rv
+
+
+# a resultSpec which does not implement filtering in python (for tests)
+class OptimisedResultSpec(ResultSpec):
+
+    def apply(self, data):
+        return data

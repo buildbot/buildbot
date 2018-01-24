@@ -152,13 +152,15 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
 
     If ``obj`` is not None, return its string representation.
 
-.. py:function:: ascii2unicode(str):
+.. py:function:: bytes2unicode(bytestr, encoding='utf-8', errors='strict'):
 
-    :param str: string
-    :returns: string as unicode, assuming ascii
+    :param bytestr: bytes
+    :param encoding: unicode encoding to pass to :py:func:`str.encode`, default ``utf-8``.
+    :param errors: error handler to pass to :py:func:`str.encode`, default ``strict``.
+    :returns: string as unicode
 
-    This function is intended to implement automatic conversions for user convenience.
-    If given a bytestring, it returns the string decoded as ASCII (and will thus fail for any bytes 0x80 or higher).
+    This function is intended to convert bytes to unicode for user convenience.
+    If given a bytestring, it returns the string decoded using ``encoding``.
     If given a unicode string, it returns it directly.
 
 .. py:function:: string2boolean(str):
@@ -213,12 +215,12 @@ Several small utilities are available at the top-level :mod:`buildbot.util` pack
     :param maybe_list: list, tuple, byte string, or unicode
     :returns: unicode
 
-    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`ascii2unicode`.
+    If ``maybe_list`` is a list or tuple, join it with spaces, casting any strings into unicode using :py:func:`bytes2unicode`.
     This is useful for configuration parameters that may be strings or lists of strings.
 
 .. py:class:: Notifier():
 
-    This is a helper for firing mulitple deferreds with the same result.
+    This is a helper for firing multiple deferreds with the same result.
 
     .. py:method:: wait()
 
@@ -811,7 +813,7 @@ This module makes it easy to manipulate identifiers.
 
     :param maxLength: maximum length of the identifier
     :param str: string to coerce to an identifier
-    :returns: identifer of maximum length ``maxLength``
+    :returns: identifier of maximum length ``maxLength``
 
     Coerce a string (assuming ASCII for bytestrings) into an identifier.
     This method will replace any invalid characters with ``_`` and truncate to the given length.
@@ -820,7 +822,7 @@ This module makes it easy to manipulate identifiers.
 
     :param maxLength: maximum length of the identifier
     :param str: identifier to increment
-    :returns: identifer of maximum length ``maxLength``
+    :returns: identifier of maximum length ``maxLength``
     :raises: ValueError if no suitable identifier can be constructed
 
     "Increment" an identifier by adding a numeric suffix, while keeping the total length limited.
@@ -1056,6 +1058,34 @@ For example, a particular daily scheduler could be configured on multiple master
         We want to reuse the service started at master startup and just reconfigure it.
         This method handles necessary steps to detect if the config has changed, and eventually call self.reconfigService()
 
+    .. py:method:: renderSecrets(self, *args)
+
+        Utility method which renders a list of parameters which can be interpolated as a secret.
+        This is meant for services which have their secrets parameter configurable as positional arguments.
+        If there are several argument, the secrets are interpolated in parallel, and a list of result is returned via deferred.
+        If there is one argument, the result is directly returned.
+
+        .. note::
+
+            For keyword arguments, a simpler method is to use the ``secrets`` class variable, which items
+            will be automatically interpolated just before reconfiguration.
+
+        .. code-block:: python
+
+                def reconfigService(self, user, password, ...)
+                    user, password = yield self.renderSecrets(user, password)
+
+        .. code-block:: python
+
+                def reconfigService(self, token, ...)
+                    token = yield self.renderSecrets(token)
+
+        .. code-block:: python
+
+                secrets = ("user", "password")
+                def reconfigService(self, user=None, password=None, ...):
+                    # nothing to do user and password will be automatically interpolated
+
 
     Advanced users can derive this class to make their own services that run inside buildbot, and follow the application lifecycle of buildbot master.
 
@@ -1134,7 +1164,7 @@ For example, a particular daily scheduler could be configured on multiple master
         :param headers: The headers to pass to every requests for this url
         :param debug: log every requests and every response.
         :param verify: disable the SSL verification.
-        
+
         :returns: instance of :`HTTPClientService`
 
         Get an instance of the SharedService.

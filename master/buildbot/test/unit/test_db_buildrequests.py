@@ -319,6 +319,11 @@ class Tests(interfaces.InterfaceTests):
                                branch='branch_A', repository='repository_A'),
             fakedb.BuildsetSourceStamp(buildsetid=self.BSID + 3,
                                        sourcestampid=self.BSID + 3),
+            # multiple sourcestamps on the same buildset are possible
+            fakedb.SourceStamp(id=self.BSID + 4,
+                               branch='branch_B', repository='repository_B'),
+            fakedb.BuildsetSourceStamp(buildsetid=self.BSID + 3,
+                                       sourcestampid=self.BSID + 4),
         ])
         d.addCallback(lambda _:
                       self.db.buildrequests.getBuildRequests(**kwargs))
@@ -674,7 +679,7 @@ class Tests(interfaces.InterfaceTests):
 
 
 class TestFakeDB(unittest.TestCase, Tests):
-    # Compatiblity with some checks in the "real" tests.
+    # Compatibility with some checks in the "real" tests.
 
     class db_engine:
 

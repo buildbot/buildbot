@@ -76,7 +76,7 @@ Image Creation
 
 Our build master will need the name of an image to perform its builds.
 Each time a new build will be requested, the same base image will be used again and again, actually discarding the result of the previous build.
-If you need some persistant storage between builds, you can `use Volumes <setting up volumes>`_.
+If you need some persistent storage between builds, you can `use Volumes <setting up volumes>`_.
 
 Each Docker image has a single purpose.
 Our worker image will be running a buildbot worker.
@@ -204,13 +204,13 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``version``
     (optional, default to the highest version known by docker-py)
-    This will indicates wich API version must be used to communicate with Docker.
+    This will indicates which API version must be used to communicate with Docker.
 
 ``tls``
     (optional)
     This allow to use TLS when connecting with the Docker socket.
     This should be a ``docker.tls.TLSConfig`` object.
-    See `docker-py's own documentation <https://docker-py.readthedocs.io/en/1.10.4/tls/>`_ for more details on how to initialise this object.
+    See `docker-py's own documentation <https://docker-py.readthedocs.io/en/stable/tls.html>`_ for more details on how to initialise this object.
 
 ``followStartupLogs``
     (optional, defaults to false)
@@ -223,11 +223,15 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
 
 ``hostconfig``
     (optional)
-    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/1.10.4/hostconfig/>`_ for all the supported options.
+    Extra host configuration parameters passed as a dictionary used to create HostConfig object. See `docker-py's HostConfig documentation <https://docker-py.readthedocs.io/en/stable/api.html#docker.api.container.ContainerApiMixin.create_host_config>`_ for all the supported options.
 
 ``autopull``
     (optional, defaults to false)
     Automatically pulls image if requested image is not on docker host.
+
+``alwayPull``
+    (optional, defaults to false)
+    Always pulls image if autopull is set to true.
 
 Setting up Volumes
 ..................

@@ -16,8 +16,10 @@ class FakeServiceUsingSecrets(BuildbotService):
     name = "FakeServiceUsingSecrets"
     secrets = ["foo", "bar", "secret"]
 
-    def reconfigService(self, *args, **kwargs):
-        self.kwargs = kwargs
+    def reconfigService(self, foo=None, bar=None, secret=None, other=None):
+        self.foo = foo
+        self.bar = bar
+        self.secret = secret
 
     def returnRenderedSecrets(self, secretKey):
         try:

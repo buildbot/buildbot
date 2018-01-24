@@ -47,6 +47,7 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
     def reconfigService(self, base_url, user, password, key=None,
                         statusName=None, startDescription=None,
                         endDescription=None, verbose=False, **kwargs):
+        user, password = yield self.renderSecrets(user, password)
         yield http.HttpStatusPushBase.reconfigService(
             self, wantProperties=True, **kwargs)
         self.key = key or Interpolate('%(prop:buildername)s')
@@ -75,6 +76,8 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
     @defer.inlineCallbacks
     def send(self, build):
         props = Properties.fromDict(build['properties'])
+        props.master = self.master
+
         results = build['results']
         if build['complete']:
             state = SUCCESSFUL if results == SUCCESS else FAILED
@@ -136,6 +139,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
     @defer.inlineCallbacks
     def reconfigService(self, base_url, user, password, messageFormatter=None,
                         verbose=False, debug=None, verify=None, **kwargs):
+        user, password = yield self.renderSecrets(user, password)
         yield notifier.NotifierBase.reconfigService(
             self, messageFormatter=messageFormatter, watchedWorkers=None,
             messageFormatterMissingWorker=None, subject='', addLogs=False,

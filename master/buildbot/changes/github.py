@@ -24,7 +24,7 @@ from twisted.internet import defer
 
 from buildbot import config
 from buildbot.changes import base
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import httpclientservice
 from buildbot.util.logger import Logger
@@ -135,7 +135,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         else:
             self.pullrequest_filter = (lambda _: pullrequest_filter)
 
-        self.category = category if callable(category) else ascii2unicode(
+        self.category = category if callable(category) else bytes2unicode(
             category)
 
     def describe(self):
@@ -257,17 +257,17 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
                 # emit the change
                 yield self.master.data.updates.addChange(
-                    author=ascii2unicode(author),
-                    revision=ascii2unicode(revision),
-                    revlink=ascii2unicode(revlink),
+                    author=bytes2unicode(author),
+                    revision=bytes2unicode(revision),
+                    revlink=bytes2unicode(revlink),
                     comments=u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
                     format(prnumber, commits, 's'
                            if commits > 0 else '', title, comments),
                     when_timestamp=datetime2epoch(updated),
-                    branch=ascii2unicode(branch),
+                    branch=bytes2unicode(branch),
                     category=self.category,
                     project=project,
-                    repository=ascii2unicode(repo),
+                    repository=bytes2unicode(repo),
                     files=files,
                     properties=properties,
                     src=u'git')

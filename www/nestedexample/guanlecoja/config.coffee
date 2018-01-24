@@ -21,7 +21,7 @@ config =
         build: 'buildbot_nestedexample/static'
 
     ### ###########################################################################################
-    #   Bower dependancies configuration
+    #   Bower dependencies configuration
     ### ###########################################################################################
     bower:
         testdeps:

@@ -117,7 +117,7 @@ class DirectoryWriter(FileWriter):
         """
         Called by remote worker to state that no more data will be transferred
         """
-        # Make sure remote_close is called, otherwise atomic rename wont happen
+        # Make sure remote_close is called, otherwise atomic rename won't happen
         self.remote_close()
 
         # Map configured compression to a TarFile setting

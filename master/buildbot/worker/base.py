@@ -30,7 +30,7 @@ from buildbot.interfaces import IWorker
 from buildbot.process import metrics
 from buildbot.process.properties import Properties
 from buildbot.status.worker import WorkerStatus
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import deprecatedWorkerClassProperty
@@ -75,7 +75,7 @@ class AbstractWorker(service.BuildbotService, object):
                       can be used
         @type locks: dictionary
         """
-        self.name = name = ascii2unicode(name)
+        self.name = name = bytes2unicode(name)
 
         if properties is None:
             properties = {}
@@ -84,6 +84,9 @@ class AbstractWorker(service.BuildbotService, object):
 
         # protocol registration
         self.registration = None
+
+        self._graceful = False
+        self._paused = False
 
         # these are set when the service is started
         self.manager = None
@@ -224,6 +227,11 @@ class AbstractWorker(service.BuildbotService, object):
         self.workerid = yield self.master.data.updates.findWorkerId(
             self.name)
 
+        self.workerActionConsumer = yield self.master.mq.startConsuming(self.controlWorker,
+                                                                        ("control", "worker",
+                                                                        str(self.workerid),
+                                                                        None))
+
         yield self._getWorkerInfo()
         yield service.BuildbotService.startService(self)
 
@@ -292,6 +300,7 @@ class AbstractWorker(service.BuildbotService, object):
         if self.registration:
             yield self.registration.unregister()
             self.registration = None
+        self.workerActionConsumer.stopConsuming()
         self.stopMissingTimer()
         self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
@@ -347,9 +356,8 @@ class AbstractWorker(service.BuildbotService, object):
         # Builders that care about it.
 
         # Reset graceful shutdown status
-        self.worker_status.setGraceful(False)
-        # We want to know when the graceful shutdown flag changes
-        self.worker_status.addGracefulWatcher(self._gracefulChanged)
+        self._graceful = False
+
         self.conn = conn
         self._old_builder_list = None  # clear builder list before proceed
 
@@ -387,6 +395,7 @@ class AbstractWorker(service.BuildbotService, object):
         self.stopMissingTimer()
         yield self.updateWorker()
         yield self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def messageReceivedFromWorker(self):
         now = time.time()
@@ -398,7 +407,6 @@ class AbstractWorker(service.BuildbotService, object):
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
         self.conn = None
         self._old_builder_list = []
-        self.worker_status.removeGracefulWatcher(self._gracefulChanged)
         self.worker_status.setConnected(False)
         log.msg("Worker.detached(%s)" % (self.name,))
         self.releaseLocks()
@@ -475,9 +483,21 @@ class AbstractWorker(service.BuildbotService, object):
     def attachBuilder(self, builder):
         return builder.attached(self, self.worker_commands)
 
+    def controlWorker(self, key, params):
+        log.msg("worker {} wants to {}: {}".format(self.name, key[-1], params))
+        if key[-1] == "stop":
+            return self.shutdownRequested()
+        if key[-1] == "pause":
+            self.pause()
+        if key[-1] == "unpause":
+            self.unpause()
+        if key[-1] == "kill":
+            self.shutdown()
+
     def shutdownRequested(self):
-        log.msg("worker %s wants to shut down" % (self.name,))
-        self.worker_status.setGraceful(True)
+        self._graceful = True
+        self.maybeShutdown()
+        self.updateState()
 
     def addWorkerForBuilder(self, wfb):
         self.workerforbuilders[wfb.builder_name] = wfb
@@ -505,15 +525,9 @@ class AbstractWorker(service.BuildbotService, object):
         this worker will not start.
         """
 
-        if self.worker_status.isPaused():
-            return False
-
-        if self.quarantine_timer:
-            return False
-
-        # If we're waiting to shutdown gracefully, then we shouldn't
+        # If we're waiting to shutdown gracefully or paused, then we shouldn't
         # accept any new jobs.
-        if self.worker_status.getGraceful():
+        if self._graceful or self._paused:
             return False
 
         if self.max_builds:
@@ -527,10 +541,6 @@ class AbstractWorker(service.BuildbotService, object):
 
         return True
 
-    def _gracefulChanged(self, graceful):
-        """This is called when our graceful shutdown setting changes"""
-        self.maybeShutdown()
-
     @defer.inlineCallbacks
     def shutdown(self):
         """Shutdown the worker"""
@@ -543,7 +553,7 @@ class AbstractWorker(service.BuildbotService, object):
     def maybeShutdown(self):
         """Shut down this worker if it has been asked to shut down gracefully,
         and has no active builders."""
-        if not self.worker_status.getGraceful():
+        if not self._graceful:
             return
         active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
                            if wfb.isBusy()]
@@ -552,17 +562,22 @@ class AbstractWorker(service.BuildbotService, object):
         d = self.shutdown()
         d.addErrback(log.err, 'error while shutting down worker')
 
+    def updateState(self):
+        self.master.data.updates.setWorkerState(self.workerid, self._paused, self._graceful)
+
     def pause(self):
         """Stop running new builds on the worker."""
-        self.worker_status.setPaused(True)
+        self._paused = True
+        self.updateState()
 
     def unpause(self):
         """Restart running new builds on the worker."""
-        self.worker_status.setPaused(False)
+        self._paused = False
         self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.updateState()
 
     def isPaused(self):
-        return self.worker_status.isPaused()
+        return self._paused
 
     def resetQuarantine(self):
         self.quarantine_timeout = self.quarantine_initial_timeout
@@ -570,6 +585,8 @@ class AbstractWorker(service.BuildbotService, object):
     def putInQuarantine(self):
         if self.quarantine_timer:  # already in quarantine
             return
+
+        self.pause()
         self.quarantine_timer = self.master.reactor.callLater(
             self.quarantine_timeout, self.exitQuarantine)
         log.msg("{} has been put in quarantine for {}s".format(
@@ -582,12 +599,13 @@ class AbstractWorker(service.BuildbotService, object):
 
     def exitQuarantine(self):
         self.quarantine_timer = None
-        self.botmaster.maybeStartBuildsForWorker(self.name)
+        self.unpause()
 
     def stopQuarantineTimer(self):
         if self.quarantine_timer is not None:
             self.quarantine_timer.cancel()
             self.quarantine_timer = None
+            self.unpause()
 
 
 class Worker(AbstractWorker):

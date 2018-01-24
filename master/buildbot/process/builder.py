@@ -34,7 +34,7 @@ from buildbot.process.build import Build
 from buildbot.process.properties import Properties
 from buildbot.process.results import RETRY
 from buildbot.util import service as util_service
-from buildbot.util import ascii2unicode
+from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
@@ -136,7 +136,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
     def getBuilderIdForName(self, name):
         # buildbot.config should ensure this is already unicode, but it doesn't
         # hurt to check again
-        name = ascii2unicode(name)
+        name = bytes2unicode(name)
         return self.master.data.updates.findBuilderId(name)
 
     def getBuilderId(self):
@@ -163,10 +163,10 @@ class Builder(util_service.ReconfigurableServiceMixin,
         bldrid = yield self.getBuilderId()
         unclaimed = yield self.master.data.get(
             ('builders', bldrid, 'buildrequests'),
-            [resultspec.Filter('claimed', 'eq', [False])])
+            [resultspec.Filter('claimed', 'eq', [False])],
+            order=['submitted_at'], limit=1)
         if unclaimed:
-            unclaimed = sorted([brd['submitted_at'] for brd in unclaimed])
-            defer.returnValue(unclaimed[0])
+            defer.returnValue(unclaimed[0]['submitted_at'])
 
     @defer.inlineCallbacks
     def getNewestCompleteTime(self):

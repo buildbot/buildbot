@@ -126,6 +126,7 @@ def launch(nodaemon):
     # spawn twistd, since spawning processes correctly is a real hassle
     # on windows.
     from twisted.python.runtime import platformType
+    from twisted.scripts.twistd import run
     argv = ["twistd",
             "--no_save",
             "--logfile=twistd.log",  # windows doesn't use the same default
@@ -137,18 +138,4 @@ def launch(nodaemon):
             argv.extend(["--pidfile="])
 
     sys.argv = argv
-
-    # this is copied from bin/twistd. twisted-2.0.0 through 2.4.0 use
-    # _twistw.run . Twisted-2.5.0 and later use twistd.run, even for
-    # windows.
-    from twisted import __version__
-    major, minor, ignored = __version__.split(".", 2)
-    major = int(major)
-    minor = int(minor)
-    if (platformType == "win32" and (major == 2 and minor < 5)):
-        from twisted.scripts import _twistw
-        run = _twistw.run
-    else:
-        from twisted.scripts import twistd
-        run = twistd.run
     run()

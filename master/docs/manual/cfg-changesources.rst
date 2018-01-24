@@ -396,6 +396,7 @@ The :bb:chsrc:`PBChangeSource` is created with the following arguments.
 
 ``passwd``
     The password for the connection - defaults to ``changepw``.
+    Can be a :ref:`Secret`.
     Do not use this default on a publicly exposed port!
 
 ``prefix``
@@ -586,9 +587,11 @@ It can watch a single branch or multiple branches.
     An optional string parameter.
     If set, the option `--user` argument will be added to all :command:`svn` commands.
     Use this if you have to authenticate to the svn server before you can do :command:`svn info` or :command:`svn log` commands.
+    Can be a :ref:`Secret`.
 
 ``svnpasswd``
     Like ``svnuser``, this will cause a option `--password` argument to be passed to all :command:`svn` commands.
+    Can be a :ref:`Secret`.
 
 ``pollInterval``
     How often to poll, in seconds.
@@ -875,7 +878,7 @@ GitHubPullrequestPoller
 
 .. py:class:: buildbot.changes.github.GitHubPullrequestPoller
 
-This :bb:chsrc:`GitHubPullrequestPoller` periodically polls the GitHub API for new or updated pull requests. The `author`, `revision`, `revlink`, `branch` and `files` fields in the recorded changes are populated with information extracted from the pull request. This allows to filter for certain changes in files and create a blamelist based on the authors in the GitHub pull request. 
+This :bb:chsrc:`GitHubPullrequestPoller` periodically polls the GitHub API for new or updated pull requests. The `author`, `revision`, `revlink`, `branch` and `files` fields in the recorded changes are populated with information extracted from the pull request. This allows to filter for certain changes in files and create a blamelist based on the authors in the GitHub pull request.
 
 The :bb:chsrc:`GitHubPullrequestPoller` accepts the following arguments:
 

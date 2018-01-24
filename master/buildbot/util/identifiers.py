@@ -42,8 +42,8 @@ def forceIdentifier(maxLength, str):
     if not isinstance(str, string_types):
         raise TypeError("%r cannot be coerced to an identifier" % (str,))
 
-    # usually ascii2unicode can handle it
-    str = util.ascii2unicode(str)
+    # usually bytes2unicode can handle it
+    str = util.bytes2unicode(str)
     if isIdentifier(maxLength, str):
         return str
 

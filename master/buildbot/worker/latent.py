@@ -272,7 +272,7 @@ class AbstractLatentWorker(AbstractWorker):
         self.stopMissingTimer()
 
         # if master is stopping, we will never achieve consistent state, as workermanager
-        # wont accept new connection
+        # won't accept new connection
         if self._substantiation_notifier and self.master.running:
             log.msg("Weird: Got request to stop before started. Allowing "
                     "worker to start cleanly to avoid inconsistent state")

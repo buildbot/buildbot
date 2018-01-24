@@ -28,6 +28,7 @@ from twisted.trial import unittest
 
 from buildbot.config import ConfigErrors
 from buildbot.process import properties
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import mail
 from buildbot.reporters.mail import ESMTPSenderFactory
@@ -323,6 +324,24 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
 
         mn, builds = yield self.do_test_sendMessage()
 
+        self.assertEqual(1, len(fakereactor.method_calls))
+        self.assertIn(('connectTCP', ('localhost', 25, None), {}),
+                      fakereactor.method_calls)
+
+    @defer.inlineCallbacks
+    def test_sendMessageWithInterpolatedConfig(self):
+        """Test that the secrets parameters are properly interpolated at reconfig stage
+
+        Note: in the unit test, we don't test that it is interpolated with secret.
+        That would require setting up secret manager.
+        We just test that the interpolation works.
+        """
+        fakereactor = Mock()
+        self.patch(mail, 'reactor', fakereactor)
+        mn, builds = yield self.do_test_sendMessage(smtpUser=Interpolate("u$er"), smtpPassword=Interpolate("pa$$word"))
+
+        self.assertEqual(mn.smtpUser, "u$er")
+        self.assertEqual(mn.smtpPassword, "pa$$word")
         self.assertEqual(1, len(fakereactor.method_calls))
         self.assertIn(('connectTCP', ('localhost', 25, None), {}),
                       fakereactor.method_calls)

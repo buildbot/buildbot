@@ -10,6 +10,159 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``0.9.15.post1`` ( ``2018-01-07`` )
+============================================
+
+Bug fixes
+---------
+
+- Fix worker reconnection fails (:issue:`3875`, :issue:`3876`)
+- Fix umask set to 0 when using LocalWorker (:issue:`3878`)
+- Fix Buildbot reconfig, when badge plugin is installed (:issue:`3879`)
+- Fix (:issue:`3865`) so that now
+  :py:class:`~buildbot.changes.svnpoller.SVNPoller` works with paths that
+  contain valid UTF-8 characters which are not ASCII.
+
+
+Buildbot ``0.9.15`` ( ``2018-01-02`` )
+======================================
+
+Bug fixes
+---------
+
+- Fix builder page not showing any build (:issue:`3820`)
+- Fix double Workers button in the menu. (:issue:`3818`)
+- Fix bad icons in the worker action dialog.
+- Fix url arguments in Buildbot :ref:`Badges` for python3.
+- Upgrading to `guanlecoja-ui` version 1.8.0, fixing two issues. Fixed issue
+  where the console view would jump to the top of page when opening the build
+  summary dialog (:issue:`3657`). Also improved sidebar behaviour by remembering
+  previous pinned vs. collapsed state.
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker`, where Buildbot can kill running
+  workers by mistake based on the form the worker name (:issue:`3800`).
+- Fixes issue with Buildbot :bb:worker:`DockerLatentWorker` not reaping zombies process within its container environment.
+- Update requirement text to use the modern "docker" module from the older
+  "docker-py" module name
+- When multiple :bb:cfg:`reporter` or :bb:cfg:`services` are configured with
+  the same name, an error is now displayed instead of silently discarding all
+  but the last one :issue:`3813`.
+- Fixed exception when using :py:class:`buildbot.www.auth.CustomAuth`
+
+Features
+--------
+
+- New Buildbot SVG icons for web UI. The web UI now uses a colored favicon
+  according to build results (:issue:`3785`).
+- ``paused`` and ``graceful`` :ref:`Worker-states` are now stored in the
+  database.
+- :ref:`Worker-states` are now displayed in the web UI.
+- Quarantine timers is now using the ``paused`` worker state.
+- Quarantine timer is now enabled when a build finish on ``EXCEPTION`` state.
+- Standalone binaries for buildbot-worker package are now published for windows and linux (``amd64``).
+  This allows to run a buildbot-worker without having a python environment.
+- New ``buildbot-worker create-worker --maxretries`` for :ref:`Latent-Workers`
+  to quit if the master is or becomes unreachable.
+- Badges can now display `running` as status.
+- The database schema now supports cascade deletes for all objects instead of
+  raising an error when deleting a record which has other records pointing to
+  it via foreign keys.
+- Buildbot can properly find its version if installed from a git archive tarball generated from a tag.
+- Enhanced the test suite to add worker/master protocol interoperability tests between python3 and python2.
+
+Deprecations and Removals
+-------------------------
+
+- buildbot.util.ascii2unicode() is removed. buildbot.util.bytes2unicode()
+  should be used instead.
+
+
+Buildbot ``0.9.14`` ( ``2017-12-08`` )
+======================================
+
+Bug fixes
+---------
+
+- Compile step now properly takes the decodeRC parameter in account
+  (:issue:`3774`)
+- Fix duplicate build requests results in
+  :py:class:`~buildbot.db.buildrequests.BuildRequestsConnectorComponent` when
+  querying the database (:issue:`3712`).
+- :py:class:`~buildbot.changes.gitpoller.GitPoller` now accepts git branch
+  names with UTF-8 characters (:issue:`3769`).
+- Fixed inconsistent use of `pointer` style mouse cursor by removing it from
+  the `.label` css rule and instead creating a new `.clickable` css rule which
+  is used only in places which are clickable and would not otherwise
+  automatically get the `pointer` icon, for example it is not needed for
+  hyper-links. (:issue:`3795`).
+- Rebuilding with the same revision now takes new change properties into
+  account instead of re-using the original build change properties
+  (:issue:`3701`).
+- Worker authentication is now delayed via a DeferredLock until Buildbot
+  configuration is finished. This fixes UnauthorizedLogin errors during
+  buildbot restart (:issue:`3462`).
+- Fixes python3 encoding issues with Windows Service (:issue:`3796`)
+
+Features
+--------
+
+- new :ref`badges` plugin which reimplement the buildbot eight png badge
+  system.
+- In progress worker control API. Worker can now be stopped and paused using the UI.
+  Note that there is no UI yet to look the status of those actions (:issue:`3429`).
+- Make maximum number of builds fetched on the builders page configurable.
+- Include `context` in the log message for `GitHubStatusPush`
+- On 'Builders' page reload builds when tags change.
+- Give reporters access to master single in renderables. This allows access to
+  build logs amongst other things
+- Added possibility to check www user credentials with a custom class.
+
+
+Buildbot ``0.9.13`` ( ``2017-11-07`` )
+======================================
+
+Deprecations and Removals
+-------------------------
+
+Following will help Buildbot to leverage new feature of twisted to implement important features like worker protocol encryption.
+
+- The ``buildbot`` and ``buildbot-worker`` packages now requires Python 2.7 or
+  Python 3.4+ -- Python 2.6 is no longer supported.
+- ``buildbot`` and ``buildbot-worker`` packages now required Twisted versions
+  >= 16.1.0. Earlier versions of Twisted are not supported.
+
+Bug fixes
+---------
+
+- Fix Console View forced builds stacking at top (issue:`3461`)
+- Improve buildrequest distributor to ensure all builders are processed. With
+  previous version, builder list could be re-prioritized, while running the
+  distributor, meaning some builders would never be run in case of master high
+  load. (:issue:`3661`)
+- Improve ``getOldestRequestTime`` function of buildrequest distributor to do
+  sorting and paging in the database layer (:issue:`3661`).
+- Arguments passed to GitLab push notifications now work with Python 3 (:issue:`3720`).
+- Web hooks change sources which use twisted.web.http.Request have been fixed to use bytes, not
+  native strings. This ensures web hooks work on Python 3. Please report any issues on web hooks in python3, as it is hard for us to test end to end.
+- Fixed null value of steps and logs in reporter HttpStatusPush api. Fixes
+  (:issue:`3180`)
+- EC2LatentBuilder now correctly sets tags on spot instances (:issue:`3739`).
+- Fixed operation of the Try scheduler for a code checked out from Subversion.
+- Fix buildbot worker startup when running as a windows service
+
+Features
+--------
+
+- Make parameters for
+  :py:class:`~buildbot.steps.shell.WarningCountingShellCommand` renderable.
+  These are `suppressionList`, `warningPattern`, `directoryEnterPattern`,
+  `directoryLeavePattern` and `maxWarnCount`.
+- :py:class:`~buildbot.www.hooks.github.GitHubEventHandler` now supports
+  authentication for GitHub instances that do not allow anonymous access
+- Added support for renderable builder locks. Previously only steps could have
+  renderable locks.
+- Added flag to Docker Latent Worker to always pull images
+
+
 Buildbot ``0.9.12.post1`` ( ``2017-10-10`` )
 ============================================
 

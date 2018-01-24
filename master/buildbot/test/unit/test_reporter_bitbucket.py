@@ -22,6 +22,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.bitbucket import _BASE_URL
@@ -51,7 +52,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
             self.master, self,
             _OAUTH_URL, auth=('key', 'secret'),
             debug=None, verify=None)
-        self.bsp = bsp = BitbucketStatusPush('key', 'secret')
+        self.bsp = bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
         yield bsp.setServiceParent(self.master)
         yield bsp.startService()
 

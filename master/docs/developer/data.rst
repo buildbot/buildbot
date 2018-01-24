@@ -411,7 +411,7 @@ Returning to the pub example::
 
 Update methods should be documented in :src:`master/docs/developer/data.rst`.
 They should be thoroughly tested with unit tests.
-They should have a fake implentation in :src:`master/buildbot/test/fake/fakedata.py`.
+They should have a fake implementation in :src:`master/buildbot/test/fake/fakedata.py`.
 That fake implementation should be tested to match the real implementation in :src:`master/buildbot/test/unit/test_data_connector.py`.
 
 .. _Adding-Fields-to-Resource-Types:

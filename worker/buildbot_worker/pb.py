@@ -69,7 +69,8 @@ class BotFactory(ReconnectingPBClientFactory):
     # for tests
     _reactor = reactor
 
-    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
+    def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay,
+                 maxRetries=None, maxRetriesCallback=None):
         ReconnectingPBClientFactory.__init__(self)
         self.maxDelay = maxDelay
         self.keepaliveInterval = keepaliveInterval
@@ -77,6 +78,16 @@ class BotFactory(ReconnectingPBClientFactory):
         # only here to print useful error messages
         self.buildmaster_host = buildmaster_host
         self.port = port
+        self.maxRetries = maxRetries
+        self.maxRetriesCallback = maxRetriesCallback
+
+    def retry(self, connector=None):
+        ReconnectingPBClientFactory.retry(self, connector=connector)
+        log.msg("Retry attempt {}/{}".format(
+            self.retries, self.maxRetries if self.maxRetries is not None else "inf"))
+        if self.maxRetries is not None and self.retries > self.maxRetries and self.maxRetriesCallback:
+            log.msg("Giving up retrying!")
+            self.maxRetriesCallback()
 
     def startedConnecting(self, connector):
         log.msg("Connecting to {0}:{1}".format(self.buildmaster_host, self.port))
@@ -156,7 +167,7 @@ class Worker(WorkerBase, service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=300, numcpus=None, unicode_encoding=None,
-                 allow_shutdown=None):
+                 allow_shutdown=None, maxRetries=None):
 
         # note: keepaliveTimeout is ignored, but preserved here for
         # backward-compatibility
@@ -174,6 +185,7 @@ class Worker(WorkerBase, service.MultiService):
 
         self.numcpus = numcpus
         self.shutdown_loop = None
+        self.maxRetries = maxRetries
 
         if allow_shutdown == 'signal':
             if not hasattr(signal, 'SIGHUP'):
@@ -183,7 +195,8 @@ class Worker(WorkerBase, service.MultiService):
             self.shutdown_mtime = 0
 
         self.allow_shutdown = allow_shutdown
-        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
+        bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay,
+            maxRetries=self.maxRetries, maxRetriesCallback=self.gracefulShutdown)
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
         self.connection = c = internet.TCPClient(
@@ -193,6 +206,8 @@ class Worker(WorkerBase, service.MultiService):
 
     def _hung_connection(self):
         log.msg("connection attempt timed out (is the port number correct?)")
+        if self.maxRetries is not None:
+            self.gracefulShutdown()
 
     def startService(self):
         WorkerBase.startService(self)

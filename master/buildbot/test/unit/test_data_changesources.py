@@ -222,7 +222,7 @@ class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
         except RuntimeError:
             pass
         else:
-            self.fail("The RuntimeError did not propogate")
+            self.fail("The RuntimeError did not propagate")
 
     @defer.inlineCallbacks
     def test__masterDeactivated(self):

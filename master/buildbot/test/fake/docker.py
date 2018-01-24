@@ -27,8 +27,10 @@ class Client(object):
         self.call_args_create_container = []
         self.call_args_create_host_config = []
         self.called_class_name = None
-        self._images = [{'RepoTags': ['busybox:latest', 'worker:latest']}]
-        self._pullable = ['alpine:latest']
+        self._images = [
+            {'RepoTags': ['busybox:latest', 'worker:latest', 'tester:latest']}]
+        self._pullable = ['alpine:latest', 'tester:latest']
+        self._pullCount = 0
         self._containers = {}
 
     def images(self):
@@ -54,13 +56,24 @@ class Client(object):
 
     def pull(self, image, *args, **kwargs):
         if image in self._pullable:
+            self._pullCount += 1
             self._images.append({'RepoTags': [image]})
 
     def containers(self, filters=None, *args, **kwargs):
         if filters is not None:
+            if 'existing' in filters.get('name', ''):
+                self.create_container(
+                    image='busybox:latest',
+                    name="buildbot-existing-87de7e"
+                )
+                self.create_container(
+                    image='busybox:latest',
+                    name="buildbot-existing-87de7ef"
+                )
+
             return [
                 c for c in self._containers.values()
-                if c['name'] == filters['name']
+                if c['name'].startswith(filters['name'])
             ]
         return self._containers.values()
 
@@ -85,7 +98,8 @@ class Client(object):
             'started': False,
             'image': image,
             'Id': ret['Id'],
-            'name': name
+            'name': name,  # docker does not return this
+            'Names': [name]  # this what docker returns
         }
         return ret
 

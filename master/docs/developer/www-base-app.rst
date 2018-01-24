@@ -31,14 +31,14 @@ On top of Angular we use nodeJS tools to ease development
   In production mode, the build system minifies html, css and js, so that the final app is only 3 files to download (+img)
 * Alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
 * `coffeescript <http://coffeescript.org/>`_, a very expressive language, preventing some of the major traps of JS
-* `pug template langage  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
+* `pug template language  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
 * `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 Modules we may or may not want to include:
 
 * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
-* `ngGrid <https://angular-ui.github.io/ui-grid/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
+* `Angular UI Grid <http://ui-grid.info/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
 * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
 * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
   Having it inside allows for all kind of hacks we may want to avoid
@@ -83,6 +83,10 @@ The entrypoint containing a Resource, nothing forbids plugin writers to add more
 For that, a reference to the master singleton is provided in ``master`` attribute of the Application entrypoint.
 You are even not restricted to twisted, and could even `load a wsgi application using flask, django, etc <http://twistedmatrix.com/documents/13.1.0/web/howto/web-in-60/wsgi.html>`_.
 
+It is also possible to make a web plugin which only adds http endpoint, and has no javascript UI.
+For that the ``Application`` endpoint object should have ``ui=False`` argument.
+You can look at the :src:`www/badges` plugin for an example of a ui-less plugin.
+
 .. _Routing:
 
 Routing
@@ -99,7 +103,7 @@ Typically, a route regitration will look like following example.
 
     # ng-classify declaration. Declares a config class
     class State extends Config
-        # Dependancy injection: we inject $stateProvider and glMenuServiceProvider
+        # Dependency injection: we inject $stateProvider and glMenuServiceProvider
         constructor: ($stateProvider, glMenuServiceProvider) ->
 
             # Name of the state

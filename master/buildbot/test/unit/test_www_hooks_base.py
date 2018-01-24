@@ -86,4 +86,4 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
         self.assertEqual(change['repository'], payload.get(b'_repository'))
 
     def test_base_with_no_change(self):
-        self._check_base_with_change({'repository': 'foo'})
+        self._check_base_with_change({b'repository': b'foo'})

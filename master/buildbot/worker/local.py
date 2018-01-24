@@ -26,8 +26,9 @@ from buildbot.worker.base import Worker
 
 class LocalWorker(Worker):
 
-    def checkConfig(self, name, workdir=None, usePty=False, **kwargs):
-        Worker.checkConfig(self, name, None, **kwargs)
+    def checkConfig(self, name, workdir=None, **kwargs):
+        kwargs['password'] = None
+        Worker.checkConfig(self, name, **kwargs)
         self.LocalWorkerFactory = None
         try:
             # importing here to avoid dependency on buildbot worker package
@@ -39,8 +40,9 @@ class LocalWorker(Worker):
         self.remote_worker = None
 
     @defer.inlineCallbacks
-    def reconfigService(self, name, workdir=None, usePty=False, **kwargs):
-        Worker.reconfigService(self, name, None, **kwargs)
+    def reconfigService(self, name, workdir=None, **kwargs):
+        kwargs['password'] = None
+        Worker.reconfigService(self, name, **kwargs)
         if workdir is None:
             workdir = name
         workdir = os.path.abspath(
@@ -52,9 +54,8 @@ class LocalWorker(Worker):
             # create the actual worker as a child service
             # we only create at reconfig, to avoid polluting memory in case of
             # reconfig
-            self.remote_worker = self.LocalWorkerFactory(name, workdir, usePty)
+            self.remote_worker = self.LocalWorkerFactory(name, workdir)
             yield self.remote_worker.setServiceParent(self)
         else:
             # The case of a reconfig, we forward the parameters
             self.remote_worker.bot.basedir = workdir
-            self.remote_worker.usePty = usePty

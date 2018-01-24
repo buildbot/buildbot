@@ -234,6 +234,53 @@ types:
                 get:
                     is:
                     - bbget: {bbtype: worker}
+
+                /actions/stop:
+                    post:
+                        description: |
+                            gracefully shutdown one worker.
+                        body:
+                            application/json:
+                                properties:
+                                    reason:
+                                        type: string
+                                        required: false
+                                        description: The reason why the worker was stopped
+
+                /actions/kill:
+                    post:
+                        description: |
+                            forcefully shutdown one worker.
+                        body:
+                            application/json:
+                                properties:
+                                    reason:
+                                        type: string
+                                        required: false
+                                        description: The reason why the worker was stopped
+
+                /actions/pause:
+                    post:
+                        description: |
+                            Pause one worker. The worker will stop taking new build.
+                        body:
+                            application/json:
+                                properties:
+                                    reason:
+                                        type: string
+                                        required: false
+                                        description: The reason why the worker was paused
+                /actions/unpause:
+                    post:
+                        description: |
+                            Unpause one worker. The worker will re-start taking builds.
+                        body:
+                            application/json:
+                                properties:
+                                    reason:
+                                        type: string
+                                        required: false
+                                        description: The reason why the worker was un-paused
         /masters:
             description: |
                 This path selects all masters supporting a given builder

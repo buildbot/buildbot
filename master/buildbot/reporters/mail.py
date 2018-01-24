@@ -85,6 +85,7 @@ class Domain(util.ComparableMixin):
 
 @implementer(interfaces.IEmailSender)
 class MailNotifier(NotifierBase):
+    secrets = ["smtpUser", "smtpPassword"]
 
     def checkConfig(self, fromaddr, mode=("failing", "passing", "warnings"),
                     tags=None, builders=None, addLogs=False,
@@ -236,6 +237,7 @@ class MailNotifier(NotifierBase):
             extraHeaders = self.extraHeaders
             if len(builds) == 1:
                 props = Properties.fromDict(builds[0]['properties'])
+                props.master = self.master
                 extraHeaders = yield props.render(extraHeaders)
 
             for k, v in iteritems(extraHeaders):

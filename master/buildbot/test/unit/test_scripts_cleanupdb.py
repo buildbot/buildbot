@@ -174,7 +174,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
 
     def assertDictAlmostEqual(self, d1, d2):
         # The test shows each methods return different size
-        # but we still make a fuzzy comparaison to resist if underlying libraries
+        # but we still make a fuzzy comparison to resist if underlying libraries
         # improve efficiency
         self.assertEqual(len(d1), len(d2))
         for k in d2.keys():

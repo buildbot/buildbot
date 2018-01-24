@@ -17,9 +17,14 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import re
+from abc import ABCMeta
+from abc import abstractmethod
 
 from twisted.cred.checkers import FilePasswordDB
+from twisted.cred.checkers import ICredentialsChecker
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
+from twisted.cred.credentials import IUsernamePassword
+from twisted.cred.error import UnauthorizedLogin
 from twisted.cred.portal import IRealm
 from twisted.cred.portal import Portal
 from twisted.internet import defer
@@ -30,7 +35,7 @@ from twisted.web.guard import HTTPAuthSessionWrapper
 from twisted.web.resource import IResource
 from zope.interface import implementer
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import config
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
@@ -181,8 +186,31 @@ class UserPasswordAuth(TwistedICredAuthBase):
             **kwargs)
 
 
+@implementer(ICredentialsChecker)
+class CustomAuth(TwistedICredAuthBase):
+    __metaclass__ = ABCMeta
+    credentialInterfaces = [IUsernamePassword]
+
+    def __init__(self, **kwargs):
+        TwistedICredAuthBase.__init__(
+            self,
+            [BasicCredentialFactory(b"buildbot")],
+            [self],
+            **kwargs)
+
+    def requestAvatarId(self, cred):
+        if self.check_credentials(cred.username, cred.password):
+            return defer.succeed(cred.username)
+        return defer.fail(UnauthorizedLogin())
+
+    @abstractmethod
+    def check_credentials(username, password):
+        return False
+
+
 def _redirect(master, request):
-    url = request.args.get("redirect", ["/"])[0]
+    url = request.args.get(b"redirect", [b"/"])[0]
+    url = bytes2unicode(url)
     return resource.Redirect(master.config.buildbotURL + "#" + url)
 
 
@@ -197,7 +225,7 @@ class PreAuthenticatedLoginResource(LoginResource):
     @defer.inlineCallbacks
     def renderLogin(self, request):
         session = request.getSession()
-        session.user_info = dict(username=bytes2NativeString(self.username))
+        session.user_info = dict(username=bytes2unicode(self.username))
         yield self.master.www.auth.updateUserInfo(request)
         raise _redirect(self.master, request)
 

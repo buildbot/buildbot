@@ -115,6 +115,8 @@ class CreateWorkerOptions(MakerBase):
          "Use --umask=0o22 to be world-readable"],
         ["maxdelay", None, 300,
          "Maximum time between connection attempts"],
+        ["maxretries", None, 'None',
+         "Maximum number of retries before worker shutdown"],
         ["numcpus", None, "None",
          "Number of available cpus to use on a build. "],
         ["log-size", "s", "10000000",
@@ -159,12 +161,12 @@ class CreateWorkerOptions(MakerBase):
             master, port = master_arg.split(":")
 
         if len(master) < 1:
-            raise usage.UsageError("invalid <master> argument '{0}'".format(
+            raise usage.UsageError("invalid <master> argument '{}'".format(
                                    master_arg))
         try:
             port = int(port)
         except ValueError:
-            raise usage.UsageError("invalid master port '{0}', "
+            raise usage.UsageError("invalid master port '{}', "
                                    "needs to be a number".format(port))
 
         return master, port
@@ -190,23 +192,14 @@ class CreateWorkerOptions(MakerBase):
             try:
                 self[argument] = int(self[argument])
             except ValueError:
-                raise usage.UsageError("{0} parameter needs to be a number".format(
+                raise usage.UsageError("{} parameter needs to be a number".format(
                                        argument))
 
-        if not re.match(r'^\d+$', self['log-count']) and \
-                self['log-count'] != 'None':
-            raise usage.UsageError("log-count parameter needs to be a number"
-                                   " or None")
-
-        if not re.match(r'^(0o)?\d+$', self['umask']) and \
-                self['umask'] != 'None':
-            raise usage.UsageError("umask parameter needs to be a number"
-                                   " or None")
-
-        if not re.match(r'^\d+$', self['numcpus']) and \
-                self['numcpus'] != 'None':
-            raise usage.UsageError("numcpus parameter needs to be a number"
-                                   " or None")
+        for argument in ["log-count", "maxretries", "umask", "numcpus"]:
+            if not re.match(r'^(0o)?\d+$', self[argument]) and \
+                    self[argument] != 'None':
+                raise usage.UsageError("{} parameter needs to be a number"
+                                    " or None".format(argument))
 
         if self['allow-shutdown'] not in [None, 'signal', 'file']:
             raise usage.UsageError("allow-shutdown needs to be one of"
@@ -228,7 +221,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        print("worker version: {0}".format(buildbot_worker.version))
+        print("worker version: {}".format(buildbot_worker.version))
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -244,7 +237,7 @@ def run():
     try:
         config.parseOptions()
     except usage.error as e:
-        print("{0}:  {1}".format(sys.argv[0], e))
+        print("{}:  {}".format(sys.argv[0], e))
         print()
         c = getattr(config, 'subOptions', config)
         print(str(c))

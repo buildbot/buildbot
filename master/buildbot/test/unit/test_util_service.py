@@ -25,6 +25,7 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.util import service
 
 
@@ -717,6 +718,28 @@ class BuildbotServiceManager(unittest.TestCase):
                 'name': 'basic'}],
             'name': 'services'})
 
+    @defer.inlineCallbacks
+    def testRenderSecrets(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test = yield service.renderSecrets(Interpolate('test_string'))
+        self.assertEqual(test, 'test_string')
+
+    @defer.inlineCallbacks
+    def testRenderSecrets2Args(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test, test2 = yield service.renderSecrets(Interpolate('test_string'), 'ok_for_non_renderable')
+        self.assertEqual(test, 'test_string')
+        self.assertEqual(test2, 'ok_for_non_renderable')
+
+    @defer.inlineCallbacks
+    def testRenderSecretsWithTuple(self):
+        yield self.prepareService()
+        service = self.manager.namedServices['basic']
+        test = yield service.renderSecrets(('user', Interpolate('test_string')))
+        self.assertEqual(test, ('user', 'test_string'))
+
 
 class UnderTestSharedService(service.SharedService):
     def __init__(self, arg1=None):
@@ -735,14 +758,17 @@ class UnderTestDependentService(service.AsyncService):
 class SharedService(unittest.SynchronousTestCase):
     def test_bad_constructor(self):
         parent = service.AsyncMultiService()
-        self.failureResultOf(UnderTestSharedService.getService(parent, arg2="foo"))
+        self.failureResultOf(
+            UnderTestSharedService.getService(parent, arg2="foo"))
 
     def test_creation(self):
         parent = service.AsyncMultiService()
         r = self.successResultOf(UnderTestSharedService.getService(parent))
         r2 = self.successResultOf(UnderTestSharedService.getService(parent))
-        r3 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
-        r4 = self.successResultOf(UnderTestSharedService.getService(parent, "arg1"))
+        r3 = self.successResultOf(
+            UnderTestSharedService.getService(parent, "arg1"))
+        r4 = self.successResultOf(
+            UnderTestSharedService.getService(parent, "arg1"))
         self.assertIdentical(r, r2)
         self.assertNotIdentical(r, r3)
         self.assertIdentical(r3, r4)

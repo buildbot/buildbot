@@ -226,6 +226,30 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         id, name = self.successResultOf(bs.start_instance(self.build))
         self.assertEqual(name, 'alpine:latest')
 
+    def test_start_instance_image_pull(self):
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True)
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'tester:latest')
+        client = docker.Client.latest
+        self.assertEqual(client._pullCount, 0)
+
+    def test_start_instance_image_alwayspull(self):
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=True, alwaysPull=True)
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'tester:latest')
+        client = docker.Client.latest
+        self.assertEqual(client._pullCount, 1)
+
+    def test_start_instance_image_noauto_alwayspull(self):
+        bs = self.setupWorker(
+            'bot', 'pass', 'tcp://1234:2375', 'tester:latest', autopull=False, alwaysPull=True)
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'tester:latest')
+        client = docker.Client.latest
+        self.assertEqual(client._pullCount, 0)
+
     def test_start_instance_noimage_renderabledockerfile(self):
         bs = self.setupWorker(
             'bot', 'pass', 'tcp://1234:2375', 'customworker',
@@ -233,6 +257,12 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
                                    distro=Property('distro')))
         id, name = self.successResultOf(bs.start_instance(self.build))
         self.assertEqual(name, 'customworker')
+
+    def test_start_worker_but_already_created_with_same_name(self):
+        bs = self.setupWorker(
+            'existing', 'pass', 'tcp://1234:2375', 'busybox:latest', ['bin/bash'])
+        id, name = self.successResultOf(bs.start_instance(self.build))
+        self.assertEqual(name, 'busybox:latest')
 
 
 class testDockerPyStreamLogs(unittest.TestCase):
