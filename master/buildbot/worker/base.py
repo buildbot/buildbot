@@ -56,11 +56,13 @@ class AbstractWorker(service.BuildbotService, object):
     quarantine_timeout = quarantine_initial_timeout = 10
     quarantine_max_timeout = 60 * 60
     start_missing_on_startup = True
+    DEFAULT_MISSING_TIMEOUT = 3600
+    DEFAULT_KEEPALIVE_INTERVAL = 3600
 
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
-                    missing_timeout=10 * 60,   # Ten minutes
-                    properties=None, locks=None, keepalive_interval=3600):
+                    missing_timeout=None,
+                    properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -241,8 +243,8 @@ class AbstractWorker(service.BuildbotService, object):
 
     @defer.inlineCallbacks
     def reconfigService(self, name, password, max_builds=None,
-                        notify_on_missing=None, missing_timeout=3600,
-                        properties=None, locks=None, keepalive_interval=3600):
+                        notify_on_missing=None, missing_timeout=DEFAULT_MISSING_TIMEOUT,
+                        properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
         # Given a Worker config arguments, configure this one identically.
         # Because Worker objects are remotely referenced, we can't replace them
         # without disconnecting the worker, yet there's no reason to do that.
@@ -255,6 +257,10 @@ class AbstractWorker(service.BuildbotService, object):
         self.access = []
         if locks:
             self.access = locks
+        if notify_on_missing is None:
+            notify_on_missing = []
+        if isinstance(notify_on_missing, str):
+            notify_on_missing = [notify_on_missing]
         self.notify_on_missing = notify_on_missing
 
         if self.missing_timeout != missing_timeout:
