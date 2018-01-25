@@ -145,9 +145,9 @@ class Change(base.ResourceType):
         else:
             uid = None
 
-        if not revlink and revision and repository and callable(self.master.config.revlink):
+        if not revlink and revision and callable(self.master.config.revlink):
             # generate revlink from revision and repository using the configured callable
-            revlink = self.master.config.revlink(revision, repository) or u''
+            revlink = self.master.config.revlink(revision, repository if repository else '??') or u''
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
