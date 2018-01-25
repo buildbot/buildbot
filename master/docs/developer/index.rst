@@ -9,6 +9,7 @@ It is intended both for developers writing patches that will be included in Buil
 .. toctree::
     :maxdepth: 2
 
+    quickstart
     general
     apis
     py3-compat
