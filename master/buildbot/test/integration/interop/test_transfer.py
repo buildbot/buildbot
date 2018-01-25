@@ -45,7 +45,7 @@ class TransferStepsMasterPb(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_transfer(self):
-        yield self.setupConfig(masterConfig())
+        yield self.setupConfig(masterConfig(bigfilename=self.mktemp()))
 
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['results'], SUCCESS)
@@ -81,7 +81,7 @@ class TransferStepsMasterNull(TransferStepsMasterPb):
 
 
 # master configuration
-def masterConfig():
+def masterConfig(bigfilename):
     c = {}
     from buildbot.config import BuilderConfig
     from buildbot.process.factory import BuildFactory
@@ -96,6 +96,14 @@ def masterConfig():
     # do a bunch of transfer to exercise the protocol
     f.addStep(steps.StringDownload("filecontent", workerdest="dir/file1.txt"))
     f.addStep(steps.StringDownload("filecontent2", workerdest="dir/file2.txt"))
+    # create 8 MB file
+    with open(bigfilename, 'w') as o:
+        buf = "xxxxxxxx" * 1024
+        for i in range(1000):
+            o.write(buf)
+    f.addStep(
+        steps.FileDownload(
+            mastersrc=bigfilename, workerdest="bigfile.txt"))
     f.addStep(
         steps.FileUpload(workersrc="dir/file2.txt", masterdest="master.txt"))
     f.addStep(

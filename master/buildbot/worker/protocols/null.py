@@ -20,6 +20,7 @@ from __future__ import print_function
 from twisted.internet import defer
 from twisted.python import log
 
+from buildbot.util.eventual import fireEventually
 from buildbot.worker.protocols import base
 
 
@@ -43,7 +44,8 @@ class ProxyMixin():
         except TypeError:
             log.msg("%s didn't accept %s and %s" % (method, args, kw))
             raise
-        return defer.maybeDeferred(lambda: state)
+        # break callback recursion for large transfers by using fireEventually
+        return fireEventually(state)
 
     def notifyOnDisconnect(self, cb):
         pass
