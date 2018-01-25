@@ -158,7 +158,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             self.builder.name, self.number, statusToString(self.results))
 
     def blamelist(self):
-        # FIXME: kill this. This belongs to reporter.utils
+        # Note that this algorithm is also implemented in buildbot.reporters.utils.getResponsibleUsersForBuild,
+        # but using the data api.
+        # it is important for the UI to have the blamelist easily available.
+        # The best way is to make sure the owners property is set to full blamelist
         blamelist = []
         for c in self.allChanges():
             if c.who not in blamelist:
@@ -467,17 +470,12 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
         self.steps = self.setupBuildSteps(self.stepFactories)
 
-        # we are now ready to set up our BuildStatus.
-        # pass all sourcestamps to the buildstatus
-        self.build_status.setSourceStamps(self.sources)
-        self.build_status.setReason(self.reason)
-        self.build_status.setBlamelist(self.blamelist())
-
+        owners = set(self.blamelist())
         # gather owners from build requests
-        owners = [r.properties['owner'] for r in self.requests
-                  if "owner" in r.properties]
+        owners.update({r.properties['owner'] for r in self.requests
+                       if "owner" in r.properties})
         if owners:
-            self.setProperty('owners', owners, 'Build')
+            self.setProperty('owners', sorted(owners), 'Build')
         self.text = []  # list of text string lists (text2)
 
     def _addBuildSteps(self, step_factories):
