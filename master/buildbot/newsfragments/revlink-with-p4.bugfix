@@ -1,0 +1,1 @@
+Added an argument to P4Source that allows users to provide a callable to convert Perforce branch and revision to a valid revlink URL. Perforce supplies a p4web server for resolving urls into changelists.
