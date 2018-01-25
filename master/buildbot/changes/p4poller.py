@@ -125,7 +125,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
                  use_tickets=False, ticket_login_interval=60 * 60 * 24,
-                 server_tz=None, pollAtLaunch=False,revlink=lambda branch, revision: (u'')):
+                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (u'')):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -146,9 +146,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                 "You need to provide a P4 password to use ticket authentication")
 
         if not callable(revlink):
-             config.error(
+            config.error(
                 "You need to provide a valid callable for revlink")
-
 
         self.p4port = p4port
         self.p4user = p4user
