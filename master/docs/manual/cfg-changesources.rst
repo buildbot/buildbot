@@ -532,8 +532,13 @@ It accepts the following arguments:
     How often to get a new ticket, in seconds, when ``use_tickets`` is enabled.
     Defaults to 86400 (24 hours).
 
-Example
-+++++++
+``revlink``
+    A function that maps branch and revision to a valid url (e.g. p4web), stored along with the change.
+    This function must be a callable which takes two arguments, the branch and the revision.
+    Defaults to lambda branch, revision: (u'')
+
+Example #1
+++++++++++
 
 This configuration uses the :envvar:`P4PORT`, :envvar:`P4USER`, and :envvar:`P4PASSWD` specified in the buildmaster's environment.
 It watches a project in which the branch name is simply the next path component, and the file is all path components after.
@@ -544,6 +549,20 @@ It watches a project in which the branch name is simply the next path component,
 
     s = changes.P4Source(p4base='//depot/project/',
                          split_file=lambda branchfile: branchfile.split('/',1))
+    c['change_source'] = s
+
+Example #2
+++++++++++
+
+Similar to the previous example but also resolves the branch and revision into a valid revlink.
+
+.. code-block:: python
+
+    from buildbot.plugins import changes
+
+    s = changes.P4Source(p4base='//depot/project/',
+                         split_file=lambda branchfile: branchfile.split('/',1))
+                         revlink=lambda branch, revision: 'http://p4web:8080/@md=d&@/{}?ac=10'.format(revision)
     c['change_source'] = s
 
 .. bb:chsrc:: SVNPoller

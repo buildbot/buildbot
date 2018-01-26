@@ -125,7 +125,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
                  use_tickets=False, ticket_login_interval=60 * 60 * 24,
-                 server_tz=None, pollAtLaunch=False):
+                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (u'')):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -145,6 +145,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             config.error(
                 "You need to provide a P4 password to use ticket authentication")
 
+        if not callable(revlink):
+            config.error(
+                "You need to provide a valid callable for revlink")
+
         self.p4port = p4port
         self.p4user = p4user
         self.p4passwd = p4passwd
@@ -155,6 +159,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.project = util.bytes2unicode(project)
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
+        self.revlink_callable = revlink
         self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None
         if server_tz is not None and self.server_tz is None:
             raise P4PollerError("Failed to get timezone from server_tz string '{}'".format(server_tz))
@@ -340,6 +345,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                     revision=text_type(num),
                     when_timestamp=when,
                     branch=branch,
-                    project=self.project)
+                    project=self.project,
+                    revlink=self.revlink_callable(branch, text_type(num)))
 
             self.last_change = num
