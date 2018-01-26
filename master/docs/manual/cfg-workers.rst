@@ -72,7 +72,7 @@ Master-Worker TCP Keepalive
 By default, the buildmaster sends a simple, non-blocking message to each worker every hour.
 These keepalives ensure that traffic is flowing over the underlying TCP connection, allowing the system's network stack to detect any problems before a build is started.
 
-The interval can be modified by specifying the interval in seconds using the ``keepalive_interval`` parameter of :class:`Worker`::
+The interval can be modified by specifying the interval in seconds using the ``keepalive_interval`` parameter of :class:`Worker` (defaults to 3600)::
 
     c['workers'] = [
         worker.Worker('bot-linux', 'linuxpasswd',

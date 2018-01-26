@@ -152,26 +152,31 @@ class TestAbstractWorker(unittest.TestCase):
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
+    @defer.inlineCallbacks
     def createWorker(self, name='bot', password='pass', attached=False, configured=True, **kwargs):
         worker = ConcreteWorker(name, password, **kwargs)
         if configured:
-            worker.setServiceParent(self.workers)
+            yield worker.setServiceParent(self.workers)
         if attached:
             worker.conn = fakeprotocol.FakeConnection(self.master, worker)
-        return worker
+        defer.returnValue(worker)
 
+    @defer.inlineCallbacks
     def test_constructor_minimal(self):
-        bs = ConcreteWorker('bot', 'pass')
+        bs = yield self.createWorker('bot', 'pass')
+        yield bs.startService()
         self.assertEqual(bs.workername, 'bot')
         self.assertEqual(bs.password, 'pass')
         self.assertEqual(bs.max_builds, None)
         self.assertEqual(bs.notify_on_missing, [])
-        self.assertEqual(bs.missing_timeout, 10 * 60)
+        self.assertEqual(bs.missing_timeout, ConcreteWorker.DEFAULT_MISSING_TIMEOUT)
         self.assertEqual(bs.properties.getProperty('workername'), 'bot')
         self.assertEqual(bs.access, [])
 
+    @defer.inlineCallbacks
     def test_slavename_deprecated(self):
-        bs = ConcreteWorker('bot', 'pass')
+        bs = yield self.createWorker('bot', 'pass')
+        yield bs.startService()
 
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
@@ -183,14 +188,16 @@ class TestAbstractWorker(unittest.TestCase):
 
         self.assertEqual(name, old_name)
 
+    @defer.inlineCallbacks
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
-        bs = ConcreteWorker('bot', 'pass',
+        bs = yield self.createWorker('bot', 'pass',
                             max_builds=2,
                             notify_on_missing=['me@me.com'],
                             missing_timeout=120,
                             properties={'a': 'b'},
                             locks=[lock1, lock2])
+        yield bs.startService()
 
         self.assertEqual(bs.max_builds, 2)
         self.assertEqual(bs.notify_on_missing, ['me@me.com'])
@@ -198,9 +205,11 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.properties.getProperty('a'), 'b')
         self.assertEqual(bs.access, [lock1, lock2])
 
+    @defer.inlineCallbacks
     def test_constructor_notify_on_missing_not_list(self):
-        bs = ConcreteWorker('bot', 'pass',
+        bs = yield self.createWorker('bot', 'pass',
                             notify_on_missing='foo@foo.com')
+        yield bs.startService()
         # turned into a list:
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
@@ -221,12 +230,12 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_attrs(self):
-        old = self.createWorker('bot', 'pass',
+        old = yield self.createWorker('bot', 'pass',
                                 max_builds=2,
                                 notify_on_missing=['me@me.com'],
                                 missing_timeout=120,
                                 properties={'a': 'b'})
-        new = self.createWorker('bot', 'pass', configured=False,
+        new = yield self.createWorker('bot', 'pass', configured=False,
                                 max_builds=3,
                                 notify_on_missing=['her@me.com'],
                                 missing_timeout=121,
@@ -245,14 +254,14 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_has_properties(self):
-        old = self.createWorker(name="bot", password="pass")
+        old = yield self.createWorker(name="bot", password="pass")
 
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('workername'), 'bot')
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):
-        old = self.createWorker('bot', 'pass')
+        old = yield self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old,
                                            existingRegistration=False)
         self.assertIn('bot', self.master.workers.registrations)
@@ -260,7 +269,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigService_builder(self):
-        old = self.createWorker('bot', 'pass')
+        old = yield self.createWorker('bot', 'pass')
         yield self.do_test_reconfigService(old, old)
 
         # initial configuration, there is no builder configured
@@ -268,7 +277,7 @@ class TestAbstractWorker(unittest.TestCase):
         workers = yield self.master.data.get(('workers',))
         self.assertEqual(len(workers[0]['configured_on']), 0)
 
-        new = self.createWorker('bot', 'pass', configured=False)
+        new = yield self.createWorker('bot', 'pass', configured=False)
 
         # we create a fake builder, and associate to the master
         self.botmaster.builders['bot'] = [FakeBuilder()]
@@ -285,7 +294,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_stopService(self):
-        worker = self.createWorker()
+        worker = yield self.createWorker()
         yield worker.startService()
 
         reg = worker.registration
@@ -373,7 +382,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_startService_getWorkerInfo_empty(self):
-        worker = self.createWorker()
+        worker = yield self.createWorker()
         yield worker.startService()
 
         self.assertEqual(worker.worker_status.getAdmin(), None)
@@ -395,7 +404,7 @@ class TestAbstractWorker(unittest.TestCase):
                 'version': 'TheVersion'
             })
         ])
-        worker = self.createWorker()
+        worker = yield self.createWorker()
 
         yield worker.startService()
 
@@ -407,7 +416,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_attached_remoteGetWorkerInfo(self):
-        worker = self.createWorker()
+        worker = yield self.createWorker()
         yield worker.startService()
 
         ENVIRON = {}
@@ -437,7 +446,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_attached_callsMaybeStartBuildsForWorker(self):
-        worker = self.createWorker()
+        worker = yield self.createWorker()
         yield worker.startService()
         yield worker.reconfigServiceWithSibling(worker)
 
@@ -458,7 +467,7 @@ class TestAbstractWorker(unittest.TestCase):
                 'version': 'WrongVersion'
             })
         ])
-        worker = self.createWorker()
+        worker = yield self.createWorker()
         yield worker.startService()
 
         conn = fakeprotocol.FakeConnection(worker.master, worker)
@@ -485,7 +494,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_worker_shutdown(self):
-        worker = self.createWorker(attached=True)
+        worker = yield self.createWorker(attached=True)
         yield worker.startService()
 
         yield worker.shutdown()
@@ -494,7 +503,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_worker_shutdown_not_connected(self):
-        worker = self.createWorker(attached=False)
+        worker = yield self.createWorker(attached=False)
         yield worker.startService()
 
         # No exceptions should be raised here
@@ -502,7 +511,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_shutdownRequested(self):
-        worker = self.createWorker(attached=False)
+        worker = yield self.createWorker(attached=False)
         yield worker.startService()
 
         yield worker.shutdownRequested()
@@ -510,7 +519,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_missing_timer_missing(self):
-        worker = self.createWorker(attached=False, missing_timeout=1)
+        worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
         yield self.clock.advance(1)
@@ -519,7 +528,7 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_missing_timer_stopped(self):
-        worker = self.createWorker(attached=False, missing_timeout=1)
+        worker = yield self.createWorker(attached=False, missing_timeout=1)
         yield worker.startService()
         self.assertNotEqual(worker.missing_timer, None)
         yield worker.stopService()
@@ -528,21 +537,21 @@ class TestAbstractWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_worker_actions_stop(self):
-        worker = self.createWorker(attached=False)
+        worker = yield self.createWorker(attached=False)
         yield worker.startService()
         worker.controlWorker(("worker", 1, "stop"), {'reason': "none"})
         self.assertEqual(worker._graceful, True)
 
     @defer.inlineCallbacks
     def test_worker_actions_kill(self):
-        worker = self.createWorker(attached=False)
+        worker = yield self.createWorker(attached=False)
         yield worker.startService()
         worker.controlWorker(("worker", 1, "kill"), {'reason': "none"})
         self.assertEqual(worker.conn, None)
 
     @defer.inlineCallbacks
     def test_worker_actions_pause(self):
-        worker = self.createWorker(attached=False)
+        worker = yield self.createWorker(attached=False)
         yield worker.startService()
         worker.controlWorker(("worker", 1, "pause"), {'reason': "none"})
         self.assertEqual(worker._paused, True)
