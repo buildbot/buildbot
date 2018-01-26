@@ -16,7 +16,7 @@ install:
   - "python -c \"import sys; print(sys.executable)\""
   - "python -V -V"
   # Twisted requires pywin32 on Windows in order to spawn processes.
-  - "python -m pip install pypiwin32"
+  - "python -m pip install \"pypiwin32<222\""
 
   # TODO: There is no binary wheel for pysqlite and building on Windows is
   # painful. Let's just substitute sqlite3.dll with never version.
