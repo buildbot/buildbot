@@ -1,0 +1,1 @@
+Fixed Builds column on builders page doesn't display recent builds for many builders (:issue:`3545`).

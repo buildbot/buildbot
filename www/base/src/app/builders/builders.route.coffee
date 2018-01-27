@@ -44,5 +44,5 @@ class State extends Config
                 type:'integer'
                 name:'buildFetchLimit'
                 caption:'Maximum number of builds to fetch'
-                default_value: 200
+                default_value: 500
             ]
