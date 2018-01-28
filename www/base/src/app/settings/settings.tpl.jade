@@ -22,5 +22,13 @@
                         .form-group(ng-switch-when="text")
                             label {{ item.caption }}
                             input.form-control(type="text" name="{{item.name}}" ng-model="item.value")
-                        .alert.alert-danger(ng-switch-default) bad item type: {{item.type}} should be one of: bool, choices, integer, text 
-                                
+                        .alert.alert-danger(ng-switch-default) bad item type: {{item.type}} should be one of: bool, choices, integer, text
+
+    .panel.panel-default
+        .panel-heading
+            h3.panel-title
+                | Override defaults for all users
+        .panel-body
+            p To override defaults for all users, put following code in master.cfg
+            pre
+                | {{master_cfg_override_snippet}}
