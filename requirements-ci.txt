@@ -83,7 +83,7 @@ treq==17.8.0
 Twisted==17.9.0
 txaio==2.8.2
 txgithub==15.0.0
-txrequests==0.9.5
+txrequests==0.9.6
 typing==3.6.2
 webcolors==1.7
 Werkzeug==0.14.1
