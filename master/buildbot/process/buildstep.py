@@ -753,9 +753,6 @@ class BuildStep(results.ResultComputingConfigMixin,
         raise NotImplementedError("your subclass must implement run()")
 
     def interrupt(self, reason):
-        # TODO: consider adding an INTERRUPTED or STOPPED status to use
-        # instead of FAILURE, might make the text a bit more clear.
-        # 'reason' can be a Failure, or text
         self.stopped = True
         if self._acquiringLock:
             lock, access, d = self._acquiringLock
