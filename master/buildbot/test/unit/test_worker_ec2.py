@@ -21,6 +21,7 @@ import os
 
 from twisted.trial import unittest
 
+from buildbot.test.util.decorators import flaky
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
@@ -487,6 +488,7 @@ class TestEC2LatentWorker(unittest.TestCase):
 
         self.assertEqual(image.id, ami.id)
 
+    @flaky(issueNumber=3936)
     @mock_ec2
     def test_get_image_owners(self):
         c, r = self.botoSetup('latent_buildbot_slave')
@@ -572,7 +574,6 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
                                     " in this version of moto, please update.")
         r.create_security_group(GroupName='latent_buildbot_slave', Description='the security group')
         r.create_security_group(GroupName='test_security_group', Description='other security group')
-        print("images", c.describe_images())
         instance = r.create_instances(ImageId=anyImageId(c), MinCount=1, MaxCount=1)[0]
         c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
         c.terminate_instances(InstanceIds=[instance.id])
