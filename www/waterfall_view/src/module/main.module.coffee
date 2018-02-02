@@ -313,6 +313,7 @@ class Waterfall extends Controller
             p = self.d3.select(@parentNode)
             a = p.append('a')
                 .attr('xlink:href', "#/builders/#{builderid}")
+            a.append('title').text(this.textContent)
             a.node().appendChild(this)
 
         # Rotate text
@@ -474,7 +475,8 @@ class Waterfall extends Controller
         p.each -> @parentNode.appendChild(this)
 
         # Show tooltip on the left or on the right
-        r = build.builderid < self.builders.length / 2
+        builderIds = self.builders.map((builder) -> builder.builderid)
+        r = builderIds.indexOf(build.builderid) < self.builders.length / 2
 
         # Create tooltip
         height = 40
@@ -483,6 +485,7 @@ class Waterfall extends Controller
             else "150,0 170,#{height / 2} 150,#{height} 0,#{height} 0,0"
         tooltip = e.append('g')
             .attr('class', 'svg-tooltip')
+            .style('pointer-events', 'none')
             .attr('transform', "translate(#{mouse[0]}, #{mouse[1]})")
             .append('g')
                 .attr('class', 'tooltip-content')
