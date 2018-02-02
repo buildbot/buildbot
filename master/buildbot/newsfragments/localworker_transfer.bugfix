@@ -1,0 +1,1 @@
+Fix maximum recursion limit issue when transferring large files with ``LocalWorker`` (issue:`3014`).
