@@ -129,6 +129,20 @@ This server is configured with the ``www`` configuration key, which specifies a 
             'cookie_expiration_time': datetime.timedelta(weeks=2)
         }
 
+``ui_default_config``
+
+    Settings in the settings page are stored per browser.
+    This configuration parameter allows to override the default settings for all your users.
+    If a user already have changed a value from the default, this will have no effect to him/her.
+    The settings page in the UI will tell you what to insert in your master.cfg to reproduce the configuration you have in your own browser.
+    Example use:
+
+    .. code-block:: python
+
+        c['www']['ui_default_config'] = {
+            'Builders.buildFetchLimit': 500,
+            'Workers.showWorkerBuilders': True,
+        }
 
 .. note::
 

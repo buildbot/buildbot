@@ -804,12 +804,13 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         if 'www' not in config_dict:
             return
         www_cfg = config_dict['www']
-        allowed = set(['port', 'debug', 'json_cache_seconds',
-                       'rest_minimum_version', 'allowed_origins', 'jsonp',
-                       'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
-                       'logRotateLength', 'maxRotatedFiles', 'versions',
-                       'change_hook_dialects', 'change_hook_auth',
-                       'custom_templates_dir', 'cookie_expiration_time'])
+        allowed = {'port', 'debug', 'json_cache_seconds',
+                   'rest_minimum_version', 'allowed_origins', 'jsonp',
+                   'plugins', 'auth', 'authz', 'avatar_methods', 'logfileName',
+                   'logRotateLength', 'maxRotatedFiles', 'versions',
+                   'change_hook_dialects', 'change_hook_auth',
+                   'custom_templates_dir', 'cookie_expiration_time',
+                   'ui_default_config'}
         unknown = set(list(www_cfg)) - allowed
 
         if unknown:

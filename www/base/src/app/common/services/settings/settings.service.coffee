@@ -1,7 +1,7 @@
 class bbSettings extends Provider('common')
-    constructor: ->
+    constructor: (config) ->
         @groups = {}
-
+        @ui_default_config = config.ui_default_config
 
     _mergeNewGroup: (oldGroup, newGroup) ->
         if not newGroup?
@@ -27,6 +27,20 @@ class bbSettings extends Provider('common')
 
     $get: [ ->
         self = @
+        if self.ui_default_config?
+            for settingSelector, v of self.ui_default_config
+                groupAndSettingName = settingSelector.split('.')
+                if groupAndSettingName.length != 2
+                    console.log "bad setting name #{settingSelector}"
+                    continue
+                [groupName, settingName] = groupAndSettingName
+                if not self.groups[groupName]?
+                    console.log "bad setting name #{settingSelector}: group does not exist"
+                    continue
+                for item in self.groups[groupName].items
+                    if item.name == settingName and item.value == item.default_value
+                        item.value = v
+
         return {
             getSettingsGroups: ->
                 self.groups

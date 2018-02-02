@@ -2,6 +2,9 @@ describe 'settingsService', ->
     bbSettingsServiceProviderRef = ""
     beforeEach module 'common', (bbSettingsServiceProvider) ->
         bbSettingsServiceProviderRef = bbSettingsServiceProvider
+        bbSettingsServiceProvider.ui_default_config = {
+            'User.config_overriden': 100
+        }
 
         localStorage.clear()
         bbSettingsServiceProvider.addSettingsGroup
@@ -11,6 +14,10 @@ describe 'settingsService', ->
                 type:'bool'
                 name:'checkbox1'
                 default_value: false
+            ,
+                type:'integer'
+                name:'config_overriden'
+                default_value: 10
             ,
                 type:'choices'
                 name:'radio'
@@ -286,3 +293,12 @@ describe 'settingsService', ->
         storageGroups = angular.fromJson(localStorage.getItem('settings'))
         storageCheckbox = storageGroups['User'].items[0].value
         expect(storageCheckbox).toBeTruthy()
+
+    it 'should be overriden by master.cfg', inject (bbSettingsService) ->
+        to_override = bbSettingsService.getSetting('User.config_overriden')
+        expect(to_override.value).toEqual(100)
+        to_override.value = 200
+        bbSettingsService.save()
+        storageGroups = angular.fromJson(localStorage.getItem('settings'))
+        to_override = storageGroups['User'].items[1].value
+        expect(to_override).toEqual(200)
