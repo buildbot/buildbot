@@ -68,6 +68,16 @@ class _buildsummary extends Controller('common')
             hasProperty = self.properties && self.properties.hasOwnProperty(property)
             return  if hasProperty then self.properties[property][0] else null
 
+        @isSummaryLog = (log) -> 
+            return log.name.toLowerCase() == "summary"
+
+        # Returns the logs, sorted with the "Summary" log first, if it exists in the step's list of logs
+        @getLogs = (step) -> 
+            summaryLogs = step.logs.filter (log) => @isSummaryLog(log)
+            logs = summaryLogs.concat( step.logs.filter (log) => not @isSummaryLog(log) )
+            return logs
+
+
         @toggleFullDisplay = ->
             @fulldisplay = !@fulldisplay
             if @fullDisplay
