@@ -90,7 +90,7 @@ Werkzeug==0.14.1
 wrapt==1.10.11
 xmltodict==0.11.0
 zope.interface==4.4.3
-coverage==4.4.2
+coverage==4.5
 codecov==2.0.14
 -e master
 -e worker
