@@ -6,7 +6,7 @@ attrs==17.4.0
 autobahn==17.10.1
 Automat==0.6.0
 Babel==2.5.3
-backports.functools-lru-cache==1.4
+backports.functools-lru-cache==1.5
 blockdiag==1.5.3
 boto==2.48.0
 boto3==1.5.22
