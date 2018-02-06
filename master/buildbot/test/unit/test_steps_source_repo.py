@@ -132,7 +132,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                 command=['repo', 'init', '-u', 'git://myrepo.com/manifest.git',
                          '-b', 'mb', '-m', 'mf', '--depth', str(depth)])
         ] + override_commands + [
-            self.ExpectShell(command=['repo', 'sync'] + syncoptions),
+            self.ExpectShell(command=['repo', 'sync', '--force-sync'] + syncoptions),
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
@@ -422,7 +422,7 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
                 workdir='wkdir/.repo/manifests',
                 command=['git', 'cherry-pick', 'FETCH_HEAD'])
             + 0,
-            self.ExpectShell(command=['repo', 'sync', '-c'])
+            self.ExpectShell(command=['repo', 'sync', '--force-sync', '-c'])
             + 0,
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
