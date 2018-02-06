@@ -26,7 +26,6 @@ from buildbot.steps import python
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 
-
 log_output_success = '''\
 Making output directory...
 Running Sphinx v1.0.7

@@ -40,12 +40,12 @@ from buildbot import locks
 from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.revlinks import default_revlink_matcher
-from buildbot.util import config as util_config
-from buildbot.util import identifiers as util_identifiers
-from buildbot.util import service as util_service
 from buildbot.util import ComparableMixin
 from buildbot.util import bytes2NativeString
+from buildbot.util import config as util_config
+from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
+from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
@@ -697,7 +697,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         for worker in workers:
             if not interfaces.IWorker.providedBy(worker):
-                msg = "{} must be a list of Worker instances but there is {!r}".format(conf_key, worker)
+                msg = "{} must be a list of Worker instances but there is {!r}".format(
+                    conf_key, worker)
                 error(msg)
                 return False
 
@@ -779,8 +780,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error(msg)
             return
 
-        msg = lambda s: "c['status'] contains an object that is not a status receiver (type %r)" % type(
-            s)
+        def msg(s):
+            return "c['status'] contains an object that is not a status receiver (type %r)" % type(s)
         for s in status:
             if not interfaces.IStatusReceiver.providedBy(s):
                 error(msg(s))
@@ -834,7 +835,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         cookie_expiration_time = www_cfg.get('cookie_expiration_time')
         if cookie_expiration_time is not None:
             if not isinstance(cookie_expiration_time, datetime.timedelta):
-                error('Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
+                error(
+                    'Invalid www["cookie_expiration_time"] configuration should be a datetime.timedelta')
 
         self.www.update(www_cfg)
 
@@ -1046,7 +1048,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
 
         if workername:
             if not isinstance(workername, str):
-                error("builder '%s': workername must be a string but it is %r" % (name, workername))
+                error("builder '%s': workername must be a string but it is %r" % (
+                    name, workername))
             workernames = workernames + [workername]
         if not workernames:
             error("builder '%s': at least one workername is required" %

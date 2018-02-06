@@ -20,8 +20,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Properties
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.util.eventual import _setReactor
 from buildbot.worker.marathon import MarathonLatentWorker

@@ -21,8 +21,8 @@ import mock
 from twisted.trial import unittest
 
 from buildbot.process import remotecommand
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import logfile
+from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.util import interfaces
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning

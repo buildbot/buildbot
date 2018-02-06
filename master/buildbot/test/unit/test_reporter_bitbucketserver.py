@@ -30,8 +30,8 @@ from buildbot.reporters.bitbucketserver import HTTP_CREATED
 from buildbot.reporters.bitbucketserver import HTTP_PROCESSED
 from buildbot.reporters.bitbucketserver import BitbucketServerPRCommentPush
 from buildbot.reporters.bitbucketserver import BitbucketServerStatusPush
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.test.util.reporter import ReporterTestMixin
@@ -301,7 +301,8 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build = builds[0]
 
         http_error_code = 500
-        error_body = {u"errors": [{u"message": u"A dataXXXbase error has occurred."}]}
+        error_body = {u"errors": [
+            {u"message": u"A dataXXXbase error has occurred."}]}
 
         self._http.expect(
             "post",
@@ -313,7 +314,8 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build['complete'] = True
         yield self.cp.buildComplete(("builds", 20, "finished"), build)
 
-        self.assertLogged("^{}: Unable to send a comment: ".format(http_error_code))
+        self.assertLogged(
+            "^{}: Unable to send a comment: ".format(http_error_code))
         self.assertLogged("A dataXXXbase error has occurred")
 
     @defer.inlineCallbacks

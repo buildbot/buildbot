@@ -28,7 +28,6 @@ from buildbot.steps import vstudio
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 
-
 real_log = r"""
 1>------ Build started: Project: lib1, Configuration: debug Win32 ------
 1>Compiling...

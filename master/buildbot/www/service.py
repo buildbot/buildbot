@@ -41,10 +41,10 @@ from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2NativeString
 from buildbot.util import service
 from buildbot.util import unicode2bytes
-from buildbot.www import config as wwwconfig
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www import change_hook
+from buildbot.www import config as wwwconfig
 from buildbot.www import rest
 from buildbot.www import sse
 from buildbot.www import ws
@@ -80,7 +80,8 @@ class BuildbotSession(server.Session):
 
     def _fromToken(self, token):
         try:
-            decoded = jwt.decode(token, self.site.session_secret, algorithms=[SESSION_SECRET_ALGORITHM])
+            decoded = jwt.decode(token, self.site.session_secret, algorithms=[
+                                 SESSION_SECRET_ALGORITHM])
         except jwt.exceptions.ExpiredSignatureError as e:
             raise KeyError(str(e))
         except Exception as e:
@@ -113,7 +114,8 @@ class BuildbotSession(server.Session):
         self._defaultValue()
 
     def notifyOnExpire(self, callback):
-        raise NotImplementedError("BuildbotSession can't support notify on session expiration")
+        raise NotImplementedError(
+            "BuildbotSession can't support notify on session expiration")
 
     def touch(self):
         pass

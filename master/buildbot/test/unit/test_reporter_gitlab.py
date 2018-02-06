@@ -27,8 +27,8 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.gitlab import HOSTED_BASE_URL
 from buildbot.reporters.gitlab import GitLabStatusPush
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util import logging
 from buildbot.test.util.reporter import ReporterTestMixin
 

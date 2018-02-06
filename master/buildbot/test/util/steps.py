@@ -26,8 +26,8 @@ from twisted.internet import task
 from twisted.python import log
 
 from buildbot import interfaces
-from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process import buildstep
+from buildbot.process import remotecommand as real_remotecommand
 from buildbot.process.results import EXCEPTION
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
@@ -371,7 +371,8 @@ class BuildStepMixin(object):
                     log.msg("Unexpected log output:\n" + got)
                     raise AssertionError("Unexpected log output; see logs")
             if self.exp_exception:
-                self.assertEqual(len(self.flushLoggedErrors(self.exp_exception)), 1)
+                self.assertEqual(
+                    len(self.flushLoggedErrors(self.exp_exception)), 1)
 
             # XXX TODO: hidden
             # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
