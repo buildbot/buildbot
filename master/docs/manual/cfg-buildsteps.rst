@@ -819,6 +819,9 @@ The Repo step takes the following arguments:
     It is a copy of the ``.repo`` directory which contains all the Git objects.
     This feature helps to minimize network usage on very big projects with lots of workers.
 
+    The suffix of the tarball determines if the tarball is compressed and which compressor is chosen.
+    Supported suffixes are ``bz2``, ``gz``, ``lzma``, ``lzop``, and ``pigz``.
+
 ``jobs``
     (optional, defaults to ``None``): Number of projects to fetch simultaneously while syncing.
     Passed to repo sync subcommand with "-j".

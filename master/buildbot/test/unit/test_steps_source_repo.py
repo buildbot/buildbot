@@ -289,6 +289,9 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
     def test_update_tarball_tgz(self):
         self.do_test_update_tarball("tgz", ["-z"])
 
+    def test_update_tarball_pigz(self):
+        self.do_test_update_tarball("pigz", ["-I", "pigz"])
+
     def test_update_tarball_bzip(self):
         self.do_test_update_tarball("tar.bz2", ["-j"])
 

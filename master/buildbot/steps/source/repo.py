@@ -393,13 +393,16 @@ class Repo(Source):
         # Keep in mind that the compression part of tarball generation
         # can be non negligible
         tar = ['tar']
-        if self.tarball.endswith("gz"):
+        if self.tarball.endswith("pigz"):
+            tar.append('-I')
+            tar.append('pigz')
+        elif self.tarball.endswith("gz"):
             tar.append('-z')
-        if self.tarball.endswith("bz2") or self.tarball.endswith("bz"):
+        elif self.tarball.endswith("bz2") or self.tarball.endswith("bz"):
             tar.append('-j')
-        if self.tarball.endswith("lzma"):
+        elif self.tarball.endswith("lzma"):
             tar.append('--lzma')
-        if self.tarball.endswith("lzop"):
+        elif self.tarball.endswith("lzop"):
             tar.append('--lzop')
         return tar
 
