@@ -27,6 +27,7 @@ from twisted.spread import pb
 from buildbot import util
 from buildbot.pbutil import decode
 from buildbot.process import metrics
+from buildbot.process.results import CANCELLED
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
@@ -75,6 +76,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         self.builder_name = None
         self.commandID = None
         self.deferred = None
+        self.interrupted = False
         # a lock to make sure that only one log-handling method runs at a time.
         # This is really only a problem with old-style steps, which do not
         # wait for the Deferred from one method before invoking the next.
@@ -154,7 +156,7 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
 
     def interrupt(self, why):
         log.msg("RemoteCommand.interrupt", self, why)
-        if not self.active:
+        if not self.active or self.interrupted:
             log.msg(" but this RemoteCommand is already inactive")
             return defer.succeed(None)
         if not self.conn:
@@ -166,9 +168,9 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
             self._finished(why)
             return defer.succeed(None)
 
+        self.interrupted = True
         # tell the remote command to halt. Returns a Deferred that will fire
         # when the interrupt command has been delivered.
-
         d = self.conn.remoteInterruptCommand(self.builder_name,
                                              self.commandID, str(why))
         # the worker may not have remote_interruptCommand
@@ -336,6 +338,8 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
             maybeFailure.raiseException()
 
     def results(self):
+        if self.interrupted:
+            return CANCELLED
         if self.rc in self.decodeRC:
             return self.decodeRC[self.rc]
         return FAILURE

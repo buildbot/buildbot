@@ -1,0 +1,1 @@
+Fixed issue with steps not correctly ending in ``CANCELLED`` status when interrupted.
