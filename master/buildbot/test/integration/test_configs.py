@@ -119,10 +119,6 @@ b1 = {'name': "buildbot-full",
       'factory': f1,
       }
 c['builders'] = [b1]
-c['status'] = []
-# WebStatus is dead.
-#from buildbot.status import html
-#c['status'].append(html.WebStatus(http_port=8010))
 c['projectName'] = "Buildbot"
 c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
@@ -157,10 +153,6 @@ b1 = {'name': "buildbot-full",
       'factory': f1,
       }
 c['builders'] = [b1]
-c['status'] = []
-# WebStatus is dead.
-#from buildbot.status import html
-#c['status'].append(html.WebStatus(http_port=8010))
 c['projectName'] = "Buildbot"
 c['projectURL'] = "http://buildbot.sourceforge.net/"
 c['buildbotURL'] = "http://localhost:8010/"
@@ -202,8 +194,6 @@ c['builders'].append(
     util.BuilderConfig(name="runtests",
       slavenames=["example-slave"],
       factory=factory))
-
-c['status'] = []
 
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
@@ -254,8 +244,6 @@ c['builders'].append(
     util.BuilderConfig(name="runtests",
       workernames=["example-worker"],
       factory=factory))
-
-c['status'] = []
 
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"

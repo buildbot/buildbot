@@ -289,6 +289,8 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "schedulers",
         "secretsProviders",
         "services",
+        # we had c['status'] = [] for a while in our default master.cfg
+        # so we need to keep it there
         "status",
         "title",
         "titleURL",
@@ -353,7 +355,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
-            config.load_status(filename, config_dict)
             config.load_user_managers(filename, config_dict)
             config.load_www(filename, config_dict)
             config.load_services(filename, config_dict)
@@ -363,7 +364,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             config.check_schedulers()
             config.check_locks()
             config.check_builders()
-            config.check_status()
             config.check_ports()
         finally:
             _errors = None
@@ -431,6 +431,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                     '0.9.0',
                     "NOTE: `{}` is deprecated and ignored "
                     "They are replaced by util.JanitorConfigurator".format(horizon))
+
+        if 'status' in config_dict:
+            warnDeprecated(
+                '0.9.0',
+                "NOTE: `status` targets are deprecated and ignored "
+                "They are replaced by reporters")
 
         copy_int_param('changeHorizon')
         copy_int_param('logCompressionLimit')
@@ -770,25 +776,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
 
         self.change_sources = change_sources
 
-    def load_status(self, filename, config_dict):
-        if 'status' not in config_dict:
-            return
-        status = config_dict.get('status', [])
-
-        msg = "c['status'] must be a list of status receivers"
-        if not isinstance(status, (list, tuple)):
-            error(msg)
-            return
-
-        def msg(s):
-            return "c['status'] contains an object that is not a status receiver (type %r)" % type(s)
-        for s in status:
-            if not interfaces.IStatusReceiver.providedBy(s):
-                error(msg(s))
-                return
-
-        self.status = status
-
     def load_user_managers(self, filename, config_dict):
         if 'user_managers' not in config_dict:
             return
@@ -942,12 +929,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             if b.builddir in seen_builddirs:
                 error("duplicate builder builddir '%s'" % b.builddir)
             seen_builddirs.add(b.builddir)
-
-    def check_status(self):
-        # allow status receivers to check themselves against the rest of the
-        # receivers
-        for s in self.status:
-            s.checkConfig(self.status)
 
     def check_ports(self):
         ports = set()

@@ -74,8 +74,6 @@ c['builders'].append(
       slavenames=["example-slave"],
       factory=factory))
 
-c['status'] = []
-
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
 
@@ -118,8 +116,6 @@ c['builders'].append(
     util.BuilderConfig(name="runtests",
       workernames=["example-worker"],
       factory=factory))
-
-c['status'] = []
 
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"

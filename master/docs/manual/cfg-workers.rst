@@ -119,7 +119,7 @@ Note that if you want to have a :class:`MailNotifier` for worker-missing emails 
     from buildbot.plugins import status, worker
     m = status.MailNotifier(fromaddr='buildbot@localhost', builders=[],
                             relayhost='smtp.example.org')
-    c['status'].append(m)
+    c['reporters'].append(m)
 
     c['workers'] = [
             worker.Worker('bot-solaris', 'solarispasswd',

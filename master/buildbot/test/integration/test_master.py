@@ -81,7 +81,6 @@ c['builders'].append(
     BuilderConfig(name="testy",
                   workernames=["local1"],
                   factory=f1))
-c['status'] = []
 c['title'] = "test"
 c['titleURL'] = "test"
 c['buildbotURL'] = "http://localhost:8010/"
