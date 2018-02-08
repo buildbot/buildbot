@@ -60,7 +60,7 @@ def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
     def escape_arg(arg):
-        arg = bytes2unicode(arg, unicode_encoding)
+        arg = unicode2bytes(arg, unicode_encoding)
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
