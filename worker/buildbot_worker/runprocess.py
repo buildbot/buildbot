@@ -612,7 +612,8 @@ class RunProcess(object):
         tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
                                 delete=False)
         # echo off hides this cheat from the log files.
-        tf.write(u"@echo off\n")        
+        tf.write(u"@echo off\n")
+        # write needs bytes or it will automatically encode unicode to str using ascii in Python 2.        
         if isinstance(self.command, (string_types, bytes)):
             tf.write(unicode2bytes(self.command, self.builder.unicode_encoding))
         else:
