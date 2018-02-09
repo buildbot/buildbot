@@ -47,6 +47,7 @@ from twisted.python import runtime
 from twisted.python.win32 import quoteArguments
 
 from buildbot_worker import util
+from buildbot_worker.compat import bytes2NativeString
 from buildbot_worker.compat import bytes2unicode
 from buildbot_worker.compat import unicode2bytes
 from buildbot_worker.exceptions import AbandonChain
@@ -60,7 +61,7 @@ def win32_batch_quote(cmd_list, unicode_encoding='utf-8'):
     # Windows batch file. This is not quite the same as quoting it for the
     # shell, as cmd.exe doesn't support the %% escape in interactive mode.
     def escape_arg(arg):
-        arg = unicode2bytes(arg, unicode_encoding)
+        arg = bytes2NativeString(arg, unicode_encoding)
         arg = quoteArguments([arg])
         # escape shell special characters
         arg = re.sub(r'[@()^"<>&|]', r'^\g<0>', arg)
@@ -613,11 +614,10 @@ class RunProcess(object):
                                 delete=False)
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
-        # write needs bytes or it will automatically encode unicode to str using ascii in Python 2.       
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(unicode2bytes(self.command, self.builder.unicode_encoding))
+            tf.write(bytes2NativeString(self.command, self.builder.unicode_encoding))
         else:
-            tf.write(unicode2bytes(win32_batch_quote(self.command, self.builder.unicode_encoding)))
+            tf.write(win32_batch_quote(self.command, self.builder.unicode_encoding))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
