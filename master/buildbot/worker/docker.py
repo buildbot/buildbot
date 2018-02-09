@@ -132,7 +132,7 @@ class DockerLatentWorker(DockerBaseWorker,
 
     def checkConfig(self, name, password, docker_host, image=None, command=None,
                     volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                    masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
+                    masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, custom_context=False, encoding='gzip', buildargs=None, **kwargs):
 
         super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
@@ -160,7 +160,7 @@ class DockerLatentWorker(DockerBaseWorker,
     @defer.inlineCallbacks
     def reconfigService(self, name, password, docker_host, image=None, command=None,
                         volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
-                        masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
+                        masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, custom_context=False, encoding='gzip', buildargs=None, **kwargs):
 
         yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
@@ -171,6 +171,9 @@ class DockerLatentWorker(DockerBaseWorker,
         self.hostconfig = hostconfig or {}
         self.autopull = autopull
         self.alwaysPull = alwaysPull
+        self.custom_context = custom_context
+        self.encoding = encoding
+        self.buildargs = buildargs
         # Prepare the parameters for the Docker Client object.
         self.client_args = {'base_url': docker_host}
         if version is not None:
@@ -213,9 +216,14 @@ class DockerLatentWorker(DockerBaseWorker,
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        image, dockerfile, volumes = yield self.renderWorkerPropsOnStart(build)
-        res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes)
-        return res
+        image = yield build.render(self.image)
+        dockerfile = yield build.render(self.dockerfile)
+        volumes = yield build.render(self.volumes)
+        custom_context = yield build.render(self.custom_context)
+        encoding = yield build.render(self.encoding)
+        buildargs = yield build.render(self.buildargs)
+        res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes, custom_context, encoding, buildargs)
+        defer.returnValue(res)
 
     def _image_exists(self, client, name):
         # Make sure the image exists
@@ -227,7 +235,7 @@ class DockerLatentWorker(DockerBaseWorker,
                     return True
         return False
 
-    def _thd_start_instance(self, image, dockerfile, volumes):
+    def _thd_start_instance(self, image, dockerfile, volumes, custom_context, encoding, buildargs):
         docker_client = self._getDockerClient()
         container_name = self.getContainerName()
         # cleanup the old instances
@@ -251,13 +259,14 @@ class DockerLatentWorker(DockerBaseWorker,
         if (not found) and (dockerfile is not None):
             log.msg("Image '%s' not found, building it from scratch" %
                     image)
-            if (os.path.isfile(dockerfile)):
+            #if (os.path.isfile(dockerfile)):
+            if (custom_context):
                 with open(dockerfile, 'rb') as fin:
-                    lines = docker_client.build(fileobj=fin, custom_context=True,
-                                                encoding='gzip', tag=image)
+                    lines = docker_client.build(fileobj=fin, custom_context=custom_context,
+                                                encoding=encoding, tag=image, buildargs=buildargs)
             else:
                 lines = docker_client.build(fileobj=BytesIO(dockerfile.encode('utf-8')),
-                                            tag=image)
+                                            tag=image, buildargs=buildargs)
 
             for line in lines:
                 for streamline in _handle_stream_line(line):
