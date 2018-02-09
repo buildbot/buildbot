@@ -612,11 +612,11 @@ class RunProcess(object):
         tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
                                 delete=False)
         # echo off hides this cheat from the log files.
-        tf.write(u"@echo off\n")
+        tf.write(u"@echo off\n")        
         if isinstance(self.command, (string_types, bytes)):
-            tf.write(bytes2unicode(self.command, self.builder.unicode_encoding))
+            tf.write(unicode2bytes(self.command, self.builder.unicode_encoding))
         else:
-            tf.write(win32_batch_quote(self.command))
+            tf.write(unicode2bytes(win32_batch_quote(self.command, self.builder.unicode_encoding)))
         tf.close()
 
         argv = os.environ['COMSPEC'].split()  # allow %COMSPEC% to have args
