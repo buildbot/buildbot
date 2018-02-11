@@ -311,7 +311,7 @@ class Repo(Source):
         for command in self.manifestDownloads:
             yield self._Cmd(command, workdir=self.build.path_module.join(self.workdir, ".repo", "manifests"))
 
-        command = ['sync']
+        command = ['sync', '--force-sync']
         if self.jobs:
             command.append('-j' + str(self.jobs))
         if not self.syncAllBranches:
