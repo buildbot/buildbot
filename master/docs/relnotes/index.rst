@@ -10,6 +10,56 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.0.0`` ( ``2018-02-11`` )
+=====================================
+
+Despite the major version bump, Buildbot 1.0.0 does not have major difference with the 0.9 series.
+1.0.0 is rather the mark of API stability.
+Developers do not foresee a major API break in the next few years like we had for 0.8 to 0.9.
+
+Starting with 1.0.0, Buildbot will follow `semver`_ versioning methodology.
+
+.. _semver: https://semver.org/
+
+Bug fixes
+---------
+
+- Cloning :bb:step:`Git` repository with submodules now works with Git < 1.7.6
+  instead of failing due to the use of the unsupported ``--force`` option.
+- :bb:chsrc:`GitHub` hook now properly creates a change in case of new tag or
+  new branch. :bb:chsrc:`GitHub` changes will have the ``category`` set to
+  ``tag`` when a tag was pushed to easily distinguish from a branch push.
+- Fixed issue with :py:meth:`Master.expireMasters` not always honoring its
+  ``forceHouseKeeping`` parameter. (:issue:`3783`)
+- Fixed issue with steps not correctly ending in ``CANCELLED`` status when
+  interrupted.
+- Fix maximum recursion limit issue when transferring large files with
+  ``LocalWorker`` (issue:`3014`).
+- Added an argument to P4Source that allows users to provide a callable to
+  convert Perforce branch and revision to a valid revlink URL. Perforce
+  supplies a p4web server for resolving urls into change lists.
+- Fixed issue with ``buildbot_pkg``` not hanging on yarn step on windows
+  (:issue:`3890`).
+- Fix issue with :bb:cfg:`workers` ``notify_on_missing`` not able to be
+  configurable as a single string instead of list of string (:issue:`3913`).
+- Fixed Builder page should display worker name instead of id (:issue:`3901`).
+
+Features
+--------
+
+- Add capability to override the default UI settings (:issue:`3908`)
+- All :ref:`Reporters` have been adapted to be able to use :ref:`Secret`.
+  :bb:chsrc:`SVNPoller` has been adapted to be able to use :ref:`Secret`.
+- Implement support for Bitbucket Cloud webhook plugin in
+  :py:class:`~buildbot.www.hooks.bitbucketcloud.BitbucketCloudEventHandler`
+- The ``owners`` property now includes people associated with the changes of
+  the build (:issue:`3904`).
+- The repo source step now syncs with the ``--force-sync`` flag which allows
+  the sync to proceed when a source repo in the manifest has changed.
+- Add support for compressing the repo source step cache tarball with ``pigz``,
+  a parallel gzip compressor.
+
+
 Buildbot ``0.9.15.post1`` ( ``2018-01-07`` )
 ============================================
 

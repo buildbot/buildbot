@@ -1,1 +1,0 @@
-Fix issue with :bb:cfg:`workers` ``notify_on_missing`` not able to be configurable as a single string instead of list of string (:issue:`3913`).

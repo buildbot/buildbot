@@ -1,1 +1,0 @@
-Fixed issue with :py:meth:`Master.expireMasters` not always honoring its ``forceHouseKeeping`` parameter. (:issue:`3783`)
