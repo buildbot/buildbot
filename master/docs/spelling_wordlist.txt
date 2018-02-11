@@ -871,6 +871,7 @@ vda
 ve
 versa
 versioned
+versioning
 viewspec
 viewvc
 virt
