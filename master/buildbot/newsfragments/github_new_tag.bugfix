@@ -1,2 +1,0 @@
-:bb:chsrc:`GitHub` hook now properly creates a change in case of new tag or new branch.
-:bb:chsrc:`GitHub` changes will have the ``category`` set to ``tag`` when a tag was pushed to easily distinguish from a branch push.
