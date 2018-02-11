@@ -13,6 +13,14 @@ Release Notes
 Buildbot ``1.0.0`` ( ``2018-02-11`` )
 =====================================
 
+Despite the major version bump, Buildbot 1.0.0 does not have major difference with the 0.9 series.
+1.0.0 is rather the mark of API stability.
+Developers do not foresee a major API break in the next few years like we had for 0.8 to 0.9.
+
+Starting with 1.0.0, Buildbot will follow `semver`_ versioning methodology.
+
+.. _semver: https://semver.org/
+
 Bug fixes
 ---------
 
@@ -39,6 +47,9 @@ Bug fixes
 Features
 --------
 
+- Add capability to override the default UI settings (:issue:`3908`)
+- All :ref:`Reporters` have been adapted to be able to use :ref:`Secret`.
+  :bb:chsrc:`SVNPoller` has been adapted to be able to use :ref:`Secret`.
 - Implement support for Bitbucket Cloud webhook plugin in
   :py:class:`~buildbot.www.hooks.bitbucketcloud.BitbucketCloudEventHandler`
 - The ``owners`` property now includes people associated with the changes of
@@ -47,9 +58,6 @@ Features
   the sync to proceed when a source repo in the manifest has changed.
 - Add support for compressing the repo source step cache tarball with ``pigz``,
   a parallel gzip compressor.
-- All :ref:`Reporters` have been adapted to be able to use :ref:`Secret`.
-  :bb:chsrc:`SVNPoller` has been adapted to be able to use :ref:`Secret`.
-- Add capability to override the default UI settings (:issue:`3908`)
 
 
 Buildbot ``0.9.15.post1`` ( ``2018-01-07`` )
