@@ -29,7 +29,6 @@ from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www.hooks.gitlab import _HEADER_EVENT
 from buildbot.www.hooks.gitlab import _HEADER_GITLAB_TOKEN
 
-
 # Sample GITLAB commit payload from https://docs.gitlab.com/ce/user/project/integrations/webhooks.html
 # Added "modified" and "removed", and change email
 gitJsonPayload = b"""

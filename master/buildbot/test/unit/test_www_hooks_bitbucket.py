@@ -27,7 +27,6 @@ from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
-
 gitJsonPayload = b"""{
     "canon_url": "https://bitbucket.org",
     "commits": [

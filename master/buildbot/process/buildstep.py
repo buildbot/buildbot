@@ -26,11 +26,11 @@ import re
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python import util as twutil
 from twisted.python import components
 from twisted.python import deprecate
 from twisted.python import failure
 from twisted.python import log
+from twisted.python import util as twutil
 from twisted.python import versions
 from twisted.python.compat import NativeStringIO
 from twisted.python.failure import Failure
@@ -382,7 +382,8 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def __str__(self):
         args = [repr(x) for x in self._factory.args]
-        args.extend([str(k) + "=" + repr(v) for k, v in self._factory.kwargs.items()])
+        args.extend([str(k) + "=" + repr(v)
+                     for k, v in self._factory.kwargs.items()])
         return "{}({})".format(
             self.__class__.__name__, ", ".join(args))
     __repr__ = __str__
@@ -495,7 +496,8 @@ class BuildStep(results.ResultComputingConfigMixin,
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
         if self.stepid is not None:
-            stepResult = self.build.properties.cleanupTextFromSecrets(stepResult)
+            stepResult = self.build.properties.cleanupTextFromSecrets(
+                stepResult)
             yield self.master.data.updates.setStepStateString(self.stepid,
                                                               stepResult)
 

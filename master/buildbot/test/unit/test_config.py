@@ -366,14 +366,12 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.load_builders.called)
         self.assertTrue(rv.load_workers.called)
         self.assertTrue(rv.load_change_sources.called)
-        self.assertTrue(rv.load_status.called)
         self.assertTrue(rv.load_user_managers.called)
 
         self.assertTrue(rv.check_single_master.called)
         self.assertTrue(rv.check_schedulers.called)
         self.assertTrue(rv.check_locks.called)
         self.assertTrue(rv.check_builders.called)
-        self.assertTrue(rv.check_status.called)
         self.assertTrue(rv.check_ports.called)
 
     def test_preChangeGenerator(self):
@@ -488,6 +486,13 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                 message_pattern=r"`eventHorizon` is deprecated and ignored"):
             self.do_test_load_global(
                 dict(eventHorizon=10))
+
+    def test_load_global_status(self):
+        with assertProducesWarning(
+                config.ConfigWarning,
+                message_pattern=r"`status` targets are deprecated and ignored"):
+            self.do_test_load_global(
+                dict(status=[]))
 
     def test_load_global_buildbotNetUsageData(self):
         self.patch(config, "_in_unit_tests", False)
@@ -912,14 +917,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                      dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
 
-    def test_load_status_not_list(self):
-        self.cfg.load_status(self.filename, dict(status="not-list"))
-        self.assertConfigError(self.errors, "must be a list of")
-
-    def test_load_status_not_status_rec(self):
-        self.cfg.load_status(self.filename, dict(status=['fo']))
-        self.assertConfigError(self.errors, "not a status receiver")
-
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})
         self.assertResults(user_managers=[])
@@ -1272,25 +1269,6 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
 
         self.cfg.check_builders()
         self.assertNoConfigErrors(self.errors)
-
-    def test_check_status_fails(self):
-        st = FakeStatusReceiver()
-        st.checkConfig = lambda status: config.error("oh noes")
-        self.cfg.status = [st]
-
-        self.cfg.check_status()
-
-        self.assertConfigError(self.errors, "oh noes")
-
-    def test_check_status(self):
-        st = FakeStatusReceiver()
-        st.checkConfig = mock.Mock()
-        self.cfg.status = [st]
-
-        self.cfg.check_status()
-
-        self.assertNoConfigErrors(self.errors)
-        st.checkConfig.assert_called_once_with(self.cfg.status)
 
     def test_check_ports_protocols_set(self):
         self.cfg.protocols = {"pb": {"port": 10}}

@@ -45,7 +45,6 @@ from buildbot.db import workers
 from buildbot.util import service
 from buildbot.worker_transition import WorkerAPICompatMixin
 
-
 upgrade_message = textwrap.dedent("""\
 
     The Buildmaster database needs to be upgraded before this version of

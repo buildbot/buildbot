@@ -26,8 +26,8 @@ from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
 from buildbot.reporters.hipchat import HOSTED_BASE_URL
 from buildbot.reporters.hipchat import HipChatStatusPush
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 

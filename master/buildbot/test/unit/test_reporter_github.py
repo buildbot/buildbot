@@ -28,8 +28,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.github import HOSTED_BASE_URL
 from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.reporter import ReporterTestMixin
 
 

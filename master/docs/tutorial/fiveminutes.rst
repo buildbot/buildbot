@@ -258,23 +258,23 @@ And of course this is all SVN-specific, but there are pollers for all the popula
 
 But note: if you have many projects, branches, and builders it probably pays to not hardcode all the schedulers and builders in the configuration, but generate them dynamically starting from list of all projects, branches, targets etc. and using loops to generate all possible combinations (or only the needed ones, depending on the specific setup), as explained in the documentation chapter about :doc:`../manual/customization`.
 
-Status targets
---------------
+Reporters
+---------
 
 Now that the basics are in place, let's go back to the builders, which is where the real work happens.
-`Status targets` are simply the means Buildbot uses to inform the world about what's happening, that is, how builders are doing.
-There are many status targets: a web interface, a mail notifier, an IRC notifier, and others.
+`Reporters` are simply the means Buildbot uses to inform the world about what's happening, that is, how builders are doing.
+There are many reporters: a mail notifier, an IRC notifier, and others.
 They are described fairly well in the manual.
 
 One thing I've found useful is the ability to pass a domain name as the lookup argument to a ``mailNotifier``, which allows you to take an unqualified username as it appears in the SVN change and create a valid email address by appending the given domain name to it::
 
-    from buildbot.plugins import status
+    from buildbot.plugins import reporter
 
     # if jsmith commits a change, mail for the build is sent to jsmith@example.org
-    notifier = status.MailNotifier(fromaddr="buildbot@example.org",
+    notifier = reporter.MailNotifier(fromaddr="buildbot@example.org",
                                    sendToInterestedUsers=True,
                                    lookup="example.org")
-    c['status'].append(notifier)
+    c['reporters'].append(notifier)
 
 The mail notifier can be customized at will by means of the ``messageFormatter`` argument, which is a class that Buildbot calls to format the body of the email, and to which it makes available lots of information about the build.
 Here all the details.

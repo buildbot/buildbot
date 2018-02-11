@@ -37,7 +37,6 @@ from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
-
 # Template for master configuration just before worker renaming.
 sample_0_9_0b5 = """\
 from buildbot.plugins import *
@@ -74,8 +73,6 @@ c['builders'].append(
     util.BuilderConfig(name="runtests",
       slavenames=["example-slave"],
       factory=factory))
-
-c['status'] = []
 
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"
@@ -119,8 +116,6 @@ c['builders'].append(
     util.BuilderConfig(name="runtests",
       workernames=["example-worker"],
       factory=factory))
-
-c['status'] = []
 
 c['title'] = "Pyflakes"
 c['titleURL'] = "https://launchpad.net/pyflakes"

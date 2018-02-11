@@ -28,7 +28,6 @@ from buildbot.steps import python_twisted
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import steps
 
-
 failureLog = '''\
 buildbot.test.unit.test_steps_python_twisted.Trial.testProperties ... [FAILURE]
 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env ... [FAILURE]

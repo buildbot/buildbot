@@ -28,8 +28,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.reporters.bitbucket import _BASE_URL
 from buildbot.reporters.bitbucket import _OAUTH_URL
 from buildbot.reporters.bitbucket import BitbucketStatusPush
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.reporter import ReporterTestMixin
 
@@ -52,7 +52,8 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
             self.master, self,
             _OAUTH_URL, auth=('key', 'secret'),
             debug=None, verify=None)
-        self.bsp = bsp = BitbucketStatusPush(Interpolate('key'), Interpolate('secret'))
+        self.bsp = bsp = BitbucketStatusPush(
+            Interpolate('key'), Interpolate('secret'))
         yield bsp.setServiceParent(self.master)
         yield bsp.startService()
 

@@ -24,8 +24,8 @@ from twisted.internet import reactor
 from twisted.trial import unittest
 
 from buildbot.process import log
-from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import logfile as fakelogfile
 from buildbot.test.util import interfaces
 
 
@@ -85,7 +85,8 @@ class Tests(unittest.TestCase):
     @defer.inlineCallbacks
     def test_updates_different_encoding(self):
         _log = yield self.makeLog('t', logEncoding='latin-1')
-        _log.addContent('$ and \xa2\n')  # 0xa2 is latin-1 encoding for CENT SIGN
+        # 0xa2 is latin-1 encoding for CENT SIGN
+        _log.addContent('$ and \xa2\n')
         _log.finish()
 
         self.assertEqual(self.master.data.updates.logs[_log.logid]['content'],

@@ -20,8 +20,8 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.secrets.providers.vault import HashiCorpVaultSecretProvider
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 
 

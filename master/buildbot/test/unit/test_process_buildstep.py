@@ -41,9 +41,9 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
-from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake import remotecommand as fakeremotecommand
 from buildbot.test.fake import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectShell
@@ -133,7 +133,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.assertEqual(sorted(step.updateBuildSummaryPolicy), [])
 
         step = buildstep.BuildStep(updateBuildSummaryPolicy=True)
-        self.assertEqual(sorted(step.updateBuildSummaryPolicy), sorted(ALL_RESULTS))
+        self.assertEqual(sorted(step.updateBuildSummaryPolicy),
+                         sorted(ALL_RESULTS))
 
     def test_updateBuildSummaryPolicyBadType(self):
         """

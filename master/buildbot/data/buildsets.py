@@ -23,8 +23,8 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import base
+from buildbot.data import sourcestamps as sourcestampsapi
 from buildbot.data import types
 from buildbot.db.buildsets import AlreadyCompleteError
 from buildbot.process.buildrequest import BuildRequestCollapser
@@ -99,7 +99,8 @@ class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         complete = resultSpec.popBooleanFilter('complete')
         resultSpec.fieldMapping = self.fieldMapping
-        d = self.master.db.buildsets.getBuildsets(complete=complete, resultSpec=resultSpec)
+        d = self.master.db.buildsets.getBuildsets(
+            complete=complete, resultSpec=resultSpec)
 
         @d.addCallback
         def db2data(buildsets):

@@ -24,7 +24,6 @@ from buildbot.steps.source.base import Source
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 from buildbot.test.util.integration import RunMasterBase
 
-
 # a simple patch which adds a Makefile
 PATCH = """diff --git a/Makefile b/Makefile
 new file mode 100644
@@ -39,6 +38,7 @@ index 0000000..8a5cf80
 
 class MySource(Source):
     """A source class which only applies the patch"""
+
     def startVC(self, branch, revision, patch):
         self.stdio_log = self.addLogForRemoteCommands("stdio")
         d = defer.succeed(SUCCESS)
@@ -81,7 +81,8 @@ def masterConfig():
     c['schedulers'] = [
         schedulers.ForceScheduler(
             name="force",
-            codebases=[util.CodebaseParameter("foo", patch=util.PatchParameter())],
+            codebases=[util.CodebaseParameter(
+                "foo", patch=util.PatchParameter())],
             builderNames=["testy"])]
 
     f = BuildFactory()

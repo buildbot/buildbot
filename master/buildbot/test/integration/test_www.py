@@ -35,9 +35,9 @@ from buildbot.test.util import db
 from buildbot.test.util import www
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
-from buildbot.www import service as wwwservice
 from buildbot.www import auth
 from buildbot.www import authz
+from buildbot.www import service as wwwservice
 
 SOMETIME = 1348971992
 OTHERTIME = 1008971992

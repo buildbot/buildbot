@@ -19,8 +19,8 @@ from __future__ import print_function
 
 import time
 
-from twisted.internet import reactor as global_reactor
 from twisted.internet import defer
+from twisted.internet import reactor as global_reactor
 from twisted.internet import threads
 from twisted.python import threadpool
 
@@ -94,7 +94,8 @@ class HyperLatentWorker(DockerBaseWorker):
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
+        DockerBaseWorker.checkConfig(
+            self, name, password, image=image, masterFQDN=masterFQDN, **kwargs)
 
         if not Hyper:
             config.error("The python modules 'docker>=2.0' and 'hyper_sh' are needed to use a"
@@ -139,7 +140,8 @@ class HyperLatentWorker(DockerBaseWorker):
             if "".join(instance['Names']).strip("/") != container_name:
                 continue
             try:
-                self.client.remove_container(instance['Id'], v=True, force=True)
+                self.client.remove_container(
+                    instance['Id'], v=True, force=True)
             except NotFound:
                 pass  # that's a race condition
             except docker.errors.APIError as e:

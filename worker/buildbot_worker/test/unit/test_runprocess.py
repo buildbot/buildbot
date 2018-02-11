@@ -33,8 +33,8 @@ from twisted.python import runtime
 from twisted.python import util
 from twisted.trial import unittest
 
-from buildbot_worker import util as bsutil
 from buildbot_worker import runprocess
+from buildbot_worker import util as bsutil
 from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.test.fake.workerforbuilder import FakeWorkerForBuilder
 from buildbot_worker.test.util import compat
@@ -485,7 +485,7 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     def _test_spawnAsBatch(self, cmd, comspec):
 
         def spawnProcess(processProtocol, executable, args=(), env=None,
-                      path=None, uid=None, gid=None, usePTY=False, childFDs=None):
+                         path=None, uid=None, gid=None, usePTY=False, childFDs=None):
             self.assertTrue(args[0].lower().endswith("cmd.exe"),
                             "{0} is not cmd.exe".format(args[0]))
 
@@ -498,7 +498,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         s = runprocess.RunProcess(b, cmd, self.basedir)
         s.pp = runprocess.RunProcessPP(s)
         s.deferred = defer.Deferred()
-        d = s._spawnAsBatch(s.pp, s.command, "args", tempEnviron, "path", False)
+        d = s._spawnAsBatch(s.pp, s.command, "args",
+                            tempEnviron, "path", False)
         return d
 
     def test_spawnAsBatchCommandString(self):
@@ -553,7 +554,8 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
 
         def poll():
             if reactor.seconds() > until:
-                d.errback(RuntimeError("pidfile {0} never appeared".format(pidfile)))
+                d.errback(RuntimeError(
+                    "pidfile {0} never appeared".format(pidfile)))
                 return
             if os.path.exists(pidfile):
                 try:
