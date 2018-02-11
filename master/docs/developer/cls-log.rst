@@ -13,6 +13,8 @@ Logs
     .. py:attribute:: name
 
         The name of the log.
+        
+        Note that if you have a build step which outputs multiple logs, naming one of the logs ``Summary`` will cause  the Web UI to sort the summary log first in the list, and expand it so that the contents are immediately visible.  
 
     .. py:attribute:: type
 
