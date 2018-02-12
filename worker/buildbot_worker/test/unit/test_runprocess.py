@@ -507,11 +507,11 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
     def test_spawnAsBatchCommandList(self):
         return self._test_spawnAsBatch(stdoutCommand('hello'), "cmd.exe /c")
 
-    def test_spawnAsBatchCommandUnicodeWithNonAscii(self):
-        return self._test_spawnAsBatch(u"echo \u6211", "cmd.exe")
+    def test_spawnAsBatchCommandWithNonAscii(self):
+        return self._test_spawnAsBatch(u"echo \u6211".encode('utf8'), "cmd.exe")
 
-    def test_spawnAsBatchCommandUnicodeListWithNonAscii(self):
-        return self._test_spawnAsBatch([u'echo', u'\u6211'], "cmd.exe /c")
+    def test_spawnAsBatchCommandListWithNonAscii(self):
+        return self._test_spawnAsBatch(['echo', u'\u6211'.encode('utf8')], "cmd.exe /c")
 
 
 class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
