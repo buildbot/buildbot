@@ -98,7 +98,10 @@ class Builder extends Controller
             $scope.numbuilds = 200
             if $stateParams.numbuilds?
                 $scope.numbuilds = +$stateParams.numbuilds
-            $scope.builds = builder.getBuilds(limit:$scope.numbuilds, order:'-number')
+            $scope.builds = builder.getBuilds
+                property: ["owner"]
+                limit: $scope.numbuilds
+                order: '-number'
             $scope.buildrequests = builder.getBuildrequests(claimed:false)
             $scope.builds.onChange=refreshContextMenu
             $scope.buildrequests.onChange=refreshContextMenu
