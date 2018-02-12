@@ -61,7 +61,7 @@ pylint==1.8.2
 pyOpenSSL==17.5.0
 pyparsing==2.2.0
 python-dateutil==2.6.1
-pytz==2017.3
+pytz==2018.3
 PyYAML==3.12
 ramlfications==0.1.9
 requests==2.18.4
