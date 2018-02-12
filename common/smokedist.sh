@@ -18,7 +18,7 @@ do
     . $VE/bin/activate
     pip install -U pip
     pip install  mock requests flask
-    pip install dist/buildbot-0*.$suffix
+    pip install dist/buildbot-1*.$suffix
     pip install dist/buildbot?pkg*.$suffix
     pip install dist/*.$suffix
     smokes/run.sh
