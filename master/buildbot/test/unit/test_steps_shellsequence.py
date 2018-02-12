@@ -63,7 +63,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
 
     def testShellArgsAreRendered(self):
         arg1 = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                      logfile=WithProperties('make %s', 'project'))
+                                      logname=WithProperties('make %s', 'project'))
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1],
                                         workdir='build'))
@@ -100,7 +100,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
 
     def testMultipleCommandsAreRun(self):
         arg1 = shellsequence.ShellArg(command='make p1')
-        arg2 = shellsequence.ShellArg(command='deploy p1', logfile='deploy')
+        arg2 = shellsequence.ShellArg(command='deploy p1', logname='deploy')
         self.setupStep(
             shellsequence.ShellSequence(commands=[arg1, arg2],
                                         workdir='build'))

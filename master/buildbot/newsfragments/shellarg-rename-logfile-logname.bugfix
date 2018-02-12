@@ -1,0 +1,1 @@
+Rename ShellArg's logfile to logname to reflect the actual meaning. (:issue:`3771`)
