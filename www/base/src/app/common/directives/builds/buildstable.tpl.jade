@@ -8,7 +8,8 @@
         td(width='100px') #
         td(width='150px') Started At
         td(width='150px') Duration
-        td(width='200px') Owner
+        td(width='150px') Revision
+        td(width='150px') Worker
         td Status
       tr(ng-repeat='build in builds | orderBy:"-started_at"')
           td(ng-show="builders") {{ builders.get(build.builderid).name }}
@@ -25,6 +26,12 @@
             span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
               | {{(build.complete_at - build.started_at)| duration }}
           td
+            span(title="Revision")
+              p(ng-repeat='(codebase, revision) in build.properties.got_revision[0]')
+                | {{codebase}}: {{revision | limitTo: '8'}}
+          td
+            a(ui-sref='worker({worker: build.workerid})')
+              | {{build.properties.workername[0]}}
           td
             ul.list-inline
               li
