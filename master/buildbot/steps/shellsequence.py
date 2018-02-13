@@ -31,7 +31,7 @@ from buildbot.process import results
 class ShellArg(results.ResultComputingConfigMixin):
     publicAttributes = (
         results.ResultComputingConfigMixin.resultConfig +
-        ["command", "logname", "logfile"])
+        ["command", "logname"])
 
     def __init__(self, command=None, logname=None, logfile=None, **kwargs):
         name = self.__class__.__name__

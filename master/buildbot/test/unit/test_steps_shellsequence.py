@@ -153,7 +153,7 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         each new build.
         """
         arg = shellsequence.ShellArg(command=WithProperties('make %s', 'project'),
-                                     logfile=WithProperties('make %s', 'project'))
+                                     lognamee=WithProperties('make %s', 'project'))
         step = shellsequence.ShellSequence(commands=[arg], workdir='build')
 
         # First "build"
