@@ -42,6 +42,7 @@ class ShellArg(results.ResultComputingConfigMixin):
 
         self.logname = logname
         if logfile is not None:
+            config.warnDeprecated('1.0.1', "logfile is deprecated, use logname")
             if self.logname is not None:
                 config.error("the 'logfile' parameter of %s "
                              "must not be specified when 'logname' is set" % (name,))
