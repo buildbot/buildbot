@@ -25,6 +25,8 @@
             span(ng-show="build.complete", title="{{(build.complete_at - build.started_at)| durationformat:'LLL' }}")
               | {{(build.complete_at - build.started_at)| duration }}
           td
+            span(title="{{build.properties.owner[0]}}")
+              | {{ build.properties.owner[0] }}
           td
             ul.list-inline
               li
