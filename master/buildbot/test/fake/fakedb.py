@@ -2027,7 +2027,7 @@ class FakeStepsComponent(FakeDBComponent):
         validation.verifyType(self.t, 'state_string', state_string,
                               validation.StringValidator())
         validation.verifyType(self.t, 'name', name,
-                              validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(70))
         # get a unique name and number
         build_steps = [r for r in itervalues(self.steps)
                        if r['buildid'] == buildid]
@@ -2075,7 +2075,7 @@ class FakeStepsComponent(FakeDBComponent):
         validation.verifyType(self.t, 'stepid', stepid,
                               validation.IntValidator())
         validation.verifyType(self.t, 'name', name,
-                              validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(70))
         validation.verifyType(self.t, 'url', url,
                               validation.StringValidator())
         b = self.steps.get(stepid)

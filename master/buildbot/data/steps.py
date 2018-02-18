@@ -110,7 +110,7 @@ class Step(base.ResourceType):
     class EntityType(types.Entity):
         stepid = types.Integer()
         number = types.Integer()
-        name = types.Identifier(50)
+        name = types.Identifier(70)
         buildid = types.Integer()
         started_at = types.NoneOk(types.DateTime())
         complete = types.Boolean()

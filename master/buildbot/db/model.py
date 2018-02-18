@@ -167,7 +167,7 @@ class Model(base.DBConnectorComponent):
         'steps', metadata,
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
-        sa.Column('name', sa.String(50), nullable=False),
+        sa.Column('name', sa.String(70), nullable=False),
         sa.Column('buildid', sa.Integer,
                   sa.ForeignKey('builds.id', ondelete='CASCADE')),
         sa.Column('started_at', sa.Integer),

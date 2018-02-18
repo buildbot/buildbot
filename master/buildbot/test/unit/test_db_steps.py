@@ -330,14 +330,14 @@ class RealTests(Tests):
         clock = task.Clock()
         clock.advance(TIME1)
         yield self.insertTestData(self.backgroundData + [
-            fakedb.Step(id=73, number=0, name=u'a' * 50, buildid=30),
+            fakedb.Step(id=73, number=0, name=u'a' * 70, buildid=30),
         ] + [fakedb.Step(id=73 + i, number=i, name=u'a' * 48 + ('_%d' % i), buildid=30)
              for i in range(1, 10)
              ] + [fakedb.Step(id=73 + i, number=i, name=u'a' * 47 + ('_%d' % i), buildid=30)
                   for i in range(10, 100)
                   ])
         stepid, number, name = yield self.db.steps.addStep(
-            buildid=30, name=u'a' * 50, state_string=u'new')
+            buildid=30, name=u'a' * 70, state_string=u'new')
         yield self.db.steps.startStep(stepid=stepid, _reactor=clock)
         self.assertEqual((number, name), (100, u'a' * 46 + '_100'))
         stepdict = yield self.db.steps.getStep(stepid=stepid)

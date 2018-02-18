@@ -95,14 +95,14 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
             # we didn't get an id, so calculate a unique name and use that
             # instead.  Because names are truncated at the right to fit in a
-            # 50-character identifier, this isn't a simple query.
+            # 70-character identifier, this isn't a simple query.
             res = conn.execute(sa.select([tbl.c.name],
                                          whereclause=((tbl.c.buildid == buildid))))
             names = set([row[0] for row in res])
             num = 1
             while True:
                 numstr = '_%d' % num
-                newname = name[:50 - len(numstr)] + numstr
+                newname = name[:70 - len(numstr)] + numstr
                 if newname not in names:
                     break
                 num += 1
