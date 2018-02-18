@@ -324,7 +324,7 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'buildid', buildid,
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'name', name,
-                              validation.IdentifierValidator(50))
+                              validation.IdentifierValidator(70))
         return defer.succeed((10, 1, name))
 
     def addStepURL(self, stepid, name, url):

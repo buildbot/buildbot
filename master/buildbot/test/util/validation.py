@@ -592,7 +592,7 @@ dbdict['builddict'] = DictValidator(
 _step = dict(
     stepid=IntValidator(),
     number=IntValidator(),
-    name=IdentifierValidator(50),
+    name=IdentifierValidator(70),
     buildid=IntValidator(),
     started_at=IntValidator(),
     complete=BooleanValidator(),
@@ -615,7 +615,7 @@ message['steps'].add(None,
 dbdict['stepdict'] = DictValidator(
     id=IntValidator(),
     number=IntValidator(),
-    name=IdentifierValidator(50),
+    name=IdentifierValidator(70),
     buildid=IntValidator(),
     started_at=DateTimeValidator(),
     complete_at=NoneOk(DateTimeValidator()),
