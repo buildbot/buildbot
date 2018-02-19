@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding:utf8
 
 # This script expects one line for each new revision on the form
 #   <oldrev> <newrev> <refname>
@@ -26,20 +27,28 @@
 from __future__ import absolute_import
 from __future__ import print_function
 from future.utils import iteritems
-from future.utils import text_type
+try:
+    from future.utils import text_type
+except:
+    from six import text_type
 
-import commands
 import logging
 import os
 import re
 import subprocess
+import shlex
 import sys
 from optparse import OptionParser
 
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
-from twisted.spread import pb
+try:
+    from twisted.spread import pb
+except ImportError:
+    raise ImportError('Twisted version conflicts.\
+                      Upgrade to latest version may solve this problem.\
+                      try:  pip install --upgrade twisted')
 
 # Modify this to fit your setup, or pass in --master server:port on the
 # command line
@@ -111,7 +120,9 @@ def addChanges(remote, changei, src='git'):
 
     def iter():
         try:
-            c = changei.next()
+            # c = changei.next()
+            c = next(changei)
+            logging.info("CHANGE:",c)
             d = addChange(c)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack
@@ -124,6 +135,8 @@ def addChanges(remote, changei, src='git'):
         except StopIteration:
             remote.broker.transport.loseConnection()
             finished_d.callback(None)
+        except e:
+            logging.error(e)
 
     iter()
     return finished_d
@@ -135,13 +148,15 @@ def connected(remote):
 
 def grab_commit_info(c, rev):
     # Extract information about committer and files using git show
-    f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
+    # f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
+    f = subprocess.Popen(shlex.split("git show --raw --pretty=full %s" % rev),
+                                      stdout=subprocess.PIPE)
 
     files = []
     comments = []
 
     while True:
-        line = f.readline()
+        line = f.stdout.readline().decode("ascii")
         if not line:
             break
 
@@ -151,27 +166,28 @@ def grab_commit_info(c, rev):
         m = re.match(r"^:.*[MAD]\s+(.+)$", line)
         if m:
             logging.debug("Got file: %s", m.group(1))
-            files.append(text_type(m.group(1), encoding=encoding))
+            files.append(text_type(m.group(1)))
             continue
 
         m = re.match(r"^Author:\s+(.+)$", line)
         if m:
             logging.debug("Got author: %s", m.group(1))
-            c['who'] = text_type(m.group(1), encoding=encoding)
+            c['who'] = text_type(m.group(1))
 
         if re.match(r"^Merge: .*$", line):
             files.append('merge')
 
     c['comments'] = ''.join(comments)
     c['files'] = files
-    status = f.close()
+    # status = f.close()
+    status = f.terminate()
     if status:
         logging.warning("git show exited with status %d", status)
 
 
 def gen_changes(input, branch):
     while True:
-        line = input.readline()
+        line = input.stdout.readline().decode("ascii")
         if not line:
             break
 
@@ -179,20 +195,20 @@ def gen_changes(input, branch):
 
         m = re.match(r"^([0-9a-f]+) (.*)$", line.strip())
         c = {'revision': m.group(1),
-             'branch': text_type(branch, encoding=encoding),
+             'branch': text_type(branch),
              }
 
         if category:
-            c['category'] = text_type(category, encoding=encoding)
+            c['category'] = text_type(category)
 
         if repository:
-            c['repository'] = text_type(repository, encoding=encoding)
+            c['repository'] = text_type(repository)
 
         if project:
-            c['project'] = text_type(project, encoding=encoding)
+            c['project'] = text_type(project)
 
         if codebase:
-            c['codebase'] = text_type(codebase, encoding=encoding)
+            c['codebase'] = text_type(codebase)
 
         grab_commit_info(c, m.group(1))
         changes.append(c)
@@ -208,11 +224,17 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     logging.info("Branch `%s' created", branch)
 
-    f = os.popen("git rev-parse --not --branches"
+    #f = os.popen("git rev-parse --not --branches"
+    #             + "| grep -v $(git rev-parse %s)" % refname
+    #             +
+    #             "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
+    #             'r')
+
+    f = subprocess.Popen(shlex.split("git rev-parse --not --branches"
                  + "| grep -v $(git rev-parse %s)" % refname
                  +
-                 "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
-                 'r')
+                 "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev),
+                 stdout=subprocess.PIPE)
 
     gen_changes(f, branch)
 
@@ -250,41 +272,44 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE)
     (baserev, err) = mergebasecommand.communicate()
     baserev = baserev.strip()  # remove newline
+    baserev = baserev.decode("ascii")
 
     logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
         c = {'revision': baserev,
              'comments': "Rewind branch",
-             'branch': text_type(branch, encoding=encoding),
+             'branch': text_type(branch),
              'who': "dummy",
              }
         logging.info("Branch %s was rewound to %s", branch, baserev[:8])
         files = []
-        f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
+        # f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
+        f = subprocess.Popen(shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
+                             stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         while True:
-            line = f.readline()
+            line = f.stdout.readline().decode("ascii")
             if not line:
                 break
 
             file = re.match(r"^:.*[MAD]\s+(.+)$", line).group(1)
             logging.debug("  Rewound file: %s", file)
-            files.append(text_type(file, encoding=encoding))
+            files.append(text_type(file))
 
-        status = f.close()
+        status = f.terminate()
         if status:
             logging.warning("git diff exited with status %d", status)
 
         if category:
-            c['category'] = text_type(category, encoding=encoding)
+            c['category'] = text_type(category)
 
         if repository:
-            c['repository'] = text_type(repository, encoding=encoding)
+            c['repository'] = text_type(repository)
 
         if project:
-            c['project'] = text_type(project, encoding=encoding)
+            c['project'] = text_type(project)
 
         if codebase:
-            c['codebase'] = text_type(codebase, encoding=encoding)
+            c['codebase'] = text_type(codebase)
 
         if files:
             c['files'] = files
@@ -297,11 +322,11 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             # Add the --first-parent to avoid adding the merge commits which
             # have already been tested.
             options += ' --first-parent'
-        f = os.popen("git rev-list %s %s..%s" %
-                     (options, baserev, newrev), 'r')
+        f = subprocess.Popen(shlex.split("git rev-list %s %s..%s" %
+                     (options, baserev, newrev)), stdout=subprocess.PIPE)
         gen_changes(f, branch)
 
-        status = f.close()
+        status = f.terminate()
         if status:
             logging.warning("git rev-list exited with status %d", status)
 
@@ -351,7 +376,10 @@ def process_changes():
         if not line:
             break
 
-        [oldrev, newrev, refname] = line.split(None, 2)
+        # [oldrev, newrev, refname] = line.split(None, 2)
+        args = line.split(None, 2)
+        [oldrev, newrev, refname] = args
+        print("REVS----------------\n", args)
         process_change(oldrev, newrev, refname)
 
 
@@ -365,7 +393,7 @@ def send_changes():
     port = int(port)
 
     f = pb.PBClientFactory()
-    d = f.login(credentials.UsernamePassword(username, auth))
+    d = f.login(credentials.UsernamePassword(username.encode('utf-8'), auth.encode('utf-8')))
     reactor.connectTCP(host, port, f)
 
     d.addErrback(connectFailed)
@@ -418,10 +446,10 @@ def parse_options():
 # information to a file as well (we'll set that up later.)
 stderr = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("git_buildbot: %(levelname)s: %(message)s")
-stderr.setLevel(logging.ERROR)
+stderr.setLevel(logging.NOTSET)
 stderr.setFormatter(fmt)
 logging.getLogger().addHandler(stderr)
-logging.getLogger().setLevel(logging.DEBUG)
+logging.getLogger().setLevel(logging.NOTSET)
 
 try:
     options = parse_options()
