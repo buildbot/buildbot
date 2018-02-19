@@ -162,7 +162,7 @@ Unfortunately, many existing names do not fit this pattern.
 The following fields are identifiers:
 
 * worker name (50-character)
-* builder name (50-character)
+* builder name (70-character)
 * step name (50-character)
 
 Serving static files
