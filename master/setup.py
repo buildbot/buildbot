@@ -331,6 +331,7 @@ setup_args = {
             ('buildbot.reporters.gerrit', ['GerritStatusPush']),
             ('buildbot.reporters.gerrit_verify_status',
              ['GerritVerifyStatusPush']),
+            ('buildbot.reporters.hipchat', ['HipChatStatusPush']),
             ('buildbot.reporters.http', ['HttpStatusPush']),
             ('buildbot.reporters.github', ['GitHubStatusPush', 'GitHubCommentPush']),
             ('buildbot.reporters.gitlab', ['GitLabStatusPush']),
