@@ -120,9 +120,8 @@ def addChanges(remote, changei, src='git'):
 
     def iter():
         try:
-            # c = changei.next()
             c = next(changei)
-            logging.info("CHANGE:",c)
+            logging.info("CHANGE:", c)
             d = addChange(c)
             # handle successful completion by re-iterating, but not immediately
             # as that will blow out the Python stack
@@ -148,9 +147,8 @@ def connected(remote):
 
 def grab_commit_info(c, rev):
     # Extract information about committer and files using git show
-    # f = os.popen("git show --raw --pretty=full %s" % rev, 'r')
     f = subprocess.Popen(shlex.split("git show --raw --pretty=full %s" % rev),
-                                      stdout=subprocess.PIPE)
+                         stdout=subprocess.PIPE)
 
     files = []
     comments = []
@@ -179,7 +177,6 @@ def grab_commit_info(c, rev):
 
     c['comments'] = ''.join(comments)
     c['files'] = files
-    # status = f.close()
     status = f.terminate()
     if status:
         logging.warning("git show exited with status %d", status)
@@ -223,12 +220,6 @@ def gen_create_branch_changes(newrev, refname, branch):
     # commits that only exists in a common subset of the new branches.
 
     logging.info("Branch `%s' created", branch)
-
-    #f = os.popen("git rev-parse --not --branches"
-    #             + "| grep -v $(git rev-parse %s)" % refname
-    #             +
-    #             "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev,
-    #             'r')
 
     f = subprocess.Popen(shlex.split("git rev-parse --not --branches"
                  + "| grep -v $(git rev-parse %s)" % refname
@@ -283,7 +274,6 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
              }
         logging.info("Branch %s was rewound to %s", branch, baserev[:8])
         files = []
-        # f = os.popen("git diff --raw %s..%s" % (oldrev, baserev), 'r')
         f = subprocess.Popen(shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         while True:
@@ -323,7 +313,8 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             # have already been tested.
             options += ' --first-parent'
         f = subprocess.Popen(shlex.split("git rev-list %s %s..%s" %
-                     (options, baserev, newrev)), stdout=subprocess.PIPE)
+                             (options, baserev, newrev)),
+                             stdout=subprocess.PIPE)
         gen_changes(f, branch)
 
         status = f.terminate()
@@ -376,10 +367,8 @@ def process_changes():
         if not line:
             break
 
-        # [oldrev, newrev, refname] = line.split(None, 2)
         args = line.split(None, 2)
         [oldrev, newrev, refname] = args
-        print("REVS----------------\n", args)
         process_change(oldrev, newrev, refname)
 
 
