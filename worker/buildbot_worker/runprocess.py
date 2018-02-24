@@ -23,6 +23,7 @@ from future.builtins import range
 from future.utils import iteritems
 from future.utils import string_types
 from future.utils import text_type
+from future.utils import PY3
 
 import os
 import pprint
@@ -610,8 +611,16 @@ class RunProcess(object):
         """A cheat that routes around the impedance mismatch between
         twisted and cmd.exe with respect to escaping quotes"""
 
-        tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                delete=False, encoding=self.builder.unicode_encoding)
+        # NamedTemporaryFile(NTF) differs in PY2 and PY3.
+        # In PY2, NTF needs encoded str and its encoding cannot be specified.
+        # In PY3, NTF needs str which is unicode and its encoding can be specified.
+        if PY3:
+            tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
+                                    delete=False, encoding=self.builder.unicode_encoding)
+        else:
+            tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
+                                    delete=False)
+
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
