@@ -611,7 +611,7 @@ class RunProcess(object):
         twisted and cmd.exe with respect to escaping quotes"""
 
         tf = NamedTemporaryFile(mode='w+', dir='.', suffix=".bat",
-                                delete=False)
+                                delete=False, encoding=self.builder.unicode_encoding)
         # echo off hides this cheat from the log files.
         tf.write(u"@echo off\n")
         if isinstance(self.command, (string_types, bytes)):
