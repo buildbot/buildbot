@@ -1,1 +1,1 @@
-Fix encoding problem of :py:class:`~NamedTemporaryFile` and add related unittest (:issue:`3799`).
+Fix encoding issues of commands with Windows workers (:issue:`3799`).
