@@ -20,10 +20,10 @@ Support for running 'shell commands'
 from __future__ import absolute_import
 from __future__ import print_function
 from future.builtins import range
+from future.utils import PY3
 from future.utils import iteritems
 from future.utils import string_types
 from future.utils import text_type
-from future.utils import PY3
 
 import os
 import pprint
