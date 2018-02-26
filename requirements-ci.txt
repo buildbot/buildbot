@@ -85,7 +85,7 @@ txaio==2.8.2
 txgithub==15.0.0
 txrequests==0.9.6
 typing==3.6.4
-webcolors==1.7
+webcolors==1.8.1
 Werkzeug==0.14.1
 wrapt==1.10.11
 xmltodict==0.11.0
