@@ -26,7 +26,7 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
 
-  - "python -m pip install -U pip"
+  - "python -m pip install -U pip setuptools wheel"
   - "python -m pip install -r requirements-ci.txt"
   - "python -m pip list"
 
