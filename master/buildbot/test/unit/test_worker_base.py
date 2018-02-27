@@ -22,6 +22,7 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot import locks
+from buildbot.process import properties
 from buildbot.test.fake import bworkermanager
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -48,6 +49,9 @@ class WorkerInterfaceTests(interfaces.InterfaceTests):
 
     def test_attr_properties(self):
         self.assertTrue(hasattr(self.wrk, 'properties'))
+
+    def test_attr_defaultProperties(self):
+        self.assertTrue(hasattr(self.wrk, 'defaultProperties'))
 
     @defer.inlineCallbacks
     def test_attr_worker_basedir(self):
@@ -235,6 +239,22 @@ class TestAbstractWorker(unittest.TestCase):
 
         yield self.do_test_reconfigService(old, old)
         self.assertTrue(old.properties.getProperty('workername'), 'bot')
+
+    @defer.inlineCallbacks
+    def test_setupProperties(self):
+        props = properties.Properties()
+        props.setProperty('foo', 1, 'Scheduler')
+        props.setProperty('bar', 'bleh', 'Change')
+        props.setProperty('omg', 'wtf', 'Builder')
+
+        wrkr = yield self.createWorker(
+            'bot', 'passwd',
+            defaultProperties={'bar': 'onoes', 'cuckoo': 42})
+
+        wrkr.setupProperties(props)
+
+        self.assertEquals(props.getProperty('bar'), 'bleh')
+        self.assertEquals(props.getProperty('cuckoo'), 42)
 
     @defer.inlineCallbacks
     def test_reconfigService_initial_registration(self):

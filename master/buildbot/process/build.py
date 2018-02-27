@@ -220,8 +220,7 @@ class Build(properties.PropertiesMixin):
         # get worker properties
         # navigate our way back to the L{buildbot.worker.Worker}
         # object that came from the config, and get its properties
-        worker_properties = workerforbuilder.worker.properties
-        props.updateFromProperties(worker_properties)
+        workerforbuilder.worker.setupProperties(props)
 
     def setupOwnProperties(self):
         # now set some properties of our own, corresponding to the
