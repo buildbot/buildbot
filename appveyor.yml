@@ -15,6 +15,8 @@ install:
   - "python -c \"import sys; print(sys.exec_prefix)\""
   - "python -c \"import sys; print(sys.executable)\""
   - "python -V -V"
+  - "python -m pip install -U pip setuptools wheel"
+  - "python -m pip install -U git+https://github.com/pypa/pip.git"
   # Twisted requires pywin32 on Windows in order to spawn processes.
   - "python -m pip install \"pypiwin32<222\""
 
@@ -26,7 +28,6 @@ install:
   - "7z x sqlite-dll-win32-x86-3110000.zip"
   - "copy /y sqlite3.dll %PYTHON%\\DLLs\\"
 
-  - "python -m pip install -U pip"
   - "python -m pip install -r requirements-ci.txt"
   - "python -m pip list"
 
