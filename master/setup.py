@@ -494,7 +494,6 @@ test_deps = [
     'moto',
     # txgithub required to run buildbot.status.github module tests
     'txgithub',
-    'ramlfications',
     'mock>=2.0.0',
 ]
 if sys.platform != 'win32':
@@ -539,7 +538,6 @@ setup_args['extras_require'] = {
         'sphinxcontrib-spelling',
         'pyenchant',
         'docutils>=0.8',
-        'ramlfications',
         'sphinx-jinja',
         'towncrier'
     ],
