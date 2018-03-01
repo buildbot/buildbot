@@ -375,6 +375,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
                 props.setProperty(propertyname,
                                   self.config.properties[propertyname],
                                   "Builder")
+        if self.config.defaultProperties:
+            for propertyname in self.config.defaultProperties:
+                if propertyname not in props:
+                    props.setProperty(propertyname,
+                                      self.config.defaultProperties[propertyname],
+                                      "Builder")
 
     def buildFinished(self, build, wfb):
         """This is called when the Build has finished (either success or
