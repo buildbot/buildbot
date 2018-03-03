@@ -206,7 +206,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                 'priority': 0,
                 'results': -1,
                 'submitted_at': epoch2datetime(A_TIMESTAMP),
-                'waited_for': True}
+                'waited_for': True,
+                'properties': None}
 
     def _buildRequestMessage1(self, brid, bsid, builderid):
         return (
