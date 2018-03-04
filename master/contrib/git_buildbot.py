@@ -240,7 +240,8 @@ def gen_create_tag_changes(newrev, refname, tag):
     # the "branch" attribute will hold the tag name.
 
     logging.info("Tag `%s' created", tag)
-    f = os.popen("git log -n 1 --pretty=oneline %s" % newrev, 'r')
+    f = subprocess.Popen(shlex.split("git log -n 1 --pretty=oneline %s" % newrev),
+                         stdout=subprocess.PIPE)
     gen_changes(f, tag)
     status = f.close()
     if status:
