@@ -71,6 +71,9 @@ properties:
     priority:
         description: the priority of this buildrequest
         type: integer
+    properties?:
+        description: a dictionary of properties corresponding to buildrequest.
+        type: sourcedproperties
     results?:
         description: |
             the results of this buildrequest (see :ref:`Build-Result-Codes`), or None if not complete
