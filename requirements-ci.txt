@@ -42,7 +42,7 @@ mccabe==0.6.1
 mock==2.0.0
 moto==1.2.0
 olefile==0.45.1
-packaging==16.8
+packaging==17.1
 pathlib2==2.3.0
 pbr==3.1.1
 pep8==1.7.1
