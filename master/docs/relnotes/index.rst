@@ -10,6 +10,35 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.1.0`` ( ``2018-03-10`` )
+=====================================
+
+
+Deprecations and Removals
+-------------------------
+
+- Removed ``ramlfication`` as a dependency to build the docs and run the tests.
+
+Bug fixes
+---------
+
+- Fixed buildrequests API doesn't provide properties data (:issue:`3929`)
+- Fix missing owner on builder build table (:issue:`3311`)
+- Include `hipchat` as reporter.
+- Fix encoding issues of commands with Windows workers (:issue:`3799`).
+- Fixed Relax builder name length restriction (:issue:`3413`).
+- Fix the configuration order so that services can actually use secrets (:issue:`3985`)
+- Partially fix Builder page should show the worker information  (:issue:`3546`).
+
+Features
+--------
+
+- Added the ``defaultProperties`` parameter to :bb:cfg:`builders`.
+- When a build step has a log called "summary" (case-insensitive), the Build
+  Summary page will sort that log first in the list of logs, and automatically
+  expand it.
+
+
 Buildbot ``1.0.0`` ( ``2018-02-11`` )
 =====================================
 
