@@ -193,6 +193,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
 
         self.secrets_manager = SecretManager()
         self.secrets_manager.setServiceParent(self)
+        self.secrets_manager.reconfig_priority = 2000
 
         self.service_manager = service.BuildbotServiceManager()
         self.service_manager.setServiceParent(self)

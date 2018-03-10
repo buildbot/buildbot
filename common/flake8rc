@@ -20,5 +20,8 @@ max-line-length = 100
 # E721 do not compare types, use 'isinstance()'
 # W503 line break before binary operator
 # E731 do not assign a lambda expression, use a def
+# H302 only import modules (we also import classes)
+# H301 one import per line (we rely on isort for that)
+# H306 sorted import (we rely on isort for that)
 
-ignore = E122,E123,E126,E128,E211,E501,E711,E712,E721,E731,W503
+ignore = E122,E123,E126,E128,E211,E501,E711,E712,E721,E731,W503,H302,H306,H301
