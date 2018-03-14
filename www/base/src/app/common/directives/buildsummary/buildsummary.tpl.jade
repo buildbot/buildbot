@@ -1,5 +1,5 @@
 .panel.panel-default(ng-class="results2class(buildsummary.build)", style="margin-bottom:0px")
-    .panel-heading.no-select
+    .panel-heading
         .flex-row
             .flex-grow-1
                 .btn.btn-xs.btn-default(ng-click="buildsummary.toggleFullDisplay()", title="Expand all step logs")
@@ -27,7 +27,7 @@
                     ui-sref="build({builder:buildsummary.parentbuilder.builderid, build:buildsummary.parentbuild.number})")
                           | {{buildsummary.parentrelationship}}:
                           | {{buildsummary.parentbuilder.name}}/{{buildsummary.parentbuild.number}}
-    ul.list-group.no-select
+    ul.list-group
       li.list-group-item(ng-if="buildsummary.isStepDisplayed(step)"
                          ng-repeat="step in buildsummary.steps | orderBy: ['stepid']")
         div(ng-click="step.fulldisplay=!step.fulldisplay")
