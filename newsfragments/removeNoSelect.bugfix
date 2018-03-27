@@ -1,0 +1,1 @@
+Removing ```no-select``` rules from places where they would prevent the user from selecting interesting text. (Issue #3663)

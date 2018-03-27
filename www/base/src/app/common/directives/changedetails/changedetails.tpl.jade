@@ -1,5 +1,5 @@
 div.changedetails(style="width:100%;")
-    div.no-select(style="width:100%;", ng-click="change.show_details = !change.show_details")
+    div(style="width:100%;", ng-click="change.show_details = !change.show_details")
         .change-avatar(ng-if="!compact && change.author_email")
             a(ng-href="mailto:{{change.author_email}}", title="{{change.author_name}}")
                 img(ng-src="avatar?email={{change.author_email}}")
