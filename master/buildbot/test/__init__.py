@@ -135,3 +135,6 @@ warnings.filterwarnings('ignore',
 # moto warning v1.0.0
 warnings.filterwarnings('ignore', "Flags not at the start of the expression")
 warnings.filterwarnings('ignore', r"object\(\) takes no parameters")
+
+# this warning happens sometimes on python3.4
+warnings.filterwarnings('ignore', r"The value of convert_charrefs will become True in 3.5")

@@ -1,0 +1,1 @@
+Fix issue which marked all workers dis-configured in the database every 24h (:issue:`3981` :issue:`3956` :issue:`3970`)
