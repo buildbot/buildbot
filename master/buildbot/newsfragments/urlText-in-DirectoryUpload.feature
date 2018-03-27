@@ -1,1 +1,1 @@
-Allow urlText to be set on a url linked to a DirectoryUpload (:issue:`3983`)
+Allow ``urlText`` to be set on a url linked to a ``DirectoryUpload`` step (:issue:`3983`)
