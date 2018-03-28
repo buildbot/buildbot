@@ -37,7 +37,7 @@ class HomePage extends BasePage
         noRunningBuilds = () ->
             element.all(By.css("h4")).getText().then (text) ->
                 text = text.join(" ")
-                return text.toLowerCase().indexOf("0 build running") >= 0
+                return text.toLowerCase().indexOf("0 builds running") >= 0
         browser.wait(noRunningBuilds, 20000)
 
 module.exports = HomePage
