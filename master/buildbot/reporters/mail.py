@@ -24,6 +24,7 @@ from email.message import Message
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.utils import formatdate
+from email.utils import parseaddr
 from io import BytesIO
 
 from twisted.internet import defer
@@ -329,9 +330,10 @@ class MailNotifier(NotifierBase):
         useAuth = self.smtpUser and self.smtpPassword
 
         s = unicode2bytes(s)
+        recipients = [parseaddr(r)[1] for r in recipients]
         sender_factory = ESMTPSenderFactory(
             unicode2bytes(self.smtpUser), unicode2bytes(self.smtpPassword),
-            self.fromaddr, recipients, BytesIO(s),
+            parseaddr(self.fromaddr)[1], recipients, BytesIO(s),
             result, requireTransportSecurity=self.useTls,
             requireAuthentication=useAuth)
 

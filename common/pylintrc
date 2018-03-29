@@ -142,6 +142,7 @@ disable=
   interface-not-implemented,
   bad-continuation,
   keyword-arg-before-vararg,
+  unsubscriptable-object,
   inconsistent-return-statements  # (implicit return None)
 
 [REPORTS]

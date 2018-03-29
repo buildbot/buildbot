@@ -291,6 +291,27 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
                 'foo@example.com', extraRecipients=[invalid])
 
     @defer.inlineCallbacks
+    def test_sendMail_real_name_addresses(self):
+        fakeSenderFactory = Mock()
+        fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
+            5].callback(True)
+        self.patch(mail, 'ESMTPSenderFactory', fakeSenderFactory)
+        self.patch(mail, 'reactor', Mock())
+        msg = Mock()
+        msg.as_string = Mock(return_value='<email>')
+
+        mn = yield self.setupMailNotifier('John Doe <john.doe@domain.tld>')
+        yield mn.sendMail(msg, ['Jane Doe <jane.doe@domain.tld>'])
+
+        self.assertIsInstance(fakeSenderFactory.call_args, tuple)
+        self.assertTrue(len(fakeSenderFactory.call_args) > 0)
+        self.assertTrue(len(fakeSenderFactory.call_args[0]) > 3)
+        self.assertEquals(fakeSenderFactory.call_args[0][2],
+                          'john.doe@domain.tld')
+        self.assertEquals(fakeSenderFactory.call_args[0][3],
+                          ['jane.doe@domain.tld'])
+
+    @defer.inlineCallbacks
     def do_test_sendMessage(self, **mnKwargs):
         fakeSenderFactory = Mock()
         fakeSenderFactory.side_effect = lambda *args, **kwargs: args[
