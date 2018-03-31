@@ -233,6 +233,9 @@ class MakeDirectory(WorkerBuildStep):
 
 class CompositeStepMixin():
 
+    def workerPathToMasterPath(self, path):
+        return os.path.join(*self.worker.path_module.split(path))
+
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write

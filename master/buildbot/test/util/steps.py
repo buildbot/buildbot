@@ -211,6 +211,7 @@ class BuildStepMixin(object):
         # step.worker
 
         self.worker = step.worker = worker.FakeWorker(self.master)
+        self.worker.attached(None)
 
         # step overrides
 
