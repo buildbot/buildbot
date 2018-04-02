@@ -405,16 +405,11 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
 
         @defer.inlineCallbacks
         def globSources(sources):
-            dl = defer.DeferredList([
+            results = yield defer.gatherResults([
                 self.runGlob(
                     os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
             ])
-            results = yield dl
-            results = [
-                result[1]
-                for result in filter(lambda result: result[0], results)
-            ]
-            results = flatten(results)
+            results = [self.workerPathToMasterPath(p) for p in flatten(results)]
             defer.returnValue(results)
 
         @defer.inlineCallbacks

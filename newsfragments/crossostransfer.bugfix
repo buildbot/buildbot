@@ -1,0 +1,1 @@
+Fix :bb:step:`MultipleFileUpload` to correctly compute path name when worker and master are on different OS (:issue:`4019`)
