@@ -104,7 +104,9 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
 
             def getLdapInfo(x):
                 if isinstance(x, list):
-                    return x[0]
+                    x = x[0]
+                if isinstance(x, bytes):
+                    x = x.decode('utf-8')
                 return x
             infos['full_name'] = getLdapInfo(ldap_infos[self.accountFullName])
             infos['email'] = getLdapInfo(ldap_infos[self.accountEmail])
@@ -120,8 +122,10 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             pattern = self.groupMemberPattern % dict(dn=dn)
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
-            infos['groups'] = flatten(
+            _groups = flatten(
                 [group_infos['raw_attributes'][self.groupName] for group_infos in res])
+            infos['groups'] = [g if not isinstance(g, bytes) else g.decode('utf-8')
+                for g in _groups]
             return infos
         return threads.deferToThread(thd)
 
