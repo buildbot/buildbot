@@ -18,7 +18,8 @@
             .col-md-4(ng-repeat="builder in builders | filter:hasBuilds")
                 .panel.panel-primary
                     .panel-heading
-                        h4.panel-title {{ builder.name }}
+                        h4.panel-title
+                          a(ui-sref="builder({builder: builder.builderid})") {{ builder.name }}
                     .panel-body
                         span(ng-repeat="build in builder.builds | orderBy:'-number'")
                             buildsticker(build="build", builder="builder")
