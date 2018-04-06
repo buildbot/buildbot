@@ -1,1 +1,0 @@
-The :bb:reporter:`MailNotifier` no longer crashes when sending from/to email addresses with "Real Name" parts (e.g., ``John Doe <john.doe@domain.tld``).
