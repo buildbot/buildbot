@@ -10,6 +10,29 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.1.1`` ( ``2018-04-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix issue which marked all workers dis-configured in the database every 24h
+  (:issue:`3981` :issue:`3956` :issue:`3970`)
+- The :bb:reporter:`MailNotifier` no longer crashes when sending from/to email
+  addresses with "Real Name" parts (e.g., ``John Doe <john.doe@domain.tld>``).
+- Corrected pluralization of text on landing page of the web UI
+
+Improved Documentation
+----------------------
+
+- Corrected typo in description of libvirt
+- Update sample config to use preferred API
+
+Misc Improvements
+-----------------
+
+- Home page now contains links to recently active builders
+
 Buildbot ``1.1.0`` ( ``2018-03-10`` )
 =====================================
 
