@@ -356,9 +356,9 @@ class V2RootResource(resource.Resource):
 
     def encodeRaw(self, data, request):
         request.setHeader(b"content-type",
-                          unicode2bytes(data['mime-type'] + '; charset=utf-8')
+                          unicode2bytes(data['mime-type']) + b'; charset=utf-8')
         request.setHeader(b"content-disposition",
-                          unicode2bytes('attachment; filename=' + data['filename']))
+                          b'attachment; filename=' + unicode2bytes(data['filename']))
         request.write(unicode2bytes(data['raw']))
         return
 
