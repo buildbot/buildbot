@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('change class', function() {
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     return it('should calculate authors emails', inject(function(Change) {
         const changes = [

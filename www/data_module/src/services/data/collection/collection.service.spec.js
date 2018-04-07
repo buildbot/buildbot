@@ -5,7 +5,7 @@
  */
 describe('Collection', function() {
     let $filter, $q, $rootScope, $timeout, c, indexedDBService, tabexService;
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let Collection = ($q = ($rootScope = (tabexService = (indexedDBService = (c = ($timeout = ($filter = undefined)))))));
     const injected = function($injector) {

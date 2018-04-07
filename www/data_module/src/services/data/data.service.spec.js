@@ -7,7 +7,7 @@
  */
 describe('Data service', function() {
     let $httpBackend, $q, $rootScope, $timeout, ENDPOINTS, restService, socketService;
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let dataService = (restService = (socketService = (ENDPOINTS = ($rootScope = ($q = ($httpBackend = ($timeout = null)))))));
     const injected = function($injector) {

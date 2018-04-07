@@ -5,7 +5,7 @@
  */
 describe('dataquery service', function() {
     let $rootScope, testArray, wrappedDataQuery;
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let DataQuery = (testArray = ($rootScope = (wrappedDataQuery = undefined)));
     const injected = function($injector) {

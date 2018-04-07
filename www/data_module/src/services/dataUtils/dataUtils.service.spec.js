@@ -4,7 +4,7 @@
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
 describe('Data utils service', function() {
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let dataUtilsService = undefined;
     const injected = $injector => dataUtilsService = $injector.get('dataUtilsService');

@@ -5,7 +5,7 @@
  */
 describe('Base class', function() {
     let $q, dataService, socketService;
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let Base = (dataService = (socketService = ($q = null)));
     const injected = function($injector) {

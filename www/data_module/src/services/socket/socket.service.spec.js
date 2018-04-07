@@ -63,7 +63,7 @@ describe('Socket service', function() {
 
     const webSocketBackend = new WebSocketBackend();
     beforeEach(function() {
-        module('bbData');
+        angular.module('bbData');
         return module($provide => $provide.constant('webSocketService', webSocketBackend));
     });
 

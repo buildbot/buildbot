@@ -5,7 +5,7 @@
  */
 describe('Stream service', function() {
     let stream;
-    beforeEach(module('bbData'));
+    beforeEach(angular.module('bbData'));
 
     let Stream = (stream = null);
     const injected = function($injector) {
