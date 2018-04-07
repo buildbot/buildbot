@@ -38,7 +38,7 @@ class Base {
             }
 
             update(o) {
-                return angular.merge(this, o);
+                return angular.extend(this, o);
             }
 
             get(...args) {
