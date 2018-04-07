@@ -1,0 +1,1 @@
+LDAP bytes/unicode handling has been fixed to work with Python 3.  This means that LDAP authentication, REMOTE_USER authentication, and LDAP avatars now work on Python 3.  In addition, an of bounds access when trying to load the value of an empty LDAP attribute has been fixed.
