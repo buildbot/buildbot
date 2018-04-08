@@ -371,6 +371,7 @@ diff
 diffs
 dir
 directoryenterpattern
+directoryupload
 dirname
 dirs
 dirwatcher
@@ -1440,6 +1441,7 @@ urllib
 urlopen
 urlparse
 urls
+urltext
 usa
 usageerror
 usechange
