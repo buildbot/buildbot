@@ -46,7 +46,7 @@ packaging==17.1
 pathlib2==2.3.0
 pbr==4.0.1
 pep8==1.7.1
-Pillow==5.0.0
+Pillow==5.1.0
 pyaml==17.12.1
 pyasn1==0.4.2
 pyasn1-modules==0.2.1
