@@ -1,0 +1,1 @@
+Speed up generation of api/v2/builders by an order of magnitude. Fixes (:issue:`3396`).
