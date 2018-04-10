@@ -171,14 +171,39 @@ class LdapUserInfo(CommonTestCase):
                                'groups': ["group", "group2"], 'username': 'me'})
 
     @defer.inlineCallbacks
-    def test_getUserAvatar(self):
+    def _getUserAvatar(self, mimeTypeAndData):
+        (mimeType, data) = mimeTypeAndData
         self.makeRawSearchSideEffect([
-            [("cn", {"picture": [b"\x89PNG lljklj"]})]])
+            [("cn", {"picture": [data]})]])
         res = yield self.userInfoProvider.getUserAvatar("me", 21, None)
         self.assertSearchCalledWith([
             (('accbase', 'avatar', ['picture']), {}),
         ])
-        self.assertEqual(res, ('image/png', b'\x89PNG lljklj'))
+        defer.returnValue(res)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarPNG(self):
+        mimeTypeAndData = ('image/png', b'\x89PNG lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarJPEG(self):
+        mimeTypeAndData = ('image/jpeg', b'\xff\xd8\xff lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarGIF(self):
+        mimeTypeAndData = ('image/gif', b'GIF8 lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarUnknownType(self):
+        mimeTypeAndData = ('', b'unknown image format')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertIsNone(res)
 
 
 class LdapUserInfoNoGroups(CommonTestCase):
