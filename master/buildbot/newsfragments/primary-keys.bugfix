@@ -1,0 +1,1 @@
+All database tables now have a primary key (:issue:`3841`).

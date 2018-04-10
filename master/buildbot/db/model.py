@@ -108,7 +108,7 @@ class Model(base.DBConnectorComponent):
         'buildrequest_claims', metadata,
         sa.Column('brid', sa.Integer,
                   sa.ForeignKey('buildrequests.id', ondelete='CASCADE'),
-                  nullable=False),
+                  primary_key=True),
         sa.Column('masterid', sa.Integer,
                   sa.ForeignKey('masters.id', ondelete='CASCADE'),
                   index=True, nullable=True),
@@ -122,8 +122,8 @@ class Model(base.DBConnectorComponent):
         'build_properties', metadata,
         sa.Column('buildid', sa.Integer,
                   sa.ForeignKey('builds.id', ondelete='CASCADE'),
-                  nullable=False),
-        sa.Column('name', sa.String(256), nullable=False),
+                  primary_key=True),
+        sa.Column('name', sa.String(256), primary_key=True),
         # JSON encoded value
         sa.Column('value', sa.Text, nullable=False),
         sa.Column('source', sa.String(256), nullable=False),
@@ -197,11 +197,12 @@ class Model(base.DBConnectorComponent):
     logchunks = sautils.Table(
         'logchunks', metadata,
         sa.Column('logid', sa.Integer,
-                  sa.ForeignKey('logs.id', ondelete='CASCADE')),
+                  sa.ForeignKey('logs.id', ondelete='CASCADE'),
+                  primary_key=True),
         # 0-based line number range in this chunk (inclusive); note that for
         # HTML logs, this counts lines of HTML, not lines of rendered output
-        sa.Column('first_line', sa.Integer, nullable=False),
-        sa.Column('last_line', sa.Integer, nullable=False),
+        sa.Column('first_line', sa.Integer, primary_key=True),
+        sa.Column('last_line', sa.Integer, primary_key=True),
         # log contents, including a terminating newline, encoded in utf-8 or,
         # if 'compressed' is not 0, compressed with gzip, bzip2 or lz4
         sa.Column('content', sa.LargeBinary(65536)),
@@ -215,8 +216,8 @@ class Model(base.DBConnectorComponent):
         'buildset_properties', metadata,
         sa.Column('buildsetid', sa.Integer,
                   sa.ForeignKey('buildsets.id', ondelete='CASCADE'),
-                  nullable=False),
-        sa.Column('property_name', sa.String(256), nullable=False),
+                  primary_key=True),
+        sa.Column('property_name', sa.String(256), primary_key=True),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.Text, nullable=False),
     )
@@ -326,8 +327,8 @@ class Model(base.DBConnectorComponent):
         'change_files', metadata,
         sa.Column('changeid', sa.Integer,
                   sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
-                  nullable=False),
-        sa.Column('filename', sa.String(1024), nullable=False),
+                  primary_key=True),
+        sa.Column('filename', sa.String(1024), primary_key=True),
     )
 
     # Properties for changes
@@ -335,8 +336,8 @@ class Model(base.DBConnectorComponent):
         'change_properties', metadata,
         sa.Column('changeid', sa.Integer,
                   sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
-                  nullable=False),
-        sa.Column('property_name', sa.String(256), nullable=False),
+                  primary_key=True),
+        sa.Column('property_name', sa.String(256), primary_key=True),
         # JSON-encoded tuple of (value, source)
         sa.Column('property_value', sa.Text, nullable=False),
     )
@@ -348,11 +349,11 @@ class Model(base.DBConnectorComponent):
         "change_users", metadata,
         sa.Column('changeid', sa.Integer,
                   sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
-                  nullable=False),
+                  primary_key=True),
         # uid for the author of the change with the given changeid
         sa.Column('uid', sa.Integer,
                   sa.ForeignKey('users.uid', ondelete='CASCADE'),
-                  nullable=False),
+                  primary_key=True),
     )
 
     # Changes to the source code, produced by ChangeSources
@@ -527,9 +528,11 @@ class Model(base.DBConnectorComponent):
     scheduler_changes = sautils.Table(
         'scheduler_changes', metadata,
         sa.Column('schedulerid', sa.Integer,
-                  sa.ForeignKey('schedulers.id', ondelete='CASCADE')),
+                  sa.ForeignKey('schedulers.id', ondelete='CASCADE'),
+                  primary_key=True),
         sa.Column('changeid', sa.Integer,
-                  sa.ForeignKey('changes.changeid', ondelete='CASCADE')),
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
+                  primary_key=True),
         # true (nonzero) if this change is important to this scheduler
         sa.Column('important', sa.Integer),
     )
@@ -604,9 +607,9 @@ class Model(base.DBConnectorComponent):
         # object for which this value is set
         sa.Column('objectid', sa.Integer,
                   sa.ForeignKey('objects.id', ondelete='CASCADE'),
-                  nullable=False),
+                  primary_key=True),
         # name for this value (local to the object)
-        sa.Column("name", sa.String(length=255), nullable=False),
+        sa.Column("name", sa.String(length=255), primary_key=True),
         # value, as a JSON string
         sa.Column("value_json", sa.Text, nullable=False),
     )
@@ -637,10 +640,10 @@ class Model(base.DBConnectorComponent):
         # unique user id number
         sa.Column('uid', sa.Integer,
                   sa.ForeignKey('users.uid', ondelete='CASCADE'),
-                  nullable=False),
+                  primary_key=True),
 
         # type of user attribute, such as 'git'
-        sa.Column("attr_type", sa.String(128), nullable=False),
+        sa.Column("attr_type", sa.String(128), primary_key=True),
 
         # data for given user attribute, such as a commit string or password
         sa.Column("attr_data", sa.String(128), nullable=False),
