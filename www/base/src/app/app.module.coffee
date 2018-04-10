@@ -5,7 +5,6 @@ class App extends App
         'ui.bootstrap'
         'ui.router'
         'RecursionHelper'
-        'guanlecoja.ui'
         'bbData'
         'btorfs.multiselect'
     ]
