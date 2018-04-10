@@ -1,4 +1,4 @@
-class Home extends Controller
+class Home
     constructor: ($scope, recentStorage, dataService, config, $location) ->
         $scope.baseurl = $location.absUrl().split("#")[0]
         $scope.config = config
@@ -21,3 +21,7 @@ class Home extends Controller
 
         $scope.recentBuilds.onChange = updateBuilds
         $scope.builders.onChange = updateBuilds
+
+
+angular.module('app')
+.controller('homeController', ['$scope', 'recentStorage', 'dataService', 'config', '$location', Home])

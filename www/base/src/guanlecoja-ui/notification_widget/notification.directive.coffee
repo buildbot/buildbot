@@ -1,4 +1,4 @@
-class GlNotification extends Directive
+class GlNotification
     constructor: ->
         return {
             replace: true
@@ -10,7 +10,7 @@ class GlNotification extends Directive
             controller: "_glNotificationController"
         }
 
-class _glNotification extends Controller
+class _glNotification
 
     constructor: (@$scope, @glNotificationService) ->
         @notifications = @glNotificationService.notifications
@@ -20,3 +20,8 @@ class _glNotification extends Controller
         @glNotificationService.dismiss(id)
         e.stopPropagation()
         null
+
+
+angular.module('guanlecoja.ui')
+.directive('glNotification', [GlNotification])
+.controller('_glNotificationController', ['$scope', 'glNotificationService', _glNotification])

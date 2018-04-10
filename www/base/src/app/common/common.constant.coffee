@@ -3,7 +3,7 @@ invert_constant = (constant_name, inverted_constant_name) ->
         return _.invert(original)
     ]
 
-class Baseurlws extends Constant('common')
+class Baseurlws
     constructor: ->
         href = location.href.toString()
         if location.hash != ""
@@ -13,7 +13,7 @@ class Baseurlws extends Constant('common')
 
         return href.replace(/^http/, "ws") + "ws"
 
-class Plurals extends Constant('common')
+class Plurals
     constructor: ->
         return {
             build: "builds"
@@ -33,7 +33,7 @@ class Plurals extends Constant('common')
         }
 invert_constant('PLURALS', 'SINGULARS')
 
-class Results extends Constant('common')
+class Results
     constructor: ->
         return {
             SUCCESS: 0
@@ -46,7 +46,7 @@ class Results extends Constant('common')
         }
 invert_constant('RESULTS', 'RESULTS_TEXT')
 
-class ResultsColor extends Constant('common')
+class ResultsColor
     constructor: ->
         return {
             SUCCESS: '#8d4'
@@ -57,3 +57,10 @@ class ResultsColor extends Constant('common')
             RETRY: '#ecc'
             CANCELLED: '#ecc'
         }
+
+
+angular.module('common')
+.constant('BASEURLWS', Baseurlws())
+.constant('PLURALS', Plurals())
+.constant('RESULTS', Results())
+.constant('RESULTS_COLOR', ResultsColor())

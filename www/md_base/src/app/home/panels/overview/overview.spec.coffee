@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'overview', ->
+    beforeEach module 'app'
 
     $rootScope = $compile = $httpBackend = API = null
 

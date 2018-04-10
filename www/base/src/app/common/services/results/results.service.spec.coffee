@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'results service', ->
+    beforeEach module 'app'
     resultsService = null
 
     injected = ($injector) ->

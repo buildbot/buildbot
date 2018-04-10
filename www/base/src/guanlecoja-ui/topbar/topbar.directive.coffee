@@ -1,4 +1,4 @@
-class GlTopbar extends Directive
+class GlTopbar
     constructor: ->
         return {
             replace: true
@@ -10,7 +10,7 @@ class GlTopbar extends Directive
             controller: "_glTopbarController"
         }
 
-class _glTopbar extends Controller
+class _glTopbar
     constructor: ($scope, glMenuService, $location) ->
         groups = glMenuService.getGroups()
         groups = _.zipObject(_.map(groups, (g) -> g.name), groups)
@@ -27,3 +27,8 @@ class _glTopbar extends Controller
 
         $scope.$on "glBreadcrumb", (e, data) ->
             $scope.breadcrumb = data
+
+
+angular.module('guanlecoja.ui')
+.directive('glTopbar', [GlTopbar])
+.controller('_glTopbarController', ['$scope', 'glMenuService', '$location', _glTopbar])

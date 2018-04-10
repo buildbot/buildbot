@@ -1,4 +1,4 @@
-class RouteChangeListener extends Run
+class RouteChangeListener
     constructor: ($rootScope, $log, config, glNotificationService) ->
         # fire an event related to the current route
         $rootScope.$on '$routeChangeSuccess', (event, currentRoute, priorRoute) ->
@@ -14,7 +14,7 @@ class RouteChangeListener extends Run
 
 # fix in dataModule is much harder, as when reconnection is detected, we should
 # reload all watched collections, take care of sending the proper events, etc
-class ReconnectingListener extends Run
+class ReconnectingListener
     constructor: ($rootScope, $log, socketService, $interval, $http, $window, $timeout) ->
 
         reconnecting = false
@@ -60,3 +60,8 @@ class ReconnectingListener extends Run
             , ->
                 # error callback: if we cannot connect, we will retry in 3 seconds
                 $timeout reloadWhenReady, 3000
+
+
+angular.module('app')
+.run(['$rootScope', '$log', 'config', 'glNotificationService', RouteChangeListener])
+.run(['$rootScope', '$log', 'socketService', '$interval', '$http', '$window', '$timeout', ReconnectingListener])

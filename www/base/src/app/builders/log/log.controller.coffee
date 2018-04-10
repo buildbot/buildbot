@@ -1,4 +1,4 @@
-class Log extends Controller
+class Log
     constructor: ($scope, dataService, dataUtilsService, $stateParams, glBreadcrumbService, faviconService) ->
         data = dataService.open().closeOnDestroy($scope)
         $scope.jumpToLine = "end"
@@ -32,3 +32,7 @@ class Log extends Controller
                                 caption: log.name
                                 sref: "log({builder:#{builder.builderid}, build:#{build.number}, step:#{step.number}, log:'#{log.slug}'})"
                         ]
+
+
+angular.module('app')
+.controller('logController', ['$scope', 'dataService', 'dataUtilsService', '$stateParams', 'glBreadcrumbService', 'faviconService', Log])

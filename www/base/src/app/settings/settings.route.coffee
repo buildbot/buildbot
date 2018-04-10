@@ -1,4 +1,4 @@
-class Settings extends Config
+class Settings
     constructor: ($stateProvider, glMenuServiceProvider) ->
 
         # Name of the state
@@ -25,3 +25,6 @@ class Settings extends Config
             data: cfg
 
         $stateProvider.state(state)
+
+angular.module('app')
+.config(['$stateProvider', 'glMenuServiceProvider', Settings])

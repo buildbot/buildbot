@@ -1,7 +1,5 @@
-beforeEach module 'app'
-
 describe 'inspectdata', ->
-
+    beforeEach module 'app'
     $rootScope = $compile = $httpBackend = null
 
     injected = ($injector) ->
@@ -95,7 +93,7 @@ describe 'inspectdata', ->
         objectfield = rows.eq(4)
         objvalue = objectfield.children().eq(1).children().eq(0)
         expandarrow = objvalue.children().eq(0)
-        
+
         # initial state: short showing, long hiding
         expect(objvalue.children().eq(1).hasClass('ng-hide')).toBe(false)
         expect(objvalue.children().eq(2).hasClass('ng-hide')).toBe(true)

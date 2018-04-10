@@ -1,5 +1,5 @@
 describe 'page with sidebar', ->
-    beforeEach (module("guanlecoja.ui"))
+    beforeEach (module("app"))
     elmBody = scope = rootScope = null
 
     injected = ($rootScope, $compile, glMenuService, $window) ->
@@ -42,7 +42,7 @@ describe 'page with sidebar', ->
         expect(scope.page.sidebarPinned).toBe(false)
 
         $timeout.flush()
-        expect(scope.page.sidebarActive).toBe(true)
+        expect(scope.page.sidebarActive).toBe(false)
         scope.page.sidebarPinned = false
         scope.page.leaveSidebar()
         $timeout.flush()

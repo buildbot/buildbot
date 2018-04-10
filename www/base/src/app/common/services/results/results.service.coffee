@@ -1,4 +1,4 @@
-class resultsService extends Factory('common')
+class resultsService
     constructor: ($log, RESULTS, RESULTS_TEXT) ->
         return {
             results: RESULTS
@@ -21,3 +21,7 @@ class resultsService extends Factory('common')
                         ret = RESULTS_TEXT[build_or_step.results]
                 return ret
         }
+
+
+angular.module('common')
+.factory('resultsService', ['$log', 'RESULTS', 'RESULTS_TEXT', resultsService])

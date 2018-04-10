@@ -1,4 +1,4 @@
-class GlPageWithSidebar extends Directive
+class GlPageWithSidebar
     constructor: ->
         return {
             replace: true
@@ -10,7 +10,7 @@ class GlPageWithSidebar extends Directive
             controller: "_glPageWithSidebarController"
         }
 
-class _glPageWithSidebar extends Controller
+class _glPageWithSidebar
     constructor: (@$scope, glMenuService, @$timeout, @$window) ->
 
         # by default, pin sidebar only if window is wide enough (collapse by default if narrow)
@@ -54,3 +54,8 @@ class _glPageWithSidebar extends Controller
                 @sidebarActive = false
                 @activeGroup = null
             ), 500
+
+
+angular.module('guanlecoja.ui')
+.directive('glPageWithSidebar', [GlPageWithSidebar])
+.controller('_glPageWithSidebarController', ['$scope', 'glMenuService', '$timeout', '$window', _glPageWithSidebar])

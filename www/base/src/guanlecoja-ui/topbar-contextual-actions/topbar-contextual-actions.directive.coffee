@@ -1,4 +1,4 @@
-class GlTopbarContextualActions extends Directive
+class GlTopbarContextualActions
     constructor: ->
         return {
             replace: true
@@ -9,7 +9,7 @@ class GlTopbarContextualActions extends Directive
         }
 
 
-class _glTopbarContextualActions extends Controller
+class _glTopbarContextualActions
     constructor: ($scope, $sce) ->
 
         $scope.$on "$stateChangeStart", (ev, state) ->
@@ -22,8 +22,14 @@ class _glTopbarContextualActions extends Controller
             $scope.actions = data
 
 # a simple service to abstract TopbarContextualActions configuration
-class glTopbarContextualActions extends Service
+class glTopbarContextualActions
     constructor: (@$rootScope) -> {}
 
     setContextualActions: (actions) ->
         @$rootScope.$broadcast("glSetContextualActions", actions)
+
+
+angular.module('guanlecoja.ui')
+.directive('glTopbarContextualActions', [GlTopbarContextualActions])
+.controller('_glTopbarContextualActionsController', ['$scope', '$sce', _glTopbarContextualActions])
+.service('glTopbarContextualActionsService', ['$rootScope', glTopbarContextualActions])

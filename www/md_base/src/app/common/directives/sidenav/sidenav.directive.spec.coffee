@@ -1,6 +1,6 @@
-beforeEach module 'app'
-
 describe 'MD: Sidebar directive', ->
+    beforeEach module 'app'
+
     $rootScope = $compile = $httpBackend = _menuServiceProvider = null
 
     injected = ($injector) ->

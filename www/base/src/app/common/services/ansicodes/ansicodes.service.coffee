@@ -17,7 +17,7 @@
 ANSI_RE = /^((\d+)(;\d+)*)?([a-zA-Z])/
 
 
-class ansicodesService extends Factory('common')
+class ansicodesService
     constructor: ($log) ->
         return {
             parseAnsiSgr: (ansi_entry) ->
@@ -117,3 +117,7 @@ class ansicodesService extends Factory('common')
                     ret += "pre.log .ansibg-#{i} { background-color: ##{color}; }\n"
                 return ret
         }
+
+
+angular.module('common')
+.factory('ansicodesService', ['$log', ansicodesService])

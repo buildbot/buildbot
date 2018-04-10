@@ -1,5 +1,5 @@
 describe 'topbar', ->
-    beforeEach (module("guanlecoja.ui"))
+    beforeEach (module("app"))
     elmBody = scope = null
 
     injected = ($rootScope, $compile) ->

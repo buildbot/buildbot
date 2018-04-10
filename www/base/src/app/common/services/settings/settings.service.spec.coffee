@@ -1,6 +1,6 @@
 describe 'settingsService', ->
     bbSettingsServiceProviderRef = ""
-    beforeEach module 'common', (bbSettingsServiceProvider) ->
+    beforeEach module 'app', (bbSettingsServiceProvider) ->
         bbSettingsServiceProviderRef = bbSettingsServiceProvider
         bbSettingsServiceProvider.ui_default_config = {
             'User.config_overriden': 100

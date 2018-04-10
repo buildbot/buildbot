@@ -2,7 +2,7 @@
     Recent storage service
 ###
 
-class RecentStorage extends Factory('common')
+class RecentStorage
     constructor: ($q, $window, $rootScope) ->
         self = this
         db = null
@@ -111,3 +111,6 @@ class RecentStorage extends Factory('common')
                 ]
 
         return service
+
+angular.module('common')
+.factory('recentStorage', ['$q', '$window', '$rootScope', RecentStorage])

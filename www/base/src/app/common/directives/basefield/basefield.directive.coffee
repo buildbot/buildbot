@@ -1,5 +1,5 @@
 # base widget handling has-error, and error message popups
-class Basefield extends Directive('common')
+class Basefield
     constructor: ->
         return {
             replace: true
@@ -11,8 +11,13 @@ class Basefield extends Directive('common')
         }
 
 
-class _basefield extends Controller('common')
+class _basefield
     constructor: ($scope) ->
         # clear error on value change
         $scope.$watch "field.value", (o,n) ->
             $scope.field.haserrors = false
+
+
+angular.module('common')
+.directive('basefield', [Basefield])
+.controller('_basefieldController', ['$scope', _basefield])

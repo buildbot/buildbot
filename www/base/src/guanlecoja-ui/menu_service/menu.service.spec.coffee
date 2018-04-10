@@ -1,5 +1,5 @@
 describe 'menuService', ->
-    beforeEach module "app", ($stateProvider, glMenuServiceProvider) ->
+    beforeEach module "guanlecoja.ui", ($stateProvider, glMenuServiceProvider) ->
         _glMenuServiceProvider = glMenuServiceProvider
         stateProvider = $stateProvider
         groups = []

@@ -1,4 +1,4 @@
-class bbSettings extends Provider('common')
+class bbSettings
     constructor: (config) ->
         @groups = {}
         @ui_default_config = config.ui_default_config
@@ -62,3 +62,7 @@ class bbSettings extends Provider('common')
                     return undefined
         }
     ]
+
+
+angular.module('common')
+.provider('bbSettingsService', ['config', bbSettings])

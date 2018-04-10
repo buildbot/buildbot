@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'buildrequest controller', ->
+    beforeEach module 'app'
     dataService = $scope = $httpBackend = $rootScope = null
     $timeout = createController = $stateParams = null
     goneto  = null

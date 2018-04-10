@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'changeitem', ->
+    beforeEach module 'app'
     $compile = $rootScope = $httpBackend = null
     injected = ($injector) ->
         $compile = $injector.get('$compile')
@@ -71,7 +70,7 @@ describe 'changeitem', ->
         files = detail.children().eq(2).children()
         data = detail.children().eq(3).children().eq(0)
 
-        # Displaying date time 
+        # Displaying date time
         date = meta.children().eq(0)
         expect(date.attr('title')).toBe('Today at 12:00 AM')
 

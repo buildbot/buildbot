@@ -1,4 +1,4 @@
-class Buildsummary extends Directive('common')
+class Buildsummary
     constructor: (RecursionHelper) ->
         return {
             replace: true
@@ -11,7 +11,7 @@ class Buildsummary extends Directive('common')
             controllerAs: 'buildsummary'
         }
 
-class _buildsummary extends Controller('common')
+class _buildsummary
     constructor: ($scope, dataService, resultsService, buildersService, $urlMatcherFactory, $location, $interval, RESULTS) ->
         self = this
         # make resultsService utilities available in the template
@@ -117,3 +117,8 @@ class _buildsummary extends Controller('common')
         $scope.$watch (=> @parentbuild), (build,o) ->
             if not build? then return
             self.parentbuilder = buildersService.getBuilder(build.builderid)
+
+
+angular.module('common')
+.directive('buildsummary', ['RecursionHelper', Buildsummary])
+.controller('_buildsummaryController', ['$scope', 'dataService', 'resultsService', 'buildersService', '$urlMatcherFactory', '$location', '$interval', 'RESULTS', _buildsummary])

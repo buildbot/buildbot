@@ -1,7 +1,5 @@
-beforeEach module 'app'
-
 describe 'buildstep', ->
-
+    beforeEach module 'app'
     $compile = $rootScope = $httpBackend = dataService = scope = RESULTS_TEXT = null
     injected = ($injector) ->
         $compile = $injector.get('$compile')

@@ -1,6 +1,6 @@
 # this function is meant to group builds into builders, but is written generically
 # so that it can group any collection into another collection like a database join
-class dataGrouperService extends Factory('common')
+class dataGrouperService
     constructor: ->
         return {
             groupBy: (collection1, collection2, joinid, attribute, joinlist) ->
@@ -35,3 +35,7 @@ class dataGrouperService extends Factory('common')
                             group = temp_dict[item[joinid]] ?= []
                         group.push(item)
         }
+
+
+angular.module('common')
+.factory('DataGrouperService', [dataGrouperService])

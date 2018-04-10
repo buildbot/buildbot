@@ -1,4 +1,4 @@
-class glNotification extends Service
+class glNotification
     constructor: (@$rootScope, @$timeout) ->
         @notifications = []
         @curid = 0
@@ -34,3 +34,7 @@ class glNotification extends Service
                 @notifications.splice(i, 1)
                 return null
         null
+
+
+angular.module('guanlecoja.ui')
+.service('glNotificationService', ['$rootScope', '$timeout', glNotification])
