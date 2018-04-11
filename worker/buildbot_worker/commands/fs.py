@@ -161,7 +161,7 @@ class CopyDirectory(base.Command):
         fromdir = os.path.join(self.builder.basedir, self.args['fromdir'])
         todir = os.path.join(self.builder.basedir, self.args['todir'])
 
-        self.timeout = args.get('timeout', 120)
+        self.timeout = args.get('timeout', None)
         self.maxTime = args.get('maxTime', None)
 
         if runtime.platformType != "posix":
