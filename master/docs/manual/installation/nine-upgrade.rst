@@ -155,7 +155,7 @@ Identifiers
 
 Many strings in Buildbot must now be identifiers.
 Identifiers are designed to fit easily and unambiguously into URLs, AMQP routes, and the like.
-An "identifier" is a nonempty unicode string of limited length, containing only ASCII alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
+An "identifier" is a nonempty unicode string of limited length, containing only UTF-8 alphanumeric characters along with ``-`` (dash) and ``_`` (underscore), and not beginning with a digit
 
 Unfortunately, many existing names do not fit this pattern.
 

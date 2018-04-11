@@ -96,9 +96,9 @@ class VerifyDict(unittest.TestCase):
 
         self.doValidationTest(validation.IdentifierValidator(50),
                               good=[
-                                  u"linux", u"Linux", u"abc123", u"a" * 50,
+                                  u"linux", u"Linux", u"abc123", u"a" * 50, u'\N{SNOWMAN}'
         ], bad=[
-                                  None, u'', b'linux', u'a/b', u'\N{SNOWMAN}', u"a.b.c.d",
+                                  None, u'', b'linux', u'a/b', u"a.b.c.d",
                                   u"a-b_c.d9", 'spaces not allowed', u"a" * 51,
                                   u"123 no initial digits",
         ])
