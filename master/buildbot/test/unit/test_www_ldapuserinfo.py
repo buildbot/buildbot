@@ -142,25 +142,12 @@ class LdapUserInfo(CommonTestCase):
     @defer.inlineCallbacks
     def test_updateUserInfoGroupsUnicodeDn(self):
         # In case of non Ascii DN, ldap3 lib returns an UTF-8 str
-        dn = "cn=Sébastien,dc=example,dc=org"
+        dn = u"cn=Sébastien,dc=example,dc=org"
         # If groupMemberPattern is an str, and dn is not decoded,
         # the resulting filter will be an str, leading to UnicodeDecodeError
         # in ldap3.protocol.convert.validate_assertion_value()
         # So we use an unicode pattern:
         self.userInfoProvider.groupMemberPattern = u'(member=%(dn)s)'
-        self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
-                                          "accountEmail": "mee@too"})],
-                                   [("cn", {"groupName": ["group"]}),
-                                    ("cn", {"groupName": ["group2"]})
-                                    ], []])
-        res = yield self.userInfoProvider.getUserInfo("me")
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': ["group", "group2"], 'username': 'me'})
-
-        # and if dn is decoded, it also works with an str groupMemberPattern,
-        # provided it's ASCII (can be decoded implicitly in any case)
-        # promotion occurs because of the % operator
-        self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
         self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
                                           "accountEmail": "mee@too"})],
                                    [("cn", {"groupName": ["group"]}),
