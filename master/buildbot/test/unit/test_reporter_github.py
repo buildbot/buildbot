@@ -25,12 +25,12 @@ from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
-from buildbot.reporters.github import HOSTED_BASE_URL
 from buildbot.reporters.github import GitHubCommentPush
 from buildbot.reporters.github import GitHubStatusPush
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.reporter import ReporterTestMixin
+from buildbot.util import githubapiservice
 
 
 class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
@@ -47,14 +47,13 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            HOSTED_BASE_URL, headers={
-                'Authorization': 'token XXYYZZ',
-                'User-Agent': 'Buildbot'
-            },
+            githubapiservice.GithubApiService.API_ROOT_URL,
             debug=None, verify=None)
+        self._http.updateHeaders({'Authorization': 'token XXYYZZ'})
         sp = self.setService()
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
+        self.patch(sp._github, '_http', self._http)
 
     def setService(self):
         self.sp = GitHubStatusPush(Interpolate('XXYYZZ'))
@@ -132,14 +131,13 @@ class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
         yield self.master.startService()
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self,
-            HOSTED_BASE_URL, headers={
-                'Authorization': 'token XXYYZZ',
-                'User-Agent': 'Buildbot'
-            },
+            githubapiservice.GithubApiService.API_ROOT_URL,
             debug=None, verify=None)
+        self._http.updateHeaders({'Authorization': 'token XXYYZZ'})
         sp = self.setService()
         sp.sessionFactory = Mock(return_value=Mock())
         yield sp.setServiceParent(self.master)
+        self.patch(sp._github, '_http', self._http)
 
     def setService(self):
         self.sp = GitHubStatusPush('XXYYZZ')

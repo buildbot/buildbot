@@ -82,7 +82,8 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
                 'state': 'INPROGRESS',
                 'key': u'Builder0',
                 'name': u'Builder0'},
-            code=201),
+            code=201,
+            headers={'Authorization': 'Bearer foo'}),
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
@@ -93,7 +94,8 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
                 'state': 'SUCCESSFUL',
                 'key': u'Builder0',
                 'name': u'Builder0'},
-            code=201),
+            code=201,
+            headers={'Authorization': 'Bearer foo'}),
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
@@ -104,7 +106,8 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
                 'state': 'FAILED',
                 'key': u'Builder0',
                 'name': u'Builder0'},
-            code=201)
+            code=201,
+            headers={'Authorization': 'Bearer foo'})
 
         build['complete'] = False
         self.bsp.buildStarted(('build', 20, 'started'), build)
@@ -145,7 +148,8 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
             code=404,
             content_json={
                 "error_description": "This commit is unknown to us",
-                "error": "invalid_commit"}),
+                "error": "invalid_commit"},
+            headers={'Authorization': 'Bearer foo'}),
         self.setUpLogging()
         self.bsp.buildStarted(('build', 20, 'started'), build)
         self.assertLogged('404: unable to upload Bitbucket status')

@@ -578,6 +578,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
+        self.changeHook.makeHandler('github')
+        yield self.changeHook._dialect_handlers['github'].handler.get_github_api_service()
+        self.patch(self.changeHook._dialect_handlers['github'].handler._github, '_http', self._http)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -872,6 +875,9 @@ class TestChangeHookConfiguredWithCustomSkips(unittest.TestCase):
             self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
+        self.changeHook.makeHandler('github')
+        yield self.changeHook._dialect_handlers['github'].handler.get_github_api_service()
+        self.patch(self.changeHook._dialect_handlers['github'].handler._github, '_http', self._http)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -948,11 +954,14 @@ class TestChangeHookConfiguredWithAuth(unittest.TestCase):
             strict=False, token=_token)
         self.master = self.changeHook.master
         fake_headers = {'User-Agent': 'Buildbot',
-                'Authorization': 'token ' + _token}
+                        'Authorization': 'token ' + _token}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://api.github.com', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
+        self.changeHook.makeHandler('github')
+        yield self.changeHook._dialect_handlers['github'].handler.get_github_api_service()
+        self.patch(self.changeHook._dialect_handlers['github'].handler._github, '_http', self._http)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -978,11 +987,13 @@ class TestChangeHookConfiguredWithCustomApiRoot(unittest.TestCase):
         self.changeHook = _prepare_github_change_hook(
             strict=False, github_api_endpoint='https://black.magic.io')
         self.master = self.changeHook.master
-        fake_headers = {'User-Agent': 'Buildbot'}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
-            self.master, self, 'https://black.magic.io', headers=fake_headers,
+            self.master, self, 'https://black.magic.io',
             debug=False, verify=False)
         yield self.master.startService()
+        self.changeHook.makeHandler('github')
+        yield self.changeHook._dialect_handlers['github'].handler.get_github_api_service()
+        self.patch(self.changeHook._dialect_handlers['github'].handler._github, '_http', self._http)
 
     @defer.inlineCallbacks
     def tearDown(self):
@@ -1011,11 +1022,14 @@ class TestChangeHookConfiguredWithCustomApiRootWithAuth(unittest.TestCase):
             token=_token)
         self.master = self.changeHook.master
         fake_headers = {'User-Agent': 'Buildbot',
-                'Authorization': 'token ' + _token}
+                        'Authorization': 'token ' + _token}
         self._http = yield fakehttpclientservice.HTTPClientService.getFakeService(
             self.master, self, 'https://black.magic.io', headers=fake_headers,
             debug=False, verify=False)
         yield self.master.startService()
+        self.changeHook.makeHandler('github')
+        yield self.changeHook._dialect_handlers['github'].handler.get_github_api_service()
+        self.patch(self.changeHook._dialect_handlers['github'].handler._github, '_http', self._http)
 
     @defer.inlineCallbacks
     def tearDown(self):

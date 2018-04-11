@@ -30,6 +30,7 @@ from twisted.python.compat import intToBytes
 from twisted.trial import unittest
 from twisted.web import resource
 from twisted.web import server
+from twisted.web.http_headers import Headers
 
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.util import bytes2NativeString
@@ -52,7 +53,7 @@ class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
         self.patch(httpclientservice, 'treq', mock.Mock())
         self.parent = service.MasterService()
         self.parent.reactor = reactor
-        self.base_headers = {}
+        self.base_headers = Headers()
         self.successResultOf(self.parent.startService())
 
 
@@ -76,7 +77,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http._session.request.assert_called_once_with('put', 'http://foo/bar',
                                                             background_callback=mock.ANY,
                                                             data=jsonBytes,
-                                                            headers={'Content-Type': 'application/json'})
+                                                            headers={b'Content-Type': b'application/json'})
 
     def test_post(self):
         self._http.post('/bar', json={'foo': 'bar'})
@@ -85,7 +86,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
         self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
                                                             background_callback=mock.ANY,
                                                             data=jsonBytes,
-                                                            headers={'Content-Type': 'application/json'})
+                                                            headers={b'Content-Type': b'application/json'})
 
     def test_delete(self):
         self._http.delete('/bar')
@@ -94,7 +95,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
                                                             headers={})
 
     def test_post_headers(self):
-        self.base_headers.update({'X-TOKEN': 'XXXYYY'})
+        self.base_headers.setRawHeaders('X-TOKEN', ['XXXYYY'])
         self._http.post('/bar', json={'foo': 'bar'})
         jsonStr = json.dumps(dict(foo='bar'))
         jsonBytes = unicode2bytes(jsonStr)
@@ -102,8 +103,8 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
                                                             background_callback=mock.ANY,
                                                             data=jsonBytes,
                                                             headers={
-                                                                'X-TOKEN': 'XXXYYY',
-                                                                'Content-Type': 'application/json'})
+                                                                b'X-Token': b'XXXYYY',
+                                                                b'Content-Type': b'application/json'})
 
     def test_post_auth(self):
         self._http = self.successResultOf(
@@ -118,8 +119,20 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
                                                             auth=(
                                                                 'user', 'pa$$'),
                                                             headers={
-                                                                'Content-Type': 'application/json'
+                                                                b'Content-Type': b'application/json'
                                                             })
+
+    def test_passed_headers_overwrite_base_headers(self):
+        self.base_headers.setRawHeaders(b'X-TOKEN', ['XXXYYY'])
+        self._http.post('/bar', json={'foo': 'bar'}, headers={'X-TOKEN': 'AABBCC'})
+        jsonStr = json.dumps(dict(foo='bar'))
+        jsonBytes = unicode2bytes(jsonStr)
+        self._http._session.request.assert_called_once_with('post', 'http://foo/bar',
+                                                            background_callback=mock.ANY,
+                                                            data=jsonBytes,
+                                                            headers={
+                                                                b'X-Token': b'AABBCC',
+                                                                b'Content-Type': b'application/json'})
 
 
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
@@ -135,37 +148,37 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http.get('/bar')
         httpclientservice.treq.get.assert_called_once_with('http://foo/bar',
                                                            agent=mock.ANY,
-                                                           headers={})
+                                                           headers=Headers())
 
     def test_put(self):
         self._http.put('/bar', json={'foo': 'bar'})
         httpclientservice.treq.put.assert_called_once_with('http://foo/bar',
                                                            agent=mock.ANY,
                                                            data=b'{"foo": "bar"}',
-                                                           headers={'Content-Type': ['application/json']})
+                                                           headers=Headers({'Content-Type': ['application/json']}))
 
     def test_post(self):
         self._http.post('/bar', json={'foo': 'bar'})
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
                                                             data=b'{"foo": "bar"}',
-                                                            headers={'Content-Type': ['application/json']})
+                                                            headers=Headers({'Content-Type': ['application/json']}))
 
     def test_delete(self):
         self._http.delete('/bar')
         httpclientservice.treq.delete.assert_called_once_with('http://foo/bar',
                                                               agent=mock.ANY,
-                                                              headers={})
+                                                              headers=Headers())
 
     def test_post_headers(self):
-        self.base_headers.update({'X-TOKEN': 'XXXYYY'})
+        self.base_headers.setRawHeaders('X-TOKEN', ['XXXYYY'])
         self._http.post('/bar', json={'foo': 'bar'})
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
                                                             data=b'{"foo": "bar"}',
-                                                            headers={
+                                                            headers=Headers({
                                                                 'Content-Type': ['application/json'],
-                                                                'X-TOKEN': ['XXXYYY']})
+                                                                'X-TOKEN': ['XXXYYY']}))
 
     def test_post_auth(self):
         self._http = self.successResultOf(
@@ -175,11 +188,10 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
                                                             agent=mock.ANY,
                                                             data=b'{"foo": "bar"}',
-                                                            auth=(
-                                                                'user', 'pa$$'),
-                                                            headers={
+                                                            auth=('user', 'pa$$'),
+                                                            headers=Headers({
                                                                 'Content-Type': ['application/json'],
-                                                            })
+                                                            }))
 
     def test_post_auth_digest(self):
         auth = HTTPDigestAuth('user', 'pa$$')
@@ -193,8 +205,17 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
                                                             data=dict(
                                                                 foo='bar'),
                                                             auth=auth,
-                                                            headers={
-                                                            })
+                                                            headers={})
+
+    def test_passed_headers_overwrite_base_headers(self):
+        self.base_headers.setRawHeaders('X-TOKEN', ['XXXYYY'])
+        self._http.post('/bar', json={'foo': 'bar'}, headers={'X-TOKEN': 'AABBCC'})
+        httpclientservice.treq.post.assert_called_once_with('http://foo/bar',
+                                                            agent=mock.ANY,
+                                                            data=b'{"foo": "bar"}',
+                                                            headers=Headers({
+                                                                'Content-Type': ['application/json'],
+                                                                'X-TOKEN': ['AABBCC']}))
 
 
 class MyResource(resource.Resource):
@@ -219,6 +240,11 @@ class MyResource(resource.Resource):
             jsonBytes = request.content.read()
             jsonStr = bytes2NativeString(jsonBytes)
             args['json_received'] = json.loads(jsonStr)
+
+        # Forward x-token header if passed in
+        x_token = request.getHeader(b'x-token')
+        if x_token:
+            request.setHeader('x-token', x_token)
 
         data = json.dumps(args)
         data = unicode2bytes(data)
@@ -355,6 +381,15 @@ class HTTPClientServiceTestTxRequestE2E(unittest.TestCase):
             return d
         dl = [oneReq() for i in range(self.NUM_PARALLEL)]
         yield defer.gatherResults(dl)
+
+    @defer.inlineCallbacks
+    def test_passed_headers_overwrite_base_headers(self):
+        self.expect('get', '/', content_json={}, headers={'X-TOKEN': 'AABBCC'})
+        self._http.updateHeaders({'X-TOKEN': 'XXXYYY'})
+        res = yield self._http.get('/', headers={'X-TOKEN': 'AABBCC'})
+        content = yield res.content()
+        self.assertEqual(content, b'{}')
+        assert res.headers.getRawHeaders(b'X-Token') == [b'AABBCC']
 
 
 class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):

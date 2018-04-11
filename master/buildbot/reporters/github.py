@@ -19,7 +19,6 @@ from __future__ import print_function
 import re
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
@@ -31,11 +30,12 @@ from buildbot.process.results import SKIPPED
 from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2NativeString
 from buildbot.util.giturlparse import giturlparse
+from buildbot.util.logger import Logger
 
-HOSTED_BASE_URL = 'https://api.github.com'
+log = Logger()
 
 
 class GitHubStatusPush(http.HttpStatusPushBase):
@@ -50,18 +50,14 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
 
         self.setDefaults(context, startDescription, endDescription)
-        if baseURL is None:
-            baseURL = HOSTED_BASE_URL
-        if baseURL.endswith('/'):
-            baseURL = baseURL[:-1]
-
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers={
-                'Authorization': 'token ' + token,
-                'User-Agent': 'Buildbot'
-            },
-            debug=self.debug, verify=self.verify)
         self.verbose = verbose
+        self._github = yield githubapiservice.GithubApiService.getService(
+            self.master,
+            oauth_token=token,
+            api_root_url=baseURL,
+            debug=self.debug,
+            verify=self.verify
+        )
 
     def setDefaults(self, context, startDescription, endDescription):
         self.context = context or Interpolate('buildbot/%(prop:buildername)s')
@@ -97,7 +93,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         if context is not None:
             payload['context'] = context
 
-        return self._http.post(
+        return self._github.post(
             '/'.join(['/repos', repo_user, repo_name, 'statuses', sha]),
             json=payload)
 
@@ -147,8 +143,8 @@ class GitHubStatusPush(http.HttpStatusPushBase):
             repoName = giturl.repo
 
         if self.verbose:
-            log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
-                repoOwner=repoOwner, repoName=repoName))
+            log.info("Updating github status: repoOwner={repoOwner}, repoName={repoName}",
+                     repoOwner=repoOwner, repoName=repoName)
 
         for sourcestamp in sourcestamps:
             sha = sourcestamp['revision']
@@ -172,18 +168,17 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     description=description
                 )
                 if self.verbose:
-                    log.msg(
+                    log.info(
                         'Updated status with "{state}" for {repoOwner}/{repoName} '
-                        'at {sha}, context "{context}", issue {issue}.'.format(
-                            state=state, repoOwner=repoOwner, repoName=repoName,
-                            sha=sha, issue=issue, context=context))
-            except Exception as e:
-                log.err(
-                    e,
-                    'Failed to update "{state}" for {repoOwner}/{repoName} '
-                    'at {sha}, context "{context}", issue {issue}.'.format(
+                        'at {sha}, context "{context}", issue {issue}.',
                         state=state, repoOwner=repoOwner, repoName=repoName,
-                        sha=sha, issue=issue, context=context))
+                        sha=sha, issue=issue, context=context)
+            except Exception as e:
+                log.failure(
+                    'Failed to update "{state}" for {repoOwner}/{repoName} '
+                    'at {sha}, context "{context}", issue {issue}.',
+                    state=state, repoOwner=repoOwner, repoName=repoName,
+                    sha=sha, issue=issue, context=context, failure=e)
 
 
 class GitHubCommentPush(GitHubStatusPush):
@@ -213,6 +208,6 @@ class GitHubCommentPush(GitHubStatusPush):
         """
         payload = {'body': description}
 
-        return self._http.post(
+        return self._github.post(
             '/'.join(['/repos', repo_user, repo_name, 'issues', issue, 'comments']),
             json=payload)

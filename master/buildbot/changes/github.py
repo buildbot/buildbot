@@ -26,7 +26,7 @@ from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util.logger import Logger
 from buildbot.util.state import StateMixin
 
@@ -101,22 +101,14 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                         magic_link=False,
                         repository_type="https",
                         github_property_whitelist=None,
+                        debug=False,
+                        verify=False,
                         **kwargs):
         yield base.ReconfigurablePollingChangeSource.reconfigService(
             self, name=self.name, **kwargs)
 
-        if baseURL is None:
-            baseURL = HOSTED_BASE_URL
-        if baseURL.endswith('/'):
-            baseURL = baseURL[:-1]
-
-        http_headers = {'User-Agent': 'Buildbot'}
-        if token is not None:
-            http_headers.update({'Authorization': 'token ' + token})
-
-        self._http = yield httpclientservice.HTTPClientService.getService(
-            self.master, baseURL, headers=http_headers)
-
+        self.debug = debug
+        self.verify = verify
         self.token = token
         self.owner = owner
         self.repo = repo
@@ -138,6 +130,14 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         self.category = category if callable(category) else bytes2unicode(
             category)
 
+        self._github = yield githubapiservice.GithubApiService.getService(
+            self.master,
+            oauth_token=self.token,
+            api_root_url=baseURL,
+            debug=self.debug,
+            verify=self.verify
+        )
+
     def describe(self):
         return "GitHubPullrequestPoller watching the "\
             "GitHub repository %s/%s" % (
@@ -145,7 +145,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
 
     @defer.inlineCallbacks
     def _getPullInformation(self, pull_number):
-        result = yield self._http.get('/'.join(
+        result = yield self._github.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
         my_json = yield result.json()
         defer.returnValue(my_json)
@@ -155,20 +155,20 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         log.debug("GitHubPullrequestPoller: polling "
                   "GitHub repository %s/%s, branches: %s" %
                   (self.owner, self.repo, self.branches))
-        result = yield self._http.get('/'.join(
+        result = yield self._github.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
         defer.returnValue(my_json)
 
     @defer.inlineCallbacks
     def _getEmail(self, user):
-        result = yield self._http.get("/".join(['/users', user]))
+        result = yield self._github.get("/".join(['/users', user]))
         my_json = yield result.json()
         defer.returnValue(my_json["email"])
 
     @defer.inlineCallbacks
     def _getFiles(self, prnumber):
-        result = yield self._http.get("/".join([
+        result = yield self._github.get("/".join([
             '/repos', self.owner, self.repo, 'pulls', str(prnumber), 'files'
         ]))
         my_json = yield result.json()

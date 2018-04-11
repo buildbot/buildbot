@@ -18,19 +18,18 @@ from __future__ import print_function
 
 import hmac
 import json
-import logging
 import re
 from hashlib import sha1
 
 from dateutil.parser import parse as dateparse
 
 from twisted.internet import defer
-from twisted.python import log
 
 from buildbot.changes.github import PullRequestMixin
 from buildbot.util import bytes2unicode
-from buildbot.util import httpclientservice
+from buildbot.util import githubapiservice
 from buildbot.util import unicode2bytes
+from buildbot.util.logger import Logger
 from buildbot.www.hooks.base import BaseHookHandler
 
 _HEADER_EVENT = b'X-GitHub-Event'
@@ -38,6 +37,8 @@ _HEADER_SIGNATURE = b'X-Hub-Signature'
 
 DEFAULT_SKIPS_PATTERN = (r'\[ *skip *ci *\]', r'\[ *ci *skip *\]')
 DEFAULT_GITHUB_API_URL = 'https://api.github.com'
+
+log = Logger()
 
 
 class GitHubEventHandler(PullRequestMixin):
@@ -71,6 +72,19 @@ class GitHubEventHandler(PullRequestMixin):
                              'while no secret is provided')
         self.debug = debug
         self.verify = verify
+        self._github = None
+
+    @defer.inlineCallbacks
+    def get_github_api_service(self):
+        if self._github is None:
+            self._github = yield githubapiservice.GithubApiService.getService(
+                self.master,
+                oauth_token=self._token,
+                api_root_url=self.github_api_endpoint,
+                debug=self.debug,
+                verify=self.verify
+            )
+        defer.returnValue(self._github)
 
     @defer.inlineCallbacks
     def process(self, request):
@@ -78,8 +92,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         event_type = request.getHeader(_HEADER_EVENT)
         event_type = bytes2unicode(event_type)
-        log.msg("X-GitHub-Event: {}".format(
-            event_type), logLevel=logging.DEBUG)
+        log.debug("X-GitHub-Event: {event_type}", event_type=event_type)
 
         handler = getattr(self, 'handle_{}'.format(event_type), None)
 
@@ -126,7 +139,7 @@ class GitHubEventHandler(PullRequestMixin):
         else:
             raise ValueError('Unknown content type: {}'.format(content_type))
 
-        log.msg("Payload: {}".format(payload), logLevel=logging.DEBUG)
+        log.debug("Payload: {payload}", payload=payload)
 
         return payload
 
@@ -148,7 +161,8 @@ class GitHubEventHandler(PullRequestMixin):
         changes = self._process_change(payload, user, repo, repo_url, project,
                                        event, properties)
 
-        log.msg("Received {} changes from github".format(len(changes)))
+        log.info("Received {num_changes} changes from github",
+                 num_changes=len(changes))
 
         return changes, 'git'
 
@@ -163,18 +177,18 @@ class GitHubEventHandler(PullRequestMixin):
         repo_full_name = payload['repository']['full_name']
         head_sha = payload['pull_request']['head']['sha']
 
-        log.msg('Processing GitHub PR #{}'.format(number),
-                logLevel=logging.DEBUG)
+        log.debug('Processing GitHub PR #{number}', number=number)
 
         head_msg = yield self._get_commit_msg(repo_full_name, head_sha)
         if self._has_skip(head_msg):
-            log.msg("GitHub PR #{}, Ignoring: "
-                    "head commit message contains skip pattern".format(number))
+            log.info("GitHub PR #{number}, Ignoring: head commit "
+                     "message contains skip pattern.", number=number)
             defer.returnValue(([], 'git'))
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
-            log.msg("GitHub PR #{} {}, ignoring".format(number, action))
+            log.info("GitHub PR #{number} {action}, ignoring,",
+                     number=number, action=action)
             defer.returnValue((changes, 'git'))
 
         properties = self.extractProperties(payload['pull_request'])
@@ -201,8 +215,8 @@ class GitHubEventHandler(PullRequestMixin):
 
         changes.append(change)
 
-        log.msg("Received {} changes from GitHub PR #{}".format(
-            len(changes), number))
+        log.info("Received {num_events} changes from GitHub PR #{number}",
+                num_events=len(changes), number=number)
         defer.returnValue((changes, 'git'))
 
     @defer.inlineCallbacks
@@ -211,19 +225,15 @@ class GitHubEventHandler(PullRequestMixin):
         :param repo: the repo full name, ``{owner}/{project}``.
             e.g. ``buildbot/buildbot``
         '''
-        headers = {
-            'User-Agent': 'Buildbot'
-        }
-        if self._token:
-            headers['Authorization'] = 'token ' + self._token
-
         url = '/repos/{}/commits/{}'.format(repo, sha)
-        http = yield httpclientservice.HTTPClientService.getService(
-            self.master, self.github_api_endpoint, headers=headers,
-            debug=self.debug, verify=self.verify)
-        res = yield http.get(url)
-        data = yield res.json()
-        msg = data['commit']['message']
+        gh_api_service = yield self.get_github_api_service()
+        response = yield gh_api_service.get(url)
+        data = yield response.json()
+        msg = None
+        if 'commit' in data:
+            # Because we can get:
+            #  {u'documentation_url': u'https://developer.github.com/v3', u'message': u'Not Found'}
+            msg = data['commit']['message']
         defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
@@ -242,7 +252,7 @@ class GitHubEventHandler(PullRequestMixin):
         # We only care about regular heads or tags
         match = re.match(r"^refs/(heads|tags)/(.+)$", refname)
         if not match:
-            log.msg("Ignoring refname `{}': Not a branch".format(refname))
+            log.info("Ignoring refname '{refname}': Not a branch,", refname=refname)
             return changes
         category = None  # None is the legacy category for when hook only supported push
         if match.group(1) == "tags":
@@ -250,7 +260,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         branch = match.group(2)
         if payload.get('deleted'):
-            log.msg("Branch `{}' deleted, ignoring".format(branch))
+            log.info("Branch '{branch}' deleted, ignoring.", branch=branch)
             return changes
 
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
@@ -267,7 +277,7 @@ class GitHubEventHandler(PullRequestMixin):
 
             when_timestamp = dateparse(commit['timestamp'])
 
-            log.msg("New revision: {}".format(commit['id'][:8]))
+            log.info("New revision: {sha}", sha=commit['id'][:8])
 
             change = {
                 'author': u'{} <{}>'.format(commit['author']['name'],
@@ -304,6 +314,8 @@ class GitHubEventHandler(PullRequestMixin):
 
         :return type: Bool
         '''
+        if not msg:
+            return False
         for skip in self.skips:
             if re.search(skip, msg):
                 return True
@@ -326,7 +338,7 @@ class GitHubHandler(BaseHookHandler):
             'codebase': options.get('codebase', None),
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
-            'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'github_api_endpoint': options.get('github_api_endpoint', None),
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,

@@ -23,6 +23,7 @@ import textwrap
 from twisted.internet import defer
 from twisted.web.client import Agent
 from twisted.web.client import HTTPConnectionPool
+from twisted.web.http_headers import Headers
 from zope.interface import implementer
 
 from buildbot import config
@@ -52,6 +53,7 @@ class TxRequestsResponseWrapper(object):
 
     def __init__(self, res):
         self._res = res
+        self._headers = None
 
     def content(self):
         return defer.succeed(self._res.content)
@@ -62,6 +64,22 @@ class TxRequestsResponseWrapper(object):
     @property
     def code(self):
         return self._res.status_code
+
+    @property
+    def headers(self):
+        if self._headers is None:
+            self._headers = Headers()
+            if isinstance(self._res.headers, Headers):
+                passed_headers = self._res.headers.getAllRawHeaders()
+            else:
+                passed_headers = self._res.headers.items()
+            for name, value in passed_headers:
+                if not isinstance(value, (list, tuple)):
+                    value = [value]
+                elif isinstance(value, tuple):
+                    value = list(value)
+                self._headers.setRawHeaders(name, value)
+        return self._headers
 
 
 class HTTPClientService(service.SharedService):
@@ -96,6 +114,8 @@ class HTTPClientService(service.SharedService):
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
+        if headers is not None and isinstance(headers, dict):
+            headers = Headers(rawHeaders={hk: [hv] for (hk, hv) in headers.items()})
         self._headers = headers
         self._session = None
         self.verify = verify
@@ -103,8 +123,17 @@ class HTTPClientService(service.SharedService):
 
     def updateHeaders(self, headers):
         if self._headers is None:
-            self._headers = {}
-        self._headers.update(headers)
+            self._headers = Headers()
+        if isinstance(headers, Headers):
+            passed_headers = headers.getAllRawHeaders()
+        else:
+            passed_headers = headers.items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            self._headers.setRawHeaders(name, value)
 
     @staticmethod
     def checkAvailable(from_module):
@@ -143,10 +172,24 @@ class HTTPClientService(service.SharedService):
         url = self._base_url + ep
         if self._auth is not None and 'auth' not in kwargs:
             kwargs['auth'] = self._auth
-        headers = kwargs.get('headers', {})
-        if self._headers is not None:
-            headers.update(self._headers)
-        kwargs['headers'] = headers
+
+        # First grab a copy of instantiation passed headers
+        headers = self._headers.copy() if self._headers else Headers()
+        # Now update/overwrite those headers with any headers passed
+        # explicitly in this request
+        if isinstance(kwargs.get('headers', {}), Headers):
+            passed_headers = kwargs.get('headers').getAllRawHeaders()
+        else:
+            passed_headers = kwargs.get('headers', {}).items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            headers.setRawHeaders(name, value)
+        if headers:
+            # Reassign headers to kwargs
+            kwargs['headers'] = headers
 
         # we manually do the json encoding in order to automatically convert timestamps
         # for txrequests and treq
@@ -154,7 +197,7 @@ class HTTPClientService(service.SharedService):
         if isinstance(json, dict):
             jsonStr = jsonmodule.dumps(json, default=toJson)
             jsonBytes = unicode2bytes(jsonStr)
-            kwargs['headers']['Content-Type'] = 'application/json'
+            kwargs['headers'].setRawHeaders('Content-Type', ['application/json'])
             kwargs['data'] = jsonBytes
         return url, kwargs
 
@@ -163,16 +206,23 @@ class HTTPClientService(service.SharedService):
         if self.debug:
             log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
+        # txrequests does not like twisted.web.http_headers.Headers
+        if 'headers' in kwargs and isinstance(kwargs['headers'], Headers):
+            # Convert it to a plain dictionary
+            kwargs['headers'] = {k: v[0] for (k, v) in kwargs['headers'].getAllRawHeaders()}
+
         def readContent(session, res):
             # this forces reading of the content inside the thread
             res.content
             if self.debug:
                 log.debug("==> {code}: {content}", code=res.status_code, content=res.content)
             return res
+
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
         if self.verify is False:
             kwargs['verify'] = False
+
         d = self._session.request(method, url, **kwargs)
         d.addCallback(TxRequestsResponseWrapper)
         d.addCallback(IHttpResponse)
@@ -180,11 +230,7 @@ class HTTPClientService(service.SharedService):
 
     def _doTReq(self, method, ep, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
-        # treq requires header values to be an array
-        kwargs['headers'] = dict([(k, [v])
-                                  for k, v in kwargs['headers'].items()])
         kwargs['agent'] = self._agent
-
         d = getattr(treq, method)(url, **kwargs)
         d.addCallback(IHttpResponse)
         return d

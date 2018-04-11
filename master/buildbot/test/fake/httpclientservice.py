@@ -22,6 +22,7 @@ import json as jsonmodule
 import mock
 
 from twisted.internet import defer
+from twisted.web.http_headers import Headers
 from zope.interface import implementer
 
 from buildbot.interfaces import IHttpResponse
@@ -37,9 +38,10 @@ log = Logger()
 @implementer(IHttpResponse)
 class ResponseWrapper(object):
 
-    def __init__(self, code, content):
+    def __init__(self, code, content, headers):
         self._content = content
         self._code = code
+        self.headers = headers
 
     def content(self):
         content = unicode2bytes(self._content)
@@ -68,22 +70,34 @@ class HTTPClientService(service.SharedService):
         service.SharedService.__init__(self)
         self._base_url = base_url
         self._auth = auth
-
+        if headers is not None:
+            headers = Headers(rawHeaders={hk: [hv] for (hk, hv) in headers.items()})
         self._headers = headers
         self._session = None
         self._expected = []
+        self.debug = debug
+        self.verify = verify
 
     def updateHeaders(self, headers):
         if self._headers is None:
-            self._headers = {}
-        self._headers.update(headers)
+            self._headers = Headers()
+        if isinstance(headers, Headers):
+            passed_headers = headers.getAllRawHeaders()
+        else:
+            passed_headers = headers.items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            self._headers.setRawHeaders(name, value)
 
     @classmethod
     def getFakeService(cls, master, case, *args, **kwargs):
         ret = cls.getService(master, *args, **kwargs)
 
         def assertNotCalled(self, *_args, **_kwargs):
-            case.fail(("HTTPClientService called with *{!r}, **{!r}"
+            case.fail(("HTTPClientService called with *{!r}, **{!r} "
                        "while should be called *{!r} **{!r}").format(
                 _args, _kwargs, args, kwargs))
         case.patch(httpclientservice.HTTPClientService, "__init__", assertNotCalled)
@@ -98,49 +112,94 @@ class HTTPClientService(service.SharedService):
     checkAvailable = mock.Mock()
 
     def expect(self, method, ep, params=None, data=None, json=None, code=200,
-               content=None, content_json=None):
+               content=None, content_json=None, headers=None):
         if content is not None and content_json is not None:
             return ValueError("content and content_json cannot be both specified")
 
         if content_json is not None:
             content = jsonmodule.dumps(content_json, default=toJson)
 
+        final_headers = self._headers.copy() if self._headers else Headers()
+        if headers:
+            if isinstance(headers, Headers):
+                passed_headers = headers.getAllRawHeaders()
+            else:
+                passed_headers = headers.items()
+            for name, value in passed_headers:
+                if not isinstance(value, (list, tuple)):
+                    value = [value]
+                elif isinstance(value, tuple):
+                    value = list(value)
+                final_headers.setRawHeaders(name, value)
+
         self._expected.append(dict(
             method=method, ep=ep, params=params, data=data, json=json, code=code,
-            content=content))
+            content=content, headers=final_headers or None))
 
     def assertNoOutstanding(self):
         self.case.assertEqual(0, len(self._expected),
                               "expected more http requests:\n {!r}".format(self._expected))
 
-    def _doRequest(self, method, ep, params=None, data=None, json=None):
+    def _prepareRequest(self, ep, kwargs):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep
+        # First grab a copy of instantiation passed headers
+        headers = self._headers.copy() if self._headers else Headers()
+        # Now update/overwrite those headers with any headers passed
+        # explicitly in this request
+        if isinstance(kwargs.get('headers', {}), Headers):
+            passed_headers = kwargs.get('headers').getAllRawHeaders()
+        else:
+            passed_headers = kwargs.get('headers', {}).items()
+        for name, value in passed_headers:
+            if not isinstance(value, (list, tuple)):
+                value = [value]
+            elif isinstance(value, tuple):
+                value = list(value)
+            headers.setRawHeaders(name, value)
+        kwargs['headers'] = headers
+        return ep, kwargs
+
+    def _doRequest(self, method, ep, **kwargs):
+        ep, kwargs = self._prepareRequest(ep, kwargs)
+        data = kwargs.pop('data', None)
+        json = kwargs.pop('json', None)
+        params = kwargs.pop('params', None)
+        headers = kwargs.pop('headers', None)
+        assert not kwargs, 'Passed unsupported keyword arguments: {}'.format(
+            ', '.join(kwargs)
+        )
+
         if not self.quiet:
-            log.debug("{method} {ep} {params!r} <- {data!r}",
-                      method=method, ep=ep, params=params, data=data or json)
+            log.debug("{method} {ep} {headers!r} {params!r} <- {data!r}",
+                      method=method, ep=ep, headers=headers, params=params, data=data or json)
         if json is not None:
             # ensure that the json is really jsonable
             jsonmodule.dumps(json, default=toJson)
         if not self._expected:
             raise AssertionError(
                 "Not expecting a request, while we got: "
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
-                    method, ep, params, data, json))
+                "method={!r}, ep={!r}, headers={!r}, params={!r}, data={!r}, json={!r}".format(
+                    method, ep, headers, params, data, json))
         expect = self._expected.pop(0)
-        if (expect['method'] != method or expect['ep'] != ep or expect['params'] != params or
-                expect['data'] != data or expect['json'] != json):
+        if (expect['method'] != method or expect['ep'] != ep or  # pylint: disable=too-many-boolean-expressions
+                expect['params'] != params or expect['data'] != data or
+                expect['json'] != json or expect['headers'] != headers):
             raise AssertionError(
                 "expecting:\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}\n"
+                "method={!r}, ep={!r}, headers={!r}, params={!r}, data={!r}, json={!r}\n"
                 "got      :\n"
-                "method={!r}, ep={!r}, params={!r}, data={!r}, json={!r}".format(
-                    expect['method'], expect['ep'], expect['params'], expect['data'], expect['json'],
-                    method, ep, params, data, json,
+                "method={!r}, ep={!r}, headers={!r}, params={!r}, data={!r}, json={!r}".format(
+                    expect['method'], expect['ep'], expect['headers'], expect['params'],
+                    expect['data'], expect['json'],
+                    method, ep, headers, params, data, json,
                 ))
         if not self.quiet:
             log.debug("{method} {ep} -> {code} {content!r}",
-                      method=method, ep=ep, code=expect['code'], content=expect['content'])
-        return defer.succeed(ResponseWrapper(expect['code'], expect['content']))
+                      method=method, ep=ep, code=expect['code'],
+                      content=expect['content'])
+        return defer.succeed(ResponseWrapper(expect['code'],
+                                             expect['content'],
+                                             expect['headers']))
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
