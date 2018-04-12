@@ -27,6 +27,7 @@ from twisted.python import log
 from twisted.web.error import Error
 
 from buildbot.interfaces import IConfigured
+from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
@@ -158,4 +159,4 @@ class IndexResource(resource.Resource):
         tpl = tpl.render(configjson=json.dumps(config, default=toJson),
                          custom_templates=self.custom_templates,
                          config=self.config)
-        defer.returnValue(tpl.encode("ascii"))
+        defer.returnValue(unicode2bytes(tpl, encoding='ascii'))

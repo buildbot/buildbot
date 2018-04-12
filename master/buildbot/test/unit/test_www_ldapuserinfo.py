@@ -26,8 +26,16 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+
+def get_config_parameter(p):
+    params = {'DEFAULT_SERVER_ENCODING': 'utf-8'}
+    return params[p]
+
+
 fake_ldap = types.ModuleType('ldap3')
 fake_ldap.SEARCH_SCOPE_WHOLE_SUBTREE = 2
+fake_ldap.get_config_parameter = get_config_parameter
+
 with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
     from buildbot.www import ldapuserinfo
 
@@ -61,10 +69,16 @@ class CommonTestCase(unittest.TestCase):
         """To be implemented by subclasses"""
         raise NotImplementedError
 
-    def makeSearchSideEffect(self, ret):
-        ret = [[{'dn': i[0], 'raw_attributes': i[1]} for i in r]
+    def _makeSearchSideEffect(self, attribute_type, ret):
+        ret = [[{'dn': i[0], attribute_type: i[1]} for i in r]
              for r in ret]
         self.userInfoProvider.search.side_effect = ret
+
+    def makeSearchSideEffect(self, ret):
+        return self._makeSearchSideEffect('attributes', ret)
+
+    def makeRawSearchSideEffect(self, ret):
+        return self._makeSearchSideEffect('raw_attributes', ret)
 
     def assertSearchCalledWith(self, exp):
         got = self.userInfoProvider.search.call_args_list
@@ -128,7 +142,7 @@ class LdapUserInfo(CommonTestCase):
     @defer.inlineCallbacks
     def test_updateUserInfoGroupsUnicodeDn(self):
         # In case of non Ascii DN, ldap3 lib returns an UTF-8 str
-        dn = "cn=Sébastien,dc=example,dc=org"
+        dn = u"cn=Sébastien,dc=example,dc=org"
         # If groupMemberPattern is an str, and dn is not decoded,
         # the resulting filter will be an str, leading to UnicodeDecodeError
         # in ldap3.protocol.convert.validate_assertion_value()
@@ -143,28 +157,40 @@ class LdapUserInfo(CommonTestCase):
         self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
                                'groups': ["group", "group2"], 'username': 'me'})
 
-        # and if dn is decoded, it also works with an str groupMemberPattern,
-        # provided it's ASCII (can be decoded implicitly in any case)
-        # promotion occurs because of the % operator
-        self.userInfoProvider.groupMemberPattern = '(member=%(dn)s)'
-        self.makeSearchSideEffect([[(dn, {"accountFullName": "me too",
-                                          "accountEmail": "mee@too"})],
-                                   [("cn", {"groupName": ["group"]}),
-                                    ("cn", {"groupName": ["group2"]})
-                                    ], []])
-        res = yield self.userInfoProvider.getUserInfo("me")
-        self.assertEqual(res, {'email': 'mee@too', 'full_name': 'me too',
-                               'groups': ["group", "group2"], 'username': 'me'})
-
     @defer.inlineCallbacks
-    def test_getUserAvatar(self):
-        self.makeSearchSideEffect([
-            [("cn", {"picture": ["\x89PNG lljklj"]})]])
+    def _getUserAvatar(self, mimeTypeAndData):
+        (mimeType, data) = mimeTypeAndData
+        self.makeRawSearchSideEffect([
+            [("cn", {"picture": [data]})]])
         res = yield self.userInfoProvider.getUserAvatar("me", 21, None)
         self.assertSearchCalledWith([
             (('accbase', 'avatar', ['picture']), {}),
         ])
-        self.assertEqual(res, ('image/png', '\x89PNG lljklj'))
+        defer.returnValue(res)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarPNG(self):
+        mimeTypeAndData = ('image/png', b'\x89PNG lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarJPEG(self):
+        mimeTypeAndData = ('image/jpeg', b'\xff\xd8\xff lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarGIF(self):
+        mimeTypeAndData = ('image/gif', b'GIF8 lljklj')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertEqual(res, mimeTypeAndData)
+
+    @defer.inlineCallbacks
+    def test_getUserAvatarUnknownType(self):
+        mimeTypeAndData = ('', b'unknown image format')
+        res = yield self._getUserAvatar(mimeTypeAndData)
+        self.assertIsNone(res)
 
 
 class LdapUserInfoNoGroups(CommonTestCase):

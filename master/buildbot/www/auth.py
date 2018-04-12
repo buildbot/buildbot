@@ -113,7 +113,7 @@ class RemoteUserAuth(AuthBase):
         if header is not None:
             self.header = header
         if headerRegex is not None:
-            self.headerRegex = re.compile(headerRegex)
+            self.headerRegex = re.compile(unicode2bytes(headerRegex))
 
     @defer.inlineCallbacks
     def maybeAutoLogin(self, request):

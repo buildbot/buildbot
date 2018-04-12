@@ -28,6 +28,7 @@ from twisted.python import log
 
 from buildbot.util import bytes2NativeString
 from buildbot.util import toJson
+from buildbot.util import unicode2bytes
 
 
 class WsProtocol(WebSocketServerProtocol):
@@ -39,7 +40,7 @@ class WsProtocol(WebSocketServerProtocol):
         self.debug = self.master.config.www.get('debug', False)
 
     def sendJsonMessage(self, **msg):
-        return self.sendMessage(json.dumps(msg, default=toJson, separators=(',', ':')).encode('utf8'))
+        return self.sendMessage(unicode2bytes(json.dumps(msg, default=toJson, separators=(',', ':'))))
 
     def onMessage(self, frame, isBinary):
         if self.debug:

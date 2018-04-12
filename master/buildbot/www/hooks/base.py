@@ -23,6 +23,8 @@ from __future__ import print_function
 
 import json
 
+from buildbot.util import bytes2unicode
+
 
 class BaseHookHandler(object):
     def __init__(self, master, options):
@@ -68,9 +70,7 @@ class BaseHookHandler(object):
         author = firstOrNothing(args.get(b'author'))
         if not author:
             author = firstOrNothing(args.get(b'who'))
-        comments = firstOrNothing(args.get(b'comments'))
-        if isinstance(comments, bytes):
-            comments = comments.decode('utf-8')
+        comments = bytes2unicode(firstOrNothing(args.get(b'comments')))
         branch = firstOrNothing(args.get(b'branch'))
         category = firstOrNothing(args.get(b'category'))
         revlink = firstOrNothing(args.get(b'revlink'))

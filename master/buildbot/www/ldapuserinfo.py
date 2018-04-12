@@ -13,6 +13,17 @@
 #
 # Copyright Buildbot Team Members
 
+
+# NOTE regarding LDAP encodings:
+#
+# By default the encoding used in ldap3 is utf-8. The encoding is user-configurable, though.
+# For more information check ldap3's documentation on this topic:
+# http://ldap3.readthedocs.io/encoding.html
+#
+# It is recommended to use ldap3's auto-decoded `attributes` values for
+# `unicode` and `raw_*` attributes for `bytes`.
+
+
 from __future__ import absolute_import
 from __future__ import print_function
 from future.moves.urllib.parse import urlparse
@@ -21,6 +32,7 @@ import ldap3
 
 from twisted.internet import threads
 
+from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.www import auth
 from buildbot.www import avatar
@@ -65,6 +77,7 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         if accountExtraFields is None:
             accountExtraFields = []
         self.accountExtraFields = accountExtraFields
+        self.ldap_encoding = ldap3.get_config_parameter('DEFAULT_SERVER_ENCODING')
 
     def connectLdap(self):
         server = urlparse(self.uri)
@@ -87,6 +100,8 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
         return c.response
 
     def getUserInfo(self, username):
+        username = bytes2unicode(username)
+
         def thd():
             c = self.connectLdap()
             infos = {'username': username}
@@ -98,19 +113,18 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             if len(res) != 1:
                 raise KeyError(
                     "ldap search \"%s\" returned %d results" % (pattern, len(res)))
-            dn, ldap_infos = res[0]['dn'], res[0]['raw_attributes']
-            if isinstance(dn, bytes):
-                dn = dn.decode('utf-8')
+            dn, ldap_infos = res[0]['dn'], res[0]['attributes']
 
-            def getLdapInfo(x):
+            def getFirstLdapInfo(x):
                 if isinstance(x, list):
-                    return x[0]
+                    x = x[0] if x else None
                 return x
-            infos['full_name'] = getLdapInfo(ldap_infos[self.accountFullName])
-            infos['email'] = getLdapInfo(ldap_infos[self.accountEmail])
+
+            infos['full_name'] = getFirstLdapInfo(ldap_infos[self.accountFullName])
+            infos['email'] = getFirstLdapInfo(ldap_infos[self.accountEmail])
             for f in self.accountExtraFields:
                 if f in ldap_infos:
-                    infos[f] = getLdapInfo(ldap_infos[f])
+                    infos[f] = getFirstLdapInfo(ldap_infos[f])
 
             if self.groupMemberPattern is None:
                 infos['groups'] = []
@@ -120,23 +134,26 @@ class LdapUserInfo(avatar.AvatarBase, auth.UserInfoProviderBase):
             pattern = self.groupMemberPattern % dict(dn=dn)
             res = self.search(c, self.groupBase, pattern,
                               attributes=[self.groupName])
-            infos['groups'] = flatten(
-                [group_infos['raw_attributes'][self.groupName] for group_infos in res])
+            infos['groups'] = flatten([group_infos['attributes'][self.groupName]
+                                      for group_infos in res])
+
             return infos
         return threads.deferToThread(thd)
 
     def findAvatarMime(self, data):
         # http://en.wikipedia.org/wiki/List_of_file_signatures
-        if data.startswith("\xff\xd8\xff"):
+        if data.startswith(b"\xff\xd8\xff"):
             return ("image/jpeg", data)
-        if data.startswith("\x89PNG"):
+        if data.startswith(b"\x89PNG"):
             return ("image/png", data)
-        if data.startswith("GIF8"):
+        if data.startswith(b"GIF8"):
             return ("image/gif", data)
         # ignore unknown image format
         return None
 
     def getUserAvatar(self, user_email, size, defaultAvatarUrl):
+        user_email = bytes2unicode(user_email)
+
         def thd():
             c = self.connectLdap()
             pattern = self.avatarPattern % dict(email=user_email)

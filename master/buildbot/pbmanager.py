@@ -208,10 +208,10 @@ class Dispatcher(service.AsyncService):
                 matched = yield defer.maybeDeferred(
                     creds.checkPassword, unicode2bytes(password))
                 if not matched:
-                    log.msg("invalid login from user '%s'" % creds.username)
+                    log.msg("invalid login from user '{}'".format(username))
                     raise error.UnauthorizedLogin()
                 defer.returnValue(creds.username)
-            log.msg("invalid login from unknown user '%s'" % creds.username)
+            log.msg("invalid login from unknown user '{}'".format(username))
             raise error.UnauthorizedLogin()
         finally:
             yield self.master.initLock.release()

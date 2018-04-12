@@ -109,7 +109,7 @@ class ChangeHookResource(resource.Resource):
             request.write(b"no change found")
         else:
             yield self.submitChanges(changes, request, src)
-            request.write("{} change found".format(len(changes)).encode())
+            request.write(unicode2bytes("{} change found".format(len(changes))))
 
     def makeHandler(self, dialect):
         """create and cache the handler object for this dialect"""
