@@ -37,7 +37,6 @@ from twisted.python.procutils import which
 from twisted.spread import pb
 
 from buildbot.status import builder
-from buildbot.util import bytes2unicode
 from buildbot.util import now
 from buildbot.util.eventual import fireEventually
 
@@ -52,7 +51,7 @@ class SourceStamp(object):
 
 
 def output(*msg):
-    log.msg(u' '.join([bytes2unicode(m) for m in msg]))
+    print(' '.join([str(m)for m in msg]))
 
 
 class SourceStampExtractor:
@@ -435,6 +434,8 @@ def getSourceStamp(vctype, treetop, branch=None, repository=None):
         cls = GitExtractor
     elif vctype == "mtn":
         cls = MonotoneExtractor
+    elif vctype == "none":
+        return defer.succeed(SourceStamp("", "", (1, ""), ""))
     else:
         output("unknown vctype '{}'".format(vctype))
         sys.exit(1)

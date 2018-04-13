@@ -161,7 +161,7 @@ class RunMasterBase(unittest.TestCase):
 
     @defer.inlineCallbacks
     def doForceBuild(self, wantSteps=False, wantProperties=False,
-                     wantLogs=False, useChange=False, forceParams=None):
+                     wantLogs=False, useChange=False, forceParams=None, triggerCallback=None):
 
         if forceParams is None:
             forceParams = {}
@@ -189,7 +189,9 @@ class RunMasterBase(unittest.TestCase):
             finishedCallback,
             ('buildsets', None, 'complete'))
 
-        if useChange is False:
+        if triggerCallback is not None:
+            yield triggerCallback()
+        elif useChange is False:
             # use data api to force a build
             yield self.master.data.control("force", forceParams, ("forceschedulers", "force"))
         else:
