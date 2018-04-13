@@ -38,6 +38,7 @@ from twisted.spread import pb
 
 from buildbot.status import builder
 from buildbot.util import now
+from buildbot.util import unicode2bytes
 from buildbot.util.eventual import fireEventually
 
 
@@ -678,7 +679,7 @@ class Try(pb.Referenceable):
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
-            d = f.login(credentials.UsernamePassword(user, passwd))
+            d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
             reactor.connectTCP(tryhost, tryport, f)
             d.addCallback(self._deliverJob_pb)
             return d
@@ -867,7 +868,7 @@ class Try(pb.Referenceable):
             tryhost, tryport = master.split(":")
             tryport = int(tryport)
             f = pb.PBClientFactory()
-            d = f.login(credentials.UsernamePassword(user, passwd))
+            d = f.login(credentials.UsernamePassword(unicode2bytes(user), unicode2bytes(passwd)))
             reactor.connectTCP(tryhost, tryport, f)
             d.addCallback(self._getBuilderNames)
             return d
