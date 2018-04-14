@@ -30,6 +30,7 @@ from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.util.eventual import eventually
 
 debug = False
 
@@ -214,4 +215,4 @@ class Dispatcher(service.AsyncService):
             log.msg("invalid login from unknown user '{}'".format(username))
             raise error.UnauthorizedLogin()
         finally:
-            yield self.master.initLock.release()
+            eventually(self.master.initLock.release)
