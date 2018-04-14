@@ -33,6 +33,7 @@ RUN \
         py-cffi \
         py-openssl@edge \
         py-cryptography@edge \
+        py-requests \
         py-service_identity@edge \
         py-sqlalchemy@edge \
         gosu@testing \
