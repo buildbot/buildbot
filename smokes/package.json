@@ -4,7 +4,6 @@
     "description": "smoke tests for buildbot with protractor",
     "main": "index.js",
     "dependencies": {
-        "coffee-script": "^1.11.1",
         "protractor": "^5.1.0"
     },
     "devDependencies": {},
