@@ -57,7 +57,7 @@ class HomePage extends BasePage {
         const noRunningBuilds = () =>
             element.all(By.css("h4")).getText().then(function(text) {
                 text = text.join(" ");
-                return text.toLowerCase().indexOf("0 build running") >= 0;
+                return text.toLowerCase().indexOf("0 builds running") >= 0;
             })
         ;
         return browser.wait(noRunningBuilds, 20000);
