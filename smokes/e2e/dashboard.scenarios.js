@@ -3,15 +3,14 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// coffee script
 // test goal: checks the the number of element present in home page
 // to test this part: two different builds need to be started
 
 
-const forcePage = require('./pages/force.coffee');
-const builderPage = require('./pages/builder.coffee');
-const dashboardPage = require('./pages/dashboard.coffee');
-const homePage = require('./pages/home.coffee');
+const forcePage = require('./pages/force.js');
+const builderPage = require('./pages/builder.js');
+const dashboardPage = require('./pages/dashboard.js');
+const homePage = require('./pages/home.js');
 
 
 describe('dashboard page', function() {

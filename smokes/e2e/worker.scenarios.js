@@ -3,12 +3,11 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// coffee script
 // test goal: checks the capability to navigate on about web page
 // to use previous and next link
 
-const workerPage = require('./pages/worker.coffee');
-const settingsPage = require('./pages/settings.coffee');
+const workerPage = require('./pages/worker.js');
+const settingsPage = require('./pages/settings.js');
 
 describe('', function() {
     let worker = null;

@@ -3,9 +3,9 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-const consolePage = require('./pages/console.coffee');
-const builderPage = require('./pages/builder.coffee');
-const homePage = require('./pages/home.coffee');
+const consolePage = require('./pages/console.js');
+const builderPage = require('./pages/builder.js');
+const homePage = require('./pages/home.js');
 
 describe('change hook', function() {
     let builder = null;

@@ -3,12 +3,11 @@
  * DS102: Remove unnecessary code created because of implicit returns
  * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
  */
-// coffee script
 // test goal: checks the capability to define a reason and to cancel/start the build
 
-const homePage = require('./pages/home.coffee');
-const forcePage = require('./pages/force.coffee');
-const builderPage = require('./pages/builder.coffee');
+const homePage = require('./pages/home.js');
+const forcePage = require('./pages/force.js');
+const builderPage = require('./pages/builder.js');
 
 describe('force and cancel', function() {
     let force = null;

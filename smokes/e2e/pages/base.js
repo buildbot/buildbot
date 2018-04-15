@@ -6,7 +6,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 // inspired by this methodology
-// http://www.lindstromhenrik.com/using-protractor-with-coffeescript/
+// http://www.lindstromhenrik.com/using-protractor-with.jsscript/
 
 
 class BasePage {
