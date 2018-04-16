@@ -67,6 +67,36 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
         return self.runStep()
 
+    def test_define(self):
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+                                         define={"a": "1", "b": "2"}))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
+                        '`pwd`" --define "_sourcedir `pwd`" --define '
+                        '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
+                        '--define "a 1" --define "b 2" --define "dist .el6" '
+                        '-ba foo.spec')
+            + ExpectShell.log('stdio',
+                              stdout='Your code has been rated at 10/10')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.runStep()
+
+    def test_define_none(self):
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
+                        '`pwd`" --define "_sourcedir `pwd`" --define '
+                        '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
+                        '--define "dist .el6" -ba foo.spec')
+            + ExpectShell.log('stdio',
+                              stdout='Your code has been rated at 10/10')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.runStep()
+
     @defer.inlineCallbacks
     def test_renderable_dist(self):
         self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=Interpolate('%(prop:renderable_dist)s')))

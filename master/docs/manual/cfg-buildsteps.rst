@@ -2643,6 +2643,9 @@ The step takes the following parameters
 ``dist``
     Distribution to build, used as the definition for ``_dist``.
 
+``define``
+    A dictionary of additional definitions to declare.
+
 ``autoRelease``
     If true, use the auto-release mechanics.
 
