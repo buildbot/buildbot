@@ -149,13 +149,13 @@ Configure remote libvirt server:
    }
 
    def delete_image_clone(vir_domain):
-       domain = domains[vir_domain]
-       if domain is not None:
+       if vir_domain in domains:
+	        domain = domains[vir_domain]
 	        os.remove(images_path + domain[1])
 
    def create_image_clone(vir_domain):
-       domain = domains[vir_domain]
-       if domain is not None:
+       if vir_domain in domains:
+	        domain = domains[vir_domain]
 	        cmd = ['/usr/bin/qemu-img', 'create', '-b', images_path + domain[0], '-f', 'qcow2', images_path + domain[1]]
 	        subprocess.call(cmd)
 
