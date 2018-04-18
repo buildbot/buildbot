@@ -54,18 +54,22 @@ config =
                 version: "~4.11.1"
                 files: 'dist/lodash.js'
             moment:
+                license: "MIT"
                 version: "~2.6.0"
-                files: 'moment.js'
+                files: 'min/moment.min.js'
             d3:  # d3 is loaded on demand via d3Service
+                license: "BSD"
                 version: "~3.4.11"
                 files: []
+                additional_files: "d3.js"
             "font-awesome":
                 version: "~4.1.0"
                 files: []
-                files: []
+                additional_files: ["fonts/fontawesome-webfont*", "css/*"]
             "bootstrap":
                 version: "~3.1.1"
                 files: []
+                additional_files: ["less/*"]
             'buildbot-data':
                 version: '~2.2.2'
                 files: 'dist/buildbot-data.js'

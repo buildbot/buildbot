@@ -1,21 +1,26 @@
 // Import bootstrap and font awesome stylesheets
 @import "../../libs/bootstrap/less/bootstrap.less";
 @import "../../libs/font-awesome/less/font-awesome.less";
-@import (inline) "../../libs/guanlecoja-ui/styles.css";
+@import "../guanlecoja-ui/styles.less";
 @fa-font-path: "./fonts";
 /* base css for angular, don't display anything until angular is running */
-[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+[ng\:cloak],
+[ng-cloak],
+[data-ng-cloak],
+[x-ng-cloak],
+.ng-cloak,
+.x-ng-cloak {
   display: none !important;
 }
 
 // Dashboards which use SVG to draw contents such as waterfall may require
 //  setting  body height to 100vh. (100% of viewport height)
-//  e.g. Waterfall uses this, otherwise the contents do not appear. 
+//  e.g. Waterfall uses this, otherwise the contents do not appear.
 // The controller dynamically adds and removes this class to body
 //   when entering and leaving Waterfall.
 //
-//  (note: adding height:100vh to a div also would solve this problem 
-//   except that causes the dialogs to make the SVG disappear due to 
+//  (note: adding height:100vh to a div also would solve this problem
+//   except that causes the dialogs to make the SVG disappear due to
 //   the dialog setting the body to overflow:hidden via modal-open rule.)
 body.hundredpercent {
   height: 100vh;
@@ -25,12 +30,12 @@ body.hundredpercent {
 @media screen {
   .modal-xlg {
     .modal-dialog {
-        width: 90%;
+      width: 90%;
     }
     /*Sets the maximum height of the modal body to 80% of the screen height*/
     .modal-body {
-        overflow-y: auto;
-        max-height: 80vh;
+      overflow-y: auto;
+      max-height: 80vh;
     }
   }
 
@@ -39,12 +44,11 @@ body.hundredpercent {
   .navbar-static-top {
     border-radius: 0;
   }
-
 }
 
 /* make the sidebar be on the back of the modals dialog */
 .sidebar {
-    z-index: (@zindex-modal - 1) !important;
+  z-index: (@zindex-modal - 1) !important;
 }
 
 /* button bar inside the breadcrum, used for forcesched buttons */
@@ -71,25 +75,25 @@ body.hundredpercent {
   white-space: nowrap;
   text-align: center;
   border-radius: @badge-border-radius;
-  transition: all 100ms cubic-bezier(0.250, 0.250, 0.750, 0.750);
-  .badge-active{
-      display: none;
+  transition: all 100ms cubic-bezier(0.25, 0.25, 0.75, 0.75);
+  .badge-active {
+    display: none;
   }
   &:hover,
   &:focus {
     -webkit-transform: scale(1.3);
     transform: scale(1.3);
-    .badge-active{
-        display: inline-block;
+    .badge-active {
+      display: inline-block;
     }
-    .badge-inactive{
-        display: none;
+    .badge-inactive {
+      display: none;
     }
   }
 }
 
 .clickable {
-  cursor: pointer
+  cursor: pointer;
 }
 
 .no-select {
@@ -130,7 +134,7 @@ Firefox will insert newlines if the selection go over a no-select span, so we ne
   img {
     height: 40px;
     width: 40px;
-    background-color: #ccc
+    background-color: #ccc;
   }
 }
 
@@ -146,23 +150,27 @@ Firefox will insert newlines if the selection go over a no-select span, so we ne
   img {
     height: 20px;
     width: 20px;
-    background-color: #ccc
+    background-color: #ccc;
   }
 }
 
 .changedetails > .no-select > * {
-    margin-left: 0.3em;
-    margin-right: 0.3em;
+  margin-left: 0.3em;
+  margin-right: 0.3em;
 }
 
-li.unstyled{
+li.unstyled {
   list-style: none;
 }
-.no-margin{
+.no-margin {
   margin: 0px !important;
 }
-.mouse-over-only  {display: none;}
-span:hover>.mouse-over-only  {display: inline;}
+.mouse-over-only {
+  display: none;
+}
+span:hover > .mouse-over-only {
+  display: inline;
+}
 
 /* flex row will make the row grow automatically given the size of the content
    This will make sure all the inside div will fill all content.
@@ -182,21 +190,27 @@ span:hover>.mouse-over-only  {display: inline;}
 
   /* Then we define how is distributed the remaining space */
   justify-content: space-around;
-    .flex-grow-1 {
-        flex-grow: 1
-    }
-    .flex-grow-2 {
-        flex-grow: 2
-    }
-    .flex-grow-3 {
-        flex-grow: 3
-    }
-    .flex-grow-4 {
-        flex-grow: 4
-    }
+  .flex-grow-1 {
+    flex-grow: 1;
+  }
+  .flex-grow-2 {
+    flex-grow: 2;
+  }
+  .flex-grow-3 {
+    flex-grow: 3;
+  }
+  .flex-grow-4 {
+    flex-grow: 4;
+  }
 }
 
 /* glyphicon to font awesome translation, for angular-bootstrap-multiselect */
-.glyphicon { font-family: 'FontAwesome'; }
-.glyphicon-ok:before { content: @fa-var-check; }
-.glyphicon-remove:before { content: @fa-var-times; }
+.glyphicon {
+  font-family: "FontAwesome";
+}
+.glyphicon-ok:before {
+  content: @fa-var-check;
+}
+.glyphicon-remove:before {
+  content: @fa-var-times;
+}

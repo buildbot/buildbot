@@ -127,3 +127,13 @@ finishrelease:
 pyinstaller: virtualenv
 	$(PIP) install pyinstaller
 	$(VENV_NAME)/bin/pyinstaller -F pyinstaller/buildbot-worker.spec
+
+# download all required bower dependencies and commit them to git
+vendors:
+	cd common; yarn install
+	for i in $(WWW_PKGS); do \
+		if [ -d $$i/guanlecoja ] ; \
+		then \
+			node common/build_jsvendors.js "$$i";\
+		fi;\
+	done
