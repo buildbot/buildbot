@@ -1,0 +1,1 @@
+fix ```Maximum recursion depth exceeded`` when lots of worker are trying to connect while master is starting or reconfiguring (:issue:`4042`).
