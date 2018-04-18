@@ -16,7 +16,7 @@ describe('change hook', function() {
     });
     afterEach(() => new homePage().waitAllBuildsFinished());
 
-    return it('should create a build', function() {
+    it('should create a build', function() {
         builder.go();
         builder.getLastSuccessBuildNumber().then(function(lastbuild) {
             browser.executeAsyncScript(done=>
@@ -32,6 +32,6 @@ describe('change hook', function() {
             return builder.waitNextBuildFinished(lastbuild);
         });
         console.go();
-        return expect(console.countSuccess()).toBeGreaterThan(0);
+        expect(console.countSuccess()).toBeGreaterThan(0);
     });
 });

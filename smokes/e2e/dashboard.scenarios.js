@@ -35,10 +35,10 @@ describe('dashboard page', function() {
         })
     );
 
-    return it('should go to the dashboard page and see no error', function() {
+    it('should go to the dashboard page and see no error', function() {
         builder.goForce();
         force.getStartButton().click();
         home.waitAllBuildsFinished();
-        return dashboard.go();
+        dashboard.go();
     });
 });

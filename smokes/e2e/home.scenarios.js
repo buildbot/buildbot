@@ -24,7 +24,7 @@ describe('home page', function() {
 
     afterEach(() => home.logOut());
 
-    return it('should go to the home page and check the different builder', function() {
+    it('should go to the home page and check the different builder', function() {
         const builderName = {
             "0" : "runtests"
         };
@@ -33,6 +33,6 @@ describe('home page', function() {
         force.getStartButton().click();
         home.go();
         const panel0 = home.getPanel(0);
-        return expect(panel0.getText()).toContain(builderName[0]);
+        expect(panel0.getText()).toContain(builderName[0]);
     });
 });

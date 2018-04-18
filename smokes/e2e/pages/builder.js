@@ -92,7 +92,7 @@ class BuilderPage extends BasePage {
 
     checkBuilderURL() {
         const builderLink = element.all(By.linkText(this.builder));
-        return expect(builderLink.count()).toBeGreaterThan(0);
+        expect(builderLink.count()).toBeGreaterThan(0);
     }
 }
 

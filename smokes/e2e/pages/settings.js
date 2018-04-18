@@ -32,7 +32,7 @@ class SettingsPage extends BasePage {
 
     checkScallingFactor(scallingVar) {
         const scallingFactor = this.getItem("Waterfall", "scaling_waterfall");
-        return expect(scallingFactor.getAttribute('value')).toEqual(scallingVar);
+        expect(scallingFactor.getAttribute('value')).toEqual(scallingVar);
     }
 
     changeColumnWidth(columnVar) {
@@ -42,7 +42,7 @@ class SettingsPage extends BasePage {
 
     checkColumnWidth(columnVar) {
         const columnWidthForm = this.getItem("Waterfall", "min_column_width_waterfall");
-        return expect(columnWidthForm.getAttribute('value')).toEqual(columnVar);
+        expect(columnWidthForm.getAttribute('value')).toEqual(columnVar);
     }
 
     changeLazyLoadingLimit(lazyLoadingLimit) {
@@ -52,7 +52,7 @@ class SettingsPage extends BasePage {
 
     checkLazyLoadingLimit(lazyLoadingLimit) {
         const lazyLoadingLimitForm = this.getItem("Waterfall", "lazy_limit_waterfall");
-        return expect(lazyLoadingLimitForm.getAttribute('value')).toEqual(lazyLoadingLimit);
+        expect(lazyLoadingLimitForm.getAttribute('value')).toEqual(lazyLoadingLimit);
     }
 
     changeIdleTime(idleTimeVar) {
@@ -62,7 +62,7 @@ class SettingsPage extends BasePage {
 
     checkIdleTime(idleTimeVar) {
         const idleTimeForm = this.getItem("Waterfall", "idle_threshold_waterfall");
-        return expect(idleTimeForm.getAttribute('value')).toEqual(idleTimeVar);
+        expect(idleTimeForm.getAttribute('value')).toEqual(idleTimeVar);
     }
 
     changeMaxBuild(maxBuildVar) {
@@ -72,7 +72,7 @@ class SettingsPage extends BasePage {
 
     checkMaxBuild(maxBuildVar) {
         const maxBuildForm = this.getItem("Console", "buildLimit");
-        return expect(maxBuildForm.getAttribute('value')).toEqual(maxBuildVar);
+        expect(maxBuildForm.getAttribute('value')).toEqual(maxBuildVar);
     }
 
     changeMaxRecentsBuilders(maxBuildersVar) {
@@ -82,7 +82,7 @@ class SettingsPage extends BasePage {
 
     checkMaxRecentsBuilders(maxBuildersVar) {
         const maxBuilderForm = this.getItem("Console", "changeLimit");
-        return expect(maxBuilderForm.getAttribute('value')).toEqual(maxBuildersVar);
+        expect(maxBuilderForm.getAttribute('value')).toEqual(maxBuildersVar);
     }
 
     changeShowWorkerBuilders(showWorkerBuildersVar) {
@@ -94,7 +94,7 @@ class SettingsPage extends BasePage {
 
     checkShowWorkerBuilders(showWorkerBuildersVar) {
         const showWorkerBuildersForm = this.getItem("Workers", "showWorkerBuilders");
-        return expect(showWorkerBuildersForm.isSelected()).toEqual(showWorkerBuildersVar);
+        expect(showWorkerBuildersForm.isSelected()).toEqual(showWorkerBuildersVar);
     }
 }
 

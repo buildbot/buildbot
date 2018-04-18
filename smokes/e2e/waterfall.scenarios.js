@@ -25,23 +25,23 @@ describe('waterfall', function() {
         const settings =  new settingsPage('runtests');
         settings.goSettings();
         settings.changeScallingFactor('10');
-        return settings.changeColumnWidth('45');
+        settings.changeColumnWidth('45');
     });
 
     afterEach(() => new homePage().waitAllBuildsFinished());
 
     it('should navigate to the waterfall, check one builder and hyperlink', function() {
         waterfall.go();
-        return waterfall.goBuilderAndCheck('runtests');
+        waterfall.goBuilderAndCheck('runtests');
     });
 
     it('should navigate to the builds waterfall and check the associated hyperlink', function() {
         waterfall.go();
-        return waterfall.goBuildAndCheck();
+        waterfall.goBuildAndCheck();
     });
 
-    return it('should navigate to the builds waterfall and open the popup and close it', function() {
+    it('should navigate to the builds waterfall and open the popup and close it', function() {
         waterfall.go();
-        return waterfall.goBuildAndClose();
+        waterfall.goBuildAndClose();
     });
 });

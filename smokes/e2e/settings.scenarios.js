@@ -29,7 +29,7 @@ describe('', function() {
             settings.changeScallingFactor(scallingVar);
             waterfall.go();
             settings.goSettings();
-            return settings.checkScallingFactor(scallingVar);
+            settings.checkScallingFactor(scallingVar);
         })
     );
 
@@ -40,7 +40,7 @@ describe('', function() {
             settings.changeColumnWidth(columnVar);
             waterfall.go();
             settings.goSettings();
-            return settings.checkColumnWidth(columnVar);
+            settings.checkColumnWidth(columnVar);
         })
     );
 
@@ -78,7 +78,7 @@ describe('', function() {
     );
 
     const maxBuildersVar='45';
-    return describe('manage settings', () =>
+    describe('manage settings', () =>
         it('should navigate to the settings, change the Max Builder value and check it', function() {
             settings.goSettings();
             settings.changeMaxRecentsBuilders(maxBuildersVar);

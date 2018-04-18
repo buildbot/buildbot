@@ -25,13 +25,13 @@ class WorkerPage extends BasePage {
     }
 
     checkWorkerPage() {
-        return expect(browser.getCurrentUrl()).toContain('#/worker');
+        expect(browser.getCurrentUrl()).toContain('#/worker');
     }
 
     checkHrefPresent() {
         const hrefRef = element.all(By.css('a'));
         expect(hrefRef.getText()).toContain('slowruntests');
-        return expect(hrefRef.getText()).toContain('runtests');
+        expect(hrefRef.getText()).toContain('runtests');
     }
 
     goBuilderLink(builderName) {

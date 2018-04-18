@@ -21,7 +21,7 @@ class ForcePage extends BasePage {
         const setInputValue = element(By.css(`forcefield label[for=${cssLabel}] + div input`));
         setInputValue.clear();
         setInputValue.sendKeys(value);
-        return expect(setInputValue.getAttribute('value')).toBe(value);
+        expect(setInputValue.getAttribute('value')).toBe(value);
     }
 
     setReason(reason) {

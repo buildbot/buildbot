@@ -21,15 +21,15 @@ describe('force', function() {
     afterEach(() => new homePage().waitAllBuildsFinished());
 
     let lastbuild = null;
-    return it('should create a build', function() {
+    it('should create a build', function() {
 
         lastbuild = 0;
         builder.go();
-        return builder.getLastSuccessBuildNumber().then(function(lastbuild) {
+        builder.getLastSuccessBuildNumber().then(function(lastbuild) {
             builder.goForce();
             force.getStartButton().click();
             builder.go();
-            return builder.waitNextBuildFinished(lastbuild);
+            builder.waitNextBuildFinished(lastbuild);
         });
     });
 });

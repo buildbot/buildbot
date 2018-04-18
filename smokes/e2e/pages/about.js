@@ -23,23 +23,23 @@ class AboutPage extends BasePage {
     }
 
     checkAboutPage() {
-        return expect(browser.getCurrentUrl()).toContain('#/about');
+        expect(browser.getCurrentUrl()).toContain('#/about');
     }
 
     checkBuildbotTitle() {
         const aboutTitle = element.all(By.css('h2')).first();
         expect(aboutTitle.getText()).toContain('About this');
-        return expect(aboutTitle.getText()).toContain('buildbot');
+        expect(aboutTitle.getText()).toContain('buildbot');
     }
 
     checkConfigTitle() {
         const configurationTitle = element.all(By.css('h2')).get(1);
-        return expect(configurationTitle.getText()).toContain('Configuration');
+        expect(configurationTitle.getText()).toContain('Configuration');
     }
 
     checkDependenciesTitle() {
         const dependenciesTitle = element.all(By.css('h2')).get(2);
-        return expect(dependenciesTitle.getText()).toContain('Javascript dependencies');
+        expect(dependenciesTitle.getText()).toContain('Javascript dependencies');
     }
 }
 

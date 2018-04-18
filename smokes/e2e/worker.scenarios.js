@@ -28,11 +28,11 @@ describe('', function() {
             worker.checkWorkerPage();
             worker.checkHrefPresent();
             builder = worker.goBuilderLink('slowruntests');
-            return builder.checkBuilderURL();
+            builder.checkBuilderURL();
         })
     );
 
-    return describe('check worker page', () =>
+    describe('check worker page', () =>
         it('should navigate to the worker page, check the one builder inside', function() {
             settings.goSettings();
             settings.changeShowWorkerBuilders(true);
@@ -41,7 +41,7 @@ describe('', function() {
             worker.checkWorkerPage();
             worker.checkHrefPresent();
             builder = worker.goBuilderLink('runtests');
-            return builder.checkBuilderURL();
+            builder.checkBuilderURL();
     })
 );
 

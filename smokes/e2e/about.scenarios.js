@@ -14,13 +14,13 @@ describe('', function() {
     beforeEach(() => about = new aboutPage('runtests'));
 
 
-    return describe('check about page', () =>
+    describe('check about page', () =>
         it('should navigate to the about page, check the default elements inside', function() {
             about.goAbout();
             about.checkAboutPage();
             about.checkBuildbotTitle();
             about.checkConfigTitle();
-            return about.checkDependenciesTitle();
+            about.checkDependenciesTitle();
     })
 );
 });

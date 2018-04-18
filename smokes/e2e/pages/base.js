@@ -28,13 +28,13 @@ class BasePage {
         element.all(By.css('.avatar img')).click();
         element.all(By.linkText('Logout')).click();
         const anonymousButton = element(By.css('.dropdown'));
-        return expect(anonymousButton.getText()).toContain("Anonymous");
+        expect(anonymousButton.getText()).toContain("Anonymous");
     }
 
     loginUser(user, password) {
         browser.get(`http://${user}:${password}@localhost:8010/auth/login`);
         const anonymousButton = element(By.css('.dropdown'));
-        return expect(anonymousButton.getText()).not.toContain("Anonymous");
+        expect(anonymousButton.getText()).not.toContain("Anonymous");
     }
 }
 

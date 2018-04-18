@@ -31,7 +31,7 @@ class WaterfallPage extends BasePage {
         firstLinkInPopup.click();
         return browser.getCurrentUrl().then(function(currentUrl) {
             expect(currentUrl).toContain("builders/");
-            return expect(currentUrl).toContain("builds/");
+            expect(currentUrl).toContain("builds/");
         });
     }
 
@@ -45,7 +45,7 @@ class WaterfallPage extends BasePage {
         self.goBuild();
         const popupClose = element.all(By.css('i.fa-times'));
         popupClose.click();
-        return expect($('modal-dialog').isPresent()).toBeFalsy();
+        expect($('modal-dialog').isPresent()).toBeFalsy();
     }
 
     goBuildAndCheck() {

@@ -24,9 +24,9 @@ describe('previousnextlink', function() {
     it('has afterEach working', function() {
     });
 
-    return it('should navigate in the builds history by using the previous next links', function() {
+    it('should navigate in the builds history by using the previous next links', function() {
         builder.go();
-        return builder.getLastSuccessBuildNumber().then(function(lastbuild) {
+        builder.getLastSuccessBuildNumber().then(function(lastbuild) {
             // Build #1
             builder.goForce();
             force.getStartButton().click();
@@ -42,7 +42,7 @@ describe('previousnextlink', function() {
             builder.clickWhenClickable(builder.getPreviousButton());
             expect(browser.getCurrentUrl()).not.toMatch(lastBuildURL);
             builder.clickWhenClickable(builder.getNextButton());
-            return expect(browser.getCurrentUrl()).toMatch(lastBuildURL);
+            expect(browser.getCurrentUrl()).toMatch(lastBuildURL);
         });
     });
 });
@@ -56,11 +56,11 @@ describe('forceandstop', function() {
         return force =  new forcePage();
     });
 
-    return it('should create a build with a dedicated reason and stop it during execution', function() {
+    it('should create a build with a dedicated reason and stop it during execution', function() {
 
         builder.goForce();
         force.getStartButton().click();
         expect(browser.getCurrentUrl()).toMatch("/builders/\[1-9]/builds/\[1-9]");
-        return builder.getStopButton().click();
+        builder.getStopButton().click();
     });
 });

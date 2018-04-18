@@ -23,11 +23,11 @@ describe('force and cancel', function() {
 
     it('should create a build', function() {
         builder.go();
-        return builder.getLastSuccessBuildNumber().then(function(lastbuild) {
+        builder.getLastSuccessBuildNumber().then(function(lastbuild) {
             builder.goForce();
             force.getStartButton().click();
             builder.go();
-            return builder.waitNextBuildFinished(lastbuild);
+            builder.waitNextBuildFinished(lastbuild);
         });
     });
 
@@ -35,10 +35,10 @@ describe('force and cancel', function() {
 
         builder.go();
         builder.goForce();
-        return force.getCancelButton().click();
+        force.getCancelButton().click();
     });
 
-    return it('should create a build with a dedicated reason and Start it', function() {
+    it('should create a build with a dedicated reason and Start it', function() {
 
         builder.go();
         builder.goForce();
@@ -48,6 +48,6 @@ describe('force and cancel', function() {
         force.setBranchName("Gerrit Branch");
         force.setRepo("http//name.com");
         force.setRevisionName("12345");
-        return force.getStartButton().click();
+        force.getStartButton().click();
     });
 });

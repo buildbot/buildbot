@@ -23,7 +23,7 @@ describe('rebuilds', function() {
 
     afterEach(() => new homePage().waitAllBuildsFinished());
 
-    return it('should navigate to a dedicated build and to use the rebuild button', function() {
+    it('should navigate to a dedicated build and to use the rebuild button', function() {
         builder.go();
         return builder.getLastSuccessBuildNumber().then(function(lastbuild) {
             builder.goForce();
@@ -31,9 +31,9 @@ describe('rebuilds', function() {
             builder.go();
             builder.waitNextBuildFinished(lastbuild);
             builder.goBuild(lastbuild);
-            return browser.getCurrentUrl().then(function(buildUrl) {
+            browser.getCurrentUrl().then(function(buildUrl) {
                 builder.getRebuildButton().click();
-                return builder.waitGoToBuild(lastbuild+2);
+                builder.waitGoToBuild(lastbuild+2);
             });
         });
     });
