@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 // test goal: checks the the number of element present in home page
 // to test this part: two different builds need to be started
 

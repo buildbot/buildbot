@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 const consolePage = require('./pages/console.js');
 const builderPage = require('./pages/builder.js');
 const homePage = require('./pages/home.js');

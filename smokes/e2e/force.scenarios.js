@@ -1,8 +1,3 @@
-/*
- * decaffeinate suggestions:
- * DS102: Remove unnecessary code created because of implicit returns
- * Full docs: https://github.com/decaffeinate/decaffeinate/blob/master/docs/suggestions.md
- */
 // test goal: checks the capability to define a reason and to cancel/start the build
 
 const forcePage = require('./pages/force.js');
