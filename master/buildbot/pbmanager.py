@@ -215,4 +215,6 @@ class Dispatcher(service.AsyncService):
             log.msg("invalid login from unknown user '%s'" % creds.username)
             raise error.UnauthorizedLogin()
         finally:
+            # brake the callback stack by returning to the reactor
+            # before waking up other waiters
             eventually(self.master.initLock.release)
