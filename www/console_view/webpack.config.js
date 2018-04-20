@@ -31,7 +31,7 @@ function isExternal(module) {
 module.exports = {
 
     entry: {
-        scripts: "./src/module/main.module.coffee",
+        scripts: "./src/module/main.module.js",
         styles: "./src/styles/styles.less",
     },
     output: {
