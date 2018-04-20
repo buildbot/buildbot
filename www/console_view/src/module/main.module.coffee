@@ -1,5 +1,5 @@
 # Register new module
-class App extends App
+class console_view 
     constructor: ->
         return [
             'ui.router'
@@ -9,8 +9,9 @@ class App extends App
             'bbData'
         ]
 
+consoleTemplate = require("./console.tpl.jade");
 
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -32,7 +33,7 @@ class State extends Config
         state =
             controller: "#{name}Controller"
             controllerAs: "c"
-            templateUrl: "console_view/views/#{name}.html"
+            template: consoleTemplate
             name: name
             url: "/#{name}"
             data: cfg
@@ -54,7 +55,7 @@ class State extends Config
                 default_value: 30
             ]
 
-class Console extends Controller
+class ConsoleController
     constructor: (@$scope, $q, @$window, dataService, bbSettingsService, resultsService,
         @$uibModal, @$timeout) ->
         angular.extend this, resultsService
@@ -75,6 +76,9 @@ class Console extends Controller
                 if a == b
                     return 0
                 return 1
+
+        console.log("webpack is working")
+
 
         @$scope.builds = @builds = @dataAccessor.getBuilds
             property: ["got_revision"]
@@ -378,3 +382,8 @@ class Console extends Controller
         change.show_details = !change.show_details
     infoIsExpanded: (change) ->
         return change.show_details
+
+
+angular.module('console_view', new console_view())
+    .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])
+    .controller('consoleController', ['$scope', '$q', '$window', 'dataService', 'bbSettingsService', 'resultsService', '$uibModal', '$timeout', ConsoleController])
