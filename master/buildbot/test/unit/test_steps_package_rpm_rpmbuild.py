@@ -19,6 +19,11 @@ from __future__ import print_function
 from twisted.internet import defer
 from twisted.trial import unittest
 
+try:
+    from collections import OrderedDict
+except ImportError:  # pragma: no cover
+    from ordereddict import OrderedDict
+
 from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.results import SUCCESS
@@ -68,8 +73,9 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
     def test_define(self):
+        defines = [("a", "1"), ("b", "2")]
         self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
-                                         define={"a": "1", "b": "2"}))
+                                         define=OrderedDict(defines)))
         self.expectCommands(
             ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
