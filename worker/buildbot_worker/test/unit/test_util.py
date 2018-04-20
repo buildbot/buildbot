@@ -99,6 +99,21 @@ class TestObfuscated(unittest.TestCase):
         self.assertEqual(1, util.Obfuscated.get_real(cmd))
         self.assertEqual(1, util.Obfuscated.get_fake(cmd))
 
+    def testObfuscatedQuotedCmdForWin(self):
+        cmd = "c:\\test program\\test.exe -p use_parameter"
+        self.assertEqual('"c:\\test program\\test.exe" -p use_parameter',
+                         util.Obfuscated.quoted_cmd(cmd))
+
+    def testObfuscatedQuotedCmdForMultiSpacePath(self):
+        cmd = "c:\\test program\\sub folder\\test.exe -p use_parameter"
+        self.assertEqual('"c:\\test program\\sub folder\\test.exe" -p use_parameter',
+                         util.Obfuscated.quoted_cmd(cmd))
+
+    def testObfuscatedQuotedCmdForListCmd(self):
+        cmd = ["c:\\test program\\sub folder\\test.exe", '-p', 'use_parameter']
+        self.assertEqual(['"c:\\test program\\sub folder\\test.exe"', '-p', 'use_parameter'],
+                         util.Obfuscated.quoted_cmd(cmd))
+
 
 class TestRewrap(unittest.TestCase):
 
