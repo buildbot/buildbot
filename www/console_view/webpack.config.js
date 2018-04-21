@@ -25,6 +25,7 @@ module.exports = {
     entry: {
         scripts: "./src/module/main.module.js",
         styles: "./src/styles/styles.less",
+        tests: "./src/module/main.module.spec.js",
     },
     output: {
         path: path.resolve(__dirname, "./"+pluginPythonName+"/static"),

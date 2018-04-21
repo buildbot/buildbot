@@ -1,5 +1,9 @@
 {
 	"name": "buildbot-console-view",
+	"scripts": {
+		"test": "karma start",
+		"test-watch": "karma start --auto-watch --no-single-run"
+	},
 	"engines": {
 		"node": ">=0.10.0",
 		"npm": ">=1.4.0"
@@ -13,6 +17,13 @@
 		"file-loader": "^0.11.2",
 		"jade": "^1.11.0",
 		"jade-html-loader": "0.0.3",
+		"jasmine-core": "^3.1.0",
+		"karma": "^2.0.2",
+		"karma-chrome-launcher": "^2.2.0",
+		"karma-coverage": "^1.1.1",
+		"karma-jasmine": "^1.1.1",
+		"karma-sourcemap-loader": "^0.3.7",
+		"karma-webpack": "^3.0.0",
 		"less": "^2.7.2",
 		"less-loader": "^4.0.5",
 		"ng-classify-loader": "0.0.3",
