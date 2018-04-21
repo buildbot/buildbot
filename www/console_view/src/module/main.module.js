@@ -1,5 +1,7 @@
+const consoleTemplate = require('./console.tpl.jade');
+const modalTemplate = require('./view/modal/modal.tpl.jade')
 
-class console_view { 
+class ConsoleView { 
     constructor() {
         return [
             'ui.router',
@@ -11,9 +13,7 @@ class console_view {
     }
 }
 
-const consoleTemplate = require("./console.tpl.jade");
-
-class State {
+class ConsoleViewConfig {
     constructor($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) {
 
         // Name of the state
@@ -97,9 +97,6 @@ class ConsoleController {
                 return 1;
             };
         }
-
-        console.log("decaf is working!");
-
 
         this.$scope.builds = (this.builds = this.dataAccessor.getBuilds({
             property: ["got_revision"],
@@ -475,7 +472,7 @@ class ConsoleController {
     selectBuild(build) {
         let modal;
         return modal = this.$uibModal.open({
-            templateUrl: 'console_view/views/modal.html',
+            template: modalTemplate,
             controller: 'consoleModalController as modal',
             windowClass: 'modal-big',
             resolve: {
@@ -496,6 +493,8 @@ class ConsoleController {
 }
 
 
-angular.module('console_view', new console_view())
-    .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])
+angular.module('console_view', new ConsoleView())
+    .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', ConsoleViewConfig])
     .controller('consoleController', ['$scope', '$q', '$window', 'dataService', 'bbSettingsService', 'resultsService', '$uibModal', '$timeout', ConsoleController]);
+
+require('./view/modal/modal.controller')
