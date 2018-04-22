@@ -24,11 +24,12 @@ import os
 import re
 import subprocess
 import sys
+import json
+import shutil
 from distutils.version import LooseVersion
 from subprocess import PIPE
 from subprocess import STDOUT
 from subprocess import Popen
-
 import setuptools.command.build_py
 import setuptools.command.egg_info
 from setuptools import setup
@@ -59,7 +60,8 @@ def gitDescribeToPep440(version):
     # where 20 is the number of commit since last release, and gf0f45ca is the short commit id preceded by 'g'
     # we parse this a transform into a pep440 release version 0.9.9.dev20 (increment last digit and add dev before 20)
 
-    VERSION_MATCH = re.compile(r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
+    VERSION_MATCH = re.compile(
+        r'(?P<major>\d+)\.(?P<minor>\d+)\.(?P<patch>\d+)(\.post(?P<post>\d+))?(-(?P<dev>\d+))?(-g(?P<commit>.+))?')
     v = VERSION_MATCH.search(version)
     if v:
         major = int(v.group('major'))
@@ -138,7 +140,8 @@ def getVersion(init_file):
         return version
 
     try:
-        p = Popen(['git', 'describe', '--tags', '--always'], stdout=PIPE, stderr=STDOUT, cwd=cwd)
+        p = Popen(['git', 'describe', '--tags', '--always'],
+                  stdout=PIPE, stderr=STDOUT, cwd=cwd)
         out = p.communicate()[0]
 
         if (not p.returncode) and out:
@@ -184,6 +187,18 @@ def getVersion(init_file):
 # This is why we override both egg_info and build, and the first run build
 # the js.
 
+def uglify(all_js, mangle=True):
+    # buildbot code depends on https://github.com/olov/ng-annotate
+    # to add dependency injection annotation
+    # if we don't use ng-annotate, we can't use a minimizer which mangle function names
+    cmd = ['uglifyjs', '-c']
+    if mangle:
+        cmd.append('-m')
+    p = Popen(cmd,
+              stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+    return p.communicate(input=all_js)[0]
+
+
 class BuildJsCommand(distutils.cmd.Command):
     """A custom command to run JS build."""
 
@@ -196,41 +211,142 @@ class BuildJsCommand(distutils.cmd.Command):
     def finalize_options(self):
         """Post-process options."""
 
+    def build_with_node(self, has_gulp, has_webpack):
+        npm_bin = check_output("npm bin").strip()
+        yarn_version = check_output("yarn --version")
+        npm_version = check_output("npm -v")
+        print("yarn:", yarn_version, "npm: ",
+              npm_version)
+        assert npm_version != "", "need nodejs and npm installed in current PATH"
+        assert LooseVersion(npm_version) >= LooseVersion(
+            "1.4"), "npm < 1.4 (%s)" % (npm_version)
+
+        commands = []
+
+        # if we find yarn, then we use it as it is much faster
+        if yarn_version != "":
+            commands.append(['yarn', 'install', '--pure-lockfile'])
+        else:
+            commands.append(['npm', 'install'])
+
+        if has_gulp:
+            commands.append(
+                [os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
+        elif has_webpack:
+            commands.append([os.path.join(npm_bin, "webpack"), '-p'])
+
+        shell = bool(os.name == 'nt')
+
+        for command in commands:
+            self.announce(
+                'Running command: %s' % str(" ".join(command)),
+                level=distutils.log.INFO)
+            subprocess.call(command, shell=shell)
+
+    def build_with_python(self, package):
+        from buildbot_pkg.pyjade import simple_convert as jade_convert
+        static = os.path.join(package, 'static')
+        shutil.rmtree(static, True)
+        os.mkdir(static)
+        os.mkdir(os.path.join(static, 'img'))
+        os.mkdir(os.path.join(static, 'fonts'))
+        TEMPLATE_HEADER = 'angular.module("app").run(["$templateCache", function($templateCache) {\n'
+        TEMPLATE_BODY = '$templateCache.put("{url}",{content});\n'
+        TEMPLATE_FOOTER = '}]);'
+        all_modules = ""
+        all_coffee = ""
+        all_templates = ""
+        all_less = ""
+        # walk the source dir to find all interresting files
+        for root, dirs, files in os.walk("src", topdown=True):
+            for name in files:
+                fn = os.path.join(root, name)
+                # find all coffee files, which are not tests
+                if name.endswith(".coffee") and not name.endswith(".spec.coffee"):
+                    with open(fn) as f:
+                        content = f.read()
+                    # if the file is a module definition, it must be placed first
+                    if name.endswith(".module.coffee"):
+                        all_modules += content + "\n"
+                    else:
+                        all_coffee += content + "\n"
+                # convert jades to html
+                if name.endswith(".jade"):
+                    with open(fn) as f:
+                        try:
+                            content = jade_convert(f.read())
+                        except Exception as e:
+                            print("{}: {}".format(fn, str(e)))
+                            content = ''
+                    if name == "index.jade":
+                        with open(os.path.join(static, 'index.html'), 'w') as f:
+                            f.write(content)
+                    else:
+                        all_templates += TEMPLATE_BODY.format(url="views/" + name.replace(".tpl.jade", ".html"),
+                                                              content=json.dumps(content))
+                # concat the less files
+                if name.endswith(".less"):
+                    with open(fn) as f:
+                        all_less += f.read() + "\n"
+                # copy the images
+                if name.endswith(".svg") or name.endswith(".png"):
+                    shutil.copyfile(fn, os.path.join(static, 'img', name))
+
+        # for some dependencies, we need to copy some datas
+        for root, dirs, files in os.walk("libs", topdown=True):
+            for name in files:
+                fn = os.path.join(root, name)
+                # hack to copy the fonts
+                if name.endswith(".woff") or name.endswith(".ttf"):
+                    shutil.copyfile(fn, os.path.join(static, 'fonts', name))
+                # hack to copy the d3 dependency
+                if name == "d3.min.js":
+                    shutil.copyfile(fn, os.path.join(static, name))
+
+        print("compiling coffee...")
+        p = Popen(['coffee', '-c', '-b', '-s'],
+                  stdin=PIPE, stdout=PIPE, stderr=STDOUT)
+        all_js = p.communicate(input=all_modules + all_coffee)[0]
+        all_js += TEMPLATE_HEADER + all_templates + TEMPLATE_FOOTER
+
+        print("compiling less...")
+        p = Popen(['lessc', '-'],
+                  stdin=PIPE, stdout=PIPE, stderr=STDOUT, cwd="src")
+        all_css = p.communicate(input=all_less)[0]
+
+        print("gathering dependencies...")
+        # bowerdeps.json contains the list of files we must include
+        # the order is important!!
+        with open(os.path.join("libs", "bowerdeps.json")) as f:
+            bower_deps = json.load(f)
+        js_files = bower_deps['js_files']
+        all_jsdeps = ""
+        for fn in js_files:
+            with open(os.path.join(*fn.split('/'))) as f:
+                all_jsdeps += f.read() + "\n"
+        print("minifying code...")
+        # jsdeps first, with full minification, then our scripts, with name mangling disabled
+        all_js = uglify(all_jsdeps) + uglify(all_js, mangle=False)
+        with open(os.path.join(package, 'static', 'scripts.js'), 'w') as f:
+            f.write(all_js)
+        with open(os.path.join(package, 'static', 'styles.css'), 'w') as f:
+            f.write(all_css)
+
     def run(self):
         """Run command."""
         if self.already_run:
             return
         package = self.distribution.packages[0]
-        if os.path.exists("gulpfile.js") or os.path.exists("webpack.config.js"):
-            yarn_version = check_output("yarn --version")
-            npm_version = check_output("npm -v")
-            print("yarn:", yarn_version, "npm: ", npm_version)
-            npm_bin = check_output("npm bin").strip()
-            assert npm_version != "", "need nodejs and npm installed in current PATH"
-            assert LooseVersion(npm_version) >= LooseVersion(
-                "1.4"), "npm < 1.4 (%s)" % (npm_version)
-
-            commands = []
-
-            # if we find yarn, then we use it as it is much faster
-            if yarn_version != "":
-                commands.append(['yarn', 'install', '--pure-lockfile'])
+        has_gulp = os.path.exists("gulpfile.js")
+        has_webpack = os.path.exists("webpack.config.js")
+        if has_gulp or has_webpack:
+            coffee_version = check_output("coffee --version")
+            ugligy_version = check_output("uglifyjs --version")
+            less_version = check_output("lessc --version")
+            if coffee_version != "" and ugligy_version != "" and less_version != "" and not has_webpack:
+                self.build_with_python(package)
             else:
-                commands.append(['npm', 'install'])
-
-            if os.path.exists("gulpfile.js"):
-                commands.append([os.path.join(npm_bin, "gulp"), 'prod', '--notests'])
-            elif os.path.exists("webpack.config.js"):
-                commands.append([os.path.join(npm_bin, "webpack"), '-p'])
-
-            shell = bool(os.name == 'nt')
-
-            for command in commands:
-                self.announce(
-                    'Running command: %s' % str(" ".join(command)),
-                    level=distutils.log.INFO)
-                subprocess.call(command, shell=shell)
-
+                self.build_with_node(has_gulp, has_webpack)
         self.copy_tree(os.path.join(package, 'static'), os.path.join(
             "build", "lib", package, "static"))
 

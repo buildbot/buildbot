@@ -364,6 +364,8 @@ class Compiler(object):
                 n, v = attr['name'], attr['val']
                 if isinstance(v, six.string_types):
                     if self.useRuntime or attr['static']:
+                        if v.count('"') > 2:
+                            raise Exception("too many quotes: " + v)
                         self.buf.append(' %s=%s' % (n, v))
                     else:
                         self.buf.append(' %s="%s"' % (n, self.visitVar(v)))
