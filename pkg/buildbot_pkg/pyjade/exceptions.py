@@ -1,0 +1,2 @@
+class CurrentlyNotSupported(Exception):
+    pass
