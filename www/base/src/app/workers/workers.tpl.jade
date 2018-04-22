@@ -9,7 +9,7 @@
                 th(ng-if="settings.showWorkerBuilders.value") Builders
                 th(ng-repeat="info in worker_infos") {{ capitalize(info) }}
 
-            tr(ng-repeat='worker in workers | orderBy: ["-num_connections", "name"]',
+            tr(ng-repeat="worker in workers | orderBy: ['-num_connections', 'name']",
                ng-hide="maybeHideWorker(worker)")
                 td
                     a(ui-sref='worker.actions({worker: worker.workerid})')
@@ -33,7 +33,7 @@
                               | {{ builders.get(build.builderid).name }}/{{ build.number }}
                 td(ng-if="settings.showWorkerBuilders.value")
                     ul.list-inline
-                        li(ng-repeat='builder in getUniqueBuilders(worker) | orderBy: ["name"]')
+                        li(ng-repeat="builder in getUniqueBuilders(worker) | orderBy: ['name']")
                             a(ui-sref="builder({builder: builder.builderid})")
                                 | {{ builder.name }}
                 td(ng-repeat="info in worker_infos")
@@ -41,9 +41,9 @@
     .row(ng-hide="builds")
         .form-group
             label.checkbox-inline
-                input(type="checkbox" name="{{settings.show_old_workers.name}}" ng-model="settings.show_old_workers.value")
+                input(name="{{settings.show_old_workers.name}}" ng-model="settings.show_old_workers.value" type="checkbox")
                 | {{settings.show_old_workers.caption}}
     div(ng-if="builds")
-        builds-table(builds="builds", builders="builders", ng-if="builds")
-        a.btn.btn-default(ui-sref='worker({worker: worker.workerid, numbuilds: numbuilds + 100})', ng-if="builds.length==numbuilds")
+        builds-table(ng-if="builds", builds="builds", builders="builders")
+        a.btn.btn-default(ng-if="builds.length==numbuilds", ui-sref='worker({worker: worker.workerid, numbuilds: numbuilds + 100})')
             | more

@@ -4,19 +4,19 @@
       | None
     table.table.table-hover.table-striped.table-condensed(ng-show='builds.length>0')
       tr
-        td(width='200px', ng-show="builders") Builder
+        td(ng-show="builders", width='200px') Builder
         td(width='100px') #
         td(width='150px') Started At
         td(width='150px') Duration
         td(width='200px') Owner
         td(width='150px') Worker
         td Status
-      tr(ng-repeat='build in builds | orderBy:"-started_at"')
+      tr(ng-repeat="build in builds | orderBy:'-started_at'")
           td(ng-show="builders") {{ builders.get(build.builderid).name }}
           td
             a(ui-sref="build({builder:build.builderid, build:build.number})")
               span.badge-status(ng-class="results2class(build, 'pulse')")
-                  span.badge-inactive 
+                  span.badge-inactive
                     | {{build.number}}
                   span.badge-active {{results2text(build)}}
           td

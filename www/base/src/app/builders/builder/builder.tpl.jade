@@ -12,7 +12,7 @@
         td(width='150px') Submitted At
         td(width='150px') Owner
         td Properties
-      tr(ng-repeat='br in buildrequests | orderBy:"-submitted_at"', ng-if="br.claimed==false" )
+      tr(ng-if="br.claimed==false", ng-repeat="br in buildrequests | orderBy:'-submitted_at'")
           td
             a(ui-sref="buildrequest({buildrequest:br.buildrequestid})")
               span.badge-status(ng-class="results2class(br, 'pulse')")
@@ -24,5 +24,5 @@
           td
           td
   builds-table(builder="builder", builds="builds")
-  a.btn.btn-default(ui-sref='builder({builder: builder.builderid, numbuilds: numbuilds + 100})', ng-if="builds.length>=numbuilds")
+  a.btn.btn-default(ng-if="builds.length>=numbuilds", ui-sref='builder({builder: builder.builderid, numbuilds: numbuilds + 100})')
       | more

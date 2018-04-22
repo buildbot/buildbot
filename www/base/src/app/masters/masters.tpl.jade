@@ -7,8 +7,8 @@
                 th Recent Builds
                 th Workers
                 th Last Active
-            tr(ng-repeat='master in masters | orderBy: ["-active", "name"]', ng-hide="maybeHideMaster(master)")
-                td 
+            tr(ng-hide="maybeHideMaster(master)", ng-repeat="master in masters | orderBy: ['-active', 'name']")
+                td
                     i.fa.fa-check.text-success(ng-show="master.active")
                     i.fa.fa-times.text-danger(ng-hide="master.active")
                 td {{ master.name}}

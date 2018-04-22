@@ -5,7 +5,7 @@
           th Builder Name
           th Builds
           th
-            span(ng-init="help=false", ng-click="help=!help")
+            span(ng-click="help=!help", ng-init="help=false")
                 i.fa.fa-question-circle.clickable(style="position:relative")
                     .popover.bottom.anim-popover(ng-if="help",
                        style="display:block;min-width:600px;left:-300px;top:30px")
@@ -27,7 +27,7 @@
                             p url bar is updated with you filter configuration, so you can bookmark your filters!
                         .arrow
             span(ng-show="tags_filter.length==0") Tags
-            span(ng-show="tags_filter.length < 5", ng-repeat="tag in tags_filter")
+            span(ng-repeat="tag in tags_filter", ng-show="tags_filter.length < 5")
                 span.label.label-success(ng-click="toggleTag(tag)")
                   | {{ tag }}
                 | &nbsp;
@@ -37,7 +37,7 @@
             span(ng-show="tags_filter.length > 0")
                 span.label.clickable.label-danger(ng-click="tags_filter = []") x
           th(style="width:20%px;") Workers
-      tr(ng-repeat='builder in builders | filter: isBuilderFiltered | orderBy: "name"')
+      tr(ng-repeat="builder in builders | filter: isBuilderFiltered | orderBy: 'name'")
           td(style="width:200px")
             a(ui-sref='builder({builder: builder.builderid})')
               | {{ builder.name }}
@@ -48,19 +48,19 @@
                       | {{ build.number }}
           td(style="width:20%;")
             span(ng-repeat="tag in builder.tags")
-                span.label.clickable(ng-click="toggleTag(tag)", ng-class="isTagFiltered(tag) ? 'label-success': 'label-default'")
+                span.label.clickable(ng-class="isTagFiltered(tag) ? 'label-success': 'label-default'", ng-click="toggleTag(tag)")
                   | {{ tag }}
                 | &nbsp;
           td(style="width:20%;")
             span(data-ng-repeat="worker in builder.workers")
                 a(ui-sref='worker({worker: worker.workerid})')
-                    span.badge-status(title="{{worker.name}}" ng-class="connected2class(worker, 'pulse')" ng-if="!settings.show_workers_name.value")
+                    span.badge-status(ng-class="connected2class(worker, 'pulse')", ng-if="!settings.show_workers_name.value", title="{{worker.name}}")
                         .badge-inactive {{worker.workerid}}
                         .badge-active {{worker.name}}
-                    span.badge-status(title="{{worker.name}}" ng-class="connected2class(worker, 'pulse')" ng-if="settings.show_workers_name.value")
+                    span.badge-status(ng-class="connected2class(worker, 'pulse')", ng-if="settings.show_workers_name.value", title="{{worker.name}}")
                       | {{ worker.name }}
   .row
       .form-group
           label.checkbox-inline
-              input(type="checkbox" name="{{settings.show_old_builders.name}}" ng-model="settings.show_old_builders.value")
+              input(name="{{settings.show_old_builders.name}}" ng-model="settings.show_old_builders.value" type="checkbox")
               | {{settings.show_old_builders.caption}}
