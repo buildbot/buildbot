@@ -1,13 +1,17 @@
+import 'angular';
+import 'angular-mocks/angular-mocks';
+require ('./main.module.js')
+
 beforeEach(function() {
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('$uibModal', () => ({open() {}}));
     });
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.service('resultsService', () => ({results2class() {}}));
     });
 
     // Mock bbSettingsProvider
-    module(function($provide) {
+    angular.mock.module(function($provide) {
         $provide.provider('bbSettingsService', (function() {
             let group = undefined;
             const Cls = class {
@@ -34,13 +38,21 @@ beforeEach(function() {
         })()
         );
     });
-    module('console_view');
+    // seems wrong to mock this if we are importing it.
+    //angular.mock.module('console_view');
 });
 
 describe('Console view', function() {
     let $state = null;
-    beforeEach(inject($injector => $state = $injector.get('$state'))
-    );
+    beforeEach(
+        inject($injector => {
+            console.log( "$injector", $injector )
+            $state = $injector.get('$state');
+    }));
+    console.log( "$state", $state ) 
+    it('should be registered in the injector as $state', function() {
+        expect($state != null);
+    });
 
     it('should register a new state with the correct configuration', function() {
         const name = 'console';

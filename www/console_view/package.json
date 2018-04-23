@@ -10,6 +10,8 @@
 	},
 	"dependencies": {},
 	"devDependencies": {
+		"angular": "^1.5.0",
+		"angular-mocks": "^1.5.0",
 		"babel-core": "^6.26.0",
 		"babel-loader": "^7.1.2",
 		"css-loader": "^0.28.5",

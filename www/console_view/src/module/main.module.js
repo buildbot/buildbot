@@ -480,6 +480,7 @@ class ConsoleController {
     }
 }
 
+console.log( "registering console_view")
 
 angular.module('console_view', new ConsoleView())
     .config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', ConsoleViewConfig])
