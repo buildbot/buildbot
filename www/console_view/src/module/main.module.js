@@ -144,7 +144,6 @@ class ConsoleController {
         }
 
         this.filtered_changes = [];
-        const result = [];
         for (let ssid in this.changesBySSID) {
             change = this.changesBySSID[ssid];
             if (change.comments) {
