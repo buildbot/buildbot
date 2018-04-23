@@ -1,5 +1,5 @@
 class State extends Config
-    constructor: ($stateProvider) ->
+    constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
         name = 'changes'
@@ -18,3 +18,13 @@ class State extends Config
             data: cfg
 
         $stateProvider.state(state)
+
+        bbSettingsServiceProvider.addSettingsGroup
+            name:'Changes'
+            caption: 'Changes page related settings'
+            items:[
+                type:'integer'
+                name:'changesFetchLimit'
+                caption:'Maximum number of changes to fetch'
+                default_value: 50
+            ]
