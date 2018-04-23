@@ -117,7 +117,7 @@ class ConsoleController {
             return;
         }
         if ((this.onchange_debounce == null)) {
-            return this.onchange_debounce = this.$timeout(this._onChange, 100);
+            this.onchange_debounce = this.$timeout(this._onChange, 100);
         }
     }
 
@@ -144,28 +144,19 @@ class ConsoleController {
         }
 
         this.filtered_changes = [];
-        return (() => {
-            const result = [];
-            for (let ssid in this.changesBySSID) {
-                change = this.changesBySSID[ssid];
-                if (change.comments) {
-                    change.subject = change.comments.split("\n")[0];
-                }
-                result.push((() => {
-                    const result1 = [];
-                    for (let builder of Array.from(change.builders)) {
-                        if (builder.builds.length > 0) {
-                            this.filtered_changes.push(change);
-                            break;
-                        } else {
-                            result1.push(undefined);
-                        }
-                    }
-                    return result1;
-                })());
+        const result = [];
+        for (let ssid in this.changesBySSID) {
+            change = this.changesBySSID[ssid];
+            if (change.comments) {
+                change.subject = change.comments.split("\n")[0];
             }
-            return result;
-        })();
+            for (let builder of Array.from(change.builders)) {
+                if (builder.builds.length > 0) {
+                    this.filtered_changes.push(change);
+                    break;
+                }
+            }
+        }
     }
 
     /*
@@ -249,7 +240,7 @@ class ConsoleController {
                 this.tag_lines.push(tag_line);
             }
         }
-        return this.last_builderids_with_builds = builderids_with_builds;
+        this.last_builderids_with_builds = builderids_with_builds;
     }
     /*
      * recursive function which sorts the builders by tags
@@ -329,15 +320,13 @@ class ConsoleController {
     populateChange(change) {
         change.builders = [];
         change.buildersById = {};
-        return (() => {
-            const result = [];
-            for (let builder of Array.from(this.builders)) {
-                builder = {builderid: builder.builderid, name: builder.name, builds: []};
-                change.builders.push(builder);
-                result.push(change.buildersById[builder.builderid] = builder);
-            }
-            return result;
-        })();
+        const result = [];
+        for (let builder of Array.from(this.builders)) {
+            builder = {builderid: builder.builderid, name: builder.name, builds: []};
+            change.builders.push(builder);
+            result.push(change.buildersById[builder.builderid] = builder);
+        }
+        return result;
     }
     /*
      * Match builds with a change
@@ -382,7 +371,7 @@ class ConsoleController {
             change = this.makeFakeChange("unknown codebase", revision, build.started_at);
         }
 
-        return change.buildersById[build.builderid].builds.push(build);
+        change.buildersById[build.builderid].builds.push(build);
     }
 
     makeFakeChange(codebase, revision, when_timestamp) {
