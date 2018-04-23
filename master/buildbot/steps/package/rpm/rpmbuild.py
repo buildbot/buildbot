@@ -49,7 +49,7 @@ class RpmBuild(ShellCommand):
                  specdir='`pwd`',
                  srcrpmdir='`pwd`',
                  dist='.el6',
-                 define={},
+                 define=None,
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
@@ -90,11 +90,11 @@ class RpmBuild(ShellCommand):
             % (topdir, builddir, rpmdir, sourcedir, specdir,
                srcrpmdir))
 
-        # The unit tests expect a certain order, so we sort the dict to keep
-        # format the same every time
-        if define:
-            for k, v in iteritems(define):
-                self.base_rpmbuild += " --define \"{} {}\"".format(k, v)
+        if define is None:
+            define = {}
+        for k, v in iteritems(define):
+            self.base_rpmbuild += " --define \"{} {}\"".format(k, v)
+
         self.specfile = specfile
         self.autoRelease = autoRelease
         self.vcsRevision = vcsRevision
