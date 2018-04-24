@@ -61,7 +61,7 @@ isort:
 	git commit -a -m "isort+autopep8 run"
 
 
-docker: docker-buildbot-worker docker-buildbot-worker-node docker-buildbot-master docker-buildbot-master-ubuntu
+docker: docker-buildbot-worker docker-buildbot-master docker-buildbot-master-ubuntu
 	echo done
 docker-buildbot-worker:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
