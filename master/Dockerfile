@@ -28,7 +28,8 @@ RUN \
         git \
         python-dev \
         libffi-dev \
-        openssl-dev \
+        libressl-dev \
+        postgresql-dev \
         py-pip \
         alpine-sdk \
         tar \
@@ -73,6 +74,7 @@ RUN \
     apk add --no-cache \
         git \
         python \
+        postgresql-libs \
         py-pip \
         gosu@testing \
         dumb-init \
