@@ -28,7 +28,8 @@ RUN \
         git \
         python-dev \
         libffi-dev \
-        openssl-dev \
+        libressl-dev \
+        postgresql-dev \
         py-pip \
         alpine-sdk \
         tar \
