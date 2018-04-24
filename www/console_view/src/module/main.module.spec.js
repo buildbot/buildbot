@@ -1,5 +1,6 @@
 import 'angular';
 import 'angular-mocks/angular-mocks';
+import uiRouter from '@uirouter/angularjs';
 require ('./main.module.js')
 
 beforeEach(function() {
