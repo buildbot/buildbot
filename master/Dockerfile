@@ -74,6 +74,7 @@ RUN \
     apk add --no-cache \
         git \
         python \
+        postgresql-libs \
         py-pip \
         gosu@testing \
         dumb-init \
