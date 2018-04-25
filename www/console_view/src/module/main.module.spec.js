@@ -1,7 +1,3 @@
-import 'angular';
-import 'angular-mocks/angular-mocks';
-import uiRouter from '@uirouter/angularjs';
-require ('./main.module.js')
 
 beforeEach(function() {
     angular.mock.module(function($provide) {
@@ -47,10 +43,8 @@ describe('Console view', function() {
     let $state = null;
     beforeEach(
         inject($injector => {
-            console.log( "$injector", $injector )
             $state = $injector.get('$state');
     }));
-    console.log( "$state", $state ) 
     it('should be registered in the injector as $state', function() {
         expect($state != null);
     });

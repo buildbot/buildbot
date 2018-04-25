@@ -25,7 +25,7 @@ module.exports = {
     entry: {
         scripts: "./src/module/main.module.js",
         styles: "./src/styles/styles.less",
-        tests: "./src/module/main.module.spec.js",
+        tests: "./test/main.js",
     },
     output: {
         path: path.resolve(__dirname, "./"+pluginPythonName+"/static"),
@@ -36,7 +36,9 @@ module.exports = {
     ],
 
     // Enable sourcemaps for debugging webpack's output.
-    devtool: "source-map",
+    // note: changed from source-map to inline-source-map to make debugging in Karma easier,
+    //   not really sure what difference is.
+    devtool: "inline-source-map",
 
     resolve: {
         extensions: [".js", ".json"],

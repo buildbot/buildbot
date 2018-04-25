@@ -1,5 +1,5 @@
 const consoleTemplate = require('./console.tpl.jade');
-const modalTemplate = require('./view/modal/modal.tpl.jade')
+const modalTemplate = require('./view/modal/modal.tpl.jade');
 
 class ConsoleView { 
     constructor() {
