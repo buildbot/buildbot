@@ -1,9 +1,9 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BasePage = require("./base.js");
+import { BasePage } from "./base";
 
-class ConsolePage extends BasePage {
+export class ConsolePage extends BasePage {
     constructor() {
         {
           super();
@@ -19,5 +19,3 @@ class ConsolePage extends BasePage {
         return element.all(By.css('.badge-status.results_SUCCESS')).count();
     }
 }
-
-module.exports = ConsolePage;

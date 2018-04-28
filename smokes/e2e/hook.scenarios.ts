@@ -1,15 +1,15 @@
-const consolePage = require('./pages/console.js');
-const builderPage = require('./pages/builder.js');
-const homePage = require('./pages/home.js');
+import { ConsolePage } from './pages/console';
+import { BuilderPage } from './pages/builder';
+import { HomePage } from './pages/home';
 
 describe('change hook', function() {
     let builder = null;
     let console = null;
     beforeEach(function() {
-        builder = new builderPage('runtests1', 'force');
-        return console = new consolePage();
+        builder = new BuilderPage('runtests1', 'force');
+        return console = new ConsolePage();
     });
-    afterEach(() => new homePage().waitAllBuildsFinished());
+    afterEach(() => new HomePage().waitAllBuildsFinished());
 
     it('should create a build', function() {
         builder.go();

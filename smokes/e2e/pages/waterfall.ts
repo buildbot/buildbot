@@ -1,9 +1,9 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BasePage = require("./base.js");
+import { BasePage } from "./base";
 
-class WaterfallPage extends BasePage {
+export class WaterfallPage extends BasePage {
     constructor(builder) {
         {
           super();
@@ -56,5 +56,3 @@ class WaterfallPage extends BasePage {
         return self.checkBuilder();
     }
 }
-
-module.exports = WaterfallPage;

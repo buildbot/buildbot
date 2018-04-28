@@ -1,10 +1,10 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BuilderPage = require('./builder.js');
-const BasePage = require("./base.js");
+import { BuilderPage } from './builder';
+import { BasePage } from "./base";
 
-class WorkerPage extends BasePage {
+export class WorkerPage extends BasePage {
 
     constructor(builder) {
         {
@@ -35,5 +35,3 @@ class WorkerPage extends BasePage {
         return new BuilderPage(builderName, 'Force');
     }
 }
-
-module.exports = WorkerPage;

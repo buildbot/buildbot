@@ -2,21 +2,21 @@
 // to use previous and next link
 
 
-const homePage = require('./pages/home.js');
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
+import { HomePage } from './pages/home';
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
 
 describe('rebuilds', function() {
     let force = null;
     let builder = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        force =  new forcePage();
+        builder = new BuilderPage('runtests', 'force');
+        force =  new ForcePage();
         return builder.goDefault();
     });
 
-    afterEach(() => new homePage().waitAllBuildsFinished());
+    afterEach(() => new HomePage().waitAllBuildsFinished());
 
     it('should navigate to a dedicated build and to use the rebuild button', function() {
         builder.go();

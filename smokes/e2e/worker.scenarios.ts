@@ -1,8 +1,8 @@
 // test goal: checks the capability to navigate on about web page
 // to use previous and next link
 
-const workerPage = require('./pages/worker.js');
-const settingsPage = require('./pages/settings.js');
+import { WorkerPage } from './pages/worker';
+import { SettingsPage } from './pages/settings';
 
 describe('', function() {
     let worker = null;
@@ -10,8 +10,8 @@ describe('', function() {
     let settings = null;
 
     beforeEach(function() {
-        worker = new workerPage('runtests');
-        return settings = new settingsPage('runtests');
+        worker = new WorkerPage('runtests');
+        return settings = new SettingsPage('runtests');
     });
 
     describe('check worker page', () =>

@@ -1,19 +1,19 @@
 // test goal: checks the capability to define a reason and to cancel/start the build
 
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
-const homePage = require('./pages/home.js');
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
+import { HomePage } from './pages/home';
 
 describe('force', function() {
     let force = null;
     let builder = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        force =  new forcePage();
+        builder = new BuilderPage('runtests', 'force');
+        force =  new ForcePage();
         return builder.goDefault();
     });
-    afterEach(() => new homePage().waitAllBuildsFinished());
+    afterEach(() => new HomePage().waitAllBuildsFinished());
 
     let lastbuild = null;
     it('should create a build', function() {

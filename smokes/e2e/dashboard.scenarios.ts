@@ -2,10 +2,10 @@
 // to test this part: two different builds need to be started
 
 
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
-const dashboardPage = require('./pages/dashboard.js');
-const homePage = require('./pages/home.js');
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
+import { DashboardPage } from './pages/dashboard';
+import { HomePage } from './pages/home';
 
 
 describe('dashboard page', function() {
@@ -15,10 +15,10 @@ describe('dashboard page', function() {
     let dashboard = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        force =  new forcePage();
-        dashboard = new dashboardPage();
-        home = new homePage();
+        builder = new BuilderPage('runtests', 'force');
+        force =  new ForcePage();
+        dashboard = new DashboardPage();
+        home = new HomePage();
         return builder.goDefault();
     });
 

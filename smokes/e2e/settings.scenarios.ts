@@ -1,9 +1,9 @@
 // test goal: checks the capability to navigate in a dedicated build
 // to use previous and next link
 
-const builderPage = require('./pages/builder.js');
-const waterfallPage = require('./pages/waterfall.js');
-const settingsPage = require('./pages/settings.js');
+import { BuilderPage } from './pages/builder';
+import { WaterfallPage } from './pages/waterfall';
+import { SettingsPage } from './pages/settings';
 
 describe('', function() {
     let builder = null;
@@ -11,9 +11,9 @@ describe('', function() {
     let settings = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        waterfall = new waterfallPage('runtests');
-        settings =  new settingsPage('runtests');
+        builder = new BuilderPage('runtests', 'force');
+        waterfall = new WaterfallPage('runtests');
+        settings =  new SettingsPage('runtests');
         return builder.goDefault();
     });
 

@@ -1,9 +1,9 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BasePage = require("./base.js");
+import { BasePage } from "./base";
 
-class DashboardPage extends BasePage {
+export class DashboardPage extends BasePage {
     constructor() {
         {
           super();
@@ -16,5 +16,3 @@ class DashboardPage extends BasePage {
         return browser.get('#/mydashboard');
     }
 }
-
-module.exports = DashboardPage;

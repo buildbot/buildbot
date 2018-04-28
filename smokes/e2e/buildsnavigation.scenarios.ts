@@ -2,19 +2,19 @@
 // to use previous and next link
 
 
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
-const homePage = require('./pages/home.js');
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
+import { HomePage } from './pages/home';
 
 describe('previousnextlink', function() {
     let force = null;
     let builder = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        return force =  new forcePage();
+        builder = new BuilderPage('runtests', 'force');
+        return force =  new ForcePage();
     });
-    afterEach(() => new homePage().waitAllBuildsFinished());
+    afterEach(() => new HomePage().waitAllBuildsFinished());
 
     it('has afterEach working', function() {
     });
@@ -47,8 +47,8 @@ describe('forceandstop', function() {
     let builder = null;
 
     beforeEach(function() {
-        builder = new builderPage('slowruntests', 'force');
-        return force =  new forcePage();
+        builder = new BuilderPage('slowruntests', 'force');
+        return force =  new ForcePage();
     });
 
     it('should create a build with a dedicated reason and stop it during execution', function() {
