@@ -1,9 +1,9 @@
 // test goal: checks the the number of element present in home page
 // to test this part: two different builds need to be started
 
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
-const homePage = require('./pages/home.js');
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
+import { HomePage } from './pages/home';
 
 describe('home page', function() {
     let force = null;
@@ -11,9 +11,9 @@ describe('home page', function() {
     let home = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        force =  new forcePage();
-        home = new homePage();
+        builder = new BuilderPage('runtests', 'force');
+        force =  new ForcePage();
+        home = new HomePage();
         return home.loginUser("my@email.com", "mypass");
     });
 

@@ -1,9 +1,9 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BasePage = require("./base.js");
+import { BasePage } from "./base";
 
-class SettingsPage extends BasePage {
+export class SettingsPage extends BasePage {
     constructor(builder) {
         {
           super();
@@ -92,5 +92,3 @@ class SettingsPage extends BasePage {
         expect(showWorkerBuildersForm.isSelected()).toEqual(showWorkerBuildersVar);
     }
 }
-
-module.exports = SettingsPage;

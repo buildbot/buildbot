@@ -1,9 +1,9 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-const BasePage = require("./base.js");
+import { BasePage } from "./base";
 
-class HomePage extends BasePage {
+export class HomePage extends BasePage {
 
     constructor(){
         {
@@ -54,5 +54,3 @@ class HomePage extends BasePage {
         return browser.wait(noRunningBuilds, 20000);
     }
 }
-
-module.exports = HomePage;

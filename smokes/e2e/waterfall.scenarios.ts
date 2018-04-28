@@ -2,11 +2,11 @@
 // to use previous and next link
 
 
-const forcePage = require('./pages/force.js');
-const builderPage = require('./pages/builder.js');
-const waterfallPage = require('./pages/waterfall.js');
-const homePage = require('./pages/home.js');
-const settingsPage = require('./pages/settings.js');
+import { ForcePage } from './pages/force';
+import { BuilderPage } from './pages/builder';
+import { WaterfallPage } from './pages/waterfall';
+import { HomePage } from './pages/home';
+import { SettingsPage } from './pages/settings';
 
 describe('waterfall', function() {
     let force = null;
@@ -14,16 +14,16 @@ describe('waterfall', function() {
     let waterfall = null;
 
     beforeEach(function() {
-        builder = new builderPage('runtests', 'force');
-        force =  new forcePage();
-        waterfall = new waterfallPage('runtests');
-        const settings =  new settingsPage('runtests');
+        builder = new BuilderPage('runtests', 'force');
+        force =  new ForcePage();
+        waterfall = new WaterfallPage('runtests');
+        const settings =  new SettingsPage('runtests');
         settings.goSettings();
         settings.changeScallingFactor('10');
         settings.changeColumnWidth('45');
     });
 
-    afterEach(() => new homePage().waitAllBuildsFinished());
+    afterEach(() => new HomePage().waitAllBuildsFinished());
 
     it('should navigate to the waterfall, check one builder and hyperlink', function() {
         waterfall.go();

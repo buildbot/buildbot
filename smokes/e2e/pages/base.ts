@@ -4,7 +4,7 @@
 // http://www.lindstromhenrik.com/using-protractor-with.jsscript/
 
 
-class BasePage {
+export class BasePage {
     // accessors for elements that all pages have have (menu, login, etc)
     constructor() {}
 
@@ -32,6 +32,3 @@ class BasePage {
         expect(anonymousButton.getText()).not.toContain("Anonymous");
     }
 }
-
-
-module.exports = BasePage;
