@@ -2,7 +2,7 @@ exports.config = {
     allScriptsTimeout: 11000,
 
     specs: [
-        'e2e/*.scenarios.js'
+        'e2e/*.scenarios.ts'
     ],
 
     capabilities: {
@@ -20,5 +20,11 @@ exports.config = {
 
     jasmineNodeOpts: {
         defaultTimeoutInterval: 30000
+    },
+
+    onPrepare() {
+        require('ts-node').register({
+          project: './tsconfig.ee.json'
+        });
     }
 };

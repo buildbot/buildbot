@@ -4,7 +4,10 @@
     "description": "smoke tests for buildbot with protractor",
     "main": "index.js",
     "dependencies": {
-        "protractor": "^5.1.0"
+        "protractor": "^5.1.0",
+        "ts-node": "~4.1.0",
+        "tslint": "~5.9.1",
+        "typescript": "^2.5.3"
     },
     "devDependencies": {},
     "scripts": {
