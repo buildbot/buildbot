@@ -1,5 +1,4 @@
-class App extends App
-    constructor: -> return [
+angular.module('app', [
         'buildbot_config'
         'ngAnimate'
         'ui.bootstrap'
@@ -8,4 +7,4 @@ class App extends App
         'guanlecoja.ui'
         'bbData'
         'btorfs.multiselect'
-    ]
+])

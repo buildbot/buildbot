@@ -32,22 +32,44 @@ config =
     bower:
         # JavaScript libraries (order matters)
         deps:
-            "guanlecoja-ui":
-                version: '~1.8.0'
-                files: ['vendors.js', 'scripts.js']
+            jquery:
+                version: '~2.2.3'
+                files: 'dist/jquery.js'
+            angular:
+                version: ANGULAR_TAG
+                files: 'angular.js'
+            "angular-animate":
+                version: ANGULAR_TAG
+                files: 'angular-animate.js'
+            "angular-bootstrap":
+                version: '~1.1.0'
+                files: 'ui-bootstrap-tpls.js'
+            "angular-ui-router":
+                version: '~0.2.18'
+                files: 'release/angular-ui-router.js'
+            "angular-recursion":
+                version: '~1.0.5'
+                files: 'angular-recursion.js'
+            lodash:
+                version: "~4.11.1"
+                files: 'dist/lodash.js'
             moment:
+                license: "MIT"
                 version: "~2.6.0"
-                files: 'moment.js'
+                files: 'min/moment.min.js'
             d3:  # d3 is loaded on demand via d3Service
+                license: "BSD"
                 version: "~3.4.11"
                 files: []
+                additional_files: "d3.js"
             "font-awesome":
                 version: "~4.1.0"
                 files: []
-                files: []
+                additional_files: ["fonts/fontawesome-webfont*", "css/*"]
             "bootstrap":
                 version: "~3.1.1"
                 files: []
+                additional_files: ["less/*"]
             'buildbot-data':
                 version: '~2.2.2'
                 files: 'dist/buildbot-data.js'

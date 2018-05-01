@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -28,3 +28,7 @@ class State extends Config
                 caption:'Maximum number of lines to show'
                 default_value: 40
             ]
+
+
+angular.module('app')
+.config(['$stateProvider', 'bbSettingsServiceProvider', State])

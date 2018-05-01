@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'buildsticker controller', ->
+    beforeEach module 'app'
     dataService = scope = $compile = results = $timeout = $rootScope = null
 
     injected = ($injector) ->

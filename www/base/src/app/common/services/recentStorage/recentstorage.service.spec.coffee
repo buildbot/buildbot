@@ -1,6 +1,6 @@
-beforeEach module 'app'
-
 describe 'recent storage service', ->
+    beforeEach module 'app'
+
     recentStorage = $q = $window = $rootScope = null
 
     injected = ($injector) ->

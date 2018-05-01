@@ -1,4 +1,4 @@
-class FindBuilds extends Factory
+class FindBuilds
     constructor: ($log, scopeTimeout, dataService, $state, RESULTS) ->
         find_build = ($scope, buildrequestid, redirect_to_build) ->
             # get the builds that are addressing this buildrequestid
@@ -15,3 +15,7 @@ class FindBuilds extends Factory
                     # we found a candidate build, no need to keep registered to the stream of builds
                     $scope.builds.close()
         return find_build
+
+
+angular.module('app')
+.factory('findBuilds', ['$log', 'scopeTimeout', 'dataService', '$state', 'RESULTS', FindBuilds])

@@ -1,0 +1,194 @@
+{
+ "deps": {
+  "jquery": {
+   "version": "~2.2.3",
+   "files": [
+    "dist/jquery.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "jquery",
+    "homepage": "https://github.com/jquery/jquery-dist",
+    "version": "2.2.4"
+   }
+  },
+  "angular": {
+   "version": "~1.5.3",
+   "files": [
+    "angular.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "angular",
+    "homepage": "https://github.com/angular/bower-angular",
+    "version": "1.5.11"
+   }
+  },
+  "angular-animate": {
+   "version": "~1.5.3",
+   "files": [
+    "angular-animate.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "angular-animate",
+    "homepage": "https://github.com/angular/bower-angular-animate",
+    "version": "1.5.11"
+   }
+  },
+  "angular-bootstrap": {
+   "version": "~1.1.0",
+   "files": [
+    "ui-bootstrap-tpls.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "angular-bootstrap",
+    "homepage": "https://github.com/angular-ui/bootstrap-bower",
+    "description": "Native AngularJS (Angular) directives for Bootstrap.",
+    "version": "1.1.2"
+   }
+  },
+  "angular-ui-router": {
+   "version": "~0.2.18",
+   "files": [
+    "release/angular-ui-router.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "angular-ui-router",
+    "homepage": "https://github.com/angular-ui/angular-ui-router-bower",
+    "version": "0.2.18"
+   }
+  },
+  "angular-recursion": {
+   "version": "~1.0.5",
+   "files": [
+    "angular-recursion.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "angular-recursion",
+    "homepage": "https://github.com/marklagendijk/angular-recursion",
+    "description": "An Angular service which helps with creating recursive directives.",
+    "version": "1.0.5"
+   }
+  },
+  "lodash": {
+   "version": "~4.11.1",
+   "files": [
+    "dist/lodash.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "name": "lodash",
+    "homepage": "https://github.com/lodash/lodash",
+    "version": "4.11.2"
+   }
+  },
+  "moment": {
+   "license": "MIT",
+   "version": "~2.6.0",
+   "files": [
+    "min/moment.min.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "moment",
+    "homepage": "https://github.com/moment/moment",
+    "version": "2.6.0"
+   }
+  },
+  "d3": {
+   "license": "BSD",
+   "version": "~3.4.11",
+   "files": [],
+   "additional_files": [
+    "d3.js"
+   ],
+   "meta": {
+    "license": "BSD",
+    "name": "d3",
+    "homepage": "https://github.com/mbostock-bower/d3-bower",
+    "version": "3.4.13"
+   }
+  },
+  "font-awesome": {
+   "version": "~4.1.0",
+   "files": [],
+   "additional_files": [
+    "fonts/fontawesome-webfont*",
+    "css/*"
+   ],
+   "meta": {
+    "license": [
+     "OFL-1.1",
+     "MIT",
+     "CC-BY-3.0"
+    ],
+    "name": "font-awesome",
+    "homepage": "http://fontawesome.io",
+    "description": "Font Awesome",
+    "version": "4.1.0"
+   }
+  },
+  "bootstrap": {
+   "version": "~3.1.1",
+   "files": [],
+   "additional_files": [
+    "less/*"
+   ],
+   "meta": {
+    "name": "bootstrap",
+    "homepage": "https://github.com/twbs/bootstrap",
+    "version": "3.1.1"
+   }
+  },
+  "buildbot-data": {
+   "version": "~2.2.2",
+   "files": [
+    "dist/buildbot-data.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "license": "MIT",
+    "name": "buildbot-data",
+    "homepage": "https://github.com/buildbot/buildbot-data-js",
+    "description": "Buildbot middleware to access data api",
+    "version": "2.2.3"
+   }
+  },
+  "angular-bootstrap-multiselect": {
+   "version": "https://github.com/bentorfs/angular-bootstrap-multiselect.git#^1.1.6",
+   "files": [
+    "dist/angular-bootstrap-multiselect.js"
+   ],
+   "additional_files": [],
+   "meta": {
+    "name": "angular-bootstrap-multiselect",
+    "homepage": "http://bentorfs.github.io/angular-bootstrap-multiselect/",
+    "version": "1.1.11"
+   }
+  }
+ },
+ "js_files": [
+  "libs/jquery/dist/jquery.js",
+  "libs/angular/angular.js",
+  "libs/angular-animate/angular-animate.js",
+  "libs/angular-bootstrap/ui-bootstrap-tpls.js",
+  "libs/angular-ui-router/release/angular-ui-router.js",
+  "libs/angular-recursion/angular-recursion.js",
+  "libs/lodash/dist/lodash.js",
+  "libs/moment/min/moment.min.js",
+  "libs/buildbot-data/dist/buildbot-data.js",
+  "libs/angular-bootstrap-multiselect/dist/angular-bootstrap-multiselect.js",
+  "libs/bowerdeps.js"
+ ]
+}

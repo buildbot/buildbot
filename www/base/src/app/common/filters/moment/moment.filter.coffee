@@ -1,14 +1,14 @@
-class Timeago extends Filter('common')
+class Timeago
     constructor: (MOMENT) ->
         return (time) ->
             return MOMENT.unix(time).fromNow()
 
-class Duration extends Filter('common')
+class Duration
     constructor: (MOMENT) ->
         return (time) ->
             return MOMENT.unix(time).from(MOMENT.unix(0),1)
 
-class Durationformat extends Filter('common')
+class Durationformat
     constructor: (MOMENT) ->
         return (time) ->
             d = MOMENT.duration(time * 1000)
@@ -26,7 +26,14 @@ class Durationformat extends Filter('common')
             else
                 return m.format('s') + " s"
 
-class Dateformat extends Filter('common')
+class Dateformat
     constructor: (MOMENT) ->
         return (time, f) ->
             return MOMENT.unix(time).format(f)
+
+
+angular.module('common')
+.filter('timeago', ['MOMENT', Timeago])
+.filter('duration', ['MOMENT', Duration])
+.filter('durationformat', ['MOMENT', Durationformat])
+.filter('dateformat', ['MOMENT', Dateformat])

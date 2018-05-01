@@ -1,4 +1,4 @@
-class Masters extends Controller
+class Masters
     constructor: ($scope, dataService, dataGrouperService, resultsService, $stateParams) ->
         _.mixin($scope, resultsService)
         $scope.maybeHideMaster = (master) ->
@@ -13,3 +13,7 @@ class Masters extends Controller
         builds = data.getBuilds(limit: 100, order: '-started_at')
         dataGrouperService.groupBy($scope.masters, builds, 'masterid', 'builds')
         dataGrouperService.groupBy($scope.masters, workers, 'masterid', 'workers', 'connected_to')
+
+
+angular.module('app')
+.controller('mastersController', ['$scope', 'dataService', 'dataGrouperService', 'resultsService', '$stateParams', Masters])

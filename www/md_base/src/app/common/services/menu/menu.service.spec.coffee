@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'menuService', ->
+    beforeEach module 'app'
     _menuServiceProvider = null
 
     beforeEach module (menuServiceProvider) ->
@@ -40,4 +39,3 @@ describe 'menuService', ->
         expect(menuService.getCurrent()).toBe('testitem1')
         _menuServiceProvider.current = 'testitem2'
         expect(menuService.getCurrent()).toBe('testitem2')
-

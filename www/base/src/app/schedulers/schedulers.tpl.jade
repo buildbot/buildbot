@@ -6,9 +6,9 @@
               td Enabled
               td Scheduler Name
               td Master
-          tr(ng-repeat='scheduler in schedulers | orderBy: ["name"]')
+          tr(ng-repeat="scheduler in schedulers | orderBy: ['name']")
               td
-                input(type="checkbox", ng-model="scheduler.enabled", ng-change="change(scheduler)")
+                input(ng-change="change(scheduler)", ng-model="scheduler.enabled", type="checkbox")
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}
       uib-tab(heading="All schedulers by master")
@@ -17,8 +17,8 @@
               td Enabled
               td Scheduler Name
               td Master
-          tr(ng-repeat='scheduler in schedulers | orderBy: ["master.name", "name"]')
+          tr(ng-repeat="scheduler in schedulers | orderBy: ['master.name', 'name']")
               td
-                input(type="checkbox", ng-model="scheduler.enabled", ng-change="change(scheduler)")
+                input(ng-change="change(scheduler)", ng-model="scheduler.enabled", type="checkbox")
               td {{ scheduler.name }}
               td {{ scheduler.master.name }}

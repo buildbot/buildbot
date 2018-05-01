@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'ansicode service', ->
+    beforeEach module 'app'
     ansicodesService = null
 
     injected = ($injector) ->

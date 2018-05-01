@@ -1,4 +1,4 @@
-class Builder extends Controller
+class Builder
     constructor: ($rootScope, $scope, dataService, $stateParams, resultsService, recentStorage,
         glBreadcrumbService, $state, glTopbarContextualActionsService, $q, $window) ->
         # make resultsService utilities available in the template
@@ -105,3 +105,7 @@ class Builder extends Controller
             $scope.buildrequests = builder.getBuildrequests(claimed:false)
             $scope.builds.onChange=refreshContextMenu
             $scope.buildrequests.onChange=refreshContextMenu
+
+
+angular.module('app')
+.controller('builderController', ['$rootScope', '$scope', 'dataService', '$stateParams', 'resultsService', 'recentStorage', 'glBreadcrumbService', '$state', 'glTopbarContextualActionsService', '$q', '$window', Builder])

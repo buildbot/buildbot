@@ -1,7 +1,5 @@
-beforeEach module 'app'
-
 describe 'buildstatus', ->
-
+    beforeEach module 'app'
     $rootScope = $compile = $httpBackend = RESULTS_TEXT = null
 
     injected = ($injector) ->
@@ -38,7 +36,7 @@ describe 'buildstatus', ->
         expect(icon.hasClass('pending')).toBe(true)
         for _, text of RESULTS_TEXT
             expect(icon.hasClass(text.toLowerCase())).toBe(false)
-        
+
         # success status
         $rootScope.build.complete = true
         $rootScope.build.results = 0

@@ -1,4 +1,4 @@
-class State extends Config
+class State
     constructor: ($stateProvider, glMenuServiceProvider, bbSettingsServiceProvider) ->
 
         # Name of the state
@@ -46,3 +46,7 @@ class State extends Config
                 caption:'Maximum number of builds to fetch'
                 default_value: 200
             ]
+
+
+angular.module('app')
+.config(['$stateProvider', 'glMenuServiceProvider', 'bbSettingsServiceProvider', State])

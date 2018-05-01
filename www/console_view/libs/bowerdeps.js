@@ -1,0 +1,1 @@
+BOWERDEPS = (typeof BOWERDEPS === 'undefined') ? {}: BOWERDEPS;

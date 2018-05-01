@@ -1,4 +1,4 @@
-class forceDialog extends Controller
+class forceDialog
     constructor: ($scope, config, $state, modal, schedulerid, $rootScope, builderid, dataService) ->
         dataService.getForceschedulers(schedulerid, subscribe: false).onChange = (schedulers) ->
             scheduler = schedulers[0]
@@ -54,3 +54,7 @@ class forceDialog extends Controller
                             $scope.error = err.error.message
                 cancel: ->
                     modal.modal.dismiss()
+
+
+angular.module('app')
+.controller('forceDialogController', ['$scope', 'config', '$state', 'modal', 'schedulerid', '$rootScope', 'builderid', 'dataService', forceDialog])

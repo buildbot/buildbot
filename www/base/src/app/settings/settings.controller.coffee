@@ -1,4 +1,4 @@
-class Settings extends Controller
+class Settings
     constructor: ($scope, bbSettingsService) ->
         # All settings definition
         #
@@ -23,3 +23,7 @@ class Settings extends Controller
             code += "}\n"
             $scope.master_cfg_override_snippet = code
         computeMasterCfgSnippet()
+
+
+angular.module('app')
+.controller('settingsController', ['$scope', 'bbSettingsService', Settings])

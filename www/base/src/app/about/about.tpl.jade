@@ -31,7 +31,7 @@
                 th description
             tr(ng-repeat='module in bower_configs', title="{{module}}")
               td
-                a(ng-show='module.homepage', ng-href='{{module.homepage}}') {{module.name}}
+                a(ng-href='{{module.homepage}}', ng-show='module.homepage') {{module.name}}
                 span(ng-hide='module.homepage') {{module.name}}
               td {{module.version}}
               td {{ module.license.join ? module.license.join(", ") : module.license}}
@@ -40,11 +40,11 @@
     .well
       h2 API description
       ul.list-group
-        li.list-group-item(ng-repeat='spec in specs |orderBy:"path"')
+        li.list-group-item(ng-repeat="spec in specs |orderBy:'path'")
           b(ng-click="show_detail = ! show_detail", ng-init='show_detail=0') /{{spec.path}}:
           | {{spec.type_spec.fields.length}} fields
           dl.dl-horizontal(ng-show='show_detail')
-            span(ng-repeat='field in spec.type_spec.fields |orderBy:"path"')
+            span(ng-repeat="field in spec.type_spec.fields |orderBy:'path'")
               dt {{field.name}}
               dd {{field.type}}
                 span(ng-show="field.type=='list'") {{field.type_spec}}

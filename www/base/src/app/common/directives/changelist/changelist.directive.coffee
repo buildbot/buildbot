@@ -1,4 +1,4 @@
-class Changelist extends Directive('common')
+class Changelist
     constructor: ->
         return {
             replace: true
@@ -8,7 +8,7 @@ class Changelist extends Directive('common')
             controller: '_changeListController'
         }
 
-class _changeList extends Controller('common')
+class _changeList
     constructor: ($scope, dataUtilsService) ->
 
         $scope.expandDetails = ->
@@ -18,3 +18,8 @@ class _changeList extends Controller('common')
         $scope.collapseDetails = ->
             for change in $scope.changes
                 change.show_details = false
+
+
+angular.module('common')
+.directive('changelist', [Changelist])
+.controller('_changeListController', ['$scope', 'dataUtilsService', _changeList])

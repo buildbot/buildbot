@@ -1,5 +1,5 @@
 # logviewer. This directive uses jquery for simplicity
-class Logviewer extends Directive
+class Logviewer
     constructor: ($log, $window, $timeout, $sce, $q, dataService, restService, ansicodesService) ->
         $window = angular.element($window)
 
@@ -99,3 +99,7 @@ class Logviewer extends Directive
                 ansicodesService.injectStyle()
                 scope.logviewer.link(scope, elm, attr)
         }
+
+
+angular.module('app')
+.directive('logviewer', ['$log', '$window', '$timeout', '$sce', '$q', 'dataService', 'restService', 'ansicodesService', Logviewer])

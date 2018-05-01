@@ -1,4 +1,4 @@
-class BuildsTable extends Directive('common')
+class BuildsTable
     constructor: (RecursionHelper) ->
         return {
             replace: true
@@ -7,8 +7,13 @@ class BuildsTable extends Directive('common')
             templateUrl: 'views/buildstable.html'
             controller: '_buildstableController'
         }
-class _buildstable extends Controller('common')
+class _buildstable
     constructor: ($scope, resultsService) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
         return
+
+
+angular.module('common')
+.directive('buildsTable', ['RecursionHelper', BuildsTable])
+.controller('_buildstableController', ['$scope', 'resultsService', _buildstable])

@@ -6,7 +6,7 @@
 
 # Objects returned by this service cannot use onNew/onUpdate mechanism of data module (as they are shared)
 
-class buildersService extends Factory('common')
+class buildersService
     constructor: ($log, dataService) ->
         # we use an always on dataService instance
         data = dataService.open()
@@ -21,3 +21,7 @@ class buildersService extends Factory('common')
                         _.assign(cache[id], builder)
                     return cache[id]
         }
+
+
+angular.module('common')
+.factory('buildersService', ['$log', 'dataService', buildersService])

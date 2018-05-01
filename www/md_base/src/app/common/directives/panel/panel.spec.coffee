@@ -1,6 +1,5 @@
-beforeEach module 'app'
-
 describe 'panel', ->
+    beforeEach module 'app'
 
     $rootScope = $compile = $httpBackend = null
 

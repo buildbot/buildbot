@@ -1,7 +1,7 @@
 # Load d3 script via jquery
 # We load those 50kB+ only when needed by plugins
 # actually, this is loaded when someone is requiring DI of this service
-class D3 extends Service
+class D3
     constructor: ($document, $q, config, $rootScope) ->
         d = $q.defer()
 
@@ -11,3 +11,7 @@ class D3 extends Service
                 d.resolve(window.d3)
 
         return get: -> d.promise
+
+
+angular.module('app')
+.service('d3Service', ['$document', '$q', 'config', '$rootScope', D3])

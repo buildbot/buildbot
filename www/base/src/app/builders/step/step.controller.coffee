@@ -1,4 +1,4 @@
-class Step extends Controller
+class Step
     constructor: ($log, $scope, $location, dataService, dataUtilsService, faviconService, $stateParams, glBreadcrumbService, publicFieldsFilter) ->
         data = dataService.open().closeOnDestroy($scope)
         builderid = dataUtilsService.numberOrString($stateParams.builder)
@@ -26,3 +26,7 @@ class Step extends Controller
                     ]
                     step.loadLogs()
                     $scope.step = publicFieldsFilter(step)
+
+
+angular.module('app')
+.controller('stepController', ['$log', '$scope', '$location', 'dataService', 'dataUtilsService', 'faviconService', '$stateParams', 'glBreadcrumbService', 'publicFieldsFilter', Step])
