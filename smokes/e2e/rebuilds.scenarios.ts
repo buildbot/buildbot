@@ -10,26 +10,27 @@ describe('rebuilds', function() {
     let force = null;
     let builder = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
-        return builder.goDefault();
+        await builder.goDefault();
     });
 
-    afterEach(() => new HomePage().waitAllBuildsFinished());
+    afterEach(async () => {
+        const homePage = new HomePage();
+        await homePage.waitAllBuildsFinished();
+    });
 
-    it('should navigate to a dedicated build and to use the rebuild button', function() {
-        builder.go();
-        return builder.getLastSuccessBuildNumber().then(function(lastbuild) {
-            builder.goForce();
-            force.getStartButton().click();
-            builder.go();
-            builder.waitNextBuildFinished(lastbuild);
-            builder.goBuild(lastbuild);
-            browser.getCurrentUrl().then(function(buildUrl) {
-                builder.getRebuildButton().click();
-                builder.waitGoToBuild(lastbuild+2);
-            });
-        });
+    it('should navigate to a dedicated build and to use the rebuild button', async () => {
+        await builder.go();
+        const lastbuild: number = await builder.getLastSuccessBuildNumber();
+        await builder.goForce();
+        await force.getStartButton().click();
+        await builder.go();
+        await builder.waitNextBuildFinished(lastbuild);
+        await builder.goBuild(lastbuild);
+        await browser.getCurrentUrl();
+        await builder.getRebuildButton().click();
+        await builder.waitGoToBuild(lastbuild + 2);
     });
 });

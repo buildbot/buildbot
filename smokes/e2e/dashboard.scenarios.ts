@@ -14,12 +14,12 @@ describe('dashboard page', function() {
     let home = null;
     let dashboard = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
         dashboard = new DashboardPage();
         home = new HomePage();
-        return builder.goDefault();
+        await builder.goDefault();
     });
 
     afterEach(done =>
@@ -30,10 +30,10 @@ describe('dashboard page', function() {
         })
     );
 
-    it('should go to the dashboard page and see no error', function() {
-        builder.goForce();
-        force.getStartButton().click();
-        home.waitAllBuildsFinished();
-        dashboard.go();
+    it('should go to the dashboard page and see no error', async () => {
+        await builder.goForce();
+        await force.getStartButton().click();
+        await home.waitAllBuildsFinished();
+        await dashboard.go();
     });
 });

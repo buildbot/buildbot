@@ -13,30 +13,33 @@ describe('waterfall', function() {
     let builder = null;
     let waterfall = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
         waterfall = new WaterfallPage('runtests');
         const settings =  new SettingsPage('runtests');
-        settings.goSettings();
-        settings.changeScallingFactor('10');
-        settings.changeColumnWidth('45');
+        await settings.goSettings();
+        await settings.changeScallingFactor('10');
+        await settings.changeColumnWidth('45');
     });
 
-    afterEach(() => new HomePage().waitAllBuildsFinished());
-
-    it('should navigate to the waterfall, check one builder and hyperlink', function() {
-        waterfall.go();
-        waterfall.goBuilderAndCheck('runtests');
+    afterEach(async () => {
+        const homePage = new HomePage();
+        await homePage.waitAllBuildsFinished();
     });
 
-    it('should navigate to the builds waterfall and check the associated hyperlink', function() {
-        waterfall.go();
-        waterfall.goBuildAndCheck();
+    it('should navigate to the waterfall, check one builder and hyperlink', async () => {
+        await waterfall.go();
+        await waterfall.goBuilderAndCheck('runtests');
     });
 
-    it('should navigate to the builds waterfall and open the popup and close it', function() {
-        waterfall.go();
-        waterfall.goBuildAndClose();
+    it('should navigate to the builds waterfall and check the associated hyperlink', async () => {
+        await waterfall.go();
+        await waterfall.goBuildAndCheck();
+    });
+
+    it('should navigate to the builds waterfall and open the popup and close it', async () => {
+        await waterfall.go();
+        await waterfall.goBuildAndClose();
     });
 });

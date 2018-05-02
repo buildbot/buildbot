@@ -1,6 +1,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
+import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
 
 export class AboutPage extends BasePage {
@@ -13,27 +14,34 @@ export class AboutPage extends BasePage {
         this.builder = builder;
     }
 
-    goAbout() {
-        return browser.get('#/about');
+    async goAbout() {
+        await browser.get('#/about');
+        await browser.wait(EC.urlContains('#/about'),
+                           5000,
+                           "URL does not contain #/about");
     }
 
-    checkAboutPage() {
-        expect(browser.getCurrentUrl()).toContain('#/about');
+    async checkAboutPage() {
+        const url = await browser.getCurrentUrl();
+        expect(url).toContain('#/about');
     }
 
-    checkBuildbotTitle() {
+    async checkBuildbotTitle() {
         const aboutTitle = element.all(By.css('h2')).first();
-        expect(aboutTitle.getText()).toContain('About this');
-        expect(aboutTitle.getText()).toContain('buildbot');
+        const title:string = await aboutTitle.getText();
+        expect(title).toContain('About this');
+        expect(title).toContain('buildbot');
     }
 
-    checkConfigTitle() {
+    async checkConfigTitle() {
         const configurationTitle = element.all(By.css('h2')).get(1);
-        expect(configurationTitle.getText()).toContain('Configuration');
+        const title:string = await configurationTitle.getText()
+        expect(title).toContain('Configuration');
     }
 
-    checkDependenciesTitle() {
+    async checkDependenciesTitle() {
         const dependenciesTitle = element.all(By.css('h2')).get(2);
-        expect(dependenciesTitle.getText()).toContain('Javascript dependencies');
+        const dependenciesText:string = await dependenciesTitle.getText();
+        expect(dependenciesText).toContain('Javascript dependencies');
     }
 }

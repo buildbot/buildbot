@@ -8,41 +8,41 @@ describe('force and cancel', function() {
     let force = null;
     let builder = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
-        return builder.goDefault();
+        await builder.goDefault();
     });
 
-    afterEach(() => new HomePage().waitAllBuildsFinished());
-
-    it('should create a build', function() {
-        builder.go();
-        builder.getLastSuccessBuildNumber().then(function(lastbuild) {
-            builder.goForce();
-            force.getStartButton().click();
-            builder.go();
-            builder.waitNextBuildFinished(lastbuild);
-        });
+    afterEach(async () => {
+        const homePage = new HomePage();
+        await homePage.waitAllBuildsFinished();
     });
 
-    it('should create a build with a dedicated reason and cancel it', function() {
-
-        builder.go();
-        builder.goForce();
-        force.getCancelButton().click();
+    it('should create a build', async () => {
+        await builder.go();
+        let lastbuild = await builder.getLastSuccessBuildNumber();
+        await builder.goForce();
+        await force.getStartButton().click();
+        await builder.go();
+        await builder.waitNextBuildFinished(lastbuild);
     });
 
-    it('should create a build with a dedicated reason and Start it', function() {
+    it('should create a build with a dedicated reason and cancel it', async () => {
+        await builder.go();
+        await builder.goForce();
+        await force.getCancelButton().click();
+    });
 
-        builder.go();
-        builder.goForce();
-        force.setReason("New Test Reason");
-        force.setYourName("FaceLess User");
-        force.setProjectName("BBOT9");
-        force.setBranchName("Gerrit Branch");
-        force.setRepo("http//name.com");
-        force.setRevisionName("12345");
-        force.getStartButton().click();
+    it('should create a build with a dedicated reason and Start it', async () => {
+        await builder.go();
+        await builder.goForce();
+        await force.setReason("New Test Reason");
+        await force.setYourName("FaceLess User");
+        await force.setProjectName("BBOT9");
+        await force.setBranchName("Gerrit Branch");
+        await force.setRepo("http//name.com");
+        await force.setRevisionName("12345");
+        await force.getStartButton().click();
     });
 });

@@ -1,6 +1,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
+import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
 
 export class WaterfallPage extends BasePage {
@@ -13,46 +14,49 @@ export class WaterfallPage extends BasePage {
         this.builder = builder;
     }
 
-    go() {
-        return browser.get('#/waterfall');
+    async go() {
+        await browser.get('#/waterfall');
+        await browser.wait(EC.urlContains('#/waterfall'),
+                           5000,
+                           "URL does not contain #/waterfall");
     }
 
-    checkBuilder() {
-        return browser.getCurrentUrl().then(currentUrl => expect(currentUrl).toContain("builders/"));
+    async checkBuilder() {
+        const currentUrl = await browser.getCurrentUrl();
+        expect(currentUrl).toContain("builders/");
     }
 
-    checkBuildResult() {
+    async checkBuildResult() {
         const firstLinkInPopup = element.all(By.css('.modal-dialog a')).first();
-        firstLinkInPopup.click();
-        return browser.getCurrentUrl().then(function(currentUrl) {
-            expect(currentUrl).toContain("builders/");
-            expect(currentUrl).toContain("builds/");
-        });
+        await firstLinkInPopup.click();
+        const currentUrl = await browser.getCurrentUrl();
+        expect(currentUrl).toContain("builders/");
+        expect(currentUrl).toContain("builds/");
     }
 
-    goBuild() {
+    async goBuild() {
         const buildList = element.all(By.css('text.id')).last();
-        return buildList.click();
+        await buildList.click();
     }
 
-    goBuildAndClose() {
-        const self =  this;
-        self.goBuild();
+    async goBuildAndClose() {
+        await this.goBuild();
         const popupClose = element.all(By.css('i.fa-times'));
-        popupClose.click();
-        expect($('modal-dialog').isPresent()).toBeFalsy();
+        await popupClose.click();
+        const dialogIsPresent = await $('modal-dialog').isPresent();
+        expect(dialogIsPresent).toBeFalsy();
     }
 
-    goBuildAndCheck() {
-        const self =  this;
-        self.goBuild();
-        return self.checkBuildResult();
+    async goBuildAndCheck() {
+        const self = this;
+        await self.goBuild();
+        await self.checkBuildResult();
     }
 
-    goBuilderAndCheck(builderRef) {
+    async goBuilderAndCheck(builderRef) {
         const self = this;
         const localBuilder = element.all(By.linkText(this.builder));
-        this.clickWhenClickable(localBuilder);
-        return self.checkBuilder();
+        await this.clickWhenClickable(localBuilder);
+        await self.checkBuilder();
     }
 }

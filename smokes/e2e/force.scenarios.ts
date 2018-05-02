@@ -13,18 +13,19 @@ describe('force', function() {
         force =  new ForcePage();
         return builder.goDefault();
     });
-    afterEach(() => new HomePage().waitAllBuildsFinished());
 
-    let lastbuild = null;
-    it('should create a build', function() {
+    afterEach(async () => {
+        const homePage = new HomePage();
+        await homePage.waitAllBuildsFinished();
+    });
 
-        lastbuild = 0;
-        builder.go();
-        builder.getLastSuccessBuildNumber().then(function(lastbuild) {
-            builder.goForce();
-            force.getStartButton().click();
-            builder.go();
-            builder.waitNextBuildFinished(lastbuild);
-        });
+    it('should create a build', async () => {
+        let lastbuild = 0;
+        await builder.go();
+        lastbuild = await builder.getLastSuccessBuildNumber();
+        await builder.goForce();
+        await force.getStartButton().click();
+        await builder.go();
+        await builder.waitNextBuildFinished(lastbuild);
     });
 });

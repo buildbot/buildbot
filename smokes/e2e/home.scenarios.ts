@@ -10,24 +10,24 @@ describe('home page', function() {
     let builder = null;
     let home = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
         home = new HomePage();
-        return home.loginUser("my@email.com", "mypass");
+        await home.loginUser("my@email.com", "mypass");
     });
 
-    afterEach(() => home.logOut());
+    afterEach(async () => await home.logOut());
 
-    it('should go to the home page and check the different builder', function() {
+    it('should go to the home page and check the different builder', async () => {
         const builderName = {
             "0" : "runtests"
         };
-        builder.go();
-        builder.goForce();
-        force.getStartButton().click();
-        home.go();
+        await builder.go();
+        await builder.goForce();
+        await force.getStartButton().click();
+        await home.go();
         const panel0 = home.getPanel(0);
-        expect(panel0.getText()).toContain(builderName[0]);
+        expect(await panel0.getText()).toContain(builderName[0]);
     });
 });

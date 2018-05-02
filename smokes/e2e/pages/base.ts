@@ -8,27 +8,30 @@ export class BasePage {
     // accessors for elements that all pages have have (menu, login, etc)
     constructor() {}
 
-    clickWhenClickable(element) {
-        return browser.wait(() =>
-            element.click().then((() => true), function() {
-                element.getLocation().then(l=>
-                    element.getSize().then(s=> console.log('not clickable', s, l))
-                );
+    async clickWhenClickable(element) {
+        await browser.wait(async () =>
+        {
+            try {
+                await element.click();
+                return true
+            } catch(err) {
+                console.log('not clickable ', err)
                 return false;
-            })
+            }
+        }
         );
     }
 
-    logOut() {
-        element.all(By.css('.avatar img')).click();
-        element.all(By.linkText('Logout')).click();
+    async logOut() {
+        await element.all(By.css('.avatar img')).click();
+        await element.all(By.linkText('Logout')).click();
         const anonymousButton = element(By.css('.dropdown'));
-        expect(anonymousButton.getText()).toContain("Anonymous");
+        expect(await anonymousButton.getText()).toContain("Anonymous");
     }
 
-    loginUser(user, password) {
-        browser.get(`http://${user}:${password}@localhost:8010/auth/login`);
+    async loginUser(user, password) {
+        await browser.get(`http://${user}:${password}@localhost:8010/auth/login`);
         const anonymousButton = element(By.css('.dropdown'));
-        expect(anonymousButton.getText()).not.toContain("Anonymous");
+        expect(await anonymousButton.getText()).not.toContain("Anonymous");
     }
 }

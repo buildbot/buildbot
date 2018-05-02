@@ -11,33 +11,33 @@ describe('', function() {
 
     beforeEach(function() {
         worker = new WorkerPage('runtests');
-        return settings = new SettingsPage('runtests');
+        settings = new SettingsPage('runtests');
     });
 
     describe('check worker page', () =>
-        it('should navigate to the worker page, check the one builder inside', function() {
-            settings.goSettings();
-            settings.changeShowWorkerBuilders(true);
-            settings.checkShowWorkerBuilders(true);
-            worker.goWorker();
-            worker.checkWorkerPage();
-            worker.checkHrefPresent();
-            builder = worker.goBuilderLink('slowruntests');
-            builder.checkBuilderURL();
+        it('should navigate to the worker page, check the one builder inside', async () => {
+            await settings.goSettings();
+            await settings.changeShowWorkerBuilders(true);
+            await settings.checkShowWorkerBuilders(true);
+            await worker.goWorker();
+            await worker.checkWorkerPage();
+            await worker.checkHrefPresent();
+            builder = await worker.goBuilderLink('slowruntests');
+            await builder.checkBuilderURL();
         })
     );
 
     describe('check worker page', () =>
-        it('should navigate to the worker page, check the one builder inside', function() {
-            settings.goSettings();
-            settings.changeShowWorkerBuilders(true);
-            settings.checkShowWorkerBuilders(true);
-            worker.goWorker();
-            worker.checkWorkerPage();
-            worker.checkHrefPresent();
-            builder = worker.goBuilderLink('runtests');
-            builder.checkBuilderURL();
-    })
-);
+        it('should navigate to the worker page, check the one builder inside', async () => {
+            await settings.goSettings();
+            await settings.changeShowWorkerBuilders(true);
+            await settings.checkShowWorkerBuilders(true);
+            await worker.goWorker();
+            await worker.checkWorkerPage();
+            await worker.checkHrefPresent();
+            builder = await worker.goBuilderLink('runtests');
+            await builder.checkBuilderURL();
+        })
+    );
 
 });

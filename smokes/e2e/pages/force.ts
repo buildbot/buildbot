@@ -12,35 +12,36 @@ export class ForcePage extends BasePage {
         }
     }
 
-    setInputText(cssLabel, value) {
+    async setInputText(cssLabel, value) {
         const setInputValue = element(By.css(`forcefield label[for=${cssLabel}] + div input`));
-        setInputValue.clear();
-        setInputValue.sendKeys(value);
-        expect(setInputValue.getAttribute('value')).toBe(value);
+        await setInputValue.clear();
+        await setInputValue.sendKeys(value);
+        const inputValue = await setInputValue.getAttribute('value');
+        expect(inputValue).toBe(value);
     }
 
-    setReason(reason) {
-        return this.setInputText("reason", reason);
+    async setReason(reason) {
+        await this.setInputText("reason", reason);
     }
 
-    setYourName(yourName) {
-        return this.setInputText("username", yourName);
+    async setYourName(yourName) {
+        await this.setInputText("username", yourName);
     }
 
-    setProjectName(projectName) {
-        return this.setInputText("project", projectName);
+    async setProjectName(projectName) {
+        await this.setInputText("project", projectName);
     }
 
-    setBranchName(branchName) {
-        return this.setInputText("branch", branchName);
+    async setBranchName(branchName) {
+        await this.setInputText("branch", branchName);
     }
 
-    setRepo(repo) {
-        return this.setInputText("repository", repo);
+    async setRepo(repo) {
+        await this.setInputText("repository", repo);
     }
 
-    setRevisionName(RevisionName) {
-        return this.setInputText("revision", RevisionName);
+    async setRevisionName(RevisionName) {
+        await this.setInputText("revision", RevisionName);
     }
 
     getStartButton() {
