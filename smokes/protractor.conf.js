@@ -5,6 +5,8 @@ exports.config = {
         'e2e/*.scenarios.ts'
     ],
 
+    SELENIUM_PROMISE_MANAGER: false,
+
     capabilities: {
         'browserName': 'chrome',
         chromeOptions: {
