@@ -61,14 +61,12 @@ isort:
 	git commit -a -m "isort+autopep8 run"
 
 
-docker: docker-buildbot-worker docker-buildbot-master docker-buildbot-master-ubuntu
+docker: docker-buildbot-worker docker-buildbot-master
 	echo done
 docker-buildbot-worker:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
 docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
-docker-buildbot-master-ubuntu:
-	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
 $(VENV_NAME):
 	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)
