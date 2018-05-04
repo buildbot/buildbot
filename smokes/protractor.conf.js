@@ -1,3 +1,5 @@
+const { SpecReporter } = require('jasmine-spec-reporter');
+
 exports.config = {
     allScriptsTimeout: 11000,
 
@@ -21,10 +23,18 @@ exports.config = {
     framework: 'jasmine',
 
     jasmineNodeOpts: {
-        defaultTimeoutInterval: 30000
+        defaultTimeoutInterval: 30000,
+        print: function() {}
     },
 
     onPrepare() {
+         jasmine.getEnv().addReporter(new SpecReporter({
+             displayFailuresSummary: true,
+             displayFailuredSpec: true,
+             displaySuiteNumber: true,
+             displaySpecDuration: true
+         }));
+
         require('ts-node').register({
           project: './tsconfig.ee.json'
         });
