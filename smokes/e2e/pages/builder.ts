@@ -1,6 +1,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
+import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
 
 export class BuilderPage extends BasePage {
@@ -14,46 +15,50 @@ export class BuilderPage extends BasePage {
         this.forceName=forcename;
     }
 
-    goDefault() {
-        return browser.get('#/builders');
+    async goDefault() {
+        await browser.get('#/builders');
     }
 
-    go() {
-        browser.get('#/builders');
+    async go() {
+        await browser.get('#/builders');
+        await browser.wait(EC.urlContains('#/builders'),
+                           5000,
+                           "URL does not contain #/builders");
         const localBuilder = element.all(By.linkText(this.builder));
-        return localBuilder.click();
+        await localBuilder.click();
     }
 
-    goForce() {
-        this.go();
-        return element.all(By.buttonText(this.forceName)).first().click();
+    async goForce() {
+        await this.go();
+        await element.all(By.buttonText(this.forceName)).first().click();
     }
 
-    goBuild(buildRef) {
-        this.go();
-        return element.all(By.linkText(buildRef.toString())).click();
+    async goBuild(buildRef) {
+        await this.go();
+        await element.all(By.linkText(buildRef.toString())).click();
     }
 
-    getLastSuccessBuildNumber() {
-        return element.all(By.css('span.badge-status.results_SUCCESS')).then(function(elements){
-            if (elements.length === 0) {
-                return 0;
-            }
-            return elements[0].getText().then(numberstr => +numberstr);
-        });
+    async getLastSuccessBuildNumber() {
+        let elements = await element.all(By.css('span.badge-status.results_SUCCESS'));
+        if (elements.length === 0) {
+            return 0;
+        }
+        let numberstr = await elements[0].getText();
+        return +numberstr;
     }
 
-    waitNextBuildFinished(reference) {
+    async waitNextBuildFinished(reference) {
         const self = this;
         const buildCountIncrement = () =>
             self.getLastSuccessBuildNumber().then(currentBuildCount => currentBuildCount === (reference + 1))
         ;
-        return browser.wait(buildCountIncrement, 20000);
+        await browser.wait(buildCountIncrement, 20000);
     }
 
-    waitGoToBuild(expected_buildnumber) {
-        const isInBuild = () =>
-            browser.getCurrentUrl().then(function(buildUrl) {
+    async waitGoToBuild(expected_buildnumber) {
+        const isInBuild = async () =>
+            {
+                let buildUrl = await browser.getCurrentUrl();
                 const split = buildUrl.split("/");
                 const builds_part = split[split.length-2];
                 const number = +split[split.length-1];
@@ -64,9 +69,8 @@ export class BuilderPage extends BasePage {
                     return false;
                 }
                 return true;
-            })
-        ;
-        return browser.wait(isInBuild, 20000);
+            }
+        await browser.wait(isInBuild, 20000);
     }
 
     getStopButton() {
@@ -85,8 +89,8 @@ export class BuilderPage extends BasePage {
         return element(By.buttonText('Rebuild'));
     }
 
-    checkBuilderURL() {
+    async checkBuilderURL() {
         const builderLink = element.all(By.linkText(this.builder));
-        expect(builderLink.count()).toBeGreaterThan(0);
+        expect(await builderLink.count()).toBeGreaterThan(0);
     }
 }

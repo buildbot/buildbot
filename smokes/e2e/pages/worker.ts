@@ -1,6 +1,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
+import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BuilderPage } from './builder';
 import { BasePage } from "./base";
 
@@ -15,23 +16,27 @@ export class WorkerPage extends BasePage {
         this.builder = builder;
     }
 
-    goWorker() {
-        return browser.get('#/workers');
+    async goWorker() {
+        await browser.get('#/workers');
+        await browser.wait(EC.urlContains('#/workers'),
+                           5000,
+                           "URL does not contain #/workers");
     }
 
-    checkWorkerPage() {
-        expect(browser.getCurrentUrl()).toContain('#/worker');
+    async checkWorkerPage() {
+        expect(await browser.getCurrentUrl()).toContain('#/worker');
     }
 
-    checkHrefPresent() {
+    async checkHrefPresent() {
         const hrefRef = element.all(By.css('a'));
-        expect(hrefRef.getText()).toContain('slowruntests');
-        expect(hrefRef.getText()).toContain('runtests');
+        const hrefRefText = await hrefRef.getText();
+        expect(hrefRefText).toContain('slowruntests');
+        expect(hrefRefText).toContain('runtests');
     }
 
-    goBuilderLink(builderName) {
+    async goBuilderLink(builderName) {
         const builderLink = element.all(By.linkText(builderName));
-        builderLink.click();
+        await builderLink.click();
         return new BuilderPage(builderName, 'Force');
     }
 }

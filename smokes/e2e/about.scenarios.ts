@@ -10,12 +10,12 @@ describe('', function() {
 
 
     describe('check about page', () =>
-        it('should navigate to the about page, check the default elements inside', function() {
-            about.goAbout();
-            about.checkAboutPage();
-            about.checkBuildbotTitle();
-            about.checkConfigTitle();
-            about.checkDependenciesTitle();
+        it('should navigate to the about page, check the default elements inside', async () => {
+            await about.goAbout();
+            await about.checkAboutPage();
+            await about.checkBuildbotTitle();
+            await about.checkConfigTitle();
+            await about.checkDependenciesTitle();
     })
 );
 });

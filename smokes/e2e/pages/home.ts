@@ -1,6 +1,7 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
+import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
 
 export class HomePage extends BasePage {
@@ -13,8 +14,11 @@ export class HomePage extends BasePage {
         }
     }
 
-    go() {
-        return browser.get('#/');
+    async go() {
+        await browser.get('#/');
+        await browser.wait(EC.urlContains('#/'),
+                           5000,
+                           "URL does not contain #/");
     }
 
     getPanel() {
@@ -30,27 +34,26 @@ export class HomePage extends BasePage {
         return element(By.buttonText('Login'));
     }
 
-    setUserText(value) {
+    async setUserText(value) {
         const setUserValue = element.all(By.css('[ng-model="username"]'));
-        setUserValue.clear();
-        return setUserValue.sendKeys(value);
+        await setUserValue.clear();
+        await setUserValue.sendKeys(value);
     }
 
-    setPasswordText(value) {
+    async setPasswordText(value) {
         const setPasswordValue = element.all(By.css('[ng-model="password"]'));
-        setPasswordValue.clear();
-        return setPasswordValue.sendKeys(value);
+        await setPasswordValue.clear();
+        await setPasswordValue.sendKeys(value);
     }
 
-    waitAllBuildsFinished() {
-        this.go();
+    async waitAllBuildsFinished() {
+        await this.go();
         const self = this;
-        const noRunningBuilds = () =>
-            element.all(By.css("h4")).getText().then(function(text) {
-                text = text.join(" ");
-                return text.toLowerCase().indexOf("0 builds running") >= 0;
-            })
-        ;
-        return browser.wait(noRunningBuilds, 20000);
+        const noRunningBuilds = async () => {
+            let text = await element.all(By.css("h4")).getText();
+            text = text.join(" ");
+            return text.toLowerCase().indexOf("0 builds running") >= 0;
+        }
+        await browser.wait(noRunningBuilds, 20000);
     }
 }
