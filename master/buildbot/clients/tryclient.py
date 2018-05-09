@@ -687,7 +687,7 @@ class Try(pb.Referenceable):
         ss = self.sourcestamp
         output("Delivering job; comment=", self.comment)
 
-        d = remote.callRemote("try",
+        d = remote.callRemote(b"try",
                               ss.branch,
                               ss.revision,
                               ss.patch,
@@ -722,7 +722,7 @@ class Try(pb.Referenceable):
         if res:
             self.buildsetStatus = res
         # gather the set of BuildRequests
-        d = self.buildsetStatus.callRemote("getBuildRequests")
+        d = self.buildsetStatus.callRemote(b"getBuildRequests")
         d.addCallback(self._getStatus_2)
 
     def _getStatus_2(self, brs):
@@ -758,7 +758,7 @@ class Try(pb.Referenceable):
             self.ETA[n] = None
             # get new Builds for this buildrequest. We follow each one until
             # it finishes or is interrupted.
-            br.callRemote("subscribe", self)
+            br.callRemote(b"subscribe", self)
 
         # now that those queries are in transit, we can start the
         # display-status-every-30-seconds loop
@@ -770,10 +770,10 @@ class Try(pb.Referenceable):
 
     def remote_newbuild(self, bs, builderName):
         if self.builds[builderName]:
-            self.builds[builderName].callRemote("unsubscribe", self)
+            self.builds[builderName].callRemote(b"unsubscribe", self)
         self.builds[builderName] = bs
-        bs.callRemote("subscribe", self, 20)
-        d = bs.callRemote("waitUntilFinished")
+        bs.callRemote(b"subscribe", self, 20)
+        d = bs.callRemote(b"waitUntilFinished")
         d.addCallback(self._build_finished, builderName)
 
     def remote_stepStarted(self, buildername, build, stepname, step):
@@ -792,13 +792,13 @@ class Try(pb.Referenceable):
         self.builds[builderName] = None
         self.ETA[builderName] = None
         self.currentStep[builderName] = "finished"
-        d = bs.callRemote("getResults")
+        d = bs.callRemote(b"getResults")
         d.addCallback(self._build_finished_2, bs, builderName)
         return d
 
     def _build_finished_2(self, results, bs, builderName):
         self.results[builderName][0] = results
-        d = bs.callRemote("getText")
+        d = bs.callRemote(b"getText")
         d.addCallback(self._build_finished_3, builderName)
         return d
 
@@ -876,7 +876,7 @@ class Try(pb.Referenceable):
             "unknown connecttype '%s', should be 'pb'" % self.connect)
 
     def _getBuilderNames(self, remote):
-        d = remote.callRemote("getAvailableBuilderNames")
+        d = remote.callRemote(b"getAvailableBuilderNames")
         d.addCallback(self._getBuilderNames2)
         d.addCallback(lambda _: remote.broker.transport.loseConnection())
         return d

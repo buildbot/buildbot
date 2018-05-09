@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import re
@@ -290,7 +291,8 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
         d = s.start()
 
         def check(ign):
-            self.assertTrue({'stdout': nl(repr(args))} in b.updates, b.show())
+            self.assertTrue({'stdout':
+                nl(repr([str(arg) for arg in args]))} in b.updates, b.show())
             self.assertTrue({'rc': 0} in b.updates, b.show())
         d.addCallback(check)
         return d

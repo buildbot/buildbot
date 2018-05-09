@@ -16,6 +16,8 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
+from future.utils import PY3
 
 from twisted.trial import unittest
 
@@ -65,7 +67,10 @@ class TestObfuscated(unittest.TestCase):
     def testSimple(self):
         c = util.Obfuscated('real', '****')
         self.assertEqual(str(c), '****')
-        self.assertEqual(repr(c), "'****'")
+        if PY3:
+            self.assertEqual(repr(c), "'****'")
+        else:
+            self.assertEqual(repr(c), "u'****'")
 
     def testObfuscatedCommand(self):
         cmd = ['echo', util.Obfuscated('password', '*******')]

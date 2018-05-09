@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import shutil
@@ -129,7 +130,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         # set up to call print when we are attached, and chain the results onto
         # the deferred for the whole test
         def call_print(mind):
-            print_d = mind.callRemote("print", "Hi, worker.")
+            print_d = mind.callRemote(b"print", "Hi, worker.")
             print_d.addCallbacks(d.callback, d.errback)
 
         # start up the master and worker

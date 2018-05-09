@@ -15,13 +15,14 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import sys
+from io import StringIO
 
 from twisted.trial import unittest
 
-from buildbot_worker.compat import NativeStringIO
 from buildbot_worker.scripts import base
 from buildbot_worker.test.util import misc
 
@@ -33,7 +34,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
 
     def setUp(self):
         # capture output to stdout
-        self.mocked_stdout = NativeStringIO()
+        self.mocked_stdout = StringIO()
         self.patch(sys, "stdout", self.mocked_stdout)
 
         # generate OS specific relative path to buildbot.tac inside basedir
@@ -42,7 +43,7 @@ class TestIsWorkerDir(misc.FileIOMixin, misc.StdoutAssertionsMixin,
     def assertReadErrorMessage(self, strerror):
         expected_message = ("error reading '{0}': {1}\n"
                             "invalid worker directory 'testdir'\n".format(
-            self.tac_file_path, strerror))
+                                self.tac_file_path, strerror))
         self.assertEqual(self.mocked_stdout.getvalue(),
                          expected_message,
                          "unexpected error message on stdout")

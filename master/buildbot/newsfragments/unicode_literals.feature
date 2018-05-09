@@ -1,0 +1,1 @@
+String literals in the buildbot worker code are now forced to be unicode on Python 2 by importing :py:class:`__future__.unicode_literals`.  This will facilitate writing code in the buildbot worker which is compatible on Python 2 and 3.

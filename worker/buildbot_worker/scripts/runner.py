@@ -19,6 +19,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from __future__ import unicode_literals
 
 import os
 import re
@@ -221,7 +222,7 @@ class Options(usage.Options):
 
     def opt_version(self):
         import buildbot_worker
-        print("worker version: {}".format(buildbot_worker.version))
+        print(str("worker version: {}".format(buildbot_worker.version)))
         usage.Options.opt_version(self)
 
     def opt_verbose(self):
@@ -238,9 +239,9 @@ def run():
         config.parseOptions()
     except usage.error as e:
         print("{}:  {}".format(sys.argv[0], e))
-        print()
+        print("")
         c = getattr(config, 'subOptions', config)
-        print(str(c))
+        print("{}".format(c))
         sys.exit(1)
 
     subconfig = config.subOptions

@@ -9,6 +9,7 @@ wrapper will disconnect in that case, and inform the caller.
 
 from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import unicode_literals
 
 from twisted.internet.interfaces import IProtocol
 from twisted.internet.interfaces import IProtocolFactory
