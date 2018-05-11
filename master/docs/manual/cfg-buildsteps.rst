@@ -1453,6 +1453,7 @@ The defaults, which are suitable for GNU Make, are these::
 .. bb:step:: VC11
 .. bb:step:: VC12
 .. bb:step:: VC14
+.. bb:step:: VC141
 .. bb:step:: VS2003
 .. bb:step:: VS2005
 .. bb:step:: VS2008
@@ -1460,17 +1461,19 @@ The defaults, which are suitable for GNU Make, are these::
 .. bb:step:: VS2012
 .. bb:step:: VS2013
 .. bb:step:: VS2015
+.. bb:step:: VS2017
 .. bb:step:: VCExpress9
 .. bb:step:: MsBuild4
 .. bb:step:: MsBuild12
 .. bb:step:: MsBuild14
+.. bb:step:: MsBuild141
 
 Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-14 (aka Visual Studio 2003-2015 and VCExpress9) are supported via calling ``devenv``.
-Msbuild as well as Windows Driver Kit 8 are supported via the ``MsBuild4``, ``MsBuild12``, and ``MsBuild14`` steps.
+VC++ 6-141 (aka Visual Studio 2003-2015 and VCExpress9) are supported via calling ``devenv``.
+Msbuild as well as Windows Driver Kit 8 are supported via the ``MsBuild4``, ``MsBuild12``, ``MsBuild14`` and  ``MsBuild141`` steps.
 These steps will take care of setting up a clean compilation environment, parsing the generated output in real time, and delivering as detailed as possible information about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.
@@ -1484,6 +1487,7 @@ The available classes are:
 * ``VC11``
 * ``VC12``
 * ``VC14``
+* ``VC141``
 * ``VS2003``
 * ``VS2005``
 * ``VS2008``
@@ -1491,10 +1495,12 @@ The available classes are:
 * ``VS2012``
 * ``VS2013``
 * ``VS2015``
+* ``VS2017``
 * ``VCExpress9``
 * ``MsBuild4``
 * ``MsBuild12``
 * ``MsBuild14``
+* ``MsBuild141``
 
 The available constructor arguments are
 
