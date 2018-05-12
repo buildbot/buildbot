@@ -426,6 +426,13 @@ class VC14(VC12):
 VS2015 = VC14
 
 
+class VC141(VC14):
+    default_installdir = r"C:\\Program Files (x86)\\Microsoft Visual Studio\\2017\\Community"
+
+
+VS2017 = VC141
+
+
 class MsBuild4(VisualStudio):
     platform = None
     vcenv_bat = r"${VS110COMNTOOLS}..\..\VC\vcvarsall.bat"
@@ -483,3 +490,53 @@ class MsBuild12(MsBuild4):
 
 class MsBuild14(MsBuild4):
     vcenv_bat = r"${VS140COMNTOOLS}..\..\VC\vcvarsall.bat"
+
+
+class MsBuild141(VisualStudio):
+    platform = None
+    vcenv_bat = r"\\VC\\Auxiliary\\Build\vcvarsall.bat"
+    renderables = ['platform']
+
+    def __init__(self, platform, **kwargs):
+        self.platform = platform
+        VisualStudio.__init__(self, **kwargs)
+
+    def setupEnvironment(self, cmd):
+        VisualStudio.setupEnvironment(self, cmd)
+        cmd.args['env']['VCENV_BAT'] = self.vcenv_bat
+        addEnvPath(cmd.args['env'], "PATH", 'C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\')
+        addEnvPath(cmd.args['env'], "PATH", r'${PATH}')
+
+    def describe(self, done=False):
+        rv = []
+        if done:
+            rv.append("built")
+        else:
+            rv.append("building")
+        if self.project is not None:
+            rv.append("%s for" % (self.project))
+        else:
+            rv.append("solution for")
+        rv.append("%s|%s" % (self.config, self.platform))
+        return rv
+
+    def start(self):
+        if self.platform is None:
+            config.error(
+                'platform is mandatory. Please specify a string such as "Win32"')
+
+        command = ('FOR /F "tokens=*" %%%%I in (\'vswhere.exe -property  installationPath\') do "%%%%I\\%%VCENV_BAT%%" x86 '
+                  '&& msbuild "%s" /p:Configuration="%s" /p:Platform="%s" /maxcpucount' % (self.projectfile, self.config, self.platform))
+
+        if self.project is not None:
+            command += ' /t:"%s"' % (self.project)
+        elif self.mode == "build":
+            command += ' /t:Build'
+        elif self.mode == "clean":
+            command += ' /t:Clean'
+        elif self.mode == "rebuild":
+            command += ' /t:Rebuild'
+
+        self.setCommand(command)
+
+        return VisualStudio.start(self)
