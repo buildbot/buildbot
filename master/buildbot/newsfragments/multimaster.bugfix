@@ -1,1 +1,0 @@
-fix several multimaster issues by reverting :issue:`3911`. re-opens :issue:`3783`. (:issue:`4067`, :issue:`4062`, :issue:`4059`)
