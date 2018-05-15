@@ -16,16 +16,16 @@ Buildbot ``1.1.2`` ( ``2018-05-15`` )
 Bug fixes
 ---------
 
-- Fix :bb:step:`MultipleFileUpload` to correctly compute path name when worker
-  and master are on different OS (:issue:`4019`)
 - fix several multimaster issues by reverting :issue:`3911`. re-opens
   :issue:`3783`. (:issue:`4067`, :issue:`4062`, :issue:`4059`)
+- Fix :bb:step:`MultipleFileUpload` to correctly compute path name when worker
+  and master are on different OS (:issue:`4019`)
 - LDAP bytes/unicode handling has been fixed to work with Python 3. This means
   that LDAP authentication, REMOTE_USER authentication, and LDAP avatars now
   work on Python 3. In addition, an of bounds access when trying to load the
   value of an empty LDAP attribute has been fixed.
 - Removing ```no-select``` rules from places where they would prevent the user
-  from selecting interesting text. (Issue #3663)
+  from selecting interesting text. (:issue:`3663`)
 - fix ```Maximum recursion depth exceeded`` when lots of worker are trying to
   connect while master is starting or reconfiguring (:issue:`4042`).
 
