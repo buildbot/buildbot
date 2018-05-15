@@ -30,6 +30,15 @@ from buildbot.steps.shell import ShellCommand
 
 def addEnvPath(env, name, value):
     """ concat a path for this name """
+
+    if not name in env:
+        env[name] = value
+        return
+
+    if type(env[name]) is list:
+        env[name].append(value)
+        return
+
     try:
         oldval = env[name]
         if not oldval.endswith(';'):
