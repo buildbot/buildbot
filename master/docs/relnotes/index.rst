@@ -10,6 +10,47 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.1.2`` ( ``2018-05-15`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix :bb:step:`MultipleFileUpload` to correctly compute path name when worker
+  and master are on different OS (:issue:`4019`)
+- fix several multimaster issues by reverting :issue:`3911`. re-opens
+  :issue:`3783`. (:issue:`4067`, :issue:`4062`, :issue:`4059`)
+- LDAP bytes/unicode handling has been fixed to work with Python 3. This means
+  that LDAP authentication, REMOTE_USER authentication, and LDAP avatars now
+  work on Python 3. In addition, an of bounds access when trying to load the
+  value of an empty LDAP attribute has been fixed.
+- Removing ```no-select``` rules from places where they would prevent the user
+  from selecting interesting text. (Issue #3663)
+- fix ```Maximum recursion depth exceeded`` when lots of worker are trying to
+  connect while master is starting or reconfiguring (:issue:`4042`).
+
+Improved Documentation
+----------------------
+
+- Document a minimal secure config for the Buildbot web interface.
+  (:issue:`4026`)
+
+Features
+--------
+
+- The Dockerfile for the buildbot master image has been updated to use Alpine
+  Linux 3.7. In addition, the Python requests module has been added to this
+  image. This makes GitHub authentication work out of the box with this image.
+  (:issue:`4039`)
+- New steps for Visual Studio 2017 (VS2017, VC141, and MsBuild141).
+- The smoke tests have been changed to use ES2017 async and await keywords.
+  This requires that the smoke tests run with Node 8 or higher. Use of async
+  and await is recommended by the Protractor team:
+  https://github.com/angular/protractor/blob/master/docs/async-await.md
+- Allow ``urlText`` to be set on a url linked to a ``DirectoryUpload`` step
+  (:issue:`3983`)
+
+
 Buildbot ``1.1.1`` ( ``2018-04-06`` )
 =====================================
 
