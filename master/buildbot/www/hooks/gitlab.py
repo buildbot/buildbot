@@ -108,6 +108,17 @@ class GitLabHandler(BaseHookHandler):
         when_timestamp = dateparse(commit['timestamp'])
         # @todo provide and document a way to choose between http and ssh url
         repo_url = attrs['source']['git_http_url']
+
+        # Filter out uninteresting events
+        state = attrs['state']
+        if re.match('^(closed|merged|approved)$', state):
+            log.msg("GitLab MR#{}: Ignoring because state is {}".format(attrs['iid'], state))
+            return []
+        action = attrs['action']
+        if not re.match('^(open|reopen)$', action) and not (action == "update" and "oldrev" in attrs):
+            log.msg("GitLab MR#{}: Ignoring because action {} was not open or reopen or an update that added code".format(attrs['iid'], action))
+            return []
+
         changes = [{
             'author': '%s <%s>' % (commit['author']['name'],
                                    commit['author']['email']),

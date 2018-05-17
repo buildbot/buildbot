@@ -1,0 +1,1 @@
+Don't schedule a build when a GitLab merge request is deleted or edited (:issue:`3635`)
