@@ -125,7 +125,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
                  use_tickets=False, ticket_login_interval=60 * 60 * 24,
-                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (u'')):
+                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (u''), resolvewho=lambda who: who):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -160,6 +160,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         self.use_tickets = use_tickets
         self.ticket_login_interval = ticket_login_interval
         self.revlink_callable = revlink
+        self.resolvewho_callable = resolvewho
         self.server_tz = dateutil.tz.gettz(server_tz) if server_tz else None
         if server_tz is not None and self.server_tz is None:
             raise P4PollerError("Failed to get timezone from server_tz string '{}'".format(server_tz))
@@ -301,7 +302,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             if not m:
                 raise P4PollerError(
                     "Unexpected 'p4 describe -s' result: %r" % result)
-            who = m.group('who')
+            who = self.resolvewho_callable(m.group('who'))
             when = datetime.datetime.strptime(m.group('when'), self.datefmt)
             if self.server_tz:
                 # Convert from the server's timezone to the local timezone.
