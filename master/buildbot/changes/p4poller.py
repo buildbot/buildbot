@@ -149,6 +149,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
             config.error(
                 "You need to provide a valid callable for revlink")
 
+        if not callable(resolvewho):
+            config.error(
+                "You need to provide a valid callable for resolvewho")
+
         self.p4port = p4port
         self.p4user = p4user
         self.p4passwd = p4passwd
