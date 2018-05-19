@@ -107,7 +107,7 @@ class GitLabHandler(BaseHookHandler):
         commit = attrs['last_commit']
         when_timestamp = dateparse(commit['timestamp'])
         # @todo provide and document a way to choose between http and ssh url
-        repo_url = attrs['source']['git_http_url']
+        repo_url = attrs['target']['git_http_url']
 
         # Filter out uninteresting events
         state = attrs['state']
@@ -126,14 +126,20 @@ class GitLabHandler(BaseHookHandler):
             'comments': "MR#{}: {}\n\n{}".format(attrs['iid'], attrs['title'], attrs['description']),
             'revision': commit['id'],
             'when_timestamp': when_timestamp,
-            'branch': attrs['source_branch'],
+            'branch': attrs['target_branch'],
             'repository': repo_url,
             'project': project,
             'category': event,
             'revlink': attrs['url'],
             'properties': {
+                'source_branch': attrs['source_branch'],
+                'source_project_id': attrs['source_project_id'],
+                'source_repository': attrs['source']['git_http_url'],
+                'source_git_ssh_url': attrs['source']['git_ssh_url'],
                 'target_branch': attrs['target_branch'],
+                'target_project_id': attrs['target_project_id'],
                 'target_repository': attrs['target']['git_http_url'],
+                'target_git_ssh_url': attrs['target']['git_ssh_url'],
                 'event': event,
             },
         }]

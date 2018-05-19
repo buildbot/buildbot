@@ -304,6 +304,7 @@ setup_args = {
             ('buildbot.steps.source.gerrit', ['Gerrit']),
             ('buildbot.steps.source.git', ['Git']),
             ('buildbot.steps.source.github', ['GitHub']),
+            ('buildbot.steps.source.gitlab', ['GitLab']),
             ('buildbot.steps.source.mercurial', ['Mercurial']),
             ('buildbot.steps.source.mtn', ['Monotone']),
             ('buildbot.steps.source.p4', ['P4']),

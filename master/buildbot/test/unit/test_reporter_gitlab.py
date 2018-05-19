@@ -121,6 +121,23 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         self.sp.buildStarted(("build", 20, "started"), build)
 
     @defer.inlineCallbacks
+    def test_merge_request_forked(self):
+        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        self.TEST_PROPS['source_project_id'] = 20922342342
+        build = yield self.setupBuildResults(SUCCESS)
+        self._http.expect(
+            'post',
+            '/api/v3/projects/20922342342/statuses/d34db33fd43db33f',
+            json={'state': 'running',
+                  'target_url': 'http://localhost:8080/#builders/79/builds/0',
+                  'ref': 'master',
+                  'description': 'Build started.', 'name': 'buildbot/Builder0'})
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "started"), build)
+        # Don't run these tests in parallel!
+        del self.TEST_PROPS['source_project_id']
+
+    @defer.inlineCallbacks
     def test_noproject(self):
         self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()

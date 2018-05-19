@@ -914,6 +914,20 @@ The revision in the GitHub event points to ``/head`` is important for the GitHub
 
 If you want to use  :bb:step:`Trigger` to create sub tests and want to have the GitHub reporter still update the original revision, make sure you set ``updateSourceStamp=False`` in the :bb:step:`Trigger` configuration.
 
+.. bb:step:: GitLab
+
+.. _Step-GitLab:
+
+GitLab
+++++++
+
+.. py:class:: buildbot.steps.source.gitlab.GitLab
+
+:bb:step:`GitLab` step is exactly like the :bb:step:`Git` step, except that it uses the source repo and branch sent by the :bb:chsrc:`GitLab` change hook when processing merge requests.
+
+When configuring builders, use a ChangeFilter with ``category = "push"``
+to select normal commits, and ``category = "merge_request"`` to select merge requests.
+
 .. bb:step:: Darcs
 
 .. _Step-Darcs:

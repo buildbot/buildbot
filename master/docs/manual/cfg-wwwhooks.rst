@@ -344,6 +344,10 @@ These parameters will be passed along to the scheduler.
 
     Your Git step must be configured with a git@ repourl, not a https: one, else the change from the webhook will not trigger a build.
 
+.. note::
+
+    To handle merge requests from forks properly, use a GitLab source step rather than a Git source step.
+
 .. warning::
 
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
