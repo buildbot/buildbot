@@ -349,6 +349,10 @@ These parameters will be passed along to the scheduler.
     As in the previous case, the incoming HTTP requests for this hook are not authenticated by default.
     Anyone who can access the web status can "fake" a request from your GitLab server, potentially causing the buildmaster to run arbitrary code.
 
+.. warning::
+    When applicable, you need to permit access to internal/local networks.
+    See ``https://docs.gitlab.com/ee/security/webhooks.html`` for details.
+
 To protect URL against unauthorized access you should either
 
   * set secret token in the configuration above, then set it in the GitLab service hook declaration, or
