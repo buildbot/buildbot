@@ -58,7 +58,7 @@ pyinstaller==3.3.1
 pyjade==4.0.0
 PyJWT==1.6.3
 pylint==1.9.1
-pyOpenSSL==17.5.0
+pyOpenSSL==18.0.0
 pyparsing==2.2.0
 python-dateutil==2.7.2
 pytz==2018.4
