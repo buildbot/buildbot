@@ -101,7 +101,13 @@ install:
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
-      pip check
+  - step: !ShellCommand
+        command: "pip check"
+        warnOnFailure: True
+        flunkOnFailure: False
+        haltOnFailure: False
+        name: "pip check"
+    title: "pip check"
 
 before_script:
   # create real database for tests
