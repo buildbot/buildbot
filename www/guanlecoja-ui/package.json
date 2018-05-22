@@ -1,7 +1,7 @@
 {
     "name": "guanlecoja-ui",
     "description": "Implements generic application base for angular.js, ui.router and bootstrap3, with less, and coffeescript.",
-    "version": "0.8.7",
+    "version": "1.0.0",
     "license": "MIT",
     "readmeFilename": "Readme.md",
     "engines": {
