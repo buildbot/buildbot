@@ -102,6 +102,7 @@ class InterfaceTests(object):
                 "zope.interfaces is too old to run this test")
 
         import zope.interface.interface
+        from zope.interface.interface import Attribute
         for interface in zope.interface.implementedBy(cls):
             for attr, template_argspec in interface.namesAndDescriptions():
                 if not hasattr(cls, attr):
@@ -110,6 +111,9 @@ class InterfaceTests(object):
                         interface)
                     self.fail(msg)
                 actual_argspec = getattr(cls, attr)
+                if isinstance(template_argspec, Attribute):
+                    continue
+                # else check method signatures
                 while hasattr(actual_argspec, '__wrapped__'):
                     actual_argspec = actual_argspec.__wrapped__
                 actual_argspec = zope.interface.interface.fromMethod(

@@ -270,6 +270,13 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
 
             def isSecure(self):
                 return False
+
+            def getPeer(self):
+                return None
+
+            def getHost(self):
+                return None
+
         request = Request(FakeChannel(), False)
         request.sitepath = [b"bb"]
         session.updateSession(request)

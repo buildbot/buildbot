@@ -138,3 +138,6 @@ warnings.filterwarnings('ignore', r"object\(\) takes no parameters")
 
 # this warning happens sometimes on python3.4
 warnings.filterwarnings('ignore', r"The value of convert_charrefs will become True in 3.5")
+
+# Twisted 18.4+ adds a deprecation warning and still use the deprecated API in its own code!
+warnings.filterwarnings('ignore', ".*getClientIP was deprecated.*", DeprecationWarning)
