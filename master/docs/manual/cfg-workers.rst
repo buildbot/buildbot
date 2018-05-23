@@ -230,6 +230,7 @@ As of time of writing, Buildbot supports the following latent workers:
    cfg-workers-libvirt.rst
    cfg-workers-openstack.rst
    cfg-workers-docker.rst
+   cfg-workers-upcloud.rst
 
 Dangers with Latent Workers
 +++++++++++++++++++++++++++
