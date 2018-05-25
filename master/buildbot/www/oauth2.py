@@ -331,14 +331,17 @@ class GitHubAuth(OAuth2Auth):
                              response=data)
                 teams = set()
                 for org, team_data in data['data'].items():
+                    if team_data is None:
+                        # Organizations can have OAuth App access restrictions enabled,
+                        # disallowing team data access to third-parties.
+                        continue
                     for node in team_data['teams']['edges']:
                         # On github we can mentions organization teams like
                         # @org-name/team-name. Let's keep the team formatting
                         # identical with the inclusion of the organization
                         # since different organizations might share a common
                         # team name
-                        if node['node'] is not None:
-                            teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
+                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',
