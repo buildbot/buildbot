@@ -725,7 +725,7 @@ gitJsonPayloadMR_open_forked = b"""
          "homepage" : "https://gitlab.example.com/build/awesome_project",
          "http_url" : "https://gitlab.example.com/build/awesome_project.git",
          "id" : 2337,
-         "name" : "hello",
+         "name" : "awesome_project",
          "namespace" : "build",
          "path_with_namespace" : "build/awesome_project",
          "ssh_url" : "git@gitlab.example.com:build/awesome_project.git",
@@ -746,7 +746,7 @@ gitJsonPayloadMR_open_forked = b"""
          "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
          "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
          "id" : 239,
-         "name" : "hello",
+         "name" : "awesome_project",
          "namespace" : "mmusterman",
          "path_with_namespace" : "mmusterman/awesome_project",
          "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
@@ -775,7 +775,7 @@ gitJsonPayloadMR_open_forked = b"""
       "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
       "http_url" : "https://gitlab.example.com/mmusterman/awesome_project.git",
       "id" : 239,
-      "name" : "hello",
+      "name" : "awesome_project",
       "namespace" : "mmusterman",
       "path_with_namespace" : "mmusterman/awesome_project",
       "ssh_url" : "git@gitlab.example.com:mmusterman/awesome_project.git",
@@ -786,7 +786,7 @@ gitJsonPayloadMR_open_forked = b"""
    "repository" : {
       "description" : "Trivial project for testing build machinery quickly",
       "homepage" : "https://gitlab.example.com/mmusterman/awesome_project",
-      "name" : "hello",
+      "name" : "awesome_project",
       "url" : "git@gitlab.example.com:mmusterman/awesome_project.git"
    },
    "user" : {
@@ -824,7 +824,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         )
         self.assertEqual(change["branch"], "v1.0.0")
 
-    def check_changes_mr_event(self, r, project='', codebase=None, timestamp=1526309644, source_repo=None):
+    def check_changes_mr_event(self, r, project='awesome_project', codebase=None, timestamp=1526309644, source_repo=None):
         self.assertEqual(len(self.changeHook.master.addedChanges), 1)
         change = self.changeHook.master.addedChanges[0]
 
@@ -844,8 +844,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change['properties']["source_branch"], 'ms-viewport')
         self.assertEqual(change['properties']["target_branch"], 'master')
         self.assertEqual(change["category"], "merge_request")
+        self.assertEqual(change.get("project"), project)
 
-    def check_changes_push_event(self, r, project='', codebase=None):
+    def check_changes_push_event(self, r, project='diaspora', codebase=None):
         self.assertEqual(len(self.changeHook.master.addedChanges), 2)
         change = self.changeHook.master.addedChanges[0]
 
@@ -880,7 +881,9 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change[
             "revlink"], "http://localhost/diaspora/commits/da1560886d4f094c3e6c9ef40349f7d38b5d27d7")
 
-        self.assertEqual(change.get("project"), project)
+        # FIXME: should we convert project name to canonical case?
+        # Or should change filter be case insensitive?
+        self.assertEqual(change.get("project").lower(), project.lower())
         self.assertEqual(change.get("codebase"), codebase)
 
     # Test 'base' hook with attributes. We should get a json string representing
@@ -898,11 +901,11 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def testGitWithChange_WithProjectToo(self):
         self.request = FakeRequest(content=gitJsonPayload)
         self.request.uri = b"/change_hook/gitlab"
-        self.request.args = {b'project': [b'MyProject']}
+        self.request.args = {b'project': [b'Diaspora']}
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         self.request.method = b"POST"
         res = yield self.request.test_render(self.changeHook)
-        self.check_changes_push_event(res, project="MyProject")
+        self.check_changes_push_event(res, project="Diaspora")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithCodebaseToo(self):
