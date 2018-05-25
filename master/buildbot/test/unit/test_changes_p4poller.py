@@ -441,7 +441,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d.addCallback(check)
         return d
 
-
+    def test_resolveWho(self):
+        self.assertRaisesConfigError("You need to provide a valid callable for resolvewho",
+                                     lambda: P4Source(resolveWho=None) )
 class TestSplit(unittest.TestCase):
 
     def test_get_simple_split(self):
