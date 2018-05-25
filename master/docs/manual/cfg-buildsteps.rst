@@ -2582,7 +2582,10 @@ Hyperlinks are added to the build detail web pages for each triggered build.
     You may use :ref:`Interpolate` here to dynamically construct new property values.
     For the simple case of copying a property, this might look like::
 
-        set_properties={"my_prop1" : Property("my_prop1")}
+        set_properties={"my_prop1" : Property("my_prop1"),
+                        "my_prop2" : Property("my_prop2")}
+
+    where ``Property`` is an instance of ``buildbot.process.properties.Property``
 
     .. note::
 
