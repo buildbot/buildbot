@@ -928,6 +928,9 @@ GitLab
 When configuring builders, you can use a ChangeFilter with ``category = "push"``
 to select normal commits, and ``category = "merge_request"`` to select merge requests.
 
+See :file:`master/docs/examples/gitlab.cfg` in the Buildbot distribution
+for a tutorial example of integrating Buildbot with GitLab.
+
 .. note::
 
     Your build worker will need access to the source project of the
