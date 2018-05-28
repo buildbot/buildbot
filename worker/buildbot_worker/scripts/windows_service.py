@@ -408,7 +408,7 @@ class BBService(win32serviceutil.ServiceFramework):
             except pywintypes.error as err:
                 # ERROR_BROKEN_PIPE means the child process closed the
                 # handle - ie, it terminated.
-                if err[0] != winerror.ERROR_BROKEN_PIPE:
+                if err.winerror != winerror.ERROR_BROKEN_PIPE:
                     self.warning("Error reading output from process: {0}".format(err))
                 break
             captured_blocks.append(data)
