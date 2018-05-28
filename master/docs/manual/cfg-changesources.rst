@@ -537,6 +537,11 @@ It accepts the following arguments:
     This function must be a callable which takes two arguments, the branch and the revision.
     Defaults to lambda branch, revision: (u'')
 
+``resolvewho``
+    A function that resolves the Perforce 'user@workspace' into a more verbose form, stored as the author of the change. Useful when usernames do not match email addresses and external, client-side lookup is required.
+    This function must be a callable which takes one argument.
+    Defaults to lambda who: (who)
+
 Example #1
 ++++++++++
 
