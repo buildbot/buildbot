@@ -16,13 +16,10 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from collections import OrderedDict
+
 from twisted.internet import defer
 from twisted.trial import unittest
-
-try:
-    from collections import OrderedDict
-except ImportError:  # pragma: no cover
-    from ordereddict import OrderedDict
 
 from buildbot import config
 from buildbot.process.properties import Interpolate
