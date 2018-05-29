@@ -129,10 +129,12 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(bldr_tbl.c.id == _builderid)
 
             # build up a intermediate builder id -> tag names map (fixes performance issue #3396)
-            bldr_id_to_tags_map = defaultdict(list)
-            for bldr_id, tag in conn.execute(sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
-                                             .select_from(tags_tbl.join(builders_tags_tbl))).fetchall():
-                bldr_id_to_tags_map[bldr_id].append(tag)
+            bldr_id_to_tags = defaultdict(list)
+            bldr_q = sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
+                       .select_from(tags_tbl.join(builders_tags_tbl))
+
+            for bldr_id, tag in conn.execute(bldr_q).fetchall():
+                bldr_id_to_tags[bldr_id].append(tag)
 
             # now group those by builderid, aggregating by masterid
             rv = []
@@ -141,7 +143,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 # pylint: disable=unsubscriptable-object
                 if not last or row['id'] != last['id']:
                     last = dict(id=row.id, name=row.name, masterids=[], description=row.description,
-                                tags=bldr_id_to_tags_map[row.id])
+                                tags=bldr_id_to_tags[row.id])
                     rv.append(last)
                 if row['masterid']:
                     last['masterids'].append(row['masterid'])
