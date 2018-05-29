@@ -131,7 +131,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             # build up a intermediate builder id -> tag names map (fixes performance issue #3396)
             bldr_id_to_tags = defaultdict(list)
             bldr_q = sa.select([builders_tags_tbl.c.builderid, tags_tbl.c.name])
-                       .select_from(tags_tbl.join(builders_tags_tbl))
+            bldr_q = bldr_q.select_from(tags_tbl.join(builders_tags_tbl))
 
             for bldr_id, tag in conn.execute(bldr_q).fetchall():
                 bldr_id_to_tags[bldr_id].append(tag)
