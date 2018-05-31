@@ -84,7 +84,7 @@ auth = "changepw"
 # When converting strings to unicode, assume this encoding.
 # (set with --encoding)
 
-encoding = 'utf8'
+encoding = sys.stdout.encoding or 'utf-8'
 
 # If true, takes only the first parent commits. This controls if we want to
 # trigger builds for merged in commits (when False).
@@ -154,7 +154,7 @@ def grab_commit_info(c, rev):
     comments = []
 
     while True:
-        line = f.stdout.readline().decode("ascii")
+        line = f.stdout.readline().decode(encoding)
         if not line:
             break
 
@@ -184,7 +184,7 @@ def grab_commit_info(c, rev):
 
 def gen_changes(input, branch):
     while True:
-        line = input.stdout.readline().decode("ascii")
+        line = input.stdout.readline().decode(encoding)
         if not line:
             break
 
@@ -264,7 +264,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         ["git", "merge-base", oldrev, newrev], stdout=subprocess.PIPE)
     (baserev, err) = mergebasecommand.communicate()
     baserev = baserev.strip()  # remove newline
-    baserev = baserev.decode("ascii")
+    baserev = baserev.decode(encoding)
 
     logging.debug("oldrev=%s newrev=%s baserev=%s", oldrev, newrev, baserev)
     if baserev != oldrev:
@@ -278,7 +278,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
         f = subprocess.Popen(shlex.split("git diff --raw %s..%s" % (oldrev, baserev)),
                              stdin=subprocess.PIPE, stdout=subprocess.PIPE)
         while True:
-            line = f.stdout.readline().decode("ascii")
+            line = f.stdout.readline().decode(encoding)
             if not line:
                 break
 
