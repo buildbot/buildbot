@@ -236,7 +236,7 @@ class MailNotifier(NotifierBase):
         # interpolation if only one build was given
         if self.extraHeaders:
             extraHeaders = self.extraHeaders
-            if len(builds) == 1:
+            if builds is not None and len(builds) == 1:
                 props = Properties.fromDict(builds[0]['properties'])
                 props.master = self.master
                 extraHeaders = yield props.render(extraHeaders)
