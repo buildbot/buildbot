@@ -10,7 +10,7 @@ backports.functools-lru-cache==1.5
 blockdiag==1.5.3
 boto==2.48.0
 boto3==1.7.31
-botocore==1.10.28
+botocore==1.10.31
 cffi==1.11.5
 click==6.7
 configparser==3.5.0
