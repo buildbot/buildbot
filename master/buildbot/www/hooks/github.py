@@ -48,6 +48,7 @@ class GitHubEventHandler(PullRequestMixin):
                  master=None,
                  skips=None,
                  github_api_endpoint=None,
+                 pullrequest_ref=None,
                  token=None,
                  debug=False,
                  verify=False):
@@ -55,6 +56,7 @@ class GitHubEventHandler(PullRequestMixin):
         self._strict = strict
         self._token = token
         self._codebase = codebase
+        self.pullrequest_ref = pullrequest_ref
         self.github_property_whitelist = github_property_whitelist
         self.skips = skips
         self.github_api_endpoint = github_api_endpoint
@@ -156,7 +158,7 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/{}/merge'.format(number)
+        refname = 'refs/pull/{}/{}'.format(number, self.pullrequest_ref)
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
@@ -327,6 +329,7 @@ class GitHubHandler(BaseHookHandler):
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,
