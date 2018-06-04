@@ -80,7 +80,8 @@ RUN \
         dumb-init \
         tar \
         tzdata \
-        curl && \
+        curl \
+        openssh && \
 # install pip dependencies
     pip install --upgrade pip setuptools && \
     pip install /wheels/*.whl && \
