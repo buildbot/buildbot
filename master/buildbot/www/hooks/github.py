@@ -225,7 +225,7 @@ class GitHubEventHandler(PullRequestMixin):
             debug=self.debug, verify=self.verify)
         res = yield http.get(url)
         data = yield res.json()
-        msg = data['commit']['message']
+        msg = data.get('commit', {'message': 'No message field'})['message']
         defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
