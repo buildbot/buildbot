@@ -1017,6 +1017,42 @@ All parameter types have a few common arguments:
     The maximum size of a field (in bytes). 
     Buildbot will ensure the field sent by the user is not too large.
 
+``autopopulate`` (optional; default: None)
+
+    If not None, ``autopopulate`` is a dictionary which describes how other parameters are updated if this one changes.
+    This is useful for when you have lots of parameters, and defaults depends on e.g. the branch.
+    This is implemented generically, and all parameters can update others.
+    Beware of infinite loops!
+
+    ::
+
+        c['schedulers'].append(schedulers.ForceScheduler(
+        name="custom",
+        builderNames=["runtests"],
+        buttonName="Start Custom Build",
+        codebases = [util.CodebaseParameter(
+            codebase='', project=None, 
+            branch=util.ChoiceStringParameter(
+                name="branch",
+                label="Branch",
+                strict=False,
+                choices=["master", "dev"],
+                autopopulate={
+                'master': {
+                    'build_name': 'build for master branch',
+                },
+                'dev': {
+                    'build_name': 'build for dev branch',
+                }
+                }
+        ))],
+        properties=[
+            util.StringParameter(
+                name="build_name",
+                label="Name of the Build release.",
+                default="")]))  # this parameter will be auto populated when user chooses branch
+
+
 The parameter types are:
 
 .. bb:sched:: NestedParameter
