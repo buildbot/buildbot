@@ -10,6 +10,46 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.2.0`` ( ``2018-06-10`` )
+=====================================
+
+Bug fixes
+---------
+
+- Don't schedule a build when a GitLab merge request is deleted or edited
+  (:issue:`3635`)
+- Add GitLab source step; using it, we now handle GitLab merge requests from
+  forks properly (:issue:`4107`)
+- Fixed a bug in :py:class:`~buildbot.reporters.mail.MailNotifier`'s
+  ``createEmail`` method when called with the default *builds* value which
+  resulted in mail not being sent.
+- Fixed a Github crash that happened on Pull Requests, triggered by Github
+  Web-hooks. The json sent by the API does not contain a commit message. In
+  github.py this causes a crash, resulting into response 500 sent back to
+  Github and building failure.
+- Speed up generation of api/v2/builders by an order of magnitude. Fixes
+  (:issue:`3396`).
+
+Improved Documentation
+----------------------
+
+- Added ``examples/gitlab.cfg`` to demonstrate integrating Buildbot with
+  GitLab.
+
+Features
+--------
+
+- :ref:`ForceScheduler-Parameters` now support an ``autopopulate`` parameter.
+- Allow the remote ref to be specified in the GitHub hook configuration
+  (:issue:`3998`)
+- Added callable to p4 source that allows client code to resolve the p4 user
+  and workspace into a more complete author. Default behaviour is a lambda that
+  simply returns the original supplied who. This callable happens after the
+  existing regex is performed.
+- :ref:`ForceScheduler-Parameters` ``ChoiceParameter`` now correctly supports
+  the ``strict`` parameter, by allowing free text entry if strict is False.
+
+
 Buildbot ``1.1.2`` ( ``2018-05-15`` )
 =====================================
 

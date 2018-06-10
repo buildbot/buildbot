@@ -1,3 +1,0 @@
-Fixed a bug in :py:class:`~buildbot.reporters.mail.MailNotifier`'s
-``createEmail`` method when called with the default *builds* value which
-resulted in mail not being sent.

@@ -1,1 +1,0 @@
-Add GitLab source step; using it, we now handle GitLab merge requests from forks properly (:issue:`4107`)
