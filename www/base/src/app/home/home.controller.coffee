@@ -1,5 +1,5 @@
 class Home extends Controller
-    constructor: ($scope, recentStorage, dataService, config, $location) ->
+    constructor: ($scope, dataService, config, $location) ->
         $scope.baseurl = $location.absUrl().split("#")[0]
         $scope.config = config
 

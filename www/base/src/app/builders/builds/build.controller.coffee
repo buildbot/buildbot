@@ -1,6 +1,6 @@
 class Build extends Controller
     constructor: ($rootScope, $scope, $location, $stateParams, $state, faviconService,
-                  dataService, dataUtilsService, recentStorage, publicFieldsFilter,
+                  dataService, dataUtilsService, publicFieldsFilter,
                   glBreadcrumbService, glTopbarContextualActionsService, resultsService, $window) ->
         _.mixin($scope, resultsService)
 
@@ -113,10 +113,6 @@ class Build extends Controller
                     if n?
                         $scope.last_build = false
                         unwatch()
-
-                recentStorage.addBuild
-                    link: "#/builders/#{$scope.builder.builderid}/builds/#{$scope.build.number}"
-                    caption: "#{$scope.builder.name} / #{$scope.build.number}"
 
                 build.getProperties().onNew = (properties) ->
                     $scope.properties = properties
