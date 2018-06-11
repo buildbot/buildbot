@@ -1,3 +1,0 @@
-Fixed a Github crash that happened on Pull Requests, triggered by Github Web-hooks.
-The json sent by the API does not contain a commit message. In github.py this causes a crash,
-resulting into response 500 sent back to Github and building failure.
