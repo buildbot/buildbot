@@ -10,8 +10,6 @@ Group=buildbot
 WorkingDirectory=/home/buildbot/master
 ExecStart=/usr/local/bin/buildbot start --nodaemon
 ExecReload=/bin/kill -HUP $MAINPIDster
-# if using EC2 Latent worker, you want to uncomment following line, and comment out the Restart line
-# ExecStopPost=shutdown now
 Restart=always
 User=buildbot
 
