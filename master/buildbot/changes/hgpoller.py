@@ -167,7 +167,7 @@ class HgPoller(base.PollingChangeSource):
             self.hgbin, args, path=self._absWorkdir(),
             env=os.environ, errortoo=True))
 
-        # some systems have old versions of Mercurial in /usr/bin 
+        # some systems have old versions of Mercurial in /usr/bin
         # (i.e. 1.4 in the case for CentOS systems) and
         # -b option isn't available.   This should fallback gracefully
         # to using -r.  Without this fallback, the addCallback() using
