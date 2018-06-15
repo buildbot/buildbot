@@ -167,6 +167,17 @@ class HgPoller(base.PollingChangeSource):
             self.hgbin, args, path=self._absWorkdir(),
             env=os.environ, errortoo=True))
 
+        # some systems have old versions of Mercurial in /usr/bin 
+        # (i.e. 1.4 in the case for CentOS systems) and
+        # -b option isn't available.   This should fallback gracefully
+        # to using -r.  Without this fallback, the addCallback() using
+        # the '-b' argument will fail without any indications in the
+        # log that something went wrong aside for an unhelpful traceback.
+        fallback_args = ['pull', '-r', self.branch, self.repourl]
+
+        d.addErrback(lambda _: utils.getProcessOutput(
+            self.hgbin, fallback_args, path=self._absWorkdir(),
+            env=os.environ, errortoo=True))
         return d
 
     def _getStateObjectId(self):
