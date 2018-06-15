@@ -68,26 +68,26 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
                 "id": 1
             })
         self._http.expect(
             'post',
-            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build started.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
-            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'success',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
                   'description': 'Build done.', 'name': 'buildbot/Builder0'})
         self._http.expect(
             'post',
-            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'failed',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
@@ -107,12 +107,12 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
                 "id": 1
             })
         self._http.expect(
             'post',
-            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
@@ -127,7 +127,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         build = yield self.setupBuildResults(SUCCESS)
         self._http.expect(
             'post',
-            '/api/v3/projects/20922342342/statuses/d34db33fd43db33f',
+            '/api/v4/projects/20922342342/statuses/d34db33fd43db33f',
             json={'state': 'running',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
@@ -145,7 +145,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
                 "message": 'project not found'
             }, code=404)
         build['complete'] = False
@@ -169,12 +169,12 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
                 "id": 1
             })
         self._http.expect(
             'post',
-            '/api/v3/projects/1/statuses/d34db33fd43db33f',
+            '/api/v4/projects/1/statuses/d34db33fd43db33f',
             json={'state': 'running',
                   'target_url': 'http://localhost:8080/#builders/79/builds/0',
                   'ref': 'master',
@@ -194,7 +194,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'get',
-            '/api/v3/projects/buildbot%2Fbuildbot', content_json={
+            '/api/v4/projects/buildbot%2Fbuildbot', content_json={
                 "id": 1
             })
         build['complete'] = False
