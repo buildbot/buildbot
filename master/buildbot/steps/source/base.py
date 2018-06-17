@@ -220,6 +220,33 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             return cmd.rc
         return d
 
+    def _downloadFile(self, buf, filename, mode=None):
+        filereader = remotetransfer.StringFileReader(buf)
+        args = {
+            'maxsize': None,
+            'reader': filereader,
+            'blocksize': 16 * 1024,
+            'workdir': self.workdir,
+            'mode': mode
+        }
+
+        if self.workerVersionIsOlderThan('downloadFile', '3.0'):
+            args['slavedest'] = filename
+        else:
+            args['workerdest'] = filename
+
+        cmd = remotecommand.RemoteCommand('downloadFile', args)
+        cmd.useLog(self.stdio_log, False)
+        log.msg("Downloading file: %s" % (filename))
+        d = self.runCommand(cmd)
+
+        @d.addCallback
+        def evaluateCommand(_):
+            if cmd.didFail():
+                raise buildstep.BuildStepFailed()
+            return cmd.rc
+        return d
+
     def patch(self, _, patch):
         diff = patch[1]
         root = None
@@ -231,36 +258,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                            ).startswith(self.build.path_module.abspath(self.workdir))):
             self.workdir = self.build.path_module.join(self.workdir, root)
 
-        def _downloadFile(buf, filename):
-            filereader = remotetransfer.StringFileReader(buf)
-            args = {
-                'maxsize': None,
-                'reader': filereader,
-                'blocksize': 16 * 1024,
-                'workdir': self.workdir,
-                'mode': None
-            }
-
-            if self.workerVersionIsOlderThan('downloadFile', '3.0'):
-                args['slavedest'] = filename
-            else:
-                args['workerdest'] = filename
-
-            cmd = remotecommand.RemoteCommand('downloadFile', args)
-            cmd.useLog(self.stdio_log, False)
-            log.msg("Downloading file: %s" % (filename))
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def evaluateCommand(_):
-                if cmd.didFail():
-                    raise buildstep.BuildStepFailed()
-                return cmd.rc
-            return d
-
-        d = _downloadFile(diff, ".buildbot-diff")
+        d = self._downloadFile(diff, ".buildbot-diff")
         d.addCallback(
-            lambda _: _downloadFile("patched\n", ".buildbot-patched"))
+            lambda _: self._downloadFile("patched\n", ".buildbot-patched"))
         d.addCallback(lambda _: self.applyPatch(patch))
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
                                                     'logEnviron': self.logEnviron})
