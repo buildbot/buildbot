@@ -94,6 +94,7 @@ backoff
 backporting
 backslashing
 basedir
+basename
 basepath
 baserev
 basetgz
@@ -1085,6 +1086,7 @@ requestsubmitted
 requeue
 requiredargs
 reschedulenextbuild
+resetmocks
 resourceneedsreconfigs
 resourcetype
 restrmatcher
