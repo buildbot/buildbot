@@ -220,13 +220,16 @@ class Source(LoggingBuildStep, CompositeStepMixin):
             return cmd.rc
         return d
 
-    def _downloadFile(self, buf, filename, mode=None):
+    def _downloadFile(self, buf, filename, workdir=None, mode=None):
+        if workdir is None:
+            workdir = self.workdir
+
         filereader = remotetransfer.StringFileReader(buf)
         args = {
             'maxsize': None,
             'reader': filereader,
             'blocksize': 16 * 1024,
-            'workdir': self.workdir,
+            'workdir': workdir,
             'mode': mode
         }
 
