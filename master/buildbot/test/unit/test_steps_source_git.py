@@ -2466,15 +2466,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
 
-    def _test_invalidGit(self, _dovccmd):
+    def _test_WorkerTooOldError(self, _dovccmd, step, msg):
         def check(failure):
             self.assertIsInstance(failure.value, WorkerTooOldError)
-            self.assertEqual(str(failure.value), "git is not installed on worker")
+            self.assertEqual(str(failure.value), msg)
 
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
-        gitStep = self.setupStep(
-            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='clean'))
+        gitStep = self.setupStep(step)
 
         gitStep._start_deferred = defer.Deferred()
         gitStep.startVC("branch", "revision", "patch")
@@ -2491,7 +2489,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             yield
             defer.returnValue("command not found:")
 
-        return self._test_invalidGit(_dovccmd)
+        step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                              mode='full', method='clean')
+        msg = 'git is not installed on worker'
+        return self._test_WorkerTooOldError(_dovccmd, step, msg)
 
     def test_gitCommandOutputShowsNoVersion(self):
         @defer.inlineCallbacks
