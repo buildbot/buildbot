@@ -1086,6 +1086,7 @@ requestsubmitted
 requeue
 requiredargs
 reschedulenextbuild
+resetmocks
 resourceneedsreconfigs
 resourcetype
 restrmatcher

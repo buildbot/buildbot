@@ -172,13 +172,17 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     # _get_changes is tested in TestGitPoller, below
 
 
-class TestGitPoller(gpo.GetProcessOutputMixin,
-                    changesource.ChangeSourceMixin,
-                    logging.LoggingMixin,
-                    unittest.TestCase):
+class TestGitPollerBase(gpo.GetProcessOutputMixin,
+                        changesource.ChangeSourceMixin,
+                        logging.LoggingMixin,
+                        unittest.TestCase):
 
     REPOURL = 'git@example.com:foo/baz.git'
     REPOURL_QUOTED = 'git%40example.com%3Afoo%2Fbaz.git'
+
+    def createPoller(self):
+        # this is overridden in TestGitPollerWithSshPrivateKey
+        return gitpoller.GitPoller(self.REPOURL)
 
     def setUp(self):
         self.setUpGetProcessOutput()
@@ -186,12 +190,15 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         @d.addCallback
         def create_poller(_):
-            self.poller = gitpoller.GitPoller(self.REPOURL)
+            self.poller = self.createPoller()
             self.poller.setServiceParent(self.master)
         return d
 
     def tearDown(self):
         return self.tearDownChangeSource()
+
+
+class TestGitPoller(TestGitPollerBase):
 
     def test_describe(self):
         self.assertSubstring("GitPoller", self.poller.describe())
@@ -1302,6 +1309,85 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
                 "master": "fa3ae8ed68e664d4db24798611b352e3c6509930"
             })
             startService.assert_called_once_with(self.poller)
+        return d
+
+
+class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
+
+    def createPoller(self):
+        poller = gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key')
+
+        # note that poller is shared by all tests, so the following mocks need
+        # to be reset each time. Call self.resetMocks()
+        poller._downloadSshPrivateKey = mock.Mock()
+        poller._removeSshPrivateKey = mock.Mock()
+        return poller
+
+    def resetMocks(self):
+        self.poller._downloadSshPrivateKey.reset_mock()
+        self.poller._removeSshPrivateKey.reset_mock()
+
+    def test_poll_initial(self):
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(
+                            os.path.join('gitpoller-work', '.buildbot-ssh-key')),
+                       'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work'),
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        d = self.poller.poll()
+
+        @d.addCallback
+        def cb(_):
+            self.assertAllCommandsRan()
+            self.assertEqual(self.poller.lastRev, {
+                'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            })
+            self.poller._downloadSshPrivateKey.assert_called_with(
+                    os.path.join('gitpoller-work', '.buildbot-ssh-key'))
+            self.poller._removeSshPrivateKey.assert_called_with(
+                    os.path.join('gitpoller-work', '.buildbot-ssh-key'))
+
+            self.master.db.state.assertStateByClass(
+                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+                lastRev={
+                    'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+                })
+
+            self.resetMocks()
+        return d
+
+    def test_poll_failFetch(self):
+        # make sure we cleanup the private key when fetch fails
+        self.expectCommands(
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(
+                            os.path.join('gitpoller-work', '.buildbot-ssh-key')),
+                       'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .exit(1),
+        )
+
+        d = self.assertFailure(self.poller.poll(), EnvironmentError)
+
+        @d.addCallback
+        def cb(_):
+            self.assertAllCommandsRan()
+            self.poller._downloadSshPrivateKey.assert_called_with(
+                    os.path.join('gitpoller-work', '.buildbot-ssh-key'))
+            self.poller._removeSshPrivateKey.assert_called_with(
+                    os.path.join('gitpoller-work', '.buildbot-ssh-key'))
+
+            self.resetMocks()
         return d
 
 

@@ -20,6 +20,7 @@ from future.utils import itervalues
 
 import os
 import re
+import stat
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -44,7 +45,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project", "pollAtLaunch",
-                     "buildPushesWithNoCommits")
+                     "buildPushesWithNoCommits", "sshPrivateKey")
+
+    secrets = ("sshPrivateKey", )
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
@@ -52,7 +55,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None, pollAtLaunch=False,
-                 buildPushesWithNoCommits=False, only_tags=False):
+                 buildPushesWithNoCommits=False, only_tags=False,
+                 sshPrivateKey=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -63,7 +67,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         base.PollingChangeSource.__init__(self, name=name,
                                           pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+                                          pollAtLaunch=pollAtLaunch,
+                                          sshPrivateKey=sshPrivateKey)
 
         if project is None:
             project = ''
@@ -92,6 +97,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
+        self.sshPrivateKey = sshPrivateKey
 
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
@@ -338,13 +344,47 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
                 category=self.category, src=u'git')
 
+    def _isSshPrivateKeyNeededForCommand(self, command):
+        commandsThatNeedKey = [
+            'fetch',
+            'ls-remote',
+        ]
+        if self.sshPrivateKey is not None and command in commandsThatNeedKey:
+            return True
+        return False
+
+    def _downloadSshPrivateKey(self, keyPath):
+        with open(keyPath, 'w') as keyFile:
+
+            # change the permissions of the key file to be user-readable only
+            # so that ssh does not complain. There will be a brief window where
+            # the file is world-readable, so this should not be relied for
+            # confidentiality of the key data.
+            os.chmod(keyPath, stat.S_IRUSR)
+            keyFile.write(self.sshPrivateKey)
+
+    def _removeSshPrivateKey(self, keyPath):
+        os.remove(keyPath)
+
     def _dovccmd(self, command, args, path=None):
+        full_args = []
+
+        needsSshPrivateKey = self._isSshPrivateKeyNeededForCommand(command)
+        sshPrivateKeyPath = os.path.join(self.workdir, '.buildbot-ssh-key')
+
+        if needsSshPrivateKey:
+            self._downloadSshPrivateKey(sshPrivateKeyPath)
+            full_args.append('-c')
+            full_args.append('core.sshCommand=ssh -i "{0}"'.format(
+                    sshPrivateKeyPath))
+
+        full_args += [command] + args
+
         d = utils.getProcessOutputAndValue(self.gitbin,
-            [command] + args, path=path, env=os.environ)
+            full_args, path=path, env=os.environ)
 
         def _convert_nonzero_to_failure(res,
-                                        command,
-                                        args,
+                                        full_args,
                                         path):
             "utility to handle the result of getProcessOutputAndValue"
             (stdout, stderr, code) = res
@@ -352,13 +392,19 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             stderr = bytes2unicode(stderr, self.encoding)
             if code != 0:
                 if code == 128:
-                    raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                   command, args, path, self.repourl, code, stderr))
-                raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                       command, args, path, self.repourl, code, stderr))
+                    raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                   full_args, path, self.repourl, code, stderr))
+                raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                       full_args, path, self.repourl, code, stderr))
             return stdout.strip()
         d.addCallback(_convert_nonzero_to_failure,
-                      command,
-                      args,
+                      full_args,
                       path)
+
+        def _removeSshKey(res, keyPath):
+            self._removeSshPrivateKey(keyPath)
+            return res
+
+        if needsSshPrivateKey:
+            d.addBoth(_removeSshKey, sshPrivateKeyPath)
         return d
