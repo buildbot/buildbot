@@ -57,7 +57,8 @@ class HgPoller(base.PollingChangeSource):
         self.repourl = repourl
         self.branch = branch
         base.PollingChangeSource.__init__(
-            self, name=name, pollInterval=pollInterval, pollAtLaunch=pollAtLaunch)
+            self, name=name, pollInterval=pollInterval,
+            pollAtLaunch=pollAtLaunch)
         self.encoding = encoding
         self.lastChange = time.time()
         self.lastPoll = time.time()
@@ -124,61 +125,66 @@ class HgPoller(base.PollingChangeSource):
                     log.msg('hgpoller: caught exception converting output %r '
                             'to timestamp' % date)
                     raise
-            return stamp, author.strip(), files.split(os.pathsep)[:-1], comments.strip()
+            return stamp, author.strip(), files.split(os.pathsep)[:-1], \
+                comments.strip()
         return d
 
     def _isRepositoryReady(self):
         """Easy to patch in tests."""
         return os.path.exists(os.path.join(self._absWorkdir(), '.hg'))
 
+    @defer.inlineCallback
     def _initRepository(self):
         """Have mercurial init the workdir as a repository (hg init) if needed.
 
         hg init will also create all needed intermediate directories.
         """
         if self._isRepositoryReady():
-            return defer.succeed(None)
+            yield defer.succeed(None)
         log.msg('hgpoller: initializing working dir from %s' % self.repourl)
-        d = utils.getProcessOutputAndValue(self.hgbin,
-                                           ['init', self._absWorkdir()],
-                                           env=os.environ)
-        d.addCallback(self._convertNonZeroToFailure)
-        d.addErrback(self._stopOnFailure)
-        d.addCallback(lambda _: log.msg(
-            "hgpoller: finished initializing working dir %r" % self.workdir))
-        return d
+        try:
+            resp = yield utils.getProcessOutputAndValue(
+                self.hgbin,
+                ['init', self._absWorkdir()],
+                env=os.environ)
+            resp = self._convertNoneZeroToFailure(resp)
+            log.msg(
+                "hgpoller: finished initializing working dir %r" %
+                self.workdir)
+        except Exception as e:
+            yield self._stopOnFailure(e)
 
+    @defer.inlineCallback
     def _getChanges(self):
         self.lastPoll = time.time()
 
-        d = self._initRepository()
-        d.addCallback(lambda _: log.msg(
-            "hgpoller: polling hg repo at %s" % self.repourl))
+        yield self._initRepository()
+        log.msg("hgpoller: polling hg repo at %s" % self.repourl)
 
-        # get a deferred object that performs the fetch
-        args = ['pull', '-b', self.branch, self.repourl]
+        try:
+            # get a deferred object that performs the fetch
+            args = ['pull', '-b', self.branch, self.repourl]
 
-        # This command always produces data on stderr, but we actually do not
-        # care about the stderr or stdout from this command.
-        # We set errortoo=True to avoid an errback from the deferred.
-        # The callback which will be added to this
-        # deferred will not use the response.
-        d.addCallback(lambda _: utils.getProcessOutput(
-            self.hgbin, args, path=self._absWorkdir(),
-            env=os.environ, errortoo=True))
+            # This command always produces data on stderr, but we actually
+            # do not care about the stderr or stdout from this command.
+            # We set errortoo=True to avoid an errback from the deferred.
+            # The callback which will be added to this
+            # deferred will not use the response.
+            yield utils.getProcessOutput(
+                self.hgbin, args, path=self._absWorkdir(),
+                env=os.environ, errortoo=True)
+        except Exception:
+            # some systems have old versions of Mercurial in /usr/bin
+            # (i.e. 1.4 in the case for CentOS systems) and
+            # -b option isn't available.   This should fallback gracefully
+            # to using -r.  Without this fallback, the addCallback() using
+            # the '-b' argument will fail without any indications in the
+            # log that something went wrong aside for an unhelpful traceback.
+            fallback_args = ['pull', '-r', self.branch, self.repourl]
 
-        # some systems have old versions of Mercurial in /usr/bin
-        # (i.e. 1.4 in the case for CentOS systems) and
-        # -b option isn't available.   This should fallback gracefully
-        # to using -r.  Without this fallback, the addCallback() using
-        # the '-b' argument will fail without any indications in the
-        # log that something went wrong aside for an unhelpful traceback.
-        fallback_args = ['pull', '-r', self.branch, self.repourl]
-
-        d.addErrback(lambda _: utils.getProcessOutput(
-            self.hgbin, fallback_args, path=self._absWorkdir(),
-            env=os.environ, errortoo=True))
-        return d
+            yield utils.getProcessOutput(
+                self.hgbin, fallback_args, path=self._absWorkdir(),
+                env=os.environ, errortoo=True)
 
     def _getStateObjectId(self):
         """Return a deferred for object id in state db.
@@ -211,7 +217,8 @@ class HgPoller(base.PollingChangeSource):
     def _setCurrentRev(self, rev, oid=None):
         """Return a deferred to set current revision in persistent state.
 
-        oid is self's id for state db. It can be passed to avoid a db lookup."""
+        oid is self's id for state db. It can be passed to avoid a db
+        lookup."""
         if oid is None:
             d = self._getStateObjectId()
         else:
@@ -231,10 +238,11 @@ class HgPoller(base.PollingChangeSource):
         (if really buildbotting a branch that does not have any changeset
         yet, one shouldn't be surprised to get errors)
         """
-        d = utils.getProcessOutput(self.hgbin,
-                                   ['heads', self.branch,
-                                       '--template={rev}' + os.linesep],
-                                   path=self._absWorkdir(), env=os.environ, errortoo=False)
+        d = utils.getProcessOutput(
+            self.hgbin,
+            ['heads', self.branch,
+             '--template={rev}' + os.linesep],
+            path=self._absWorkdir(), env=os.environ, errortoo=False)
 
         @d.addErrback
         def no_head_err(exc):
@@ -287,8 +295,9 @@ class HgPoller(base.PollingChangeSource):
         # two passes for hg log makes parsing simpler (comments is multi-lines)
         revListArgs = ['log', '-b', self.branch, '-r', revrange,
                        r'--template={rev}:{node}\n']
-        results = yield utils.getProcessOutput(self.hgbin, revListArgs,
-                                               path=self._absWorkdir(), env=os.environ, errortoo=False)
+        results = yield utils.getProcessOutput(
+            self.hgbin, revListArgs,
+            path=self._absWorkdir(), env=os.environ, errortoo=False)
         results = results.decode(self.encoding)
 
         revNodeList = [rn.split(u':', 1) for rn in results.strip().split()]
