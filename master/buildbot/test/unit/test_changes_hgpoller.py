@@ -121,7 +121,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         )
 
         # do the poll
-        d = self.poller.poll()
+        yield self.poller.poll()
 
         # check the results
         def check_changes(_):
@@ -143,7 +143,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         yield check_changes()
         yield self.check_current_rev(73591)
-
 
     def check_current_rev(self, wished):
         def check_on_rev(_):
