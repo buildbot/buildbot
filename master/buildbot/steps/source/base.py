@@ -21,7 +21,6 @@ from twisted.python import log
 from buildbot.process import buildstep
 from buildbot.process import properties
 from buildbot.process import remotecommand
-from buildbot.process import remotetransfer
 from buildbot.process.buildstep import LoggingBuildStep
 from buildbot.status.builder import FAILURE
 from buildbot.status.builder import SKIPPED
@@ -231,36 +230,9 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                                            ).startswith(self.build.path_module.abspath(self.workdir))):
             self.workdir = self.build.path_module.join(self.workdir, root)
 
-        def _downloadFile(buf, filename):
-            filereader = remotetransfer.StringFileReader(buf)
-            args = {
-                'maxsize': None,
-                'reader': filereader,
-                'blocksize': 16 * 1024,
-                'workdir': self.workdir,
-                'mode': None
-            }
-
-            if self.workerVersionIsOlderThan('downloadFile', '3.0'):
-                args['slavedest'] = filename
-            else:
-                args['workerdest'] = filename
-
-            cmd = remotecommand.RemoteCommand('downloadFile', args)
-            cmd.useLog(self.stdio_log, False)
-            log.msg("Downloading file: %s" % (filename))
-            d = self.runCommand(cmd)
-
-            @d.addCallback
-            def evaluateCommand(_):
-                if cmd.didFail():
-                    raise buildstep.BuildStepFailed()
-                return cmd.rc
-            return d
-
-        d = _downloadFile(diff, ".buildbot-diff")
+        d = self.downloadFileContentToWorker('.buildbot-diff', diff)
         d.addCallback(
-            lambda _: _downloadFile("patched\n", ".buildbot-patched"))
+            lambda _: self.downloadFileContentToWorker('.buildbot-patched', 'patched\n'))
         d.addCallback(lambda _: self.applyPatch(patch))
         cmd = remotecommand.RemoteCommand('rmdir', {'dir': self.build.path_module.join(self.workdir, ".buildbot-diff"),
                                                     'logEnviron': self.logEnviron})
