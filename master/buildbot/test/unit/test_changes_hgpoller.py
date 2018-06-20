@@ -124,7 +124,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         yield self.poller.poll()
 
         # check the results
-        def check_changes(_):
+        def check_changes():
             self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
             change = self.master.data.updates.changesAdded[0]
@@ -178,6 +178,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # normal operation. There's a previous revision, we get a new one.
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
+            gpo.Expect('hg', 'pull', '-r', 'default',
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
