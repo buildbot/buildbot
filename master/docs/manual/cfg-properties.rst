@@ -188,7 +188,11 @@ A common mistake is to omit the trailing "s", leading to a rather obscure error 
                 util.Interpolate('REVISION=%(prop:got_revision)s'),
                 'dist']))
 
-This example will result in a ``make`` command with an argument like ``REVISION=12098``.
+This example will result in the command: ``make REVISION=12098 dist``,
+while being careful with quoting the property to protect from the shell.
+So if a property contains ``12098; rm -rf /;``, no harm will come to
+the server.
+
 
 .. _Interpolate-DictStyle:
 
