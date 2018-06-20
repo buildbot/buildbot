@@ -124,7 +124,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d = self.poller.poll()
 
         # check the results
-        @d.addCallback
         def check_changes(_):
             self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -142,8 +141,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['branch'], 'default')
             self.assertEqual(change['comments'], 'This is rev 73591')
 
-        d.addCallback(self.check_current_rev(73591))
-        return d
+        yield check_changes()
+        yield self.check_current_rev(73591))
+
 
     def check_current_rev(self, wished):
         def check_on_rev(_):
