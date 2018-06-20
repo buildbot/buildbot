@@ -142,7 +142,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['comments'], 'This is rev 73591')
 
         yield check_changes()
-        yield self.check_current_rev(73591))
+        yield self.check_current_rev(73591)
 
 
     def check_current_rev(self, wished):
