@@ -133,7 +133,7 @@ class HgPoller(base.PollingChangeSource):
         """Easy to patch in tests."""
         return os.path.exists(os.path.join(self._absWorkdir(), '.hg'))
 
-    @defer.inlineCallback
+    @defer.inlineCallbacks
     def _initRepository(self):
         """Have mercurial init the workdir as a repository (hg init) if needed.
 
@@ -154,7 +154,7 @@ class HgPoller(base.PollingChangeSource):
         except Exception as e:
             yield self._stopOnFailure(e)
 
-    @defer.inlineCallback
+    @defer.inlineCallbacks
     def _getChanges(self):
         self.lastPoll = time.time()
 
