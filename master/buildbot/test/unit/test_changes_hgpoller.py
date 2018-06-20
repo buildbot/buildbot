@@ -159,6 +159,9 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             gpo.Expect('hg', 'pull', '-b', 'default',
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
+            gpo.Expect('hg', 'pull', '-r', 'default',
+                       'ssh://example.com/foo/baz')
+            .path('/some/dir'),
             gpo.Expect(
                 'hg', 'heads', 'default', '--template={rev}' + os.linesep)
             .path('/some/dir').stdout(b'5' + LINESEP_BYTES + b'6' + LINESEP_BYTES)
