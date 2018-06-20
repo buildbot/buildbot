@@ -91,6 +91,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
     def test_hgbin_default(self):
         self.assertEqual(self.poller.hgbin, "hg")
 
+    @defer.inlineCallbacks
     def test_poll_initial(self):
         self.repo_ready = False
         # Test that environment variables get propagated to subprocesses
@@ -123,6 +124,7 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         d = self.poller.poll()
 
         # check the results
+        @d.addCallback
         def check_changes(_):
             self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
@@ -140,7 +142,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['branch'], 'default')
             self.assertEqual(change['comments'], 'This is rev 73591')
 
-        d.addCallback(check_changes)
         d.addCallback(self.check_current_rev(73591))
         return d
 
