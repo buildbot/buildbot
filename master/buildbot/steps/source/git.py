@@ -28,6 +28,7 @@ from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
+from buildbot.process.properties import Properties
 from buildbot.steps.source.base import Source
 
 RC_SUCCESS = 0
@@ -80,7 +81,8 @@ class Git(Source):
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
-                 clobberOnFailure=False, getDescription=False, config=None, origin=None, **kwargs):
+                 clobberOnFailure=False, getDescription=False, config=None,
+                 origin=None, sshPrivateKey=None, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -121,6 +123,11 @@ class Git(Source):
         @type origin: string
         @param origin: The name to give the remote when cloning (default None)
 
+        @type  sshPrivateKey: Secret or string
+        @param sshPrivateKey: The private key to use when running git for fetch
+                              operations. git must be 2.3 or newer in order to
+                              use this parameter.
+
         @type  config: dict
         @param config: Git configuration options to enable when running git
         """
@@ -138,10 +145,14 @@ class Git(Source):
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.getDescription = getDescription
+        self.sshPrivateKey = sshPrivateKey
+        self.didDownloadSshPrivateKey = False
         self.config = config
         self.supportsBranch = True
         self.supportsSubmoduleForce = True
         self.supportsSubmoduleCheckout = True
+        self.supportsSshPrivateKey = True
+        self.supportsSshPrivateKeyAsConfigOption = True
         self.srcdir = 'source'
         self.origin = origin
         Source.__init__(self, **kwargs)
@@ -160,6 +171,11 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
+    def _checkRequiredGitFeatures(self):
+        if self.sshPrivateKey is not None and not self.supportsSshPrivateKey:
+            raise WorkerTooOldError('ssh private key support requires '
+                                    'git 2.3.0')
+
     @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
@@ -173,19 +189,23 @@ class Git(Source):
 
             if not gitInstalled:
                 raise WorkerTooOldError("git is not installed on worker")
+            self._checkRequiredGitFeatures()
 
             patched = yield self.sourcedirIsPatched()
 
             if patched:
                 yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
+            yield self._downloadSshPrivateKeyIfNeeded()
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
                 yield self.patch(None, patch=patch)
             yield self.parseGotRevision()
             res = yield self.parseCommitDescription()
+            yield self._removeSshPrivateKeyIfNeeded()
             yield self.finish(res)
         except Exception as e:
+            yield self._removeSshPrivateKeyIfNeeded()
             yield self.failed(e)
 
     @defer.inlineCallbacks
@@ -338,13 +358,59 @@ class Git(Source):
 
         defer.returnValue(RC_SUCCESS)
 
+    def _isSshPrivateKeyNeededForGitCommand(self, command):
+        if not command or self.sshPrivateKey is None:
+            return False
+
+        gitCommandsThatNeedSshKey = [
+            'clone', 'submodule', 'fetch'
+        ]
+        if command[0] in gitCommandsThatNeedSshKey:
+            return True
+        return False
+
+    def _getSshDataWorkDir(self):
+        if self.method == 'copy' and self.mode == 'full':
+            return self.srcdir
+        return self.workdir
+
+    def _getSshDataRelPath(self, suffix):
+        # we can't use the workdir for the key, because it's needed when
+        # cloning repositories and git does not like the destination directory
+        # being non-empty. So instead of '{workdir}/.buildbot-ssh-key' we put
+        # the key at '.{workdir}.buildbot-ssh-key'.
+
+        # basename will return empty string for paths ending with a slash
+        basename = self.build.path_module.basename(
+                self._getSshDataWorkDir().rstrip('/\\'))
+        basename = '.{0}.{1}'.format(basename, suffix)
+        return self.build.path_module.join('..', basename)
+
+    def _getSshPrivateKeyRelPath(self):
+        return self._getSshDataRelPath('buildbot-ssh-key')
+
+    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
+        if self.supportsSshPrivateKeyAsConfigOption:
+            full_command.append('-c')
+            full_command.append('core.sshCommand=ssh -i "{0}"'.format(
+                    self._getSshPrivateKeyRelPath()))
+        else:
+            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(
+                    self._getSshPrivateKeyRelPath())
+
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
         full_command = ['git']
+        full_env = self.env.copy() if self.env else {}
+
         if self.config is not None:
             for name, value in iteritems(self.config):
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
+
+        if self._isSshPrivateKeyNeededForGitCommand(command):
+            self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
+
         full_command.extend(command)
 
         # check for the interruptSignal flag
@@ -371,7 +437,7 @@ class Git(Source):
 
         cmd = remotecommand.RemoteShellCommand(self.workdir,
                                                full_command,
-                                               env=self.env,
+                                               env=full_env,
                                                logEnviron=self.logEnviron,
                                                timeout=self.timeout,
                                                sigtermTime=sigtermTime,
@@ -599,6 +665,12 @@ class Git(Source):
             self.supportsSubmoduleForce = False
         if LooseVersion(version) < LooseVersion("1.7.8"):
             self.supportsSubmoduleCheckout = False
+        if LooseVersion(version) < LooseVersion("2.3.0"):
+            self.supportsSshPrivateKey = False
+            self.supportsSshPrivateKeyAsConfigOption = False
+        if LooseVersion(version) < LooseVersion("2.10.0"):
+            self.supportsSshPrivateKeyAsConfigOption = False
+
         defer.returnValue(gitInstalled)
 
     @defer.inlineCallbacks
@@ -636,3 +708,29 @@ class Git(Source):
             defer.returnValue("clobber")
         else:
             defer.returnValue("clone")
+
+    @defer.inlineCallbacks
+    def _downloadSshPrivateKeyIfNeeded(self):
+        if self.sshPrivateKey is None:
+            defer.returnValue(RC_SUCCESS)
+
+        p = Properties()
+        p.master = self.master
+        privateKey = yield p.render(self.sshPrivateKey)
+
+        yield self.downloadFileContentToWorker(self._getSshPrivateKeyRelPath(),
+                                               privateKey,
+                                               workdir=self._getSshDataWorkDir(),
+                                               mode=0o400)
+        self.didDownloadSshPrivateKey = True
+        defer.returnValue(RC_SUCCESS)
+
+    @defer.inlineCallbacks
+    def _removeSshPrivateKeyIfNeeded(self):
+        if not self.didDownloadSshPrivateKey:
+            defer.returnValue(RC_SUCCESS)
+
+        keyPath = self.build.path_module.join(self._getSshDataWorkDir(),
+                                              self._getSshPrivateKeyRelPath())
+        yield self.runRmdir(keyPath)
+        defer.returnValue(RC_SUCCESS)
