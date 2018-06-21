@@ -173,7 +173,7 @@ class HgPoller(base.PollingChangeSource):
             yield utils.getProcessOutput(
                 self.hgbin, args, path=self._absWorkdir(),
                 env=os.environ, errortoo=True)
-        except Exception:
+        except Exception as e:
             # some systems have old versions of Mercurial in /usr/bin
             # (i.e. 1.4 in the case for CentOS systems) and
             # -b option isn't available.   This should fallback gracefully

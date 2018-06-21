@@ -123,25 +123,22 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # do the poll
         yield self.poller.poll()
 
-        # check the results
-        def check_changes():
-            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
 
-            change = self.master.data.updates.changesAdded[0]
-            self.assertEqual(change['revision'], '4423cdb')
-            self.assertEqual(change['author'],
-                             'Bob Test <bobtest@example.org>')
-            if self.usetimestamps:
-                self.assertEqual(change['when_timestamp'], 1273258100)
-            else:
-                self.assertEqual(change['when_timestamp'], None)
-            self.assertEqual(
-                change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
-            self.assertEqual(change['src'], 'hg')
-            self.assertEqual(change['branch'], 'default')
-            self.assertEqual(change['comments'], 'This is rev 73591')
+        change = self.master.data.updates.changesAdded[0]
+        self.assertEqual(change['revision'], '4423cdb')
+        self.assertEqual(change['author'],
+                         'Bob Test <bobtest@example.org>')
+        if self.usetimestamps:
+            self.assertEqual(change['when_timestamp'], 1273258100)
+        else:
+            self.assertEqual(change['when_timestamp'], None)
+        self.assertEqual(
+            change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
+        self.assertEqual(change['src'], 'hg')
+        self.assertEqual(change['branch'], 'default')
+        self.assertEqual(change['comments'], 'This is rev 73591')
 
-        yield check_changes()
         yield self.check_current_rev(73591)
 
     def check_current_rev(self, wished):
@@ -157,9 +154,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # ancestor)
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect('hg', 'pull', '-r', 'default',
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
@@ -178,9 +172,6 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
         # normal operation. There's a previous revision, we get a new one.
         self.expectCommands(
             gpo.Expect('hg', 'pull', '-b', 'default',
-                       'ssh://example.com/foo/baz')
-            .path('/some/dir'),
-            gpo.Expect('hg', 'pull', '-r', 'default',
                        'ssh://example.com/foo/baz')
             .path('/some/dir'),
             gpo.Expect(
