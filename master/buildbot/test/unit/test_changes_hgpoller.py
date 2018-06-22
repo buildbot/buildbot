@@ -38,7 +38,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
     usetimestamps = True
 
     def check_for_old_hgbin(self):
-        resp = subprocess.Popen(['hg', '--version'], stdout=subprocess.PIPE)
+        resp = subprocess.Popen([self.hgbin, '--version'], stdout=subprocess.PIPE)
         ver_str = resp.communicate()[0].decode().split("\n")[0]
         reg = re.compile(r'.*\((?P<version>version \d+\.\d+\.\d+)\)')
         reg_result = reg.search(ver_str)
@@ -70,7 +70,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
             self.poller = hgpoller.HgPoller(self.remote_repo,
                                             hgbin=self.hgbin,
                                             usetimestamps=self.usetimestamps,
-                                            workdir='/some/dir')
+                                            workdir=self.repo_dir)
             self.poller.setServiceParent(self.master)
             self.poller._isRepositoryReady = _isRepositoryReady
 
@@ -105,7 +105,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
 
         # and one with explicit name...
         other = hgpoller.HgPoller(
-            self.remote_repo, name="MyName", workdir='/some/dir')
+            self.remote_repo, name="MyName", workdir=self.repo_dir)
         self.assertEqual("MyName", other.name)
 
     def test_hgbin_default(self):
