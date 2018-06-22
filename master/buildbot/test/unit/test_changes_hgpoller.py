@@ -36,6 +36,8 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
                        changesource.ChangeSourceMixin,
                        unittest.TestCase):
 
+    usetimestamps = True
+
     def check_for_old_hgbin(self):
         resp = subprocess.Popen(['hg', '--version'], stdout=subprocess.PIPE)
         ver_str = resp.communicate()[0].decode().split("\n")[0]
