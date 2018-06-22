@@ -156,7 +156,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
             self.assertEqual(change['when_timestamp'], None)
         self.assertEqual(
             change['files'], ['file1 with spaces', os.path.join('dir with spaces', 'file2')])
-        self.assertEqual(change['src'], 'hg')
+        self.assertEqual(change['src'], self.hgbin)
         self.assertEqual(change['branch'], 'default')
         self.assertEqual(change['comments'], 'This is rev 73591')
 
