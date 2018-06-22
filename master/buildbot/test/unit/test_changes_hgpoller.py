@@ -61,6 +61,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
         d = self.setUpChangeSource()
         self.remote_repo = remote_repo
         self.branch = branch
+        self.repo_dir = repo_dir
         self.repo_ready = repo_ready
 
         def _isRepositoryReady():
