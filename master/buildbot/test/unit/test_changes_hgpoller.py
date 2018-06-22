@@ -230,7 +230,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(change['comments'], u'Comment for rev 5')
 
 
-class TestHgPoller(BaseTestHgPoller):
+class TestHgPoller(BaseTestHgPoller, unittest.TestCase):
     usetimestamps = True
 
     def setUp(self):
@@ -243,7 +243,7 @@ class HgPollerNoTimestamp(TestHgPoller):
     usetimestamps = False
 
 
-class TestOldHgPoller(BaseTestHgPoller):
+class TestOldHgPoller(BaseTestHgPoller, unittest.TestCase):
     usetimestamps = True
 
     def setUp(self):
