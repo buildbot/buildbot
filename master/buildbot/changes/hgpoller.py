@@ -158,7 +158,7 @@ class HgPoller(base.PollingChangeSource):
     def _getChanges(self):
         self.lastPoll = time.time()
 
-        yield self._initRepository()
+        self._initRepository()
         log.msg("hgpoller: polling hg repo at %s" % self.repourl)
 
         try:
@@ -173,7 +173,7 @@ class HgPoller(base.PollingChangeSource):
             yield utils.getProcessOutput(
                 self.hgbin, args, path=self._absWorkdir(),
                 env=os.environ, errortoo=True)
-        except Exception as e:
+        except ValueError:
             # some systems have old versions of Mercurial in /usr/bin
             # (i.e. 1.4 in the case for CentOS systems) and
             # -b option isn't available.   This should fallback gracefully
