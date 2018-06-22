@@ -33,8 +33,7 @@ PATHSEP_BYTES = os.pathsep.encode("ascii")
 
 
 class BaseTestHgPoller(gpo.GetProcessOutputMixin,
-                       changesource.ChangeSourceMixin,
-                       unittest.TestCase):
+                       changesource.ChangeSourceMixin):
 
     usetimestamps = True
 
