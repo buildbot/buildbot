@@ -68,6 +68,7 @@ class BaseTestHgPoller(gpo.GetProcessOutputMixin,
 
         def create_poller(_):
             self.poller = hgpoller.HgPoller(self.remote_repo,
+                                            hgbin=self.hgbin,
                                             usetimestamps=self.usetimestamps,
                                             workdir='/some/dir')
             self.poller.setServiceParent(self.master)
