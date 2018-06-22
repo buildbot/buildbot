@@ -234,7 +234,7 @@ class TestHgPoller(BaseTestHgPoller, unittest.TestCase):
     usetimestamps = True
 
     def setUp(self):
-        return BaseTestHgPoller.setUp(remote_repo='ssh://example.com/foo/baz')
+        return BaseTestHgPoller.setUp(self, remote_repo='ssh://example.com/foo/baz')
 
 
 class HgPollerNoTimestamp(TestHgPoller):
@@ -247,7 +247,7 @@ class TestOldHgPoller(BaseTestHgPoller, unittest.TestCase):
     usetimestamps = True
 
     def setUp(self):
-        return BaseTestHgPoller.setUp(remote_repo='ssh://example.com/foo/bar',
+        return BaseTestHgPoller.setUp(self, remote_repo='ssh://example.com/foo/bar',
                                       hgbin='/usr/bin/hg')
 
 
