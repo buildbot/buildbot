@@ -374,29 +374,38 @@ class Git(Source):
             return self.srcdir
         return self.workdir
 
-    def _getSshDataRelPath(self, suffix):
-        # we can't use the workdir for the key, because it's needed when
-        # cloning repositories and git does not like the destination directory
-        # being non-empty. So instead of '{workdir}/.buildbot-ssh-key' we put
-        # the key at '.{workdir}.buildbot-ssh-key'.
+    def _getSshDataPath(self):
+        # we can't use the workdir for temporary ssh-related files, because
+        # it's needed when cloning repositories and git does not like the
+        # destination directory being non-empty. We have to use separate
+        # temporary directory for that data to ensure the confidentiality of it.
+        # So instead of
+        # '{path}/{to}/{workdir}/.buildbot-ssh-key' we put the key at
+        # '{path}/{to}/.{workdir}.buildbot/ssh-key'.
 
-        # basename will return empty string for paths ending with a slash
-        basename = self.build.path_module.basename(
-                self._getSshDataWorkDir().rstrip('/\\'))
-        basename = '.{0}.{1}'.format(basename, suffix)
-        return self.build.path_module.join('..', basename)
+        # basename and dirname interpret the last element being empty for paths
+        # ending with a slash
+        path_module = self.build.path_module
 
-    def _getSshPrivateKeyRelPath(self):
-        return self._getSshDataRelPath('buildbot-ssh-key')
+        workdir = self._getSshDataWorkDir().rstrip('/\\')
+        parent_path = path_module.dirname(workdir)
+
+        basename = '.{0}.buildbot'.format(path_module.basename(workdir))
+        return path_module.join(parent_path, basename)
+
+    def _getSshPrivateKeyPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-key')
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
+
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), self.workdir)
+
         if self.supportsSshPrivateKeyAsConfigOption:
             full_command.append('-c')
-            full_command.append('core.sshCommand=ssh -i "{0}"'.format(
-                    self._getSshPrivateKeyRelPath()))
+            full_command.append('core.sshCommand=ssh -i "{0}"'.format(rel_key_path))
         else:
-            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(
-                    self._getSshPrivateKeyRelPath())
+            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(rel_key_path)
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -716,12 +725,16 @@ class Git(Source):
 
         p = Properties()
         p.master = self.master
-        privateKey = yield p.render(self.sshPrivateKey)
+        private_key = yield p.render(self.sshPrivateKey)
 
-        yield self.downloadFileContentToWorker(self._getSshPrivateKeyRelPath(),
-                                               privateKey,
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
+
+        yield self.runMkdir(self._getSshDataPath())
+        yield self.downloadFileContentToWorker(rel_key_path, private_key,
                                                workdir=self._getSshDataWorkDir(),
                                                mode=0o400)
+
         self.didDownloadSshPrivateKey = True
         defer.returnValue(RC_SUCCESS)
 
@@ -730,7 +743,5 @@ class Git(Source):
         if not self.didDownloadSshPrivateKey:
             defer.returnValue(RC_SUCCESS)
 
-        keyPath = self.build.path_module.join(self._getSshDataWorkDir(),
-                                              self._getSshPrivateKeyRelPath())
-        yield self.runRmdir(keyPath)
+        yield self.runRmdir(self._getSshDataPath())
         defer.returnValue(RC_SUCCESS)
