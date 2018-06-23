@@ -147,7 +147,7 @@ class HgPoller(base.PollingChangeSource):
                 self.hgbin,
                 ['init', self._absWorkdir()],
                 env=os.environ)
-            resp = self._convertNoneZeroToFailure(resp)
+            yield self._convertNoneZeroToFailure(resp)
             log.msg(
                 "hgpoller: finished initializing working dir %r" %
                 self.workdir)
