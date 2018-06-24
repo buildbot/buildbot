@@ -194,6 +194,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -234,6 +235,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -288,6 +290,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
