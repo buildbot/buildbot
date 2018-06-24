@@ -338,27 +338,17 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
                 category=self.category, src=u'git')
 
+    @defer.inlineCallbacks
     def _dovccmd(self, command, args, path=None):
-        d = utils.getProcessOutputAndValue(self.gitbin,
+        res = yield utils.getProcessOutputAndValue(self.gitbin,
             [command] + args, path=path, env=os.environ)
-
-        def _convert_nonzero_to_failure(res,
-                                        command,
-                                        args,
-                                        path):
-            "utility to handle the result of getProcessOutputAndValue"
-            (stdout, stderr, code) = res
-            stdout = bytes2unicode(stdout, self.encoding)
-            stderr = bytes2unicode(stderr, self.encoding)
-            if code != 0:
-                if code == 128:
-                    raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
+        (stdout, stderr, code) = res
+        stdout = bytes2unicode(stdout, self.encoding)
+        stderr = bytes2unicode(stderr, self.encoding)
+        if code != 0:
+            if code == 128:
+                raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
+                               command, args, path, self.repourl, code, stderr))
+            raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
                                    command, args, path, self.repourl, code, stderr))
-                raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                       command, args, path, self.repourl, code, stderr))
-            return stdout.strip()
-        d.addCallback(_convert_nonzero_to_failure,
-                      command,
-                      args,
-                      path)
-        return d
+        defer.returnValue(stdout.strip())
