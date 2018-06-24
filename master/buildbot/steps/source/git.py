@@ -125,8 +125,8 @@ class Git(Source):
 
         @type  sshPrivateKey: Secret or string
         @param sshPrivateKey: The private key to use when running git for fetch
-                              operations. git must be 2.3 or newer in order to
-                              use this parameter.
+                              operations. The ssh utility must be in the system
+                              path in order to use this option.
 
         @type  config: dict
         @param config: Git configuration options to enable when running git
@@ -151,7 +151,7 @@ class Git(Source):
         self.supportsBranch = True
         self.supportsSubmoduleForce = True
         self.supportsSubmoduleCheckout = True
-        self.supportsSshPrivateKey = True
+        self.supportsSshPrivateKeyAsEnvOption = True
         self.supportsSshPrivateKeyAsConfigOption = True
         self.srcdir = 'source'
         self.origin = origin
@@ -171,11 +171,6 @@ class Git(Source):
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
 
-    def _checkRequiredGitFeatures(self):
-        if self.sshPrivateKey is not None and not self.supportsSshPrivateKey:
-            raise WorkerTooOldError('ssh private key support requires '
-                                    'git 2.3.0')
-
     @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
         self.branch = branch or 'HEAD'
@@ -189,7 +184,6 @@ class Git(Source):
 
             if not gitInstalled:
                 raise WorkerTooOldError("git is not installed on worker")
-            self._checkRequiredGitFeatures()
 
             patched = yield self.sourcedirIsPatched()
 
@@ -396,16 +390,30 @@ class Git(Source):
     def _getSshPrivateKeyPath(self):
         return self.build.path_module.join(self._getSshDataPath(), 'ssh-key')
 
+    def _getSshWrapperScriptPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-wrapper.sh')
+
+    def _getSshWrapperScript(self):
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
+
+        # note that this works on windows if using git with MINGW embedded.
+        return '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(rel_key_path)
+
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
         rel_key_path = self.build.path_module.relpath(
                 self._getSshPrivateKeyPath(), self.workdir)
+        rel_ssh_wrapper_path = self.build.path_module.relpath(
+                self._getSshWrapperScriptPath(), self.workdir)
 
         if self.supportsSshPrivateKeyAsConfigOption:
             full_command.append('-c')
             full_command.append('core.sshCommand=ssh -i "{0}"'.format(rel_key_path))
-        else:
+        elif self.supportsSshPrivateKeyAsEnvOption:
             full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(rel_key_path)
+        else:
+            full_env['GIT_SSH'] = rel_ssh_wrapper_path
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -675,7 +683,7 @@ class Git(Source):
         if LooseVersion(version) < LooseVersion("1.7.8"):
             self.supportsSubmoduleCheckout = False
         if LooseVersion(version) < LooseVersion("2.3.0"):
-            self.supportsSshPrivateKey = False
+            self.supportsSshPrivateKeyAsEnvOption = False
             self.supportsSshPrivateKeyAsConfigOption = False
         if LooseVersion(version) < LooseVersion("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = False
@@ -733,8 +741,16 @@ class Git(Source):
 
         rel_key_path = self.build.path_module.relpath(
                 self._getSshPrivateKeyPath(), workdir)
+        rel_wrapper_script_path = self.build.path_module.relpath(
+                self._getSshWrapperScriptPath(), workdir)
 
         yield self.runMkdir(self._getSshDataPath())
+
+        if not self.supportsSshPrivateKeyAsEnvOption:
+            yield self.downloadFileContentToWorker(rel_wrapper_script_path,
+                                                   self._getSshWrapperScript(),
+                                                   workdir=workdir, mode=0o700)
+
         yield self.downloadFileContentToWorker(rel_key_path, private_key,
                                                workdir=workdir, mode=0o400)
 
