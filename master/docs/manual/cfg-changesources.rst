@@ -806,6 +806,10 @@ It accepts the following arguments:
 ``only_tags``
     Determines if the GitPoller should poll for new tags in the git repository.
 
+``sshPrivateKey``
+    Specifies private SSH key for git to use. This may be either a :ref:`Secret`
+    or just a string. This option requires Git-2.3 or later.
+
 A configuration for the Git poller might look like this:
 
 .. code-block:: python
