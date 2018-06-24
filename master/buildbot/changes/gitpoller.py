@@ -101,6 +101,17 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             self.workdir = 'gitpoller-work'
 
     @defer.inlineCallbacks
+    def _checkGitFeatures(self):
+        stdout = yield self._dovccmd('--version', [])
+
+        version = "0.0.0"
+        if 'git' in stdout:
+            try:
+                version = stdout.strip().split(' ')[2]
+            except IndexError:
+                raise EnvironmentError('Git is not installed')
+
+    @defer.inlineCallbacks
     def activate(self):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
@@ -108,6 +119,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
         try:
+            yield self._checkGitFeatures()
             self.lastRev = yield self.getState('lastRev', {})
 
             base.PollingChangeSource.activate(self)
