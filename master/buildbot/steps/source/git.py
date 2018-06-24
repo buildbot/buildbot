@@ -727,13 +727,16 @@ class Git(Source):
         p.master = self.master
         private_key = yield p.render(self.sshPrivateKey)
 
+        # not using self.workdir because it may be changed depending on step
+        # options
+        workdir = self._getSshDataWorkDir()
+
         rel_key_path = self.build.path_module.relpath(
-                self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
+                self._getSshPrivateKeyPath(), workdir)
 
         yield self.runMkdir(self._getSshDataPath())
         yield self.downloadFileContentToWorker(rel_key_path, private_key,
-                                               workdir=self._getSshDataWorkDir(),
-                                               mode=0o400)
+                                               workdir=workdir, mode=0o400)
 
         self.didDownloadSshPrivateKey = True
         defer.returnValue(RC_SUCCESS)
