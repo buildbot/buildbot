@@ -100,21 +100,19 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
 
+    @defer.inlineCallbacks
     def activate(self):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
-        d = self.getState('lastRev', {})
+        try:
+            self.lastRev = yield self.getState('lastRev', {})
 
-        @d.addCallback
-        def setLastRev(lastRev):
-            self.lastRev = lastRev
-        d.addCallback(lambda _: base.PollingChangeSource.activate(self))
-        d.addErrback(log.err, 'while initializing GitPoller repository')
-
-        return d
+            base.PollingChangeSource.activate(self)
+        except Exception as e:
+            log.err(e, 'while initializing GitPoller repository')
 
     def describe(self):
         str = ('GitPoller watching the remote git repository ' +
