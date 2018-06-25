@@ -26,7 +26,7 @@ gulp.task('vendors', function(){
 	  // readline is required in a deadcode path
 	  // body-parser use dynamic parsing of its source code
 	  // consolidate requires tons of template package deps and is a dep of gulp-wrap > 0.8, and thus gulp-wrap should not be upgraded
-	  exclude: ['karma', 'readline'],
+	  exclude: ['karma', 'readline','v8'],
       ignore: ['./lib-cov/connect'],
 	}))
 	.on('error', gutil.log)

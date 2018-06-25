@@ -246,6 +246,7 @@ You can see it in action at https://github.com/buildbot/buildbot/tree/master/www
 
 ### ChangeLog
 
+* 0.8.8: Upgrade dependencies
 * 0.8.7: revert usage of gulp-watch as it does not work as expected.
 * 0.8.6: fix high CPU usage in dev mode. Use ChromeHeadless by default.
 * 0.8.5: screwed-up release.
