@@ -5,16 +5,16 @@
         "gulp": "~3.9.0"
     },
     "coffeelintConfig": {
-        "indentation" : {
-            "level" : "error",
-            "value" : 4
+        "indentation": {
+            "level": "error",
+            "value": 4
         },
         "max_line_length": {
             "level": "ignore"
         },
-        "line_endings" : {
-            "value" : "unix",
-            "level" : "error"
+        "line_endings": {
+            "value": "unix",
+            "level": "error"
         }
     }
 }
