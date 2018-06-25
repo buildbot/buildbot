@@ -4,9 +4,10 @@ dist: trusty
 addons:
   chrome: stable
 node_js:
-  - "4.5"
   - "6.10"
   - "7.10"
+  - "8.11"
+  - "10.5"
 
 before_install:
   - yarn global add gulp
