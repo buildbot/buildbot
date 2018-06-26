@@ -94,6 +94,7 @@ backoff
 backporting
 backslashing
 basedir
+basename
 basepath
 baserev
 basetgz
