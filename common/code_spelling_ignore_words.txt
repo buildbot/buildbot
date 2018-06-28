@@ -226,6 +226,7 @@ cb
 cbc
 cbd
 cd
+ce
 cfg
 cgi
 chainedprotocolfactory
@@ -398,6 +399,7 @@ du
 dup
 durchmesser
 dustin
+ee
 eg
 egypt
 enforcechosenworker
@@ -808,6 +810,7 @@ maybestartbuildsforbuilder
 maybestartbuildsforworker
 maybestartbuildson
 maybestartbuildsonbuilder
+mb
 md
 meijer
 melo
@@ -839,6 +842,7 @@ monkeypatches
 moshe
 moto
 mq
+mr
 msdn
 msg
 msgbody
@@ -1027,6 +1031,7 @@ rc
 reactorname
 readlines
 readsourcedata
+readthedocs
 realdatabasemixin
 realmasterlock
 realworkerlock
@@ -1492,6 +1497,8 @@ warnonwarnings
 wb
 weakref
 webclient
+webhook
+webhooks
 webserver
 wehn
 wfb
@@ -1531,5 +1538,6 @@ xml
 xxab
 xxx
 yieldmetricsvalue
+za
 zadka
 zope
