@@ -126,7 +126,10 @@ class Git(Source):
         @type  sshPrivateKey: Secret or string
         @param sshPrivateKey: The private key to use when running git for fetch
                               operations. The ssh utility must be in the system
-                              path in order to use this option.
+                              path in order to use this option. On Windows only
+                              git distribution that embeds MINGW has been
+                              tested (as of July 2017 the official distribution
+                              is MINGW-based).
 
         @type  config: dict
         @param config: Git configuration options to enable when running git
