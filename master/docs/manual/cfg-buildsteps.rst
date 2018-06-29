@@ -471,6 +471,13 @@ The Git step takes the following arguments:
 
    (optional) A dict of git configuration settings to pass to the remote git commands.
 
+``sshPrivateKey``
+
+   (optional) The private key to use when running git for fetch operations. The
+   ssh utility must be in the system path in order to use this option. On
+   Windows only git distribution that embeds MINGW has been tested (as of July
+   2017 the official distribution is MINGW-based).
+
 .. bb:step:: SVN
 
 .. _Step-SVN:
