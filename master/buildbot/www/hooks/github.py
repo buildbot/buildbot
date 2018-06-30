@@ -124,7 +124,7 @@ class GitHubEventHandler(PullRequestMixin):
                     # and fallback to the insecure simple comparison otherwise
                     return a == b
 
-            if not _cmp(mac.hexdigest(), unicode2bytes(hexdigest)):
+            if not _cmp(bytes2unicode(mac.hexdigest()), hexdigest):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(b'Content-Type')
