@@ -114,9 +114,17 @@ class GitHubEventHandler(PullRequestMixin):
             mac = hmac.new(unicode2bytes(self._secret),
                            msg=unicode2bytes(content),
                            digestmod=sha1)
-            # NOTE: hmac.compare_digest should be used, but it's only available
-            # starting Python 2.7.7
-            if mac.hexdigest() != hexdigest:
+
+            def _cmp(a, b):
+                try:
+                    # try the more secure compare_digest() first
+                    from hmac import compare_digest
+                    return compare_digest(a, b)
+                except ImportError:
+                    # and fallback to the insecure simple comparison otherwise
+                    return a == b
+
+            if not _cmp(mac.hexdigest(), hexdigest):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(b'Content-Type')
