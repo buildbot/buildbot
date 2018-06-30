@@ -120,7 +120,7 @@ class GitHubEventHandler(PullRequestMixin):
                     # try the more secure compare_digest() first
                     from hmac import compare_digest
                     return compare_digest(a, b)
-                except ImportError:
+                except ImportError:  # pragma: no cover
                     # and fallback to the insecure simple comparison otherwise
                     return a == b
 
