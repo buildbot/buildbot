@@ -238,6 +238,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_initial(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -265,6 +267,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_failInit(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
             .exit(1),
         )
@@ -276,6 +280,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_failFetch(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -289,6 +295,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_failRevParse(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -309,6 +317,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_failLog(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -356,6 +366,8 @@ class TestGitPoller(TestGitPollerBase):
     def test_poll_GitError_log(self):
         self.setUpLogging()
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
             .exit(128),
         )
@@ -372,6 +384,8 @@ class TestGitPoller(TestGitPollerBase):
         self.addGetProcessOutputExpectEnv({'ENVVAR': 'TRUE'})
 
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -407,6 +421,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_multipleBranches_initial(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
@@ -438,6 +454,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_multipleBranches(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
@@ -560,6 +578,8 @@ class TestGitPoller(TestGitPollerBase):
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_default(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -597,6 +617,8 @@ class TestGitPoller(TestGitPollerBase):
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_true(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -667,6 +689,8 @@ class TestGitPoller(TestGitPollerBase):
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_true_fast_forward(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -738,6 +762,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_allBranches_single(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
@@ -818,6 +844,8 @@ class TestGitPoller(TestGitPollerBase):
         self.addGetProcessOutputExpectEnv({'ENVVAR': 'TRUE'})
 
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -851,6 +879,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_allBranches_multiple(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -952,6 +982,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_callableFilteredBranches(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -1042,6 +1074,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_branchFilter(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -1130,6 +1164,8 @@ class TestGitPoller(TestGitPollerBase):
         # patch out getProcessOutput and getProcessOutputAndValue for the
         # benefit of the _get_changes method
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -1222,6 +1258,8 @@ class TestGitPoller(TestGitPollerBase):
 
     def test_poll_callableCategory(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
@@ -1383,7 +1421,6 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
-        yield self.poller._checkGitFeatures()
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1423,7 +1460,6 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
-        yield self.poller._checkGitFeatures()
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -1462,7 +1498,6 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             .exit(1),
         )
 
-        yield self.poller._checkGitFeatures()
         yield self.assertFailure(self.poller.poll(), EnvironmentError)
 
         self.assertAllCommandsRan()

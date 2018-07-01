@@ -140,7 +140,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
         try:
-            yield self._checkGitFeatures()
             self.lastRev = yield self.getState('lastRev', {})
 
             base.PollingChangeSource.activate(self)
@@ -193,6 +192,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def poll(self):
+        yield self._checkGitFeatures()
+
         try:
             yield self._dovccmd('init', ['--bare', self.workdir])
         except GitError as e:
