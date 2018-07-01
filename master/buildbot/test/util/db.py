@@ -170,6 +170,7 @@ class RealDatabaseMixin(object):
         model.Model.metadata.create_all(
             bind=conn, tables=tables, checkfirst=True)
 
+    @defer.inlineCallbacks
     def setUpRealDatabase(self, table_names=None, basedir='basedir',
                           want_pool=True, sqlite_memory=True):
         """
@@ -202,15 +203,14 @@ class RealDatabaseMixin(object):
                                                       basedir=basedir)
         # if the caller does not want a pool, we're done.
         if not want_pool:
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return
 
         self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 
         log.msg("cleaning database %s" % self.db_url)
-        d = self.db_pool.do(self.__thd_clean_database)
-        d.addCallback(lambda _:
-                      self.db_pool.do(self.__thd_create_tables, table_names))
-        return d
+        yield self.db_pool.do(self.__thd_clean_database)
+        yield self.db_pool.do(self.__thd_create_tables, table_names)
 
     def tearDownRealDatabase(self):
         if self.__want_pool:
