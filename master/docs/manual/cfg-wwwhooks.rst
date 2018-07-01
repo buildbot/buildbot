@@ -199,8 +199,6 @@ Github hook creates 3 kinds of changes, distinguishable by their ``category`` fi
 To protect URL against unauthorized access you should use :ref:`Change-Hooks-Auth` option.
 Then change the the ``Payload URL`` of your GitHub webhook to ``https://user:password@builds.example.com/bbot/change_hook/github``.
 
-Patches are welcome to implement: https://developer.github.com/webhooks/securing/
-
 
 .. bb:chsrc:: BitBucket
 
