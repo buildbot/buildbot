@@ -64,14 +64,12 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         self.master.config = new_config
         return new_config
 
+    @defer.inlineCallbacks
     def test_reconfigService_no_port(self):
         new_config = self.makeConfig()
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(self.svc.site, None)
-        return d
+        self.assertEqual(self.svc.site, None)
 
     @defer.inlineCallbacks
     def test_reconfigService_reconfigResources(self):
@@ -87,59 +85,47 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
         self.assertEqual(NeedsReconfigResource.reconfigs, 2)
 
+    @defer.inlineCallbacks
     def test_reconfigService_port(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, 20)
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, 20)
 
+    @defer.inlineCallbacks
     def test_reconfigService_expiration_time(self):
         new_config = self.makeConfig(port=80, cookie_expiration_time=datetime.timedelta(minutes=1))
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(service.BuildbotSession.expDelay, datetime.timedelta(minutes=1))
 
+    @defer.inlineCallbacks
     def test_reconfigService_port_changes(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def reconfig(_):
-            newer_config = self.makeConfig(port=999)
-            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        newer_config = self.makeConfig(port=999)
+        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
-        @d.addCallback
-        def check(_):
-            self.assertNotEqual(self.svc.site, None)
-            self.assertNotEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, 999)
-        return d
+        self.assertNotEqual(self.svc.site, None)
+        self.assertNotEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, 999)
 
+    @defer.inlineCallbacks
     def test_reconfigService_port_changes_to_none(self):
         new_config = self.makeConfig(port=20)
-        d = self.svc.reconfigServiceWithBuildbotConfig(new_config)
+        yield self.svc.reconfigServiceWithBuildbotConfig(new_config)
 
-        @d.addCallback
-        def reconfig(_):
-            newer_config = self.makeConfig()
-            return self.svc.reconfigServiceWithBuildbotConfig(newer_config)
+        newer_config = self.makeConfig()
+        yield self.svc.reconfigServiceWithBuildbotConfig(newer_config)
 
-        @d.addCallback
-        def check(_):
-            # (note the site sticks around)
-            self.assertEqual(self.svc.port_service, None)
-            self.assertEqual(self.svc.port, None)
-        return d
+        # (note the site sticks around)
+        self.assertEqual(self.svc.port_service, None)
+        self.assertEqual(self.svc.port, None)
 
     def test_setupSite(self):
         self.svc.setupSite(self.makeConfig())
