@@ -20,6 +20,8 @@ from future.utils import itervalues
 
 import os
 import re
+import stat
+from distutils.version import LooseVersion
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -28,6 +30,7 @@ from twisted.python import log
 from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
+from buildbot.util import private_tempdir
 from buildbot.util.state import StateMixin
 
 
@@ -44,7 +47,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project", "pollAtLaunch",
-                     "buildPushesWithNoCommits")
+                     "buildPushesWithNoCommits", "sshPrivateKey")
+
+    secrets = ("sshPrivateKey", )
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
@@ -52,7 +57,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                  category=None, project=None,
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None, pollAtLaunch=False,
-                 buildPushesWithNoCommits=False, only_tags=False):
+                 buildPushesWithNoCommits=False, only_tags=False,
+                 sshPrivateKey=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -63,7 +69,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
         base.PollingChangeSource.__init__(self, name=name,
                                           pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch)
+                                          pollAtLaunch=pollAtLaunch,
+                                          sshPrivateKey=sshPrivateKey)
 
         if project is None:
             project = ''
@@ -92,6 +99,9 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.project = bytes2unicode(project, encoding=self.encoding)
         self.changeCount = 0
         self.lastRev = {}
+        self.sshPrivateKey = sshPrivateKey
+        self.supportsSshPrivateKey = True
+        self.supportsSshPrivateKeyAsConfigOption = True
 
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
@@ -100,21 +110,41 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if self.workdir is None:
             self.workdir = 'gitpoller-work'
 
+    @defer.inlineCallbacks
+    def _checkGitFeatures(self):
+        stdout = yield self._dovccmd('--version', [])
+
+        version = "0.0.0"
+        if 'git' in stdout:
+            try:
+                version = stdout.strip().split(' ')[2]
+            except IndexError:
+                raise EnvironmentError('Git is not installed')
+        else:
+            raise EnvironmentError('Git is not installed')
+
+        if LooseVersion(version) < LooseVersion("2.3.0"):
+            self.supportsSshPrivateKey = False
+            self.supportsSshPrivateKeyAsConfigOption = False
+        if LooseVersion(version) < LooseVersion("2.10.0"):
+            self.supportsSshPrivateKeyAsConfigOption = False
+
+        if self.sshPrivateKey is not None and not self.supportsSshPrivateKey:
+            raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
+
+    @defer.inlineCallbacks
     def activate(self):
         # make our workdir absolute, relative to the master's basedir
         if not os.path.isabs(self.workdir):
             self.workdir = os.path.join(self.master.basedir, self.workdir)
             log.msg("gitpoller: using workdir '{}'".format(self.workdir))
 
-        d = self.getState('lastRev', {})
+        try:
+            self.lastRev = yield self.getState('lastRev', {})
 
-        @d.addCallback
-        def setLastRev(lastRev):
-            self.lastRev = lastRev
-        d.addCallback(lambda _: base.PollingChangeSource.activate(self))
-        d.addErrback(log.err, 'while initializing GitPoller repository')
-
-        return d
+            base.PollingChangeSource.activate(self)
+        except Exception as e:
+            log.err(e, 'while initializing GitPoller repository')
 
     def describe(self):
         str = ('GitPoller watching the remote git repository ' +
@@ -162,6 +192,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
 
     @defer.inlineCallbacks
     def poll(self):
+        yield self._checkGitFeatures()
+
         try:
             yield self._dovccmd('init', ['--bare', self.workdir])
         except GitError as e:
@@ -338,27 +370,69 @@ class GitPoller(base.PollingChangeSource, StateMixin):
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
                 category=self.category, src=u'git')
 
-    def _dovccmd(self, command, args, path=None):
-        d = utils.getProcessOutputAndValue(self.gitbin,
-            [command] + args, path=path, env=os.environ)
+    def _isSshPrivateKeyNeededForCommand(self, command):
+        commandsThatNeedKey = [
+            'fetch',
+            'ls-remote',
+        ]
+        if self.sshPrivateKey is not None and command in commandsThatNeedKey:
+            return True
+        return False
 
-        def _convert_nonzero_to_failure(res,
-                                        command,
-                                        args,
-                                        path):
-            "utility to handle the result of getProcessOutputAndValue"
-            (stdout, stderr, code) = res
-            stdout = bytes2unicode(stdout, self.encoding)
-            stderr = bytes2unicode(stderr, self.encoding)
-            if code != 0:
-                if code == 128:
-                    raise GitError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                   command, args, path, self.repourl, code, stderr))
-                raise EnvironmentError('command {} {} in {} on repourl {} failed with exit code {}: {}'.format(
-                                       command, args, path, self.repourl, code, stderr))
-            return stdout.strip()
-        d.addCallback(_convert_nonzero_to_failure,
-                      command,
-                      args,
-                      path)
-        return d
+    def _downloadSshPrivateKey(self, keyPath):
+        with open(keyPath, 'w') as keyFile:
+            # change the permissions of the key file to be user-readable only
+            # so that ssh does not complain. This is not used for security
+            # because the parent directory will have proper permissions.
+            os.chmod(keyPath, stat.S_IRUSR)
+            keyFile.write(self.sshPrivateKey)
+
+    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env,
+                                             key_path):
+        if self.supportsSshPrivateKeyAsConfigOption:
+            full_command.append('-c')
+            full_command.append('core.sshCommand=ssh -i "{0}"'.format(key_path))
+        else:
+            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(key_path)
+
+    def _getSshDataPath(self):
+        return os.path.join(self.workdir, '.buildbot-ssh')
+
+    def _getSshPrivateKeyPath(self):
+        return os.path.join(self._getSshDataPath(), 'ssh-key')
+
+    @defer.inlineCallbacks
+    def _dovccmd(self, command, args, path=None):
+        if self._isSshPrivateKeyNeededForCommand(command):
+            key_dir = self._getSshDataPath()
+            with private_tempdir.PrivateTemporaryDirectory(name=key_dir):
+                stdout = yield self._dovccmdImpl(command, args, path)
+        else:
+            stdout = yield self._dovccmdImpl(command, args, path)
+        defer.returnValue(stdout)
+
+    @defer.inlineCallbacks
+    def _dovccmdImpl(self, command, args, path):
+        full_args = []
+        full_env = os.environ.copy()
+
+        if self._isSshPrivateKeyNeededForCommand(command):
+            key_path = self._getSshPrivateKeyPath()
+            self._downloadSshPrivateKey(key_path)
+            self._adjustCommandParamsForSshPrivateKey(full_args, full_env,
+                                                      key_path)
+
+        full_args += [command] + args
+
+        res = yield utils.getProcessOutputAndValue(self.gitbin,
+            full_args, path=path, env=full_env)
+        (stdout, stderr, code) = res
+        stdout = bytes2unicode(stdout, self.encoding)
+        stderr = bytes2unicode(stderr, self.encoding)
+        if code != 0:
+            if code == 128:
+                raise GitError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                               full_args, path, self.repourl, code, stderr))
+            raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
+                                   full_args, path, self.repourl, code, stderr))
+        defer.returnValue(stdout.strip())

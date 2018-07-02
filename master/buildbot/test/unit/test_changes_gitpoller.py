@@ -172,13 +172,17 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
     # _get_changes is tested in TestGitPoller, below
 
 
-class TestGitPoller(gpo.GetProcessOutputMixin,
-                    changesource.ChangeSourceMixin,
-                    logging.LoggingMixin,
-                    unittest.TestCase):
+class TestGitPollerBase(gpo.GetProcessOutputMixin,
+                        changesource.ChangeSourceMixin,
+                        logging.LoggingMixin,
+                        unittest.TestCase):
 
     REPOURL = 'git@example.com:foo/baz.git'
     REPOURL_QUOTED = 'git%40example.com%3Afoo%2Fbaz.git'
+
+    def createPoller(self):
+        # this is overridden in TestGitPollerWithSshPrivateKey
+        return gitpoller.GitPoller(self.REPOURL)
 
     def setUp(self):
         self.setUpGetProcessOutput()
@@ -186,12 +190,15 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
         @d.addCallback
         def create_poller(_):
-            self.poller = gitpoller.GitPoller(self.REPOURL)
+            self.poller = self.createPoller()
             self.poller.setServiceParent(self.master)
         return d
 
     def tearDown(self):
         return self.tearDownChangeSource()
+
+
+class TestGitPoller(TestGitPollerBase):
 
     def test_describe(self):
         self.assertSubstring("GitPoller", self.poller.describe())
@@ -204,8 +211,35 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         other = gitpoller.GitPoller(self.REPOURL, name="MyName")
         self.assertEqual("MyName", other.name)
 
+    @defer.inlineCallbacks
+    def test_checkGitFeatures_git_not_installed(self):
+        self.setUpLogging()
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'Command not found'),
+        )
+
+        yield self.assertFailure(self.poller._checkGitFeatures(),
+                                 EnvironmentError)
+        self.assertAllCommandsRan()
+
+    @defer.inlineCallbacks
+    def test_checkGitFeatures_git_bad_version(self):
+        self.setUpLogging()
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git ')
+        )
+
+        yield self.assertFailure(self.poller._checkGitFeatures(),
+                                 EnvironmentError)
+
+        self.assertAllCommandsRan()
+
     def test_poll_initial(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -233,6 +267,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_failInit(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
             .exit(1),
         )
@@ -244,6 +280,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_failFetch(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -257,6 +295,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_failRevParse(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -277,6 +317,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_failLog(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -324,6 +366,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     def test_poll_GitError_log(self):
         self.setUpLogging()
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work')
             .exit(128),
         )
@@ -340,6 +384,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.addGetProcessOutputExpectEnv({'ENVVAR': 'TRUE'})
 
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -375,6 +421,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_multipleBranches_initial(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
@@ -406,6 +454,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_multipleBranches(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
@@ -528,6 +578,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_default(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -565,6 +617,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_true(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -635,6 +689,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_true_fast_forward(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -706,6 +762,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_allBranches_single(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
@@ -786,6 +844,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         self.addGetProcessOutputExpectEnv({'ENVVAR': 'TRUE'})
 
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -819,6 +879,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_allBranches_multiple(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -920,6 +982,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_callableFilteredBranches(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -1010,6 +1074,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_branchFilter(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'\n'.join([
@@ -1098,6 +1164,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
         # patch out getProcessOutput and getProcessOutputAndValue for the
         # benefit of the _get_changes method
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
@@ -1190,6 +1258,8 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
 
     def test_poll_callableCategory(self):
         self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
             .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
@@ -1303,6 +1373,140 @@ class TestGitPoller(gpo.GetProcessOutputMixin,
             })
             startService.assert_called_once_with(self.poller)
         return d
+
+
+class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
+
+    def createPoller(self):
+        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key')
+
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshPrivateKey')
+    @defer.inlineCallbacks
+    def test_check_git_features_ssh_1_7(self, download_mock, cleanup_dir_mock,
+                                        create_dir_mock):
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 1.7.5\n'),
+        )
+
+        yield self.assertFailure(self.poller._checkGitFeatures(), EnvironmentError)
+
+        self.assertAllCommandsRan()
+
+        create_dir_mock.assert_not_called()
+        cleanup_dir_mock.assert_not_called()
+        download_mock.assert_not_called()
+
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshPrivateKey')
+    @defer.inlineCallbacks
+    def test_poll_initial_2_10(self, download_mock, cleanup_dir_mock,
+                               create_dir_mock):
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 2.10.0\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(
+                            os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')),
+                       'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work'),
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+        })
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
+                'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            })
+
+        create_dir_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
+        cleanup_dir_mock.assert_called()
+        download_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key'))
+
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshPrivateKey')
+    @defer.inlineCallbacks
+    def test_poll_initial_2_3(self, download_mock, cleanup_dir_mock,
+                              create_dir_mock):
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 2.3.0\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .env({'GIT_SSH_COMMAND': 'ssh -i "{0}"'.format(
+                 os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key'))}),
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+        })
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
+                'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            })
+
+        create_dir_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
+        cleanup_dir_mock.assert_called()
+        download_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key'))
+
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshPrivateKey')
+    @defer.inlineCallbacks
+    def test_poll_failFetch_git_2_10(self, download_mock, cleanup_dir_mock,
+                                     create_dir_mock):
+        # make sure we cleanup the private key when fetch fails
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 2.10.0\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(
+                            os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')),
+                       'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .exit(1),
+        )
+
+        yield self.assertFailure(self.poller.poll(), EnvironmentError)
+
+        self.assertAllCommandsRan()
+
+        create_dir_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
+        cleanup_dir_mock.assert_called()
+        download_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key'))
 
 
 class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
