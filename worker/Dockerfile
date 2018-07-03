@@ -49,4 +49,4 @@ RUN pip install /usr/src/buildbot-worker
 USER buildbot
 WORKDIR /buildbot
 
-CMD ["/usr/bin/dumb-init", "twistd", "-ny", "buildbot.tac"]
+CMD ["/usr/bin/dumb-init", "twistd", "--pidfile=", "-ny", "buildbot.tac"]
