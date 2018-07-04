@@ -312,17 +312,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_simple_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
-        d = self.runStep()
+        yield self.runStep()
 
-        def flush(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(flush)
-        return d
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def test_bogus_scheduler(self):
