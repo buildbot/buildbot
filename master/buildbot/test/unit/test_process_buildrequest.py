@@ -142,7 +142,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
     # * Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
 
     def makeBuildRequestRows(self, brid, bsid, changeid, ssid, codebase, branch=None,
-                             project=None, repository=None, patchid=None, revision=None):
+                             project=None, repository=None, patchid=None, revision=None, merge_req_source_branch=None):
         rows = [
             fakedb.SourceStamp(id=ssid, codebase=codebase, branch=branch,
                                project=project, repository=repository, patchid=patchid, revision=revision),
@@ -163,6 +163,13 @@ class TestBuildRequestCollapser(unittest.TestCase):
                 fakedb.Patch(id=patchid, patch_base64='aGVsbG8sIHdvcmxk',
                  patch_author='bar', patch_comment='foo', subdir='/foo',
                  patchlevel=3))
+        if merge_req_source_branch:
+            rows.append(
+                fakedb.BuildsetProperty(buildsetid=bsid, property_name='event',
+                                        property_value='["merge_request", "Change"]'))
+            rows.append(
+                fakedb.BuildsetProperty(buildsetid=bsid, property_name='source_branch',
+                                        property_value='["' + merge_req_source_branch + '", "Change"]'))
 
         return rows
 
@@ -251,6 +258,27 @@ class TestBuildRequestCollapser(unittest.TestCase):
         self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
         yield self.do_request_collapse(rows, [22], [])
         yield self.do_request_collapse(rows, [21], [20])
+
+    # * Build requests with event property containing
+    #   'merge_request' (e.g., from gitlab webhook)
+    #   are collapsed iff their source branches match
+    @defer.inlineCallbacks
+    def test_collapseRequests_collapse_default_with_a_merge_request(self):
+
+        def collapseRequests_fn(master, builder, brdict1, brdict2):
+            return buildrequest.BuildRequest.canBeCollapsed(builder.master, brdict1, brdict2)
+
+        rows = [
+            fakedb.Builder(id=77, name='A'),
+        ]
+        rows += self.makeBuildRequestRows(21, 121, None, 221, 'C')
+        rows += self.makeBuildRequestRows(19, 119, None, 210, 'C', merge_req_source_branch="branch1")
+        rows += self.makeBuildRequestRows(18, 118, None, 209, 'C', merge_req_source_branch="branch1")
+        rows += self.makeBuildRequestRows(17, 117, None, 207, 'C', merge_req_source_branch="branch2")
+        rows += self.makeBuildRequestRows(20, 120, None, 220, 'C')
+        self.bldr.getCollapseRequestsFn = lambda: Builder._defaultCollapseRequestFn
+        yield self.do_request_collapse(rows, [21], [20])
+        yield self.do_request_collapse(rows, [19], [18])
 
     # * Either both source stamps are associated with changes..
     @defer.inlineCallbacks

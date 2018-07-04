@@ -267,7 +267,18 @@ class BuildRequest(object):
         if br1['buildsetid'] == br2['buildsetid']:
             defer.returnValue(True)
 
-        # get the buidlsets for each buildrequest
+        # Don't collapse e.g. GitLab merge requests with normal builds
+        bsp1 = yield master.db.buildsets.getBuildsetProperties(br1['buildsetid'])
+        bsp2 = yield master.db.buildsets.getBuildsetProperties(br2['buildsetid'])
+        if bsp1.get('event') != bsp2.get('event'):
+            defer.returnValue(False)
+        # Don't collapse GitLab merge requests from different branches/projects
+        if ((bsp1.get('event') == ('merge_request', 'Change')) and
+            (bsp1.get('source_branch') != bsp2.get('source_branch') or
+             bsp1.get('source_git_ssh_url') != bsp2.get('source_git_ssh_url'))):
+                defer.returnValue(False)
+
+        # get the buildsets for each buildrequest
         selfBuildsets = yield master.data.get(
             ('buildsets', str(br1['buildsetid'])))
         otherBuildsets = yield master.data.get(

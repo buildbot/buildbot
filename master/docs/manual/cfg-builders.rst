@@ -152,7 +152,8 @@ If ``collapseRequests`` is given, it completely overrides the global configurati
 Possible values for both ``collapseRequests`` configurations are:
 
 ``True``
-    Requests will be collapsed if their sourcestamp are compatible (see below for definition of compatible).
+    Requests will be collapsed if they and their sourcestamps are
+    compatible (see below for definition of compatible).
 
 ``False``
     Requests will never be collapsed.
@@ -166,6 +167,13 @@ Sourcestamps are compatible if all of the below conditions are met:
 * Their codebase, branch, project, and repository attributes match exactly
 * Neither source stamp has a patch (e.g., from a try scheduler)
 * Either both source stamps are associated with changes, or neither are associated with changes but they have matching revisions.
+
+Build requests are compatible unless they have
+an 'event' property with value 'merge_request'
+(e.g., from a GitLab webhook merge request) and
+have different 'source_branch' or 'source_git_ssh_url'
+properties.
+
 
 .. index:: Builds; priority
 
