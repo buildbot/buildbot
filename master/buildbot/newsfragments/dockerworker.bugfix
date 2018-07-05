@@ -1,1 +1,1 @@
-buildbot-worker docker image no longer use pidfile. This allows to autorestart a docker worker upon crash.
+buildbot-worker docker image no longer use pidfile. This allows to auto-restart a docker worker upon crash.
