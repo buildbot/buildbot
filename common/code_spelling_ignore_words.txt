@@ -3,6 +3,8 @@ accesskey
 accumulateclasslist
 ack
 acknowledgement
+activation
+activations
 actuateat
 actuateattimer
 actuateok
@@ -72,6 +74,7 @@ async
 asynclrucache
 atlassian
 atm
+atomicity
 attachscheduler
 attr
 attributeerror
@@ -109,6 +112,7 @@ bdictlist
 bear's
 behaviour
 ben
+benchmarking
 benjamin
 bennetts
 berlin
@@ -292,6 +296,7 @@ committers
 compability
 comparablemixin
 comparaison
+comparator
 compat
 compatiblity
 completers
@@ -307,6 +312,7 @@ configs
 configurator
 configurators
 conn
+connectedness
 connectionmade
 connectionpool
 contrib
@@ -397,17 +403,21 @@ dradez
 dss
 du
 dup
+durations
 durchmesser
 dustin
 ee
 eg
 egypt
+encoding
+encodings
 enforcechosenworker
 enginestrategy
 enosuch
 ensurehasssl
 entitytype
 env
+environ
 eof
 epydoc
 eqconnectionpool
@@ -552,6 +562,7 @@ getsourcestamp
 getspec
 getstate
 getsteps
+getter
 gettestresults
 gettext
 gettimernameforchange
@@ -627,6 +638,7 @@ iff
 i'm
 impl
 ina
+incrementing
 indices
 influxdb
 infos
@@ -641,9 +653,13 @@ inrepos
 inserttestdata
 installdir
 instanceuri
+instantiation
+instantiations
 insubstantiate
 insubstantiation
+integrations
 internet
+interoperability
 interruptable
 interruptsignal
 intialization
@@ -709,6 +725,7 @@ keyerror
 keyfile
 keypair
 keypairs
+keyring
 klass
 knielsen
 kwarg
@@ -771,6 +788,7 @@ maildir
 maildirs
 maintainance
 makedirs
+makefile
 makerbase
 makeremoteshellcommand
 maketelnetprotocol
@@ -792,6 +810,7 @@ masterfqdn
 masterid
 masterlock
 masterstatus
+matcher
 matthew
 maxcount
 maxcountforworker
@@ -814,6 +833,7 @@ mb
 md
 meijer
 melo
+merchantability
 mesos
 messagereceived
 metadata
@@ -824,8 +844,10 @@ microsoft
 middleware
 miguel
 milner
+mingw
 minidom
 minidom's
+minimalistic
 mintime
 mispelling
 misr
@@ -1023,6 +1045,7 @@ qa
 qmail
 quickmode
 quickstart
+quiesce
 radez
 raiseexpectationfailure
 ralph
@@ -1036,6 +1059,7 @@ realdatabasemixin
 realmasterlock
 realworkerlock
 reasonstring
+recoded
 recompress
 reconf
 reconfig
@@ -1047,6 +1071,9 @@ reconfigservicebuilders
 reconfigservicewithconstructorargs
 reconfigservicewithsibling
 reconfigurability
+reconfigurable
+reconfiguring
+reconnection
 recurse
 redhat
 refactor
@@ -1129,6 +1156,7 @@ rpmdir
 rpmlint
 rpms
 rpmspec
+rsa
 rsh
 rst
 rstrip
@@ -1223,6 +1251,7 @@ specdir
 specfile
 specfiles
 split
+splitter
 spulec
 sql
 sqlalchemy
@@ -1283,6 +1312,7 @@ subarg
 subclassability
 subclassed
 subclassers
+subclasses
 subclassing
 subcommand
 subcommands
@@ -1300,6 +1330,7 @@ subprocess
 subprocesses
 subquery
 substring
+subunit
 summarycb
 suppressionfile
 suppressions
@@ -1352,6 +1383,8 @@ thursday
 tid
 timedelta
 timestamp
+timezone
+timezones
 tld
 tls
 tmp
@@ -1398,9 +1431,12 @@ uid
 umask
 un
 unabbreviated
+unambiguity
 unclaim
 unclaimedbrdicts
 unconfigure
+underpowered
+unencrypted
 unexpectedsuccesses
 ungrouped
 unhandled
@@ -1413,6 +1449,8 @@ unique'd
 unittest
 unix
 unixpassworddatabase
+unlink
+unlinked
 unparsable
 unparseable
 unregister
