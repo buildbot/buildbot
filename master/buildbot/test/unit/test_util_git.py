@@ -65,6 +65,17 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertTrue(self.supportsSshPrivateKeyAsConfigOption)
 
 
+class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):
+    def test_throws_when_wrapper_not_given(self):
+        self.gitInstalled = True
+
+        command = []
+        env = {}
+        with self.assertRaises(Exception):
+            self.adjustCommandParamsForSshPrivateKey(command, env,
+                                                     'path/to/key')
+
+
 class TestGetSshKnownHostsContents(unittest.TestCase):
     def test(self):
         key = 'ssh-rsa AAAA<...>WsHQ=='
