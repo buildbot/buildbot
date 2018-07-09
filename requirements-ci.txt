@@ -62,7 +62,7 @@ pyOpenSSL==18.0.0
 pyparsing==2.2.0
 python-dateutil==2.7.3
 pytz==2018.5
-PyYAML==3.12
+PyYAML==3.13
 requests==2.19.1
 s3transfer==0.1.13
 scandir==1.7
