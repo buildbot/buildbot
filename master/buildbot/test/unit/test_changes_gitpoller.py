@@ -26,7 +26,6 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.changes import base
 from buildbot.changes import gitpoller
 from buildbot.test.util import changesource
 from buildbot.test.util import config
@@ -1340,39 +1339,30 @@ class TestGitPoller(TestGitPollerBase):
             self.assertEqual(added[1]['category'], u'64a5dc')
         return d
 
-    # We mock out base.PollingChangeSource.startService, since it calls
-    # reactor.callWhenRunning, which leaves a dirty reactor if a synchronous
-    # deferred is returned from a test method.
+    @defer.inlineCallbacks
     def test_startService(self):
-        startService = mock.Mock()
-        self.patch(base.PollingChangeSource, "startService", startService)
-        d = self.poller.startService()
+        yield self.poller.startService()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(
-                self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
-            self.assertEqual(self.poller.lastRev, {})
-            startService.assert_called_once_with(self.poller)
-        return d
+        self.assertEqual(
+            self.poller.workdir, os.path.join('basedir', 'gitpoller-work'))
+        self.assertEqual(self.poller.lastRev, {})
 
+        yield self.poller.stopService()
+
+    @defer.inlineCallbacks
     def test_startService_loadLastRev(self):
-        startService = mock.Mock()
-        self.patch(base.PollingChangeSource, "startService", startService)
         self.master.db.state.fakeState(
             name=bytes2unicode(self.REPOURL), class_name='GitPoller',
             lastRev={"master": "fa3ae8ed68e664d4db24798611b352e3c6509930"},
         )
 
-        d = self.poller.startService()
+        yield self.poller.startService()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(self.poller.lastRev, {
-                "master": "fa3ae8ed68e664d4db24798611b352e3c6509930"
-            })
-            startService.assert_called_once_with(self.poller)
-        return d
+        self.assertEqual(self.poller.lastRev, {
+            "master": "fa3ae8ed68e664d4db24798611b352e3c6509930"
+        })
+
+        yield self.poller.stopService()
 
 
 class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
