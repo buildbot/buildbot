@@ -268,8 +268,8 @@ class BuildRequest(object):
             defer.returnValue(True)
 
         # Don't collapse e.g. GitLab merge requests with normal builds
-        bsp1 = yield master.db.buildsets.getBuildsetProperties(br1['buildsetid'])
-        bsp2 = yield master.db.buildsets.getBuildsetProperties(br2['buildsetid'])
+        bsp1 = yield master.data.get(('buildsets', br1['buildsetid'], 'properties'))
+        bsp2 = yield master.data.get(('buildsets', br2['buildsetid'], 'properties'))
         if bsp1.get('event') != bsp2.get('event'):
             defer.returnValue(False)
         # Don't collapse GitLab merge requests from different branches/projects
