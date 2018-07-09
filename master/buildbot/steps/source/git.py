@@ -18,8 +18,6 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import string_types
 
-from distutils.version import LooseVersion
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -30,6 +28,7 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.steps.source.base import Source
+from buildbot.util.git import GitMixin
 
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
@@ -72,7 +71,7 @@ git_describe_flags = [
 ]
 
 
-class Git(Source):
+class Git(Source, GitMixin):
 
     """ Class for Git with all the smarts """
     name = 'git'
@@ -151,13 +150,10 @@ class Git(Source):
         self.sshPrivateKey = sshPrivateKey
         self.didDownloadSshPrivateKey = False
         self.config = config
-        self.supportsBranch = True
-        self.supportsSubmoduleForce = True
-        self.supportsSubmoduleCheckout = True
-        self.supportsSshPrivateKeyAsEnvOption = True
-        self.supportsSshPrivateKeyAsConfigOption = True
         self.srcdir = 'source'
         self.origin = origin
+        self.setupGit()
+
         Source.__init__(self, **kwargs)
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
@@ -671,27 +667,9 @@ class Git(Source):
     def checkBranchSupport(self):
         stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
-        gitInstalled = False
-        version = "0.0.0"
-        if 'git' in stdout:
-            gitInstalled = True
-            try:
-                version = stdout.strip().split(' ')[2]
-            except IndexError:
-                gitInstalled = False
-        if LooseVersion(version) < LooseVersion("1.6.5"):
-            self.supportsBranch = False
-        if LooseVersion(version) < LooseVersion("1.7.6"):
-            self.supportsSubmoduleForce = False
-        if LooseVersion(version) < LooseVersion("1.7.8"):
-            self.supportsSubmoduleCheckout = False
-        if LooseVersion(version) < LooseVersion("2.3.0"):
-            self.supportsSshPrivateKeyAsEnvOption = False
-            self.supportsSshPrivateKeyAsConfigOption = False
-        if LooseVersion(version) < LooseVersion("2.10.0"):
-            self.supportsSshPrivateKeyAsConfigOption = False
+        self.parseGitFeatures(stdout)
 
-        defer.returnValue(gitInstalled)
+        defer.returnValue(self.gitInstalled)
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):
