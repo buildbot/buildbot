@@ -27,7 +27,7 @@ _giturlmatcher = re.compile(
     r'(?P<proto>(https?://|ssh://|git://|))'
     r'((?P<user>.*)@)?'
     r'(?P<domain>[^\/:]+)(:((?P<port>[0-9]+)/)?|/)'
-    r'(?P<owner>.+)/(?P<repo>[^/]+?)(\.git)?$')
+    r'((?P<owner>.+)/)?(?P<repo>[^/]+?)(\.git)?$')
 
 GitUrl = namedtuple('GitUrl', ['proto', 'user', 'domain', 'port', 'owner', 'repo'])
 
