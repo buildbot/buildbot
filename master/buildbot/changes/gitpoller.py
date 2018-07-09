@@ -376,17 +376,20 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             return True
         return False
 
+    def _writeLocalFile(self, path, contents, mode=None):  # pragma: no cover
+        with open(path, 'w') as file:
+            if mode is not None:
+                os.chmod(path, mode)
+            file.write(contents)
+
     def _downloadSshPrivateKey(self, keyPath):
-        with open(keyPath, 'w') as keyFile:
-            # change the permissions of the key file to be user-readable only
-            # so that ssh does not complain. This is not used for security
-            # because the parent directory will have proper permissions.
-            os.chmod(keyPath, stat.S_IRUSR)
-            keyFile.write(self.sshPrivateKey)
+        # We change the permissions of the key file to be user-readable only so
+        # that ssh does not complain. This is not used for security because the
+        # parent directory will have proper permissions.
+        self._writeLocalFile(keyPath, self.sshPrivateKey, mode=stat.S_IRUSR)
 
     def _downloadSshKnownHosts(self, path):
-        with open(path, 'w') as hostsFile:
-            hostsFile.write(getSshKnownHostsContents(self.sshHostKey))
+        self._writeLocalFile(path, getSshKnownHostsContents(self.sshHostKey))
 
     def _getSshDataPath(self):
         return os.path.join(self.workdir, '.buildbot-ssh')
