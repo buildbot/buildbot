@@ -1499,6 +1499,62 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key'))
 
 
+class TestGitPollerWithSshHostKey(TestGitPollerBase):
+
+    def createPoller(self):
+        return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key',
+                                   sshHostKey='ssh-host-key')
+
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshPrivateKey')
+    @mock.patch('buildbot.changes.gitpoller.GitPoller._downloadSshKnownHosts')
+    @defer.inlineCallbacks
+    def test_poll_initial_2_10(self, download_known_hosts_mock,
+                               download_mock, cleanup_dir_mock,
+                               create_dir_mock):
+
+        key_path = os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')
+        known_hosts_path = \
+            os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-known-hosts')
+
+        self.expectCommands(
+            gpo.Expect('git', '--version')
+            .stdout(b'git version 2.10.0\n'),
+            gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c',
+                       'core.sshCommand=ssh -i "{0}" '
+                       '-o "UserKnownHostsFile={1}"'.format(
+                               key_path, known_hosts_path),
+                       'fetch', self.REPOURL,
+                       '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work'),
+            gpo.Expect('git', 'rev-parse',
+                       'refs/buildbot/' + self.REPOURL_QUOTED + '/master')
+            .path('gitpoller-work')
+            .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
+        )
+
+        yield self.poller.poll()
+
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+        })
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
+                'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+            })
+
+        create_dir_mock.assert_called_with(
+                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
+        cleanup_dir_mock.assert_called()
+        download_known_hosts_mock.assert_called_with(known_hosts_path)
+        download_mock.assert_called_with(key_path)
+
+
 class TestGitPollerConstructor(unittest.TestCase, config.ConfigErrorsMixin):
 
     def test_deprecatedFetchRefspec(self):

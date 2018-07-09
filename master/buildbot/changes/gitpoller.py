@@ -31,6 +31,7 @@ from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshKnownHostsContents
 from buildbot.util.state import StateMixin
 
 
@@ -47,9 +48,9 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
     compare_attrs = ("repourl", "branches", "workdir",
                      "pollInterval", "gitbin", "usetimestamps",
                      "category", "project", "pollAtLaunch",
-                     "buildPushesWithNoCommits", "sshPrivateKey")
+                     "buildPushesWithNoCommits", "sshPrivateKey", "sshHostKey")
 
-    secrets = ("sshPrivateKey", )
+    secrets = ("sshPrivateKey", "sshHostKey")
 
     def __init__(self, repourl, branches=None, branch=None,
                  workdir=None, pollInterval=10 * 60,
@@ -58,7 +59,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                  pollinterval=-2, fetch_refspec=None,
                  encoding='utf-8', name=None, pollAtLaunch=False,
                  buildPushesWithNoCommits=False, only_tags=False,
-                 sshPrivateKey=None):
+                 sshPrivateKey=None, sshHostKey=None):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -67,10 +68,16 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if name is None:
             name = repourl
 
+        if sshHostKey is not None and sshPrivateKey is None:
+            config.error('GitPoller: sshPrivateKey must be provided in order '
+                         'use sshHostKey')
+            sshPrivateKey = None
+
         base.PollingChangeSource.__init__(self, name=name,
                                           pollInterval=pollInterval,
                                           pollAtLaunch=pollAtLaunch,
-                                          sshPrivateKey=sshPrivateKey)
+                                          sshPrivateKey=sshPrivateKey,
+                                          sshHostKey=sshHostKey)
 
         if project is None:
             project = ''
@@ -100,6 +107,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         self.changeCount = 0
         self.lastRev = {}
         self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
         self.setupGit()
 
         if fetch_refspec is not None:
@@ -376,11 +384,18 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             os.chmod(keyPath, stat.S_IRUSR)
             keyFile.write(self.sshPrivateKey)
 
+    def _downloadSshKnownHosts(self, path):
+        with open(path, 'w') as hostsFile:
+            hostsFile.write(getSshKnownHostsContents(self.sshHostKey))
+
     def _getSshDataPath(self):
         return os.path.join(self.workdir, '.buildbot-ssh')
 
     def _getSshPrivateKeyPath(self):
         return os.path.join(self._getSshDataPath(), 'ssh-key')
+
+    def _getSshKnownHostsPath(self):
+        return os.path.join(self._getSshDataPath(), 'ssh-known-hosts')
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, args, path=None):
@@ -400,8 +415,15 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if self._isSshPrivateKeyNeededForCommand(command):
             key_path = self._getSshPrivateKeyPath()
             self._downloadSshPrivateKey(key_path)
+
+            known_hosts_path = None
+            if self.sshHostKey is not None:
+                known_hosts_path = self._getSshKnownHostsPath()
+                self._downloadSshKnownHosts(known_hosts_path)
+
             self.adjustCommandParamsForSshPrivateKey(full_args, full_env,
-                                                     key_path)
+                                                     key_path, None,
+                                                     known_hosts_path)
 
         full_args += [command] + args
 
