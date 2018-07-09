@@ -63,3 +63,8 @@ class GitMixin(object):
                 raise Exception('Only SSH wrapper script is supported but path '
                                 'not given')
             env['GIT_SSH'] = sshWrapperPath
+
+
+def getSshWrapperScriptContents(keyPath):
+    # note that this works on windows if using git with MINGW embedded.
+    return '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(keyPath)

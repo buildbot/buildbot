@@ -29,6 +29,7 @@ from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.steps.source.base import Source
 from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshWrapperScriptContents
 
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
@@ -396,8 +397,7 @@ class Git(Source, GitMixin):
         rel_key_path = self.build.path_module.relpath(
                 self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
 
-        # note that this works on windows if using git with MINGW embedded.
-        return '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(rel_key_path)
+        return getSshWrapperScriptContents(rel_key_path)
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
