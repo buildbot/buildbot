@@ -19,6 +19,15 @@ from __future__ import print_function
 from distutils.version import LooseVersion
 
 
+def getSshCommand(keyPath, knownHostsPath):
+    command = ['ssh']
+    if keyPath is not None:
+        command += ['-i', '"{0}"'.format(keyPath)]
+    if knownHostsPath is not None:
+        command += ['-o', '"UserKnownHostsFile={0}"'.format(knownHostsPath)]
+    return ' '.join(command)
+
+
 class GitMixin(object):
 
     def setupGit(self):
@@ -52,12 +61,15 @@ class GitMixin(object):
             self.supportsSshPrivateKeyAsConfigOption = True
 
     def adjustCommandParamsForSshPrivateKey(self, command, env,
-                                            keyPath, sshWrapperPath=None):
+                                            keyPath, sshWrapperPath=None,
+                                            knownHostsPath=None):
+        ssh_command = getSshCommand(keyPath, knownHostsPath)
+
         if self.supportsSshPrivateKeyAsConfigOption:
             command.append('-c')
-            command.append('core.sshCommand=ssh -i "{0}"'.format(keyPath))
+            command.append('core.sshCommand={0}'.format(ssh_command))
         elif self.supportsSshPrivateKeyAsEnvOption:
-            env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(keyPath)
+            env['GIT_SSH_COMMAND'] = ssh_command
         else:
             if sshWrapperPath is None:
                 raise Exception('Only SSH wrapper script is supported but path '
@@ -65,6 +77,13 @@ class GitMixin(object):
             env['GIT_SSH'] = sshWrapperPath
 
 
-def getSshWrapperScriptContents(keyPath):
+def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
+    ssh_command = getSshCommand(keyPath, knownHostsPath)
+
     # note that this works on windows if using git with MINGW embedded.
-    return '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(keyPath)
+    return '#!/bin/sh\n{0} "$@"\n'.format(ssh_command)
+
+
+def getSshKnownHostsContents(hostKey):
+    host_name = '*'
+    return '{0} {1}'.format(host_name, hostKey)
