@@ -18,8 +18,6 @@ from __future__ import print_function
 from future.utils import iteritems
 from future.utils import string_types
 
-from distutils.version import LooseVersion
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -30,6 +28,8 @@ from buildbot.process import buildstep
 from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.steps.source.base import Source
+from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshWrapperScriptContents
 
 RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
@@ -72,7 +72,7 @@ git_describe_flags = [
 ]
 
 
-class Git(Source):
+class Git(Source, GitMixin):
 
     """ Class for Git with all the smarts """
     name = 'git'
@@ -151,13 +151,10 @@ class Git(Source):
         self.sshPrivateKey = sshPrivateKey
         self.didDownloadSshPrivateKey = False
         self.config = config
-        self.supportsBranch = True
-        self.supportsSubmoduleForce = True
-        self.supportsSubmoduleCheckout = True
-        self.supportsSshPrivateKeyAsEnvOption = True
-        self.supportsSshPrivateKeyAsConfigOption = True
         self.srcdir = 'source'
         self.origin = origin
+        self.setupGit()
+
         Source.__init__(self, **kwargs)
         if not self.repourl:
             bbconfig.error("Git: must provide repourl.")
@@ -400,8 +397,7 @@ class Git(Source):
         rel_key_path = self.build.path_module.relpath(
                 self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
 
-        # note that this works on windows if using git with MINGW embedded.
-        return '#!/bin/sh\nssh -i "{0}" "$@"\n'.format(rel_key_path)
+        return getSshWrapperScriptContents(rel_key_path)
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
@@ -410,13 +406,9 @@ class Git(Source):
         rel_ssh_wrapper_path = self.build.path_module.relpath(
                 self._getSshWrapperScriptPath(), self.workdir)
 
-        if self.supportsSshPrivateKeyAsConfigOption:
-            full_command.append('-c')
-            full_command.append('core.sshCommand=ssh -i "{0}"'.format(rel_key_path))
-        elif self.supportsSshPrivateKeyAsEnvOption:
-            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(rel_key_path)
-        else:
-            full_env['GIT_SSH'] = rel_ssh_wrapper_path
+        self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
+                                                 rel_key_path,
+                                                 rel_ssh_wrapper_path)
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -671,27 +663,9 @@ class Git(Source):
     def checkBranchSupport(self):
         stdout = yield self._dovccmd(['--version'], collectStdout=True)
 
-        gitInstalled = False
-        version = "0.0.0"
-        if 'git' in stdout:
-            gitInstalled = True
-            try:
-                version = stdout.strip().split(' ')[2]
-            except IndexError:
-                gitInstalled = False
-        if LooseVersion(version) < LooseVersion("1.6.5"):
-            self.supportsBranch = False
-        if LooseVersion(version) < LooseVersion("1.7.6"):
-            self.supportsSubmoduleForce = False
-        if LooseVersion(version) < LooseVersion("1.7.8"):
-            self.supportsSubmoduleCheckout = False
-        if LooseVersion(version) < LooseVersion("2.3.0"):
-            self.supportsSshPrivateKeyAsEnvOption = False
-            self.supportsSshPrivateKeyAsConfigOption = False
-        if LooseVersion(version) < LooseVersion("2.10.0"):
-            self.supportsSshPrivateKeyAsConfigOption = False
+        self.parseGitFeatures(stdout)
 
-        defer.returnValue(gitInstalled)
+        defer.returnValue(self.gitInstalled)
 
     @defer.inlineCallbacks
     def applyPatch(self, patch):

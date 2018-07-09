@@ -21,7 +21,6 @@ from future.utils import itervalues
 import os
 import re
 import stat
-from distutils.version import LooseVersion
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -31,6 +30,7 @@ from buildbot import config
 from buildbot.changes import base
 from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
+from buildbot.util.git import GitMixin
 from buildbot.util.state import StateMixin
 
 
@@ -39,7 +39,7 @@ class GitError(Exception):
     """Raised when git exits with code 128."""
 
 
-class GitPoller(base.PollingChangeSource, StateMixin):
+class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
 
     """This source will poll a remote git repo for changes and submit
     them to the change master."""
@@ -100,8 +100,7 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         self.changeCount = 0
         self.lastRev = {}
         self.sshPrivateKey = sshPrivateKey
-        self.supportsSshPrivateKey = True
-        self.supportsSshPrivateKeyAsConfigOption = True
+        self.setupGit()
 
         if fetch_refspec is not None:
             config.error("GitPoller: fetch_refspec is no longer supported. "
@@ -114,22 +113,12 @@ class GitPoller(base.PollingChangeSource, StateMixin):
     def _checkGitFeatures(self):
         stdout = yield self._dovccmd('--version', [])
 
-        version = "0.0.0"
-        if 'git' in stdout:
-            try:
-                version = stdout.strip().split(' ')[2]
-            except IndexError:
-                raise EnvironmentError('Git is not installed')
-        else:
+        self.parseGitFeatures(stdout)
+        if not self.gitInstalled:
             raise EnvironmentError('Git is not installed')
 
-        if LooseVersion(version) < LooseVersion("2.3.0"):
-            self.supportsSshPrivateKey = False
-            self.supportsSshPrivateKeyAsConfigOption = False
-        if LooseVersion(version) < LooseVersion("2.10.0"):
-            self.supportsSshPrivateKeyAsConfigOption = False
-
-        if self.sshPrivateKey is not None and not self.supportsSshPrivateKey:
+        if (self.sshPrivateKey is not None and
+                not self.supportsSshPrivateKeyAsEnvOption):
             raise EnvironmentError('SSH private keys require Git 2.3.0 or newer')
 
     @defer.inlineCallbacks
@@ -387,14 +376,6 @@ class GitPoller(base.PollingChangeSource, StateMixin):
             os.chmod(keyPath, stat.S_IRUSR)
             keyFile.write(self.sshPrivateKey)
 
-    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env,
-                                             key_path):
-        if self.supportsSshPrivateKeyAsConfigOption:
-            full_command.append('-c')
-            full_command.append('core.sshCommand=ssh -i "{0}"'.format(key_path))
-        else:
-            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(key_path)
-
     def _getSshDataPath(self):
         return os.path.join(self.workdir, '.buildbot-ssh')
 
@@ -419,8 +400,8 @@ class GitPoller(base.PollingChangeSource, StateMixin):
         if self._isSshPrivateKeyNeededForCommand(command):
             key_path = self._getSshPrivateKeyPath()
             self._downloadSshPrivateKey(key_path)
-            self._adjustCommandParamsForSshPrivateKey(full_args, full_env,
-                                                      key_path)
+            self.adjustCommandParamsForSshPrivateKey(full_args, full_env,
+                                                     key_path)
 
         full_args += [command] + args
 
