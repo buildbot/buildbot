@@ -50,3 +50,16 @@ class GitMixin(object):
             self.supportsSshPrivateKeyAsEnvOption = True
         if LooseVersion(version) >= LooseVersion("2.10.0"):
             self.supportsSshPrivateKeyAsConfigOption = True
+
+    def adjustCommandParamsForSshPrivateKey(self, command, env,
+                                            keyPath, sshWrapperPath=None):
+        if self.supportsSshPrivateKeyAsConfigOption:
+            command.append('-c')
+            command.append('core.sshCommand=ssh -i "{0}"'.format(keyPath))
+        elif self.supportsSshPrivateKeyAsEnvOption:
+            env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(keyPath)
+        else:
+            if sshWrapperPath is None:
+                raise Exception('Only SSH wrapper script is supported but path '
+                                'not given')
+            env['GIT_SSH'] = sshWrapperPath

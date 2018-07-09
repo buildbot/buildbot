@@ -406,13 +406,9 @@ class Git(Source, GitMixin):
         rel_ssh_wrapper_path = self.build.path_module.relpath(
                 self._getSshWrapperScriptPath(), self.workdir)
 
-        if self.supportsSshPrivateKeyAsConfigOption:
-            full_command.append('-c')
-            full_command.append('core.sshCommand=ssh -i "{0}"'.format(rel_key_path))
-        elif self.supportsSshPrivateKeyAsEnvOption:
-            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(rel_key_path)
-        else:
-            full_env['GIT_SSH'] = rel_ssh_wrapper_path
+        self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
+                                                 rel_key_path,
+                                                 rel_ssh_wrapper_path)
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):

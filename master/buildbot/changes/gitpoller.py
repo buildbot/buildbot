@@ -376,14 +376,6 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             os.chmod(keyPath, stat.S_IRUSR)
             keyFile.write(self.sshPrivateKey)
 
-    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env,
-                                             key_path):
-        if self.supportsSshPrivateKeyAsConfigOption:
-            full_command.append('-c')
-            full_command.append('core.sshCommand=ssh -i "{0}"'.format(key_path))
-        else:
-            full_env['GIT_SSH_COMMAND'] = 'ssh -i "{0}"'.format(key_path)
-
     def _getSshDataPath(self):
         return os.path.join(self.workdir, '.buildbot-ssh')
 
@@ -408,8 +400,8 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if self._isSshPrivateKeyNeededForCommand(command):
             key_path = self._getSshPrivateKeyPath()
             self._downloadSshPrivateKey(key_path)
-            self._adjustCommandParamsForSshPrivateKey(full_args, full_env,
-                                                      key_path)
+            self.adjustCommandParamsForSshPrivateKey(full_args, full_env,
+                                                     key_path)
 
         full_args += [command] + args
 
