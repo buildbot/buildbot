@@ -34,16 +34,16 @@ GitUrl = namedtuple('GitUrl', ['proto', 'user', 'domain', 'port', 'owner', 'repo
 
 def giturlparse(url):
     res = _giturlmatcher.match(url)
-    if res is not None:
-        port = res.group("port")
-        if port is not None:
-            port = int(port)
-        proto = res.group("proto")
-        if proto:
-            proto = proto[:-3]
-        else:
-            proto = 'ssh'  # implicit proto is ssh
-        return GitUrl(
-            proto, res.group('user'),
-            res.group("domain"), port, res.group("owner"),
-            res.group("repo"))
+    if res is None:
+        return None
+
+    port = res.group("port")
+    if port is not None:
+        port = int(port)
+    proto = res.group("proto")
+    if proto:
+        proto = proto[:-3]
+    else:
+        proto = 'ssh'  # implicit proto is ssh
+    return GitUrl(proto, res.group('user'), res.group("domain"),
+                  port, res.group('owner'), res.group('repo'))
