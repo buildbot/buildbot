@@ -29,6 +29,7 @@ from buildbot.process import remotecommand
 from buildbot.process.properties import Properties
 from buildbot.steps.source.base import Source
 from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshKnownHostsContents
 from buildbot.util.git import getSshWrapperScriptContents
 
 RC_SUCCESS = 0
@@ -82,7 +83,7 @@ class Git(Source, GitMixin):
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
                  clobberOnFailure=False, getDescription=False, config=None,
-                 origin=None, sshPrivateKey=None, **kwargs):
+                 origin=None, sshPrivateKey=None, sshHostKey=None, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -131,6 +132,14 @@ class Git(Source, GitMixin):
                               tested (as of July 2017 the official distribution
                               is MINGW-based).
 
+        @type  sshHostKey: Secret or string
+        @param sshHostKey: Specifies public host key to match when
+                           authenticating with SSH public key authentication.
+                           `sshPrivateKey` must be specified in order to use
+                           this option. The host key must be in the form of
+                           `<key type> <base64-encoded string>`,
+                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+
         @type  config: dict
         @param config: Git configuration options to enable when running git
         """
@@ -149,6 +158,7 @@ class Git(Source, GitMixin):
         self.mode = mode
         self.getDescription = getDescription
         self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
         self.didDownloadSshPrivateKey = False
         self.config = config
         self.srcdir = 'source'
@@ -170,6 +180,11 @@ class Git(Source, GitMixin):
                         "Git: shallow only possible with mode 'full' and method 'clobber'.")
         if not isinstance(self.getDescription, (bool, dict)):
             bbconfig.error("Git: getDescription must be a boolean or a dict.")
+
+        if sshHostKey is not None and sshPrivateKey is None:
+            bbconfig.error('Git: sshPrivateKey must be provided in order '
+                           'use sshHostKey')
+            self.sshPrivateKey = None
 
     @defer.inlineCallbacks
     def startVC(self, branch, revision, patch):
@@ -390,6 +405,9 @@ class Git(Source, GitMixin):
     def _getSshPrivateKeyPath(self):
         return self.build.path_module.join(self._getSshDataPath(), 'ssh-key')
 
+    def _getSshHostKeyPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-known-hosts')
+
     def _getSshWrapperScriptPath(self):
         return self.build.path_module.join(self._getSshDataPath(), 'ssh-wrapper.sh')
 
@@ -405,10 +423,15 @@ class Git(Source, GitMixin):
                 self._getSshPrivateKeyPath(), self.workdir)
         rel_ssh_wrapper_path = self.build.path_module.relpath(
                 self._getSshWrapperScriptPath(), self.workdir)
+        rel_host_key_path = None
+        if self.sshHostKey is not None:
+            rel_host_key_path = self.build.path_module.relpath(
+                    self._getSshHostKeyPath(), self.workdir)
 
         self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
                                                  rel_key_path,
-                                                 rel_ssh_wrapper_path)
+                                                 rel_ssh_wrapper_path,
+                                                 rel_host_key_path)
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -711,6 +734,7 @@ class Git(Source, GitMixin):
         p = Properties()
         p.master = self.master
         private_key = yield p.render(self.sshPrivateKey)
+        host_key = yield p.render(self.sshHostKey)
 
         # not using self.workdir because it may be changed depending on step
         # options
@@ -718,6 +742,8 @@ class Git(Source, GitMixin):
 
         rel_key_path = self.build.path_module.relpath(
                 self._getSshPrivateKeyPath(), workdir)
+        rel_host_key_path = self.build.path_module.relpath(
+                self._getSshHostKeyPath(), workdir)
         rel_wrapper_script_path = self.build.path_module.relpath(
                 self._getSshWrapperScriptPath(), workdir)
 
@@ -730,6 +756,12 @@ class Git(Source, GitMixin):
 
         yield self.downloadFileContentToWorker(rel_key_path, private_key,
                                                workdir=workdir, mode=0o400)
+
+        if self.sshHostKey is not None:
+            known_hosts_contents = getSshKnownHostsContents(host_key)
+            yield self.downloadFileContentToWorker(rel_host_key_path,
+                                                   known_hosts_contents,
+                                                   workdir=workdir, mode=0o400)
 
         self.didDownloadSshPrivateKey = True
         defer.returnValue(RC_SUCCESS)
