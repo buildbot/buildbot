@@ -1,0 +1,1 @@
+-:bb:step:`GitHub` now also fetches keys from target git repo when building merge requests. (:issue:`4187`)

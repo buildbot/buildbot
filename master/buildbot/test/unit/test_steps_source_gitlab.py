@@ -68,6 +68,11 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
             ExpectShell(workdir='wkdir',
                         command=['git', 'clean', '-f', '-f', '-d'])
             + 0,
+            # because source_git_ssh_url property was set, _fetch gets its tags
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'git@gitlab.example.com:mmusterman/awesome_project.git'])
+            + 0,
             # here we always ignore revision, and fetch the merge branch
             ExpectShell(workdir='wkdir',
                         command=['git', 'fetch', '-t',
