@@ -128,12 +128,12 @@ class Api(object):
         left = {
             "color": left_color,
             "text": left_text,
-            "width": self.textwidth(left_text, config)
+            "width": int(config['left_width']) or self.textwidth(left_text, config)
         }
         right = {
             "color": right_color,
             "text": right_text,
-            "width": self.textwidth(right_text, config)
+            "width": int(config['right_width']) or self.textwidth(right_text, config)
         }
 
         template = self.env.get_template(config['template_name'].format(**config))

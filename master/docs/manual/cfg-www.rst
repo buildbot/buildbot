@@ -268,6 +268,8 @@ The default templates are very much configurable via the following options.
     {
         "left_text": "Build Status",  # text on the left part of the image
         "left_color": "#555",  # color of the left part of the image
+        "left_size": "40", # override autodetected font width, omit if not required
+        "right_size": "50", # override autodetected font width, omit if not required
         "style": "flat",  # style of the template availables are "flat", "flat-square", "plastic"
         "template_name": "{style}.svg.j2",  # name of the template
         "font_face": "DejaVu Sans",
