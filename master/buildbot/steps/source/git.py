@@ -570,6 +570,14 @@ class Git(Source):
         # If it's a shallow clone abort build step
         res = yield self._dovccmd(command, abandonOnFailure=(abandonOnFailure and shallowClone))
 
+        if self.build.hasProperty("target_git_ssh_url"):
+            # Fetch tags from the target repo, else builds
+            # that require up to date tags often fail due to missing tags.
+            command = ['fetch', '-t', self.build.getProperty("target_git_ssh_url", None)]
+            if self.prog:
+                command.append('--progress')
+            yield self._dovccmd(command)
+
         if switchToBranch:
             res = yield self._fetch(None)
 
