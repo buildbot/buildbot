@@ -19,6 +19,7 @@ from __future__ import print_function
 from twisted.trial import unittest
 
 from buildbot.util.git import GitMixin
+from buildbot.util.git import getSshKnownHostsContents
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
@@ -62,3 +63,22 @@ class TestParseGitFeatures(GitMixin, unittest.TestCase):
         self.assertTrue(self.supportsSubmoduleCheckout)
         self.assertTrue(self.supportsSshPrivateKeyAsEnvOption)
         self.assertTrue(self.supportsSshPrivateKeyAsConfigOption)
+
+
+class TestAdjustCommandParamsForSshPrivateKey(GitMixin, unittest.TestCase):
+    def test_throws_when_wrapper_not_given(self):
+        self.gitInstalled = True
+
+        command = []
+        env = {}
+        with self.assertRaises(Exception):
+            self.adjustCommandParamsForSshPrivateKey(command, env,
+                                                     'path/to/key')
+
+
+class TestGetSshKnownHostsContents(unittest.TestCase):
+    def test(self):
+        key = 'ssh-rsa AAAA<...>WsHQ=='
+
+        expected = '* ssh-rsa AAAA<...>WsHQ=='
+        self.assertEqual(expected, getSshKnownHostsContents(key))

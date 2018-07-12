@@ -476,7 +476,17 @@ The Git step takes the following arguments:
    (optional) The private key to use when running git for fetch operations. The
    ssh utility must be in the system path in order to use this option. On
    Windows only git distribution that embeds MINGW has been tested (as of July
-   2017 the official distribution is MINGW-based).
+   2017 the official distribution is MINGW-based). The worker must either have
+   the host in the known hosts file or the host key must be specified via the
+   `sshHostKey` option.
+
+``sshHostKey``
+
+    (optional) Specifies public host key to match when authenticating with SSH
+    public key authentication. This may be either a :ref:`Secret` or just a
+    string. `sshPrivateKey` must be specified in order to use this option.
+    The host key must be in the form of `<key type> <base64-encoded string>`,
+    e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
 
 .. bb:step:: SVN
 
