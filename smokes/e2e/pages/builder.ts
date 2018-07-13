@@ -22,7 +22,7 @@ export class BuilderPage extends BasePage {
     async go() {
         await browser.get('#/builders');
         await browser.wait(EC.urlContains('#/builders'),
-                           5000,
+                           10000,
                            "URL does not contain #/builders");
         const localBuilder = element.all(By.linkText(this.builder));
         await localBuilder.click();

@@ -16,7 +16,7 @@ export class DashboardPage extends BasePage {
     async go() {
         await browser.get('#/mydashboard');
         await browser.wait(EC.urlContains('#/mydashboard'),
-                           5000,
+                           10000,
                            "URL does not contain #/mydashboard");
     }
 }

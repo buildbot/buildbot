@@ -17,7 +17,7 @@ export class AboutPage extends BasePage {
     async goAbout() {
         await browser.get('#/about');
         await browser.wait(EC.urlContains('#/about'),
-                           5000,
+                           10000,
                            "URL does not contain #/about");
     }
 

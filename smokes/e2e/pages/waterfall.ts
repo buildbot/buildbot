@@ -17,7 +17,7 @@ export class WaterfallPage extends BasePage {
     async go() {
         await browser.get('#/waterfall');
         await browser.wait(EC.urlContains('#/waterfall'),
-                           5000,
+                           10000,
                            "URL does not contain #/waterfall");
     }
 

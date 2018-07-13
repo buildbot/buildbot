@@ -17,7 +17,7 @@ export class SettingsPage extends BasePage {
     async goSettings() {
         await browser.get('#/settings');
         await browser.wait(EC.urlContains('#/settings'),
-                           5000,
+                           10000,
                            "URL does not contain #/settings");
     }
 

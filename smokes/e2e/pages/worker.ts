@@ -19,7 +19,7 @@ export class WorkerPage extends BasePage {
     async goWorker() {
         await browser.get('#/workers');
         await browser.wait(EC.urlContains('#/workers'),
-                           5000,
+                           10000,
                            "URL does not contain #/workers");
     }
 
