@@ -10,6 +10,37 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.3.0`` ( ``2018-07-13`` )
+=====================================
+
+Bug fixes
+---------
+
+- buildbot-worker docker image no longer use pidfile. This allows to
+  auto-restart a docker worker upon crash.
+- GitLab v3 API is deprecated and has been removed from http://gitlab.com, so
+  we now use v4. (:issue:`4143`)
+
+Features
+--------
+
+- -:bb:step:`Git` now supports `sshHostKey` parameter to specify ssh public
+  host key for fetch operations.
+- -:bb:step:`Git` now supports `sshPrivateKey` parameter to specify private ssh
+  key for fetch operations.
+- -:bb:chsrc:`GitPoller` now supports `sshHostKey` parameter to specify ssh
+  public host key for fetch operations. This feature is supported on git 2.3
+  and newer.
+- -:bb:chsrc:`GitPoller` now supports `sshPrivateKey` parameter to specify
+  private ssh key for fetch operations. This feature is supported on git 2.3
+  and newer.
+- Github hook token validation now uses ``hmac.compare_digest()`` for better security
+
+Deprecations and Removals
+-------------------------
+
+- Removed support for GitLab v3 API ( GitLab < 9 ).
+
 Buildbot ``1.2.0`` ( ``2018-06-10`` )
 =====================================
 
