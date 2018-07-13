@@ -34,7 +34,12 @@ Features
 - -:bb:chsrc:`GitPoller` now supports `sshPrivateKey` parameter to specify
   private ssh key for fetch operations. This feature is supported on git 2.3
   and newer.
+- Github hook token validation now uses ``hmac.compare_digest()`` for better security
 
+Deprecations and Removals
+-------------------------
+
+- Removed support for GitLab v3 API ( GitLab < 9 ).
 
 Buildbot ``1.2.0`` ( ``2018-06-10`` )
 =====================================
