@@ -16,7 +16,7 @@ export class ConsolePage extends BasePage {
     async go() {
         await browser.get('#/console');
         await browser.wait(EC.urlContains('#/console'),
-                           5000,
+                           10000,
                            "URL does not contain #/console");
     }
 

@@ -17,7 +17,7 @@ export class HomePage extends BasePage {
     async go() {
         await browser.get('#/');
         await browser.wait(EC.urlContains('#/'),
-                           5000,
+                           10000,
                            "URL does not contain #/");
     }
 
