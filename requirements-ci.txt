@@ -63,7 +63,7 @@ pyparsing==2.2.0
 python-dateutil==2.7.3
 pytz==2018.4
 PyYAML==3.12
-requests==2.18.4
+requests==2.19.1
 s3transfer==0.1.13
 scandir==1.7
 service-identity==17.0.0
