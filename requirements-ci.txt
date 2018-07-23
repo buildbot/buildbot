@@ -1,7 +1,7 @@
 alabaster==0.7.11
 appdirs==1.4.3
 asn1crypto==0.24.0
-astroid==1.6.4
+astroid==2.0.1
 attrs==18.1.0
 autobahn==18.5.2
 Automat==0.6.0
