@@ -119,7 +119,7 @@ class GitStepMixin(GitMixin):
             return False
 
         gitCommandsThatNeedSshKey = [
-            'clone', 'submodule', 'fetch'
+            'clone', 'submodule', 'fetch', 'push'
         ]
         if command[0] in gitCommandsThatNeedSshKey:
             return True

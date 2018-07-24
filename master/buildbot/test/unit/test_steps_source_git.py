@@ -32,6 +32,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from buildbot.test.util import steps
 
 
 class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
@@ -3158,3 +3159,326 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                               mode='full', method='clean')
         msg = 'git is not installed on worker'
         return self._test_WorkerTooOldError(_dovccmd, step, msg)
+
+
+class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                  unittest.TestCase):
+    stepClass = git.GitPush
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_push_simple(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_force(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', force=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch', '--force'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_fail(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', force=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch', '--force'])
+            + ExpectShell.log('stdio',
+                              stderr="error: failed to push some refs to <url>\n")
+            + 1
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_push_ssh_key_2_10(self):
+        url = 'ssh://github.com/test/test.git'
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "../.wkdir.buildbot/ssh-key"'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'push', url, 'testbranch'])
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_key_2_3(self):
+        url = 'ssh://github.com/test/test.git'
+        ssh_command = 'ssh -i "../.wkdir.buildbot/ssh-key"'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_key_1_7(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-wrapper.sh',
+                        workdir='wkdir',
+                        mode=0o700))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH': '../.wkdir.buildbot/ssh-wrapper.sh'})
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_2_10(self):
+        url = 'ssh://github.com/test/test.git'
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "../.wkdir.buildbot/ssh-key" ' \
+            '-o "UserKnownHostsFile=../.wkdir.buildbot/ssh-known-hosts"'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-known-hosts',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'push', url, 'testbranch'])
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_2_3(self):
+        url = 'ssh://github.com/test/test.git'
+        ssh_command = \
+            'ssh -i "../.wkdir.buildbot/ssh-key" ' \
+            '-o "UserKnownHostsFile=../.wkdir.buildbot/ssh-known-hosts"'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-known-hosts',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_1_7(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('mkdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-wrapper.sh',
+                        workdir='wkdir',
+                        mode=0o700))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-key',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest='../.wkdir.buildbot/ssh-known-hosts',
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH': '../.wkdir.buildbot/ssh-wrapper.sh'})
+            + 0,
+            Expect('rmdir', dict(dir='.wkdir.buildbot',
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()

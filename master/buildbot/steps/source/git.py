@@ -589,3 +589,116 @@ class Git(Source, GitStepMixin):
             defer.returnValue("clobber")
         else:
             defer.returnValue("clone")
+
+
+class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
+
+    description = None
+    descriptionDone = None
+    descriptionSuffix = None
+
+    ''' Class to perform Git push commands '''
+
+    name = 'gitpush'
+    renderables = ['repourl', 'branch']
+
+    def __init__(self, workdir=None, repourl=None, branch=None, force=False,
+                 env=None, timeout=20 * 60, logEnviron=True,
+                 sshPrivateKey=None, sshHostKey=None,
+                 config=None, **kwargs):
+        """
+        @type  workdir: string
+        @param workdir: local directory (relative to the Builder's root)
+                        where the tree should be placed
+
+        @type  repourl: string
+        @param repourl: the URL which points at the git repository
+
+        @type  branch: string
+        @param branch: The branch to push. The branch should already exist on
+                       the local repository.
+
+        @type force: boolean
+        @param force: If True, forces overwrite of refs on the remote
+                      repository. Corresponds to the '--force' flag.
+
+        @type env: dict
+        @param env: Specifies custom environment variables to set
+
+        @type logEnviron: boolean
+        @param logEnviron: If this option is true (the default), then the
+                           step's logfile will describe the environment
+                           variables on the worker. In situations where the
+                           environment is not relevant and is long, it may
+                           be easier to set logEnviron=False.
+
+        @type timeout
+        @param timeout: Specifies the timeout for individual git operations
+
+        @type  sshPrivateKey: Secret or string
+        @param sshPrivateKey: The private key to use when running git for push
+                              operations. The ssh utility must be in the system
+                              path in order to use this option. On Windows only
+                              git distribution that embeds MINGW has been
+                              tested (as of July 2017 the official distribution
+                              is MINGW-based).
+
+        @type  sshHostKey: Secret or string
+        @param sshHostKey: Specifies public host key to match when
+                           authenticating with SSH public key authentication.
+                           `sshPrivateKey` must be specified in order to use
+                           this option. The host key must be in the form of
+                           `<key type> <base64-encoded string>`,
+                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+
+        @type  config: dict
+        @param config: Git configuration options to enable when running git
+        """
+
+        self.workdir = workdir
+        self.repourl = repourl
+        self.branch = branch
+        self.force = force
+        self.env = env
+        self.timeout = timeout
+        self.logEnviron = logEnviron
+        self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
+        self.config = config
+
+        buildstep.BuildStep.__init__(self, **kwargs)
+
+        self.setupGitStep()
+
+        if not self.branch:
+            bbconfig.error('GitPush: must provide branch')
+
+    def _getSshDataWorkDir(self):
+        return self.workdir
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.stdio_log = yield self.addLog("stdio")
+        try:
+            gitInstalled = yield self.checkBranchSupport()
+
+            if not gitInstalled:
+                raise WorkerTooOldError("git is not installed on worker")
+
+            yield self._downloadSshPrivateKeyIfNeeded()
+            ret = yield self._doPush()
+            yield self._removeSshPrivateKeyIfNeeded()
+            defer.returnValue(ret)
+
+        except Exception as e:
+            yield self._removeSshPrivateKeyIfNeeded()
+            raise e
+
+    @defer.inlineCallbacks
+    def _doPush(self):
+        cmd = ['push', self.repourl, self.branch]
+        if self.force:
+            cmd.append('--force')
+
+        ret = yield self._dovccmd(cmd)
+        defer.returnValue(ret)
