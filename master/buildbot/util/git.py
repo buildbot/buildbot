@@ -15,8 +15,19 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 from distutils.version import LooseVersion
+
+from twisted.internet import defer
+from twisted.python import log
+
+from buildbot import config as bbconfig
+from buildbot.process import buildstep
+from buildbot.process import remotecommand
+from buildbot.process.properties import Properties
+
+RC_SUCCESS = 0
 
 
 def getSshCommand(keyPath, knownHostsPath):
@@ -87,3 +98,192 @@ def getSshWrapperScriptContents(keyPath, knownHostsPath=None):
 def getSshKnownHostsContents(hostKey):
     host_name = '*'
     return '{0} {1}'.format(host_name, hostKey)
+
+
+class GitStepMixin(GitMixin):
+
+    def setupGitStep(self):
+        self.didDownloadSshPrivateKey = False
+        self.setupGit()
+
+        if self.sshHostKey is not None and self.sshPrivateKey is None:
+            bbconfig.error('Git: sshPrivateKey must be provided in order '
+                           'use sshHostKey')
+            self.sshPrivateKey = None
+
+        if not self.repourl:
+            bbconfig.error("Git: must provide repourl.")
+
+    def _isSshPrivateKeyNeededForGitCommand(self, command):
+        if not command or self.sshPrivateKey is None:
+            return False
+
+        gitCommandsThatNeedSshKey = [
+            'clone', 'submodule', 'fetch'
+        ]
+        if command[0] in gitCommandsThatNeedSshKey:
+            return True
+        return False
+
+    def _getSshDataPath(self):
+        # we can't use the workdir for temporary ssh-related files, because
+        # it's needed when cloning repositories and git does not like the
+        # destination directory being non-empty. We have to use separate
+        # temporary directory for that data to ensure the confidentiality of it.
+        # So instead of
+        # '{path}/{to}/{workdir}/.buildbot-ssh-key' we put the key at
+        # '{path}/{to}/.{workdir}.buildbot/ssh-key'.
+
+        # basename and dirname interpret the last element being empty for paths
+        # ending with a slash
+        path_module = self.build.path_module
+
+        workdir = self._getSshDataWorkDir().rstrip('/\\')
+        parent_path = path_module.dirname(workdir)
+
+        basename = '.{0}.buildbot'.format(path_module.basename(workdir))
+        return path_module.join(parent_path, basename)
+
+    def _getSshPrivateKeyPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-key')
+
+    def _getSshHostKeyPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-known-hosts')
+
+    def _getSshWrapperScriptPath(self):
+        return self.build.path_module.join(self._getSshDataPath(), 'ssh-wrapper.sh')
+
+    def _getSshWrapperScript(self):
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
+
+        return getSshWrapperScriptContents(rel_key_path)
+
+    def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
+
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), self.workdir)
+        rel_ssh_wrapper_path = self.build.path_module.relpath(
+                self._getSshWrapperScriptPath(), self.workdir)
+        rel_host_key_path = None
+        if self.sshHostKey is not None:
+            rel_host_key_path = self.build.path_module.relpath(
+                    self._getSshHostKeyPath(), self.workdir)
+
+        self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
+                                                 rel_key_path,
+                                                 rel_ssh_wrapper_path,
+                                                 rel_host_key_path)
+
+    @defer.inlineCallbacks
+    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
+        full_command = ['git']
+        full_env = self.env.copy() if self.env else {}
+
+        if self.config is not None:
+            for name, value in iteritems(self.config):
+                full_command.append('-c')
+                full_command.append('%s=%s' % (name, value))
+
+        if self._isSshPrivateKeyNeededForGitCommand(command):
+            self._adjustCommandParamsForSshPrivateKey(full_command, full_env)
+
+        full_command.extend(command)
+
+        # check for the interruptSignal flag
+        sigtermTime = None
+        interruptSignal = None
+
+        # If possible prefer to send a SIGTERM to git before we send a SIGKILL.
+        # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
+        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
+        # before getting terminated
+        if not self.workerVersionIsOlderThan("shell", "2.16"):
+            # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
+            # stick around for too long because this is on top of any timeout
+            # we have hit.
+            sigtermTime = 1
+        else:
+            # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
+            # killing.  This should be safe.
+            if self.workerVersionIsOlderThan("shell", "2.15"):
+                log.msg(
+                    "NOTE: worker does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
+            else:
+                interruptSignal = 'TERM'
+
+        cmd = remotecommand.RemoteShellCommand(self.workdir,
+                                               full_command,
+                                               env=full_env,
+                                               logEnviron=self.logEnviron,
+                                               timeout=self.timeout,
+                                               sigtermTime=sigtermTime,
+                                               interruptSignal=interruptSignal,
+                                               collectStdout=collectStdout,
+                                               initialStdin=initialStdin)
+        cmd.useLog(self.stdio_log, False)
+        yield self.runCommand(cmd)
+
+        if abandonOnFailure and cmd.didFail():
+            log.msg("Source step failed while running command %s" % cmd)
+            raise buildstep.BuildStepFailed()
+        if collectStdout:
+            defer.returnValue(cmd.stdout)
+            return
+        defer.returnValue(cmd.rc)
+
+    @defer.inlineCallbacks
+    def checkBranchSupport(self):
+        stdout = yield self._dovccmd(['--version'], collectStdout=True)
+
+        self.parseGitFeatures(stdout)
+
+        defer.returnValue(self.gitInstalled)
+
+    @defer.inlineCallbacks
+    def _downloadSshPrivateKeyIfNeeded(self):
+        if self.sshPrivateKey is None:
+            defer.returnValue(RC_SUCCESS)
+
+        p = Properties()
+        p.master = self.master
+        private_key = yield p.render(self.sshPrivateKey)
+        host_key = yield p.render(self.sshHostKey)
+
+        # not using self.workdir because it may be changed depending on step
+        # options
+        workdir = self._getSshDataWorkDir()
+
+        rel_key_path = self.build.path_module.relpath(
+                self._getSshPrivateKeyPath(), workdir)
+        rel_host_key_path = self.build.path_module.relpath(
+                self._getSshHostKeyPath(), workdir)
+        rel_wrapper_script_path = self.build.path_module.relpath(
+                self._getSshWrapperScriptPath(), workdir)
+
+        yield self.runMkdir(self._getSshDataPath())
+
+        if not self.supportsSshPrivateKeyAsEnvOption:
+            yield self.downloadFileContentToWorker(rel_wrapper_script_path,
+                                                   self._getSshWrapperScript(),
+                                                   workdir=workdir, mode=0o700)
+
+        yield self.downloadFileContentToWorker(rel_key_path, private_key,
+                                               workdir=workdir, mode=0o400)
+
+        if self.sshHostKey is not None:
+            known_hosts_contents = getSshKnownHostsContents(host_key)
+            yield self.downloadFileContentToWorker(rel_host_key_path,
+                                                   known_hosts_contents,
+                                                   workdir=workdir, mode=0o400)
+
+        self.didDownloadSshPrivateKey = True
+        defer.returnValue(RC_SUCCESS)
+
+    @defer.inlineCallbacks
+    def _removeSshPrivateKeyIfNeeded(self):
+        if not self.didDownloadSshPrivateKey:
+            defer.returnValue(RC_SUCCESS)
+
+        yield self.runRmdir(self._getSshDataPath())
+        defer.returnValue(RC_SUCCESS)
