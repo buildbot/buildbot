@@ -493,8 +493,6 @@ test_deps = [
     # boto3 and moto required for running EC2 tests
     'boto3',
     'moto',
-    # txgithub required to run buildbot.status.github module tests
-    'txgithub',
     'mock>=2.0.0',
 ]
 if sys.platform != 'win32':
