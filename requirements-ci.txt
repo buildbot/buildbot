@@ -49,7 +49,7 @@ pep8==1.7.1
 Pillow==5.2.0
 pyaml==17.12.1
 pyasn1==0.4.4
-pyasn1-modules==0.2.1
+pyasn1-modules==0.2.2
 pycodestyle==2.3.1
 pycparser==2.18
 pyenchant==2.0.0
