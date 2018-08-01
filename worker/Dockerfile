@@ -39,12 +39,13 @@ RUN         apt-get update && \
     # Install required python packages, and twisted
     pip --no-cache-dir install 'twisted[tls]' && \
     mkdir /buildbot &&\
-    useradd -ms /bin/bash buildbot && chown -R buildbot /buildbot
+    useradd -ms /bin/bash buildbot
 
 COPY . /usr/src/buildbot-worker
 COPY docker/buildbot.tac /buildbot/buildbot.tac
 
-RUN pip install /usr/src/buildbot-worker
+RUN pip install /usr/src/buildbot-worker && \
+    chown -R buildbot /buildbot
 
 USER buildbot
 WORKDIR /buildbot
