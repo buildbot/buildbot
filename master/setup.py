@@ -540,7 +540,8 @@ setup_args['extras_require'] = {
         'pyenchant',
         'docutils>=0.8',
         'sphinx-jinja',
-        'towncrier'
+        'towncrier',
+        'yaml'
     ],
 }
 
