@@ -81,7 +81,6 @@ towncrier==18.6.0
 treq==18.6.0
 Twisted==18.4.0
 txaio==18.7.1
-txgithub==15.0.0
 txrequests==0.9.6
 typing==3.6.4
 webcolors==1.8.1
