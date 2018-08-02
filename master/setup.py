@@ -541,7 +541,7 @@ setup_args['extras_require'] = {
         'docutils>=0.8',
         'sphinx-jinja',
         'towncrier',
-        'yaml'
+        'pyyaml'
     ],
 }
 
