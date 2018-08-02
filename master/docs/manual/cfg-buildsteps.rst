@@ -242,6 +242,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 
 ``alwaysUseLatest``
     if True, bypass the usual behavior of checking out the revision in the source stamp, and always update to the latest revision in the repository instead.
+    If the specific VC system supports branches and a specific branch is specified in the step parameters via ``branch`` or ``defaultBranch`` parameters then the latest revision on that branch is checked out.
 
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means that when a full VC checkout fails, it should be retried up to ``repeats`` times, waiting ``delay`` seconds between attempts.
@@ -303,6 +304,7 @@ The Mercurial step takes the following arguments:
 ``defaultBranch``
    this specifies the name of the branch to use when a Build does not provide one of its own.
    This will be appended to ``repourl`` to create the string that will be passed to the ``hg clone`` command.
+   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the branch name should be appended to the ``repourl`` or the branch is a Mercurial named branch and can be found within the ``repourl``.
@@ -363,6 +365,7 @@ The Git step takes the following arguments:
 ``branch``
    (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
+   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
@@ -610,6 +613,7 @@ This step takes the following arguments:
     a string which will be used in a ``-r`` argument.
     This is most useful for specifying a branch to work on.
     Defaults to ``HEAD``.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``global_options``
     a list of flags to be put before the argument ``checkout`` in the CVS command.
@@ -675,6 +679,7 @@ The step takes the following arguments:
 ``defaultBranch``
     (allowed if and only if ``baseURL`` is provided): this specifies the name of the branch to use when a Build does not provide one of its own.
     This will be appended to ``baseURL`` to create the string that will be passed to the ``bzr checkout`` command.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``mode``
 ``method``
@@ -1035,6 +1040,7 @@ Monotone step takes the following arguments:
 
 ``branch``
     this specifies the name of the branch to use when a Build does not provide one of its own.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``progress``
     this is a boolean that has a pull from the repository use ``--ticker=dot`` instead of the default ``--ticker=none``.
