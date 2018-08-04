@@ -119,7 +119,7 @@ All the objects that are referenced from the workers for remote calls have an ``
 ``Impl`` classes are subclassed by buildbot master, and implement the actual logic for the protocol api.
 ``Proxy`` classes are implemented by the worker/master protocols, and implements the demux and de-serialization of protocol calls.
 
-On worker sides, those proxy objects are replaced by a proxy object having a single method to call master side methodss:
+On worker sides, those proxy objects are replaced by a proxy object having a single method to call master side methods:
 
 .. py:class:: workerProxyObject()
 

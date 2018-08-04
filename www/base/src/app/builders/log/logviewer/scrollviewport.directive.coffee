@@ -75,7 +75,7 @@ class Scroll extends Directive
                     loadAll = false  # should we load the whole log
 
                     # Buffer is a sparse array containing list of rows that are already instantiated into dom
-                    # or padding. padding have the class .padding, and potencially following buffer elements are
+                    # or padding. padding have the class .padding, and potentially following buffer elements are
                     # sparsed out.
                     buffer = []
 

@@ -94,7 +94,7 @@ The message queueing implementation is configured as a dictionary in the ``mq`` 
 The ``type`` key describes the type of MQ implementation to be used.
 Note that the implementation type cannot be changed in a reconfig.
 
-The available implemenetation types are described in the following sections.
+The available implementation types are described in the following sections.
 
 Simple
 ++++++
