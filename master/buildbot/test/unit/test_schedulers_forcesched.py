@@ -258,15 +258,18 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_bad_codebases(self):
 
         # codebases must be a list of either string or BaseParameter types
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a list of strings or CodebaseParameter objects:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a "
+                                     "list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo', builderNames=['bar'],
                                                             codebases=[123],))
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a list of strings or CodebaseParameter objects:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a "
+                                     "list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo', builderNames=['bar'],
                                                             codebases=[IntParameter('foo')],))
 
         # codebases cannot be empty
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' cannot be empty; use [CodebaseParameter(codebase='', hide=True)] if needed:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' cannot be "
+                                     "empty; use [CodebaseParameter(codebase='', hide=True)] if needed:",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=[
                                                                 'bar'],

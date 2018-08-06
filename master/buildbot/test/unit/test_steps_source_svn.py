@@ -1720,7 +1720,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             +
             ExpectShell.log(
-                'stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
+                'stdio', stdout='<?xml version="1.0"?>'
+                                '<entry kind="dir" path="/a/b/c" revision="1">'
+                                '<url>http://svn.local/app/trunk</url>'
+                                '</entry>')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',

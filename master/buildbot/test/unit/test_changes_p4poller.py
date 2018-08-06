@@ -201,7 +201,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_b',
                 'category': None,
                 'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+                'comments':
+                    u'short desc truncated because this is a long description.\n'
+                    u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'branch_b_file', u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -215,7 +217,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_c',
                 'category': None,
                 'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+                'comments':
+                    u'short desc truncated because this is a long description.\n'
+                    u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'whatbranch'],
                 'project': '',
                 'properties': {},

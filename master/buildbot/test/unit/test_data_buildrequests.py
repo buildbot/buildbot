@@ -557,7 +557,11 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertTrue(buildset['submitted_at'] is not None)
         buildset['submitted_at'] = None
         self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': None,
-                                    'sourcestamps': None, 'parent_buildid': None, 'results': -1, 'parent_relationship': None, 'reason': u'rebuild', 'external_idstring': u'extid', 'complete': False})
+                                    'sourcestamps': None, 'parent_buildid': None,
+                                    'results': -1, 'parent_relationship': None,
+                                    'reason': u'rebuild',
+                                    'external_idstring': u'extid',
+                                    'complete': False})
 
         properties = yield self.master.data.get(('buildsets', new_bsid, 'properties'))
         self.assertEqual(

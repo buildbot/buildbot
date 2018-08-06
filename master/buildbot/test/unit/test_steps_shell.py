@@ -517,7 +517,10 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         ``SetPropertyFromCommand`` reports a config error.
         """
         self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand, command=["echo", "value"], property="propname", extract_fn=lambda x: {"propname": "hello"})
+                          shell.SetPropertyFromCommand,
+                          command=["echo", "value"],
+                          property="propname",
+                          extract_fn=lambda x: {"propname": "hello"})
 
     def test_error_none_set(self):
         """

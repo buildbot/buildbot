@@ -8,7 +8,9 @@ try:
     from buildbot_pkg import setup_www_plugin
 except ImportError:
     import sys
-    print("Please install buildbot_pkg module in order to install that package, or use the pre-build .whl modules available on pypi", file=sys.stderr)
+    print('Please install buildbot_pkg module in order to install that '
+          'package, or use the pre-build .whl modules available on pypi',
+          file=sys.stderr)
     sys.exit(1)
 
 setup_www_plugin(
