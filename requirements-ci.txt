@@ -65,7 +65,7 @@ pytz==2018.5
 PyYAML==3.13
 requests==2.19.1
 s3transfer==0.1.13
-scandir==1.7
+scandir==1.8
 service-identity==17.0.0
 setuptools-trial==0.6.0
 singledispatch==3.4.0.3
