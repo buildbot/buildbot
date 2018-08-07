@@ -1,0 +1,1 @@
+`p4 login -p` command generates 3 lines in both windows and linux. The third line is the ticket returned by server. However the current code is using the second line.
