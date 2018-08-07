@@ -197,7 +197,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         lines = text.split("\n")
         if len(lines) < 2:
             return None
-        return lines[1].strip()
+        return lines[2].strip()
 
     def _getPasswd(self):
         if self.use_tickets:
