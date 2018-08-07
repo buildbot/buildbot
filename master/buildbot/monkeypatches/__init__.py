@@ -118,17 +118,19 @@ def patch_unittest_testcase():
     if not getattr(TestCase, "assertRegex", None):
         TestCase.assertRegex = TestCase.assertRegexpMatches
 
+
 @onlyOnce
 def patch_testcase_flushLoggedErrors():
     from twisted.trial.unittest import SynchronousTestCase
     import gc
 
     # DebugInfo use of __del__ leads to hard to find gc timing issues
-    # https://twistedmatrix.com/trac/ticket/9506#ticket
+    # https://twistedmatrix.com/trac/ticket/9505
     def flushLoggedErrors(self, *errorTypes):
         gc.collect()
         return self._observer.flushErrors(*errorTypes)
     SynchronousTestCase.flushLoggedErrors = flushLoggedErrors
+
 
 def patch_all(for_tests=False):
     if for_tests:
