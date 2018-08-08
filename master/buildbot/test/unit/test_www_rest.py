@@ -308,15 +308,11 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(got, exp)
 
     def assertRestError(self, responseCode, message):
-        got = {}
-        got['content'] = json.loads(bytes2NativeString(self.request.written))
-        got['responseCode'] = self.request.responseCode
-
-        exp = {}
-        exp['content'] = {'error': message}
-        exp['responseCode'] = responseCode
-
-        self.assertEqual(got, exp)
+        content = json.loads(bytes2NativeString(self.request.written))
+        gotResponseCode = self.request.responseCode
+        self.assertEqual(list(content.keys()), ['error'])
+        self.assertRegex(content['error'], message)
+        self.assertEqual(responseCode, gotResponseCode)
 
     @defer.inlineCallbacks
     def test_not_found(self):
@@ -583,8 +579,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_api_fails(self):
         yield self.render_resource(self.rsrc, b'/test/fail')
-        self.assertRestError(message="RuntimeError('oh noes',)",
-                             responseCode=500)
+        self.assertRestError(message=r"RuntimeError\('oh noes',?\)", responseCode=500)
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_decode_result_spec_raise_bad_request_on_bad_property_value(self):
