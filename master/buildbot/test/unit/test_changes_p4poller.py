@@ -336,7 +336,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                              ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
             self.assertEqual('pass\n', transport.msg)
-            pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
+            pp.outReceived('Enter password:\nSuccess:  Password verified.\nTICKET_ID_GOES_HERE\n')
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
