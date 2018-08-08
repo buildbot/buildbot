@@ -1437,6 +1437,101 @@ class Renderer(unittest.TestCase):
         # but they always contain the name of function
         self.assertIn('myrend', repr(myrend))
 
+    @defer.inlineCallbacks
+    def test_renderer_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_with_state_called(self):
+        # it's tempting to try to call the decorated function.  Don't do that.
+        # It's not a function anymore.
+
+        def rend(p, arg, kwarg='y'):
+            return 'x'
+
+        with self.assertRaises(TypeError):
+            rend_with_args = renderer(rend).withArgs('a', kwarg='kw')
+            yield self.build.render(rend_with_args('y'))
+
+    @defer.inlineCallbacks
+    def test_renderer_decorator_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(rend.withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_decorator_with_state_does_not_share_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p, *args, **kwargs):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), str(args), str(kwargs))
+
+        rend1 = rend.withArgs('a', kwarg1='kw1')
+        rend2 = rend.withArgs('b', kwarg2='kw2')
+
+        res1 = yield self.build.render(rend1)
+        res2 = yield self.build.render(rend2)
+
+        self.assertEqual('x-X-(\'a\',)-{\'kwarg1\': \'kw1\'}', res1)
+        self.assertEqual('x-X-(\'b\',)-{\'kwarg2\': \'kw2\'}', res2)
+
+    @defer.inlineCallbacks
+    def test_renderer_deferred_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return defer.succeed('x-%s-%s-%s' %
+                    (p.getProperty('x'), arg, kwarg))
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_fails_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            raise RuntimeError('oops')
+
+        with self.assertRaises(RuntimeError):
+            yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+
+    @defer.inlineCallbacks
+    def test_renderer_recursive_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return Interpolate('x-%(prop:x)s-%(kw:arg)s-%(kw:kwarg)s',
+                    arg=arg, kwarg=kwarg)
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    def test_renderer_repr_with_state(self):
+        @renderer
+        def rend(p):
+            pass
+
+        rend = rend.withArgs('a', kwarg='kw')  # pylint: disable=assignment-from-no-return
+
+        self.assertIn('renderer(', repr(rend))
+        # py3 and py2 do not have the same way of repr functions
+        # but they always contain the name of function
+        self.assertIn('args=[\'a\']', repr(rend))
+        self.assertIn('kwargs={\'kwarg\': \'kw\'}', repr(rend))
+
 
 class Compare(unittest.TestCase):
 
