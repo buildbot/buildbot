@@ -1366,53 +1366,67 @@ class Renderer(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
 
+    @defer.inlineCallbacks
     def test_renderer(self):
         self.props.setProperty("x", "X", "test")
-        d = self.build.render(
-            renderer(lambda p: 'x%sx' % p.getProperty('x')))
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
 
+        def rend(p):
+            return 'x%sx' % p.getProperty('x')
+
+        res = yield self.build.render(renderer(rend))
+        self.assertEqual('xXx', res)
+
+    @defer.inlineCallbacks
     def test_renderer_called(self):
         # it's tempting to try to call the decorated function.  Don't do that.
         # It's not a function anymore.
-        d = defer.maybeDeferred(lambda:
-                                self.build.render(renderer(lambda p: 'x')('y')))
-        self.assertFailure(d, TypeError)
-        return d
 
+        def rend(p):
+            return 'x'
+
+        with self.assertRaises(TypeError):
+            yield self.build.render(renderer(rend)('y'))
+
+    @defer.inlineCallbacks
     def test_renderer_decorator(self):
         self.props.setProperty("x", "X", "test")
 
         @renderer
         def rend(p):
             return 'x%sx' % p.getProperty('x')
-        d = self.build.render(rend)
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
 
+        res = yield self.build.render(rend)
+        self.assertEqual('xXx', res)
+
+    @defer.inlineCallbacks
     def test_renderer_deferred(self):
         self.props.setProperty("x", "X", "test")
-        d = self.build.render(
-            renderer(lambda p: defer.succeed('y%sy' % p.getProperty('x'))))
-        d.addCallback(self.assertEqual, 'yXy')
-        return d
 
+        def rend(p):
+            return defer.succeed('y%sy' % p.getProperty('x'))
+
+        res = yield self.build.render(renderer(rend))
+        self.assertEqual('yXy', res)
+
+    @defer.inlineCallbacks
     def test_renderer_fails(self):
-        d = self.build.render(
-            renderer(lambda p: defer.fail(RuntimeError("oops"))))
-        self.assertFailure(d, RuntimeError)
-        return d
 
+        @defer.inlineCallbacks
+        def rend(p):
+            raise RuntimeError("oops")
+
+        with self.assertRaises(RuntimeError):
+            yield self.build.render(renderer(rend))
+
+    @defer.inlineCallbacks
     def test_renderer_recursive(self):
         self.props.setProperty("x", "X", "test")
 
-        @renderer
         def rend(p):
             return Interpolate("x%(prop:x)sx")
-        d = self.build.render(rend)
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
+
+        ret = yield self.build.render(renderer(rend))
+        self.assertEqual('xXx', ret)
 
     def test_renderer_repr(self):
         @renderer
