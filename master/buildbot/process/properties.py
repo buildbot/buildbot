@@ -909,8 +909,11 @@ class _Renderer(util.ComparableMixin, object):
 
     @defer.inlineCallbacks
     def getRenderingFor(self, props):
+        args = yield props.render(self.args)
+        kwargs = yield props.render(self.kwargs)
+
         # We allow the renderer fn to return a renderable for convenience
-        result = yield self.fn(props, *self.args, **self.kwargs)
+        result = yield self.fn(props, *args, **kwargs)
         result = yield props.render(result)
         defer.returnValue(result)
 

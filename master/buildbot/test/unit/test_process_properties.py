@@ -1460,6 +1460,19 @@ class Renderer(unittest.TestCase):
             yield self.build.render(rend_with_args('y'))
 
     @defer.inlineCallbacks
+    def test_renderer_with_state_renders_args(self):
+        self.props.setProperty("x", "X", "test")
+        self.props.setProperty('arg', 'ARG', 'test2')
+        self.props.setProperty('kw', 'KW', 'test3')
+
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(
+            renderer(rend).withArgs(Property('arg'), kwarg=Property('kw')))
+        self.assertEqual('x-X-ARG-KW', res)
+
+    @defer.inlineCallbacks
     def test_renderer_decorator_with_state(self):
         self.props.setProperty("x", "X", "test")
 
