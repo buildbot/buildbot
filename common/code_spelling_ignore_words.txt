@@ -513,6 +513,7 @@ gatherresults
 gayton
 gcc
 gc'd
+gc
 gerrit
 getaddress
 getargspec
