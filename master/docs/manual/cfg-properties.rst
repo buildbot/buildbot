@@ -308,6 +308,32 @@ You can think of ``renderer`` as saying "call this function when the step starts
 
     Since 0.9.3, renderer can itself return :class:`~buildbot.interfaces.IRenderable` objects or containers containing :class:`~buildbot.interfaces.IRenderable`.
 
+Optionally, extra arguments may be passed to the rendered function at any time by calling ``withArgs`` on the renderable object.
+The ``withArgs`` method accepts ``*args`` and ``**kwargs`` arguments which are stored in a new renderable object which is returned.
+The original renderable object is not modified.
+Multiple ``withArgs`` calls may be chained.
+The passed ``*args`` and ``**kwargs`` parameters are rendered and the results are passed to the rendered function at the time it is itself rendered.
+For example::
+
+    from buildbot.plugins import steps, util
+
+    @util.renderer
+    def makeCommand(props, target):
+        command = ['make']
+        cpus = props.getProperty('CPUs')
+        if cpus:
+            command.extend(['-j', str(cpus+1)])
+        else:
+            command.extend(['-j', '2'])
+        command.extend([target])
+        return command
+
+    f.addStep(steps.ShellCommand(command=makeCommand.withArgs('mytarget')))
+
+.. note::
+
+    The rendering of the renderable object may happen at unexpected times, so it is best to ensure that the passed extra arguments are not changed.
+
 .. note::
 
     Config errors with Renderables may not always be caught via checkconfig
