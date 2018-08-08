@@ -195,7 +195,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
 
     def _parseTicketPassword(self, text):
         lines = text.split("\n")
-        if len(lines) < 2:
+        if len(lines) < 3:
             return None
         return lines[2].strip()
 
