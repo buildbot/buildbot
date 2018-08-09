@@ -31,7 +31,7 @@ from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
-class IndexResource(resource.Resource):
+class IndexResource(resource.InternalResource):
     # enable reconfigResource calls
     needsReconfig = True
 

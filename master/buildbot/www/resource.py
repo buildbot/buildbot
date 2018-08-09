@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from urllib.parse import urljoin
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import resource
@@ -117,3 +119,19 @@ class RedirectResource(Resource):
         redir = self.base_url + self.basepath
         request.redirect(redir)
         return redir
+
+
+class InternalResource(Resource):
+    """
+    Resource available only for authorized users if authorization is enabled.
+    """
+    def render(self, request):
+        from .oauth2 import OAuth2Auth
+        wwwconfig = self.master.www
+        userinfos = wwwconfig.getUserInfos(request)
+        auth = wwwconfig.auth
+        if 'anonymous' in userinfos and isinstance(auth, OAuth2Auth) and auth.autologin:
+            redir = urljoin(self.base_url, 'auth/login?redirect=')
+            request.redirect(redir)
+            return redir.encode()
+        return super().render(request)
