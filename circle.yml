@@ -1,5 +1,5 @@
 # Circle CI configuration file
-# https://circleci.com/docs/
+# https://circleci.com/docs
 
 machine:
   python:
