@@ -15,6 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -28,6 +29,28 @@ from buildbot.process.results import RETRY
 
 
 class Db2DataMixin(object):
+
+    def _generate_filtered_properties(self, props, filters):
+        """
+        This method returns Build's properties according to property filters.
+
+        :param props: Properties as a dict (from db)
+        :param filters: Desired properties keys as a list (from API URI)
+        """
+        # by default no properties are returned
+        if props and filters:
+            return (props
+                    if '*' in filters
+                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
+
+    @defer.inlineCallbacks
+    def addPropertiesToBuildRequest(self, buildrequest, filters):
+        if not filters:
+            return
+        props = yield self.master.db.buildsets.getBuildsetProperties(buildrequest['buildsetid'])
+        filtered_properties = self._generate_filtered_properties(props, filters)
+        if filtered_properties:
+            buildrequest['properties'] = filtered_properties
 
     def db2data(self, dbdict):
         data = {
@@ -43,6 +66,7 @@ class Db2DataMixin(object):
             'submitted_at': dbdict['submitted_at'],
             'complete_at': dbdict['complete_at'],
             'waited_for': dbdict['waited_for'],
+            'properties': dbdict.get('properties'),
         }
         return defer.succeed(data)
     fieldMapping = {
@@ -73,6 +97,8 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         buildrequest = yield self.master.db.buildrequests.getBuildRequest(kwargs['buildrequestid'])
 
         if buildrequest:
+            filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
+            yield self.addPropertiesToBuildRequest(buildrequest, filters)
             defer.returnValue((yield self.db2data(buildrequest)))
         defer.returnValue(None)
 
@@ -144,7 +170,9 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
             bsid=bsid,
             resultSpec=resultSpec)
         results = []
+        filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
         for br in buildrequests:
+            yield self.addPropertiesToBuildRequest(br, filters)
             results.append((yield self.db2data(br)))
         defer.returnValue(results)
 
@@ -174,6 +202,7 @@ class BuildRequest(base.ResourceType):
         submitted_at = types.DateTime()
         complete_at = types.NoneOk(types.DateTime())
         waited_for = types.Boolean()
+        properties = types.NoneOk(types.SourcedProperties())
     entityType = EntityType(name)
 
     @defer.inlineCallbacks

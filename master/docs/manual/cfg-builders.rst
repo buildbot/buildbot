@@ -127,6 +127,10 @@ Other optional keys may be set on each ``BuilderConfig``:
     Those values can be used later on like other properties.
     :ref:`Interpolate`.
 
+``defaultProperties``
+    Similar to the ``properties`` parameter.
+    But ``defaultProperties`` will only be added to :ref:`Build-Properties` if they are not already set by :ref:`another source <Properties>`.
+
 ``description``
     A builder may be given an arbitrary description, which will show up in the web status on the builder's page.
 

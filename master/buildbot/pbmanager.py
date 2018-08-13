@@ -30,6 +30,7 @@ from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot.util.eventual import eventually
 
 debug = False
 
@@ -208,10 +209,12 @@ class Dispatcher(service.AsyncService):
                 matched = yield defer.maybeDeferred(
                     creds.checkPassword, unicode2bytes(password))
                 if not matched:
-                    log.msg("invalid login from user '%s'" % creds.username)
+                    log.msg("invalid login from user '{}'".format(username))
                     raise error.UnauthorizedLogin()
                 defer.returnValue(creds.username)
-            log.msg("invalid login from unknown user '%s'" % creds.username)
+            log.msg("invalid login from unknown user '{}'".format(username))
             raise error.UnauthorizedLogin()
         finally:
-            yield self.master.initLock.release()
+            # brake the callback stack by returning to the reactor
+            # before waking up other waiters
+            eventually(self.master.initLock.release)

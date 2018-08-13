@@ -55,6 +55,10 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.BuildRequest(id=44, buildsetid=8822, builderid=77,
                                 priority=7, submitted_at=self.SUBMITTED_AT_EPOCH,
                                 waited_for=1),
+            fakedb.BuildsetProperty(buildsetid=8822, property_name='prop1',
+                                    property_value='["one", "fake1"]'),
+            fakedb.BuildsetProperty(buildsetid=8822, property_name='prop2',
+                                    property_value='["two", "fake2"]'),
         ])
 
     def tearDown(self):
@@ -82,11 +86,29 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(buildrequest['complete_at'], self.COMPLETE_AT)
         self.assertEqual(buildrequest['buildsetid'], 8822)
         self.assertEqual(buildrequest['priority'], 7)
+        self.assertEqual(buildrequest['properties'], None)
 
     @defer.inlineCallbacks
     def testGetMissing(self):
         buildrequest = yield self.callGet(('buildrequests', 9999))
         self.assertEqual(buildrequest, None)
+
+    @defer.inlineCallbacks
+    def testGetProperty(self):
+        prop = resultspec.Property(b'property', 'eq', 'prop1')
+        buildrequest = yield self.callGet(('buildrequests', 44),
+                           resultSpec=resultspec.ResultSpec(properties=[prop]))
+        self.assertEqual(buildrequest['buildrequestid'], 44)
+        self.assertEqual(buildrequest['properties'], {u'prop1': (u'one', u'fake1')})
+
+    @defer.inlineCallbacks
+    def testGetProperties(self):
+        prop = resultspec.Property(b'property', 'eq', '*')
+        buildrequest = yield self.callGet(('buildrequests', 44),
+                           resultSpec=resultspec.ResultSpec(properties=[prop]))
+        self.assertEqual(buildrequest['buildrequestid'], 44)
+        self.assertEqual(buildrequest['properties'],
+            {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
 
 
 class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -143,6 +165,22 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def testGetUnknownBuilderid(self):
         buildrequests = yield self.callGet(('builders', 79, 'buildrequests'))
         self.assertEqual(buildrequests, [])
+
+    @defer.inlineCallbacks
+    def testGetProperties(self):
+        self.master.db.insertTestData([
+            fakedb.BuildsetProperty(buildsetid=8822, property_name='prop1',
+                                    property_value='["one", "fake1"]'),
+            fakedb.BuildsetProperty(buildsetid=8822, property_name='prop2',
+                                    property_value='["two", "fake2"]'),
+        ])
+        prop = resultspec.Property(b'property', 'eq', '*')
+        buildrequests = yield self.callGet(('builders', 78, 'buildrequests'),
+                           resultSpec=resultspec.ResultSpec(properties=[prop]))
+        self.assertEqual(len(buildrequests), 1)
+        self.assertEqual(buildrequests[0]['buildrequestid'], 46)
+        self.assertEqual(buildrequests[0]['properties'],
+            {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
 
     @defer.inlineCallbacks
     def testGetNoFilters(self):
@@ -298,6 +336,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             'claimed': False,
             'claimed_by_masterid': None,
             'buildsetid': 8822,
+            'properties': None,
         }
         self.assertEqual(sorted(self.master.mq.productions), sorted([
             (('buildrequests', '44', 'claimed'), msg),
@@ -388,6 +427,7 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
             'claimed': False,
             'claimed_by_masterid': None,
             'buildsetid': 8822,
+            'properties': None,
         }
         self.assertEqual(sorted(self.master.mq.productions), sorted([
             (('buildrequests', '44', 'unclaimed'), msg),
@@ -506,7 +546,8 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(buildrequest, {'buildrequestid': 1001, 'complete': False, 'waited_for': False,
                                         'claimed_at': None, 'results': -1, 'claimed': False,
                                         'buildsetid': 200, 'complete_at': None, 'submitted_at': None,
-                                        'builderid': 77, 'claimed_by_masterid': None, 'priority': 0})
+                                        'builderid': 77, 'claimed_by_masterid': None, 'priority': 0,
+                                        'properties': None})
         buildset = yield self.master.data.get(('buildsets', new_bsid))
         oldbuildset = yield self.master.data.get(('buildsets', 8822))
 

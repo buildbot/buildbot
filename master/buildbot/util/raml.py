@@ -21,12 +21,34 @@ import copy
 import json
 import os
 
-import ramlfications
+import yaml
 
 try:
     from collections import OrderedDict
 except ImportError:  # pragma: no cover
     from ordereddict import OrderedDict
+
+
+# minimalistic raml loader. Support !include tags, and mapping as OrderedDict
+class RamlLoader(yaml.SafeLoader):
+    pass
+
+
+def construct_include(loader, node):
+    path = os.path.join(os.path.dirname(loader.stream.name), node.value)
+    with open(path) as f:
+        return yaml.load(f, Loader=RamlLoader)
+
+
+def construct_mapping(loader, node):
+    loader.flatten_mapping(node)
+    return OrderedDict(loader.construct_pairs(node))
+
+
+RamlLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
+    construct_mapping)
+RamlLoader.add_constructor(u'!include', construct_include)
 
 
 class RamlSpec(object):
@@ -40,12 +62,11 @@ class RamlSpec(object):
     """
 
     def __init__(self):
-        # waiting for raml1.0 support in ramlfications
-        # we cannot use its raml parser
-        # so we just use its loader
         fn = os.path.join(os.path.dirname(__file__),
                           os.pardir, 'spec', 'api.raml')
-        self.api = ramlfications.load(fn)
+        with open(fn) as f:
+            self.api = yaml.load(f, Loader=RamlLoader)
+
         with open(fn) as f:
             self.rawraml = f.read()
 

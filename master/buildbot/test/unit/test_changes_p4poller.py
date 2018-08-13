@@ -29,6 +29,7 @@ from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
 from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.util import changesource
+from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.util import datetime2epoch
 
@@ -98,6 +99,7 @@ p4change = {
 
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
+                   config.ConfigErrorsMixin,
                    unittest.TestCase):
 
     def setUp(self):
@@ -440,6 +442,10 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d
+
+    def test_resolveWho_callable(self):
+        self.assertRaisesConfigError("You need to provide a valid callable for resolvewho",
+                                     lambda: P4Source(resolvewho=None))
 
 
 class TestSplit(unittest.TestCase):

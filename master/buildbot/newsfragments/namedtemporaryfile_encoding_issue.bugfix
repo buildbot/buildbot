@@ -1,1 +1,0 @@
-Fix encoding issues of commands with Windows workers (:issue:`3799`).

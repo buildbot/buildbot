@@ -1,1 +1,0 @@
-When a build step has a log called "summary" (case-insensitive), the Build Summary page will sort that log first in the list of logs, and automatically expand it.

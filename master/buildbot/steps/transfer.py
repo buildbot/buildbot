@@ -197,7 +197,7 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
-                 compress=None, url=None,
+                 compress=None, url=None, urlText=None,
                  slavesrc=None,  # deprecated, use `workersrc` instead
                  **buildstep_kwargs
                  ):
@@ -225,6 +225,7 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
                 "'compress' must be one of None, 'gz', or 'bz2'")
         self.compress = compress
         self.url = url
+        self.urlText = urlText
 
     def start(self):
         self.checkWorkerHasCommand("uploadDirectory")
@@ -241,8 +242,12 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
         self.descriptionDone = "uploading %s" % os.path.basename(source)
         if self.url is not None:
-            self.addURL(
-                os.path.basename(os.path.normpath(masterdest)), self.url)
+            urlText = self.urlText
+
+            if urlText is None:
+                urlText = os.path.basename(os.path.normpath(masterdest))
+
+            self.addURL(urlText, self.url)
 
         # we use maxsize to limit the amount of data on both sides
         dirWriter = remotetransfer.DirectoryWriter(
@@ -405,16 +410,11 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
 
         @defer.inlineCallbacks
         def globSources(sources):
-            dl = defer.DeferredList([
+            results = yield defer.gatherResults([
                 self.runGlob(
                     os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
             ])
-            results = yield dl
-            results = [
-                result[1]
-                for result in filter(lambda result: result[0], results)
-            ]
-            results = flatten(results)
+            results = [self.workerPathToMasterPath(p) for p in flatten(results)]
             defer.returnValue(results)
 
         @defer.inlineCallbacks

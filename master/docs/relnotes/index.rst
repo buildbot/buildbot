@@ -10,6 +10,167 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.3.0`` ( ``2018-07-13`` )
+=====================================
+
+Bug fixes
+---------
+
+- buildbot-worker docker image no longer use pidfile. This allows to
+  auto-restart a docker worker upon crash.
+- GitLab v3 API is deprecated and has been removed from http://gitlab.com, so
+  we now use v4. (:issue:`4143`)
+
+Features
+--------
+
+- -:bb:step:`Git` now supports `sshHostKey` parameter to specify ssh public
+  host key for fetch operations.
+- -:bb:step:`Git` now supports `sshPrivateKey` parameter to specify private ssh
+  key for fetch operations.
+- -:bb:chsrc:`GitPoller` now supports `sshHostKey` parameter to specify ssh
+  public host key for fetch operations. This feature is supported on git 2.3
+  and newer.
+- -:bb:chsrc:`GitPoller` now supports `sshPrivateKey` parameter to specify
+  private ssh key for fetch operations. This feature is supported on git 2.3
+  and newer.
+- Github hook token validation now uses ``hmac.compare_digest()`` for better security
+
+Deprecations and Removals
+-------------------------
+
+- Removed support for GitLab v3 API ( GitLab < 9 ).
+
+Buildbot ``1.2.0`` ( ``2018-06-10`` )
+=====================================
+
+Bug fixes
+---------
+
+- Don't schedule a build when a GitLab merge request is deleted or edited (:issue:`3635`)
+- Add GitLab source step; using it, we now handle GitLab merge requests from
+  forks properly (:issue:`4107`)
+- Fixed a bug in :py:class:`~buildbot.reporters.mail.MailNotifier`'s
+  ``createEmail`` method when called with the default *builds* value which
+  resulted in mail not being sent.
+- Fixed a Github crash that happened on Pull Requests, triggered by Github
+  Web-hooks. The json sent by the API does not contain a commit message. In
+  github.py this causes a crash, resulting into response 500 sent back to
+  Github and building failure.
+- Speed up generation of api/v2/builders by an order of magnitude. (:issue:`3396`).
+
+Improved Documentation
+----------------------
+
+- Added ``examples/gitlab.cfg`` to demonstrate integrating Buildbot with
+  GitLab.
+
+Features
+--------
+
+- :ref:`ForceScheduler-Parameters` now support an ``autopopulate`` parameter.
+- :ref:`ForceScheduler-Parameters` ``ChoiceParameter`` now correctly supports
+  the ``strict`` parameter, by allowing free text entry if strict is False.
+- Allow the remote ref to be specified in the GitHub hook configuration (:issue:`3998`)
+- Added callable to p4 source that allows client code to resolve the p4 user
+  and workspace into a more complete author. Default behaviour is a lambda that
+  simply returns the original supplied who. This callable happens after the
+  existing regex is performed.
+
+
+Buildbot ``1.1.2`` ( ``2018-05-15`` )
+=====================================
+
+Bug fixes
+---------
+
+- fix several multimaster issues by reverting :issue:`3911`. re-opens
+  :issue:`3783`. (:issue:`4067`, :issue:`4062`, :issue:`4059`)
+- Fix :bb:step:`MultipleFileUpload` to correctly compute path name when worker
+  and master are on different OS (:issue:`4019`)
+- LDAP bytes/unicode handling has been fixed to work with Python 3. This means
+  that LDAP authentication, REMOTE_USER authentication, and LDAP avatars now
+  work on Python 3. In addition, an of bounds access when trying to load the
+  value of an empty LDAP attribute has been fixed.
+- Removing ```no-select``` rules from places where they would prevent the user
+  from selecting interesting text. (:issue:`3663`)
+- fix ```Maximum recursion depth exceeded`` when lots of worker are trying to
+  connect while master is starting or reconfiguring (:issue:`4042`).
+
+Improved Documentation
+----------------------
+
+- Document a minimal secure config for the Buildbot web interface.
+  (:issue:`4026`)
+
+Features
+--------
+
+- The Dockerfile for the buildbot master image has been updated to use Alpine
+  Linux 3.7. In addition, the Python requests module has been added to this
+  image. This makes GitHub authentication work out of the box with this image.
+  (:issue:`4039`)
+- New steps for Visual Studio 2017 (VS2017, VC141, and MsBuild141).
+- The smoke tests have been changed to use ES2017 async and await keywords.
+  This requires that the smoke tests run with Node 8 or higher. Use of async
+  and await is recommended by the Protractor team:
+  https://github.com/angular/protractor/blob/master/docs/async-await.md
+- Allow ``urlText`` to be set on a url linked to a ``DirectoryUpload`` step
+  (:issue:`3983`)
+
+
+Buildbot ``1.1.1`` ( ``2018-04-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix issue which marked all workers dis-configured in the database every 24h
+  (:issue:`3981` :issue:`3956` :issue:`3970`)
+- The :bb:reporter:`MailNotifier` no longer crashes when sending from/to email
+  addresses with "Real Name" parts (e.g., ``John Doe <john.doe@domain.tld>``).
+- Corrected pluralization of text on landing page of the web UI
+
+Improved Documentation
+----------------------
+
+- Corrected typo in description of libvirt
+- Update sample config to use preferred API
+
+Misc Improvements
+-----------------
+
+- Home page now contains links to recently active builders
+
+Buildbot ``1.1.0`` ( ``2018-03-10`` )
+=====================================
+
+
+Deprecations and Removals
+-------------------------
+
+- Removed ``ramlfication`` as a dependency to build the docs and run the tests.
+
+Bug fixes
+---------
+
+- Fixed buildrequests API doesn't provide properties data (:issue:`3929`)
+- Fix missing owner on builder build table (:issue:`3311`)
+- Include `hipchat` as reporter.
+- Fix encoding issues of commands with Windows workers (:issue:`3799`).
+- Fixed Relax builder name length restriction (:issue:`3413`).
+- Fix the configuration order so that services can actually use secrets (:issue:`3985`)
+- Partially fix Builder page should show the worker information  (:issue:`3546`).
+
+Features
+--------
+
+- Added the ``defaultProperties`` parameter to :bb:cfg:`builders`.
+- When a build step has a log called "summary" (case-insensitive), the Build
+  Summary page will sort that log first in the list of logs, and automatically
+  expand it.
+
+
 Buildbot ``1.0.0`` ( ``2018-02-11`` )
 =====================================
 

@@ -48,6 +48,7 @@ class GitHubEventHandler(PullRequestMixin):
                  master=None,
                  skips=None,
                  github_api_endpoint=None,
+                 pullrequest_ref=None,
                  token=None,
                  debug=False,
                  verify=False):
@@ -55,6 +56,7 @@ class GitHubEventHandler(PullRequestMixin):
         self._strict = strict
         self._token = token
         self._codebase = codebase
+        self.pullrequest_ref = pullrequest_ref
         self.github_property_whitelist = github_property_whitelist
         self.skips = skips
         self.github_api_endpoint = github_api_endpoint
@@ -112,9 +114,17 @@ class GitHubEventHandler(PullRequestMixin):
             mac = hmac.new(unicode2bytes(self._secret),
                            msg=unicode2bytes(content),
                            digestmod=sha1)
-            # NOTE: hmac.compare_digest should be used, but it's only available
-            # starting Python 2.7.7
-            if mac.hexdigest() != hexdigest:
+
+            def _cmp(a, b):
+                try:
+                    # try the more secure compare_digest() first
+                    from hmac import compare_digest
+                    return compare_digest(a, b)
+                except ImportError:  # pragma: no cover
+                    # and fallback to the insecure simple comparison otherwise
+                    return a == b
+
+            if not _cmp(bytes2unicode(mac.hexdigest()), hexdigest):
                 raise ValueError('Hash mismatch')
 
         content_type = request.getHeader(b'Content-Type')
@@ -156,7 +166,7 @@ class GitHubEventHandler(PullRequestMixin):
     def handle_pull_request(self, payload, event):
         changes = []
         number = payload['number']
-        refname = 'refs/pull/{}/merge'.format(number)
+        refname = 'refs/pull/{}/{}'.format(number, self.pullrequest_ref)
         commits = payload['pull_request']['commits']
         title = payload['pull_request']['title']
         comments = payload['pull_request']['body']
@@ -223,7 +233,7 @@ class GitHubEventHandler(PullRequestMixin):
             debug=self.debug, verify=self.verify)
         res = yield http.get(url)
         data = yield res.json()
-        msg = data['commit']['message']
+        msg = data.get('commit', {'message': 'No message field'})['message']
         defer.returnValue(msg)
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
@@ -327,6 +337,7 @@ class GitHubHandler(BaseHookHandler):
             'github_property_whitelist': options.get('github_property_whitelist', None),
             'skips': options.get('skips', None),
             'github_api_endpoint': options.get('github_api_endpoint', None) or 'https://api.github.com',
+            'pullrequest_ref': options.get('pullrequest_ref', None) or 'merge',
             'token': options.get('token', None),
             'debug': options.get('debug', None) or False,
             'verify': options.get('verify', None) or False,

@@ -356,10 +356,10 @@ class V2RootResource(resource.Resource):
 
     def encodeRaw(self, data, request):
         request.setHeader(b"content-type",
-                          data['mime-type'].encode() + b'; charset=utf-8')
+                          unicode2bytes(data['mime-type']) + b'; charset=utf-8')
         request.setHeader(b"content-disposition",
-                          b'attachment; filename=' + data['filename'].encode())
-        request.write(data['raw'].encode('utf-8'))
+                          b'attachment; filename=' + unicode2bytes(data['filename']))
+        request.write(unicode2bytes(data['raw']))
         return
 
     @defer.inlineCallbacks

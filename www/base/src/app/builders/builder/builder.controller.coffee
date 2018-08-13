@@ -1,5 +1,5 @@
 class Builder extends Controller
-    constructor: ($rootScope, $scope, dataService, $stateParams, resultsService, recentStorage,
+    constructor: ($rootScope, $scope, dataService, $stateParams, resultsService,
         glBreadcrumbService, $state, glTopbarContextualActionsService, $q, $window) ->
         # make resultsService utilities available in the template
         _.mixin($scope, resultsService)
@@ -19,9 +19,6 @@ class Builder extends Controller
                     caption: builder.name
                     sref: "builder({builder:#{builder.builderid}})"
             ]
-            recentStorage.addBuilder
-                link: "#/builders/#{builder.builderid}"
-                caption: builder.name
 
             # reinstall breadcrumb when coming back from forcesched
             $scope.$on '$stateChangeSuccess', ->
@@ -99,7 +96,7 @@ class Builder extends Controller
             if $stateParams.numbuilds?
                 $scope.numbuilds = +$stateParams.numbuilds
             $scope.builds = builder.getBuilds
-                property: ["owner"]
+                property: ["owner", "workername"]
                 limit: $scope.numbuilds
                 order: '-number'
             $scope.buildrequests = builder.getBuildrequests(claimed:false)

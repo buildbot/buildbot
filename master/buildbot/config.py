@@ -960,7 +960,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                  tags=None, category=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None,
+                 canStartBuild=None, defaultProperties=None,
 
                  slavename=None,  # deprecated, use `workername` instead
                  slavenames=None,  # deprecated, use `workernames` instead
@@ -1106,6 +1106,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if not isinstance(self.env, dict):
             error("builder's env must be a dictionary")
         self.properties = properties or {}
+        self.defaultProperties = defaultProperties or {}
         self.collapseRequests = collapseRequests
 
         self.description = description
@@ -1132,6 +1133,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
             rv['env'] = self.env
         if self.properties:
             rv['properties'] = self.properties
+        if self.defaultProperties:
+            rv['defaultProperties'] = self.defaultProperties
         if self.collapseRequests is not None:
             rv['collapseRequests'] = self.collapseRequests
         if self.description:

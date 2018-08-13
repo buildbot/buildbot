@@ -20,15 +20,23 @@ import os
 from twisted.internet import defer
 
 from buildbot.process.properties import Interpolate
+from buildbot.reporters.http import HttpStatusPush
 from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.util.integration import RunMasterBase
+
+
+class FakeSecretReporter(HttpStatusPush):
+    def send(self, build):
+        assert self.auth == ('user', 'myhttppasswd')
+        self.reported = True
 
 
 class SecretsConfig(RunMasterBase):
 
     @defer.inlineCallbacks
     def test_secret(self):
-        yield self.setupConfig(masterConfig())
+        c = masterConfig()
+        yield self.setupConfig(c)
         build = yield self.doForceBuild(wantSteps=True, wantLogs=True)
         self.assertEqual(build['buildid'], 1)
         res = yield self.checkBuildStepLogExist(build, "echo <foo>")
@@ -38,6 +46,7 @@ class SecretsConfig(RunMasterBase):
         # at this point, build contains all the log and steps info that is in the db
         # we check that our secret is not in there!
         self.assertNotIn("bar", repr(build))
+        self.assertTrue(c['services'][0].reported)
 
     @defer.inlineCallbacks
     def test_secretReconfig(self):
@@ -66,13 +75,15 @@ def masterConfig():
     from buildbot.process.factory import BuildFactory
     from buildbot.plugins import schedulers, steps
 
+    c['services'] = [FakeSecretReporter('http://example.com/hook',
+                                        auth=('user', Interpolate('%(secret:httppasswd)s')))]
     c['schedulers'] = [
         schedulers.ForceScheduler(
             name="force",
             builderNames=["testy"])]
 
     c['secretsProviders'] = [FakeSecretStorage(
-        secretdict={"foo": "bar", "something": "more"})]
+        secretdict={"foo": "bar", "something": "more", 'httppasswd': 'myhttppasswd'})]
     f = BuildFactory()
     if os.name == "posix":
         f.addStep(steps.ShellCommand(command=Interpolate(

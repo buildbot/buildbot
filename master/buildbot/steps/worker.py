@@ -233,6 +233,9 @@ class MakeDirectory(WorkerBuildStep):
 
 class CompositeStepMixin():
 
+    def workerPathToMasterPath(self, path):
+        return os.path.join(*self.worker.path_module.split(path))
+
     def addLogForRemoteCommands(self, logname):
         """This method must be called by user classes
         composite steps could create several logs, this mixin functions will write
@@ -325,12 +328,17 @@ class CompositeStepMixin():
                                      evaluateCommand=commandComplete)
     deprecatedWorkerClassMethod(locals(), getFileContentFromWorker)
 
-    def downloadFileContentToWorker(self, workerdest, strfile, abandonOnFailure=False, mode=None):
+    def downloadFileContentToWorker(self, workerdest, strfile,
+                                    abandonOnFailure=False, mode=None,
+                                    workdir=None):
+        if workdir is None:
+            workdir = self.workdir
+
         self.checkWorkerHasCommand("downloadFile")
         fileReader = remotetransfer.StringFileReader(strfile)
         # default arguments
         args = {
-            'workdir': self.workdir,
+            'workdir': workdir,
             'maxsize': None,
             'mode': mode,
             'reader': fileReader,

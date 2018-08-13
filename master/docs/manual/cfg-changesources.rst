@@ -537,6 +537,11 @@ It accepts the following arguments:
     This function must be a callable which takes two arguments, the branch and the revision.
     Defaults to lambda branch, revision: (u'')
 
+``resolvewho``
+    A function that resolves the Perforce 'user@workspace' into a more verbose form, stored as the author of the change. Useful when usernames do not match email addresses and external, client-side lookup is required.
+    This function must be a callable which takes one argument.
+    Defaults to lambda who: (who)
+
 Example #1
 ++++++++++
 
@@ -800,6 +805,19 @@ It accepts the following arguments:
 
 ``only_tags``
     Determines if the GitPoller should poll for new tags in the git repository.
+
+``sshPrivateKey``
+    Specifies private SSH key for git to use. This may be either a :ref:`Secret`
+    or just a string. This option requires Git-2.3 or later. The master must
+    either have the host in the known hosts file or the host key must be
+    specified via the `sshHostKey` option.
+
+``sshHostKey``
+    Specifies public host key to match when authenticating with SSH
+    public key authentication. This may be either a :ref:`Secret` or just a
+    string. `sshPrivateKey` must be specified in order to use this option.
+    The host key must be in the form of `<key type> <base64-encoded string>`,
+    e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
 
 A configuration for the Git poller might look like this:
 

@@ -31,6 +31,7 @@ from buildbot import interfaces
 from buildbot import locks
 from buildbot.process import builder
 from buildbot.process import factory
+from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
@@ -477,6 +478,19 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             deprecated = self.bldr.expectations
 
         self.assertIdentical(deprecated, None)
+
+    @defer.inlineCallbacks
+    def test_defaultProperties(self):
+        props = Properties()
+        props.setProperty('foo', 1, 'Scheduler')
+        props.setProperty('bar', 'bleh', 'Change')
+
+        yield self.makeBuilder(defaultProperties={'bar': 'onoes', 'cuckoo': 42})
+
+        self.bldr.setupProperties(props)
+
+        self.assertEquals(props.getProperty('bar'), 'bleh')
+        self.assertEquals(props.getProperty('cuckoo'), 42)
 
 
 class TestGetBuilderId(BuilderMixin, unittest.TestCase):

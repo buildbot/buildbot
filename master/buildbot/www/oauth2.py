@@ -331,6 +331,10 @@ class GitHubAuth(OAuth2Auth):
                              response=data)
                 teams = set()
                 for org, team_data in data['data'].items():
+                    if team_data is None:
+                        # Organizations can have OAuth App access restrictions enabled,
+                        # disallowing team data access to third-parties.
+                        continue
                     for node in team_data['teams']['edges']:
                         # On github we can mentions organization teams like
                         # @org-name/team-name. Let's keep the team formatting
@@ -354,7 +358,7 @@ class GitLabAuth(OAuth2Auth):
         uri = instanceUri.rstrip("/")
         self.authUri = "%s/oauth/authorize" % uri
         self.tokenUri = "%s/oauth/token" % uri
-        self.resourceEndpoint = "%s/api/v3" % uri
+        self.resourceEndpoint = "%s/api/v4" % uri
         super(GitLabAuth, self).__init__(clientId, clientSecret, **kwargs)
 
     def getUserInfoFromOAuthClient(self, c):
