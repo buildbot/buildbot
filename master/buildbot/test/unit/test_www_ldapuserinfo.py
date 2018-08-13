@@ -109,8 +109,8 @@ class LdapUserInfo(CommonTestCase):
         try:
             yield self.userInfoProvider.getUserInfo("me")
         except KeyError as e:
-            self.assertEqual(
-                repr(e), "KeyError('ldap search \"accpattern\" returned 0 results',)")
+            self.assertRegex(
+                repr(e), r"KeyError\('ldap search \"accpattern\" returned 0 results',?\)")
         else:
             self.fail("should have raised a key error")
 

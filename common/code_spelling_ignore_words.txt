@@ -497,6 +497,7 @@ foobar
 foogit
 foreignkey
 formatinterval
+formatargspec
 fp
 fqdn
 freebsd
@@ -513,6 +514,7 @@ gatherresults
 gayton
 gcc
 gc'd
+gc
 gerrit
 getaddress
 getargspec
@@ -1040,6 +1042,7 @@ pygments
 pyjade
 pylint
 pylint's
+pyparsing
 pythonpath
 qa
 qmail
@@ -1539,6 +1542,7 @@ webclient
 webhook
 webhooks
 webserver
+werzeug
 wehn
 wfb
 wget
