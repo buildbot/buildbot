@@ -44,7 +44,7 @@ moto==1.3.4
 olefile==0.45.1
 packaging==17.1
 pathlib2==2.3.2
-pbr==4.1.1
+pbr==4.2.0
 pep8==1.7.1
 Pillow==5.2.0
 pyaml==17.12.1
