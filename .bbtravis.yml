@@ -78,6 +78,14 @@ matrix:
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.6"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
+
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.7"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
 # Dependencies installation commands
