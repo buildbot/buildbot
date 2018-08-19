@@ -1,0 +1,1 @@
+Fix git submodule support when using `sshPrivateKey` and `sshHostKey` settings by passing ssh data as absolute, not relative paths.

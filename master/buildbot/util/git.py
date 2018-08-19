@@ -139,7 +139,7 @@ class GitStepMixin(GitMixin):
         path_module = self.build.path_module
 
         workdir = self._getSshDataWorkDir().rstrip('/\\')
-        parent_path = path_module.dirname(workdir)
+        parent_path = path_module.abspath(path_module.dirname(workdir))
 
         basename = '.{0}.buildbot'.format(path_module.basename(workdir))
         return path_module.join(parent_path, basename)
@@ -154,26 +154,19 @@ class GitStepMixin(GitMixin):
         return self.build.path_module.join(self._getSshDataPath(), 'ssh-wrapper.sh')
 
     def _getSshWrapperScript(self):
-        rel_key_path = self.build.path_module.relpath(
-                self._getSshPrivateKeyPath(), self._getSshDataWorkDir())
-
-        return getSshWrapperScriptContents(rel_key_path)
+        return getSshWrapperScriptContents(self._getSshPrivateKeyPath)
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
-        rel_key_path = self.build.path_module.relpath(
-                self._getSshPrivateKeyPath(), self.workdir)
-        rel_ssh_wrapper_path = self.build.path_module.relpath(
-                self._getSshWrapperScriptPath(), self.workdir)
-        rel_host_key_path = None
+        key_path = self._getSshPrivateKeyPath()
+        ssh_wrapper_path = self._getSshWrapperScriptPath()
+        host_key_path = None
         if self.sshHostKey is not None:
-            rel_host_key_path = self.build.path_module.relpath(
-                    self._getSshHostKeyPath(), self.workdir)
+            host_key_path = self._getSshHostKeyPath()
 
         self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
-                                                 rel_key_path,
-                                                 rel_ssh_wrapper_path,
-                                                 rel_host_key_path)
+                                                 key_path, ssh_wrapper_path,
+                                                 host_key_path)
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
@@ -254,26 +247,20 @@ class GitStepMixin(GitMixin):
         # options
         workdir = self._getSshDataWorkDir()
 
-        rel_key_path = self.build.path_module.relpath(
-                self._getSshPrivateKeyPath(), workdir)
-        rel_host_key_path = self.build.path_module.relpath(
-                self._getSshHostKeyPath(), workdir)
-        rel_wrapper_script_path = self.build.path_module.relpath(
-                self._getSshWrapperScriptPath(), workdir)
-
         yield self.runMkdir(self._getSshDataPath())
 
         if not self.supportsSshPrivateKeyAsEnvOption:
-            yield self.downloadFileContentToWorker(rel_wrapper_script_path,
+            yield self.downloadFileContentToWorker(self._getSshWrapperScriptPath(),
                                                    self._getSshWrapperScript(),
                                                    workdir=workdir, mode=0o700)
 
-        yield self.downloadFileContentToWorker(rel_key_path, private_key,
+        yield self.downloadFileContentToWorker(self._getSshPrivateKeyPath(),
+                                               private_key,
                                                workdir=workdir, mode=0o400)
 
         if self.sshHostKey is not None:
             known_hosts_contents = getSshKnownHostsContents(host_key)
-            yield self.downloadFileContentToWorker(rel_host_key_path,
+            yield self.downloadFileContentToWorker(self._getSshHostKeyPath(),
                                                    known_hosts_contents,
                                                    workdir=workdir, mode=0o400)
 
