@@ -39,7 +39,7 @@ Fixes
 * Error while applying db upgrade is now properly reported in the buildbot upgrade-master command line.
 * Made :class:`Interpolate` safe for deepcopy or serialization/deserialization
 * Optimized UI REST requests for child builds and change page.
-* Fix :class:`DockerLatentWorker` use of `volume` parameter, they now propely manage `src:dest` syntax.
+* Fix :class:`DockerLatentWorker` use of `volume` parameter, they now properly manage `src:dest` syntax.
 * Fix :class:`DockerLatentWorker` to properly create properties so that docker parameters can be renderable.
 * Lock down autobahn version for python 2.6 (note that autobahn and twisted are no longer supporting 2.6, and thus do not receive security fixes anymore).
 * Fix docs and example to always use port 8020 for the web ui.

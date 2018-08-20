@@ -936,7 +936,7 @@ changesources
 
     An instance of this class is available at ``master.db.changesources``.
 
-    Changesources are identified by their changesourceid, which can be objtained from :py:meth:`findChangeSourceId`.
+    Changesources are identified by their changesourceid, which can be obtained from :py:meth:`findChangeSourceId`.
 
     Changesources are represented by dictionaries with the following keys:
 
@@ -1005,7 +1005,7 @@ schedulers
 
     An instance of this class is available at ``master.db.schedulers``.
 
-    Schedulers are identified by their schedulerid, which can be objtained from :py:meth:`findSchedulerId`.
+    Schedulers are identified by their schedulerid, which can be obtained from :py:meth:`findSchedulerId`.
 
     Schedulers are represented by dictionaries with the following keys:
 

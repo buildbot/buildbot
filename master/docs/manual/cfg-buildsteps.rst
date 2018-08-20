@@ -1877,7 +1877,7 @@ The :bb:step:`MTR` step's arguments are:
     Value of option `--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
     Defaults to 4.
     This is used to determine the number of server error log files to download from the worker.
-    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using option `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
+    Specifying a too high value does not hurt (as nonexistent error logs will be ignored), however if using option `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
     An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or ``None``.
