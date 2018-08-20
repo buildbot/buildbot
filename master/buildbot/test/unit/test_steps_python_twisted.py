@@ -89,7 +89,7 @@ buildbot.test.unit.test_steps_python_twisted.Trial.test_run_singular
 Ran 8 tests in 0.101s
 
 FAILED (failures=8)
-'''
+'''  # noqa: max-line-length
 
 
 class Trial(steps.BuildStepMixin, unittest.TestCase):
@@ -201,7 +201,7 @@ class Trial(steps.BuildStepMixin, unittest.TestCase):
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_env_supplement ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobs ... [FAILURE]/home/dustin/code/buildbot/t/buildbot/master/buildbot/test/fake/logfile.py:92: UserWarning: step uses removed LogFile method `getText`
                 buildbot.test.unit.test_steps_python_twisted.Trial.test_run_jobsProperties ... [FAILURE]
-                '''))
+                ''')) # noqa: max-line-length
         return self.runStep()
 
     def testProperties(self):

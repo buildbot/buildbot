@@ -106,7 +106,10 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout(LINESEP_BYTES.join([b'73591:4423cdb'])),
             gpo.Expect('hg', 'log', '-r', '4423cdb',
-                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
+                       '--template={date|hgdate}' + os.linesep + \
+                       '{author}' + os.linesep + \
+                       "{files % '{file}" + os.pathsep + \
+                       "'}" + os.linesep + '{desc|strip}')
             .path('/some/dir').stdout(LINESEP_BYTES.join([
                 b'1273258100.0 -7200',
                 b'Bob Test <bobtest@example.org>',
@@ -177,7 +180,11 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
                        '--template={rev}:{node}\\n')
             .path('/some/dir').stdout(b'5:784bd' + LINESEP_BYTES),
             gpo.Expect('hg', 'log', '-r', '784bd',
-                       '--template={date|hgdate}' + os.linesep + '{author}' + os.linesep + "{files % '{file}" + os.pathsep + "'}" + os.linesep + '{desc|strip}')
+                       '--template={date|hgdate}' + os.linesep +
+                       '{author}' + os.linesep +
+                       "{files % '{file}" +
+                       os.pathsep + "'}" +
+                       os.linesep + '{desc|strip}')
             .path('/some/dir').stdout(LINESEP_BYTES.join([
                 b'1273258009.0 -7200',
                 b'Joe Test <joetest@example.org>',

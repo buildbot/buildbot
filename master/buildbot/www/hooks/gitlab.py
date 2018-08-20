@@ -120,7 +120,9 @@ class GitLabHandler(BaseHookHandler):
             return []
         action = attrs['action']
         if not re.match('^(open|reopen)$', action) and not (action == "update" and "oldrev" in attrs):
-            log.msg("GitLab MR#{}: Ignoring because action {} was not open or reopen or an update that added code".format(attrs['iid'], action))
+            log.msg("GitLab MR#{}: Ignoring because action {} was not open or "
+                    "reopen or an update that added code".format(attrs['iid'],
+                                                                 action))
             return []
 
         changes = [{
