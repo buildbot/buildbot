@@ -183,15 +183,13 @@ class TestGitPollerBase(gpo.GetProcessOutputMixin,
         # this is overridden in TestGitPollerWithSshPrivateKey
         return gitpoller.GitPoller(self.REPOURL)
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpGetProcessOutput()
-        d = self.setUpChangeSource()
+        yield self.setUpChangeSource()
 
-        @d.addCallback
-        def create_poller(_):
-            self.poller = self.createPoller()
-            self.poller.setServiceParent(self.master)
-        return d
+        self.poller = self.createPoller()
+        self.poller.setServiceParent(self.master)
 
     def tearDown(self):
         return self.tearDownChangeSource()
@@ -235,6 +233,7 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assertAllCommandsRan()
 
+    @defer.inlineCallbacks
     def test_poll_initial(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -249,20 +248,17 @@ class TestGitPoller(TestGitPollerBase):
             .stdout(b'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5\n'),
         )
 
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+        })
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
-            self.master.db.state.assertStateByClass(
-                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
-                lastRev={
-                    'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
-                })
-        return d
 
     def test_poll_failInit(self):
         self.expectCommands(
@@ -292,6 +288,7 @@ class TestGitPoller(TestGitPollerBase):
         d.addCallback(lambda _: self.assertAllCommandsRan())
         return d
 
+    @defer.inlineCallbacks
     def test_poll_failRevParse(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -306,14 +303,13 @@ class TestGitPoller(TestGitPollerBase):
             .exit(1),
         )
 
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(len(self.flushLoggedErrors()), 1)
-            self.assertEqual(self.poller.lastRev, {})
+        self.assertAllCommandsRan()
+        self.assertEqual(len(self.flushLoggedErrors()), 1)
+        self.assertEqual(self.poller.lastRev, {})
 
+    @defer.inlineCallbacks
     def test_poll_failLog(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -339,15 +335,13 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(len(self.flushLoggedErrors()), 1)
-            self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(len(self.flushLoggedErrors()), 1)
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
 
     def test_poll_GitError(self):
         # Raised when git exits with status code 128. See issue 2468
@@ -376,6 +370,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertLogged("command.*on repourl.*failed.*exit code 128.*")
         return d
 
+    @defer.inlineCallbacks
     def test_poll_nothingNew(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -406,18 +401,16 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.master.db.state.assertStateByClass(
-                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
-                lastRev={
-                    'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
-                })
-        return d
+        self.assertAllCommandsRan()
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
+                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+            })
 
+    @defer.inlineCallbacks
     def test_poll_multipleBranches_initial(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -439,18 +432,15 @@ class TestGitPoller(TestGitPollerBase):
 
         # do the poll
         self.poller.branches = ['master', 'release']
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+        })
 
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_multipleBranches(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -514,65 +504,61 @@ class TestGitPoller(TestGitPollerBase):
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'release': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+        })
 
-            self.assertEqual(self.master.data.updates.changesAdded, [
-                {
-                    'author': u'by:4423cdbc',
-                    'branch': u'master',
-                    'category': None,
-                    'codebase': None,
-                    'comments': u'hello!',
-                    'files': [u'/etc/442'],
-                    'project': '',
-                    'properties': {},
-                    'repository': 'git@example.com:foo/baz.git',
-                    'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                    'revlink': '',
-                    'src': 'git',
-                    'when_timestamp': 1273258009,
-                },
-                {
-                    'author': u'by:64a5dc2a',
-                    'branch': u'master',
-                    'category': None,
-                    'codebase': None,
-                    'comments': u'hello!',
-                    'files': [u'/etc/64a'],
-                    'project': '',
-                    'properties': {},
-                    'repository': 'git@example.com:foo/baz.git',
-                    'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                    'revlink': '',
-                    'src': 'git',
-                    'when_timestamp': 1273258009,
-                },
-                {
-                    'author': u'by:9118f4ab',
-                    'branch': u'release',
-                    'category': None,
-                    'codebase': None,
-                    'comments': u'hello!',
-                    'files': [u'/etc/911'],
-                    'project': '',
-                    'properties': {},
-                    'repository': 'git@example.com:foo/baz.git',
-                    'revision': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
-                    'revlink': '',
-                    'src': 'git',
-                    'when_timestamp': 1273258009,
-                }
-            ])
-
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [
+            {
+                'author': u'by:4423cdbc',
+                'branch': u'master',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/442'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            },
+            {
+                'author': u'by:64a5dc2a',
+                'branch': u'master',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/64a'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            },
+            {
+                'author': u'by:9118f4ab',
+                'branch': u'release',
+                'category': None,
+                'codebase': None,
+                'comments': u'hello!',
+                'files': [u'/etc/911'],
+                'project': '',
+                'properties': {},
+                'repository': 'git@example.com:foo/baz.git',
+                'revision': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2',
+                'revlink': '',
+                'src': 'git',
+                'when_timestamp': 1273258009,
+            }
+        ])
 
     @defer.inlineCallbacks
     def test_poll_multipleBranches_buildPushesWithNoCommits_default(self):
@@ -759,6 +745,7 @@ class TestGitPoller(TestGitPollerBase):
              'when_timestamp': 1273258009}]
         )
 
+    @defer.inlineCallbacks
     def test_poll_allBranches_single(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -808,34 +795,31 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'refs/heads/master':
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'refs/heads/master':
+            '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
 
-            added = self.master.data.updates.changesAdded
-            self.assertEqual(len(added), 2)
+        added = self.master.data.updates.changesAdded
+        self.assertEqual(len(added), 2)
 
-            self.assertEqual(added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(added[0]['when_timestamp'], 1273258009)
-            self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'master')
-            self.assertEqual(added[0]['files'], [u'/etc/442'])
-            self.assertEqual(added[0]['src'], 'git')
+        self.assertEqual(added[0]['author'], 'by:4423cdbc')
+        self.assertEqual(added[0]['when_timestamp'], 1273258009)
+        self.assertEqual(added[0]['comments'], 'hello!')
+        self.assertEqual(added[0]['branch'], 'master')
+        self.assertEqual(added[0]['files'], [u'/etc/442'])
+        self.assertEqual(added[0]['src'], 'git')
 
-            self.assertEqual(added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(added[1]['when_timestamp'], 1273258009)
-            self.assertEqual(added[1]['comments'], 'hello!')
-            self.assertEqual(added[1]['files'], [u'/etc/64a'])
-            self.assertEqual(added[1]['src'], 'git')
+        self.assertEqual(added[1]['author'], 'by:64a5dc2a')
+        self.assertEqual(added[1]['when_timestamp'], 1273258009)
+        self.assertEqual(added[1]['comments'], 'hello!')
+        self.assertEqual(added[1]['files'], [u'/etc/64a'])
+        self.assertEqual(added[1]['src'], 'git')
 
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_noChanges(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -866,16 +850,14 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
-            })
-        return d
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
 
+    @defer.inlineCallbacks
     def test_poll_allBranches_multiple(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -943,42 +925,39 @@ class TestGitPoller(TestGitPollerBase):
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'refs/heads/master':
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'refs/heads/release':
-                '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'refs/heads/master':
+            '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'refs/heads/release':
+            '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+        })
 
-            added = self.master.data.updates.changesAdded
-            self.assertEqual(len(added), 3)
+        added = self.master.data.updates.changesAdded
+        self.assertEqual(len(added), 3)
 
-            self.assertEqual(added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(added[0]['when_timestamp'], 1273258009)
-            self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'master')
-            self.assertEqual(added[0]['files'], ['/etc/442'])
-            self.assertEqual(added[0]['src'], 'git')
+        self.assertEqual(added[0]['author'], 'by:4423cdbc')
+        self.assertEqual(added[0]['when_timestamp'], 1273258009)
+        self.assertEqual(added[0]['comments'], 'hello!')
+        self.assertEqual(added[0]['branch'], 'master')
+        self.assertEqual(added[0]['files'], ['/etc/442'])
+        self.assertEqual(added[0]['src'], 'git')
 
-            self.assertEqual(added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(added[1]['when_timestamp'], 1273258009)
-            self.assertEqual(added[1]['comments'], 'hello!')
-            self.assertEqual(added[1]['files'], ['/etc/64a'])
-            self.assertEqual(added[1]['src'], 'git')
+        self.assertEqual(added[1]['author'], 'by:64a5dc2a')
+        self.assertEqual(added[1]['when_timestamp'], 1273258009)
+        self.assertEqual(added[1]['comments'], 'hello!')
+        self.assertEqual(added[1]['files'], ['/etc/64a'])
+        self.assertEqual(added[1]['src'], 'git')
 
-            self.assertEqual(added[2]['author'], 'by:9118f4ab')
-            self.assertEqual(added[2]['when_timestamp'], 1273258009)
-            self.assertEqual(added[2]['comments'], 'hello!')
-            self.assertEqual(added[2]['files'], ['/etc/911'])
-            self.assertEqual(added[2]['src'], 'git')
+        self.assertEqual(added[2]['author'], 'by:9118f4ab')
+        self.assertEqual(added[2]['when_timestamp'], 1273258009)
+        self.assertEqual(added[2]['comments'], 'hello!')
+        self.assertEqual(added[2]['files'], ['/etc/911'])
+        self.assertEqual(added[2]['src'], 'git')
 
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_callableFilteredBranches(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1038,39 +1017,36 @@ class TestGitPoller(TestGitPollerBase):
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/heads/release': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
+        self.assertAllCommandsRan()
 
-            # The release branch id should remain unchanged,
-            # because it was ignored.
-            self.assertEqual(self.poller.lastRev, {
-                'refs/heads/master':
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'refs/heads/release':
-                'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
-            })
+        # The release branch id should remain unchanged,
+        # because it was ignored.
+        self.assertEqual(self.poller.lastRev, {
+            'refs/heads/master':
+            '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'refs/heads/release':
+            'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
+        })
 
-            added = self.master.data.updates.changesAdded
-            self.assertEqual(len(added), 2)
+        added = self.master.data.updates.changesAdded
+        self.assertEqual(len(added), 2)
 
-            self.assertEqual(added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(added[0]['when_timestamp'], 1273258009)
-            self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'master')
-            self.assertEqual(added[0]['files'], ['/etc/442'])
-            self.assertEqual(added[0]['src'], 'git')
+        self.assertEqual(added[0]['author'], 'by:4423cdbc')
+        self.assertEqual(added[0]['when_timestamp'], 1273258009)
+        self.assertEqual(added[0]['comments'], 'hello!')
+        self.assertEqual(added[0]['branch'], 'master')
+        self.assertEqual(added[0]['files'], ['/etc/442'])
+        self.assertEqual(added[0]['src'], 'git')
 
-            self.assertEqual(added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(added[1]['when_timestamp'], 1273258009)
-            self.assertEqual(added[1]['comments'], 'hello!')
-            self.assertEqual(added[1]['files'], ['/etc/64a'])
-            self.assertEqual(added[1]['src'], 'git')
+        self.assertEqual(added[1]['author'], 'by:64a5dc2a')
+        self.assertEqual(added[1]['when_timestamp'], 1273258009)
+        self.assertEqual(added[1]['comments'], 'hello!')
+        self.assertEqual(added[1]['files'], ['/etc/64a'])
+        self.assertEqual(added[1]['src'], 'git')
 
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_branchFilter(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1133,27 +1109,24 @@ class TestGitPoller(TestGitPollerBase):
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
             'refs/pull/410/head': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
-                'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
+            'refs/pull/410/head': '9118f4ab71963d23d02d4bdc54876ac8bf05acf2'
+        })
 
-            added = self.master.data.updates.changesAdded
-            self.assertEqual(len(added), 1)
+        added = self.master.data.updates.changesAdded
+        self.assertEqual(len(added), 1)
 
-            self.assertEqual(added[0]['author'], 'by:9118f4ab')
-            self.assertEqual(added[0]['when_timestamp'], 1273258009)
-            self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['files'], [u'/etc/911'])
-            self.assertEqual(added[0]['src'], 'git')
+        self.assertEqual(added[0]['author'], 'by:9118f4ab')
+        self.assertEqual(added[0]['when_timestamp'], 1273258009)
+        self.assertEqual(added[0]['comments'], 'hello!')
+        self.assertEqual(added[0]['files'], [u'/etc/911'])
+        self.assertEqual(added[0]['src'], 'git')
 
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_old(self):
         # Test that environment variables get propagated to subprocesses
         # (See #2116)
@@ -1208,53 +1181,50 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'master': 'fa3ae8ed68e664d4db24798611b352e3c6509930'
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
         # check the results
-        @d.addCallback
-        def check_changes(_):
-            self.assertEqual(self.poller.lastRev, {
+        self.assertEqual(self.poller.lastRev, {
+            'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
+        })
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': 'by:4423cdbc',
+            'branch': 'master',
+            'category': None,
+            'codebase': None,
+            'comments': 'hello!',
+            'files': ['/etc/442'],
+            'project': '',
+            'properties': {},
+            'repository': 'git@example.com:foo/baz.git',
+            'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+            'revlink': '',
+            'src': 'git',
+            'when_timestamp': 1273258009,
+        }, {
+            'author': 'by:64a5dc2a',
+            'branch': 'master',
+            'category': None,
+            'codebase': None,
+            'comments': 'hello!',
+            'files': ['/etc/64a'],
+            'project': '',
+            'properties': {},
+            'repository': 'git@example.com:foo/baz.git',
+            'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
+            'revlink': '',
+            'src': 'git',
+            'when_timestamp': 1273258009,
+        }])
+        self.assertAllCommandsRan()
+
+        self.master.db.state.assertStateByClass(
+            name=bytes2unicode(self.REPOURL), class_name='GitPoller',
+            lastRev={
                 'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
             })
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': 'by:4423cdbc',
-                'branch': 'master',
-                'category': None,
-                'codebase': None,
-                'comments': 'hello!',
-                'files': ['/etc/442'],
-                'project': '',
-                'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
-                'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-                'revlink': '',
-                'src': 'git',
-                'when_timestamp': 1273258009,
-            }, {
-                'author': 'by:64a5dc2a',
-                'branch': 'master',
-                'category': None,
-                'codebase': None,
-                'comments': 'hello!',
-                'files': ['/etc/64a'],
-                'project': '',
-                'properties': {},
-                'repository': 'git@example.com:foo/baz.git',
-                'revision': '64a5dc2a4bd4f558b5dd193d47c83c7d7abc9a1a',
-                'revlink': '',
-                'src': 'git',
-                'when_timestamp': 1273258009,
-            }])
-            self.assertAllCommandsRan()
 
-            self.master.db.state.assertStateByClass(
-                name=bytes2unicode(self.REPOURL), class_name='GitPoller',
-                lastRev={
-                    'master': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
-                })
-
-        return d
-
+    @defer.inlineCallbacks
     def test_poll_callableCategory(self):
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1310,34 +1280,31 @@ class TestGitPoller(TestGitPollerBase):
         self.poller.lastRev = {
             'refs/heads/master': 'fa3ae8ed68e664d4db24798611b352e3c6509930',
         }
-        d = self.poller.poll()
+        yield self.poller.poll()
 
-        @d.addCallback
-        def cb(_):
-            self.assertAllCommandsRan()
-            self.assertEqual(self.poller.lastRev, {
-                'refs/heads/master':
-                '4423cdbcbb89c14e50dd5f4152415afd686c5241',
-            })
+        self.assertAllCommandsRan()
+        self.assertEqual(self.poller.lastRev, {
+            'refs/heads/master':
+            '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+        })
 
-            added = self.master.data.updates.changesAdded
-            self.assertEqual(len(added), 2)
+        added = self.master.data.updates.changesAdded
+        self.assertEqual(len(added), 2)
 
-            self.assertEqual(added[0]['author'], 'by:4423cdbc')
-            self.assertEqual(added[0]['when_timestamp'], 1273258009)
-            self.assertEqual(added[0]['comments'], 'hello!')
-            self.assertEqual(added[0]['branch'], 'master')
-            self.assertEqual(added[0]['files'], [u'/etc/442'])
-            self.assertEqual(added[0]['src'], 'git')
-            self.assertEqual(added[0]['category'], u'4423cd')
+        self.assertEqual(added[0]['author'], 'by:4423cdbc')
+        self.assertEqual(added[0]['when_timestamp'], 1273258009)
+        self.assertEqual(added[0]['comments'], 'hello!')
+        self.assertEqual(added[0]['branch'], 'master')
+        self.assertEqual(added[0]['files'], [u'/etc/442'])
+        self.assertEqual(added[0]['src'], 'git')
+        self.assertEqual(added[0]['category'], u'4423cd')
 
-            self.assertEqual(added[1]['author'], 'by:64a5dc2a')
-            self.assertEqual(added[1]['when_timestamp'], 1273258009)
-            self.assertEqual(added[1]['comments'], 'hello!')
-            self.assertEqual(added[1]['files'], [u'/etc/64a'])
-            self.assertEqual(added[1]['src'], 'git')
-            self.assertEqual(added[1]['category'], u'64a5dc')
-        return d
+        self.assertEqual(added[1]['author'], 'by:64a5dc2a')
+        self.assertEqual(added[1]['when_timestamp'], 1273258009)
+        self.assertEqual(added[1]['comments'], 'hello!')
+        self.assertEqual(added[1]['files'], [u'/etc/64a'])
+        self.assertEqual(added[1]['src'], 'git')
+        self.assertEqual(added[1]['category'], u'64a5dc')
 
     @defer.inlineCallbacks
     def test_startService(self):
