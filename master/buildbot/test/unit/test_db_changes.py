@@ -672,48 +672,44 @@ class RealTests(Tests):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
     def test_pruneChanges_lots(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=29),
         ] + [
             fakedb.Change(changeid=n, sourcestampid=29)
             for n in range(1, 151)
         ])
 
-        d.addCallback(lambda _: self.db.changes.pruneChanges(1))
+        yield self.db.changes.pruneChanges(1)
 
-        def check(_):
-            def thd(conn):
-                results = {}
-                for tbl_name in ('scheduler_changes', 'change_files',
-                                 'change_properties', 'changes'):
-                    tbl = self.db.model.metadata.tables[tbl_name]
-                    res = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = len([row for row in res.fetchall()])
-                self.assertEqual(results, {
-                    'scheduler_changes': 0,
-                    'change_files': 0,
-                    'change_properties': 0,
-                    'changes': 1,
-                })
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
+        def thd(conn):
+            results = {}
+            for tbl_name in ('scheduler_changes', 'change_files',
+                             'change_properties', 'changes'):
+                tbl = self.db.model.metadata.tables[tbl_name]
+                res = conn.execute(sa.select([tbl.c.changeid]))
+                results[tbl_name] = len([row for row in res.fetchall()])
+            self.assertEqual(results, {
+                'scheduler_changes': 0,
+                'change_files': 0,
+                'change_properties': 0,
+                'changes': 1,
+            })
+            self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def test_pruneChanges_None(self):
-        d = self.insertTestData(self.change13_rows)
+        yield self.insertTestData(self.change13_rows)
 
-        d.addCallback(lambda _: self.db.changes.pruneChanges(None))
+        yield self.db.changes.pruneChanges(None)
 
-        def check(_):
-            def thd(conn):
-                tbl = self.db.model.changes
-                res = conn.execute(tbl.select())
-                self.assertEqual([row.changeid for row in res.fetchall()],
-                                 [13])
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
+        def thd(conn):
+            tbl = self.db.model.changes
+            res = conn.execute(tbl.select())
+            self.assertEqual([row.changeid for row in res.fetchall()],
+                             [13])
+        self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_getChangesForBuild(self):
@@ -840,8 +836,9 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['changes', 'change_files',
                          'change_properties', 'scheduler_changes', 'schedulers',
                          'sourcestampsets', 'sourcestamps', 'patches', 'change_users',
@@ -849,16 +846,12 @@ class TestRealDB(unittest.TestCase,
                          'buildrequests', 'builds', 'buildset_sourcestamps',
                          'workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.changes = changes.ChangesConnectorComponent(self.db)
-            self.db.builds = builds.BuildsConnectorComponent(self.db)
-            self.db.sourcestamps = \
-                sourcestamps.SourceStampsConnectorComponent(self.db)
-            self.master = self.db.master
-            self.master.db = self.db
-
-        return d
+        self.db.changes = changes.ChangesConnectorComponent(self.db)
+        self.db.builds = builds.BuildsConnectorComponent(self.db)
+        self.db.sourcestamps = \
+            sourcestamps.SourceStampsConnectorComponent(self.db)
+        self.master = self.db.master
+        self.master.db = self.db
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
