@@ -704,7 +704,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     @defer.inlineCallbacks
     def getUrl(self):
-        builder_id = yield self.builder.getBuilderId()
+        builder_id = yield self.getBuilderId()
         defer.returnValue(getURLForBuild(self.master, builder_id, self.number))
 
     def waitUntilFinished(self):
