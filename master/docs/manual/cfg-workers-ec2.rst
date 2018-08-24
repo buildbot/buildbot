@@ -53,6 +53,7 @@ Here are a few additional hints.
 * When an instance of the image starts, it needs to automatically start a buildbot worker that connects to your master (to create a buildbot worker, :ref:`Creating-a-worker`; to make a daemon, :ref:`Launching-the-daemons`).
 * You may want to make an instance of the buildbot worker, configure it as a standard worker in the master (i.e., not as a latent worker), and test and debug it that way before you turn it into an AMI and convert to a latent worker in the master.
 * In order to avoid extra costs in case of master failure, you should configure the worker of the AMI with ``maxretries`` option (see :ref:`Worker-Options`)
+  Also see `example systemd unit file example <https://github.com/buildbot/buildbot-contrib/blob/master/master/contrib/systemd/worker.service>`_
 
 Configure the Master with an :class:`~buildbot.worker.ec2.EC2LatentWorker`
 --------------------------------------------------------------------------
@@ -349,4 +350,3 @@ If the multiple exceeds the ``max_spot_price``, the bid price will be the ``max_
 Either ``max_spot_price`` or ``price_multiplier``, but not both, may be None.
 If ``price_multiplier`` is None, then no historical price information is retrieved; the bid price is simply the specified ``max_spot_price``.
 If the ``max_spot_price`` is None, then the multiple of the historical average spot prices is used as the bid price with no limit.
-

@@ -3,7 +3,8 @@
 show-source = yes
 statistics = yes
 count = yes
-max-line-length = 100
+# gradually reduce to 100 (previously this warning was disabled)
+max-line-length = 140
 
 # List of currently ignored PEP8 issues.  Some of them definetely should be
 # enabled in future.
@@ -14,7 +15,6 @@ max-line-length = 100
 # E126 continuation line over-indented for hanging indent
 # E128 continuation line under-indented for visual indent
 # E211 whitespace before '('
-# E501 line too long (102 > 100 characters)
 # E711 comparison to None should be 'if cond is None:'
 # E712 comparison to False should be 'if cond is False:' or 'if not cond:'
 # E721 do not compare types, use 'isinstance()'
@@ -24,4 +24,4 @@ max-line-length = 100
 # H301 one import per line (we rely on isort for that)
 # H306 sorted import (we rely on isort for that)
 
-ignore = E122,E123,E126,E128,E211,E501,E711,E712,E721,E731,W503,H302,H306,H301
+ignore = E122,E123,E126,E128,E211,E711,E712,E721,E731,W503,H302,H306,H301

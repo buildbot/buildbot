@@ -32,6 +32,7 @@ from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.fake.remotecommand import ExpectShell
 from buildbot.test.util import config
 from buildbot.test.util import sourcesteps
+from buildbot.test.util import steps
 
 
 class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.TestCase):
@@ -83,11 +84,413 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.runStep()
 
+    def test_mode_full_clean_ssh_key_2_10(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_ssh_key_2_3(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_ssh_key_1_7(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_wrapper_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_wrapper_path,
+                                        workdir='wkdir',
+                                        mode=0o700))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH': ssh_wrapper_path})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_ssh_host_key_2_10(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}" ' \
+            '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
+                                                 ssh_known_hosts_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_ssh_host_key_2_3(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_command = \
+            'ssh -i "{0}" ' \
+            '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
+                                                 ssh_known_hosts_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_ssh_host_key_1_7(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_wrapper_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_wrapper_path,
+                                        workdir='wkdir',
+                                        mode=0o700))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH': ssh_wrapper_path})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
     def test_mode_full_clean_win32path(self):
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
         self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -116,6 +519,195 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_win32path_ssh_key_2_10(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+        self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='wkdir\\.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_win32path_ssh_key_2_3(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+        self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
+        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('stat', dict(file='wkdir\\.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_clean_win32path_ssh_key_1_7(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey'))
+        self.build.path_module = namedModule('ntpath')
+        self.worker.worker_system = 'win32'
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
+        ssh_wrapper_path = \
+            self.build.path_module.abspath('.wkdir.buildbot\\ssh-wrapper.sh')
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('stat', dict(file='wkdir\\.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_wrapper_path,
+                                        workdir='wkdir',
+                                        mode=0o700))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'],
+                        env={'GIT_SSH': ssh_wrapper_path})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
@@ -201,13 +793,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
@@ -268,13 +860,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         slavedest='.buildbot-patched', workdir='wkdir',
@@ -330,13 +922,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             ExpectShell(workdir='wkdir',
                         command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-diff', workdir='wkdir',
                                         mode=None))
             + 0,
-            Expect('downloadFile', dict(blocksize=16384, maxsize=None,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
                                         reader=ExpectRemoteRef(
                                             remotetransfer.StringFileReader),
                                         workerdest='.buildbot-patched', workdir='wkdir',
@@ -907,6 +1499,66 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
             + 0,
 
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_incremental_branch_ssh_key_2_10(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='incremental', branch='test-branch',
+                           sshPrivateKey='ssh-key'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='wkdir',
+                                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': 'wkdir', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'test-branch'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'checkout', '-B', 'test-branch'])
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty(
@@ -1542,6 +2194,68 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                         command=['git', 'rev-parse', 'HEAD'])
             + ExpectShell.log('stdio',
                               stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
+    def test_mode_full_copy_ssh_key_2_10(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='copy', sshPrivateKey='sshkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.source.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.source.buildbot/ssh-key')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='wkdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir='source',
+                                        mode=0o400))
+            + 0,
+            Expect('rmdir', dict(dir='wkdir',
+                                 logEnviron=True,
+                                 timeout=1200)),
+            Expect('listdir', {'dir': 'source', 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir='source',
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            Expect('cpdir', {'fromdir': 'source', 'todir': 'wkdir',
+                             'logEnviron': True, 'timeout': 1200})
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
             + 0,
         )
         self.expectOutcome(result=SUCCESS)
@@ -2466,15 +3180,13 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.expectOutcome(result=RETRY, state_string="update (retry)")
         return self.runStep()
 
-    def _test_invalidGit(self, _dovccmd):
+    def _test_WorkerTooOldError(self, _dovccmd, step, msg):
         def check(failure):
             self.assertIsInstance(failure.value, WorkerTooOldError)
-            self.assertEqual(str(failure.value), "git is not installed on worker")
+            self.assertEqual(str(failure.value), msg)
 
         self.patch(self.stepClass, "_dovccmd", _dovccmd)
-        gitStep = self.setupStep(
-            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                           mode='full', method='clean'))
+        gitStep = self.setupStep(step)
 
         gitStep._start_deferred = defer.Deferred()
         gitStep.startVC("branch", "revision", "patch")
@@ -2491,7 +3203,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             yield
             defer.returnValue("command not found:")
 
-        return self._test_invalidGit(_dovccmd)
+        step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                              mode='full', method='clean')
+        msg = 'git is not installed on worker'
+        return self._test_WorkerTooOldError(_dovccmd, step, msg)
 
     def test_gitCommandOutputShowsNoVersion(self):
         @defer.inlineCallbacks
@@ -2505,4 +3220,363 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             yield
             defer.returnValue("git ")
 
-        return self._test_invalidGit(_dovccmd)
+        step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                              mode='full', method='clean')
+        msg = 'git is not installed on worker'
+        return self._test_WorkerTooOldError(_dovccmd, step, msg)
+
+
+class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
+                  unittest.TestCase):
+    stepClass = git.GitPush
+
+    def setUp(self):
+        return self.setUpBuildStep()
+
+    def tearDown(self):
+        return self.tearDownBuildStep()
+
+    def test_push_simple(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch'))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_force(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', force=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch', '--force'])
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_fail(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', force=True))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.5')
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch', '--force'])
+            + ExpectShell.log('stdio',
+                              stderr="error: failed to push some refs to <url>\n")
+            + 1
+        )
+        self.expectOutcome(result=FAILURE)
+        return self.runStep()
+
+    def test_push_ssh_key_2_10(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'push', url, 'testbranch'])
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_key_2_3(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_key_1_7(self):
+        url = 'ssh://github.com/test/test.git'
+
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshKey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_wrapper_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_wrapper_path,
+                        workdir='wkdir',
+                        mode=0o700))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH': ssh_wrapper_path})
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_2_10(self):
+        url = 'ssh://github.com/test/test.git'
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}" ' \
+            '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
+                                                 ssh_known_hosts_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', '-c', ssh_command_config,
+                                 'push', url, 'testbranch'])
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_2_3(self):
+        url = 'ssh://github.com/test/test.git'
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_command = \
+            'ssh -i "{0}" ' \
+            '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
+                                                 ssh_known_hosts_path)
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.3.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH_COMMAND': ssh_command})
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()
+
+    def test_push_ssh_host_key_1_7(self):
+        url = 'ssh://github.com/test/test.git'
+        self.setupStep(
+            self.stepClass(workdir='wkdir', repourl=url,
+                           branch='testbranch', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'))
+
+        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
+        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_wrapper_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+        ssh_known_hosts_path = \
+            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+
+        self.expectCommands(
+            ExpectShell(workdir='wkdir',
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 1.7.0')
+            + 0,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_wrapper_path,
+                        workdir='wkdir',
+                        mode=0o700))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(
+                            remotetransfer.StringFileReader),
+                        workerdest=ssh_key_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir='wkdir',
+                        mode=0o400))
+            + 0,
+            ExpectShell(workdir='wkdir',
+                        command=['git', 'push', url, 'testbranch'],
+                        env={'GIT_SSH': ssh_wrapper_path})
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        return self.runStep()

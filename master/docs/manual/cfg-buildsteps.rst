@@ -202,8 +202,8 @@ Source Checkout
 
         ... steps.Git ...
 
-Common Parameters
-+++++++++++++++++
+Common Parameters of source checkout operations
++++++++++++++++++++++++++++++++++++++++++++++++
 
 All source checkout steps accept some common parameters to control how they get the sources and where they should be placed.
 The remaining per-VC-system parameters are mostly to specify where exactly the sources are coming from.
@@ -242,6 +242,7 @@ The remaining per-VC-system parameters are mostly to specify where exactly the s
 
 ``alwaysUseLatest``
     if True, bypass the usual behavior of checking out the revision in the source stamp, and always update to the latest revision in the repository instead.
+    If the specific VC system supports branches and a specific branch is specified in the step parameters via ``branch`` or ``defaultBranch`` parameters then the latest revision on that branch is checked out.
 
 ``retry``
     If set, this specifies a tuple of ``(delay, repeats)`` which means that when a full VC checkout fails, it should be retried up to ``repeats`` times, waiting ``delay`` seconds between attempts.
@@ -303,6 +304,7 @@ The Mercurial step takes the following arguments:
 ``defaultBranch``
    this specifies the name of the branch to use when a Build does not provide one of its own.
    This will be appended to ``repourl`` to create the string that will be passed to the ``hg clone`` command.
+   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``branchType``
    either 'dirname' (default) or 'inrepo' depending on whether the branch name should be appended to the ``repourl`` or the branch is a Mercurial named branch and can be found within the ``repourl``.
@@ -363,6 +365,7 @@ The Git step takes the following arguments:
 ``branch``
    (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
+   If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``submodules``
    (optional): when initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
@@ -470,6 +473,23 @@ The Git step takes the following arguments:
 ``config``
 
    (optional) A dict of git configuration settings to pass to the remote git commands.
+
+``sshPrivateKey``
+
+   (optional) The private key to use when running git for fetch operations. The
+   ssh utility must be in the system path in order to use this option. On
+   Windows only git distribution that embeds MINGW has been tested (as of July
+   2017 the official distribution is MINGW-based). The worker must either have
+   the host in the known hosts file or the host key must be specified via the
+   `sshHostKey` option.
+
+``sshHostKey``
+
+    (optional) Specifies public host key to match when authenticating with SSH
+    public key authentication. This may be either a :ref:`Secret` or just a
+    string. `sshPrivateKey` must be specified in order to use this option.
+    The host key must be in the form of `<key type> <base64-encoded string>`,
+    e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
 
 .. bb:step:: SVN
 
@@ -593,6 +613,7 @@ This step takes the following arguments:
     a string which will be used in a ``-r`` argument.
     This is most useful for specifying a branch to work on.
     Defaults to ``HEAD``.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``global_options``
     a list of flags to be put before the argument ``checkout`` in the CVS command.
@@ -658,6 +679,7 @@ The step takes the following arguments:
 ``defaultBranch``
     (allowed if and only if ``baseURL`` is provided): this specifies the name of the branch to use when a Build does not provide one of its own.
     This will be appended to ``baseURL`` to create the string that will be passed to the ``bzr checkout`` command.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``mode``
 ``method``
@@ -914,6 +936,34 @@ The revision in the GitHub event points to ``/head`` is important for the GitHub
 
 If you want to use  :bb:step:`Trigger` to create sub tests and want to have the GitHub reporter still update the original revision, make sure you set ``updateSourceStamp=False`` in the :bb:step:`Trigger` configuration.
 
+.. bb:step:: GitLab
+
+.. _Step-GitLab:
+
+GitLab
+++++++
+
+.. py:class:: buildbot.steps.source.gitlab.GitLab
+
+:bb:step:`GitLab` step is exactly like the :bb:step:`Git` step, except that it uses the source repo and branch sent by the :bb:chsrc:`GitLab` change hook when processing merge requests.
+
+When configuring builders, you can use a ChangeFilter with ``category = "push"``
+to select normal commits, and ``category = "merge_request"`` to select merge requests.
+
+See :file:`master/docs/examples/gitlab.cfg` in the Buildbot distribution
+for a tutorial example of integrating Buildbot with GitLab.
+
+.. note::
+
+    Your build worker will need access to the source project of the
+    changeset, or it won't be able to check out the source.  This means
+    authenticating the build worker via ssh credentials in the usual
+    way, then granting it access [via a GitLab deploy key
+    or GitLab project membership](https://docs.gitlab.com/ee/ssh/).
+    This needs to be done not only for the main git repo, but also for
+    each fork that wants to be able to submit merge requests against
+    the main repo.
+
 .. bb:step:: Darcs
 
 .. _Step-Darcs:
@@ -990,6 +1040,7 @@ Monotone step takes the following arguments:
 
 ``branch``
     this specifies the name of the branch to use when a Build does not provide one of its own.
+    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
 ``progress``
     this is a boolean that has a pull from the repository use ``--ticker=dot`` instead of the default ``--ticker=none``.
@@ -1037,6 +1088,66 @@ Monotone step takes the following arguments:
       This way we make fresh builds with very less bandwidth to download source.
       The behavior of source checkout follows exactly same as incremental.
       It performs all the incremental checkout behavior in ``source`` directory.
+
+Other Source operations
+-----------------------
+
+Currently the only non-checkout step that is related to version control is ``GitPush``.
+
+.. bb:step:: GitPush
+
+GitPush
++++++++
+
+.. py:class:: buildbot.steps.source.git.GitPush
+
+The :bb:step:`GitPush` build step pushes new commits to a `Git <http://git.or.cz/>`_ repository.
+
+The GitPush step takes the following arguments:
+
+``workdir``
+    (required) The path to the local repository to push commits from.
+
+``repourl``
+    (required) The URL of the upstream Git repository.
+
+``branch``
+    (required) The branch to push.
+    The branch should already exist on the local repository.
+
+``force``
+    (optional) If ``True``, forces overwrite of refs on the remote repository.
+    Corresponds to the ``--force`` flag of the ``git push`` command.
+
+``logEnviron``
+    (optional) If this option is true (the default), then the step's logfile will describe the environment variables on the worker.
+    In situations where the environment is not relevant and is long, it may be easier to set ``logEnviron=False``.
+
+``env``
+    (optional) A dictionary of environment strings which will be added to the child command's environment.
+    The usual property interpolations can be used in environment variable names and values - see :ref:`Properties`.
+
+``timeout``
+    (optional) Specifies the timeout for worker-side operations, in seconds.
+    If your repositories are particularly large, then you may need to increase this  value from its default of 1200 (20 minutes).
+
+``config``
+
+    (optional) A dict of git configuration settings to pass to the remote git commands.
+
+``sshPrivateKey``
+
+    (optional) The private key to use when running git for fetch operations.
+    The ssh utility must be in the system path in order to use this option.
+    On Windows only git distribution that embeds MINGW has been tested (as of July 2017 the official distribution is MINGW-based).
+    The worker must either have the host in the known hosts file or the host key must be specified via the ``sshHostKey`` option.
+
+``sshHostKey``
+
+    (optional) Specifies public host key to match when authenticating with SSH public key authentication.
+    This may be either a :ref:`Secret` or just a string.
+    ``sshPrivateKey`` must be specified in order to use this option.
+    The host key must be in the form of ``<key type> <base64-encoded string>``, e.g. ``ssh-rsa AAAAB3N<...>FAaQ==``.
 
 .. bb:step:: ShellCommand
 
@@ -1453,6 +1564,7 @@ The defaults, which are suitable for GNU Make, are these::
 .. bb:step:: VC11
 .. bb:step:: VC12
 .. bb:step:: VC14
+.. bb:step:: VC141
 .. bb:step:: VS2003
 .. bb:step:: VS2005
 .. bb:step:: VS2008
@@ -1460,17 +1572,19 @@ The defaults, which are suitable for GNU Make, are these::
 .. bb:step:: VS2012
 .. bb:step:: VS2013
 .. bb:step:: VS2015
+.. bb:step:: VS2017
 .. bb:step:: VCExpress9
 .. bb:step:: MsBuild4
 .. bb:step:: MsBuild12
 .. bb:step:: MsBuild14
+.. bb:step:: MsBuild141
 
 Visual C++
 ++++++++++
 
 These steps are meant to handle compilation using Microsoft compilers.
-VC++ 6-14 (aka Visual Studio 2003-2015 and VCExpress9) are supported via calling ``devenv``.
-Msbuild as well as Windows Driver Kit 8 are supported via the ``MsBuild4``, ``MsBuild12``, and ``MsBuild14`` steps.
+VC++ 6-141 (aka Visual Studio 2003-2015 and VCExpress9) are supported via calling ``devenv``.
+Msbuild as well as Windows Driver Kit 8 are supported via the ``MsBuild4``, ``MsBuild12``, ``MsBuild14`` and  ``MsBuild141`` steps.
 These steps will take care of setting up a clean compilation environment, parsing the generated output in real time, and delivering as detailed as possible information about the compilation executed.
 
 All of the classes are in :mod:`buildbot.steps.vstudio`.
@@ -1484,6 +1598,7 @@ The available classes are:
 * ``VC11``
 * ``VC12``
 * ``VC14``
+* ``VC141``
 * ``VS2003``
 * ``VS2005``
 * ``VS2008``
@@ -1491,10 +1606,12 @@ The available classes are:
 * ``VS2012``
 * ``VS2013``
 * ``VS2015``
+* ``VS2017``
 * ``VCExpress9``
 * ``MsBuild4``
 * ``MsBuild12``
 * ``MsBuild14``
+* ``MsBuild141``
 
 The available constructor arguments are
 
@@ -1760,7 +1877,7 @@ The :bb:step:`MTR` step's arguments are:
     Value of option `--parallel` option used for :file:`mysql-test-run.pl` (number of processes used to run the test suite in parallel).
     Defaults to 4.
     This is used to determine the number of server error log files to download from the worker.
-    Specifying a too high value does not hurt (as nonexisting error logs will be ignored), however if using option `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
+    Specifying a too high value does not hurt (as nonexistent error logs will be ignored), however if using option `--parallel` value greater than the default it needs to be specified, or some server error logs will be missing.
 
 ``dbpool``
     An instance of :class:`twisted.enterprise.adbapi.ConnectionPool`, or ``None``.
@@ -2576,7 +2693,10 @@ Hyperlinks are added to the build detail web pages for each triggered build.
     You may use :ref:`Interpolate` here to dynamically construct new property values.
     For the simple case of copying a property, this might look like::
 
-        set_properties={"my_prop1" : Property("my_prop1")}
+        set_properties={"my_prop1" : Property("my_prop1"),
+                        "my_prop2" : Property("my_prop2")}
+
+    where ``Property`` is an instance of ``buildbot.process.properties.Property``
 
     .. note::
 

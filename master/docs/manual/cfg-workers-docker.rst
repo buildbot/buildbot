@@ -229,7 +229,7 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Do
     (optional, defaults to false)
     Automatically pulls image if requested image is not on docker host.
 
-``alwayPull``
+``alwaysPull``
     (optional, defaults to false)
     Always pulls image if autopull is set to true.
 

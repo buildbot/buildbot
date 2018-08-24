@@ -304,6 +304,7 @@ setup_args = {
             ('buildbot.steps.source.gerrit', ['Gerrit']),
             ('buildbot.steps.source.git', ['Git']),
             ('buildbot.steps.source.github', ['GitHub']),
+            ('buildbot.steps.source.gitlab', ['GitLab']),
             ('buildbot.steps.source.mercurial', ['Mercurial']),
             ('buildbot.steps.source.mtn', ['Monotone']),
             ('buildbot.steps.source.p4', ['P4']),
@@ -492,8 +493,6 @@ test_deps = [
     # boto3 and moto required for running EC2 tests
     'boto3',
     'moto',
-    # txgithub required to run buildbot.status.github module tests
-    'txgithub',
     'mock>=2.0.0',
 ]
 if sys.platform != 'win32':
@@ -539,7 +538,8 @@ setup_args['extras_require'] = {
         'pyenchant',
         'docutils>=0.8',
         'sphinx-jinja',
-        'towncrier'
+        'towncrier',
+        'pyyaml'
     ],
 }
 

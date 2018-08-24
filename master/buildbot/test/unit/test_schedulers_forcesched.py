@@ -258,15 +258,18 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
     def test_bad_codebases(self):
 
         # codebases must be a list of either string or BaseParameter types
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a list of strings or CodebaseParameter objects:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a "
+                                     "list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo', builderNames=['bar'],
                                                             codebases=[123],))
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a list of strings or CodebaseParameter objects:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' must be a "
+                                     "list of strings or CodebaseParameter objects:",
                                      lambda: ForceScheduler(name='foo', builderNames=['bar'],
                                                             codebases=[IntParameter('foo')],))
 
         # codebases cannot be empty
-        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' cannot be empty; use [CodebaseParameter(codebase='', hide=True)] if needed:",
+        self.assertRaisesConfigError("ForceScheduler 'foo': 'codebases' cannot be "
+                                     "empty; use [CodebaseParameter(codebase='', hide=True)] if needed:",
                                      lambda: ForceScheduler(name='foo',
                                                             builderNames=[
                                                                 'bar'],
@@ -445,7 +448,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "text", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-                              '"size": 10}')
+                              '"size": 10, "autopopulate": null}')
 
     def test_StringParameter_Required(self):
         self.do_ParameterTest(value=" ", expect=CollectedValidationError,
@@ -468,7 +471,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "file", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, '
-                              '"maxsize": 10485760}')
+                              '"maxsize": 10485760, "autopopulate": null}')
 
     def test_PatchParameter(self):
         self.do_ParameterTest(req=dict(p1_author='me', reason="because"), expect={
@@ -478,25 +481,25 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                                    'level': 1,
                                    'subdir': '.'},
                               klass=PatchParameter,
-                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
                               '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
                               '"layout": "vertical", "columns": 1, "fields": [{"name": "body", '
-                              '"fullName": "p1_body", "label": "body", "tablabel": "body", '
+                              '"fullName": "p1_body", "label": "body", "tablabel": "body", "autopopulate": null, '
                               '"type": "file", "default": "", "required": false, "multiple": false, '
                               '"regex": null, "hide": false, "maxsize": 10485760}, {"name": "level", '
                               '"fullName": "p1_level", "label": "level", "tablabel": "level", '
                               '"type": "int", "default": 1, "required": false, "multiple": false, '
-                              '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
+                              '"regex": null, "hide": false, "maxsize": null, "size": 10, "autopopulate": null}, '
                               '{"name": "author", "fullName": "p1_author", "label": "author", '
-                              '"tablabel": "author", "type": "text", "default": "", '
+                              '"tablabel": "author", "type": "text", "default": "", "autopopulate": null, '
                               '"required": false, "multiple": false, "regex": null, "hide": false, '
-                              '"maxsize": null, "size": 10}, {"name": "comment", '
+                              '"maxsize": null, "size": 10}, {"name": "comment", "autopopulate": null, '
                               '"fullName": "p1_comment", "label": "comment", "tablabel": "comment", '
                               '"type": "text", "default": "", "required": false, "multiple": false, '
                               '"regex": null, "hide": false, "maxsize": null, "size": 10}, '
                               '{"name": "subdir", "fullName": "p1_subdir", "label": "subdir", '
-                              '"tablabel": "subdir", "type": "text", "default": ".", '
+                              '"tablabel": "subdir", "type": "text", "default": ".", "autopopulate": null, '
                               '"required": false, "multiple": false, "regex": null, "hide": false, '
                               '"maxsize": null, "size": 10}]}')
 
@@ -505,7 +508,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "int", "default": 0, "required": false, '
                               '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-                              '"size": 10}')
+                              '"size": 10, "autopopulate": null}')
 
     def test_FixedParameter(self):
         self.do_ParameterTest(value="123", expect="321", klass=FixedParameter,
@@ -513,7 +516,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "fixed", "default": "321", '
                               '"required": false, "multiple": false, "regex": null, "hide": true, '
-                              '"maxsize": null}')
+                              '"maxsize": null, "autopopulate": null}')
 
     def test_BooleanParameter_True(self):
         req = dict(p1=True, reason='because')
@@ -522,7 +525,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "bool", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, '
-                              '"maxsize": null}')
+                              '"maxsize": null, "autopopulate": null}')
 
     def test_BooleanParameter_False(self):
         req = dict(p2=True, reason='because')
@@ -538,7 +541,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
                               '"default": "", "required": false, "multiple": false, "regex": null, '
                               '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true}')
+                              '"need_email": true, "autopopulate": null}')
 
     def test_UserNameParameterIsValidMail(self):
         email = "test@buildbot.net"
@@ -549,7 +552,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
                               '"default": "", "required": false, "multiple": false, "regex": null, '
                               '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true}')
+                              '"need_email": true, "autopopulate": null}')
 
     def test_UserNameParameterIsValidMailBis(self):
         email = "<test@buildbot.net>"
@@ -560,7 +563,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               '"label": "Your name:", "tablabel": "Your name:", "type": "username", '
                               '"default": "", "required": false, "multiple": false, "regex": null, '
                               '"hide": false, "maxsize": null, "size": 30, '
-                              '"need_email": true}')
+                              '"need_email": true, "autopopulate": null}')
 
     def test_ChoiceParameter(self):
         self.do_ParameterTest(value='t1', expect='t1',
@@ -569,7 +572,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "list", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
-                              '"choices": ["t1", "t2"], "strict": true}')
+                              '"choices": ["t1", "t2"], "strict": true, "autopopulate": null}')
 
     def test_ChoiceParameterError(self):
         self.do_ParameterTest(value='t3',
@@ -590,7 +593,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
                               expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
                               '"tablabel": "p1", "type": "list", "default": "", "required": false, '
                               '"multiple": true, "regex": null, "hide": false, "maxsize": null, '
-                              '"choices": ["t1", "t2"], "strict": true}')
+                              '"choices": ["t1", "t2"], "strict": true, "autopopulate": null}')
 
     def test_ChoiceParameterMultipleError(self):
         self.do_ParameterTest(value=['t1', 't3'],
@@ -607,11 +610,11 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         self.do_ParameterTest(req=dict(p1_foo='123', reason="because"),
                               expect=dict(foo=123),
                               klass=NestedParameter, fields=fields,
-                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", '
+                              expectJson='{"name": "p1", "fullName": "p1", "label": "p1", "autopopulate": null, '
                               '"tablabel": "p1", "type": "nested", "default": "", "required": false, '
                               '"multiple": false, "regex": null, "hide": false, "maxsize": null, '
                               '"layout": "vertical", "columns": 1, "fields": [{"name": "foo", '
-                              '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", '
+                              '"fullName": "p1_foo", "label": "foo", "tablabel": "foo", "autopopulate": null, '
                               '"type": "int", "default": 0, "required": false, "multiple": false, '
                               '"regex": null, "hide": false, "maxsize": null, "size": 10}]}')
 

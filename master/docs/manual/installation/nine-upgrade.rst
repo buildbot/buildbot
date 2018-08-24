@@ -215,4 +215,3 @@ More Information
 For minor changes not mentioned here, consult the release notes for the versions over which you are upgrading.
 
 Buildbot-0.9.0 represents several years' work, and as such we may have missed potential migration issues.
-To find the latest "gotchas" and share with other users, see http://trac.buildbot.net/wiki/NineMigrationGuide.

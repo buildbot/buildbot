@@ -7,7 +7,7 @@ Data_module is a reusable angularJS module used to access buildbot's data api fr
 Its main purpose is to handle the 3 way binding.
 
 
-2 way binding is the angular MVVM concept, which seemlessly synchronise the view and the model.
+2 way binding is the angular MVVM concept, which seamlessly synchronise the view and the model.
 Here we introduce an additional way of synchronisation, which is from the server to the model.
 
 .. blockdiag::

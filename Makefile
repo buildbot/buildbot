@@ -8,9 +8,9 @@ VENV_NAME:=.venv$(VENV_PY_VERSION)
 PIP?=$(VENV_NAME)/bin/pip
 VENV_PY_VERSION?=python
 
-WWW_PKGS := pkg www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
-WWW_EX_PKGS := nestedexample codeparameter
-ALL_PKGS := master worker $(WWW_PKGS)
+WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
+WWW_EX_PKGS := www/nestedexample www/codeparameter
+ALL_PKGS := master worker pkg $(WWW_PKGS)
 
 ALL_PKGS_TARGETS := $(addsuffix _pkg,$(ALL_PKGS))
 .PHONY: $(ALL_PKGS_TARGETS)
@@ -43,11 +43,15 @@ frontend_deps: $(VENV_NAME)
 
 # rebuild front-end from source
 frontend: frontend_deps
-	for i in $(WWW_PKGS) $(WWW_EX_PKG); do $(PIP) install -e $$i || exit 1; done
+	for i in pkg $(WWW_PKGS); do $(PIP) install -e $$i || exit 1; done
 
 # do installation tests. Test front-end can build and install for all install methods
 frontend_install_tests: frontend_deps
 	trial pkg/test_buildbot_pkg.py
+
+# upgrade FE dependencies
+frontend_yarn_upgrade:
+	for i in $(WWW_PKGS) $(WWW_EX_PKGS); do (cd $$i; echo $$i; yarn upgrade || echo $$i failed); done
 
 # install git hooks for validating patches at commit time
 hooks:
@@ -61,14 +65,12 @@ isort:
 	git commit -a -m "isort+autopep8 run"
 
 
-docker: docker-buildbot-worker docker-buildbot-worker-node docker-buildbot-master docker-buildbot-master-ubuntu
+docker: docker-buildbot-worker docker-buildbot-master
 	echo done
 docker-buildbot-worker:
 	$(DOCKERBUILD) -t buildbot/buildbot-worker:master worker
 docker-buildbot-master:
 	$(DOCKERBUILD) -t buildbot/buildbot-master:master master
-docker-buildbot-master-ubuntu:
-	$(DOCKERBUILD) -t buildbot/buildbot-master-ubuntu:master -f master/Dockerfile.ubuntu master
 
 $(VENV_NAME):
 	virtualenv -p $(VENV_PY_VERSION) $(VENV_NAME)

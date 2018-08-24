@@ -302,8 +302,16 @@ Custom templates can also be specified in a ``template`` directory nearby the ``
 Authentication plugins
 ~~~~~~~~~~~~~~~~~~~~~~
 
-By default, Buildbot does not require people to authenticate in order to see the readonly data.
-In order to access control features in the web UI, you will need to configure an authentication plugin.
+By default, Buildbot does not require people to authenticate in order to access control features in the web UI.
+To secure Buildbot, you will need to configure an authentication plugin.
+
+.. note::
+
+   To secure the Buildbot web interface, authorization rules must be provided via the 'authz' configuration.
+   If you simply wish to lock down a Buildbot instance so that only read only access is permitted, you can
+   restrict access to control endpoints to an unpopulated 'admin' role. For example::
+
+      c['www']['authz'] = util.Authz(allowRules=[util.AnyControlEndpointMatcher(role="admins")],roleMatchers=[])
 
 .. note::
 

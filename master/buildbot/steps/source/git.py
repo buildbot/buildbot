@@ -15,10 +15,7 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import iteritems
 from future.utils import string_types
-
-from distutils.version import LooseVersion
 
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -27,10 +24,11 @@ from twisted.python import log
 from buildbot import config as bbconfig
 from buildbot.interfaces import WorkerTooOldError
 from buildbot.process import buildstep
-from buildbot.process import remotecommand
 from buildbot.steps.source.base import Source
+from buildbot.steps.worker import CompositeStepMixin
+from buildbot.util.git import RC_SUCCESS
+from buildbot.util.git import GitStepMixin
 
-RC_SUCCESS = 0
 GIT_HASH_LENGTH = 40
 
 
@@ -71,7 +69,7 @@ git_describe_flags = [
 ]
 
 
-class Git(Source):
+class Git(Source, GitStepMixin):
 
     """ Class for Git with all the smarts """
     name = 'git'
@@ -80,7 +78,8 @@ class Git(Source):
 
     def __init__(self, repourl=None, branch='HEAD', mode='incremental', method=None,
                  reference=None, submodules=False, shallow=False, progress=False, retryFetch=False,
-                 clobberOnFailure=False, getDescription=False, config=None, origin=None, **kwargs):
+                 clobberOnFailure=False, getDescription=False, config=None,
+                 origin=None, sshPrivateKey=None, sshHostKey=None, **kwargs):
         """
         @type  repourl: string
         @param repourl: the URL which points at the git repository
@@ -121,6 +120,22 @@ class Git(Source):
         @type origin: string
         @param origin: The name to give the remote when cloning (default None)
 
+        @type  sshPrivateKey: Secret or string
+        @param sshPrivateKey: The private key to use when running git for fetch
+                              operations. The ssh utility must be in the system
+                              path in order to use this option. On Windows only
+                              git distribution that embeds MINGW has been
+                              tested (as of July 2017 the official distribution
+                              is MINGW-based).
+
+        @type  sshHostKey: Secret or string
+        @param sshHostKey: Specifies public host key to match when
+                           authenticating with SSH public key authentication.
+                           `sshPrivateKey` must be specified in order to use
+                           this option. The host key must be in the form of
+                           `<key type> <base64-encoded string>`,
+                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+
         @type  config: dict
         @param config: Git configuration options to enable when running git
         """
@@ -138,15 +153,16 @@ class Git(Source):
         self.clobberOnFailure = clobberOnFailure
         self.mode = mode
         self.getDescription = getDescription
+        self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
         self.config = config
-        self.supportsBranch = True
-        self.supportsSubmoduleForce = True
-        self.supportsSubmoduleCheckout = True
         self.srcdir = 'source'
         self.origin = origin
+
         Source.__init__(self, **kwargs)
-        if not self.repourl:
-            bbconfig.error("Git: must provide repourl.")
+
+        self.setupGitStep()
+
         if isinstance(self.mode, string_types):
             if not self._hasAttrGroupMember('mode', self.mode):
                 bbconfig.error("Git: mode must be %s" %
@@ -179,13 +195,16 @@ class Git(Source):
             if patched:
                 yield self._dovccmd(['clean', '-f', '-f', '-d', '-x'])
 
+            yield self._downloadSshPrivateKeyIfNeeded()
             yield self._getAttrGroupMember('mode', self.mode)()
             if patch:
                 yield self.patch(None, patch=patch)
             yield self.parseGotRevision()
             res = yield self.parseCommitDescription()
+            yield self._removeSshPrivateKeyIfNeeded()
             yield self.finish(res)
         except Exception as e:
+            yield self._removeSshPrivateKeyIfNeeded()
             yield self.failed(e)
 
     @defer.inlineCallbacks
@@ -338,56 +357,10 @@ class Git(Source):
 
         defer.returnValue(RC_SUCCESS)
 
-    @defer.inlineCallbacks
-    def _dovccmd(self, command, abandonOnFailure=True, collectStdout=False, initialStdin=None):
-        full_command = ['git']
-        if self.config is not None:
-            for name, value in iteritems(self.config):
-                full_command.append('-c')
-                full_command.append('%s=%s' % (name, value))
-        full_command.extend(command)
-
-        # check for the interruptSignal flag
-        sigtermTime = None
-        interruptSignal = None
-
-        # If possible prefer to send a SIGTERM to git before we send a SIGKILL.
-        # If we send a SIGKILL, git is prone to leaving around stale lockfiles.
-        # By priming it with a SIGTERM first we can ensure that it has a chance to shut-down gracefully
-        # before getting terminated
-        if not self.workerVersionIsOlderThan("shell", "2.16"):
-            # git should shut-down quickly on SIGTERM.  If it doesn't don't let it
-            # stick around for too long because this is on top of any timeout
-            # we have hit.
-            sigtermTime = 1
-        else:
-            # Since sigtermTime is unavailable try to just use SIGTERM by itself instead of
-            # killing.  This should be safe.
-            if self.workerVersionIsOlderThan("shell", "2.15"):
-                log.msg(
-                    "NOTE: worker does not allow master to specify interruptSignal. This may leave a stale lockfile around if the command is interrupted/times out\n")
-            else:
-                interruptSignal = 'TERM'
-
-        cmd = remotecommand.RemoteShellCommand(self.workdir,
-                                               full_command,
-                                               env=self.env,
-                                               logEnviron=self.logEnviron,
-                                               timeout=self.timeout,
-                                               sigtermTime=sigtermTime,
-                                               interruptSignal=interruptSignal,
-                                               collectStdout=collectStdout,
-                                               initialStdin=initialStdin)
-        cmd.useLog(self.stdio_log, False)
-        yield self.runCommand(cmd)
-
-        if abandonOnFailure and cmd.didFail():
-            log.msg("Source step failed while running command %s" % cmd)
-            raise buildstep.BuildStepFailed()
-        if collectStdout:
-            defer.returnValue(cmd.stdout)
-            return
-        defer.returnValue(cmd.rc)
+    def _getSshDataWorkDir(self):
+        if self.method == 'copy' and self.mode == 'full':
+            return self.srcdir
+        return self.workdir
 
     @defer.inlineCallbacks
     def _fetch(self, _):
@@ -582,26 +555,6 @@ class Git(Source):
             return 'fresh'
 
     @defer.inlineCallbacks
-    def checkBranchSupport(self):
-        stdout = yield self._dovccmd(['--version'], collectStdout=True)
-
-        gitInstalled = False
-        version = "0.0.0"
-        if 'git' in stdout:
-            gitInstalled = True
-            try:
-                version = stdout.strip().split(' ')[2]
-            except IndexError:
-                gitInstalled = False
-        if LooseVersion(version) < LooseVersion("1.6.5"):
-            self.supportsBranch = False
-        if LooseVersion(version) < LooseVersion("1.7.6"):
-            self.supportsSubmoduleForce = False
-        if LooseVersion(version) < LooseVersion("1.7.8"):
-            self.supportsSubmoduleCheckout = False
-        defer.returnValue(gitInstalled)
-
-    @defer.inlineCallbacks
     def applyPatch(self, patch):
         yield self._dovccmd(['update-index', '--refresh'])
 
@@ -636,3 +589,116 @@ class Git(Source):
             defer.returnValue("clobber")
         else:
             defer.returnValue("clone")
+
+
+class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
+
+    description = None
+    descriptionDone = None
+    descriptionSuffix = None
+
+    ''' Class to perform Git push commands '''
+
+    name = 'gitpush'
+    renderables = ['repourl', 'branch']
+
+    def __init__(self, workdir=None, repourl=None, branch=None, force=False,
+                 env=None, timeout=20 * 60, logEnviron=True,
+                 sshPrivateKey=None, sshHostKey=None,
+                 config=None, **kwargs):
+        """
+        @type  workdir: string
+        @param workdir: local directory (relative to the Builder's root)
+                        where the tree should be placed
+
+        @type  repourl: string
+        @param repourl: the URL which points at the git repository
+
+        @type  branch: string
+        @param branch: The branch to push. The branch should already exist on
+                       the local repository.
+
+        @type force: boolean
+        @param force: If True, forces overwrite of refs on the remote
+                      repository. Corresponds to the '--force' flag.
+
+        @type env: dict
+        @param env: Specifies custom environment variables to set
+
+        @type logEnviron: boolean
+        @param logEnviron: If this option is true (the default), then the
+                           step's logfile will describe the environment
+                           variables on the worker. In situations where the
+                           environment is not relevant and is long, it may
+                           be easier to set logEnviron=False.
+
+        @type timeout
+        @param timeout: Specifies the timeout for individual git operations
+
+        @type  sshPrivateKey: Secret or string
+        @param sshPrivateKey: The private key to use when running git for push
+                              operations. The ssh utility must be in the system
+                              path in order to use this option. On Windows only
+                              git distribution that embeds MINGW has been
+                              tested (as of July 2017 the official distribution
+                              is MINGW-based).
+
+        @type  sshHostKey: Secret or string
+        @param sshHostKey: Specifies public host key to match when
+                           authenticating with SSH public key authentication.
+                           `sshPrivateKey` must be specified in order to use
+                           this option. The host key must be in the form of
+                           `<key type> <base64-encoded string>`,
+                           e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+
+        @type  config: dict
+        @param config: Git configuration options to enable when running git
+        """
+
+        self.workdir = workdir
+        self.repourl = repourl
+        self.branch = branch
+        self.force = force
+        self.env = env
+        self.timeout = timeout
+        self.logEnviron = logEnviron
+        self.sshPrivateKey = sshPrivateKey
+        self.sshHostKey = sshHostKey
+        self.config = config
+
+        buildstep.BuildStep.__init__(self, **kwargs)
+
+        self.setupGitStep()
+
+        if not self.branch:
+            bbconfig.error('GitPush: must provide branch')
+
+    def _getSshDataWorkDir(self):
+        return self.workdir
+
+    @defer.inlineCallbacks
+    def run(self):
+        self.stdio_log = yield self.addLog("stdio")
+        try:
+            gitInstalled = yield self.checkBranchSupport()
+
+            if not gitInstalled:
+                raise WorkerTooOldError("git is not installed on worker")
+
+            yield self._downloadSshPrivateKeyIfNeeded()
+            ret = yield self._doPush()
+            yield self._removeSshPrivateKeyIfNeeded()
+            defer.returnValue(ret)
+
+        except Exception as e:
+            yield self._removeSshPrivateKeyIfNeeded()
+            raise e
+
+    @defer.inlineCallbacks
+    def _doPush(self):
+        cmd = ['push', self.repourl, self.branch]
+        if self.force:
+            cmd.append('--force')
+
+        ret = yield self._dovccmd(cmd)
+        defer.returnValue(ret)

@@ -77,7 +77,7 @@ class BaseParameter(object):
     BaseParameter provides a base implementation for property customization
     """
     spec_attributes = ["name", "fullName", "label", "tablabel", "type", "default", "required",
-                       "multiple", "regex", "hide", "maxsize"]
+                       "multiple", "regex", "hide", "maxsize", "autopopulate"]
     name = ""
     parentName = None
     label = ""
@@ -90,6 +90,7 @@ class BaseParameter(object):
     debug = True
     hide = False
     maxsize = None
+    autopopulate = None
 
     @property
     def fullName(self):

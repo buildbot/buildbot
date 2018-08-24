@@ -73,7 +73,7 @@ Worker Connections
 ~~~~~~~~~~~~~~~~~~
 
 The workers are typically run on a variety of separate machines, at least one per platform of interest.
-These machines connect to the buildmaster over a TCP connection to a publically-visible port.
+These machines connect to the buildmaster over a TCP connection to a publicly-visible port.
 As a result, the workers can live behind a NAT box or similar firewalls, as long as they can get to buildmaster.
 The TCP connections are initiated by the worker and accepted by the buildmaster, but commands and results travel both ways within this connection.
 The buildmaster is always in charge, so all commands travel exclusively from the buildmaster to the worker.

@@ -78,6 +78,14 @@ matrix:
 
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.6"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
+
+    - python: "3.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
+    - python: "3.7"
+      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
 
 # Dependencies installation commands
@@ -101,6 +109,13 @@ install:
       fi
       if [ $TWISTED != latest -a  $TWISTED != trunk ]; then pip install Twisted==$TWISTED ; fi
       if [ $SQLALCHEMY != latest ]; then pip install sqlalchemy==$SQLALCHEMY; fi
+  - step: !ShellCommand
+        command: "pip check"
+        warnOnFailure: True
+        flunkOnFailure: False
+        haltOnFailure: False
+        name: "pip check"
+    title: "pip check"
 
 before_script:
   # create real database for tests

@@ -21,11 +21,22 @@ from twisted.internet import defer
 from twisted.internet import utils
 
 
+def _check_env_is_expected(test, expected_env, env):
+    if expected_env is None:
+        return
+
+    env = env or {}
+    for var, value in iteritems(expected_env):
+        test.assertEqual(env.get(var), value,
+                         'Expected environment to have %s = %r' % (var, value))
+
+
 class Expect(object):
     _stdout = b""
     _stderr = b""
     _exit = 0
     _path = None
+    _env = None
 
     def __init__(self, bin, *args):
         self._bin = bin
@@ -49,10 +60,16 @@ class Expect(object):
         self._path = path
         return self
 
-    def check(self, test, bin, path, args):
+    def env(self, env):
+        self._env = env
+        return self
+
+    def check(self, test, bin, path, args, env):
         test.assertDictEqual(
             dict(bin=bin, path=path, args=tuple(args)),
             dict(bin=self._bin, path=self._path, args=self._args), "unexpected command run")
+
+        _check_env_is_expected(test, self._env, env)
         return (self._stdout, self._stderr, self._exit)
 
     def __repr__(self):
@@ -71,12 +88,6 @@ class GetProcessOutputMixin:
         self.assertEqual(self._expected_commands, [],
                          "assert all expected commands were run")
 
-    def _check_env(self, env):
-        env = env or {}
-        for var, value in iteritems(self._gpo_expect_env):
-            self.assertEqual(env.get(var), value,
-                             'Expected environment to have %s = %r' % (var, value))
-
     def patched_getProcessOutput(self, bin, args, env=None,
                                  errortoo=False, path=None):
         d = self.patched_getProcessOutputAndValue(bin, args, env=env,
@@ -94,14 +105,14 @@ class GetProcessOutputMixin:
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,
                                          path=None):
-        self._check_env(env)
+        _check_env_is_expected(self, self._gpo_expect_env, env)
 
         if not self._expected_commands:
             self.fail("got command %s %s when no further commands were expected"
                       % (bin, args))
 
         expect = self._expected_commands.pop(0)
-        return defer.succeed(expect.check(self, bin, path, args))
+        return defer.succeed(expect.check(self, bin, path, args, env))
 
     def _patch_gpo(self):
         if not self._gpo_patched:

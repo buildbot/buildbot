@@ -29,6 +29,7 @@ from buildbot.changes.p4poller import P4PollerError
 from buildbot.changes.p4poller import P4Source
 from buildbot.changes.p4poller import get_simple_split
 from buildbot.test.util import changesource
+from buildbot.test.util import config
 from buildbot.test.util import gpo
 from buildbot.util import datetime2epoch
 
@@ -98,6 +99,7 @@ p4change = {
 
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
+                   config.ConfigErrorsMixin,
                    unittest.TestCase):
 
     def setUp(self):
@@ -199,7 +201,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_b',
                 'category': None,
                 'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+                'comments':
+                    u'short desc truncated because this is a long description.\n'
+                    u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'branch_b_file', u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -213,7 +217,9 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                 'branch': u'branch_c',
                 'category': None,
                 'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+                'comments':
+                    u'short desc truncated because this is a long description.\n'
+                    u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
                 'files': [u'whatbranch'],
                 'project': '',
                 'properties': {},
@@ -336,7 +342,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                              ['p4', [b'p4', b'login', b'-p']])
             pp.makeConnection(transport)
             self.assertEqual('pass\n', transport.msg)
-            pp.outReceived('Enter password:\nTICKET_ID_GOES_HERE\n')
+            pp.outReceived('Enter password:\nSuccess:  Password verified.\nTICKET_ID_GOES_HERE\n')
             so = error.ProcessDone(None)
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
@@ -440,6 +446,10 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.assertAllCommandsRan()
         d.addCallback(check)
         return d
+
+    def test_resolveWho_callable(self):
+        self.assertRaisesConfigError("You need to provide a valid callable for resolvewho",
+                                     lambda: P4Source(resolvewho=None))
 
 
 class TestSplit(unittest.TestCase):
