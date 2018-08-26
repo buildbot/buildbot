@@ -1,0 +1,3 @@
+:py:class:`buildbot.reporters.irc.IrcStatusBot` no longer encodes messages
+before passing them on to methods of its Twisted base class to avoid posting
+the ``repr()`` of a bytes object when running on Python 3.
