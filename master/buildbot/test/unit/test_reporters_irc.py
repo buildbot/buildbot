@@ -53,6 +53,14 @@ class TestIrcStatusBot(unittest.TestCase):
             args = ('nick', 'pass', ['#ch'], [], [], {})
         return irc.IrcStatusBot(*args, **kwargs)
 
+    def test_groupDescribe(self):
+        b = self.makeBot()
+        b.describe = lambda d, m: evts.append(('n', d, m))
+
+        evts = []
+        b.groupDescribe('#chan', 'hi')
+        self.assertEqual(evts, [('n', '#chan', 'hi')])
+
     def test_groupChat(self):
         b = self.makeBot()
         b.notice = lambda d, m: evts.append(('n', d, m))
