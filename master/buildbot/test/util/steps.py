@@ -310,6 +310,7 @@ class BuildStepMixin(object):
         self.exp_exception = exception_class
         self.expectOutcome(EXCEPTION)
 
+    @defer.inlineCallbacks
     def runStep(self):
         """
         Run the step set up with L{setupStep}, and check the results.
@@ -320,64 +321,61 @@ class BuildStepMixin(object):
 
         self.conn = mock.Mock(name="WorkerForBuilder(connection)")
         self.step.setupProgress()
-        d = self.step.startStep(self.conn)
+        result = yield self.step.startStep(self.conn)
 
-        @d.addCallback
-        def check(result):
-            # finish up the debounced updateSummary before checking
-            self.debounceClock.advance(1)
-            if self.expected_remote_commands:
-                log.msg("un-executed remote commands:")
-                for rc in self.expected_remote_commands:
-                    log.msg(repr(rc))
-                raise AssertionError("un-executed remote commands; see logs")
+        # finish up the debounced updateSummary before checking
+        self.debounceClock.advance(1)
+        if self.expected_remote_commands:
+            log.msg("un-executed remote commands:")
+            for rc in self.expected_remote_commands:
+                log.msg(repr(rc))
+            raise AssertionError("un-executed remote commands; see logs")
 
-            # in case of unexpected result, display logs in stdout for
-            # debugging failing tests
-            if result != self.exp_result:
-                log.msg("unexpected result from step; dumping logs")
-                for l in itervalues(self.step.logs):
-                    if l.stdout:
-                        log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
-                    if l.stderr:
-                        log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
-                raise AssertionError("unexpected result; see logs")
+        # in case of unexpected result, display logs in stdout for
+        # debugging failing tests
+        if result != self.exp_result:
+            log.msg("unexpected result from step; dumping logs")
+            for l in itervalues(self.step.logs):
+                if l.stdout:
+                    log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
+                if l.stderr:
+                    log.msg("{0} stderr:\n{1}".format(l.name, l.stderr))
+            raise AssertionError("unexpected result; see logs")
 
-            if self.exp_state_string:
-                stepStateString = self.master.data.updates.stepStateString
-                stepids = list(stepStateString)
-                assert stepids, "no step state strings were set"
-                self.assertEqual(
+        if self.exp_state_string:
+            stepStateString = self.master.data.updates.stepStateString
+            stepids = list(stepStateString)
+            assert stepids, "no step state strings were set"
+            self.assertEqual(
+                self.exp_state_string,
+                stepStateString[stepids[0]],
+                "expected state_string {0!r}, got {1!r}".format(
                     self.exp_state_string,
-                    stepStateString[stepids[0]],
-                    "expected state_string {0!r}, got {1!r}".format(
-                        self.exp_state_string,
-                        stepStateString[stepids[0]]))
-            for pn, (pv, ps) in iteritems(self.exp_properties):
-                self.assertTrue(self.properties.hasProperty(pn),
-                                "missing property '%s'" % pn)
-                self.assertEqual(self.properties.getProperty(pn),
-                                 pv, "property '%s'" % pn)
-                if ps is not None:
-                    self.assertEqual(
-                        self.properties.getPropertySource(pn), ps,
-                        "property {0!r} source has source {1!r}".format(
-                            pn, self.properties.getPropertySource(pn)))
-            for pn in self.exp_missing_properties:
-                self.assertFalse(self.properties.hasProperty(pn),
-                                 "unexpected property '%s'" % pn)
-            for l, exp in iteritems(self.exp_logfiles):
-                got = self.step.logs[l].stdout
-                if got != exp:
-                    log.msg("Unexpected log output:\n" + got)
-                    raise AssertionError("Unexpected log output; see logs")
-            if self.exp_exception:
+                    stepStateString[stepids[0]]))
+        for pn, (pv, ps) in iteritems(self.exp_properties):
+            self.assertTrue(self.properties.hasProperty(pn),
+                            "missing property '%s'" % pn)
+            self.assertEqual(self.properties.getProperty(pn),
+                             pv, "property '%s'" % pn)
+            if ps is not None:
                 self.assertEqual(
-                    len(self.flushLoggedErrors(self.exp_exception)), 1)
+                    self.properties.getPropertySource(pn), ps,
+                    "property {0!r} source has source {1!r}".format(
+                        pn, self.properties.getPropertySource(pn)))
+        for pn in self.exp_missing_properties:
+            self.assertFalse(self.properties.hasProperty(pn),
+                             "unexpected property '%s'" % pn)
+        for l, exp in iteritems(self.exp_logfiles):
+            got = self.step.logs[l].stdout
+            if got != exp:
+                log.msg("Unexpected log output:\n" + got)
+                raise AssertionError("Unexpected log output; see logs")
+        if self.exp_exception:
+            self.assertEqual(
+                len(self.flushLoggedErrors(self.exp_exception)), 1)
 
-            # XXX TODO: hidden
-            # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
-        return d
+        # XXX TODO: hidden
+        # self.step_status.setHidden.assert_called_once_with(self.exp_hidden)
 
     # callbacks from the running step
 

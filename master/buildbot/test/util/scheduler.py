@@ -123,16 +123,15 @@ class SchedulerMixin(interfaces.InterfaceTests):
         def patch(meth):
             oldMethod = getattr(scheduler, meth)
 
+            @defer.inlineCallbacks
             def newMethod():
                 self._parentMethodCalled = False
-                d = defer.maybeDeferred(oldMethod)
+                rv = yield defer.maybeDeferred(oldMethod)
 
-                @d.addCallback
-                def check(rv):
-                    self.assertTrue(self._parentMethodCalled,
-                                    "'%s' did not call its parent" % meth)
-                    return rv
-                return d
+                self.assertTrue(self._parentMethodCalled,
+                    "'%s' did not call its parent" % meth)
+                defer.returnValue(rv)
+
             setattr(scheduler, meth, newMethod)
 
             oldParent = getattr(base.BaseScheduler, meth)

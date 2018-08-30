@@ -144,6 +144,7 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
         yield sched._enabledCallback(None, {'enabled': not sched.enabled})
         self.assertEqual(sched.enabled, expectedValue)
 
+    @defer.inlineCallbacks
     def do_test_change_consumption(self, kwargs, expected_result):
         # (expected_result should be True (important), False (unimportant), or
         # None (ignore the change))
@@ -179,20 +180,17 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             return defer.succeed(None)
         sched.gotChange = gotChange
 
-        d = sched.startConsumingChanges(**kwargs)
+        yield sched.startConsumingChanges(**kwargs)
 
-        def test(_):
-            # check that it registered callbacks
-            self.assertEqual(len(self.mq.qrefs), 2)
+        # check that it registered callbacks
+        self.assertEqual(len(self.mq.qrefs), 2)
 
-            qref = self.mq.qrefs[1]
-            self.assertEqual(qref.filter, ('changes', None, 'new'))
+        qref = self.mq.qrefs[1]
+        self.assertEqual(qref.filter, ('changes', None, 'new'))
 
-            # invoke the callback with the change, and check the result
-            qref.callback('change.12934.new', msg)
-            self.assertEqual(change_received[0], expected_result)
-        d.addCallback(test)
-        return d
+        # invoke the callback with the change, and check the result
+        qref.callback('change.12934.new', msg)
+        self.assertEqual(change_received[0], expected_result)
 
     def test_change_consumption_defaults(self):
         # all changes are important by default
@@ -210,15 +208,13 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
             dict(fileIsImportant=lambda c: False),
             False)
 
+    @defer.inlineCallbacks
     def test_change_consumption_fileIsImportant_exception(self):
-        d = self.do_test_change_consumption(
+        yield self.do_test_change_consumption(
             dict(fileIsImportant=lambda c: 1 / 0),
             None)
 
-        def check_err(_):
-            self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
-        d.addCallback(check_err)
-        return d
+        self.assertEqual(1, len(self.flushLoggedErrors(ZeroDivisionError)))
 
     def test_change_consumption_change_filter_True(self):
         cf = mock.Mock()

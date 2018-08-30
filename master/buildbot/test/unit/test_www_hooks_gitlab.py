@@ -927,20 +927,17 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_tag_event(res, codebase="MyCodebase")
 
+    @defer.inlineCallbacks
     def testGitWithNoJson(self):
         self.request = FakeRequest()
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
-        d = self.request.test_render(self.changeHook)
+        yield self.request.test_render(self.changeHook)
 
-        def check_changes(r):
-            self.assertEqual(len(self.changeHook.master.addedChanges), 0)
-            self.assertIn(b"Error loading JSON:", self.request.written)
-            self.request.setResponseCode.assert_called_with(400, mock.ANY)
-
-        d.addCallback(check_changes)
-        return d
+        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertIn(b"Error loading JSON:", self.request.written)
+        self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
     @defer.inlineCallbacks
     def test_event_property(self):

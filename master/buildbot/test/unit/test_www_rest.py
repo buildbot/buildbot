@@ -43,16 +43,14 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
 
     maxVersion = 2
 
+    @defer.inlineCallbacks
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
-        d = self.render_resource(rsrc, b'/')
+        rv = yield self.render_resource(rsrc, b'/')
 
-        @d.addCallback
-        def check(rv):
-            self.assertIn(b'api_versions', rv)
-        return d
+        self.assertIn(b'api_versions', rv)
 
     def test_versions(self):
         master = self.make_master(url='h:/a/b/')
