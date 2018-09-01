@@ -29,6 +29,7 @@ class deferredLocked(unittest.TestCase):
     def test_name(self):
         self.assertEqual(util.deferredLocked, misc.deferredLocked)
 
+    @defer.inlineCallbacks
     def test_fn(self):
         lock = defer.DeferredLock()
 
@@ -36,12 +37,9 @@ class deferredLocked(unittest.TestCase):
         def check_locked(arg1, arg2):
             self.assertEqual([lock.locked, arg1, arg2], [True, 1, 2])
             return defer.succeed(None)
-        d = check_locked(1, 2)
+        yield check_locked(1, 2)
 
-        @d.addCallback
-        def check_unlocked(_):
-            self.assertFalse(lock.locked)
-        return d
+        self.assertFalse(lock.locked)
 
     def test_fn_fails(self):
         lock = defer.DeferredLock()
@@ -72,6 +70,7 @@ class deferredLocked(unittest.TestCase):
                        lambda _: self.assertFalse(lock.locked))
         return d
 
+    @defer.inlineCallbacks
     def test_method(self):
         testcase = self
 
@@ -84,12 +83,9 @@ class deferredLocked(unittest.TestCase):
                 return defer.succeed(None)
         obj = C()
         obj.aLock = defer.DeferredLock()
-        d = obj.check_locked(1, 2)
+        yield obj.check_locked(1, 2)
 
-        @d.addCallback
-        def check_unlocked(_):
-            self.assertFalse(obj.aLock.locked)
-        return d
+        self.assertFalse(obj.aLock.locked)
 
 
 class TestCancelAfter(unittest.TestCase):

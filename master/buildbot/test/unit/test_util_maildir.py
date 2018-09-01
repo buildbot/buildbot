@@ -52,6 +52,7 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
         yield self.svc.stopService()
         self.assertEqual(len(list(self.svc)), 0)
 
+    @defer.inlineCallbacks
     def test_messageReceived(self):
         self.svc = maildir.MaildirService(self.maildir)
 
@@ -62,28 +63,19 @@ class TestMaildirService(dirs.DirsMixin, unittest.TestCase):
             messagesReceived.append(filename)
             return defer.succeed(None)
         self.svc.messageReceived = messageReceived
-        d = defer.maybeDeferred(self.svc.startService)
+        yield defer.maybeDeferred(self.svc.startService)
 
-        def check_empty(_):
-            self.assertEqual(messagesReceived, [])
-        d.addCallback(check_empty)
+        self.assertEqual(messagesReceived, [])
 
-        def add_msg(_):
-            tmpfile = os.path.join(self.tmpdir, "newmsg")
-            newfile = os.path.join(self.newdir, "newmsg")
-            open(tmpfile, "w").close()
-            os.rename(tmpfile, newfile)
-        d.addCallback(add_msg)
+        tmpfile = os.path.join(self.tmpdir, "newmsg")
+        newfile = os.path.join(self.newdir, "newmsg")
+        open(tmpfile, "w").close()
+        os.rename(tmpfile, newfile)
 
-        def trigger(_):
-            # TODO: can we wait for a dnotify somehow, if enabled?
-            return self.svc.poll()
-        d.addCallback(trigger)
+        # TODO: can we wait for a dnotify somehow, if enabled?
+        yield self.svc.poll()
 
-        def check_nonempty(_):
-            self.assertEqual(messagesReceived, ['newmsg'])
-        d.addCallback(check_nonempty)
-        return d
+        self.assertEqual(messagesReceived, ['newmsg'])
 
     def test_moveToCurDir(self):
         self.svc = maildir.MaildirService(self.maildir)
