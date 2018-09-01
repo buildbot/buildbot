@@ -75,21 +75,17 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
                 repl.assert_called_with(config)
         return d
 
+    @defer.inlineCallbacks
     def test_createMaster_quiet(self):
-        d = self.do_test_createMaster(mkconfig(quiet=True))
+        yield self.do_test_createMaster(mkconfig(quiet=True))
 
-        @d.addCallback
-        def check(_):
-            self.assertWasQuiet()
-        return d
+        self.assertWasQuiet()
 
+    @defer.inlineCallbacks
     def test_createMaster_loud(self):
-        d = self.do_test_createMaster(mkconfig(quiet=False))
+        yield self.do_test_createMaster(mkconfig(quiet=False))
 
-        @d.addCallback
-        def check(_):
-            self.assertInStdout('buildmaster configured in')
-        return d
+        self.assertInStdout('buildmaster configured in')
 
 
 class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,

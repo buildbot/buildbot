@@ -453,6 +453,7 @@ class AsyncLRUCacheTest(unittest.TestCase):
             res = yield self.lru.get(c)
             self.check_result(res, short(c))
 
+    @defer.inlineCallbacks
     def test_massively_parallel(self):
         chars = list(string.ascii_lowercase * 5)
 
@@ -468,17 +469,15 @@ class AsyncLRUCacheTest(unittest.TestCase):
         def check(c, d):
             d.addCallback(self.check_result, short(c))
             return d
-        d = defer.gatherResults([
+        yield defer.gatherResults([
             check(c, self.lru.get(c))
             for c in chars])
 
-        @d.addCallback
-        def post_check(_):
-            self.assertEqual(misses[0], 26)
-            self.assertEqual(self.lru.misses, 26)
-            self.assertEqual(self.lru.hits, 4 * 26)
-        return d
+        self.assertEqual(misses[0], 26)
+        self.assertEqual(self.lru.misses, 26)
+        self.assertEqual(self.lru.hits, 4 * 26)
 
+    @defer.inlineCallbacks
     def test_slow_fetch(self):
         def slower_miss_fn(k):
             d = defer.Deferred()
@@ -497,12 +496,9 @@ class AsyncLRUCacheTest(unittest.TestCase):
             reactor.callLater(0.02 * i, do_get, d, 'x')
             ds.append(d)
 
-        d = defer.gatherResults(ds)
+        yield defer.gatherResults(ds)
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
-        return d
+        self.assertEqual((self.lru.hits, self.lru.misses), (7, 1))
 
     def test_slow_failure(self):
         def slow_fail_miss_fn(k):

@@ -59,9 +59,9 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
         self.tearDownDirs()
         return self.tearDownRealDatabase()
 
+    @defer.inlineCallbacks
     def do_test_migration(self, base_version, target_version,
                           setup_thd_cb, verify_thd_cb):
-        d = defer.succeed(None)
 
         def setup_thd(conn):
             metadata = sa.MetaData()
@@ -77,7 +77,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                          repository_path=self.db.model.repo_path,
                          version=base_version)
             setup_thd_cb(conn)
-        d.addCallback(lambda _: self.db.pool.do(setup_thd))
+        yield self.db.pool.do(setup_thd)
 
         def upgrade_thd(engine):
             with querylog.log_queries():
@@ -89,7 +89,7 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                         log.msg('upgrading to schema version %d' %
                                 (version + 1))
                         schema.runchange(version, change, 1)
-        d.addCallback(lambda _: self.db.pool.do_with_engine(upgrade_thd))
+        yield self.db.pool.do_with_engine(upgrade_thd)
 
         def check_table_charsets_thd(engine):
             # charsets are only a problem for MySQL
@@ -101,11 +101,10 @@ class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
                 create_table = r.fetchone()[1]
                 self.assertIn('DEFAULT CHARSET=utf8', create_table,
                               "table %s does not have the utf8 charset" % tbl)
-        d.addCallback(lambda _: self.db.pool.do(check_table_charsets_thd))
+        yield self.db.pool.do(check_table_charsets_thd)
 
         def verify_thd(engine):
             with sautils.withoutSqliteForeignKeys(engine):
                 verify_thd_cb(engine)
 
-        d.addCallback(lambda _: self.db.pool.do(verify_thd))
-        return d
+        yield self.db.pool.do(verify_thd)

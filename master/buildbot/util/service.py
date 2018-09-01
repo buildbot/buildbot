@@ -22,7 +22,6 @@ import hashlib
 from twisted.application import service
 from twisted.internet import defer
 from twisted.internet import task
-from twisted.python import failure
 from twisted.python import log
 from twisted.python import reflect
 from twisted.python.reflect import accumulateClassList
@@ -124,31 +123,28 @@ class SharedService(AsyncMultiService):
     """a service that is created only once per parameter set in a parent service"""
 
     @classmethod
+    @defer.inlineCallbacks
     def getService(cls, parent, *args, **kwargs):
         name = cls.getName(*args, **kwargs)
         if name in parent.namedServices:
-            return defer.succeed(parent.namedServices[name])
-        try:
-            instance = cls(*args, **kwargs)
-        except Exception:
-            # we transform all exceptions into failure
-            return defer.fail(failure.Failure())
+            defer.returnValue(parent.namedServices[name])
+            return  # pragma: no cover
+
+        instance = cls(*args, **kwargs)
+
         # The class is not required to initialized its name
         # but we use the name to identify the instance in the parent service
         # so we force it with the name we used
         instance.name = name
-        d = instance.setServiceParent(parent)
+        yield instance.setServiceParent(parent)
 
-        @d.addCallback
-        def returnInstance(res):
-            # we put the service on top of the list, so that it is stopped the last
-            # This make sense as the shared service is used as a dependency
-            # for other service
-            parent.services.remove(instance)
-            parent.services.insert(0, instance)
-            # hook the return value to the instance object
-            return instance
-        return d
+        # we put the service on top of the list, so that it is stopped the last
+        # This make sense as the shared service is used as a dependency
+        # for other service
+        parent.services.remove(instance)
+        parent.services.insert(0, instance)
+        # hook the return value to the instance object
+        defer.returnValue(instance)
 
     @classmethod
     def getName(cls, *args, **kwargs):
