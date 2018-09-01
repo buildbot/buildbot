@@ -80,16 +80,14 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
         self.db._doCleanup()
         self.assertFalse(self.db.changes.pruneChanges.called)
 
+    @defer.inlineCallbacks
     def test_doCleanup_configured(self):
         self.db.changes.pruneChanges = mock.Mock(
             return_value=defer.succeed(None))
-        d = self.startService()
+        yield self.startService()
 
-        @d.addCallback
-        def check(_):
-            self.db._doCleanup()
-            self.assertTrue(self.db.changes.pruneChanges.called)
-        return d
+        self.db._doCleanup()
+        self.assertTrue(self.db.changes.pruneChanges.called)
 
     def test_setup_check_version_bad(self):
         if self.db_url == 'sqlite://':

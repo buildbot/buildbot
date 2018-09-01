@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake.fakemaster import make_master
@@ -37,23 +38,19 @@ class TestStateMixin(unittest.TestCase):
         self.master = make_master(wantDb=True, testcase=self)
         self.object = FakeObject(self.master)
 
+    @defer.inlineCallbacks
     def test_getState(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject',
                                        fav_color=['red', 'purple'])
-        d = self.object.getState('fav_color')
+        res = yield self.object.getState('fav_color')
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res, ['red', 'purple'])
-        return d
+        self.assertEqual(res, ['red', 'purple'])
 
+    @defer.inlineCallbacks
     def test_getState_default(self):
-        d = self.object.getState('fav_color', 'black')
+        res = yield self.object.getState('fav_color', 'black')
 
-        @d.addCallback
-        def check(res):
-            self.assertEqual(res, 'black')
-        return d
+        self.assertEqual(res, 'black')
 
     def test_getState_KeyError(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject',
@@ -69,21 +66,17 @@ class TestStateMixin(unittest.TestCase):
         d.addCallbacks(cb, check_exc)
         return d
 
+    @defer.inlineCallbacks
     def test_setState(self):
-        d = self.object.setState('y', 14)
+        yield self.object.setState('y', 14)
 
-        @d.addCallback
-        def check(_):
-            self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                    y=14)
-        return d
+        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
+                                                y=14)
 
+    @defer.inlineCallbacks
     def test_setState_existing(self):
         self.master.db.state.fakeState('fake-name', 'FakeObject', x=13)
-        d = self.object.setState('x', 14)
+        yield self.object.setState('x', 14)
 
-        @d.addCallback
-        def check(_):
-            self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
-                                                    x=14)
-        return d
+        self.master.db.state.assertStateByClass('fake-name', 'FakeObject',
+                                                x=14)

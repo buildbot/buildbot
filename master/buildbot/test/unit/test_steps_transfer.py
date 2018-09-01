@@ -27,6 +27,7 @@ from io import BytesIO
 
 from mock import Mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -149,6 +150,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
     def testTimestamp(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, keepstamp=True))
@@ -168,19 +170,16 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="uploading %s" % os.path.basename(__file__))
 
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkTimestamp(_):
-            desttimestamp = (os.path.getatime(self.destfile),
-                             os.path.getmtime(self.destfile))
+        desttimestamp = (os.path.getatime(self.destfile),
+                         os.path.getmtime(self.destfile))
 
-            srctimestamp = [int(t) for t in timestamp]
-            desttimestamp = [int(d) for d in desttimestamp]
+        srctimestamp = [int(t) for t in timestamp]
+        desttimestamp = [int(d) for d in desttimestamp]
 
-            self.assertEqual(srctimestamp[0], desttimestamp[0])
-            self.assertEqual(srctimestamp[1], desttimestamp[1])
-        return d
+        self.assertEqual(srctimestamp[0], desttimestamp[0])
+        self.assertEqual(srctimestamp[1], desttimestamp[1])
 
     def testDescriptionDone(self):
         self.setupStep(
@@ -204,6 +203,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
     def testURL(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file"))
@@ -222,14 +222,12 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="uploading %s" % os.path.basename(__file__))
 
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkURL(_):
-            self.step.addURL.assert_called_once_with(
-                os.path.basename(self.destfile), "http://server/file")
-        return d
+        self.step.addURL.assert_called_once_with(
+            os.path.basename(self.destfile), "http://server/file")
 
+    @defer.inlineCallbacks
     def testURLText(self):
         self.setupStep(
             transfer.FileUpload(workersrc=__file__, masterdest=self.destfile, url="http://server/file", urlText="testfile"))
@@ -248,13 +246,10 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="uploading %s" % os.path.basename(__file__))
 
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkURL(_):
-            self.step.addURL.assert_called_once_with(
-                "testfile", "http://server/file")
-        return d
+        self.step.addURL.assert_called_once_with(
+            "testfile", "http://server/file")
 
     def testFailure(self):
         self.setupStep(
@@ -273,6 +268,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
     def testException(self):
         self.setupStep(
             transfer.FileUpload(workersrc='srcfile', masterdest=self.destfile))
@@ -288,15 +284,11 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading srcfile (exception)")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(behavior.writer.cancel.called, True)
-            self.assertEqual(
-                len(self.flushLoggedErrors(RuntimeError)), 1)
-
-        return d
+        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(
+            len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_workersrc_old_api(self):
         step = transfer.FileUpload(workersrc='srcfile', masterdest='dstfile')
@@ -405,6 +397,7 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
     def testException(self):
         self.setupStep(
             transfer.DirectoryUpload(workersrc='srcdir', masterdest=self.destdir))
@@ -421,15 +414,11 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(
             result=EXCEPTION,
             state_string="uploading srcdir (exception)")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(behavior.writer.cancel.called, True)
-            self.assertEqual(
+        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(
                 len(self.flushLoggedErrors(RuntimeError)), 1)
-
-        return d
 
     def test_workersrc_old_api(self):
         step = transfer.DirectoryUpload(
@@ -721,6 +710,7 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         d = self.runStep()
         return d
 
+    @defer.inlineCallbacks
     def testException(self):
         self.setupStep(
             transfer.MultipleFileUpload(workersrcs=["srcfile", "srcdir"], masterdest=self.destdir))
@@ -740,16 +730,13 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=EXCEPTION, state_string="uploading 2 files (exception)")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(behavior.writer.cancel.called, True)
-            self.assertEqual(
+        self.assertEqual(behavior.writer.cancel.called, True)
+        self.assertEqual(
                 len(self.flushLoggedErrors(RuntimeError)), 1)
 
-        return d
-
+    @defer.inlineCallbacks
     def testSubclass(self):
         class CustomStep(transfer.MultipleFileUpload):
             uploadDone = Mock(return_value=None)
@@ -784,9 +771,8 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(
             result=SUCCESS, state_string="uploading 2 files")
 
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
         def checkCalls(res):
             self.assertEqual(step.uploadDone.call_count, 2)
             self.assertEqual(step.uploadDone.call_args_list[0],
@@ -796,9 +782,6 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
             self.assertEqual(step.allUploadsDone.call_count, 1)
             self.assertEqual(step.allUploadsDone.call_args_list[0],
                              ((SUCCESS, ['srcfile', 'srcdir'], self.destdir), {}))
-            return res
-
-        return d
 
     def test_workersrcs_old_api(self):
         step = transfer.MultipleFileUpload(
@@ -894,6 +877,7 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertRaises(TypeError, lambda: transfer.FileDownload())
         self.assertRaises(TypeError, lambda: transfer.FileDownload('srcfile'))
 
+    @defer.inlineCallbacks
     def testBasic(self):
         master_file = __file__
         self.setupStep(
@@ -915,18 +899,15 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkCalls(res):
-            with open(master_file, "rb") as f:
-                contents = f.read()
-            # Only first 1000 bytes transferred in downloadString() helper
-            contents = contents[:1000]
-            self.assertEqual(b''.join(read), contents)
+        with open(master_file, "rb") as f:
+            contents = f.read()
+        # Only first 1000 bytes transferred in downloadString() helper
+        contents = contents[:1000]
+        self.assertEqual(b''.join(read), contents)
 
-        return d
-
+    @defer.inlineCallbacks
     def testBasicWorker2_16(self):
         master_file = __file__
         self.setupStep(
@@ -949,17 +930,14 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
             result=SUCCESS,
             state_string="downloading to {0}".format(
                 os.path.basename(self.destfile)))
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
         def checkCalls(res):
             with open(master_file, "rb") as f:
                 contents = f.read()
             # Only first 1000 bytes transferred in downloadString() helper
             contents = contents[:1000]
             self.assertEqual(b''.join(read), contents)
-
-        return d
 
 
 class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -980,6 +958,7 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
             transfer.StringDownload,
             "string", "file", mode="not-a-number")
 
+    @defer.inlineCallbacks
     def testBasic(self):
         self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
 
@@ -999,13 +978,12 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.txt")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
         def checkCalls(res):
             self.assertEqual(b''.join(read), b"Hello World")
-        return d
 
+    @defer.inlineCallbacks
     def testBasicWorker2_16(self):
         self.setupStep(
             transfer.StringDownload("Hello World", "hello.txt"),
@@ -1027,12 +1005,9 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.txt")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkCalls(res):
-            self.assertEqual(b''.join(read), b"Hello World")
-        return d
+        self.assertEqual(b''.join(read), b"Hello World")
 
     def testFailure(self):
         self.setupStep(transfer.StringDownload("Hello World", "hello.txt"))
@@ -1095,6 +1070,7 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
     def tearDown(self):
         return self.tearDownBuildStep()
 
+    @defer.inlineCallbacks
     def testBasic(self):
         msg = dict(message="Hello World")
         self.setupStep(transfer.JSONStringDownload(msg, "hello.json"))
@@ -1116,12 +1092,9 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
 
         self.expectOutcome(
             result=SUCCESS, state_string="downloading to hello.json")
-        d = self.runStep()
+        yield self.runStep()
 
-        @d.addCallback
-        def checkCalls(res):
-            self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
-        return d
+        self.assertEqual(b''.join(read), b'{"message": "Hello World"}')
 
     def testFailure(self):
         msg = dict(message="Hello World")

@@ -483,6 +483,7 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
     def test_truncated(self):
         self.fakemaster.data = test_data = b'tenchars--' * 10
 
@@ -495,22 +496,19 @@ class TestDownloadFile(CommandTestMixin, unittest.TestCase):
             mode=0o777,
         ))
 
-        d = self.run_command()
+        yield self.run_command()
 
-        def check(_):
-            self.assertUpdates([
-                'read(s)', 'close',
-                {'rc': 1,
-                 'stderr': "Maximum filesize reached, truncating file '{0}'".format(
-                 os.path.join(self.basedir, '.', 'data'))}
-            ])
-            datafile = os.path.join(self.basedir, 'data')
-            self.assertTrue(os.path.exists(datafile))
-            with open(datafile, mode="rb") as f:
-                data = f.read()
-            self.assertEqual(data, test_data[:50])
-        d.addCallback(check)
-        return d
+        self.assertUpdates([
+            'read(s)', 'close',
+            {'rc': 1,
+             'stderr': "Maximum filesize reached, truncating file '{0}'".format(
+             os.path.join(self.basedir, '.', 'data'))}
+        ])
+        datafile = os.path.join(self.basedir, 'data')
+        self.assertTrue(os.path.exists(datafile))
+        with open(datafile, mode="rb") as f:
+            data = f.read()
+        self.assertEqual(data, test_data[:50])
 
     def test_interrupted(self):
         self.fakemaster.data = b'tenchars--' * 100  # 1k

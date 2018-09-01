@@ -95,15 +95,13 @@ class TestBase(unittest.TestCase):
 class TestBaseAsConnectorComponent(unittest.TestCase,
                                    connector_component.ConnectorComponentMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
         # this co-opts the masters table to test findSomethingId
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['masters'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.base = base.DBConnectorComponent(self.db)
-        return d
+        self.db.base = base.DBConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_findSomethingId_race(self):

@@ -587,16 +587,14 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['logs', 'logchunks', 'steps', 'builds', 'builders',
                          'masters', 'buildrequests', 'buildsets',
                          'workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.logs = logs.LogsConnectorComponent(self.db)
-        return d
+        self.db.logs = logs.LogsConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
