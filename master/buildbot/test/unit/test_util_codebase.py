@@ -55,10 +55,10 @@ class TestAbsoluteSourceStampsMixin(unittest.TestCase, scheduler.SchedulerMixin)
         cbd = yield self.object.getCodebaseDict('a')
         self.assertEqual(cbd, {'repository': '', 'branch': 'master'})
 
+    @defer.inlineCallbacks
     def test_getCodebaseDict_not_found(self):
         d = self.object.getCodebaseDict('c')
-        self.assertFailure(d, KeyError)
-        return d
+        yield self.assertFailure(d, KeyError)
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_existing(self):

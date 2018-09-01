@@ -200,6 +200,7 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
         d.addCallback(check)
         return d
 
+    @defer.inlineCallbacks
     def test_out_of_space(self):
         self.fakemaster.write_out_of_space_at = 70
         self.fakemaster.count_writes = True    # get actual byte counts
@@ -213,17 +214,13 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             keepstamp=False,
         ))
 
-        d = self.run_command()
-        self.assertFailure(d, RuntimeError)
+        yield self.assertFailure(self.run_command(), RuntimeError)
 
-        def check(_):
-            self.assertUpdates([
-                {'header': 'sending {0}'.format(self.datafile)},
-                'write 64', 'close',
-                {'rc': 1}
-            ])
-        d.addCallback(check)
-        return d
+        self.assertUpdates([
+            {'header': 'sending {0}'.format(self.datafile)},
+            'write 64', 'close',
+            {'rc': 1}
+        ])
 
     def test_interrupted(self):
         self.fakemaster.delay_write = True  # write very slowly
@@ -355,6 +352,7 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
     if sys.version_info[:2] <= (2, 4):
         test_simple_bz2.skip = "bz2 stream decompression not supported on Python-2.4"
 
+    @defer.inlineCallbacks
     def test_out_of_space_unpack(self):
         self.fakemaster.keep_data = True
         self.fakemaster.unpack_fail = True
@@ -368,18 +366,13 @@ class TestWorkerDirectoryUpload(CommandTestMixin, unittest.TestCase):
             compress=None
         ))
 
-        d = self.run_command()
-        self.assertFailure(d, RuntimeError)
+        yield self.assertFailure(self.run_command(), RuntimeError)
 
-        def check(_):
-            self.assertUpdates([
-                {'header': 'sending {0}'.format(self.datadir)},
-                'write(s)', 'unpack',
-                {'rc': 1}
-            ])
-        d.addCallback(check)
-
-        return d
+        self.assertUpdates([
+            {'header': 'sending {0}'.format(self.datadir)},
+            'write(s)', 'unpack',
+            {'rc': 1}
+        ])
 
 
 class TestDownloadFile(CommandTestMixin, unittest.TestCase):

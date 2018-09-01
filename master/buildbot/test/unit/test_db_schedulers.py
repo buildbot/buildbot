@@ -198,6 +198,7 @@ class Tests(interfaces.InterfaceTests):
         sch = yield self.db.schedulers.getScheduler(24)
         self.assertEqual(sch['masterid'], 13)
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked(self):
         d = self.insertTestData([
             self.master13,
@@ -205,8 +206,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.schedulers.setSchedulerMaster(25, 13))
-        self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
 
     def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
         d = self.insertTestData([
@@ -216,14 +216,14 @@ class Tests(interfaces.InterfaceTests):
                       self.db.schedulers.setSchedulerMaster(25, 14))
         return d
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_active(self):
         d = self.insertTestData([
             self.scheduler24, self.master13, self.scheduler24master,
         ])
         d.addCallback(lambda _:
                       self.db.schedulers.setSchedulerMaster(24, 14))
-        self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_None(self):
