@@ -3,15 +3,16 @@
 import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { HomePage } from './pages/home';
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('force', function() {
     let force = null;
     let builder = null;
 
-    beforeEach(function() {
+    beforeEach(async () => {
         builder = new BuilderPage('runtests', 'force');
         force =  new ForcePage();
-        return builder.goDefault();
+        await builder.goDefault();
     });
 
     afterEach(async () => {
@@ -24,7 +25,11 @@ describe('force', function() {
         await builder.go();
         lastbuild = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        await force.getStartButton().click();
+        let startButton = force.getStartButton();
+        await browser.wait(EC.elementToBeClickable(startButton),
+                           5000,
+                           "start button not clickable");
+        await startButton.click();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });
