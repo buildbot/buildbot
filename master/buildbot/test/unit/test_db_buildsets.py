@@ -100,36 +100,30 @@ class Tests(interfaces.InterfaceTests):
                                       parent_buildid=None, parent_relationship=None,
                                       bsid=bsid))
 
+    @defer.inlineCallbacks
     def test_addBuildset_getBuildset_explicit_submitted_at(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _:
-                      self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
-                                                    properties={}, builderids=[1], external_idstring='extid',
-                                                    submitted_at=epoch2datetime(8888888), _reactor=self.clock, waited_for=False))
-        d.addCallback(lambda bsid_brids:
-                      self.db.buildsets.getBuildset(bsid_brids[0]))
+        bsid_brids = yield self.db.buildsets.addBuildset(
+                sourcestamps=[234], reason='because', properties={},
+                builderids=[1], external_idstring='extid',
+                submitted_at=epoch2datetime(8888888), _reactor=self.clock,
+                waited_for=False)
+        bsdict = yield self.db.buildsets.getBuildset(bsid_brids[0])
 
-        @d.addCallback
-        def check(bsdict):
-            validation.verifyDbDict(self, 'bsdict', bsdict)
-            self.assertEqual(bsdict, dict(external_idstring='extid',
-                                          reason='because', sourcestamps=[234],
-                                          submitted_at=datetime.datetime(1970, 4, 13, 21, 8, 8,
-                                                                         tzinfo=UTC),
-                                          complete=False, complete_at=None, results=-1,
-                                          parent_buildid=None, parent_relationship=None,
-                                          bsid=bsdict['bsid']))
-        return d
+        validation.verifyDbDict(self, 'bsdict', bsdict)
+        self.assertEqual(bsdict, dict(external_idstring='extid',
+                                      reason='because', sourcestamps=[234],
+                                      submitted_at=datetime.datetime(1970, 4, 13, 21, 8, 8,
+                                                                     tzinfo=UTC),
+                                      complete=False, complete_at=None, results=-1,
+                                      parent_buildid=None, parent_relationship=None,
+                                      bsid=bsdict['bsid']))
 
+    @defer.inlineCallbacks
     def do_test_getBuildsetProperties(self, buildsetid, rows, expected):
-        d = self.insertTestData(rows)
-        d.addCallback(lambda _:
-                      self.db.buildsets.getBuildsetProperties(buildsetid))
+        yield self.insertTestData(rows)
+        props = yield self.db.buildsets.getBuildsetProperties(buildsetid)
 
-        def check(props):
-            self.assertEqual(props, expected)
-        d.addCallback(check)
-        return d
+        self.assertEqual(props, expected)
 
     def test_getBuildsetProperties_multiple(self):
         return self.do_test_getBuildsetProperties(91, [
@@ -579,18 +573,16 @@ class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['patches', 'buildsets', 'buildset_properties',
                          'objects', 'buildrequests', 'sourcestamps',
                          'buildset_sourcestamps', 'builders',
                          'builds', 'masters', 'workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
-        d.addCallback(lambda _: self.setUpTests())
-        return d
+        self.db.buildsets = buildsets.BuildsetsConnectorComponent(self.db)
+        yield self.setUpTests()
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

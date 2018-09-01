@@ -674,17 +674,15 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests, querylog.SqliteMaxVariableMixin):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['workers', 'masters', 'builders',
                          'builder_masters', 'connected_workers',
                          'configured_workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.workers = \
-                workers.WorkersConnectorComponent(self.db)
-        return d
+        self.db.workers = \
+            workers.WorkersConnectorComponent(self.db)
 
     @defer.inlineCallbacks
     def test_workerConfiguredMany(self):
