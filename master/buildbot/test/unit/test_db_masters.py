@@ -222,17 +222,15 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.clock = task.Clock()
         self.clock.advance(SOMETIME)
 
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['masters', 'schedulers', 'scheduler_masters'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.masters = masters.MastersConnectorComponent(self.db)
-        return d
+        self.db.masters = masters.MastersConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

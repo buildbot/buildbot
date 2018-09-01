@@ -144,9 +144,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
                                       u'event.patchSet.revision': u'abcdef',
                                       u'event.patchSet.number': u'12'}}
 
+    @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):
         s = self.newChangeSource('somehost', 'someuser')
-        d = s.lineReceived(json.dumps(dict(
+        yield s.lineReceived(json.dumps(dict(
             type="patchset-created",
             change=dict(
                 branch="br",
@@ -159,13 +160,10 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             patchSet=dict(revision="abcdef", number="12")
         )))
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-            c = self.master.data.updates.changesAdded[0]
-            for k, v in iteritems(c):
-                self.assertEqual(self.expected_change[k], v)
-        return d
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        for k, v in iteritems(c):
+            self.assertEqual(self.expected_change[k], v)
 
     change_merged_event = {
         "type": "change-merged",
@@ -179,29 +177,26 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
         "patchSet": {"revision": "abcdefj", "number": "13"}
     }
 
+    @defer.inlineCallbacks
     def test_handled_events_filter_true(self):
         s = self.newChangeSource(
             'somehost', 'some_choosy_user', handled_events=["change-merged"])
-        d = s.lineReceived(json.dumps(self.change_merged_event))
+        yield s.lineReceived(json.dumps(self.change_merged_event))
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-            c = self.master.data.updates.changesAdded[0]
-            self.assertEqual(c["category"], "change-merged")
-            self.assertEqual(c["branch"], "br")
-        return d
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        self.assertEqual(c["category"], "change-merged")
+        self.assertEqual(c["branch"], "br")
 
+    @defer.inlineCallbacks
     def test_handled_events_filter_false(self):
         s = self.newChangeSource(
             'somehost', 'some_choosy_user')
-        d = s.lineReceived(json.dumps(self.change_merged_event))
+        yield s.lineReceived(json.dumps(self.change_merged_event))
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(len(self.master.data.updates.changesAdded), 0)
-        return d
+        self.assertEqual(len(self.master.data.updates.changesAdded), 0)
 
+    @defer.inlineCallbacks
     def test_custom_handler(self):
         s = self.newChangeSource(
             'somehost', 'some_choosy_user',
@@ -212,14 +207,11 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
             return self.addChangeFromEvent(properties, event)
         # Patches class to not bother with the inheritance
         s.eventReceived_change_merged = types.MethodType(custom_handler, s)
-        d = s.lineReceived(json.dumps(self.change_merged_event))
+        yield s.lineReceived(json.dumps(self.change_merged_event))
 
-        @d.addCallback
-        def check(_):
-            self.assertEqual(len(self.master.data.updates.changesAdded), 1)
-            c = self.master.data.updates.changesAdded[0]
-            self.assertEqual(c['project'], "world")
-        return d
+        self.assertEqual(len(self.master.data.updates.changesAdded), 1)
+        c = self.master.data.updates.changesAdded[0]
+        self.assertEqual(c['project'], "world")
 
     def test_startStreamProcess_bytes_output(self):
         s = self.newChangeSource(

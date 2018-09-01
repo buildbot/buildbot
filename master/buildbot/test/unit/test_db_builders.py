@@ -263,19 +263,16 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['builders', 'masters', 'builder_masters',
                          'builders_tags', 'tags'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.builders = builders.BuildersConnectorComponent(self.db)
-            self.db.tags = tags.TagsConnectorComponent(self.db)
-            self.master = self.db.master
-            self.master.db = self.db
-
-        return d
+        self.db.builders = builders.BuildersConnectorComponent(self.db)
+        self.db.tags = tags.TagsConnectorComponent(self.db)
+        self.master = self.db.master
+        self.master.db = self.db
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
