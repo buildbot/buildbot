@@ -47,8 +47,8 @@ jobs:
             # we test the new generated binary with the global virtualenv
             SANDBOXED_WORKER_PATH=`pwd`/dist/buildbot-worker trial --reporter=text --rterrors buildbot.test.integration.interop
       - persist_to_workspace:
-          root: .
-          paths: dist
+          root: dist
+          paths: .
       - store_artifacts:
           path: master/docs/_build/html/
           destination: docs
