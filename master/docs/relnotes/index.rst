@@ -10,6 +10,34 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.4.0`` ( ``2018-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix `Build.getUrl()` to not ignore virtual builders.
+- Fix git submodule support when using `sshPrivateKey` and `sshHostKey`
+  settings by passing ssh data as absolute, not relative paths.
+- Fixed :bb:step:`P4` for change in latest version of `p4 login -p`.
+- :py:class:`buildbot.reporters.irc.IrcStatusBot` no longer encodes messages
+  before passing them on to methods of its Twisted base class to avoid posting
+  the ``repr()`` of a bytes object when running on Python 3.
+
+Features
+--------
+
+- Added new :bb:step:`GitPush` step to perform git push operations.
+- Objects returned by :ref:`renderer` now are able to pass extra arguments to
+  the rendered function via `withArgs` method.
+
+Test Suite
+----------
+
+- Test suite has been improved for readability by adding a lot of ``inlineCallbacks``
+- Fixed tests which didn't wait for ``assertFailure``'s returned deferred.
+- The test suite now runs on Python 3.7 (mostly deprecation warnings from dependencies shut down)
+
 Buildbot ``1.3.0`` ( ``2018-07-13`` )
 =====================================
 
