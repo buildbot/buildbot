@@ -5,6 +5,7 @@
 import { HomePage } from './pages/home';
 import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('rebuilds', function() {
     let force = null;
@@ -25,12 +26,20 @@ describe('rebuilds', function() {
         await builder.go();
         const lastbuild: number = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        await force.getStartButton().click();
+        let startButton = force.getStartButton();
+        await browser.wait(EC.elementToBeClickable(startButton),
+                           5000,
+                           "start button not clickable");
+        await startButton.click();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
         await builder.goBuild(lastbuild);
         await browser.getCurrentUrl();
-        await builder.getRebuildButton().click();
+        let rebuildButton = builder.getRebuildButton();
+        await browser.wait(EC.elementToBeClickable(rebuildButton),
+                           5000,
+                           "rebuild button not clickable");
+        await rebuildButton.click();
         await builder.waitGoToBuild(lastbuild + 2);
     });
 });

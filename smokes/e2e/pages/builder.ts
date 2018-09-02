@@ -1,22 +1,23 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 export class BuilderPage extends BasePage {
+    builder: string;
+    forceName: string;
     constructor(builder, forcename) {
-        {
-          super();
-          let thisFn = (() => { return this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('return') + 6 + 1, thisFn.indexOf(';')).trim();
-        }
+        super();
         this.builder = builder;
         this.forceName=forcename;
     }
 
     async goDefault() {
         await browser.get('#/builders');
+        await browser.wait(EC.urlContains('#/builders'),
+                           10000,
+                           "URL does not contain #/builders");
     }
 
     async go() {
@@ -24,18 +25,29 @@ export class BuilderPage extends BasePage {
         await browser.wait(EC.urlContains('#/builders'),
                            10000,
                            "URL does not contain #/builders");
-        const localBuilder = element.all(By.linkText(this.builder));
+        let localBuilder = element(By.linkText(this.builder));
+        await browser.wait(EC.elementToBeClickable(localBuilder),
+                           5000,
+                           "local builder not clickable");
         await localBuilder.click();
     }
 
     async goForce() {
         await this.go();
-        await element.all(By.buttonText(this.forceName)).first().click();
+        var forceButton = element.all(By.buttonText(this.forceName)).first();
+        await browser.wait(EC.elementToBeClickable(forceButton),
+                           5000,
+                           "force button not clickable");
+        await forceButton.click();
     }
 
     async goBuild(buildRef) {
         await this.go();
-        await element.all(By.linkText(buildRef.toString())).click();
+        var buildLink = element(By.linkText(buildRef.toString()));
+        await browser.wait(EC.elementToBeClickable(buildLink),
+                           5000,
+                           "build link not clickable");
+        await buildLink.click();
     }
 
     async getLastSuccessBuildNumber() {

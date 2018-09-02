@@ -1,16 +1,12 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BasePage } from "./base";
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 export class DashboardPage extends BasePage {
     constructor() {
-        {
-          super();
-          let thisFn = (() => { return this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('return') + 6 + 1, thisFn.indexOf(';')).trim();
-        }
+        super();
     }
 
     async go() {
@@ -18,5 +14,10 @@ export class DashboardPage extends BasePage {
         await browser.wait(EC.urlContains('#/mydashboard'),
                            10000,
                            "URL does not contain #/mydashboard");
+        var buildLink = element.all(By.linkText("runtests/1")).first();
+        await browser.wait(EC.elementToBeClickable(buildLink),
+                           500000,
+                           "runtests/1 link not clickable");
+        await buildLink.click();
     }
 }
