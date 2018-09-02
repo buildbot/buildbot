@@ -162,9 +162,10 @@ class Tests(interfaces.InterfaceTests):
         stepdict = yield self.db.steps.getStep(buildid=30, name='five')
         self.assertEqual(stepdict, None)
 
+    @defer.inlineCallbacks
     def test_getStep_invalid(self):
         d = self.db.steps.getStep(buildid=30)
-        self.assertFailure(d, RuntimeError)
+        yield self.assertFailure(d, RuntimeError)
 
     @defer.inlineCallbacks
     def test_getSteps(self):

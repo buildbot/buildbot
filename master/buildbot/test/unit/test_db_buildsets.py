@@ -561,12 +561,13 @@ class TestFakeDB(unittest.TestCase, Tests):
         self.insertTestData = self.db.insertTestData
         return self.setUpTests()
 
+    @defer.inlineCallbacks
     def test_addBuildset_bad_waited_for(self):
         # only the fake db asserts on the type of waited_for
         d = self.db.buildsets.addBuildset(sourcestamps=[234], reason='because',
                                           properties={}, builderids=[1], external_idstring='extid',
                                           waited_for='wat', _reactor=self.clock)
-        self.assertFailure(d, AssertionError)
+        yield self.assertFailure(d, AssertionError)
 
 
 class TestRealDB(db.TestCase,
