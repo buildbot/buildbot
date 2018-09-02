@@ -508,9 +508,10 @@ class AsyncLRUCacheTest(unittest.TestCase):
             return d
         self.lru.miss_fn = slow_fail_miss_fn
 
+        @defer.inlineCallbacks
         def do_get(test_d, k):
             d = self.lru.get(k)
-            self.assertFailure(d, RuntimeError)
+            yield self.assertFailure(d, RuntimeError)
             d.addCallbacks(test_d.callback, test_d.errback)
 
         ds = []

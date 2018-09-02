@@ -104,13 +104,15 @@ class TestCancelAfter(unittest.TestCase):
         self.d.callback("result")
         self.assertTrue(d.called)
 
+    @defer.inlineCallbacks
     def test_fails(self):
         d = misc.cancelAfter(10, self.d)
         self.assertFalse(d.called)
         self.d.errback(RuntimeError("oh noes"))
         self.assertTrue(d.called)
-        self.assertFailure(d, RuntimeError)
+        yield self.assertFailure(d, RuntimeError)
 
+    @defer.inlineCallbacks
     def test_timeout_succeeds(self):
         c = task.Clock()
         d = misc.cancelAfter(10, self.d, _reactor=c)
@@ -118,8 +120,9 @@ class TestCancelAfter(unittest.TestCase):
         c.advance(11)
         d.callback("result")  # ignored
         self.assertTrue(d.called)
-        self.assertFailure(d, defer.CancelledError)
+        yield self.assertFailure(d, defer.CancelledError)
 
+    @defer.inlineCallbacks
     def test_timeout_fails(self):
         c = task.Clock()
         d = misc.cancelAfter(10, self.d, _reactor=c)
@@ -127,4 +130,4 @@ class TestCancelAfter(unittest.TestCase):
         c.advance(11)
         self.d.errback(RuntimeError("oh noes"))  # ignored
         self.assertTrue(d.called)
-        self.assertFailure(d, defer.CancelledError)
+        yield self.assertFailure(d, defer.CancelledError)
