@@ -1,1 +1,0 @@
-Fix `Build.getUrl()` to not ignore virtual builders.

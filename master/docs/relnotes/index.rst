@@ -10,6 +10,30 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.4.0`` ( ``2018-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix `Build.getUrl()` to not ignore virtual builders.
+- Fix git submodule support when using `sshPrivateKey` and `sshHostKey`
+  settings by passing ssh data as absolute, not relative paths.
+- At current version, p4 login -p command generates 3 lines in both windows and
+  linux. The third line is the ticket returned by server. However the current
+  code is using the second line.
+- :py:class:`buildbot.reporters.irc.IrcStatusBot` no longer encodes messages
+  before passing them on to methods of its Twisted base class to avoid posting
+  the ``repr()`` of a bytes object when running on Python 3.
+
+Features
+--------
+
+- Added new `GitPush` step to perform git push operations.
+- Objects returned by :ref:`renderer` now are able to pass extra arguments to
+  the rendered function via `withArgs` method.
+
+
 Buildbot ``1.3.0`` ( ``2018-07-13`` )
 =====================================
 
