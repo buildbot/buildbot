@@ -251,8 +251,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(u"Warning: cannot fully decode {} in {}".format(
-                    repr(result), self.encoding))
+            log.msg(u"{}: cannot fully decode {} in {}".format(
+                    ex, repr(result), self.encoding))
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change
