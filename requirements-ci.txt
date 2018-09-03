@@ -1,7 +1,7 @@
 alabaster==0.7.11
 appdirs==1.4.3
 asn1crypto==0.24.0
-astroid==2.0.4
+astroid==2.0.4; python_version >= "3.4"
 attrs==18.2.0
 autobahn==18.9.1
 Automat==0.7.0
@@ -57,7 +57,7 @@ pyflakes==2.0.0
 pyinstaller==3.3.1
 pyjade==4.0.0
 PyJWT==1.6.4
-pylint==2.1.1
+pylint==2.1.1; python_version >= "3.4"
 pyOpenSSL==18.0.0
 pyparsing==2.2.0
 python-dateutil==2.7.3
