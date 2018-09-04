@@ -19,7 +19,6 @@ env:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - HYPER_SIZE=m1
   matrix:
-  - TWISTED=latest SQLALCHEMY=latest TESTS=isort 
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
   # add js tests in separate job. Start it early because it is quite long
@@ -61,9 +60,11 @@ matrix:
   fast_finish: true
   include:
     # python 3 tests
-    # flake8, pylint, docs first as they're more likely to find issues
+    # flake8, isort, pylint, docs first as they're more likely to find issues
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
+    - python: "3.6"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
     - python: "3.6"
