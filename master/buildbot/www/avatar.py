@@ -75,13 +75,15 @@ class AvatarResource(resource.Resource):
     def renderAvatar(self, request):
         email = request.args.get(b"email", [b""])[0]
         size = request.args.get(b"size", 32)
+        r = None
         if self.cache.get(email):
             r = self.cache[email]
         for method in self.avatarMethods:
             try:
                 res = yield method.getUserAvatar(email, size, self.defaultAvatarFullUrl)
-            except resource.Redirect as r:
-                self.cache[email] = r
+            except resource.Redirect:
+                if r is not None:
+                    self.cache[email] = r
                 raise
             if res is not None:
                 request.setHeader(b'content-type', res[0])
