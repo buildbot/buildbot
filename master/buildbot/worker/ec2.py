@@ -451,7 +451,7 @@ class EC2LatentWorker(AbstractLatentWorker):
             goal = (SHUTTINGDOWN, TERMINATED)
             instance.reload()
         else:
-            goal = TERMINATED,
+            goal = (TERMINATED,)
         while instance.state['Name'] not in goal:
             time.sleep(interval)
             duration += interval

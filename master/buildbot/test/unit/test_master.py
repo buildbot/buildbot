@@ -143,8 +143,8 @@ class OldTriggeringMethods(unittest.TestCase):
 
     def test_addChange_args_new_and_old(self):
         func = self.do_test_addChange_args
-        kwargs = dict(who='author',
-                      author='author'),
+        kwargs = (dict(who='author',
+                       author='author'),)
         exp_data_kwargs = dict(author='author')
         self.assertRaises(TypeError, func, kwargs=kwargs,
                           exp_data_kwargs=exp_data_kwargs)
