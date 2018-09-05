@@ -92,7 +92,7 @@ class EventResource(resource.Resource):
             cid = unicode2bytes(str(uuid.uuid4()))
             consumer = Consumer(request)
 
-        elif command == b"add" or command == b"remove":
+        elif command in (b"add", b"remove"):
             if path:
                 cid = path[0]
                 path = path[1:]
