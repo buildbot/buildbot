@@ -150,7 +150,6 @@ disable=
   no-else-return,
   consider-using-dict-comprehension,
   consider-using-set-comprehension,
-  consider-using-in,
   assignment-from-none,
   chained-comparision,
   self-cls-assignment,
