@@ -433,10 +433,6 @@ class IStatus(Interface):
                            of builds that will be examined within any given
                            Builder.
         """
-        if builders is None:
-            builders = []
-        if branches is None:
-            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -663,8 +659,6 @@ class IBuilderStatus(Interface):
                            This argument imposes a hard limit on the number
                            of builds that will be examined.
         """
-        if branches is None:
-            branches = []
 
     def subscribe(receiver):
         """Register an IStatusReceiver to receive new status events. The
@@ -702,14 +696,6 @@ class IEventSource(Interface):
         @param minTime: a timestamp. Do not generate events occurring prior to
         this timestamp.
         """
-        if branches is None:
-            branches = []
-        if categories is None:
-            categories = []
-        if committers is None:
-            committers = []
-        if projects is None:
-            projects = []
 
 
 class IBuildStatus(Interface):
