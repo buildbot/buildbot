@@ -152,7 +152,6 @@ disable=
   consider-using-set-comprehension,
   assignment-from-none,
   self-cls-assignment,
-  useless-import-alias,
   trailing-comma-tuple,
   comparison-with-callable,
   comparison-with-itself,
