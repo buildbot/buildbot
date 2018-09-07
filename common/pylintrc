@@ -151,7 +151,6 @@ disable=
   consider-using-dict-comprehension,
   consider-using-set-comprehension,
   assignment-from-none,
-  self-cls-assignment,
   trailing-comma-tuple,
   comparison-with-callable,
   comparison-with-itself,
