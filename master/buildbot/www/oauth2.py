@@ -317,9 +317,9 @@ class GitHubAuth(OAuth2Auth):
                          groups=[org['node']['login'] for org in
                                  data['viewer']['organizations']['edges']])
         if self.getTeamsMembership:
-            orgs_name_slug_mapping = dict(
-                [(self._orgname_slug_sub_re.sub('_', n), n)
-                 for n in user_info['groups']])
+            orgs_name_slug_mapping = {
+                self._orgname_slug_sub_re.sub('_', n): n
+                for n in user_info['groups']}
             graphql_query = self.getUserTeamsGraphqlTplC.render(
                 {'user_info': user_info,
                  'organizations': orgs_name_slug_mapping})

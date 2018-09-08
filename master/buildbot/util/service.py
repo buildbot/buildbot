@@ -444,8 +444,8 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
         old_set = set(old_by_name)
         new_config_attr = getattr(new_config, self.config_attr)
         if isinstance(new_config_attr, list):
-            new_by_name = dict([(s.name, s)
-                                for s in new_config_attr])
+            new_by_name = {s.name: s
+                           for s in new_config_attr}
         elif isinstance(new_config_attr, dict):
             new_by_name = new_config_attr
         else:

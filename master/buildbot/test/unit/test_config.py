@@ -302,9 +302,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         )
         expected.update(global_defaults)
         expected['buildbotNetUsageData'] = 'basic'
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in iteritems(expected)}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
@@ -405,9 +405,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def assertResults(self, **expected):
         self.assertFalse(self.errors, self.errors.errors)
-        got = dict([
-            (attr, getattr(self.cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(self.cfg, attr)
+            for attr, exp in iteritems(expected)}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
 
@@ -1314,9 +1314,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     # utils
 
     def assertAttributes(self, cfg, **expected):
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in iteritems(expected)}
         self.assertEqual(got, expected)
 
     # tests

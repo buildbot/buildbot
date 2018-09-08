@@ -254,10 +254,10 @@ class BotBase(service.MultiService):
         service.MultiService.startService(self)
 
     def remote_getCommands(self):
-        commands = dict([
-            (n, base.command_version)
+        commands = {
+            n: base.command_version
             for n in registry.getAllCommandNames()
-        ])
+        }
         return commands
 
     @defer.inlineCallbacks

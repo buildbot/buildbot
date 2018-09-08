@@ -1195,8 +1195,8 @@ class ShellMixin(object):
     def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
                                stdioLogName='stdio',
                                **overrides):
-        kwargs = dict([(arg, getattr(self, arg))
-                       for arg in self._shellMixinArgs])
+        kwargs = {arg: getattr(self, arg)
+                  for arg in self._shellMixinArgs}
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:

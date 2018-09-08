@@ -186,8 +186,9 @@ class ComparableMixin(object):
         compare_attrs = []
         reflect.accumulateClassList(
             self.__class__, 'compare_attrs', compare_attrs)
-        return dict([(k, getattr(self, k)) for k in compare_attrs
-                     if hasattr(self, k) and k not in ("passwd", "password")])
+        return {k: getattr(self, k)
+                for k in compare_attrs
+                if hasattr(self, k) and k not in ("passwd", "password")}
 
 
 def diffSets(old, new):
