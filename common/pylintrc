@@ -149,7 +149,6 @@ disable=
   useless-return,
   no-else-return,
   consider-using-dict-comprehension,
-  consider-using-set-comprehension,
   assignment-from-none,
   comparison-with-callable,
   comparison-with-itself,
