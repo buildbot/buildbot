@@ -84,7 +84,7 @@ def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
 def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantSteps=False,
                         wantPreviousBuild=False, wantLogs=False):
 
-    builderids = set([build['builderid'] for build in builds])
+    builderids = {build['builderid'] for build in builds}
 
     builders = yield defer.gatherResults([master.data.get(("builders", _id))
                                           for _id in builderids])

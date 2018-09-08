@@ -857,7 +857,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error("no builders are configured")
 
         # check that all builders are implemented on this master
-        unscheduled_buildernames = set([b.name for b in self.builders])
+        unscheduled_buildernames = {b.name for b in self.builders}
         for s in itervalues(self.schedulers):
             builderNames = s.listBuilderNames()
             if interfaces.IRenderable.providedBy(builderNames):
@@ -877,7 +877,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         if self.multiMaster:
             return
 
-        all_buildernames = set([b.name for b in self.builders])
+        all_buildernames = {b.name for b in self.builders}
 
         for s in itervalues(self.schedulers):
             builderNames = s.listBuilderNames()
@@ -913,7 +913,7 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
     def check_builders(self):
         # look both for duplicate builder names, and for builders pointing
         # to unknown workers
-        workernames = set([w.workername for w in self.workers])
+        workernames = {w.workername for w in self.workers}
         seen_names = set()
         seen_builddirs = set()
 
@@ -1072,7 +1072,7 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                     "builder '%s': tags list contains something that is not a string" % (name,))
 
             if len(tags) != len(set(tags)):
-                dupes = " ".join(set([x for x in tags if tags.count(x) > 1]))
+                dupes = " ".join({x for x in tags if tags.count(x) > 1})
                 error(
                     "builder '%s': tags list contains duplicate tags: %s" % (name, dupes))
         else:

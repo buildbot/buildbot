@@ -226,7 +226,7 @@ class RealDatabaseMixin(object):
         @returns: Deferred
         """
         # sort the tables by dependency
-        all_table_names = set([row.table for row in rows])
+        all_table_names = {row.table for row in rows}
         ordered_tables = [t for t in model.Model.metadata.sorted_tables
                           if t.name in all_table_names]
 
