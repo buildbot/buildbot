@@ -339,5 +339,5 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
-        self.assertRaises(config.ConfigErrors, lambda:
-                          self.master.reconfigServiceWithBuildbotConfig(new))
+        self.assertRaises(config.ConfigErrors,
+                          self.master.reconfigServiceWithBuildbotConfig, new)

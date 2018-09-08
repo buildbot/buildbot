@@ -483,12 +483,12 @@ class TestBuildRequest(unittest.TestCase):
         d = master.db.buildrequests.getBuildRequest(288)
         d.addCallback(lambda brdict:
                       buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
+        d.addCallback(brs.append)
         d.addCallback(lambda _:
                       master.db.buildrequests.getBuildRequest(289))
         d.addCallback(lambda brdict:
                       buildrequest.BuildRequest.fromBrdict(master, brdict))
-        d.addCallback(lambda br: brs.append(br))
+        d.addCallback(brs.append)
 
         def check(_):
             sources = brs[0].mergeSourceStampsWith(brs[1:])
@@ -549,10 +549,10 @@ class TestBuildRequest(unittest.TestCase):
         # use getBuildRequest to minimize the risk from changes to the format
         # of the brdict
         d = master.db.buildrequests.getBuildRequest(288)
-        d.addCallback(lambda brdict: brDicts.append(brdict))
+        d.addCallback(brDicts.append)
         d.addCallback(lambda _:
                       master.db.buildrequests.getBuildRequest(289))
-        d.addCallback(lambda brdict: brDicts.append(brdict))
+        d.addCallback(brDicts.append)
         d.addCallback(lambda _: buildrequest.BuildRequest.canBeCollapsed(
             master, brDicts[0], brDicts[1]))
 

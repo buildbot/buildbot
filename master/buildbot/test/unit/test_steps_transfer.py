@@ -112,8 +112,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def testConstructorModeType(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx'))
+        self.assertRaises(config.ConfigErrors,
+                          transfer.FileUpload, workersrc=__file__, masterdest='xyz', mode='g+rwx')
 
     def testBasic(self):
         self.setupStep(
@@ -326,8 +326,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrc, 'srcfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.FileUpload())
-        self.assertRaises(TypeError, lambda: transfer.FileUpload('src'))
+        self.assertRaises(TypeError, transfer.FileUpload)
+        self.assertRaises(TypeError, transfer.FileUpload, 'src')
 
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
@@ -457,8 +457,8 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrc, 'srcfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.DirectoryUpload())
-        self.assertRaises(TypeError, lambda: transfer.DirectoryUpload('src'))
+        self.assertRaises(TypeError, transfer.DirectoryUpload)
+        self.assertRaises(TypeError, transfer.DirectoryUpload, 'src')
 
 
 class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
@@ -820,9 +820,9 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrcs, ['srcfile'])
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.MultipleFileUpload())
+        self.assertRaises(TypeError, transfer.MultipleFileUpload)
         self.assertRaises(
-            TypeError, lambda: transfer.MultipleFileUpload(['srcfile']))
+            TypeError, transfer.MultipleFileUpload, ['srcfile'])
 
 
 class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -874,8 +874,8 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.FileDownload())
-        self.assertRaises(TypeError, lambda: transfer.FileDownload('srcfile'))
+        self.assertRaises(TypeError, transfer.FileDownload)
+        self.assertRaises(TypeError, transfer.FileDownload, 'srcfile')
 
     @defer.inlineCallbacks
     def testBasic(self):
@@ -1057,9 +1057,9 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.StringDownload())
+        self.assertRaises(TypeError, transfer.StringDownload)
         self.assertRaises(
-            TypeError, lambda: transfer.StringDownload('srcfile'))
+            TypeError, transfer.StringDownload, 'srcfile')
 
 
 class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -1145,9 +1145,9 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.JSONStringDownload())
+        self.assertRaises(TypeError, transfer.JSONStringDownload)
         self.assertRaises(
-            TypeError, lambda: transfer.JSONStringDownload('srcfile'))
+            TypeError, transfer.JSONStringDownload, 'srcfile')
 
 
 class TestJSONPropertiesDownload(unittest.TestCase):
@@ -1250,4 +1250,4 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, lambda: transfer.JSONPropertiesDownload())
+        self.assertRaises(TypeError, transfer.JSONPropertiesDownload)
