@@ -151,7 +151,6 @@ disable=
   consider-using-dict-comprehension,
   consider-using-set-comprehension,
   assignment-from-none,
-  useless-import-alias,
   comparison-with-callable,
   comparison-with-itself,
   assignment-from-no-return,
