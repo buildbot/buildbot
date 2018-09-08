@@ -182,8 +182,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         return d
 
     def _get_process_output(self, args):
-        env = dict([(e, os.environ.get(e))
-                    for e in self.env_vars if os.environ.get(e)])
+        env = {e: os.environ.get(e)
+               for e in self.env_vars if os.environ.get(e)}
         d = utils.getProcessOutput(self.p4bin, args, env)
         return d
 

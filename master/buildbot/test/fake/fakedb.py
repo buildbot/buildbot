@@ -1319,7 +1319,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildset_sourcestamps[bsid] = ssids
 
         defer.returnValue((bsid,
-                           dict([(br.builderid, br.id) for br in br_rows])))
+                           {br.builderid: br.id for br in br_rows}))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):

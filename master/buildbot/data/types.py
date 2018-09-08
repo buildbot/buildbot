@@ -311,7 +311,7 @@ class Dict(Type):
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([(maybeNoneOrList(k, v), v.ramlname) for k, v in self.contents.items()])}
+                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in iteritems(self.contents)}}
 
 
 class JsonObject(Type):
@@ -389,9 +389,6 @@ class Entity(Type):
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([
-                    (
-                        maybeNoneOrList(k, v),
-                        {'type': v.ramlname, 'description': ''}
-                    )
-                    for k, v in iteritems(self.fields)])}
+                'properties': {
+                    maybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
+                    for k, v in iteritems(self.fields)}}

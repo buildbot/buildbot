@@ -89,8 +89,8 @@ def getDetailsForBuilds(master, buildset, builds, wantProperties=False, wantStep
     builders = yield defer.gatherResults([master.data.get(("builders", _id))
                                           for _id in builderids])
 
-    buildersbyid = dict([(builder['builderid'], builder)
-                         for builder in builders])
+    buildersbyid = {builder['builderid']: builder
+                    for builder in builders}
 
     if wantProperties:
         buildproperties = yield defer.gatherResults(

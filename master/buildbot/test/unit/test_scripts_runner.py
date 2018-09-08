@@ -41,7 +41,7 @@ class OptionsMixin(object):
                    lambda other_self: self.options_file)
 
     def assertOptions(self, opts, exp):
-        got = dict([(k, opts[k]) for k in exp])
+        got = {k: opts[k] for k in exp}
         if got != exp:
             msg = []
             for k in exp:
