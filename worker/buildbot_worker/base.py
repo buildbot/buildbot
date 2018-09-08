@@ -263,8 +263,8 @@ class BotBase(service.MultiService):
     @defer.inlineCallbacks
     def remote_setBuilderList(self, wanted):
         retval = {}
-        wanted_names = set([name for (name, builddir) in wanted])
-        wanted_dirs = set([builddir for (name, builddir) in wanted])
+        wanted_names = {name for (name, builddir) in wanted}
+        wanted_dirs = {builddir for (name, builddir) in wanted}
         wanted_dirs.add('info')
         for (name, builddir) in wanted:
             b = self.builders.get(name, None)

@@ -195,8 +195,7 @@ class BuilderStatus(styles.Versioned):
         return None
 
     def _getBuildBranches(self, build):
-        return set([ss.branch
-                    for ss in build.getSourceStamps()])
+        return {ss.branch for ss in build.getSourceStamps()}
 
     def generateFinishedBuilds(self, branches=None,
                                num_builds=None,

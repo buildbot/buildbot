@@ -148,8 +148,8 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                 got = sorted(insp.get_indexes(tbl.name),
                              key=lambda x: x['name'])
                 if exp != got:
-                    got_names = set([idx['name'] for idx in got])
-                    exp_names = set([idx['name'] for idx in exp])
+                    got_names = {idx['name'] for idx in got}
+                    exp_names = {idx['name'] for idx in exp}
                     got_info = dict((idx['name'], idx) for idx in got)
                     exp_info = dict((idx['name'], idx) for idx in exp)
                     for name in got_names - exp_names:

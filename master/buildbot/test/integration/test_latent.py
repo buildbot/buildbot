@@ -164,7 +164,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
@@ -207,7 +207,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         controller.auto_stop(True)
 
@@ -393,7 +393,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         controller.auto_stop(True)
 
@@ -445,7 +445,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         # should get 2 logs (html and txt) with proper information in there
         self.assertEqual(len(logs), 2)
@@ -510,7 +510,7 @@ class Tests(SynchronousTestCase):
         # When the substantiation fails, the buildrequest becomes unclaimed.
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         # should get 2 logs (html and txt) with proper information in there
         self.assertEqual(len(logs), 2)
@@ -657,7 +657,7 @@ class Tests(SynchronousTestCase):
         self.assertEqual(RETRY, dbdict['results'])
         self.assertEqual(
             set(brids),
-            set([req['buildrequestid'] for req in unclaimed_build_requests]),
+            {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)

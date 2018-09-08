@@ -63,7 +63,7 @@ class EndpointMixin(interfaces.InterfaceTests):
             self.matcher[pp] = self.ep
 
         self.pathArgs = [
-            set([arg.split(':', 1)[1] for arg in pp if ':' in arg])
+            {arg.split(':', 1)[1] for arg in pp if ':' in arg}
             for pp in pathPatterns if pp is not None]
 
     def tearDownEndpoint(self):
