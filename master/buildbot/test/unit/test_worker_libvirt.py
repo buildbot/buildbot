@@ -86,7 +86,6 @@ class TestLibVirtWorker(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_prepare_base_image_full(self):
-        pass
         self.patch(utils, "getProcessValue", mock.Mock())
         utils.getProcessValue.side_effect = lambda x, y: defer.succeed(0)
 
@@ -206,8 +205,8 @@ class TestWorkQueue(unittest.TestCase):
 
         @d.addErrback
         def errback(f):
-            # log.msg("errback called?")
-            pass
+            """ log.msg("errback called?") """
+
         return d
 
     @defer.inlineCallbacks

@@ -123,7 +123,6 @@ class IEmailSender(Interface):
 
     """I know how to send email, and can be used by other parts of the
     Buildbot to contact developers."""
-    pass
 
 
 class IEmailLookup(Interface):

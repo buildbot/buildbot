@@ -29,12 +29,8 @@ class DataException(Exception):
 
 
 class InvalidPathError(DataException):
-
     "A path argument was invalid or unknown"
-    pass
 
 
 class InvalidControlException(DataException):
-
     "Action is not supported"
-    pass

@@ -134,13 +134,11 @@ class ReconnectingPBClientFactory(PBClientFactory,
     def gotPerspective(self, perspective):
         """The remote avatar or perspective (obtained each time this factory
         connects) is now available."""
-        pass
 
     def gotRootObject(self, root):
         """The remote root object (obtained each time this factory connects)
         is now available. This method will be called each time the connection
         is established and the object reference is retrieved."""
-        pass
 
     def failedToGetPerspective(self, why):
         """The login process failed, most likely because of an authorization

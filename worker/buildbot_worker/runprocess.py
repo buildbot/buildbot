@@ -882,7 +882,6 @@ class RunProcess(object):
                             (sys.exc_info()[1])))
                     # probably no-such-process, maybe because there is no process
                     # group
-                    pass
 
         elif runtime.platformType == "win32":
             if interruptSignal is None:
@@ -914,12 +913,10 @@ class RunProcess(object):
             except OSError:
                 log.err("from process.signalProcess:")
                 # could be no-such-process, because they finished very recently
-                pass
             except error.ProcessExitedAlready:
                 log.msg("Process exited already - can't kill")
                 # the process has already exited, and likely finished() has
                 # been called already or will be called shortly
-                pass
 
         return hit
 

@@ -59,7 +59,7 @@ class TestStateMixin(unittest.TestCase):
 
         def check_exc(f):
             f.trap(KeyError)
-            pass
+
         d.addCallbacks(cb, check_exc)
         return d
 

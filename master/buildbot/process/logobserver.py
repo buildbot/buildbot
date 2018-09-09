@@ -85,17 +85,14 @@ class LogLineObserver(LogObserver):
     def outLineReceived(self, line):
         """This will be called with complete stdout lines (not including the
         delimiter). Override this in your observer."""
-        pass
 
     def errLineReceived(self, line):
         """This will be called with complete lines of stderr (not including
         the delimiter). Override this in your observer."""
-        pass
 
     def headerLineReceived(self, line):
         """This will be called with complete lines of stderr (not including
         the delimiter). Override this in your observer."""
-        pass
 
 
 class LineConsumerLogObserver(LogLineObserver):

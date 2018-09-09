@@ -42,7 +42,6 @@ class TestUsersBase(unittest.TestCase):
     Not really sure what there is to test, aside from _setUpManualUsers getting
     self.master set.
     """
-    pass
 
 
 class TestCommandlineUserManagerPerspective(unittest.TestCase, ManualUsersMixin):
