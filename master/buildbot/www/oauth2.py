@@ -209,7 +209,7 @@ class GitHubAuth(OAuth2Auth):
         query getOrgTeamMembership {
           {%- for org_slug, org_name in organizations.items() %}
           {{ org_slug }}: organization(login: "{{ org_name }}") {
-            teams(first: 100) {
+            teams(first: 100 userLogins: ["{{ user_info.username }}"]) {
               edges {
                 node {
                   name,
