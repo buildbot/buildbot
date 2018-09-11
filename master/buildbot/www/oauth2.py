@@ -342,6 +342,7 @@ class GitHubAuth(OAuth2Auth):
                         # since different organizations might share a common
                         # team name
                         teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
+                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['slug']))
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',

@@ -322,6 +322,12 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                                         'slug': 'committers'
                                     }
                                 },
+                                {
+                                    'node': {
+                                        'name': 'Team with spaces and caps',
+                                        'slug': 'team-with-spaces-and-caps'
+                                    }
+                                },
                             ]
                         }
                     },
@@ -334,11 +340,15 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
                           'groups': [
                               'hello',
                               'grp',
+                              'grp/Team with spaces and caps',
                               'grp/committers',
                               'grp/contributors',
                               'grp/developers',
+                              'grp/develpers',
+                              'grp/team-with-spaces-and-caps',
                               'hello/contributors',
-                              'hello/developers'
+                              'hello/developers',
+                              'hello/develpers',
                           ],
                           'full_name': 'foo bar'}, res)
 
