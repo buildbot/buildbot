@@ -587,6 +587,10 @@ The following parameters are accepted by this class:
     At the moment, irc bot can listen to build 'start' and 'finish' events.
     This parameter can be changed during run-time by sending the ``notify`` command to the bot.
 
+``noticeOnChannel``
+   (optional)
+   Whether to send notices rather than messages when communicating with a channel.
+
 ``showBlameList``
     (optional, disabled by default)
     Whether or not to display the blame list for failed builds.
