@@ -50,7 +50,7 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def makeBot(self, *args, **kwargs):
         if not args:
-            args = ('nick', 'pass', ['#ch'], [], [], {})
+            args = ('nick', 'pass', ['#ch'], [], False, [], {})
         return irc.IrcStatusBot(*args, **kwargs)
 
     def test_groupDescribe(self):
@@ -63,6 +63,14 @@ class TestIrcStatusBot(unittest.TestCase):
 
     def test_groupChat(self):
         b = self.makeBot()
+        b.msg = lambda d, m: evts.append(('n', d, m))
+
+        evts = []
+        b.groupChat('#chan', 'hi')
+        self.assertEqual(evts, [('n', '#chan', 'hi')])
+
+    def test_groupChat_notice(self):
+        b = self.makeBot('nick', 'pass', ['#ch'], [], True, [], {})
         b.notice = lambda d, m: evts.append(('n', d, m))
 
         evts = []
@@ -104,7 +112,7 @@ class TestIrcStatusBot(unittest.TestCase):
         self.assertEqual(c.messages, ['hello'])
 
     def test_privmsg_user_uppercase(self):
-        b = self.makeBot('NICK', 'pass', ['#ch'], [], [], {})
+        b = self.makeBot('NICK', 'pass', ['#ch'], [], False, [], {})
         b.contactClass = FakeContact
         b.privmsg('jimmy!~foo@bar', 'NICK', 'hello')
 
@@ -155,7 +163,7 @@ class TestIrcStatusBot(unittest.TestCase):
     def test_signedOn(self):
         b = self.makeBot('nick', 'pass',
                          ['#ch1', dict(channel='#ch2', password='sekrits')],
-                         ['jimmy', 'bobby'], [], {})
+                         ['jimmy', 'bobby'], False, [], {})
         evts = []
 
         def msg(d, m):
@@ -247,6 +255,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
             nick='nick',
             channels=['channels'],
             pm_to_nicks=['pm', 'to', 'nicks'],
+            noticeOnChannel=True,
             port=1234,
             allowForce=True,
             tags=['tags'],
@@ -269,7 +278,7 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         p = factory.buildProtocol('address')
         self.assertIdentical(p, proto_obj)
         factory.protocol.assert_called_with(
-            'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'],
+            'nick', 'pass', ['channels'], ['pm', 'to', 'nicks'], True,
             ['tags'], {'successToFailure': 1},
             useColors=False,
             useRevisions=True,

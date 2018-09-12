@@ -39,13 +39,15 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
     """I represent the buildbot to an IRC server.
     """
 
-    def __init__(self, nickname, password, channels, pm_to_nicks, *args, **kwargs):
+    def __init__(self, nickname, password, channels, pm_to_nicks,
+                 noticeOnChannel, *args, **kwargs):
         StatusBot.__init__(self, *args, **kwargs)
         self.nickname = nickname
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
         self.password = password
         self.hasQuit = 0
+        self.noticeOnChannel = noticeOnChannel
         self._keepAliveCall = task.LoopingCall(
             lambda: self.ping(self.nickname))
 
@@ -60,7 +62,10 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     # The following methods are called when we write something.
     def groupChat(self, channel, message):
-        self.notice(channel, message)
+        if self.noticeOnChannel:
+            self.notice(channel, message)
+        else:
+            self.msg(channel, message)
 
     def chat(self, user, message):
         self.msg(user, message)
@@ -135,6 +140,7 @@ class IrcStatusFactory(ThrottledClientFactory):
     p = None
 
     def __init__(self, nickname, password, channels, pm_to_nicks, tags, notify_events,
+                 noticeOnChannel=False,
                  useRevisions=False, showBlameList=False,
                  parent=None,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
@@ -147,6 +153,7 @@ class IrcStatusFactory(ThrottledClientFactory):
         self.tags = tags
         self.parent = parent
         self.notify_events = notify_events
+        self.noticeOnChannel = noticeOnChannel
         self.useRevisions = useRevisions
         self.showBlameList = showBlameList
         self.useColors = useColors
@@ -168,6 +175,7 @@ class IrcStatusFactory(ThrottledClientFactory):
 
         p = self.protocol(self.nickname, self.password,
                           self.channels, self.pm_to_nicks,
+                          self.noticeOnChannel,
                           self.tags, self.notify_events,
                           useColors=self.useColors,
                           useRevisions=self.useRevisions,
@@ -207,7 +215,7 @@ class IRC(service.BuildbotService):
                     allowForce=False, tags=None, password=None, notify_events=None,
                     showBlameList=True, useRevisions=False,
                     useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                    allowShutdown=False, **kwargs
+                    allowShutdown=False, noticeOnChannel=False, **kwargs
                     ):
         deprecated_params = list(kwargs)
         if deprecated_params:
@@ -218,6 +226,9 @@ class IRC(service.BuildbotService):
         if allowShutdown not in (True, False):
             config.error("allowShutdown must be boolean, not %r" %
                          (allowShutdown,))
+        if noticeOnChannel not in (True, False):
+            config.error("noticeOnChannel must be boolean, not %r" %
+                         (noticeOnChannel,))
         if useSSL:
             # SSL client needs a ClientContextFactory for some SSL mumbo-jumbo
             ssl.ensureHasSSL(self.__class__.__name__)
@@ -226,7 +237,7 @@ class IRC(service.BuildbotService):
                         allowForce=False, tags=None, password=None, notify_events=None,
                         showBlameList=True, useRevisions=False,
                         useSSL=False, lostDelay=None, failedDelay=None, useColors=True,
-                        allowShutdown=False, **kwargs
+                        allowShutdown=False, noticeOnChannel=False, **kwargs
                         ):
 
         # need to stash these so we can detect changes later
@@ -245,6 +256,7 @@ class IRC(service.BuildbotService):
             notify_events = {}
         self.notify_events = notify_events
         self.allowShutdown = allowShutdown
+        self.noticeOnChannel = noticeOnChannel
 
         # This function is only called in case of reconfig with changes
         # We don't try to be smart here. Just restart the bot if config has
@@ -254,6 +266,7 @@ class IRC(service.BuildbotService):
         self.f = IrcStatusFactory(self.nick, self.password,
                                   self.channels, self.pm_to_nicks,
                                   self.tags, self.notify_events,
+                                  noticeOnChannel=noticeOnChannel,
                                   parent=self,
                                   useRevisions=useRevisions,
                                   showBlameList=showBlameList,
