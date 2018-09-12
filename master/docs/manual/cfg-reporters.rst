@@ -588,7 +588,7 @@ The following parameters are accepted by this class:
     This parameter can be changed during run-time by sending the ``notify`` command to the bot.
 
 ``noticeOnChannel``
-   (optional)
+   (optional, disabled by default)
    Whether to send notices rather than messages when communicating with a channel.
 
 ``showBlameList``
