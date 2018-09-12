@@ -1,0 +1,4 @@
+Restricted groups added by :py:class:`~buildbot.www.oauth2.GitHubAuth`'s
+``getTeamsMembership`` option to only those teams to which the user belongs.
+Previously, groups were added for all teams for all organizations to which the
+user belongs.
