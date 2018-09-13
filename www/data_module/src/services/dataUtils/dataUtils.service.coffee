@@ -32,9 +32,11 @@ class DataUtils extends Service
             socketPath: (arg) ->
                 a = @copyOrSplit(arg)
                 # if the argument count is even, the last argument is an id
+                # Format of properties endpoint is an exception
+                # and needs to be properties/*, not properties/*/*
                 stars = ['*']
                 # is it odd?
-                if a.length % 2 is 1 then stars.push('*')
+                if a.length % 2 is 1 and not arg.endsWith("/properties") then stars.push('*')
                 a.concat(stars).join('/')
 
             socketPathRE: (socketPath) ->
