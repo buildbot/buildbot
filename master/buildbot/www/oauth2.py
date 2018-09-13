@@ -22,10 +22,10 @@ from future.utils import iteritems
 import json
 import re
 import textwrap
-from six.moves.urllib.parse import urljoin
 
 import jinja2
 import requests
+from six.moves.urllib.parse import urljoin
 
 from twisted.internet import defer
 from twisted.internet import threads
