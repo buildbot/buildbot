@@ -31,7 +31,7 @@ from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
 
-class IndexResource(resource.InternalResource):
+class IndexResource(resource.Resource):
     # enable reconfigResource calls
     needsReconfig = True
 
@@ -160,3 +160,14 @@ class IndexResource(resource.InternalResource):
                          custom_templates=self.custom_templates,
                          config=self.config)
         defer.returnValue(unicode2bytes(tpl, encoding='ascii'))
+
+    def render(self, request):
+        """
+        Resource available only for authorized users if authorization is enabled.
+        """
+        wwwconfig = self.master.www
+        userinfos = wwwconfig.getUserInfos(request)
+        auth = wwwconfig.auth
+        if 'anonymous' in userinfos and auth and auth.autologin:
+            return auth.doAutologin(request)
+        return super(IndexResource, self).render(request)

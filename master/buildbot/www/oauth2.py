@@ -22,7 +22,7 @@ from future.utils import iteritems
 import json
 import re
 import textwrap
-from posixpath import join
+from six.moves.urllib.parse import urljoin
 
 import jinja2
 import requests
@@ -97,7 +97,7 @@ class OAuth2Auth(auth.AuthBase):
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = join(new_config.buildbotURL, "auth/login")
+        self.loginUri = urljoin(new_config.buildbotURL, "auth/login")
         self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
@@ -175,6 +175,11 @@ class OAuth2Auth(auth.AuthBase):
 
     def getUserInfoFromOAuthClient(self, c):
         return {}
+
+    def doAutologin(self, request):
+        redir = urljoin(self.loginUri, '?redirect=')
+        request.redirect(redir)
+        return redir.encode()
 
 
 class GoogleAuth(OAuth2Auth):
