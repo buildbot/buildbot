@@ -24,7 +24,7 @@ class ConfigErrorsMixin(object):
     def assertConfigError(self, errors, substr_or_re):
         if len(errors.errors) > 1:
             self.fail("too many errors: %s" % (errors.errors,))
-        elif len(errors.errors) < 1:
+        elif not errors.errors:
             self.fail("expected error did not occur")
         else:
             curr_error = errors.errors[0]
