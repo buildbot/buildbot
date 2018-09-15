@@ -213,6 +213,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     def finish(self):
         self.finished = True
         self._maybeFinished()
+        # pylint: disable=unnecessary-lambda
         self._delay(lambda: self.asyncLogfile.finish())
 
     def unwrap(self):

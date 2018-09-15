@@ -117,5 +117,5 @@ class Tests(unittest.TestCase):
             u'aa_100')
 
     def test_incrementIdentifier_add_digits_out_of_space(self):
-        self.assertRaises(ValueError, lambda:
-                          identifiers.incrementIdentifier(6, u'_99999'))
+        self.assertRaises(ValueError,
+                          identifiers.incrementIdentifier, 6, u'_99999')

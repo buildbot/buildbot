@@ -402,8 +402,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # into sys.maxint so that it sorts to the end
 
         def xform(bldr):
-            d = defer.maybeDeferred(lambda:
-                                    bldr.getOldestRequestTime())
+            d = defer.maybeDeferred(bldr.getOldestRequestTime)
             d.addCallback(lambda time:
                           (((time is None) and None or time), bldr))
             return d
@@ -457,8 +456,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # run it
         try:
-            builders = yield defer.maybeDeferred(lambda:
-                                                 sorter(self.master, builders))
+            builders = yield defer.maybeDeferred(sorter, self.master, builders)
         except Exception:
             log.err(Failure(), "prioritizing builders; order unspecified")
 

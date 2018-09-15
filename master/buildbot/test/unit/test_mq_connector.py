@@ -58,8 +58,8 @@ class MQConnector(unittest.TestCase):
 
     def test_setup_unknown_type(self):
         self.mqconfig['type'] = 'unknown'
-        self.assertRaises(AssertionError, lambda:
-                          self.conn.setup())
+        self.assertRaises(AssertionError,
+                          self.conn.setup)
 
     def test_setup_simple_type(self):
         self.patchFakeMQ(name='simple')

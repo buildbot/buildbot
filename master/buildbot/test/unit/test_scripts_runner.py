@@ -173,7 +173,7 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_size_noninteger(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--log-size=1M'))
+                          self.parse, '--log-size=1M')
 
     def test_log_count(self):
         opts = self.parse('-l124')
@@ -192,7 +192,7 @@ class TestCreateMasterOptions(OptionsMixin, unittest.TestCase):
 
     def test_log_count_noninteger(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--log-count=M'))
+                          self.parse, '--log-count=M')
 
     def test_db_long(self):
         opts = self.parse('--db=foo://bar')
@@ -382,8 +382,8 @@ class TestTryOptions(OptionsMixin, unittest.TestCase):
         self.assertOptions(opts, exp)
 
     def test_patchlevel_inval(self):
-        self.assertRaises(ValueError, lambda:
-                          self.parse('-p', 'a'))
+        self.assertRaises(ValueError,
+                          self.parse, '-p', 'a')
 
     def test_config_builders(self):
         self.options_file['try_builders'] = ['a', 'b']
@@ -523,7 +523,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def test_invalid_when(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--when=foo', *self.master_and_who))
+                          self.parse, '--when=foo', *self.master_and_who)
 
     def test_comments_overrides_logfile(self):
         opts = self.parse('--logfile', 'logs', '--comments', 'foo',
@@ -550,7 +550,7 @@ class TestSendChangeOptions(OptionsMixin, unittest.TestCase):
 
     def test_invalid_vcs(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse('--vc=foo', *self.master_and_who))
+                          self.parse, '--vc=foo', *self.master_and_who)
 
     def test_invalid_master(self):
         self.assertRaises(usage.UsageError,
@@ -574,7 +574,7 @@ class TestTryServerOptions(OptionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
+                          self.parse)
 
     def test_with_jobdir(self):
         opts = self.parse('--jobdir', 'xyz')
@@ -628,7 +628,7 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
+                          self.parse)
 
     def test_synopsis(self):
         opts = runner.UserOptions()
@@ -692,12 +692,12 @@ class TestUserOptions(OptionsMixin, unittest.TestCase):
 
     def test_invalid_info(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse("--info", "foo=bar",
-                                             '--op', 'add', *self.extra_args))
+                          self.parse,
+                          "--info", "foo=bar", '--op', 'add', *self.extra_args)
 
     def test_no_master(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse('-op=foo'))
+                          self.parse, '-op=foo')
 
     def test_invalid_master(self):
         self.assertRaises(usage.UsageError, self.parse, '-m', 'foo')
@@ -793,7 +793,7 @@ class TestOptions(OptionsMixin, misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_defaults(self):
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse())
+                          self.parse)
 
     def test_version(self):
         try:
