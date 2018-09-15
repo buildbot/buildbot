@@ -144,7 +144,6 @@ disable=
   assignment-from-no-return,
   stop-iteration-return,
   len-as-condition,
-  try-except-raise
 
 
 [REPORTS]
