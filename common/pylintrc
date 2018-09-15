@@ -143,7 +143,6 @@ disable=
   comparison-with-itself,
   assignment-from-no-return,
   stop-iteration-return,
-  len-as-condition,
 
 
 [REPORTS]
