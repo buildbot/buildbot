@@ -1,11 +1,41 @@
 {
-    "name": "buildbot-console-view",
-    "engines": {
-        "node": ">=0.10.0",
-        "npm": ">=1.4.0"
-    },
-    "dependencies": {
-        "guanlecoja": "~0.8.3",
-        "gulp": "3.9.0"
-    }
+	"name": "buildbot-console-view",
+	"scripts": {
+		"test": "karma start",
+		"test-watch": "karma start --auto-watch --no-single-run"
+	},
+	"engines": {
+		"node": ">=0.10.0",
+		"npm": ">=1.4.0"
+	},
+	"dependencies": {},
+	"devDependencies": {
+		"@uirouter/angularjs": "^1.0.15",
+		"angular": "^1.5.0",
+		"angular-mocks": "^1.5.0",
+		"babel-core": "^6.26.0",
+		"babel-loader": "^7.1.2",
+		"css-loader": "^0.28.5",
+		"extract-text-webpack-plugin": "^3.0.2",
+		"file-loader": "^0.11.2",
+		"install": "^0.11.0",
+		"jade": "^1.11.0",
+		"jade-html-loader": "0.0.3",
+		"jasmine-core": "^3.1.0",
+		"karma": "^2.0.2",
+		"karma-chrome-launcher": "^2.2.0",
+		"karma-coverage": "^1.1.1",
+		"karma-jasmine": "^1.1.1",
+		"karma-sourcemap-loader": "^0.3.7",
+		"karma-webpack": "^3.0.0",
+		"less": "^2.7.2",
+		"less-loader": "^4.0.5",
+		"ng-classify-loader": "0.0.3",
+		"npm": "^5.8.0",
+		"raw-loader": "^0.5.1",
+		"source-map-loader": "^0.2.1",
+		"style-loader": "^0.18.2",
+		"webpack": "^3.9.1"
+	},
+	"license": "Apache-2.0"
 }
