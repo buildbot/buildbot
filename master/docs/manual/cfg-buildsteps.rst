@@ -362,7 +362,7 @@ The Git step takes the following arguments:
    The URL of the upstream Git repository.
 
 ``branch`` (optional)
-   This specifies the name of the branch to use when a Build does not provide one of its own.
+   This specifies the name of the branch or the tag to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
