@@ -370,7 +370,7 @@ The Git step takes the following arguments:
    When initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
 
 ``shallow`` (optional)
-   Instructs git to attempt shallow clones (``--depth 1``).
+   Instructs Git to attempt shallow clones (``--depth 1``).
    The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
    This option can be used only in full builds with clobber method.
 
@@ -460,12 +460,12 @@ The Git step takes the following arguments:
       * ``dirty=foo``: `--dirty=foo`
 
 ``config`` (optional)
-   A dict of git configuration settings to pass to the remote git commands.
+   A dict of Git configuration settings to pass to the remote Git commands.
 
 ``sshPrivateKey`` (optional)
-   The private key to use when running git for fetch operations.
+   The private key to use when running Git for fetch operations.
    The ssh utility must be in the system path in order to use this option.
-   On Windows only git distribution that embeds MINGW has been tested (as of July 2017 the official distribution is MINGW-based).
+   On Windows only Git distribution that embeds MINGW has been tested (as of July 2017 the official distribution is MINGW-based).
    The worker must either have the host in the known hosts file or the host key must be specified via the `sshHostKey` option.
 
 ``sshHostKey`` (optional)
