@@ -345,17 +345,16 @@ Git
 
 The :bb:step:`Git` build step clones or updates a `Git <http://git.or.cz/>`_ repository and checks out the specified branch or revision.
 
-
 .. note::
 
-    The Buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the Buildbot uses.
+   The Buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the Buildbot uses.
 
 ::
 
-    from buildbot.plugins import steps
+   from buildbot.plugins import steps
 
-    factory.addStep(steps.Git(repourl='git://path/to/repo', mode='full',
-                              method='clobber', submodules=True))
+   factory.addStep(steps.Git(repourl='git://path/to/repo', mode='full',
+                             method='clobber', submodules=True))
 
 The Git step takes the following arguments:
 
@@ -399,24 +398,20 @@ The Git step takes the following arguments:
    If retry fails it fails the source checkout step.
 
 ``mode``
+   (optional): defaults to ``'incremental'``.
+   Specifies whether to clean the build tree or not.
 
-  (optional): defaults to ``'incremental'``.
-  Specifies whether to clean the build tree or not.
-
-    ``incremental``
+   ``incremental``
       The source is update, but any built files are left untouched.
 
-    ``full``
+   ``full``
       The build tree is clean of any built files.
       The exact method for doing this is controlled by the ``method`` argument.
 
-
 ``method``
-
    (optional): defaults to ``fresh`` when mode is ``full``.
    Git's incremental mode does not require a method.
    The full mode has four methods defined:
-
 
    ``clobber``
       It removes the build directory entirely then makes full clone from repo.
@@ -442,7 +437,6 @@ The Git step takes the following arguments:
       It performs all the incremental checkout behavior in ``source`` directory.
 
 ``getDescription``
-
    (optional) After checkout, invoke a `git describe` on the revision and save the result in a property; the property's name is either ``commit-description`` or ``commit-description-foo``, depending on whether the ``codebase`` argument was also provided.
    The argument should either be a ``bool`` or ``dict``, and will change how `git describe` is called:
 
@@ -471,11 +465,9 @@ The Git step takes the following arguments:
       * ``dirty=foo``: `--dirty=foo`
 
 ``config``
-
    (optional) A dict of git configuration settings to pass to the remote git commands.
 
 ``sshPrivateKey``
-
    (optional) The private key to use when running git for fetch operations. The
    ssh utility must be in the system path in order to use this option. On
    Windows only git distribution that embeds MINGW has been tested (as of July
@@ -484,12 +476,11 @@ The Git step takes the following arguments:
    `sshHostKey` option.
 
 ``sshHostKey``
-
-    (optional) Specifies public host key to match when authenticating with SSH
-    public key authentication. This may be either a :ref:`Secret` or just a
-    string. `sshPrivateKey` must be specified in order to use this option.
-    The host key must be in the form of `<key type> <base64-encoded string>`,
-    e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
+   (optional) Specifies public host key to match when authenticating with SSH
+   public key authentication. This may be either a :ref:`Secret` or just a
+   string. `sshPrivateKey` must be specified in order to use this option.
+   The host key must be in the form of `<key type> <base64-encoded string>`,
+   e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
 
 .. bb:step:: SVN
 
