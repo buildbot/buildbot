@@ -349,7 +349,7 @@ The :bb:step:`Git` build step clones or updates a `Git <http://git.or.cz/>`_ rep
 
    The Buildbot supports Git version 1.2.0 and later: earlier versions (such as the one shipped in Ubuntu 'Dapper') do not support the :command:`git init` command that the Buildbot uses.
 
-::
+.. code-block:: python
 
    from buildbot.plugins import steps
 
