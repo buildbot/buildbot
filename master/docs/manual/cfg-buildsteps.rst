@@ -387,7 +387,7 @@ The Git step takes the following arguments:
    This solves issues of long fetches being killed due to lack of output, but requires Git 1.7.2 or later.
 
 ``retryFetch`` (optional, default: ``False``)
-   If true, if the ``git fetch`` fails then buildbot retries to fetch again instead of failing the entire source checkout.
+   If true, if the ``git fetch`` fails then Buildbot retries to fetch again instead of failing the entire source checkout.
 
 ``clobberOnFailure`` (optional, default: ``False``)
    If a fetch or full clone fails we can checkout source removing everything.
