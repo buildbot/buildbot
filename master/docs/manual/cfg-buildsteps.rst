@@ -358,47 +358,43 @@ The :bb:step:`Git` build step clones or updates a `Git <http://git.or.cz/>`_ rep
 
 The Git step takes the following arguments:
 
-``repourl``
-   (required): the URL of the upstream Git repository.
+``repourl`` (required)
+   The URL of the upstream Git repository.
 
-``branch``
-   (optional): this specifies the name of the branch to use when a Build does not provide one of its own.
+``branch`` (optional)
+   This specifies the name of the branch to use when a Build does not provide one of its own.
    If this parameter is not specified, and the Build does not provide a branch, the default branch of the remote repository will be used.
    If ``alwaysUseLatest`` is ``True`` then the branch and revision information that comes with the Build is ignored and branch specified in this parameter is used.
 
-``submodules``
-   (optional): when initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
-   Default: ``False``.
+``submodules`` (optional, default: ``False``)
+   When initializing/updating a Git repository, this tells Buildbot whether to handle Git submodules.
 
-``shallow``
-   (optional): instructs git to attempt shallow clones (``--depth 1``).
+``shallow`` (optional)
+   Instructs git to attempt shallow clones (``--depth 1``).
    The depth defaults to 1 and can be changed by passing an integer instead of ``True``.
    This option can be used only in full builds with clobber method.
 
-``reference``
-   (optional): use the specified string as a path to a reference repository on the local machine.
+``reference`` (optional)
+   Use the specified string as a path to a reference repository on the local machine.
    Git will try to grab objects from this path first instead of the main repository, if they exist.
 
-``origin``
-   (optional): By default, any clone will use the name "origin" as the remote repository (eg, "origin/master").
+``origin`` (optional)
+   By default, any clone will use the name "origin" as the remote repository (eg, "origin/master").
    This renderable option allows that to be configured to an alternate name.
 
-``progress``
-   (optional): passes the (``--progress``) flag to (:command:`git fetch`).
+``progress`` (optional)
+   Passes the (``--progress``) flag to (:command:`git fetch`).
    This solves issues of long fetches being killed due to lack of output, but requires Git 1.7.2 or later.
 
-``retryFetch``
-   (optional): defaults to ``False``.
+``retryFetch`` (optional, default: ``False``)
    If true, if the ``git fetch`` fails then buildbot retries to fetch again instead of failing the entire source checkout.
 
-``clobberOnFailure``
-   (optional): defaults to ``False``.
+``clobberOnFailure`` (optional, default: ``False``)
    If a fetch or full clone fails we can checkout source removing everything.
    This way new repository will be cloned.
    If retry fails it fails the source checkout step.
 
-``mode``
-   (optional): defaults to ``'incremental'``.
+``mode`` (optional, default: ``'incremental'``)
    Specifies whether to clean the build tree or not.
 
    ``incremental``
@@ -408,8 +404,7 @@ The Git step takes the following arguments:
       The build tree is clean of any built files.
       The exact method for doing this is controlled by the ``method`` argument.
 
-``method``
-   (optional): defaults to ``fresh`` when mode is ``full``.
+``method`` (optional, default: ``fresh`` when mode is ``full``)
    Git's incremental mode does not require a method.
    The full mode has four methods defined:
 
@@ -436,8 +431,8 @@ The Git step takes the following arguments:
       The behavior of source checkout follows exactly same as incremental.
       It performs all the incremental checkout behavior in ``source`` directory.
 
-``getDescription``
-   (optional) After checkout, invoke a `git describe` on the revision and save the result in a property; the property's name is either ``commit-description`` or ``commit-description-foo``, depending on whether the ``codebase`` argument was also provided.
+``getDescription`` (optional)
+   After checkout, invoke a `git describe` on the revision and save the result in a property; the property's name is either ``commit-description`` or ``commit-description-foo``, depending on whether the ``codebase`` argument was also provided.
    The argument should either be a ``bool`` or ``dict``, and will change how `git describe` is called:
 
    * ``getDescription=False``: disables this feature explicitly
@@ -464,17 +459,17 @@ The Git step takes the following arguments:
       * ``candidates=7``: `--candidates=7`
       * ``dirty=foo``: `--dirty=foo`
 
-``config``
-   (optional) A dict of git configuration settings to pass to the remote git commands.
+``config`` (optional)
+   A dict of git configuration settings to pass to the remote git commands.
 
-``sshPrivateKey``
-   (optional) The private key to use when running git for fetch operations.
+``sshPrivateKey`` (optional)
+   The private key to use when running git for fetch operations.
    The ssh utility must be in the system path in order to use this option.
    On Windows only git distribution that embeds MINGW has been tested (as of July 2017 the official distribution is MINGW-based).
    The worker must either have the host in the known hosts file or the host key must be specified via the `sshHostKey` option.
 
-``sshHostKey``
-   (optional) Specifies public host key to match when authenticating with SSH public key authentication.
+``sshHostKey`` (optional)
+   Specifies public host key to match when authenticating with SSH public key authentication.
    This may be either a :ref:`Secret` or just a string.
    `sshPrivateKey` must be specified in order to use this option.
    The host key must be in the form of `<key type> <base64-encoded string>`, e.g. `ssh-rsa AAAAB3N<...>FAaQ==`.
