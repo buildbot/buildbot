@@ -457,7 +457,7 @@ def command_to_string(command):
             stringWords.append(w)
     words = stringWords
 
-    if len(words) < 1:
+    if not words:
         return None
     if len(words) < 3:
         rv = "'%s'" % (' '.join(words))

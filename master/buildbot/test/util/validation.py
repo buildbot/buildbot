@@ -113,7 +113,7 @@ class IdentifierValidator(Validator):
             yield "{} - {!r} - is not a unicode string".format(name, object)
         elif not self.ident_re.match(object):
             yield "{} - {!r} - is not an identifier".format(name, object)
-        elif len(object) < 1:
+        elif not object:
             yield "{} - identifiers cannot be an empty string".format(name)
         elif len(object) > self.len:
             yield "{} - {!r} - is longer than {} characters".format(
