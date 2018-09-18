@@ -1,0 +1,9 @@
+Update Git source checkout build step documentation:
+
+* remove redundant empty lines
+* make the indentation consistent
+* make the code example explicitly Python snippet
+* make the SSH related parameter documentation compliant with one-sentence-per-line policy
+* re-format require/optional status and default values for the Git source checkout step
+* fix the Git spelling
+* align the docs with the code in `buildbot/steps/source/git.py` (tags are also supported)
