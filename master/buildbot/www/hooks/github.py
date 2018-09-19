@@ -263,12 +263,16 @@ class GitHubEventHandler(PullRequestMixin):
             log.msg("Branch `{}' deleted, ignoring".format(branch))
             return changes
 
+        if not payload['head_commit'] and not payload['commits']:
+            log.msg("No commits specified for branch `{}', ignoring".format(branch))
+            return changes
+
         # check skip pattern in commit message. e.g.: [ci skip] and [skip ci]
         head_msg = payload['head_commit'].get('message', '')
         if self._has_skip(head_msg):
             return changes
         commits = payload['commits']
-        if payload.get('created'):
+        if not commits:
             commits = [payload['head_commit']]
         for commit in commits:
             files = []
