@@ -1,0 +1,1 @@
+Fixed builders page doesn't list workers in multi-master configuration (:issue:`4326`)

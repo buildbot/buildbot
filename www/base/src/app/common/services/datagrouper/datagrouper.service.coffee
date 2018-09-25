@@ -25,7 +25,8 @@ class dataGrouperService extends Factory('common')
                                 group = collection1.get(item2[joinid])[attribute] ?= []
                             else
                                 group = temp_dict[item2[joinid]] ?= []
-                            group.push(item)
+                            if item not in group
+                                group.push(item)
                 else
                     collection2.onNew = (item) ->
                         # the collection1 might not be yet loaded, so we need to store the worker list
