@@ -92,7 +92,11 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
 
     name = 'upload'
 
-    renderables = ['workersrc', 'masterdest', 'url']
+    renderables = [
+        'masterdest',
+        'url',
+        'workersrc',
+    ]
 
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
