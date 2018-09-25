@@ -95,6 +95,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
     renderables = [
         'masterdest',
         'url',
+        'urlText',
         'workersrc',
     ]
 
