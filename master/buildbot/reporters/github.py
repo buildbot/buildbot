@@ -123,47 +123,57 @@ class GitHubStatusPush(http.HttpStatusPushBase):
         context = yield props.render(self.context)
 
         sourcestamps = build['buildset'].get('sourcestamps')
-
-        if not sourcestamps or not sourcestamps[0]:
+        if not sourcestamps:
             return
 
-        project = sourcestamps[0]['project']
-
-        branch = props['branch']
-        m = re.search(r"refs/pull/([0-9]*)/merge", branch)
-        if m:
-            issue = m.group(1)
-        else:
-            issue = None
-
-        if "/" in project:
-            repoOwner, repoName = project.split('/')
-        else:
-            giturl = giturlparse(sourcestamps[0]['repository'])
-            repoOwner = giturl.owner
-            repoName = giturl.repo
-
-        if self.verbose:
-            log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
-                repoOwner=repoOwner, repoName=repoName))
-
         for sourcestamp in sourcestamps:
+            project = sourcestamp['project']
+
+            # If branch is None, so is issue
+            issue = None
+            if 'branch' in props:
+                m = re.search(r"refs/pull/([0-9]*)/merge", props['branch'])
+                if m:
+                    issue = m.group(1)
+
+            repoOwner = None
+            repoName = None
+            if "/" in project:
+                repoOwner, repoName = project.split('/')
+            else:
+                giturl = giturlparse(sourcestamp['repository'])
+                if giturl:
+                    repoOwner = giturl.owner
+                    repoName = giturl.repo
+
             sha = sourcestamp['revision']
             response = None
+
+            # If the scheduler specifies multiple codebases, don't bother updating
+            # the ones for which there is no revision
+            if not sha:
+                log.msg(
+                    'Skipped status update for codebase {codebase}, '
+                    'context "{context}", issue {issue}.'.format(
+                        codebase=sourcestamp['codebase'], issue=issue, context=context))
+                continue
+
             try:
+                if self.verbose:
+                    log.msg("Updating github status: repoOwner={repoOwner}, repoName={repoName}".format(
+                        repoOwner=repoOwner, repoName=repoName))
+
                 repo_user = repoOwner
                 repo_name = repoName
                 target_url = build['url']
-                response = yield self.createStatus(
-                    repo_user=repo_user,
-                    repo_name=repo_name,
-                    sha=sha,
-                    state=state,
-                    target_url=target_url,
-                    context=context,
-                    issue=issue,
-                    description=description
-                )
+                response = yield self.createStatus(repo_user=repo_user,
+                                                   repo_name=repo_name,
+                                                   sha=sha,
+                                                   state=state,
+                                                   target_url=target_url,
+                                                   context=context,
+                                                   issue=issue,
+                                                   description=description)
 
                 if not self.isStatus2XX(response.code):
                     raise Exception()
