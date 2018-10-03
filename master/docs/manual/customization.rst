@@ -965,6 +965,46 @@ For example::
         url = 'http://coverage.example.com/reports/%s' % reportname
         yield self.addURL('coverage', url)
 
+This also works from log observers, which is helpful for instance if the build output points to an external page such as a detailed log file. The following example parses output of *poudriere*, a tool for building packages on the FreeBSD operating system.
+
+Example output:
+
+.. code-block:: none
+
+    [00:00:00] Creating the reference jail... done
+    ...
+    [00:00:01] Logs: /usr/local/poudriere/data/logs/bulk/103amd64-2018Q4/2018-10-03_05h47m30s
+    ...
+    ... build log without details (those are in the above logs directory) ...
+
+Log observer implementation::
+
+    c = BuildmasterConfig = {}
+    c['titleURL'] = 'https://my-buildbot.example.com/'
+    # ...
+    class PoudriereLogLinkObserver(util.LogLineObserver):
+        _regex = re.compile(
+            r'Logs: /usr/local/poudriere/data/logs/bulk/([-_/0-9A-Za-z]+)$')
+
+        def __init__(self):
+            super().__init__()
+            self._finished = False
+
+        def outLineReceived(self, line):
+            # Short-circuit if URL already found
+            if self._finished:
+                return
+
+            m = self._regex.search(line.rstrip())
+            if m:
+                self._finished = True
+                # Let's assume local directory /usr/local/poudriere/data/logs/bulk
+                # is available as https://my-buildbot.example.com/poudriere/logs
+                poudriere_ui_url = c['titleURL'] + 'poudriere/logs/' + m.group(1)
+                # Add URLs for build overview page and for per-package log files
+                self.step.addURL('Poudriere build web interface', poudriere_ui_url)
+                self.step.addURL('Poudriere logs', poudriere_ui_url + '/logs/')
+
 Discovering files
 ~~~~~~~~~~~~~~~~~
 
