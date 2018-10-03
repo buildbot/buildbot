@@ -73,12 +73,16 @@ gulp.task 'proxy', ['processindex'], ->
     argv = require('minimist')(process.argv)
     argv.host?= 'nine.buildbot.net'
     argv.port?= 8080
+    argv.secure?= false
+    argv.ignoresslerrors?= false
 
     fs = require 'fs'
     path = require 'path'
     http = require 'http'
     httpProxy = require 'http-proxy'
-    proxy = httpProxy.createProxyServer({})
+    proxy = httpProxy.createProxyServer({
+        secure: not argv.ignoresslerrors,
+    })
     proxy.on 'proxyReq', (proxyReq, req, res, options) ->
         delete proxyReq.removeHeader('Origin')
         delete proxyReq.removeHeader('Referer')
@@ -88,7 +92,7 @@ gulp.task 'proxy', ['processindex'], ->
 
     server = http.createServer (req, res) ->
         if req.url.match /^\/(api|sse|avatar)/
-            proxy.web req, res, {target: 'http://' + argv.host}
+            proxy.web req, res, {target: 'http' + (if argv.secure then 's' else '') + '://' + argv.host}
         else
             filepath = config.dir.build + req.url.split('?')[0]
             if fs.existsSync(filepath) and fs.lstatSync(filepath).isDirectory()
@@ -101,9 +105,9 @@ gulp.task 'proxy', ['processindex'], ->
                     res.writeHead(200)
                     res.end(data)
     server.on 'upgrade',  (req, socket, head) ->
-        proxy.ws req, socket, {target: 'ws://' + argv.host}
+        proxy.ws req, socket, {target: 'ws' + (if argv.secure then 's' else '') + '://' + argv.host}
 
     server.listen parseInt(argv.port)
-    console.log "[Proxy] server listening on port #{argv.port}"
+    console.log "[Proxy] server listening on port #{argv.port}, target {http#{if argv.secure then 's' else ''},ws#{if argv.secure then 's' else ''}}://#{argv.host}/{api,sse,avatar}"
 
 module.exports = config
