@@ -257,7 +257,7 @@ You can then just point your browser to localhost:8010, and you will access `<ht
 Guanlecoja
 ----------
 
-Buildbot's build environment has been factorized for reuse in other projects and plugins, and is callsed Guanlecoja.
+Buildbot's build environment has been factorized for reuse in other projects and plugins, and is called Guanlecoja.
 
 The documentation and meaning of this name is maintained in Guanlecoja's own site. https://github.com/buildbot/guanlecoja/
 
