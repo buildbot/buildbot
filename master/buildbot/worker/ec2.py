@@ -398,7 +398,10 @@ class EC2LatentWorker(AbstractLatentWorker):
             ImageId=image.id, KeyName=self.keypair_name,
             SecurityGroups=self.classic_security_groups,
             InstanceType=self.instance_type, UserData=self.user_data,
-            Placement=self.placement, MinCount=1, MaxCount=1,
+            Placement=self._remove_none_opts(
+                AvailabilityZone=self.placement,
+            ),
+            MinCount=1, MaxCount=1,
             SubnetId=self.subnet_id, SecurityGroupIds=self.security_group_ids,
             IamInstanceProfile=self._remove_none_opts(
                 Name=self.instance_profile_name,
