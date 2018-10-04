@@ -1,1 +1,1 @@
-Make urlText renderable for the :py:class:`~buildbot.steps.transfer.FileUpload` build step.
+Make ``urlText`` renderable for the :py:class:`~buildbot.steps.transfer.FileUpload` build step.
