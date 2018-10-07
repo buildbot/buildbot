@@ -172,7 +172,9 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     description=description
                 )
 
-                assert response.code // 100 == 2
+                if not self.isStatus2XX(response.code):
+                    raise Exception()
+
                 if self.verbose:
                     log.msg(
                         'Updated status with "{state}" for {repoOwner}/{repoName} '

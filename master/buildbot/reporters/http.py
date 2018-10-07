@@ -87,6 +87,9 @@ class HttpStatusPushBase(service.BuildbotService):
     def send(self, build):
         pass
 
+    def isStatus2XX(self, code):
+        return code // 100 == 2
+
 
 class HttpStatusPush(HttpStatusPushBase):
     name = "HttpStatusPush"
