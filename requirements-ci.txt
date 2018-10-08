@@ -3,7 +3,7 @@ appdirs==1.4.3
 asn1crypto==0.24.0
 astroid==2.0.4; python_version >= "3.4"
 attrs==18.2.0
-autobahn==18.9.1
+autobahn==18.9.2
 Automat==0.7.0
 Babel==2.6.0
 backports.functools-lru-cache==1.5
