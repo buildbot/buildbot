@@ -1,1 +1,0 @@
-Fix the umask parameter example to make it work with both Python 2.x and 3.x.
