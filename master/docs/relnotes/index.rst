@@ -10,6 +10,38 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.5.0`` ( ``2018-10-09`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix the umask parameter example to make it work with both Python 2.x and 3.x.
+- Fix build-change association for multi-codebase builds in the console view..
+- Fixed builders page doesn't list workers in multi-master configuration
+  (:issue:`4326`)
+- Restricted groups added by :py:class:`~buildbot.www.oauth2.GitHubAuth`'s
+  ``getTeamsMembership`` option to only those teams to which the user belongs.
+  Previously, groups were added for all teams for all organizations to which
+  the user belongs.
+- Fix 'Show old workers' combo behavior.
+
+Features
+--------
+
+- GitHub teams added to a user's ``groups`` by
+  :py:class:`~buildbot.www.oauth2.GitHubAuth`'s ``getTeamsMembership`` option
+  are now added by slug as well as by name. This means a team named "Bot
+  Builders" in the organization "buildbot" will be added as both ``buildbot/Bot
+  Builders`` and ``buildbot/bot-builders``.
+- Make ``urlText`` renderable for the
+  :py:class:`~buildbot.steps.transfer.FileUpload` build step.
+- Added ``noticeOnChannel`` option to :bb:reporter:`IRC` to send notices
+  instead of messages to channels. This was an option in v0.8.x and removed in
+  v0.9.0, which defaulted to sending notices. The v0.8.x default of sending
+  messages is now restored.
+
+
 Buildbot ``1.4.0`` ( ``2018-09-02`` )
 =====================================
 
