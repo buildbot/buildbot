@@ -251,7 +251,7 @@ Provided you run it in a buildbot master virtualenv, the following command will 
 
     gulp dev proxy --host nine.buildbot.net
 
-You can then just point your browser to localhost:8010, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
+You can then just point your browser to localhost:8080, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
 
 
 Guanlecoja
