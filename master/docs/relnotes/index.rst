@@ -41,6 +41,11 @@ Features
   v0.9.0, which defaulted to sending notices. The v0.8.x default of sending
   messages is now restored.
 
+Reverts
+-------
+
+- Reverted: Fix git submodule support when using `sshPrivateKey` and `sshHostKey` because it broke other use cases (:issue:`4316`)
+  In order to have this feature to work, you need to keep your master in 1.4.0, and make sure your worker ``buildbot.tac`` are installed in the same path as your master.
 
 Buildbot ``1.4.0`` ( ``2018-09-02`` )
 =====================================
