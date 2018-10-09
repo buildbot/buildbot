@@ -122,7 +122,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc="srcfile", workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
@@ -140,7 +140,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 slavesrc="srcfile", workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
@@ -161,7 +161,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc=__file__, workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=True,
+                blocksize=262144, maxsize=None, keepstamp=True,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString('test', timestamp=timestamp))
             + 0)
@@ -191,7 +191,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc=__file__, workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
@@ -213,7 +213,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc=__file__, workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
@@ -237,7 +237,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc=__file__, workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(uploadString("Hello world!"))
             + 0)
@@ -258,7 +258,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc="srcfile", workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + 1)
 
@@ -278,7 +278,7 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.expectCommands(
             Expect('uploadFile', dict(
                 workersrc="srcfile", workdir='wkdir',
-                blocksize=16384, maxsize=None, keepstamp=False,
+                blocksize=262144, maxsize=None, keepstamp=False,
                 writer=ExpectRemoteRef(remotetransfer.FileWriter)))
             + Expect.behavior(behavior))
 

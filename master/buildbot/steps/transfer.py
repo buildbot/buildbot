@@ -100,7 +100,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
     ]
 
     def __init__(self, workersrc=None, masterdest=None,
-                 workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
+                 workdir=None, maxsize=None, blocksize=256 * 1024, mode=None,
                  keepstamp=False, url=None, urlText=None,
                  slavesrc=None,  # deprecated, use `workersrc` instead
                  **buildstep_kwargs):
