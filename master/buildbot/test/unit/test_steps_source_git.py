@@ -18,7 +18,6 @@ from __future__ import print_function
 
 from twisted.internet import defer
 from twisted.internet import error
-from twisted.python.reflect import namedModule
 from twisted.trial import unittest
 
 from buildbot.interfaces import WorkerTooOldError
@@ -489,8 +488,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean'))
-        self.build.path_module = namedModule('ntpath')
-        self.worker.worker_system = 'win32'
+        self.changeWorkerSystem('win32')
         self.expectCommands(
             ExpectShell(workdir='wkdir',
                         command=['git', '--version'])
@@ -530,8 +528,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.build.path_module = namedModule('ntpath')
-        self.worker.worker_system = 'win32'
+        self.changeWorkerSystem('win32')
 
         ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
         ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
@@ -591,8 +588,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.build.path_module = namedModule('ntpath')
-        self.worker.worker_system = 'win32'
+        self.changeWorkerSystem('win32')
 
         ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
         ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
@@ -651,8 +647,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
-        self.build.path_module = namedModule('ntpath')
-        self.worker.worker_system = 'win32'
+        self.changeWorkerSystem('win32')
 
         ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
         ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
