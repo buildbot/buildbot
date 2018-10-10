@@ -185,9 +185,6 @@ class TestLibVirtWorker(unittest.TestCase):
 
 class TestWorkQueue(unittest.TestCase):
 
-    def setUp(self):
-        self.queue = libvirtworker.WorkQueue()
-
     def delayed_success(self):
         def work():
             d = defer.Deferred()
@@ -216,53 +213,67 @@ class TestWorkQueue(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_handle_exceptions(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             raise ValueError
-        yield self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
     @defer.inlineCallbacks
     def test_handle_immediate_errback(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             return defer.fail(RuntimeError("Sad times"))
-        yield self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
     @defer.inlineCallbacks
     def test_handle_delayed_errback(self):
+        queue = libvirtworker.WorkQueue()
         work = self.delayed_errback()
-        yield self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(queue.execute(work))
 
     @defer.inlineCallbacks
     def test_handle_immediate_success(self):
+        queue = libvirtworker.WorkQueue()
+
         def work():
             return defer.succeed(True)
-        yield self.queue.execute(work)
+        yield queue.execute(work)
 
     @defer.inlineCallbacks
     def test_handle_delayed_success(self):
+        queue = libvirtworker.WorkQueue()
         work = self.delayed_success()
-        yield self.queue.execute(work)
+        yield queue.execute(work)
 
     @defer.inlineCallbacks
     def test_single_pow_fires(self):
-        yield self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield queue.execute(self.delayed_success())
 
     @defer.inlineCallbacks
     def test_single_pow_errors_gracefully(self):
-        d = self.queue.execute(self.delayed_errback())
+        queue = libvirtworker.WorkQueue()
+        d = queue.execute(self.delayed_errback())
         yield self.expect_errback(d)
 
     @defer.inlineCallbacks
     def test_fail_doesnt_break_further_work(self):
-        self.expect_errback(self.queue.execute(self.delayed_errback()))
-        yield self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield self.expect_errback(queue.execute(self.delayed_errback()))
+        yield queue.execute(self.delayed_success())
 
     @defer.inlineCallbacks
     def test_second_pow_fires(self):
-        self.queue.execute(self.delayed_success())
-        yield self.queue.execute(self.delayed_success())
+        queue = libvirtworker.WorkQueue()
+        yield queue.execute(self.delayed_success())
+        yield queue.execute(self.delayed_success())
 
     @defer.inlineCallbacks
     def test_work(self):
+        queue = libvirtworker.WorkQueue()
+
         # We want these deferreds to fire in order
         flags = {1: False, 2: False, 3: False}
 
@@ -270,7 +281,7 @@ class TestWorkQueue(unittest.TestCase):
         # flags[1] shouldn't already be set, either
         @defer.inlineCallbacks
         def d1():
-            yield self.queue.execute(self.delayed_success())
+            yield queue.execute(self.delayed_success())
             self.assertEqual(flags[1], False)
             flags[1] = True
             self.assertEqual(flags[2], False)
@@ -280,7 +291,7 @@ class TestWorkQueue(unittest.TestCase):
         # flags[2] should definitely be False
         @defer.inlineCallbacks
         def d2():
-            yield self.queue.execute(self.delayed_success())
+            yield queue.execute(self.delayed_success())
             self.assertFalse(flags[2])
             flags[2] = True
             self.assertTrue(flags[1])
@@ -289,7 +300,7 @@ class TestWorkQueue(unittest.TestCase):
         # When third deferred fires, only flags[3] should be unset
         @defer.inlineCallbacks
         def d3():
-            yield self.queue.execute(self.delayed_success())
+            yield queue.execute(self.delayed_success())
 
             self.assertFalse(flags[3])
             flags[3] = True
