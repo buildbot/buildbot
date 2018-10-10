@@ -214,54 +214,63 @@ class TestWorkQueue(unittest.TestCase):
             pass
         return d
 
+    @defer.inlineCallbacks
     def test_handle_exceptions(self):
         def work():
             raise ValueError
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(self.queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_immediate_errback(self):
         def work():
             return defer.fail(RuntimeError("Sad times"))
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(self.queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_delayed_errback(self):
         work = self.delayed_errback()
-        return self.expect_errback(self.queue.execute(work))
+        yield self.expect_errback(self.queue.execute(work))
 
+    @defer.inlineCallbacks
     def test_handle_immediate_success(self):
         def work():
             return defer.succeed(True)
-        return self.queue.execute(work)
+        yield self.queue.execute(work)
 
+    @defer.inlineCallbacks
     def test_handle_delayed_success(self):
         work = self.delayed_success()
-        return self.queue.execute(work)
+        yield self.queue.execute(work)
 
+    @defer.inlineCallbacks
     def test_single_pow_fires(self):
-        return self.queue.execute(self.delayed_success())
+        yield self.queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_single_pow_errors_gracefully(self):
         d = self.queue.execute(self.delayed_errback())
-        return self.expect_errback(d)
+        yield self.expect_errback(d)
 
+    @defer.inlineCallbacks
     def test_fail_doesnt_break_further_work(self):
         self.expect_errback(self.queue.execute(self.delayed_errback()))
-        return self.queue.execute(self.delayed_success())
+        yield self.queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_second_pow_fires(self):
         self.queue.execute(self.delayed_success())
-        return self.queue.execute(self.delayed_success())
+        yield self.queue.execute(self.delayed_success())
 
+    @defer.inlineCallbacks
     def test_work(self):
         # We want these deferreds to fire in order
         flags = {1: False, 2: False, 3: False}
 
         # When first deferred fires, flags[2] and flags[3] should still be false
         # flags[1] shouldn't already be set, either
-        d1 = self.queue.execute(self.delayed_success())
-
-        @d1.addCallback
-        def cb1(res):
+        @defer.inlineCallbacks
+        def d1():
+            yield self.queue.execute(self.delayed_success())
             self.assertEqual(flags[1], False)
             flags[1] = True
             self.assertEqual(flags[2], False)
@@ -269,26 +278,25 @@ class TestWorkQueue(unittest.TestCase):
 
         # When second deferred fires, only flags[3] should be set
         # flags[2] should definitely be False
-        d2 = self.queue.execute(self.delayed_success())
-
-        @d2.addCallback
-        def cb2(res):
-            assert not flags[2]
+        @defer.inlineCallbacks
+        def d2():
+            yield self.queue.execute(self.delayed_success())
+            self.assertFalse(flags[2])
             flags[2] = True
-            assert flags[1]
-            assert not flags[3]
+            self.assertTrue(flags[1])
+            self.assertFalse(flags[3])
 
         # When third deferred fires, only flags[3] should be unset
-        d3 = self.queue.execute(self.delayed_success())
+        @defer.inlineCallbacks
+        def d3():
+            yield self.queue.execute(self.delayed_success())
 
-        @d3.addCallback
-        def cb3(res):
-            assert not flags[3]
+            self.assertFalse(flags[3])
             flags[3] = True
-            assert flags[1]
-            assert flags[2]
+            self.assertTrue(flags[1])
+            self.assertTrue(flags[2])
 
-        return defer.DeferredList([d1, d2, d3], fireOnOneErrback=True)
+        yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)
 
 
 class TestWorkerTransition(unittest.TestCase):
