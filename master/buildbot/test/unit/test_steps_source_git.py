@@ -88,8 +88,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
 
@@ -147,8 +147,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
         ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
@@ -205,10 +205,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='clean', sshPrivateKey='sshkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_wrapper_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.wkdir.buildbot/ssh-wrapper.sh'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -272,10 +271,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
@@ -343,10 +341,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
             'ssh -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
@@ -414,12 +411,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_wrapper_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -484,6 +479,79 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
         return self.runStep()
 
+    def test_mode_full_clean_ssh_host_key_2_10_abs_workdir(self):
+        self.setupStep(
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                           mode='full', method='clean', sshPrivateKey='sshkey',
+                           sshHostKey='sshhostkey'),
+            wantDefaultWorkdir=False)
+        workdir = '/myworkdir/workdir'
+        self.build.workdir = workdir
+
+        ssh_workdir = '/myworkdir/.workdir.buildbot'
+        ssh_key_path = '/myworkdir/.workdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/myworkdir/.workdir.buildbot/ssh-known-hosts'
+        ssh_command_config = \
+            'core.sshCommand=ssh -i "{0}" ' \
+            '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
+                                                 ssh_known_hosts_path)
+
+        self.expectCommands(
+            ExpectShell(workdir=workdir,
+                        command=['git', '--version'])
+            + ExpectShell.log('stdio',
+                              stdout='git version 2.10.0')
+            + 0,
+            Expect('stat', dict(file='/myworkdir/workdir/.buildbot-patched',
+                                logEnviron=True))
+            + 1,
+            Expect('mkdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+            Expect('downloadFile', dict(blocksize=32768, maxsize=None,
+                                        reader=ExpectRemoteRef(
+                                            remotetransfer.StringFileReader),
+                                        workerdest=ssh_key_path,
+                                        workdir=workdir,
+                                        mode=0o400))
+            + 0,
+            Expect('downloadFile',
+                   dict(blocksize=32768, maxsize=None,
+                        reader=ExpectRemoteRef(remotetransfer.StringFileReader),
+                        workerdest=ssh_known_hosts_path,
+                        workdir=workdir,
+                        mode=0o400))
+            + 0,
+            Expect('listdir', {'dir': workdir, 'logEnviron': True,
+                               'timeout': 1200})
+            + Expect.update('files', ['.git'])
+            + 0,
+            ExpectShell(workdir=workdir,
+                        command=['git', 'clean', '-f', '-f', '-d'])
+            + 0,
+            ExpectShell(workdir=workdir,
+                        command=['git', '-c', ssh_command_config,
+                                 'fetch', '-t',
+                                 'http://github.com/buildbot/buildbot.git',
+                                 'HEAD'])
+            + 0,
+            ExpectShell(workdir=workdir,
+                        command=['git', 'reset', '--hard', 'FETCH_HEAD', '--'])
+            + 0,
+            ExpectShell(workdir=workdir,
+                        command=['git', 'rev-parse', 'HEAD'])
+            + ExpectShell.log('stdio',
+                              stdout='f6ad368298bd941e934a41f3babc827b2aa95a1d')
+            + 0,
+            Expect('rmdir', dict(dir=ssh_workdir,
+                                 logEnviron=True))
+            + 0,
+        )
+        self.expectOutcome(result=SUCCESS)
+        self.expectProperty(
+            'got_revision', 'f6ad368298bd941e934a41f3babc827b2aa95a1d', self.sourceName)
+        return self.runStep()
+
     def test_mode_full_clean_win32path(self):
         self.setupStep(
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
@@ -530,10 +598,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
-        ssh_command_config = \
-            'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
+        ssh_workdir = '\\wrk\\.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.wkdir.buildbot\\ssh-key'
+        ssh_command_config = 'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -590,8 +657,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
+        ssh_workdir = '\\wrk\\.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.wkdir.buildbot\\ssh-key'
         ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
@@ -649,10 +716,9 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='full', method='clean', sshPrivateKey='sshkey'))
         self.changeWorkerSystem('win32')
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot\\ssh-key')
-        ssh_wrapper_path = \
-            self.build.path_module.abspath('.wkdir.buildbot\\ssh-wrapper.sh')
+        ssh_workdir = '\\wrk\\.wkdir.buildbot'
+        ssh_key_path = '\\wrk\\.wkdir.buildbot\\ssh-key'
+        ssh_wrapper_path = '\\wrk\\.wkdir.buildbot\\ssh-wrapper.sh'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -1506,8 +1572,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
                            mode='incremental', branch='test-branch',
                            sshPrivateKey='ssh-key'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
 
@@ -2201,8 +2267,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                            mode='full', method='copy', sshPrivateKey='sshkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.source.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.source.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.source.buildbot'
+        ssh_key_path = '/wrk/.source.buildbot/ssh-key'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
 
@@ -3297,8 +3363,8 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}"'.format(ssh_key_path)
 
@@ -3337,8 +3403,8 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
         ssh_command = 'ssh -i "{0}"'.format(ssh_key_path)
 
         self.expectCommands(
@@ -3376,10 +3442,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
             self.stepClass(workdir='wkdir', repourl=url,
                            branch='testbranch', sshPrivateKey='sshKey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_wrapper_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.wkdir.buildbot/ssh-wrapper.sh'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
@@ -3424,10 +3489,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
         ssh_command_config = \
             'core.sshCommand=ssh -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
@@ -3475,10 +3539,9 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
         ssh_command = \
             'ssh -i "{0}" ' \
             '-o "UserKnownHostsFile={1}"'.format(ssh_key_path,
@@ -3526,12 +3589,10 @@ class TestGitPush(steps.BuildStepMixin, config.ConfigErrorsMixin,
                            branch='testbranch', sshPrivateKey='sshkey',
                            sshHostKey='sshhostkey'))
 
-        ssh_workdir = self.build.path_module.abspath('.wkdir.buildbot')
-        ssh_key_path = self.build.path_module.abspath('.wkdir.buildbot/ssh-key')
-        ssh_wrapper_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-wrapper.sh')
-        ssh_known_hosts_path = \
-            self.build.path_module.abspath('.wkdir.buildbot/ssh-known-hosts')
+        ssh_workdir = '/wrk/.wkdir.buildbot'
+        ssh_key_path = '/wrk/.wkdir.buildbot/ssh-key'
+        ssh_wrapper_path = '/wrk/.wkdir.buildbot/ssh-wrapper.sh'
+        ssh_known_hosts_path = '/wrk/.wkdir.buildbot/ssh-known-hosts'
 
         self.expectCommands(
             ExpectShell(workdir='wkdir',
