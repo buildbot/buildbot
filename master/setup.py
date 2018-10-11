@@ -492,6 +492,7 @@ test_deps = [
     'pyjade',
     # boto3 and moto required for running EC2 tests
     'boto3',
+    'botocore<1.11', # botocore>=1.11.0 broke moto
     'moto',
     'mock>=2.0.0',
 ]
