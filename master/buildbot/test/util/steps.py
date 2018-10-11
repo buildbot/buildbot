@@ -24,6 +24,7 @@ import mock
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import log
+from twisted.python.reflect import namedModule
 
 from buildbot import interfaces
 from buildbot.process import buildstep
@@ -438,3 +439,12 @@ class BuildStepMixin(object):
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
         defer.returnValue(command)
+
+    def changeWorkerSystem(self, system):
+        self.worker.worker_system = system
+        if system in ['nt', 'win32']:
+            self.build.path_module = namedModule('ntpath')
+            self.worker.worker_basedir = '\\wrk'
+        else:
+            self.build.path_module = namedModule('posixpath')
+            self.worker.worker_basedir = '/wrk'
