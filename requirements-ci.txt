@@ -79,7 +79,7 @@ termcolor==1.1.0
 toml==0.10.0
 towncrier==18.5.0 # pyup: ignore
 treq==18.6.0
-Twisted==18.7.0
+Twisted==18.9.0
 txaio==18.8.1
 txrequests==0.9.6
 typing==3.6.6
