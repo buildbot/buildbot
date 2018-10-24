@@ -56,6 +56,7 @@ class AuthBase(config.ConfiguredMixin):
 
     def __init__(self, userInfoProvider=None):
         self.userInfoProvider = userInfoProvider
+        self.autologin = False
 
     def reconfigAuth(self, master, new_config):
         self.master = master
