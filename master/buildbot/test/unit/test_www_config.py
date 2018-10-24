@@ -43,6 +43,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
         master = self.make_master(
             url='h:/a/b/', auth=_auth, versions=custom_versions)
+        master.www.auth = None
         rsrc = config.IndexResource(master, "foo")
         rsrc.reconfigResource(master.config)
         rsrc.jinja = mock.Mock()

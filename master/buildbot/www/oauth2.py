@@ -22,6 +22,7 @@ from future.utils import iteritems
 import json
 import re
 import textwrap
+from posixpath import join
 
 import jinja2
 import requests
@@ -75,7 +76,6 @@ class OAuth2LoginResource(auth.LoginResource):
                     raise resource.Redirect(self.auth.homeUri + "#" + redirect)
             raise resource.Redirect(self.auth.homeUri)
 
-
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
     getTokenUseAuthHeaders = False
@@ -97,7 +97,7 @@ class OAuth2Auth(auth.AuthBase):
 
     def reconfigAuth(self, master, new_config):
         self.master = master
-        self.loginUri = urljoin(new_config.buildbotURL, "auth/login")
+        self.loginUri = join(new_config.buildbotURL, "auth/login")
         self.homeUri = new_config.buildbotURL
 
     def getConfigDict(self):
