@@ -170,4 +170,4 @@ class IndexResource(resource.Resource):
         auth = wwwconfig.auth
         if 'anonymous' in userinfos and auth and auth.autologin:
             return auth.doAutologin(request)
-        return super(IndexResource, self).render(request)
+        return resource.Resource.render(self, request)
