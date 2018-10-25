@@ -76,6 +76,7 @@ class OAuth2LoginResource(auth.LoginResource):
                     raise resource.Redirect(self.auth.homeUri + "#" + redirect)
             raise resource.Redirect(self.auth.homeUri)
 
+
 class OAuth2Auth(auth.AuthBase):
     name = 'oauth2'
     getTokenUseAuthHeaders = False
