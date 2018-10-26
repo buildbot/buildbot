@@ -294,12 +294,12 @@ class TestCommandlineUserManager(unittest.TestCase, ManualUsersMixin):
         self.manual_component.setServiceParent(self.master)
 
     def test_no_userpass(self):
-        d = defer.maybeDeferred(lambda: manual.CommandlineUserManager())
+        d = defer.maybeDeferred(manual.CommandlineUserManager)
         return self.assertFailure(d, AssertionError)
 
     def test_no_port(self):
-        d = defer.maybeDeferred(lambda: manual.CommandlineUserManager(username="x",
-                                                                      passwd="y"))
+        d = defer.maybeDeferred(manual.CommandlineUserManager,
+                                username="x", passwd="y")
         return self.assertFailure(d, AssertionError)
 
     def test_service(self):

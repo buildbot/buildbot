@@ -77,14 +77,12 @@ class ChangeSourceMixin(object):
         self.started = True
         return self.changesource.startService()
 
+    @defer.inlineCallbacks
     def stopChangeSource(self):
         "stop the change source again; returns a deferred"
-        d = self.changesource.stopService()
+        yield self.changesource.stopService()
 
-        @d.addCallback
-        def mark_stopped(_):
-            self.started = False
-        return d
+        self.started = False
 
     def setChangeSourceToMaster(self, otherMaster):
         # some tests build the CS late, so for those tests we will require that

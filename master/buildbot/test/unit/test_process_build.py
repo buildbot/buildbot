@@ -116,9 +116,11 @@ class FakeBuilder:
         self.name = 'fred'
         self.master = master
         self.botmaster = master.botmaster
+        self.builderid = 83
+        self._builders = {}
 
     def getBuilderId(self):
-        return defer.succeed(83)
+        return defer.succeed(self.builderid)
 
     def setupProperties(self, props):
         pass
@@ -127,7 +129,7 @@ class FakeBuilder:
         pass
 
     def getBuilderIdForName(self, name):
-        return defer.succeed(83)
+        return defer.succeed(self._builders.get(name, None) or self.builderid)
 
 
 @implementer(interfaces.IBuildStepFactory)
@@ -821,6 +823,15 @@ class TestBuild(unittest.TestCase):
         self.build.number = 3
         url = yield self.build.getUrl()
         self.assertEqual(url, 'http://localhost:8080/#builders/83/builds/3')
+
+    @defer.inlineCallbacks
+    def testGetUrlForVirtualBuilder(self):
+        # Let's fake a virtual builder
+        self.builder._builders['wilma'] = 108
+        self.build.setProperty('virtual_builder_name', 'wilma', 'Build')
+        self.build.number = 33
+        url = yield self.build.getUrl()
+        self.assertEqual(url, 'http://localhost:8080/#builders/108/builds/33')
 
     def test_active_builds_metric(self):
         """

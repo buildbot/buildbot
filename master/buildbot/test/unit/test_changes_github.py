@@ -343,8 +343,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             ep='/repos/defunkt/defunkt/pulls/4242/files',
             content_json=json.loads("[{}]"))
         yield self.startChangeSource()
-        d = self.changesource.poll()
-        self.assertFailure(d, KeyError)
+        yield self.assertFailure(self.changesource.poll(), KeyError)
 
     @defer.inlineCallbacks
     def test_wrongRepoLink(self):

@@ -51,11 +51,11 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         arg1 = shellsequence.ShellArg(command=1)
         self.assertRaisesConfigError(
             "1 is an invalid command, it must be a string or a list",
-            lambda: arg1.validateAttributes())
+            arg1.validateAttributes)
         arg2 = shellsequence.ShellArg(command=["make", 1])
         self.assertRaisesConfigError(
             "['make', 1] must only have strings in it",
-            lambda: arg2.validateAttributes())
+            arg2.validateAttributes)
 
         for goodcmd in ["make p1", ["make", "p1"]]:
             arg = shellsequence.ShellArg(command=goodcmd)

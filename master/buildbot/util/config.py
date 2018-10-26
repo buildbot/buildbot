@@ -59,7 +59,7 @@ class _DictConfigured(object):
         self.value = value
 
     def getConfigDict(self):
-        return dict([(k, IConfigured(v).getConfigDict()) for k, v in iteritems(self.value)])
+        return {k: IConfigured(v).getConfigDict() for k, v in iteritems(self.value)}
 
 
 registerAdapter(_DictConfigured, dict, IConfigured)

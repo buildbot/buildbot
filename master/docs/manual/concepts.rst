@@ -333,7 +333,7 @@ The buildmaster is responsible for turning the :class:`BuildSet` into a set of :
 BuildRequests
 -------------
 
-A :class:`BuildRequest` is a request to build a specific set of source code (specified by one ore more source stamps) on a single :class:`Builder`.
+A :class:`BuildRequest` is a request to build a specific set of source code (specified by one or more source stamps) on a single :class:`Builder`.
 Each :class:`Builder` runs the :class:`BuildRequest` as soon as it can (i.e. when an associated worker becomes free).
 :class:`BuildRequest`\s are prioritized from oldest to newest, so when a worker becomes free, the :class:`Builder` with the oldest :class:`BuildRequest` is run.
 
@@ -519,7 +519,7 @@ IRC Nicknames
 Like :class:`MailNotifier`, the :class:`buildbot.status.words.IRC` class provides a status target which can announce the results of each build.
 It also provides an interactive interface by responding to online queries posted in the channel or sent as private messages.
 
-In the future, the buildbot can be configured map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.
+In the future, the buildbot can be configured to map User names to IRC nicknames, to watch for the recent presence of these nicknames, and to deliver build status messages to the interested parties.
 Like :class:`MailNotifier` does for email addresses, the :class:`IRC` object will have an :class:`IRCLookup` which is responsible for nicknames.
 The mapping can be set up statically, or it can be updated by online users themselves (by claiming a username with some kind of ``buildbot: i am user warner`` commands).
 

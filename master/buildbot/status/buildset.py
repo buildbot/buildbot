@@ -55,10 +55,10 @@ class BuildSetStatus:
 
         @d.addCallback
         def get_objects(brdicts):
-            return dict([
-                (brd['buildername'], BuildRequestStatus(brd['buildername'],
-                                                        brd['brid'], self.status))
-                for brd in brdicts])
+            return {
+                brd['buildername']: BuildRequestStatus(brd['buildername'],
+                                                       brd['brid'], self.status)
+                for brd in brdicts}
         return d
 
     def getBuilderNames(self):

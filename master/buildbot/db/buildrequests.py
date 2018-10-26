@@ -65,7 +65,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                                        reqs_tbl.c.builderid == builder_tbl.c.id)
 
         return sa.select([reqs_tbl, claims_tbl, sstamps_tbl.c.branch,
-                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase, builder_tbl.c.name.label('buildername')]).select_from(from_clause)
+                          sstamps_tbl.c.repository, sstamps_tbl.c.codebase,
+                          builder_tbl.c.name.label('buildername')
+                          ]).select_from(from_clause)
 
     def getBuildRequest(self, brid):
         def thd(conn):

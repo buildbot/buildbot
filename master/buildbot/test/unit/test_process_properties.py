@@ -1366,53 +1366,67 @@ class Renderer(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
 
+    @defer.inlineCallbacks
     def test_renderer(self):
         self.props.setProperty("x", "X", "test")
-        d = self.build.render(
-            renderer(lambda p: 'x%sx' % p.getProperty('x')))
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
 
+        def rend(p):
+            return 'x%sx' % p.getProperty('x')
+
+        res = yield self.build.render(renderer(rend))
+        self.assertEqual('xXx', res)
+
+    @defer.inlineCallbacks
     def test_renderer_called(self):
         # it's tempting to try to call the decorated function.  Don't do that.
         # It's not a function anymore.
-        d = defer.maybeDeferred(lambda:
-                                self.build.render(renderer(lambda p: 'x')('y')))
-        self.assertFailure(d, TypeError)
-        return d
 
+        def rend(p):
+            return 'x'
+
+        with self.assertRaises(TypeError):
+            yield self.build.render(renderer(rend)('y'))
+
+    @defer.inlineCallbacks
     def test_renderer_decorator(self):
         self.props.setProperty("x", "X", "test")
 
         @renderer
         def rend(p):
             return 'x%sx' % p.getProperty('x')
-        d = self.build.render(rend)
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
 
+        res = yield self.build.render(rend)
+        self.assertEqual('xXx', res)
+
+    @defer.inlineCallbacks
     def test_renderer_deferred(self):
         self.props.setProperty("x", "X", "test")
-        d = self.build.render(
-            renderer(lambda p: defer.succeed('y%sy' % p.getProperty('x'))))
-        d.addCallback(self.assertEqual, 'yXy')
-        return d
 
+        def rend(p):
+            return defer.succeed('y%sy' % p.getProperty('x'))
+
+        res = yield self.build.render(renderer(rend))
+        self.assertEqual('yXy', res)
+
+    @defer.inlineCallbacks
     def test_renderer_fails(self):
-        d = self.build.render(
-            renderer(lambda p: defer.fail(RuntimeError("oops"))))
-        self.assertFailure(d, RuntimeError)
-        return d
 
+        @defer.inlineCallbacks
+        def rend(p):
+            raise RuntimeError("oops")
+
+        with self.assertRaises(RuntimeError):
+            yield self.build.render(renderer(rend))
+
+    @defer.inlineCallbacks
     def test_renderer_recursive(self):
         self.props.setProperty("x", "X", "test")
 
-        @renderer
         def rend(p):
             return Interpolate("x%(prop:x)sx")
-        d = self.build.render(rend)
-        d.addCallback(self.assertEqual, 'xXx')
-        return d
+
+        ret = yield self.build.render(renderer(rend))
+        self.assertEqual('xXx', ret)
 
     def test_renderer_repr(self):
         @renderer
@@ -1422,6 +1436,114 @@ class Renderer(unittest.TestCase):
         # py3 and py2 do not have the same way of repr functions
         # but they always contain the name of function
         self.assertIn('myrend', repr(myrend))
+
+    @defer.inlineCallbacks
+    def test_renderer_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_with_state_called(self):
+        # it's tempting to try to call the decorated function.  Don't do that.
+        # It's not a function anymore.
+
+        def rend(p, arg, kwarg='y'):
+            return 'x'
+
+        with self.assertRaises(TypeError):
+            rend_with_args = renderer(rend).withArgs('a', kwarg='kw')
+            yield self.build.render(rend_with_args('y'))
+
+    @defer.inlineCallbacks
+    def test_renderer_with_state_renders_args(self):
+        self.props.setProperty("x", "X", "test")
+        self.props.setProperty('arg', 'ARG', 'test2')
+        self.props.setProperty('kw', 'KW', 'test3')
+
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(
+            renderer(rend).withArgs(Property('arg'), kwarg=Property('kw')))
+        self.assertEqual('x-X-ARG-KW', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_decorator_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p, arg, kwarg='y'):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), arg, kwarg)
+
+        res = yield self.build.render(rend.withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_decorator_with_state_does_not_share_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        @renderer
+        def rend(p, *args, **kwargs):
+            return 'x-%s-%s-%s' % (p.getProperty('x'), str(args), str(kwargs))
+
+        rend1 = rend.withArgs('a', kwarg1='kw1')
+        rend2 = rend.withArgs('b', kwarg2='kw2')
+
+        res1 = yield self.build.render(rend1)
+        res2 = yield self.build.render(rend2)
+
+        self.assertEqual('x-X-(\'a\',)-{\'kwarg1\': \'kw1\'}', res1)
+        self.assertEqual('x-X-(\'b\',)-{\'kwarg2\': \'kw2\'}', res2)
+
+    @defer.inlineCallbacks
+    def test_renderer_deferred_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return defer.succeed('x-%s-%s-%s' %
+                    (p.getProperty('x'), arg, kwarg))
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    @defer.inlineCallbacks
+    def test_renderer_fails_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            raise RuntimeError('oops')
+
+        with self.assertRaises(RuntimeError):
+            yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+
+    @defer.inlineCallbacks
+    def test_renderer_recursive_with_state(self):
+        self.props.setProperty("x", "X", "test")
+
+        def rend(p, arg, kwarg='y'):
+            return Interpolate('x-%(prop:x)s-%(kw:arg)s-%(kw:kwarg)s',
+                    arg=arg, kwarg=kwarg)
+
+        res = yield self.build.render(renderer(rend).withArgs('a', kwarg='kw'))
+        self.assertEqual('x-X-a-kw', res)
+
+    def test_renderer_repr_with_state(self):
+        @renderer
+        def rend(p):
+            pass
+
+        rend = rend.withArgs('a', kwarg='kw')  # pylint: disable=assignment-from-no-return
+
+        self.assertIn('renderer(', repr(rend))
+        # py3 and py2 do not have the same way of repr functions
+        # but they always contain the name of function
+        self.assertIn('args=[\'a\']', repr(rend))
+        self.assertIn('kwargs={\'kwarg\': \'kw\'}', repr(rend))
 
 
 class Compare(unittest.TestCase):

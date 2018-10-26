@@ -41,15 +41,12 @@ class TestPBChangeSource(
 
     EXP_DEFAULT_REGISTRATION = ('9999', 'alice', 'sekrit')
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpPBChangeSource()
-        d = self.setUpChangeSource()
+        yield self.setUpChangeSource()
 
-        @d.addCallback
-        def setup(_):
-            self.master.pbmanager = self.pbmanager
-
-        return d
+        self.master.pbmanager = self.pbmanager
 
     def test_registration_no_workerport(self):
         return self._test_registration(None, exp_ConfigErrors=True,
@@ -222,270 +219,248 @@ class TestChangePerspective(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self,
                                              wantDb=True, wantData=True)
 
+    @defer.inlineCallbacks
     def test_addChange_noprefix(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(who="bar", files=['a']))
+        yield cp.perspective_addChange(dict(who="bar", files=['a']))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'bar',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [u'a'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'bar',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [u'a'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_codebase(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
+        yield cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'bar',
-                'branch': None,
-                'category': None,
-                'codebase': u'cb',
-                'comments': None,
-                'files': [],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'bar',
+            'branch': None,
+            'category': None,
+            'codebase': u'cb',
+            'comments': None,
+            'files': [],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_prefix(self):
         cp = pb.ChangePerspective(self.master, 'xx/')
-        d = cp.perspective_addChange(
+        yield cp.perspective_addChange(
             dict(who="bar", files=['xx/a', 'yy/b']))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'bar',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [u'a'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'bar',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [u'a'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_sanitize_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(
+        yield cp.perspective_addChange(
             dict(project=None, revlink=None, repository=None)
         )
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': None,
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [],
-                'project': u'',
-                'properties': {},
-                'repository': u'',
-                'revision': None,
-                'revlink': u'',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [],
+            'project': u'',
+            'properties': {},
+            'repository': u'',
+            'revision': None,
+            'revlink': u'',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_when_None(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(
+        yield cp.perspective_addChange(
             dict(when=None)
         )
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': None,
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_files_tuple(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(
+        yield cp.perspective_addChange(
             dict(files=('a', 'b'))
         )
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': None,
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [u'a', u'b'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [u'a', u'b'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
+        yield cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
                                           comments=u"\N{SNOWMAN}",
                                           files=[u'\N{VERY MUCH GREATER-THAN}']))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'\u2603',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': u'\u2603',
-                'files': [u'\u22d9'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'\u2603',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': u'\u2603',
+            'files': [u'\u22d9'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
+        yield cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
                                           comments=u"\N{SNOWMAN}".encode(
                                               'utf8'),
                                           files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'\u2603',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': u'\u2603',
-                'files': [u'\u22d9'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'\u2603',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': u'\u2603',
+            'files': [u'\u22d9'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_non_utf8_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
         bogus_utf8 = b'\xff\xff\xff\xff'
         replacement = bogus_utf8.decode('utf8', 'replace')
-        d = cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
+        yield cp.perspective_addChange(dict(author=bogus_utf8, files=['a']))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': replacement,
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [u'a'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': None,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': replacement,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [u'a'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }])
 
+    @defer.inlineCallbacks
     def test_addChange_old_param_names(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(who='me', when=1234,
+        yield cp.perspective_addChange(dict(who='me', when=1234,
                                           files=[]))
 
-        def check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'me',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': None,
-                'when_timestamp': 1234,
-            }])
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'me',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': 1234,
+        }])
 
+    @defer.inlineCallbacks
     def test_createUserObject_git_src(self):
         cp = pb.ChangePerspective(self.master, None)
-        d = cp.perspective_addChange(dict(who="c <h@c>", src='git'))
+        yield cp.perspective_addChange(dict(who="c <h@c>", src='git'))
 
-        def check_change(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'c <h@c>',
-                'branch': None,
-                'category': None,
-                'codebase': None,
-                'comments': None,
-                'files': [],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': None,
-                'revlink': '',
-                'src': u'git',
-                'when_timestamp': None,
-            }])
-        d.addCallback(check_change)
-        return d
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'c <h@c>',
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': [],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': u'git',
+            'when_timestamp': None,
+        }])

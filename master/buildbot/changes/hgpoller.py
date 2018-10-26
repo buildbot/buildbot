@@ -320,6 +320,6 @@ class HgPoller(base.PollingChangeSource):
     def _stopOnFailure(self, f):
         "utility method to stop the service when a failure occurs"
         if self.running:
-            d = defer.maybeDeferred(lambda: self.stopService())
+            d = defer.maybeDeferred(self.stopService)
             d.addErrback(log.err, 'while stopping broken HgPoller service')
         return f

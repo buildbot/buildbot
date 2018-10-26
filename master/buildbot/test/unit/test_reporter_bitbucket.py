@@ -82,7 +82,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
                 'state': 'INPROGRESS',
                 'key': u'Builder0',
                 'name': u'Builder0'},
-            code=201),
+            code=201)
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(
@@ -93,7 +93,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
                 'state': 'SUCCESSFUL',
                 'key': u'Builder0',
                 'name': u'Builder0'},
-            code=201),
+            code=201)
         self.oauthhttp.expect('post', '', data={'grant_type': 'client_credentials'},
                               content_json={'access_token': 'foo'})
         self._http.expect(

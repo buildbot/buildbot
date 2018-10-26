@@ -97,20 +97,18 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             fakedb.BuildsetSourceStamp(buildsetid=11, sourcestampid=21),
         ]
 
+    @defer.inlineCallbacks
     def makeBuilder(self, patch_random=False, startBuildsForSucceeds=True, **config_kwargs):
-        d = BuilderMixin.makeBuilder(
+        yield BuilderMixin.makeBuilder(
             self, patch_random=patch_random, **config_kwargs)
 
-        @d.addCallback
-        def patch_startBuildsFor(_):
-            # patch into the _startBuildsFor method
-            self.builds_started = []
+        # patch into the _startBuildsFor method
+        self.builds_started = []
 
-            def _startBuildFor(workerforbuilder, buildrequests):
-                self.builds_started.append((workerforbuilder, buildrequests))
-                return defer.succeed(startBuildsForSucceeds)
-            self.bldr._startBuildFor = _startBuildFor
-        return d
+        def _startBuildFor(workerforbuilder, buildrequests):
+            self.builds_started.append((workerforbuilder, buildrequests))
+            return defer.succeed(startBuildsForSucceeds)
+        self.bldr._startBuildFor = _startBuildFor
 
     def assertBuildsStarted(self, exp):
         # munge builds_started into a list of (worker, [brids])

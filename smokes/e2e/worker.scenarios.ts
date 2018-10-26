@@ -15,7 +15,7 @@ describe('', function() {
     });
 
     describe('check worker page', () =>
-        it('should navigate to the worker page, check the one builder inside', async () => {
+        it('should navigate to the worker page, check the one slowruntests link', async () => {
             await settings.goSettings();
             await settings.changeShowWorkerBuilders(true);
             await settings.checkShowWorkerBuilders(true);
@@ -28,7 +28,7 @@ describe('', function() {
     );
 
     describe('check worker page', () =>
-        it('should navigate to the worker page, check the one builder inside', async () => {
+        it('should navigate to the worker page, check the one runtests link', async () => {
             await settings.goSettings();
             await settings.changeShowWorkerBuilders(true);
             await settings.checkShowWorkerBuilders(true);

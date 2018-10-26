@@ -19,8 +19,8 @@ class Workers extends Controller
             if $stateParams.worker?
                 return worker.workerid != +$stateParams.worker
             if $scope.settings.show_old_workers.value
-                return worker.configured_on.length == 0
-            return 0
+                return 0
+            return worker.configured_on.length == 0
 
         data = dataService.open().closeOnDestroy($scope)
 

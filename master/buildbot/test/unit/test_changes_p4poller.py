@@ -20,6 +20,7 @@ import datetime
 
 import dateutil.tz
 
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.internet import reactor
 from twisted.python import failure
@@ -140,6 +141,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
                        split_file=lambda x: x.split('/', 1))
         self.assertEqual("MyName", cs2.name)
 
+    @defer.inlineCallbacks
     def do_test_poll_successful(self, **kwargs):
         encoding = kwargs.get('encoding', 'utf8')
         self.attachChangeSource(
@@ -160,74 +162,72 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
         # The first time, it just learns the change to start at.
         self.assertTrue(self.changesource.last_change is None)
-        d = self.changesource.poll()
+        yield self.changesource.poll()
 
-        def check_first_check(_):
-            self.assertEqual(self.master.data.updates.changesAdded, [])
-            self.assertEqual(self.changesource.last_change, 1)
-        d.addCallback(check_first_check)
+        self.assertEqual(self.master.data.updates.changesAdded, [])
+        self.assertEqual(self.changesource.last_change, 1)
 
         # Subsequent times, it returns Change objects for new changes.
-        d.addCallback(lambda _: self.changesource.poll())
+        yield self.changesource.poll()
 
-        def check_second_check(res):
+        # when_timestamp is converted from a local time spec, so just
+        # replicate that here
+        when1 = self.makeTime("2006/04/13 21:46:23")
+        when2 = self.makeTime("2006/04/13 21:51:39")
 
-            # when_timestamp is converted from a local time spec, so just
-            # replicate that here
-            when1 = self.makeTime("2006/04/13 21:46:23")
-            when2 = self.makeTime("2006/04/13 21:51:39")
-
-            # these two can happen in either order, since they're from the same
-            # perforce change.
-            changesAdded = self.master.data.updates.changesAdded
-            if changesAdded[1]['branch'] == 'branch_c':
-                changesAdded[1:] = reversed(changesAdded[1:])
-            self.assertEqual(self.master.data.updates.changesAdded, [{
-                'author': u'slamb',
-                'branch': u'trunk',
-                'category': None,
-                'codebase': None,
-                'comments': u'creation',
-                'files': [u'whatbranch'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '2',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when1),
-            }, {
-                'author': u'bob',
-                'branch': u'branch_b',
-                'category': None,
-                'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
-                'files': [u'branch_b_file', u'whatbranch'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '3',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when2),
-            }, {
-                'author': u'bob',
-                'branch': u'branch_c',
-                'category': None,
-                'codebase': None,
-                'comments': u'short desc truncated because this is a long description.\nASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
-                'files': [u'whatbranch'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '3',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when2),
-            }])
-            self.assertAllCommandsRan()
-        d.addCallback(check_second_check)
-        return d
+        # these two can happen in either order, since they're from the same
+        # perforce change.
+        changesAdded = self.master.data.updates.changesAdded
+        if changesAdded[1]['branch'] == 'branch_c':
+            changesAdded[1:] = reversed(changesAdded[1:])
+        self.assertEqual(self.master.data.updates.changesAdded, [{
+            'author': u'slamb',
+            'branch': u'trunk',
+            'category': None,
+            'codebase': None,
+            'comments': u'creation',
+            'files': [u'whatbranch'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': '2',
+            'revlink': '',
+            'src': None,
+            'when_timestamp': datetime2epoch(when1),
+        }, {
+            'author': u'bob',
+            'branch': u'branch_b',
+            'category': None,
+            'codebase': None,
+            'comments':
+                u'short desc truncated because this is a long description.\n'
+                u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+            'files': [u'branch_b_file', u'whatbranch'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': '3',
+            'revlink': '',
+            'src': None,
+            'when_timestamp': datetime2epoch(when2),
+        }, {
+            'author': u'bob',
+            'branch': u'branch_c',
+            'category': None,
+            'codebase': None,
+            'comments':
+                u'short desc truncated because this is a long description.\n'
+                u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+            'files': [u'whatbranch'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': '3',
+            'revlink': '',
+            'src': None,
+            'when_timestamp': datetime2epoch(when2),
+        }])
+        self.assertAllCommandsRan()
 
     def test_poll_successful_default_encoding(self):
         return self.do_test_poll_successful()
@@ -247,6 +247,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource._poll()
         return self.assertFailure(d, P4PollerError)
 
+    @defer.inlineCallbacks
     def test_poll_failed_describe(self):
         self.attachChangeSource(
             P4Source(p4port=None, p4user=None,
@@ -263,15 +264,12 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.changesource.last_change = 2
 
         # call _poll, so we can catch the failure
-        d = self.changesource._poll()
-        self.assertFailure(d, P4PollerError)
+        with self.assertRaises(P4PollerError):
+            yield self.changesource._poll()
 
-        @d.addCallback
-        def check(_):
-            # check that 2 was processed OK
-            self.assertEqual(self.changesource.last_change, 2)
-            self.assertAllCommandsRan()
-        return d
+        # check that 2 was processed OK
+        self.assertEqual(self.changesource.last_change, 2)
+        self.assertAllCommandsRan()
 
     def test_poll_unicode_error(self):
         self.attachChangeSource(
@@ -308,6 +306,7 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         d = self.changesource._poll()
         return d
 
+    @defer.inlineCallbacks
     def test_acquire_ticket_auth(self):
         self.attachChangeSource(
             P4Source(p4port=None, p4user=None, p4passwd='pass',
@@ -343,14 +342,12 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             pp.processEnded(failure.Failure(so))
         self.patch(reactor, 'spawnProcess', spawnProcess)
 
-        d = self.changesource.poll()
+        yield self.changesource.poll()
 
-        def check_ticket_passwd(_):
-            self.assertEqual(
-                self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
-        d.addCallback(check_ticket_passwd)
-        return d
+        self.assertEqual(
+            self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
 
+    @defer.inlineCallbacks
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
         self.attachChangeSource(
@@ -364,55 +361,53 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
-        d = self.changesource.poll()
+        yield self.changesource.poll()
 
-        def check(res):
-            # when_timestamp is converted from a local time spec, so just
-            # replicate that here
-            when = self.makeTime("2006/04/13 21:55:39")
+        # when_timestamp is converted from a local time spec, so just
+        # replicate that here
+        when = self.makeTime("2006/04/13 21:55:39")
 
-            def changeKey(change):
-                """ Let's sort the array of changes by branch,
-                    because in P4Source._poll(), changeAdded()
-                    is called by iterating over a dictionary of
-                    branches"""
-                return change['branch']
+        def changeKey(change):
+            """ Let's sort the array of changes by branch,
+                because in P4Source._poll(), changeAdded()
+                is called by iterating over a dictionary of
+                branches"""
+            return change['branch']
 
-            self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
-                sorted([{
-                'author': u'mpatel',
-                'branch': u'branch_c',
-                'category': None,
-                'codebase': None,
-                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-                'files': [u'branch_c_file'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '5',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when),
-            }, {
-                'author': u'mpatel',
-                'branch': u'branch_b',
-                'category': None,
-                'codebase': None,
-                'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-                'files': [u'branch_b_file'],
-                'project': '',
-                'properties': {},
-                'repository': '',
-                'revision': '5',
-                'revlink': '',
-                'src': None,
-                'when_timestamp': datetime2epoch(when),
-            }], key=changeKey))
-            self.assertEqual(self.changesource.last_change, 5)
-            self.assertAllCommandsRan()
-        d.addCallback(check)
-        return d
+        self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
+            sorted([{
+            'author': u'mpatel',
+            'branch': u'branch_c',
+            'category': None,
+            'codebase': None,
+            'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'files': [u'branch_c_file'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': '5',
+            'revlink': '',
+            'src': None,
+            'when_timestamp': datetime2epoch(when),
+        }, {
+            'author': u'mpatel',
+            'branch': u'branch_b',
+            'category': None,
+            'codebase': None,
+            'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'files': [u'branch_b_file'],
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': '5',
+            'revlink': '',
+            'src': None,
+            'when_timestamp': datetime2epoch(when),
+        }], key=changeKey))
+        self.assertEqual(self.changesource.last_change, 5)
+        self.assertAllCommandsRan()
 
+    @defer.inlineCallbacks
     def test_server_tz(self):
         """Verify that the server_tz parameter is handled correctly"""
         self.attachChangeSource(
@@ -427,21 +422,18 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         self.add_p4_describe_result(5, p4change[5])
 
         self.changesource.last_change = 50
-        d = self.changesource.poll()
+        yield self.changesource.poll()
 
-        def check(res):
-            # when_timestamp is converted from 21:55:39 Berlin time to UTC
-            when_berlin = self.makeTime("2006/04/13 21:55:39")
-            when_berlin = when_berlin.replace(
-                tzinfo=dateutil.tz.gettz('Europe/Berlin'))
-            when = datetime2epoch(when_berlin)
+        # when_timestamp is converted from 21:55:39 Berlin time to UTC
+        when_berlin = self.makeTime("2006/04/13 21:55:39")
+        when_berlin = when_berlin.replace(
+            tzinfo=dateutil.tz.gettz('Europe/Berlin'))
+        when = datetime2epoch(when_berlin)
 
-            self.assertEqual([ch['when_timestamp']
-                              for ch in self.master.data.updates.changesAdded],
-                             [when, when])
-            self.assertAllCommandsRan()
-        d.addCallback(check)
-        return d
+        self.assertEqual([ch['when_timestamp']
+                          for ch in self.master.data.updates.changesAdded],
+                         [when, when])
+        self.assertAllCommandsRan()
 
     def test_resolveWho_callable(self):
         self.assertRaisesConfigError("You need to provide a valid callable for resolvewho",

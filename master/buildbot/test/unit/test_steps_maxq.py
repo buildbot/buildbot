@@ -35,7 +35,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_testdir_required(self):
-        self.assertRaises(config.ConfigErrors, lambda: maxq.MaxQ())
+        self.assertRaises(config.ConfigErrors, maxq.MaxQ)
 
     def test_success(self):
         self.setupStep(

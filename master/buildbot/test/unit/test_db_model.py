@@ -56,13 +56,13 @@ class DBConnector_Basic(db.RealDatabaseMixin, unittest.TestCase):
 
     def test_is_current_empty(self):
         d = self.db.model.is_current()
-        d.addCallback(lambda r: self.assertFalse(r))
+        d.addCallback(self.assertFalse)
         return d
 
     def test_is_current_full(self):
         d = self.db.model.upgrade()
         d.addCallback(lambda _: self.db.model.is_current())
-        d.addCallback(lambda r: self.assertTrue(r))
+        d.addCallback(self.assertTrue)
         return d
 
     # the upgrade method is very well-tested by the integration tests; the

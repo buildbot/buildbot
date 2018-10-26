@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
+
 from buildbot.db import model
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
@@ -38,29 +40,25 @@ class ConnectorComponentMixin(db.RealDatabaseMixin):
     @ivar db.model: DB model
     """
 
+    @defer.inlineCallbacks
     def setUpConnectorComponent(self, table_names=None, basedir='basedir'):
         """Set up C{self.db}, using the given db_url and basedir."""
         if table_names is None:
             table_names = []
 
-        d = self.setUpRealDatabase(table_names=table_names, basedir=basedir)
+        yield self.setUpRealDatabase(table_names=table_names, basedir=basedir)
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db = FakeDBConnector()
-            self.db.pool = self.db_pool
-            self.db.master = fakemaster.make_master()
-            self.db.model = model.Model(self.db)
-        return d
+        self.db = FakeDBConnector()
+        self.db.pool = self.db_pool
+        self.db.master = fakemaster.make_master()
+        self.db.model = model.Model(self.db)
 
+    @defer.inlineCallbacks
     def tearDownConnectorComponent(self):
-        d = self.tearDownRealDatabase()
+        yield self.tearDownRealDatabase()
 
-        @d.addCallback
-        def finish_cleanup(_):
-            self.db_pool.shutdown()
-            # break some reference loops, just for fun
-            del self.db.pool
-            del self.db.model
-            del self.db
-        return d
+        self.db_pool.shutdown()
+        # break some reference loops, just for fun
+        del self.db.pool
+        del self.db.model
+        del self.db

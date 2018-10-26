@@ -141,3 +141,14 @@ warnings.filterwarnings('ignore', r"The value of convert_charrefs will become Tr
 
 # Twisted 18.4+ adds a deprecation warning and still use the deprecated API in its own code!
 warnings.filterwarnings('ignore', ".*getClientIP was deprecated.*", DeprecationWarning)
+
+# Python 3.7 adds a deprecation warning formatargspec.
+# The signature api that replaces it is not available in 2.7
+warnings.filterwarnings('ignore', ".*`formatargspec` is deprecated.*", DeprecationWarning)
+
+# Python 3.7 adds a deprecation importing ABCs from collection.
+# Such imports are made in dependencies (e.g moto, werzeug, pyparsing)
+warnings.filterwarnings('ignore', ".*Using or importing the ABCs from 'collections'.*", DeprecationWarning)
+
+# more 3.7 warning from moto
+warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem instead.*", DeprecationWarning)

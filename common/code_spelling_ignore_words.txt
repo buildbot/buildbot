@@ -497,6 +497,7 @@ foobar
 foogit
 foreignkey
 formatinterval
+formatargspec
 fp
 fqdn
 freebsd
@@ -812,6 +813,7 @@ masterid
 masterlock
 masterstatus
 matcher
+matchers
 matthew
 maxcount
 maxcountforworker
@@ -1041,6 +1043,7 @@ pygments
 pyjade
 pylint
 pylint's
+pyparsing
 pythonpath
 qa
 qmail
@@ -1540,6 +1543,7 @@ webclient
 webhook
 webhooks
 webserver
+werzeug
 wehn
 wfb
 wget

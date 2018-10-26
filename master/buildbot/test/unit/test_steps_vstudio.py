@@ -94,8 +94,7 @@ class MSLogLineObserver(unittest.TestCase):
 
         self.progress = {}
         self.llo.step = Mock()
-        self.llo.step.setProgress = \
-            lambda n, prog: self.progress.__setitem__(n, prog)
+        self.llo.step.setProgress = self.progress.__setitem__
 
     def receiveLines(self, *lines):
         for line in lines:

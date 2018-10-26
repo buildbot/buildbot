@@ -634,70 +634,58 @@ class TestContactChannel(unittest.TestCase):
             ('#buildbot', u'unmuted, unicode \u2603'),
         ])
 
+    @defer.inlineCallbacks
     def test_handleMessage_silly(self):
         silly_prompt = list(self.contact.silly)[0]
         self.contact.doSilly = mock.Mock()
-        d = self.contact.handleMessage(silly_prompt)
+        yield self.contact.handleMessage(silly_prompt)
 
-        @d.addCallback
-        def cb(_):
-            self.contact.doSilly.assert_called_with(silly_prompt)
-        return d
+        self.contact.doSilly.assert_called_with(silly_prompt)
 
+    @defer.inlineCallbacks
     def test_handleMessage_short_command(self):
         self.contact.command_TESTY = mock.Mock()
-        d = self.contact.handleMessage('testy')
+        yield self.contact.handleMessage('testy')
 
-        @d.addCallback
-        def cb(_):
-            self.contact.command_TESTY.assert_called_with('')
-        return d
+        self.contact.command_TESTY.assert_called_with('')
 
+    @defer.inlineCallbacks
     def test_handleMessage_long_command(self):
         self.contact.command_TESTY = mock.Mock()
-        d = self.contact.handleMessage('testy   westy boo')
+        yield self.contact.handleMessage('testy   westy boo')
 
-        @d.addCallback
-        def cb(_):
-            self.contact.command_TESTY.assert_called_with('westy boo')
-        return d
+        self.contact.command_TESTY.assert_called_with('westy boo')
 
+    @defer.inlineCallbacks
     def test_handleMessage_excited(self):
         self.patch_send()
-        d = self.contact.handleMessage('hi!')
+        yield self.contact.handleMessage('hi!')
 
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(len(self.sent), 1)  # who cares what it says..
-        return d
+        self.assertEqual(len(self.sent), 1)  # who cares what it says..
 
+    @defer.inlineCallbacks
     def test_handleMessage_exception(self):
         self.patch_send()
 
         def command_TESTY(msg):
             raise RuntimeError("FAIL")
         self.contact.command_TESTY = command_TESTY
-        d = self.contact.handleMessage('testy boom')
+        yield self.contact.handleMessage('testy boom')
 
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(self.sent,
-                             ["Something bad happened (see logs)"])
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        return d
+        self.assertEqual(self.sent,
+                         ["Something bad happened (see logs)"])
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
+    @defer.inlineCallbacks
     def test_handleMessage_UsageError(self):
         self.patch_send()
 
         def command_TESTY(msg):
             raise words.UsageError("oh noes")
         self.contact.command_TESTY = command_TESTY
-        d = self.contact.handleMessage('testy boom')
+        yield self.contact.handleMessage('testy boom')
 
-        @d.addCallback
-        def cb(_):
-            self.assertEqual(self.sent, ["oh noes"])
-        return d
+        self.assertEqual(self.sent, ["oh noes"])
 
     def test_handleAction_ignored(self):
         self.patch_act()

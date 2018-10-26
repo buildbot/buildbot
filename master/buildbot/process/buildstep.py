@@ -213,6 +213,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     def finish(self):
         self.finished = True
         self._maybeFinished()
+        # pylint: disable=unnecessary-lambda
         self._delay(lambda: self.asyncLogfile.finish())
 
     def unwrap(self):
@@ -1195,8 +1196,8 @@ class ShellMixin(object):
     def makeRemoteShellCommand(self, collectStdout=False, collectStderr=False,
                                stdioLogName='stdio',
                                **overrides):
-        kwargs = dict([(arg, getattr(self, arg))
-                       for arg in self._shellMixinArgs])
+        kwargs = {arg: getattr(self, arg)
+                  for arg in self._shellMixinArgs}
         kwargs.update(overrides)
         stdio = None
         if stdioLogName is not None:

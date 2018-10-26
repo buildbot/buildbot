@@ -234,10 +234,10 @@ Fixes
 
 * The version check for SQLAlchemy-Migrate was fixed to accept more version string formats.
 
-* The :bb:step:`HTTPStep` step's requeset parameters are now renderable.
+* The :bb:step:`HTTPStep` step's request parameters are now renderable.
 
 * With Git(), force the updating submodules to ensure local changes by the
-  build are overwitten. This both ensures more consistent builds and avoids
+  build are overwritten. This both ensures more consistent builds and avoids
   errors when updating submodules.
 
 * Buildbot is now compatible with Gerrit v2.6 and higher.

@@ -185,7 +185,7 @@ class TestSubcommandOptions(unittest.TestCase):
     def test_requiredOptions(self):
         self.fakeOptionsFile()
         self.assertRaises(usage.UsageError,
-                          lambda: self.parse(self.RequiredOptions))
+                          self.parse, self.RequiredOptions)
 
 
 class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
@@ -265,8 +265,9 @@ class TestLoadOptionsFile(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     def test_loadOptionsFile_syntax_error(self):
         self.writeOptionsFile(self.dir, 'abc=abc')
-        self.assertRaises(NameError, lambda:
-                          self.do_loadOptionsFile(_here=self.dir, exp={}))
+        self.assertRaises(NameError,
+                          self.do_loadOptionsFile,
+                          _here=self.dir, exp={})
         self.assertInStdout('error while reading')
 
     def test_loadOptionsFile_toomany(self):

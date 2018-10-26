@@ -209,7 +209,7 @@ class GitHubAuth(OAuth2Auth):
         query getOrgTeamMembership {
           {%- for org_slug, org_name in organizations.items() %}
           {{ org_slug }}: organization(login: "{{ org_name }}") {
-            teams(first: 100) {
+            teams(first: 100 userLogins: ["{{ user_info.username }}"]) {
               edges {
                 node {
                   name,
@@ -317,9 +317,9 @@ class GitHubAuth(OAuth2Auth):
                          groups=[org['node']['login'] for org in
                                  data['viewer']['organizations']['edges']])
         if self.getTeamsMembership:
-            orgs_name_slug_mapping = dict(
-                [(self._orgname_slug_sub_re.sub('_', n), n)
-                 for n in user_info['groups']])
+            orgs_name_slug_mapping = {
+                self._orgname_slug_sub_re.sub('_', n): n
+                for n in user_info['groups']}
             graphql_query = self.getUserTeamsGraphqlTplC.render(
                 {'user_info': user_info,
                  'organizations': orgs_name_slug_mapping})
@@ -342,6 +342,7 @@ class GitHubAuth(OAuth2Auth):
                         # since different organizations might share a common
                         # team name
                         teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['name']))
+                        teams.add('%s/%s' % (orgs_name_slug_mapping[org], node['node']['slug']))
                 user_info['groups'].extend(sorted(teams))
         if self.debug:
             log.info('{klass} User Details: {user_info}',

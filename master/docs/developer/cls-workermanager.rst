@@ -12,7 +12,7 @@ WorkerRegistration
 
     .. py:method:: unregister()
 
-        Remove registartion for `worker`
+        Remove registration for `worker`
 
     .. py:method:: update(worker_config, global_config)
 

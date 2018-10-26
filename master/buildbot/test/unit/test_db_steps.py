@@ -162,9 +162,10 @@ class Tests(interfaces.InterfaceTests):
         stepdict = yield self.db.steps.getStep(buildid=30, name='five')
         self.assertEqual(stepdict, None)
 
+    @defer.inlineCallbacks
     def test_getStep_invalid(self):
         d = self.db.steps.getStep(buildid=30)
-        self.assertFailure(d, RuntimeError)
+        yield self.assertFailure(d, RuntimeError)
 
     @defer.inlineCallbacks
     def test_getSteps(self):
@@ -359,15 +360,13 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['steps', 'builds', 'builders', 'masters',
                          'buildrequests', 'buildsets', 'workers'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.steps = steps.StepsConnectorComponent(self.db)
-        return d
+        self.db.steps = steps.StepsConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
