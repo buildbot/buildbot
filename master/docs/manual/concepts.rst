@@ -37,8 +37,6 @@ To sum up the above, to build a project, Buildbot needs to know exactly which ve
 It uses a *source stamp* to do so for each codebase, each of which assigns informs Buildbot that it should use a specific *revision* from that codebase.
 Collectively these source stamps are called *source stamp set* for each project.
 
-.. index: change
-
 .. _Version-Control-Systems:
 
 Version Control Systems
@@ -55,140 +53,25 @@ When the build begins, one or more source steps use the information in the sourc
 
 .. index: change
 
-.. _Attributes-of-Changes:
+.. _Concept-Changes:
 
 Changes
 -------
 
-.. _Attr-Who:
+A :ref:`Change<Change-Attrs>` is an abstract way Buildbot uses to represent a single change to the source files performed by a developer.
+In version control systems that support the notion of atomic check-ins a change represents a changeset or commit.
 
-Who
-~~~
+A :class:`Change` comprises of the following information:
 
-Each :class:`Change` has a :attr:`who` attribute, which specifies which developer is responsible for the change.
-This is a string which comes from a namespace controlled by the VC repository.
-Frequently this means it is a username on the host which runs the repository, but not all VC systems require this.
-Each :class:`StatusNotifier` will map the :attr:`who` attribute into something appropriate for their particular means of communication: an email address, an IRC handle, etc.
+ - the developer that is responsible for the change
 
-This ``who`` attribute is also parsed and stored into Buildbot's database (see :ref:`User-Objects`).
-Currently, only ``who`` attributes in Changes from ``git`` repositories are translated into user objects, but in the future all incoming Changes will have their ``who`` parsed and stored.
+ - the list of files that the change added, removed or modified
 
-.. _Attr-Files:
+ - the message of the commit
 
-Files
-~~~~~
+ - the repository, the codebase and the project that the change corresponds to
 
-It also has a list of :attr:`files`, which are just the tree-relative filenames of any files that were added, deleted, or modified for this :class:`Change`.
-These filenames are used by the :func:`fileIsImportant` function (in the scheduler) to decide whether it is worth triggering a new build or not, e.g. the function could use the following function to only run a build if a C file were checked in::
-
-    def has_C_files(change):
-        for name in change.files:
-            if name.endswith(".c"):
-                return True
-        return False
-
-Certain :class:`BuildStep`\s can also use the list of changed files to run a more targeted series of tests, e.g. the ``python_twisted.Trial`` step can run just the unit tests that provide coverage for the modified .py files instead of running the full test suite.
-
-.. _Attr-Comments:
-
-Comments
-~~~~~~~~
-
-The Change also has a :attr:`comments` attribute, which is a string containing any checkin comments.
-
-.. _Attr-Project:
-
-Project
-~~~~~~~
-
-The :attr:`project` attribute of a change or source stamp describes the project to which it corresponds, as a short human-readable string.
-This is useful in cases where multiple independent projects are built on the same buildmaster.
-In such cases, it can be used to control which builds are scheduled for a given commit, and to limit status displays to only one project.
-
-.. _Attr-Repository:
-
-Repository
-~~~~~~~~~~
-
-This attribute specifies the repository in which this change occurred.
-In the case of DVCS's, this information may be required to check out the committed source code.
-However, using the repository from a change has security risks: if Buildbot is configured to blindly trust this information, then it may easily be tricked into building arbitrary source code, potentially compromising the workers and the integrity of subsequent builds.
-
-.. _Attr-Codebase:
-
-Codebase
-~~~~~~~~
-
-This attribute specifies the codebase to which this change was made.
-As described :ref:`above <Source-Stamps>`, multiple repositories may contain the same codebase.
-A change's codebase is usually determined by the :bb:cfg:`codebaseGenerator` configuration.
-By default the codebase is ''; this value is used automatically for single-codebase configurations.
-
-.. _Attr-Revision:
-
-Revision
-~~~~~~~~
-
-Each Change can have a :attr:`revision` attribute, which describes how to get a tree with a specific state: a tree which includes this Change (and all that came before it) but none that come after it.
-If this information is unavailable, the :attr:`revision` attribute will be ``None``.
-These revisions are provided by the :class:`ChangeSource`.
-
-Revisions are always strings.
-
-`CVS`
-    :attr:`revision` is the seconds since the epoch as an integer.
-
-`SVN`
-    :attr:`revision` is the revision number
-
-`Darcs`
-    :attr:`revision` is a large string, the output of :command:`darcs changes --context`
-
-`Mercurial`
-    :attr:`revision` is a short string (a hash ID), the output of :command:`hg identify`
-
-`P4`
-    :attr:`revision` is the transaction number
-
-`Git`
-    :attr:`revision` is a short string (a SHA1 hash), the output of e.g.  :command:`git rev-parse`
-
-Branches
-~~~~~~~~
-
-The Change might also have a :attr:`branch` attribute.
-This indicates that all of the Change's files are in the same named branch.
-The schedulers get to decide whether the branch should be built or not.
-
-For VC systems like CVS, Git, Mercurial and Monotone the :attr:`branch` name is unrelated to the filename.
-(That is, the branch name and the filename inhabit unrelated namespaces.)
-For SVN, branches are expressed as subdirectories of the repository, so the file's ``repourl`` is a combination of some base URL, the branch name, and the filename within the branch.
-(In a sense, the branch name and the filename inhabit the same namespace.)
-Darcs branches are subdirectories of a base URL just like SVN.
-
-`CVS`
-    branch='warner-newfeature', files=['src/foo.c']
-
-`SVN`
-    branch='branches/warner-newfeature', files=['src/foo.c']
-
-`Darcs`
-    branch='warner-newfeature', files=['src/foo.c']
-
-`Mercurial`
-    branch='warner-newfeature', files=['src/foo.c']
-
-`Git`
-    branch='warner-newfeature', files=['src/foo.c']
-
-`Monotone`
-    branch='warner-newfeature', files=['src/foo.c']
-
-Change Properties
-~~~~~~~~~~~~~~~~~
-
-A Change may have one or more properties attached to it, usually specified through the Force Build form or :bb:cmdline:`sendchange`.
-Properties are discussed in detail in the :ref:`Build-Properties` section.
+ - the revision and the branch of the commit
 
 .. _Scheduling-Builds:
 
