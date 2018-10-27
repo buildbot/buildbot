@@ -6,6 +6,7 @@ admins
 afterwards
 al
 Allura
+amongst
 AMIs
 analyse
 angularjs
@@ -126,6 +127,7 @@ cancelling
 candidated
 canonicalize
 canStartBuild
+catchup
 cd
 cfg
 changehook
@@ -168,6 +170,7 @@ collapser
 commandId
 commandline
 committer
+comparators
 conditionalize
 config
 Config
@@ -193,9 +196,11 @@ Cron
 croniter
 cronjob
 crontab
+cryptographically
 css
 csv
 customizability
+customizable
 cvs
 CVS
 cvsmodule
@@ -214,6 +219,7 @@ datatype
 datetime
 dateutil
 Dateutil
+davide
 de
 deafault
 Debian
@@ -227,7 +233,9 @@ deepcopy
 deferreds
 Deferreds
 demux
+deprecations
 deserialization
+deterministically
 dev
 Dict
 dicts
@@ -237,6 +245,8 @@ diff
 diffs
 dirname
 dirwatcher
+disambiguated
+discoverable
 distro
 distros
 Distutils
@@ -254,6 +264,7 @@ doesn
 dom
 downloadFile
 dropdown
+durations
 dustin
 ec
 eg
@@ -271,6 +282,8 @@ errbacks
 errorCb
 et
 eventPathPatterns
+explorable
+extensibility
 facto
 failover
 failsafe
@@ -291,7 +304,7 @@ fo
 foo
 forcescheduler
 forceschedulers
-formaters
+formatter
 formatters
 formular
 fqdn
@@ -309,6 +322,7 @@ getChoices
 getfqdn
 getProperties
 getRecipients
+getter
 getters
 GiB
 github
@@ -348,8 +362,10 @@ https
 Hyperlinks
 ie
 img
+implementers
 impls
 incoherencies
+incrementing
 Indices
 influxDB
 infos
@@ -362,10 +378,14 @@ inline
 inlineCallbacks
 inrepo
 inrepos
+instantiation
+integrators
 interCaps
 internet
+interoperability
 interoperable
 intialization
+invariants
 io
 ip
 iPhone
@@ -396,12 +416,14 @@ Keepalive
 keepalives
 kerberos
 Kerberos
+keyring
 keystoneauth
 KiB
 kibibytes
 kwargs
 latin
 ldap
+lexically
 libaprutil
 libvirt
 Libvirt
@@ -440,6 +462,7 @@ maildir
 maildirs
 Maildirs
 mailstatus
+matcher
 matchers
 MaxQ
 maxWarnCount
@@ -452,8 +475,11 @@ metadata
 MiB
 minified
 minifies
+minimalistic
 mis
 misbehaving
+misconfiguration
+mistyped
 mixin
 Mixins
 mkdir
@@ -519,6 +545,7 @@ overloadable
 param
 parameterizes
 parseable
+parsers
 passthrough
 passwordless
 patchlevel
@@ -598,6 +625,10 @@ reconf
 reconfig
 reconfigService
 reconfigurability
+reconfigurable
+reconfigures
+reconfiguring
+reconnection
 refactored
 refactoring
 Refactoring
@@ -640,6 +671,8 @@ runtests
 runtime
 runtimes
 sautils
+scalable
+scalability
 sched
 schedulerid
 schedulerName
@@ -648,6 +681,7 @@ schemas
 scp
 searchable
 sed
+selectable
 sendchange
 serializable
 serviceid
@@ -666,6 +700,7 @@ slavenames
 smoketest
 solaris
 Solaris
+sortable
 sourcedproperties
 sourcestamp
 sourceStamp
@@ -673,6 +708,7 @@ sourcestampid
 sourcestamps
 spambots
 spdy
+splitter
 sqlalchemy
 sqlite
 Sqlite
@@ -697,9 +733,10 @@ stepdict
 stepdicts
 stepid
 stopService
+storages
 subclassed
 subclassing
-subclassses
+subclasses
 subcommand
 subcommands
 subdir
@@ -713,11 +750,14 @@ Subqueries
 subquery
 subshell
 substrings
+subunit
 successCb
 sucessful
 summarization
 superclass
 superproject
+superset
+suppressions
 svn
 SVN
 svnmailer
@@ -735,6 +775,7 @@ tarballs
 Tarballs
 templateCache
 templating
+testability
 testsuite
 textarea
 tgrid
@@ -773,6 +814,7 @@ unclaiming
 uncollectable
 uncomment
 unescaped
+unencrypted
 unhandled
 unices
 unicode
@@ -780,10 +822,12 @@ unimportantSchedulerNames
 unittest
 unittests
 unix
+unorthodoxy
 Unregister
 unsubscribe
 unsubscribes
 untracked
+untrusted
 unversioned
 uploadDirectory
 uploader
