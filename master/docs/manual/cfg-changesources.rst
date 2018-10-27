@@ -13,12 +13,77 @@ These change sources fall broadly into two categories: pollers which periodicall
 
 A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports. It contains just enough information needed to acquire specific version of the tree when needed. This usually happens as one of the first steps in a :class:`Build`.
 
-For more information on VC systems and :class:`Change`\s, see :ref:`Version-Control-Systems`.
 This concept does not map perfectly to every version control system.
 For example, for CVS Buildbot must guess that version updates made to multiple files within a short time represent a single change.
 
 :class:`Change`\s can be provided by a variety of :class:`ChangeSource` types, although any given project will typically have only a single :class:`ChangeSource` active.
-This section provides a description of all available :class:`ChangeSource` types and explains how to set up each of them.
+
+.. _How-Different-VC-Systems-Specify-Sources:
+
+How Different VC Systems Specify Sources
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For CVS, the static specifications are *repository* and *module*.
+In addition to those, each build uses a timestamp (or omits the timestamp to mean *the latest*) and *branch tag* (which defaults to ``HEAD``).
+These parameters collectively specify a set of sources from which a build may be performed.
+
+`Subversion <http://subversion.tigris.org>`_,  combines the repository, module, and branch into a single *Subversion URL* parameter.
+Within that scope, source checkouts can be specified by a numeric *revision number* (a repository-wide monotonically-increasing marker, such that each transaction that changes the repository is indexed by a different revision number), or a revision timestamp.
+When branches are used, the repository and module form a static ``baseURL``, while each build has a *revision number* and a *branch* (which defaults to a statically-specified ``defaultBranch``).
+The ``baseURL`` and ``branch`` are simply concatenated together to derive the ``repourl`` to use for the checkout.
+
+`Perforce <http://www.perforce.com/>`_ is similar.
+The server is specified through a ``P4PORT`` parameter.
+Module and branch are specified in a single depot path, and revisions are depot-wide.
+When branches are used, the ``p4base`` and ``defaultBranch`` are concatenated together to produce the depot path.
+
+`Bzr <http://bazaar-vcs.org>`_ (which is a descendant of Arch/Bazaar, and is frequently referred to as "Bazaar") has the same sort of repository-vs-workspace model as Arch, but the repository data can either be stored inside the working directory or kept elsewhere (either on the same machine or on an entirely different machine).
+For the purposes of Buildbot (which never commits changes), the repository is specified with a URL and a revision number.
+
+The most common way to obtain read-only access to a bzr tree is via HTTP, simply by making the repository visible through a web server like Apache.
+Bzr can also use FTP and SFTP servers, if the worker process has sufficient privileges to access them.
+Higher performance can be obtained by running a special Bazaar-specific server.
+None of these matter to the buildbot: the repository URL just has to match the kind of server being used.
+The ``repoURL`` argument provides the location of the repository.
+
+Branches are expressed as subdirectories of the main central repository, which means that if branches are being used, the BZR step is given a ``baseURL`` and ``defaultBranch`` instead of getting the ``repoURL`` argument.
+
+`Darcs <http://darcs.net/>`_ doesn't really have the notion of a single master repository.
+Nor does it really have branches.
+In Darcs, each working directory is also a repository, and there are operations to push and pull patches from one of these ``repositories`` to another.
+For the Buildbot's purposes, all you need to do is specify the URL of a repository that you want to build from.
+The worker will then pull the latest patches from that repository and build them.
+Multiple branches are implemented by using multiple repositories (possibly living on the same server).
+
+Builders which use Darcs therefore have a static ``repourl`` which specifies the location of the repository.
+If branches are being used, the source Step is instead configured with a ``baseURL`` and a ``defaultBranch``, and the two strings are simply concatenated together to obtain the repository's URL.
+Each build then has a specific branch which replaces ``defaultBranch``, or just uses the default one.
+Instead of a revision number, each build can have a ``context``, which is a string that records all the patches that are present in a given tree (this is the output of ``darcs changes --context``, and is considerably less concise than, e.g. Subversion's revision number, but the patch-reordering flexibility of Darcs makes it impossible to provide a shorter useful specification).
+
+`Mercurial <https://www.mercurial-scm.org/>`_ follows a decentralized model, and each repository can have several branches and tags.
+The source Step is configured with a static ``repourl`` which specifies the location of the repository.
+Branches are configured with the ``defaultBranch`` argument.
+The *revision* is the hash identifier returned by ``hg identify``.
+
+`Git <http://git.or.cz/>`_ also follows a decentralized model, and each repository can have several branches and tags.
+The source Step is configured with a static ``repourl`` which specifies the location of the repository.
+In addition, an optional ``branch`` parameter can be specified to check out code from a specific branch instead of the default *master* branch.
+The *revision* is specified as a SHA1 hash as returned by e.g. ``git rev-parse``.
+No attempt is made to ensure that the specified revision is actually a subset of the specified branch.
+
+`Monotone <http://www.monotone.ca/>`_ is another that follows a decentralized model where each repository can have several branches and tags.
+The source Step is configured with static ``repourl`` and ``branch`` parameters, which specifies the location of the repository and the branch to use.
+The *revision* is specified as a SHA1 hash as returned by e.g. ``mtn automate select w:``.
+No attempt is made to ensure that the specified revision is actually a subset of the specified branch.
+
+Tree Stability
+++++++++++++++
+
+Changes tend to arrive at a buildmaster in bursts.
+In many cases, these bursts of changes are meant to be taken together.
+For example, a developer may have pushed multiple commits to a DVCS that comprise the same new feature or bugfix.
+To avoid trying to build every change, Buildbot supports the notion of *tree stability*, by waiting for a burst of changes to finish before starting to schedule builds.
+This is implemented as a timer, with builds not scheduled until no changes have occurred for the duration of the timer.
 
 .. _Choosing-a-Change-Source:
 
@@ -281,7 +346,7 @@ For example:
     c['change_source'] = changes.CVSMaildirSource("/home/buildbot/Mail")
 
 Configuration of CVS and :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>`
-##################################################################################################
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 CVS must be configured to invoke the :contrib-src:`buildbot_cvs_mail.py <master/contrib/buildbot_cvs_mail.py>` script when files are checked in.
 This is done via the CVS loginfo configuration file.
@@ -583,7 +648,7 @@ SVNPoller
 
 .. py:class:: buildbot.changes.svnpoller.SVNPoller
 
-The :bb:chsrc:`SVNPoller` is a ChangeSource which periodically polls a `Subversion <http://subversion.tigris.org/>`_ repository for new revisions, by running the ``svn log`` command in a subshell.
+The :bb:chsrc:`SVNPoller` is a ChangeSource which periodically polls a `Subversion <http://subversion.tigris.org>`_ repository for new revisions, by running the ``svn log`` command in a subshell.
 It can watch a single branch or multiple branches.
 
 :bb:chsrc:`SVNPoller` accepts the following arguments:
