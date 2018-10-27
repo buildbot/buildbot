@@ -49,10 +49,6 @@ Buildbot supports a significant number of version control systems, so it treats 
 For purposes of deciding when to perform builds, Buildbot's change sources monitor repositories, and represent any updates to those repositories as *changes*.
 These change sources fall broadly into two categories: pollers which periodically check the repository for updates; and hooks, where the repository is configured to notify Buildbot whenever an update occurs.
 
-This concept does not map perfectly to every version control system.
-For example, for CVS Buildbot must guess that version updates made to multiple files within a short time represent a single change; for DVCS's like Git, Buildbot records a change when a commit is pushed to the monitored repository, not when it is initially committed.
-We assume that the :class:`Change`\s arrive at the master in the same order in which they are committed to the repository.
-
 When it comes time to actually perform a build, a scheduler prepares a source stamp set, as described above, based on its configuration.
 When the build begins, one or more source steps use the information in the source stamp set to actually check out the source code, using the normal VCS commands.
 

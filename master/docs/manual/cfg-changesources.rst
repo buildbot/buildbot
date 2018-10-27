@@ -14,6 +14,9 @@ These change sources fall broadly into two categories: pollers which periodicall
 A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports. It contains just enough information needed to acquire specific version of the tree when needed. This usually happens as one of the first steps in a :class:`Build`.
 
 For more information on VC systems and :class:`Change`\s, see :ref:`Version-Control-Systems`.
+This concept does not map perfectly to every version control system.
+For example, for CVS Buildbot must guess that version updates made to multiple files within a short time represent a single change; for distributed version control systems like Git, Buildbot records a change when a commit is pushed to the monitored repository, not when it is initially committed.
+We assume that the :class:`Change`\s arrive at the master in the same order in which they are committed to the repository.
 
 :class:`Change`\s can be provided by a variety of :class:`ChangeSource` types, although any given project will typically have only a single :class:`ChangeSource` active.
 This section provides a description of all available :class:`ChangeSource` types and explains how to set up each of them.
