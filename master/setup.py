@@ -539,7 +539,7 @@ setup_args['extras_require'] = {
         'pyenchant',
         'docutils>=0.8',
         'sphinx-jinja',
-        'towncrier',
+        'towncrier<=18.5.0', # towncrier 18.6.0 does not support python 2.7
         'pyyaml'
     ],
 }
