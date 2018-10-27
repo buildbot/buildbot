@@ -383,15 +383,18 @@ A builder also has a :class:`BuildFactory`, which is responsible for creating ne
 Workers
 -------
 
-Each builder is associated with one of more :class:`Worker`\s.
-A builder which is used to perform Mac OS X builds (as opposed to Linux or Solaris builds) should naturally be associated with a Mac worker.
+A :class:`Worker`\s corresponds to an environment where builds are executed.
+A single physical machine that must run at least one :class:`Worker`\s in order for Buildbot to be able to utilize it for running builds.
+Multiple :class:`Worker`\s may run on a single machine to provide different environments that can reuse the same hardware by means of containers or virtual machines.
+
+Each builder is associated with one or more :class:`Worker`\s.
+For example, a builder which is used to perform macOS builds (as opposed to Linux or Windows builds) should naturally be associated with a Mac worker.
 
 If multiple workers are available for any given builder, you will have some measure of redundancy: in case one worker goes offline, the others can still keep the :class:`Builder` working.
 In addition, multiple workers will allow multiple simultaneous builds for the same :class:`Builder`, which might be useful if you have a lot of forced or ``try`` builds taking place.
 
-If you use this feature, it is important to make sure that the workers are all, in fact, capable of running the given build.
-The worker hosts should be configured similarly, otherwise you will spend a lot of time trying (unsuccessfully) to reproduce a failure that only occurs on some of the workers and not the others.
-Different platforms, operating systems, versions of major programs or libraries, all these things mean you should use separate Builders.
+Ideally, each :class:`Worker` that is configured for a builder should be identical.
+Otherwise build or test failures will be dependent on which worker the build is ran and this will complicate investigation of failures.
 
 .. _Concepts-Build:
 
