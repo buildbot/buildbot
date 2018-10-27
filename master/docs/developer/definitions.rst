@@ -1,18 +1,3 @@
-Definitions
-===========
-
-Buildbot uses some terms and concepts that have specific meanings.
-
-Repository
-----------
-
-See :ref:`Attr-Repository`.
-
-Project
--------
-
-See :ref:`Attr-Project`.
-
 Version Control Comparison
 --------------------------
 
