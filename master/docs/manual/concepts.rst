@@ -356,16 +356,20 @@ A merge of buildrequests is performed per codebase, thus on changes having the s
 Builders
 --------
 
-The Buildmaster runs a collection of :class:`Builder`\s, each of which handles a single type of build (e.g. full versus quick), on one or more workers.
-:class:`Builder`\s serve as a kind of queue for a particular type of build.
-Each :class:`Builder` gets a separate column in the waterfall display.
-In general, each :class:`Builder` runs independently (although various kinds of interlocks can cause one :class:`Builder` to have an effect on another).
+A :class:`Builder` handles the process of scheduling work to workers.
+Each :class:`Builder` is responsible for a certain type of build, which usually consist of identical or very similar sequence of steps.
+
+The class serves as a kind of queue for that particular type of build.
+In general, each :class:`Builder` runs independently, but it's possible to constrain the behavior of :class:`Builder`\s using various kinds of interlocks.
 
 Each builder is a long-lived object which controls a sequence of :class:`Build`\s.
-Each :class:`Builder` is created when the config file is first parsed, and lives forever (or rather until it is removed from the config file).
+A :class:`Builder` is created when the config file is first parsed, and lives forever (or rather until it is removed from the config file).
 It mediates the connections to the workers that do all the work, and is responsible for creating the :class:`Build` objects - :ref:`Concepts-Build`.
 
-Each builder gets a unique name, and the path name of a directory where it gets to do all its work (there is a buildmaster-side directory for keeping status information, as well as a worker-side directory where the actual checkout/compile/test commands are executed).
+Each builder gets a unique name, and the path name of a directory where it gets to do all its work.
+This path is used in two ways.
+On the buildmaster-side a directory is created for keeping status information.
+On the worker-side a directory is created where the actual checkout, compile and test commands are executed.
 
 .. _Concepts-Build-Factories:
 
