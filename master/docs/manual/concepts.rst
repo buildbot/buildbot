@@ -16,21 +16,26 @@ You'll need to understand how the Buildbot sees the world to configure it proper
 Source Stamps
 -------------
 
-Source code comes from *repositories*, provided by version control systems.
-Repositories are generally identified by URLs, e.g., ``git://github.com/buildbot/buildbot.git``.
+Buildbot uses the concept of *source stamp set* to identify exact source code that needs to be built for a certain project.
+A *source stamp set* is a collection of one or more source stamps.
 
-In these days of distributed version control systems, the same *codebase* may appear in multiple repositories.
+A *source stamp* is a collection of information needed to identify a particular version of code on a certain codebase. This information most often is a revision and possibly a branch.
+
+A *codebase* is a collection of related files and their history tracked as a unit by version control systems.
+A single codebase may appear in multiple repositories which themselves are identified by URLs.
 For example, ``https://github.com/mozilla/mozilla-central`` and ``http://hg.mozilla.org/mozilla-release`` both contain the Firefox codebase, although not exactly the same code.
 
-Many *projects* are built from multiple codebases.
+A *project* is corresponds to a set of one or more codebases that together may be built and produce some end artifact.
 For example, a company may build several applications based on the same core library.
 The "app" codebase and the "core" codebase are in separate repositories, but are compiled together and constitute a single project.
 Changes to either codebase should cause a rebuild of the application.
 
-Most version control systems define some sort of *revision* that can be used (sometimes in combination with a *branch*) to uniquely specify a particular version of the source code.
+A *revision* is an identifier used by most version control systems to uniquely specify a particular version of the source code.
+Sometimes in order to do that a revision may make sense only if used combination with a *branch*.
 
-To build a project, Buildbot needs to know exactly which version of each codebase it should build.
-It uses a *source stamp* to do so for each codebase; the collection of sourcestamps required for a project is called a *source stamp set*.
+To sum up the above, to build a project, Buildbot needs to know exactly which version of each codebase it should build.
+It uses a *source stamp* to do so for each codebase, each of which assigns informs Buildbot that it should use a specific *revision* from that codebase.
+Collectively these source stamps are called *source stamp set* for each project.
 
 .. index: change
 
