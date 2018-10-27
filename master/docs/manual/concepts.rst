@@ -401,8 +401,8 @@ Otherwise build or test failures will be dependent on which worker the build is 
 Builds
 ------
 
-A build is a single compile or test run of a particular version of the source code, and is comprised of a series of steps.
-It is ultimately up to you what constitutes a build, but for compiled software it is generally the checkout, configure, make, and make check sequence.
+A :class:`Build` is a single compile or test run of a particular version of the source code, and is comprised of a series of steps.
+The steps may be arbitrary. For example, for compiled software a build generally consists of the checkout, configure, make, and make check sequence.
 For interpreted projects like Python modules, a build is generally a checkout followed by an invocation of the bundled test suite.
 
 A :class:`BuildFactory` describes the steps a build will perform.
