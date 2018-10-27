@@ -102,9 +102,10 @@ If branches are being used, the source Step is instead configured with a ``baseU
 Each build then has a specific branch which replaces ``defaultBranch``, or just uses the default one.
 Instead of a revision number, each build can have a ``context``, which is a string that records all the patches that are present in a given tree (this is the output of ``darcs changes --context``, and is considerably less concise than, e.g. Subversion's revision number, but the patch-reordering flexibility of Darcs makes it impossible to provide a shorter useful specification).
 
-`Mercurial <https://www.mercurial-scm.org/>`_ is like Darcs, in that each branch is stored in a separate repository.
-The ``repourl``, ``baseURL``, and ``defaultBranch`` arguments are all handled the same way as with Darcs.
-The *revision*, however, is the hash identifier returned by ``hg identify``.
+`Mercurial <https://www.mercurial-scm.org/>`_ follows a decentralized model, and each repository can have several branches and tags.
+The source Step is configured with a static ``repourl`` which specifies the location of the repository.
+Branches are configured with the ``defaultBranch`` argument.
+The *revision* is the hash identifier returned by ``hg identify``.
 
 `Git <http://git.or.cz/>`_ also follows a decentralized model, and each repository can have several branches and tags.
 The source Step is configured with a static ``repourl`` which specifies the location of the repository.
@@ -224,12 +225,11 @@ The Change might also have a :attr:`branch` attribute.
 This indicates that all of the Change's files are in the same named branch.
 The schedulers get to decide whether the branch should be built or not.
 
-For VC systems like CVS,  Git and Monotone the :attr:`branch` name is unrelated to the filename.
+For VC systems like CVS, Git, Mercurial and Monotone the :attr:`branch` name is unrelated to the filename.
 (That is, the branch name and the filename inhabit unrelated namespaces.)
 For SVN, branches are expressed as subdirectories of the repository, so the file's ``repourl`` is a combination of some base URL, the branch name, and the filename within the branch.
 (In a sense, the branch name and the filename inhabit the same namespace.)
 Darcs branches are subdirectories of a base URL just like SVN.
-Mercurial branches are the same as Darcs.
 
 `CVS`
     branch='warner-newfeature', files=['src/foo.c']
