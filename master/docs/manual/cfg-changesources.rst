@@ -76,6 +76,31 @@ The source Step is configured with static ``repourl`` and ``branch`` parameters,
 The *revision* is specified as a SHA1 hash as returned by e.g. ``mtn automate select w:``.
 No attempt is made to ensure that the specified revision is actually a subset of the specified branch.
 
+Comparison
+++++++++++
+
+=========== =========== =========== ===================
+Name        Change      Revision    Branches
+=========== =========== =========== ===================
+CVS         patch [1]   timestamp   unnamed
+Subversion  revision    integer     directories
+Git         commit      sha1 hash   named refs
+Mercurial   changeset   sha1 hash   different repos
+                                    or (permanently)
+                                    named commits
+Darcs       ?           none [2]    different repos
+Bazaar      ?           ?           ?
+Perforce    ?           ?           ?
+BitKeeper   changeset   ?           different repos
+=========== =========== =========== ===================
+
+* [1] note that CVS only tracks patches to individual files.  Buildbot tries to
+  recognize coordinated changes to multiple files by correlating change times.
+
+* [2] Darcs does not have a concise way of representing a particular revision
+  of the source.
+
+
 Tree Stability
 ++++++++++++++
 
