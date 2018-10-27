@@ -7,10 +7,12 @@ Change Sources
    :depth: 2
    :local:
 
-A Version Control System maintains a source tree, and tells the buildmaster when it changes.
-The first step of each :class:`Build` is typically to acquire a copy of some version of this tree.
+A *change source* is the mechanism which is used by Buildbot to get information about new changes in a repository maintained by a Version Control System.
 
-This chapter describes how the Buildbot learns about what :class:`Change`\s have occurred.
+These change sources fall broadly into two categories: pollers which periodically check the repository for updates; and hooks, where the repository is configured to notify Buildbot whenever an update occurs.
+
+A :class:`Change` is an abstract way that Buildbot uses to represent changes in any of the Version Control Systems it supports. It contains just enough information needed to acquire specific version of the tree when needed. This usually happens as one of the first steps in a :class:`Build`.
+
 For more information on VC systems and :class:`Change`\s, see :ref:`Version-Control-Systems`.
 
 :class:`Change`\s can be provided by a variety of :class:`ChangeSource` types, although any given project will typically have only a single :class:`ChangeSource` active.
