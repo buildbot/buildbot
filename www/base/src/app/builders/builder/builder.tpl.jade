@@ -20,6 +20,7 @@
             span(title="{{br.submitted_at | dateformat:'LLL'}}")
               | {{br.submitted_at | timeago }}
           td
+            span {{br.properties.owner[0]}}
           td
   builds-table(builder="builder", builds="builds")
   a.btn.btn-default(ui-sref='builder({builder: builder.builderid, numbuilds: numbuilds + 100})', ng-if="builds.length>=numbuilds")
