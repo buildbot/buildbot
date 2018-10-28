@@ -302,7 +302,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    .. py:method:: _retValParams(self, msg)
 
-      This is an abstract method which needs to be implemented by subclassses.
+      This is an abstract method which needs to be implemented by subclasses.
       This method needs to return a list of parameters that will be passed to the ``callback`` function.
       See individual build ``CaptureBuild*`` classes for more information.
 
