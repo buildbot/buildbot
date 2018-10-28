@@ -49,6 +49,14 @@ export class ForcePage extends BasePage {
         await button.click();
     }
 
+    async clickCancelWholeQueue() {
+        let button = this.getCancelWholeQueue();
+        await browser.wait(EC.elementToBeClickable(button),
+                           5000,
+                           "cancel whole queue button not clickable");
+        await button.click();
+    }
+
     getStartButton() {
         return element(By.buttonText('Start Build'));
     }
@@ -58,7 +66,7 @@ export class ForcePage extends BasePage {
     }
 
     getCancelWholeQueue() {
-        return element(By.buttonText('Cancel Whole Queue'));
+        return element(By.buttonText('Cancel whole queue'));
     }
 
     getStopButton() {
