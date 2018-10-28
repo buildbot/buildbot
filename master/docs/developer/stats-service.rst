@@ -42,7 +42,7 @@ Stats Service
       ``storage_backends``
         A list of storage backends.
 
-      This mehtod is called automatically to reconfigure the running service.
+      This method is called automatically to reconfigure the running service.
 
    .. py:method:: registerConsumers(self)
 
@@ -190,7 +190,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
 .. py:class:: buildbot.statistics.capture.CapturePropertyBase
 
-   This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
+   This is a base class for both :class:`CaptureProperty` and :class:`CapturePropertyAllBuilders` and abstracts away much of the common functionality between the two classes.
    Cannot be initialized directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is initialized with the following arguments:
 
@@ -221,13 +221,13 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
       The consumer for all CaptureProperty classes described below.
       This method filters out the correct properties as per the configuration file and sends those properties for storage.
-      The subclasses of this method do not need to implement this method as it takes care of all the functionaltiy itself.
+      The subclasses of this method do not need to implement this method as it takes care of all the functionality itself.
       See :class:`Capture` for more information.
 
    .. py:method:: _builder_name_matches(self, builder_info):
 
       This is an abstract method and needs to be implemented by all subclasses of this class.
-      This is a helper method to the ``consume`` method metioned above.
+      This is a helper method to the ``consume`` method mentioned above.
       It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
       It takes one argument:
 
@@ -296,13 +296,13 @@ Capture classes are used for declaring which data needs to captured and sent to 
       .. note:: This consumer requires all subclasses to implement:
 
       ``self._time_type`` (property)
-        A string used as a key in ``post_data`` sent to sotrage services.
+        A string used as a key in ``post_data`` sent to storage services.
       ``self._retValParams(msg)`` (method)
         A method that takes in the ``msg`` this consumer gets and returns a list of arguments for the capture callback.
 
    .. py:method:: _retValParams(self, msg)
 
-      This is an abstract method which needs to be implemented by subclassses.
+      This is an abstract method which needs to be implemented by subclasses.
       This method needs to return a list of parameters that will be passed to the ``callback`` function.
       See individual build ``CaptureBuild*`` classes for more information.
 
@@ -313,7 +313,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
    .. py:method:: _builder_name_matches(self, builder_info)
 
       This is an abstract method and needs to be implemented by all subclasses of this class.
-      This is a helper method to the ``consume`` method metioned above.
+      This is a helper method to the ``consume`` method mentioned above.
       It checks whether a builder is allowed to send build times to the storage backend according to the configuration file.
       It takes one argument:
 
@@ -468,7 +468,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
 .. py:class:: buildbot.statistics.capture.CaptureDataBase
 
-   This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionaltiy between the two classes.
+   This is a base class for both :class:`CaptureData` and :class:`CaptureDataAllBuilders` and abstracts away much of the common functionality between the two classes.
    Cannot be initialized directly as it contains an abstract method and raises ``TypeError`` if tried.
    It is initialized with the following arguments:
 
@@ -491,7 +491,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
    .. py:method:: _builder_name_matches(self, builder_info)
 
       This is an abstract method and needs to be implemented by all subclasses of this class.
-      This is a helper method to the ``consume`` method metioned above.
+      This is a helper method to the ``consume`` method mentioned above.
       It checks whether a builder is allowed to send properties to the storage backend according to the configuration file.
       It takes one argument:
 
@@ -502,7 +502,7 @@ Capture classes are used for declaring which data needs to captured and sent to 
 
    A capture class for capturing arbitrary data that is not stored as build-data.
    See :meth:`yieldMetricsValue` for more.
-   Takes the following arguments for initliazation:
+   Takes the following arguments for initialization:
 
    ``data_name``
      (str) The name of data to be captured.

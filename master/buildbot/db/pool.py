@@ -202,12 +202,13 @@ class DBThreadPool(object):
                     # and re-try
                     log.err(e, 'retrying {} after sql error {}'.format(callable, e))
                     continue
-                # AlreadyClaimedError are normal especially in a multimaster
-                # configuration
-                except (AlreadyClaimedError, ChangeSourceAlreadyClaimedError, SchedulerAlreadyClaimedError, AlreadyCompleteError):
-                    raise
                 except Exception as e:
-                    log.err(e, 'Got fatal Exception on DB')
+                    # AlreadyClaimedError are normal especially in a multimaster
+                    # configuration
+                    if not isinstance(e,
+                        (AlreadyClaimedError, ChangeSourceAlreadyClaimedError,
+                         SchedulerAlreadyClaimedError, AlreadyCompleteError)):
+                        log.err(e, 'Got fatal Exception on DB')
                     raise
             finally:
                 if not with_engine:

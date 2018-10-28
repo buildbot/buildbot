@@ -616,7 +616,7 @@ class UserOptions(base.SubcommandOptions):
         if not info and not ids:
             raise usage.UsageError("must specify either --ids or --info")
 
-        if op == 'add' or op == 'update':
+        if op in ('add', 'update'):
             if ids:
                 raise usage.UsageError("cannot use --ids with 'add' or "
                                        "'update'")
@@ -631,7 +631,7 @@ class UserOptions(base.SubcommandOptions):
                     if 'identifier' in user:
                         raise usage.UsageError("identifier found in add info, "
                                                "use: --info=type=value,type=value,..")
-        if op == 'remove' or op == 'get':
+        if op in ('remove', 'get'):
             if info:
                 raise usage.UsageError("cannot use --info with 'remove' "
                                        "or 'get'")

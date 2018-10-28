@@ -86,7 +86,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(bm_tbl.c.masterid == masterid)
                 q = q.where(bm_tbl.c.builderid.in_(builderids))
                 res = conn.execute(q)
-                buildermasterids = set([row['id'] for row in res])
+                buildermasterids = {row['id'] for row in res}
                 res.close()
             else:
                 buildermasterids = set([])
@@ -98,8 +98,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             q = q.where(bm_tbl.c.masterid == masterid)
             q = q.where(cfg_tbl.c.workerid == workerid)
             res = conn.execute(q)
-            oldbuildermasterids = set(
-                [row['buildermasterid'] for row in res])
+            oldbuildermasterids = {row['buildermasterid'] for row in res}
             res.close()
 
             todeletebuildermasterids = oldbuildermasterids - buildermasterids

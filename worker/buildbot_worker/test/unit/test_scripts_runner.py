@@ -32,7 +32,7 @@ from buildbot_worker.test.util import misc
 class OptionsMixin(object):
 
     def assertOptions(self, opts, exp):
-        got = dict([(k, opts[k]) for k in exp])
+        got = {k: opts[k] for k in exp}
         if got != exp:
             msg = []
             for k in exp:

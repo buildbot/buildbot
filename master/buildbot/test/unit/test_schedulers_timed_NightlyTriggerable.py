@@ -200,11 +200,16 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_savedTrigger(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
+
+        value_json = \
+            '[ [ {"codebase": "cb", "project": "p", "repository": "r", ' \
+            '"branch": "br", "revision": "myrev"} ], {}, null, null ]'
+
         self.db.insertTestData([
             fakedb.Object(
                 id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {}, null, null ]'),
+                               value_json=value_json),
         ])
 
         sched.activate()
@@ -219,11 +224,15 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_savedTrigger_dict(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
+
+        value_json = \
+            '[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", ' \
+            '"branch": "br", "revision": "myrev"} }, {}, null, null ]'
         self.db.insertTestData([
             fakedb.Object(
                 id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ { "cb": {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} }, {}, null, null ]'),
+                               value_json=value_json),
         ])
 
         sched.activate()
@@ -314,11 +323,16 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
     def test_savedProperties(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    minute=[5], codebases={'cb': {'repository': 'annoying'}})
+
+        value_json = \
+            '[ [ {"codebase": "cb", "project": "p", "repository": "r", ' \
+            '"branch": "br", "revision": "myrev"} ], ' \
+            '{"testprop": ["test", "TEST"]}, null, null ]'
         self.db.insertTestData([
             fakedb.Object(
                 id=self.SCHEDULERID, name='test', class_name='NightlyTriggerable'),
             fakedb.ObjectState(objectid=self.SCHEDULERID, name='lastTrigger',
-                               value_json='[ [ {"codebase": "cb", "project": "p", "repository": "r", "branch": "br", "revision": "myrev"} ], {"testprop": ["test", "TEST"]}, null, null ]'),
+                               value_json=value_json),
         ])
 
         sched.activate()

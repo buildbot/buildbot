@@ -75,7 +75,7 @@ upgrade-master
     buildbot upgrade-master {BASEDIR}
 
 This upgrades a previously created buildmaster's base directory for a new version of buildbot master source code.
-This will copy the web server static files, and potencially upgrade the db.
+This will copy the web server static files, and potentially upgrade the db.
 
 .. bb:cmdline:: start (buildbot)
 

@@ -180,7 +180,7 @@ class Identifier(Type):
             yield "%s - %r - is not a unicode string" % (name, object)
         elif not self.identRe.match(object):
             yield "%s - %r - is not an identifier" % (name, object)
-        elif len(object) < 1:
+        elif not object:
             yield "%s - identifiers cannot be an empty string" % (name,)
         elif len(object) > self.len:
             yield "%s - %r - is longer than %d characters" % (name, object,
@@ -311,7 +311,7 @@ class Dict(Type):
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([(maybeNoneOrList(k, v), v.ramlname) for k, v in self.contents.items()])}
+                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in iteritems(self.contents)}}
 
 
 class JsonObject(Type):
@@ -389,9 +389,6 @@ class Entity(Type):
 
     def toRaml(self):
         return {'type': "object",
-                'properties': dict([
-                    (
-                        maybeNoneOrList(k, v),
-                        {'type': v.ramlname, 'description': ''}
-                    )
-                    for k, v in iteritems(self.fields)])}
+                'properties': {
+                    maybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
+                    for k, v in iteritems(self.fields)}}

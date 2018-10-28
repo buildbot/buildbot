@@ -98,7 +98,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             # 50-character identifier, this isn't a simple query.
             res = conn.execute(sa.select([tbl.c.name],
                                          whereclause=((tbl.c.buildid == buildid))))
-            names = set([row[0] for row in res])
+            names = {row[0] for row in res}
             num = 1
             while True:
                 numstr = '_%d' % num

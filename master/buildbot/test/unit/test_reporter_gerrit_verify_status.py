@@ -377,8 +377,8 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
 
         # from chdict:
         chdict = TestGerritChangeSource.expected_change
-        props = Properties.fromDict(dict([
-            (k, (v, 'change')) for k, v in chdict['properties'].items()]))
+        props = Properties.fromDict({
+            k: (v, 'change') for k, v in chdict['properties'].items()})
         changes = self.sp.getGerritChanges(props)
         self.assertEqual(changes, [
             {'change_id': '4321', 'revision_id': '12'}

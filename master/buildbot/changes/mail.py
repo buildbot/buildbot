@@ -351,9 +351,7 @@ class SVNCommitEmailMaildirSource(MaildirSource):
         # commit message is terminated by the file-listing section
         while lines:
             line = lines.pop(0)
-            if (line == "Modified:\n" or
-                line == "Added:\n" or
-                    line == "Removed:\n"):
+            if line in ("Modified:\n", "Added:\n", "Removed:\n"):
                 break
             comments += line
         comments = comments.rstrip() + "\n"

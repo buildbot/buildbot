@@ -36,10 +36,14 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
     def setupStep(self, step, args, **kwargs):
         step = sourcesteps.SourceStepMixin.setupStep(self, step, args, **kwargs)
         step.build.properties.setProperty("source_branch", "ms-viewport", "gitlab source branch")
-        step.build.properties.setProperty("source_git_ssh_url", "git@gitlab.example.com:build/awesome_project.git", "gitlab source git ssh url")
+        step.build.properties.setProperty("source_git_ssh_url",
+            "git@gitlab.example.com:build/awesome_project.git",
+            "gitlab source git ssh url")
         step.build.properties.setProperty("source_project_id", 2337, "gitlab source project ID")
         step.build.properties.setProperty("target_branch", "master", "gitlab target branch")
-        step.build.properties.setProperty("target_git_ssh_url", "git@gitlab.example.com:mmusterman/awesome_project.git", "gitlab target git ssh url")
+        step.build.properties.setProperty("target_git_ssh_url",
+            "git@gitlab.example.com:mmusterman/awesome_project.git",
+            "gitlab target git ssh url")
         step.build.properties.setProperty("target_project_id", 239, "gitlab target project ID")
         return step
 

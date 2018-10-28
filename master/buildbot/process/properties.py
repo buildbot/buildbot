@@ -897,14 +897,30 @@ class _Renderer(util.ComparableMixin, object):
 
     def __init__(self, fn):
         self.fn = fn
+        self.args = []
+        self.kwargs = {}
 
+    def withArgs(self, *args, **kwargs):
+        new_renderer = _Renderer(self.fn)
+        new_renderer.args = self.args + list(args)
+        new_renderer.kwargs = dict(self.kwargs)
+        new_renderer.kwargs.update(kwargs)
+        return new_renderer
+
+    @defer.inlineCallbacks
     def getRenderingFor(self, props):
+        args = yield props.render(self.args)
+        kwargs = yield props.render(self.kwargs)
+
         # We allow the renderer fn to return a renderable for convenience
-        d = defer.maybeDeferred(self.fn, props)
-        d.addCallback(props.render)
-        return d
+        result = yield self.fn(props, *args, **kwargs)
+        result = yield props.render(result)
+        defer.returnValue(result)
 
     def __repr__(self):
+        if self.args or self.kwargs:
+            return 'renderer(%r, args=%r, kwargs=%r)' % (self.fn, self.args,
+                                                         self.kwargs)
         return 'renderer(%r)' % (self.fn,)
 
 

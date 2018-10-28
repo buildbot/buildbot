@@ -23,10 +23,10 @@ from io import BytesIO
 from twisted.internet import defer
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.util import unicode2bytes
+from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucketserver import _HEADER_EVENT
 
 _CT_JSON = b'application/json'

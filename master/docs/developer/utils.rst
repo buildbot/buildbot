@@ -510,7 +510,7 @@ The ``@poll.method`` decorator makes this behavior easy and reliable.
 .. py:function:: method
 
     This decorator replaces the decorated method with a :py:class:`Poller` instance configured to call the decorated method periodically.
-    The poller is initially stopped, so peroidic calls will not begin until its ``start`` method is called.
+    The poller is initially stopped, so periodic calls will not begin until its ``start`` method is called.
     The start polling interval is specified when the poller is started.
 
     If the decorated method fails or raises an exception, the Poller logs the error and re-schedules the call for the next interval.

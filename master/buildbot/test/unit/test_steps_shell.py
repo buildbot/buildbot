@@ -318,7 +318,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         # this checks that an exception is raised for invalid arguments
         self.assertRaisesConfigError(
             "ShellCommand's `command' argument is not specified",
-            lambda: shell.ShellCommand())
+            shell.ShellCommand)
 
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
@@ -517,7 +517,10 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         ``SetPropertyFromCommand`` reports a config error.
         """
         self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand, command=["echo", "value"], property="propname", extract_fn=lambda x: {"propname": "hello"})
+                          shell.SetPropertyFromCommand,
+                          command=["echo", "value"],
+                          property="propname",
+                          extract_fn=lambda x: {"propname": "hello"})
 
     def test_error_none_set(self):
         """
@@ -1007,7 +1010,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         self.assertRaisesConfigError(
             "WarningCountingShellCommand's `command' argument is not "
             "specified",
-            lambda: shell.WarningCountingShellCommand())
+            shell.WarningCountingShellCommand)
 
 
 class Compile(steps.BuildStepMixin, unittest.TestCase):

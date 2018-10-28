@@ -552,8 +552,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
                     continue
                 if not (warnRe is None or warnRe.search(text)):
                     continue
-                if not ((start is None and end is None) or
-                        (lineNo is not None and start <= lineNo and end >= lineNo)):
+                if ((start is not None and end is not None) and
+                   not (lineNo is not None and start <= lineNo <= end)):
                     continue
                 return
 

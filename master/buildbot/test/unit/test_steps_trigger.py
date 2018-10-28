@@ -263,39 +263,45 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     # tests
     def test_no_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger())
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger)
 
     def test_unimportantSchedulerNames_not_in_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['a'], unimportantsShedulerNames=['b']))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['a'], unimportantsShedulerNames=['b'])
 
     def test_sourceStamp_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamp=dict(x=1), updateSourceStamp=True))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['c'],
+                          sourceStamp=dict(x=1), updateSourceStamp=True)
 
     def test_sourceStamps_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamps=[dict(x=1), dict(x=2)],
-                                          updateSourceStamp=True))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['c'],
+                          sourceStamps=[dict(x=1), dict(x=2)],
+                          updateSourceStamp=True)
 
     def test_updateSourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          updateSourceStamp=True, alwaysUseLatest=True))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['c'],
+                          updateSourceStamp=True, alwaysUseLatest=True)
 
     def test_sourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamp=dict(x=1), alwaysUseLatest=True))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['c'],
+                          sourceStamp=dict(x=1), alwaysUseLatest=True)
 
     def test_sourceStamps_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          trigger.Trigger(schedulerNames=['c'],
-                                          sourceStamps=[dict(x=1), dict(x=2)],
-                                          alwaysUseLatest=True))
+        self.assertRaises(config.ConfigErrors,
+                          trigger.Trigger,
+                          schedulerNames=['c'],
+                          sourceStamps=[dict(x=1), dict(x=2)],
+                          alwaysUseLatest=True)
 
     def test_simple(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
@@ -312,17 +318,15 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         self.expectTriggeredWith(a=(False, [], {}))
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_simple_exception(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a']))
         self.scheduler_a.exception = True
         self.expectOutcome(result=SUCCESS, state_string='triggered a')
         self.expectTriggeredWith(a=(False, [], {}))
-        d = self.runStep()
+        yield self.runStep()
 
-        def flush(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(flush)
-        return d
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     @defer.inlineCallbacks
     def test_bogus_scheduler(self):

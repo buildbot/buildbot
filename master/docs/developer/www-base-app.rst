@@ -11,7 +11,7 @@ The client side of the web UI is written in JavaScript and based on the AngularJ
 This is a `Single Page Application <http://en.wikipedia.org/wiki/Single-page_application>`_.
 All Buildbot pages are loaded from the same path, at the master's base URL.
 The actual content of the page is dictated by the fragment in the URL (the portion following the ``#`` character).
-Using the fragment is a common JS techique to avoid reloading the whole page over HTTP when the user changes the URI or clicks a link.
+Using the fragment is a common JS technique to avoid reloading the whole page over HTTP when the user changes the URI or clicks a link.
 
 AngularJS
 ~~~~~~~~~
@@ -27,18 +27,18 @@ AngularJS strong points are:
 
 On top of Angular we use nodeJS tools to ease development
 
-* gulp build system, seemlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
+* gulp build system, seamlessly build the app, can watch files for modification, rebuild and reload browser in dev mode.
   In production mode, the build system minifies html, css and js, so that the final app is only 3 files to download (+img)
 * Alternatively webpack build system can be used for the same purposes as gulp (in UI extensions)
 * `coffeescript <http://coffeescript.org/>`_, a very expressive language, preventing some of the major traps of JS
-* `pug template language  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readbility to angular html templates
+* `pug template language  (aka jade) <https://pugjs.org/>`_, adds syntax sugar and readability to angular html templates
 * `Bootstrap <https://getbootstrap.com/>`_ is a CSS library providing know good basis for our styles
 * `Font Awesome <http://fortawesome.github.com/Font-Awesome/>`_ is a coherent and large icon library
 
 Modules we may or may not want to include:
 
 * `momentjs <http://momentjs.com/>`_ is a library implementing human readable relative timings (e.g. "one hour ago")
-* `Angular UI Grid <http://ui-grid.info/>`_ is a grid system for full featured searcheable/sortable/csv exportable grids
+* `Angular UI Grid <http://ui-grid.info/>`_ is a grid system for full featured searchable/sortable/csv exportable grids
 * `angular-UI <http://angular-ui.github.com/>`_ is a collection of jquery based directives and filters. Probably not very useful for us
 * `JQuery <http://jquery.com/>`_ the well known JS framework, allows all sort of dom manipulation.
   Having it inside allows for all kind of hacks we may want to avoid
@@ -97,7 +97,7 @@ The router we use is ``ui.router``.
 Menu is managed by guanlecoja-ui's glMenuProvider.
 Please look at ``ui.router``, and guanlecoja-ui documentation for details.
 
-Typically, a route regitration will look like following example.
+Typically, a route registration will look like following example.
 
 .. code-block:: coffeescript
 
@@ -251,13 +251,20 @@ Provided you run it in a buildbot master virtualenv, the following command will 
 
     gulp dev proxy --host nine.buildbot.net
 
-You can then just point your browser to localhost:8010, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
+You can then just point your browser to localhost:8080, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
+
+If your buildbot instance is served over HTTPS, use the ``--secure`` argument to access the host via ``https://`` and ``wss://``, respectively. The argument ``--ignoresslerrors`` may be helpful if the server uses a self-signed certificate. Note that the ``--host`` parameter can specify port and URL path, in case buildbot is served on a non-standard port or not from the root path ``/``.
+
+.. code-block:: none
+
+    gulp dev proxy --host ssl-protected.ci.example.com --secure
+    gulp dev proxy --host self-signed-ssl.ci.example.com/buildbot --secure --ignoresslerrors
 
 
 Guanlecoja
 ----------
 
-Buildbot's build environment has been factorized for reuse in other projects and plugins, and is callsed Guanlecoja.
+Buildbot's build environment has been factorized for reuse in other projects and plugins, and is called Guanlecoja.
 
 The documentation and meaning of this name is maintained in Guanlecoja's own site. https://github.com/buildbot/guanlecoja/
 

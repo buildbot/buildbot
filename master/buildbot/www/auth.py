@@ -112,7 +112,7 @@ class RemoteUserAuth(AuthBase):
         if self.userInfoProvider is None:
             self.userInfoProvider = UserInfoProviderBase()
         if header is not None:
-            self.header = header
+            self.header = unicode2bytes(header)
         if headerRegex is not None:
             self.headerRegex = re.compile(unicode2bytes(headerRegex))
 

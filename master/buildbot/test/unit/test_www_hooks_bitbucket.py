@@ -22,9 +22,9 @@ import calendar
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
-import buildbot.www.change_hook as change_hook
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
+from buildbot.www import change_hook
 from buildbot.www.hooks.bitbucket import _HEADER_EVENT
 
 gitJsonPayload = b"""{

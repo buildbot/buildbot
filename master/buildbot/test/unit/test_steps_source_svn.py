@@ -128,18 +128,20 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN())
+        self.assertRaises(config.ConfigErrors,
+                          svn.SVN)
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN(repourl='http://svn.local/app/trunk',
-                                  mode='invalid'))
+        self.assertRaises(config.ConfigErrors,
+                          svn.SVN,
+                          repourl='http://svn.local/app/trunk',
+                          mode='invalid')
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          svn.SVN(repourl='http://svn.local/app/trunk',
-                                  method='invalid'))
+        self.assertRaises(config.ConfigErrors,
+                          svn.SVN,
+                          repourl='http://svn.local/app/trunk',
+                          method='invalid')
 
     def test_svn_not_installed(self):
         self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
@@ -219,7 +221,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         def _checkType():
             revision = self.step.getProperty('got_revision')
-            self.assertRaises(ValueError, lambda: int(revision))
+            self.assertRaises(ValueError, int, revision)
         d.addCallback(lambda _: _checkType())
         return d
 
@@ -1720,7 +1722,10 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
                                  '--password', ('obfuscated', 'pass', 'XXXXXX'), '--random'])
             +
             ExpectShell.log(
-                'stdio', stdout="""<?xml version="1.0"?><entry kind="dir" path="/a/b/c" revision="1"><url>http://svn.local/app/trunk</url></entry>""")
+                'stdio', stdout='<?xml version="1.0"?>'
+                                '<entry kind="dir" path="/a/b/c" revision="1">'
+                                '<url>http://svn.local/app/trunk</url>'
+                                '</entry>')
             + 0,
             ExpectShell(workdir='wkdir',
                         command=['svn', 'update', '--non-interactive',
@@ -1987,7 +1992,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
         </status>
         """
         self.assertRaises(buildstep.BuildStepFailed,
-                          lambda: list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, [])))
+                          list,
+                          svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, []))
 
     def test_getUnversionedFiles_no_path(self):
         svn_st_xml = """<?xml version="1.0"?>

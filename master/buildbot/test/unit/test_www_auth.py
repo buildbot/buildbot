@@ -200,7 +200,7 @@ class CustomAuth(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(result_good, 'fellow')
         cred_bad = UsernamePassword('bandid', 'incorrect')
         defer_bad = self.auth.checkers[0].requestAvatarId(cred_bad)
-        self.assertFailure(defer_bad, UnauthorizedLogin)
+        yield self.assertFailure(defer_bad, UnauthorizedLogin)
 
 
 class LoginResource(www.WwwTestMixin, AuthResourceMixin, unittest.TestCase):

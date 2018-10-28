@@ -81,6 +81,7 @@ class Tests(interfaces.InterfaceTests):
         cs = yield self.db.changesources.getChangeSource(42)
         self.assertEqual(cs['masterid'], 13)
 
+    @defer.inlineCallbacks
     def test_setChangeSourceMaster_inactive_but_linked(self):
         """Inactive changesource but already claimed by an active master"""
         d = self.insertTestData([
@@ -90,9 +91,9 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.changesources.setChangeSourceMaster(87, 13))
-        self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
 
+    @defer.inlineCallbacks
     def test_setChangeSourceMaster_active(self):
         """Active changesource already claimed by an active master"""
         d = self.insertTestData([
@@ -100,8 +101,7 @@ class Tests(interfaces.InterfaceTests):
         ])
         d.addCallback(lambda _:
                       self.db.changesources.setChangeSourceMaster(42, 14))
-        self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
-        return d
+        yield self.assertFailure(d, changesources.ChangeSourceAlreadyClaimedError)
 
     @defer.inlineCallbacks
     def test_setChangeSourceMaster_None(self):

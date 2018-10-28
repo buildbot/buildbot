@@ -205,12 +205,12 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         timer.start()
 
         # arrange builders by name
-        old_by_name = dict([(b.name, b)
-                            for b in list(self)
-                            if isinstance(b, Builder)])
+        old_by_name = {b.name: b
+                       for b in list(self)
+                       if isinstance(b, Builder)}
         old_set = set(old_by_name)
-        new_by_name = dict([(bc.name, bc)
-                            for bc in new_config.builders])
+        new_by_name = {bc.name: bc
+                       for bc in new_config.builders}
         new_set = set(new_by_name)
 
         # calculate new builders, by name, and removed builders
@@ -227,9 +227,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                 builder.master = None
                 builder.botmaster = None
 
-                # pylint: disable=cell-var-from-loop
-                yield defer.maybeDeferred(lambda:
-                                          builder.disownServiceParent())
+                yield defer.maybeDeferred(builder.disownServiceParent)
 
             for n in added_names:
                 builder = Builder(n)

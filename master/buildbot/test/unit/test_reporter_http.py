@@ -128,3 +128,23 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = True
         self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def http2XX(self, code, content):
+        yield self.createReporter()
+        self._http.expect('post', '', code=code, content=content,
+                          json=BuildLookAlike())
+        build = yield self.setupBuildResults(SUCCESS)
+        self.sp.buildStarted(('build', 20, 'finished'), build)
+
+    @defer.inlineCallbacks
+    def test_http200(self):
+        yield self.http2XX(code=200, content="OK")
+
+    @defer.inlineCallbacks
+    def test_http201(self):  # e.g. GitHub returns 201
+        yield self.http2XX(code=201, content="Created")
+
+    @defer.inlineCallbacks
+    def test_http202(self):
+        yield self.http2XX(code=202, content="Accepted")
