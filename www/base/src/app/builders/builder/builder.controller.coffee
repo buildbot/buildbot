@@ -100,5 +100,9 @@ class Builder extends Controller
                 limit: $scope.numbuilds
                 order: '-number'
             $scope.buildrequests = builder.getBuildrequests(claimed:false)
+            $scope.buildrequests.onNew = (buildrequest) ->
+                data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
+                    buildset.getProperties().onNew = (properties) ->
+                        buildrequest.properties = properties
             $scope.builds.onChange=refreshContextMenu
             $scope.buildrequests.onChange=refreshContextMenu
