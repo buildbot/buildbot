@@ -528,7 +528,7 @@ Features
   View <GridView>`.
 - :py:class:`~buildbot.worker.openstack.OpenStackLatentWorker` now supports V3
   authentication.
-- Buildbot now tries harder at finding line boundaries. It nows support several
+- Buildbot now tries harder at finding line boundaries. It now supports several
   cursor controlling ANSI sequences as well as use of lots of backspace to go
   back several characters.
 - UI Improvements so that Buildbot build pages looks better on mobile.
