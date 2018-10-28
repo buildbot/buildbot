@@ -31,7 +31,8 @@ if [ -f /usr/bin/protractor ]; then
     PROTRACTOR=/usr/bin/protractor
 else
     yarn install --pure-lockfile
-    ./node_modules/protractor/bin/webdriver-manager update
+    ../common/smokedist-download-compatible-chromedriver.py \
+        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser
     PROTRACTOR=./node_modules/protractor/bin/protractor
 fi
 if [ -f /usr/bin/xvfb-run ] ; then
@@ -39,6 +40,7 @@ if [ -f /usr/bin/xvfb-run ] ; then
 else
     # manual mode: install locally
     yarn install
-    ./node_modules/protractor/bin/webdriver-manager update
+    ../common/smokedist-download-compatible-chromedriver.py \
+        ./node_modules/protractor/bin/webdriver-manager google-chrome chromium-browser
     ./node_modules/protractor/bin/protractor protractor.conf.js
 fi
