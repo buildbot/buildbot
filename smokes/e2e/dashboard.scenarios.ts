@@ -33,11 +33,7 @@ describe('dashboard page', function() {
 
     it('should go to the dashboard page and see no error', async () => {
         await builder.goForce();
-        let startButton = force.getStartButton();
-        await browser.wait(EC.elementToBeClickable(startButton),
-                           5000,
-                           "start button not clickable");
-        await startButton.click();
+        await force.clickStartButton();
         await home.waitAllBuildsFinished();
         await dashboard.go();
     });

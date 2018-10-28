@@ -26,11 +26,7 @@ describe('home page', function() {
         };
         await builder.go();
         await builder.goForce();
-        let startButton = force.getStartButton();
-        await browser.wait(EC.elementToBeClickable(startButton),
-                           5000,
-                           "start button not clickable");
-        await startButton.click();
+        await force.clickStartButton();
         await home.go();
         const panel0 = home.getPanel(0);
         expect(await panel0.getText()).toContain(builderName[0]);

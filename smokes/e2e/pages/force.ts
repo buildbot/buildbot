@@ -2,6 +2,7 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
+import { ExpectedConditions as EC } from 'protractor';
 
 export class ForcePage extends BasePage {
     constructor() {
@@ -38,6 +39,14 @@ export class ForcePage extends BasePage {
 
     async setRevisionName(RevisionName) {
         await this.setInputText("revision", RevisionName);
+    }
+
+    async clickStartButton() {
+        let button = this.getStartButton();
+        await browser.wait(EC.elementToBeClickable(button),
+                           5000,
+                           "start button not clickable");
+        await button.click();
     }
 
     getStartButton() {
