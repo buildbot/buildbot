@@ -161,7 +161,7 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                 context = unicode2NativeString(context)
                 issue = unicode2NativeString(issue)
                 description = unicode2NativeString(description)
-                yield self.createStatus(
+                response = yield self.createStatus(
                     repo_user=repo_user,
                     repo_name=repo_name,
                     sha=sha,
@@ -171,6 +171,10 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                     issue=issue,
                     description=description
                 )
+
+                if not self.isStatus2XX(response.code):
+                    raise Exception()
+
                 if self.verbose:
                     log.msg(
                         'Updated status with "{state}" for {repoOwner}/{repoName} '
@@ -178,12 +182,15 @@ class GitHubStatusPush(http.HttpStatusPushBase):
                             state=state, repoOwner=repoOwner, repoName=repoName,
                             sha=sha, issue=issue, context=context))
             except Exception as e:
+                content = yield response.content()
                 log.err(
                     e,
                     'Failed to update "{state}" for {repoOwner}/{repoName} '
-                    'at {sha}, context "{context}", issue {issue}.'.format(
+                    'at {sha}, context "{context}", issue {issue}. '
+                    'http {code}, {content}'.format(
                         state=state, repoOwner=repoOwner, repoName=repoName,
-                        sha=sha, issue=issue, context=context))
+                        sha=sha, issue=issue, context=context,
+                        code=response.code, content=content))
 
 
 class GitHubCommentPush(GitHubStatusPush):
