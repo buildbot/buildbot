@@ -202,7 +202,6 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         lines = text.split("\n")
         if len(lines) < 3:
             raise P4PollerError("Failed to parse ticket in that output is less than 3 lines: {}".format(text))
-            return None
         return lines[2].strip()
 
     def _getPasswd(self):
