@@ -38,6 +38,7 @@ RUN         apt-get update && \
     easy_install pip && \
     # Install required python packages, and twisted
     pip --no-cache-dir install 'twisted[tls]' && \
+    pip install virtualenv && \
     mkdir /buildbot &&\
     useradd -ms /bin/bash buildbot
 

@@ -144,7 +144,7 @@ Collapsing Build Requests
 When more than one build request is available for a builder, Buildbot can "collapse" the requests into a single build.
 This is desirable when build requests arrive more quickly than the available workers can satisfy them, but has the drawback that separate results for each build are not available.
 
-Requests are only candidated for a merge if both requests have exactly the same :ref:`codebases<Attr-Codebase>`.
+Requests are only candidated for a merge if both requests have exactly the same :ref:`codebases<Change-Attr-Codebase>`.
 
 This behavior can be controlled globally, using the :bb:cfg:`collapseRequests` parameter, and on a per-:class:`Builder` basis, using the ``collapseRequests`` argument to the :class:`Builder` configuration.
 If ``collapseRequests`` is given, it completely overrides the global configuration.
