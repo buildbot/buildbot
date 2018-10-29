@@ -25,11 +25,7 @@ describe('force', function() {
         await builder.go();
         lastbuild = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        let startButton = force.getStartButton();
-        await browser.wait(EC.elementToBeClickable(startButton),
-                           5000,
-                           "start button not clickable");
-        await startButton.click();
+        await force.clickStartButton();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });
