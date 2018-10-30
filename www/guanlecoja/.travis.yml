@@ -7,7 +7,8 @@ node_js:
   - "6.10"
   - "7.10"
   - "8.11"
-  - "10.5"
+  - "10.13"
+  - "11.0"
 
 before_install:
   - yarn global add gulp
