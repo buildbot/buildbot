@@ -43,16 +43,14 @@ class RestRootResource(www.WwwTestMixin, unittest.TestCase):
 
     maxVersion = 2
 
+    @defer.inlineCallbacks
     def test_render(self):
         master = self.make_master(url='h:/a/b/')
         rsrc = rest.RestRootResource(master)
 
-        d = self.render_resource(rsrc, b'/')
+        rv = yield self.render_resource(rsrc, b'/')
 
-        @d.addCallback
-        def check(rv):
-            self.assertIn(b'api_versions', rv)
-        return d
+        self.assertIn(b'api_versions', rv)
 
     def test_versions(self):
         master = self.make_master(url='h:/a/b/')
@@ -597,7 +595,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(spec.limit, expected_limit)
 
     def test_decode_result_spec_order(self):
-        expected_order = 'info',
+        expected_order = ('info',)
         self.make_request(b'/test')
         self.request.args = {b'order': expected_order}
         spec = self.rsrc.decodeResultSpec(self.request, endpoint.Test)
@@ -627,7 +625,7 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
 
     def test_decode_result_spec_not_a_collection_order(self):
         def expectRaiseBadRequest():
-            order = 'info',
+            order = ('info',)
             self.make_request(b'/test')
             self.request.args = {b'order': order}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)

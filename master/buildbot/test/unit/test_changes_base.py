@@ -83,18 +83,16 @@ class TestPollingChangeSource(changesource.ChangeSourceMixin, unittest.TestCase)
     class Subclass(base.PollingChangeSource):
         pass
 
+    @defer.inlineCallbacks
     def setUp(self):
         # patch in a Clock so we can manipulate the reactor's time
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
-        d = self.setUpChangeSource()
+        yield self.setUpChangeSource()
 
-        @d.addCallback
-        def create_changesource(_):
-            self.attachChangeSource(self.Subclass(name="DummyCS"))
-        return d
+        self.attachChangeSource(self.Subclass(name="DummyCS"))
 
     def tearDown(self):
         return self.tearDownChangeSource()
@@ -192,18 +190,16 @@ class TestReconfigurablePollingChangeSource(changesource.ChangeSourceMixin, unit
     class Subclass(base.ReconfigurablePollingChangeSource):
         pass
 
+    @defer.inlineCallbacks
     def setUp(self):
         # patch in a Clock so we can manipulate the reactor's time
         self.clock = task.Clock()
         self.patch(reactor, 'callLater', self.clock.callLater)
         self.patch(reactor, 'seconds', self.clock.seconds)
 
-        d = self.setUpChangeSource()
+        yield self.setUpChangeSource()
 
-        @d.addCallback
-        def create_changesource(_):
-            self.attachChangeSource(self.Subclass(name="DummyCS"))
-        return d
+        self.attachChangeSource(self.Subclass(name="DummyCS"))
 
     def tearDown(self):
         return self.tearDownChangeSource()

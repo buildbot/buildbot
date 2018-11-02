@@ -1,18 +1,15 @@
 // this file will contains the different generic functions which
 // will be called by the different tests
 
-import {browser, by, element, ExpectedConditions as EC} from 'protractor';
 import { BuilderPage } from './builder';
 import { BasePage } from "./base";
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 export class WorkerPage extends BasePage {
+    builder: string;
 
     constructor(builder) {
-        {
-          super();
-          let thisFn = (() => { return this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('return') + 6 + 1, thisFn.indexOf(';')).trim();
-        }
+        super();
         this.builder = builder;
     }
 
@@ -35,7 +32,10 @@ export class WorkerPage extends BasePage {
     }
 
     async goBuilderLink(builderName) {
-        const builderLink = element.all(By.linkText(builderName));
+        let builderLink = element(By.linkText(builderName));
+        await browser.wait(EC.elementToBeClickable(builderLink),
+                           5000,
+                           "link for " + builderName + " not clickable");
         await builderLink.click();
         return new BuilderPage(builderName, 'Force');
     }

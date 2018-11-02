@@ -3,6 +3,7 @@
 import { HomePage } from './pages/home';
 import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('force and cancel', function() {
     let force = null;
@@ -23,7 +24,7 @@ describe('force and cancel', function() {
         await builder.go();
         let lastbuild = await builder.getLastSuccessBuildNumber();
         await builder.goForce();
-        await force.getStartButton().click();
+        await force.clickStartButton();
         await builder.go();
         await builder.waitNextBuildFinished(lastbuild);
     });
@@ -31,7 +32,11 @@ describe('force and cancel', function() {
     it('should create a build with a dedicated reason and cancel it', async () => {
         await builder.go();
         await builder.goForce();
-        await force.getCancelButton().click();
+        let cancelButton = force.getCancelButton();
+        await browser.wait(EC.elementToBeClickable(cancelButton),
+                           5000,
+                           "cancel button not clickable");
+        await cancelButton.click();
     });
 
     it('should create a build with a dedicated reason and Start it', async () => {
@@ -43,6 +48,6 @@ describe('force and cancel', function() {
         await force.setBranchName("Gerrit Branch");
         await force.setRepo("http//name.com");
         await force.setRevisionName("12345");
-        await force.getStartButton().click();
+        await force.clickStartButton();
     });
 });

@@ -36,8 +36,8 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_root(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.Mock())
+        self.assertRaises(config.ConfigErrors,
+                          mock.Mock)
 
     def test_class_attrs(self):
         step = self.setupStep(mock.Mock(root='TESTROOT'))

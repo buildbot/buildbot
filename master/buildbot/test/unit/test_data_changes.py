@@ -217,6 +217,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         return self.do_test_addChange(kwargs,
                                       expectedRoutingKey, expectedMessage, expectedRow)
 
+    @defer.inlineCallbacks
     def test_addChange_src_codebase(self):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
@@ -270,15 +271,11 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             project='Buildbot',
             sourcestampid=100,
         )
-        d = self.do_test_addChange(kwargs,
+        yield self.do_test_addChange(kwargs,
                                    expectedRoutingKey, expectedMessage, expectedRow,
                                    expectedChangeUsers=[123])
 
-        @d.addCallback
-        def check(_):
-            createUserObject.assert_called_once_with(
-                self.master, 'warner', 'git')
-        return d
+        createUserObject.assert_called_once_with(self.master, 'warner', 'git')
 
     def test_addChange_src_codebaseGenerator(self):
         def preChangeGenerator(**kwargs):

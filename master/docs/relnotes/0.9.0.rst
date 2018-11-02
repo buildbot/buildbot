@@ -210,7 +210,7 @@ See respective documentation for details.
 
 * :class:`~buildbot.status.mail.MailNotifier` renamed to :class:`~buildbot.reporters.mail.MailNotifier`
 
-* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formaters need to be rewritten.
+* :class:`~buildbot.status.mail.MailNotifier` argument ``messageFormatter`` should now be a :class:`~buildbot.status.message.MessageFormatter`, due to removal of data api, custom message formatters need to be rewritten.
 
 * :class:`~buildbot.status.mail.MailNotifier` argument ``previousBuildGetter`` is not supported anymore
 

@@ -39,21 +39,23 @@ class TestDarcs(sourcesteps.SourceStepMixin, unittest.TestCase):
         return self.tearDownSourceStep()
 
     def test_no_empty_step_config(self):
-        self.assertRaises(config.ConfigErrors, lambda: darcs.Darcs())
+        self.assertRaises(config.ConfigErrors, darcs.Darcs)
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(repourl='http://localhost/darcs',
-                                      mode='full', method='fresh'))
+        self.assertRaises(config.ConfigErrors,
+                          darcs.Darcs,
+                          repourl='http://localhost/darcs',
+                          mode='full', method='fresh')
 
     def test_incremental_invalid_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(repourl='http://localhost/darcs',
-                                      mode='incremental', method='fresh'))
+        self.assertRaises(config.ConfigErrors,
+                          darcs.Darcs,
+                          repourl='http://localhost/darcs',
+                          mode='incremental', method='fresh')
 
     def test_no_repo_url(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          darcs.Darcs(mode='full', method='fresh'))
+        self.assertRaises(config.ConfigErrors,
+                          darcs.Darcs, mode='full', method='fresh')
 
     def test_mode_full_clobber(self):
         self.setupStep(

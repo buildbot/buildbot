@@ -72,7 +72,7 @@ class CacheManager(service.ReconfigurableServiceMixin, service.AsyncService):
                                                                                     new_config)
 
     def get_metrics(self):
-        return dict([
-            (n, dict(hits=c.hits, refhits=c.refhits,
-                     misses=c.misses, max_size=c.max_size))
-            for n, c in iteritems(self._caches)])
+        return {
+            n: {'hits': c.hits, 'refhits': c.refhits,
+                'misses': c.misses, 'max_size': c.max_size}
+            for n, c in iteritems(self._caches)}

@@ -251,13 +251,20 @@ Provided you run it in a buildbot master virtualenv, the following command will 
 
     gulp dev proxy --host nine.buildbot.net
 
-You can then just point your browser to localhost:8010, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
+You can then just point your browser to localhost:8080, and you will access `<http://nine.buildbot.net>`__, with your own version of the UI.
+
+If your buildbot instance is served over HTTPS, use the ``--secure`` argument to access the host via ``https://`` and ``wss://``, respectively. The argument ``--ignoresslerrors`` may be helpful if the server uses a self-signed certificate. Note that the ``--host`` parameter can specify port and URL path, in case buildbot is served on a non-standard port or not from the root path ``/``.
+
+.. code-block:: none
+
+    gulp dev proxy --host ssl-protected.ci.example.com --secure
+    gulp dev proxy --host self-signed-ssl.ci.example.com/buildbot --secure --ignoresslerrors
 
 
 Guanlecoja
 ----------
 
-Buildbot's build environment has been factorized for reuse in other projects and plugins, and is callsed Guanlecoja.
+Buildbot's build environment has been factorized for reuse in other projects and plugins, and is called Guanlecoja.
 
 The documentation and meaning of this name is maintained in Guanlecoja's own site. https://github.com/buildbot/guanlecoja/
 

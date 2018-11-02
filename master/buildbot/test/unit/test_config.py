@@ -302,9 +302,9 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         )
         expected.update(global_defaults)
         expected['buildbotNetUsageData'] = 'basic'
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in iteritems(expected)}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
@@ -405,9 +405,9 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def assertResults(self, **expected):
         self.assertFalse(self.errors, self.errors.errors)
-        got = dict([
-            (attr, getattr(self.cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(self.cfg, attr)
+            for attr, exp in iteritems(expected)}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
 
@@ -1314,9 +1314,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     # utils
 
     def assertAttributes(self, cfg, **expected):
-        got = dict([
-            (attr, getattr(cfg, attr))
-            for attr, exp in iteritems(expected)])
+        got = {
+            attr: getattr(cfg, attr)
+            for attr, exp in iteritems(expected)}
         self.assertEqual(got, expected)
 
     # tests
@@ -1645,16 +1645,14 @@ class FakeService(service.ReconfigurableServiceMixin,
     succeed = True
     call_index = 1
 
+    @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
+        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
             self, new_config)
         if not self.succeed:
-            @d.addCallback
-            def fail(_):
-                raise ValueError("oh noes")
-        return d
+            raise ValueError("oh noes")
 
 
 class FakeMultiService(service.ReconfigurableServiceMixin,
@@ -1669,14 +1667,12 @@ class FakeMultiService(service.ReconfigurableServiceMixin,
 
 class ReconfigurableServiceMixin(unittest.TestCase):
 
+    @defer.inlineCallbacks
     def test_service(self):
         svc = FakeService()
-        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            self.assertTrue(svc.called)
-        return d
+        self.assertTrue(svc.called)
 
     @defer.inlineCallbacks
     def test_service_failure(self):
@@ -1689,6 +1685,7 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         else:
             self.fail("should have raised ValueError")
 
+    @defer.inlineCallbacks
     def test_multiservice(self):
         svc = FakeMultiService()
         ch1 = FakeService()
@@ -1697,16 +1694,14 @@ class ReconfigurableServiceMixin(unittest.TestCase):
         ch2.setServiceParent(svc)
         ch3 = FakeService()
         ch3.setServiceParent(ch2)
-        d = svc.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield svc.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            self.assertTrue(svc.called)
-            self.assertTrue(ch1.called)
-            self.assertTrue(ch2.called)
-            self.assertTrue(ch3.called)
-        return d
+        self.assertTrue(svc.called)
+        self.assertTrue(ch1.called)
+        self.assertTrue(ch2.called)
+        self.assertTrue(ch3.called)
 
+    @defer.inlineCallbacks
     def test_multiservice_priority(self):
         parent = FakeMultiService()
         svc128 = FakeService()
@@ -1719,14 +1714,11 @@ class ReconfigurableServiceMixin(unittest.TestCase):
             svc.setServiceParent(parent)
             services.append(svc)
 
-        d = parent.reconfigServiceWithBuildbotConfig(mock.Mock())
+        yield parent.reconfigServiceWithBuildbotConfig(mock.Mock())
 
-        @d.addCallback
-        def check(_):
-            prio_order = [svc.called for svc in services]
-            called_order = sorted(prio_order)
-            self.assertEqual(prio_order, called_order)
-        return d
+        prio_order = [s.called for s in services]
+        called_order = sorted(prio_order)
+        self.assertEqual(prio_order, called_order)
 
     @defer.inlineCallbacks
     def test_multiservice_nested_failure(self):

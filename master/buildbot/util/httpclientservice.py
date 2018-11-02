@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+from future.utils import iteritems
 
 import json as jsonmodule
 import textwrap
@@ -181,8 +182,8 @@ class HTTPClientService(service.SharedService):
     def _doTReq(self, method, ep, **kwargs):
         url, kwargs = self._prepareRequest(ep, kwargs)
         # treq requires header values to be an array
-        kwargs['headers'] = dict([(k, [v])
-                                  for k, v in kwargs['headers'].items()])
+        kwargs['headers'] = {k: [v]
+                             for k, v in iteritems(kwargs['headers'])}
         kwargs['agent'] = self._agent
 
         d = getattr(treq, method)(url, **kwargs)

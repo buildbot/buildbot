@@ -492,6 +492,7 @@ test_deps = [
     'pyjade',
     # boto3 and moto required for running EC2 tests
     'boto3',
+    'botocore<1.11', # botocore>=1.11.0 broke moto
     'moto',
     'mock>=2.0.0',
 ]
@@ -538,7 +539,7 @@ setup_args['extras_require'] = {
         'pyenchant',
         'docutils>=0.8',
         'sphinx-jinja',
-        'towncrier',
+        'towncrier<=18.5.0', # towncrier 18.6.0 does not support python 2.7
         'pyyaml'
     ],
 }

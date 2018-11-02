@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.db import changes
@@ -30,51 +31,41 @@ class TestBadRows(connector_component.ConnectorComponentMixin,
     # rows in the change_properties database do not contain a proper [value,
     # source] tuple.
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['patches', 'sourcestamps', 'changes',
                          'change_properties', 'change_files'])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.changes = changes.ChangesConnectorComponent(self.db)
-        return d
+        self.db.changes = changes.ChangesConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
+    @defer.inlineCallbacks
     def test_bogus_row_no_source(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                                   property_value='"no source"'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        @d.addCallback
-        def get13(_):
-            return self.db.changes.getChange(13)
+        c = yield self.db.changes.getChange(13)
 
-        @d.addCallback
-        def check13(c):
-            self.assertEqual(c['properties'],
-                             dict(devel=('no source', 'Change')))
-        return d
+        self.assertEqual(c['properties'],
+                         dict(devel=('no source', 'Change')))
 
+    @defer.inlineCallbacks
     def test_bogus_row_jsoned_list(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=10),
             fakedb.ChangeProperty(changeid=13, property_name='devel',
                                   property_value='[1, 2]'),
             fakedb.Change(changeid=13, sourcestampid=10),
         ])
 
-        @d.addCallback
-        def get13(_):
-            return self.db.changes.getChange(13)
+        c = yield self.db.changes.getChange(13)
 
-        @d.addCallback
-        def check13(c):
-            self.assertEqual(c['properties'],
-                             dict(devel=([1, 2], 'Change')))
-        return d
+        self.assertEqual(c['properties'],
+                         dict(devel=([1, 2], 'Change')))

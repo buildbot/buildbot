@@ -1319,7 +1319,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
         self.buildset_sourcestamps[bsid] = ssids
 
         defer.returnValue((bsid,
-                           dict([(br.builderid, br.id) for br in br_rows])))
+                           {br.builderid: br.id for br in br_rows}))
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -2033,7 +2033,7 @@ class FakeStepsComponent(FakeDBComponent):
                        if r['buildid'] == buildid]
         if build_steps:
             number = max([r['number'] for r in build_steps]) + 1
-            names = set([r['name'] for r in build_steps])
+            names = {r['name'] for r in build_steps}
             if name in names:
                 i = 1
                 while '%s_%d' % (name, i) in names:

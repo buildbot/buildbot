@@ -337,7 +337,7 @@ class V2RootResource(resource.Resource):
         if fields:
             fields = [bytes2NativeString(f) for f in fields]
             fieldsSet = set(fields)
-            if order and set([o.lstrip('-') for o in order]) - fieldsSet:
+            if order and {o.lstrip('-') for o in order} - fieldsSet:
                 raise BadRequest("cannot order on un-selected fields")
             for filter in filters:
                 if filter.field not in fieldsSet:

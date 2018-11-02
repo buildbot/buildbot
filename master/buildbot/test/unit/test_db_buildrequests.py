@@ -20,6 +20,7 @@ from future.utils import lrange
 
 import datetime
 
+from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
 
@@ -698,20 +699,18 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  Tests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['patches', 'changes', 'builders',
                          'buildsets', 'buildset_properties', 'buildrequests',
                          'buildset_sourcestamps', 'masters', 'buildrequest_claims',
                          'sourcestamps', 'sourcestampsets', 'builds', 'workers',
                          ])
 
-        @d.addCallback
-        def finish_setup(_):
-            self.db.buildrequests = \
-                buildrequests.BuildRequestsConnectorComponent(self.db)
-        d.addCallback(lambda _: self.setUpTests())
-        return d
+        self.db.buildrequests = \
+            buildrequests.BuildRequestsConnectorComponent(self.db)
+        yield self.setUpTests()
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

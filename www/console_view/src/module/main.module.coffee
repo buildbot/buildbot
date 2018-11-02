@@ -268,6 +268,8 @@ class Console extends Controller
         if  buildset? and buildset.sourcestamps?
             for sourcestamp in buildset.sourcestamps
                 change = @changesBySSID[sourcestamp.ssid]
+                if change?
+                    break
 
         if not change? and build.properties?.got_revision?
             rev = build.properties.got_revision[0]
@@ -278,9 +280,13 @@ class Console extends Controller
                     change = @makeFakeChange("", rev, build.started_at)
             else
                 for codebase, revision of rev
-                    change = @changesByRevision[rev]
-                    if not change?
-                        change = @makeFakeChange(codebase, revision, build.started_at)
+                    change = @changesByRevision[revision]
+                    if change?
+                        break;
+
+                if not change?
+                    revision = if rev is {} then "" else rev[rev.keys()[0]]
+                    change = @makeFakeChange(codebase, revision, build.started_at)
 
         if not change?
             revision = "unknown revision #{build.builderid}-#{build.buildid}"

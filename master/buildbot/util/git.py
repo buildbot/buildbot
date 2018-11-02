@@ -139,7 +139,11 @@ class GitStepMixin(GitMixin):
         path_module = self.build.path_module
 
         workdir = self._getSshDataWorkDir().rstrip('/\\')
-        parent_path = path_module.abspath(path_module.dirname(workdir))
+        if path_module.isabs(workdir):
+            parent_path = path_module.dirname(workdir)
+        else:
+            parent_path = path_module.join(self.worker.worker_basedir,
+                                           path_module.dirname(workdir))
 
         basename = '.{0}.buildbot'.format(path_module.basename(workdir))
         return path_module.join(parent_path, basename)

@@ -7,7 +7,6 @@ This section gives some general information about Buildbot development.
     :maxdepth: 2
 
     master-overview
-    definitions
     style
     coffeescript-style
     tests

@@ -10,6 +10,71 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.5.0`` ( ``2018-10-09`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix the umask parameter example to make it work with both Python 2.x and 3.x.
+- Fix build-change association for multi-codebase builds in the console view..
+- Fixed builders page doesn't list workers in multi-master configuration
+  (:issue:`4326`)
+- Restricted groups added by :py:class:`~buildbot.www.oauth2.GitHubAuth`'s
+  ``getTeamsMembership`` option to only those teams to which the user belongs.
+  Previously, groups were added for all teams for all organizations to which
+  the user belongs.
+- Fix 'Show old workers' combo behavior.
+
+Features
+--------
+
+- GitHub teams added to a user's ``groups`` by
+  :py:class:`~buildbot.www.oauth2.GitHubAuth`'s ``getTeamsMembership`` option
+  are now added by slug as well as by name. This means a team named "Bot
+  Builders" in the organization "buildbot" will be added as both ``buildbot/Bot
+  Builders`` and ``buildbot/bot-builders``.
+- Make ``urlText`` renderable for the
+  :py:class:`~buildbot.steps.transfer.FileUpload` build step.
+- Added ``noticeOnChannel`` option to :bb:reporter:`IRC` to send notices
+  instead of messages to channels. This was an option in v0.8.x and removed in
+  v0.9.0, which defaulted to sending notices. The v0.8.x default of sending
+  messages is now restored.
+
+Reverts
+-------
+
+- Reverted: Fix git submodule support when using `sshPrivateKey` and `sshHostKey` because it broke other use cases (:issue:`4316`)
+  In order to have this feature to work, you need to keep your master in 1.4.0, and make sure your worker ``buildbot.tac`` are installed in the same path as your master.
+
+Buildbot ``1.4.0`` ( ``2018-09-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix `Build.getUrl()` to not ignore virtual builders.
+- Fix git submodule support when using `sshPrivateKey` and `sshHostKey`
+  settings by passing ssh data as absolute, not relative paths.
+- Fixed :bb:step:`P4` for change in latest version of `p4 login -p`.
+- :py:class:`buildbot.reporters.irc.IrcStatusBot` no longer encodes messages
+  before passing them on to methods of its Twisted base class to avoid posting
+  the ``repr()`` of a bytes object when running on Python 3.
+
+Features
+--------
+
+- Added new :bb:step:`GitPush` step to perform git push operations.
+- Objects returned by :ref:`renderer` now are able to pass extra arguments to
+  the rendered function via `withArgs` method.
+
+Test Suite
+----------
+
+- Test suite has been improved for readability by adding a lot of ``inlineCallbacks``
+- Fixed tests which didn't wait for ``assertFailure``'s returned deferred.
+- The test suite now runs on Python 3.7 (mostly deprecation warnings from dependencies shut down)
+
 Buildbot ``1.3.0`` ( ``2018-07-13`` )
 =====================================
 
@@ -463,7 +528,7 @@ Features
   View <GridView>`.
 - :py:class:`~buildbot.worker.openstack.OpenStackLatentWorker` now supports V3
   authentication.
-- Buildbot now tries harder at finding line boundaries. It nows support several
+- Buildbot now tries harder at finding line boundaries. It now supports several
   cursor controlling ANSI sequences as well as use of lots of backspace to go
   back several characters.
 - UI Improvements so that Buildbot build pages looks better on mobile.

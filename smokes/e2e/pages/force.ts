@@ -2,14 +2,11 @@
 // will be called by the different tests
 
 import { BasePage } from "./base";
+import { ExpectedConditions as EC } from 'protractor';
 
 export class ForcePage extends BasePage {
     constructor() {
-        {
-          super();
-          let thisFn = (() => { return this; }).toString();
-          let thisName = thisFn.slice(thisFn.indexOf('return') + 6 + 1, thisFn.indexOf(';')).trim();
-        }
+        super();
     }
 
     async setInputText(cssLabel, value) {
@@ -44,6 +41,22 @@ export class ForcePage extends BasePage {
         await this.setInputText("revision", RevisionName);
     }
 
+    async clickStartButton() {
+        let button = this.getStartButton();
+        await browser.wait(EC.elementToBeClickable(button),
+                           5000,
+                           "start button not clickable");
+        await button.click();
+    }
+
+    async clickCancelWholeQueue() {
+        let button = this.getCancelWholeQueue();
+        await browser.wait(EC.elementToBeClickable(button),
+                           5000,
+                           "cancel whole queue button not clickable");
+        await button.click();
+    }
+
     getStartButton() {
         return element(By.buttonText('Start Build'));
     }
@@ -53,7 +66,7 @@ export class ForcePage extends BasePage {
     }
 
     getCancelWholeQueue() {
-        return element(By.buttonText('Cancel Whole Queue'));
+        return element(By.buttonText('Cancel whole queue'));
     }
 
     getStopButton() {

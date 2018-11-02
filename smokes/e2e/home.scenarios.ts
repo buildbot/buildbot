@@ -4,6 +4,7 @@
 import { ForcePage } from './pages/force';
 import { BuilderPage } from './pages/builder';
 import { HomePage } from './pages/home';
+import { browser, by, element, ExpectedConditions as EC } from 'protractor';
 
 describe('home page', function() {
     let force = null;
@@ -25,7 +26,7 @@ describe('home page', function() {
         };
         await builder.go();
         await builder.goForce();
-        await force.getStartButton().click();
+        await force.clickStartButton();
         await home.go();
         const panel0 = home.getPanel(0);
         expect(await panel0.getText()).toContain(builderName[0]);

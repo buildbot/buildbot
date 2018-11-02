@@ -182,8 +182,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         return d
 
     def _get_process_output(self, args):
-        env = dict([(e, os.environ.get(e))
-                    for e in self.env_vars if os.environ.get(e)])
+        env = {e: os.environ.get(e)
+               for e in self.env_vars if os.environ.get(e)}
         d = utils.getProcessOutput(self.p4bin, args, env)
         return d
 
@@ -251,8 +251,8 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(u"Warning: cannot fully decode {} in {}".format(
-                    repr(result), self.encoding))
+            log.msg(u"{}: cannot fully decode {} in {}".format(
+                    ex, repr(result), self.encoding))
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 
         last_change = self.last_change

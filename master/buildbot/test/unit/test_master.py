@@ -143,8 +143,8 @@ class OldTriggeringMethods(unittest.TestCase):
 
     def test_addChange_args_new_and_old(self):
         func = self.do_test_addChange_args
-        kwargs = dict(who='author',
-                      author='author'),
+        kwargs = (dict(who='author',
+                       author='author'),)
         exp_data_kwargs = dict(author='author')
         self.assertRaises(TypeError, func, kwargs=kwargs,
                           exp_data_kwargs=exp_data_kwargs)
@@ -191,38 +191,35 @@ class InitTests(unittest.SynchronousTestCase):
 
 class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase):
 
+    @defer.inlineCallbacks
     def setUp(self):
         self.setUpLogging()
         self.basedir = os.path.abspath('basedir')
-        d = self.setUpDirs(self.basedir)
+        yield self.setUpDirs(self.basedir)
 
-        @d.addCallback
-        def make_master(_):
-            # don't create child services
-            self.patch(master.BuildMaster, 'create_child_services',
-                       lambda self: None)
+        # don't create child services
+        self.patch(master.BuildMaster, 'create_child_services',
+                   lambda self: None)
 
-            # patch out a few other annoying things the master likes to do
-            self.patch(monkeypatches, 'patch_all', lambda: None)
-            self.patch(signal, 'signal', lambda sig, hdlr: None)
-            # XXX temporary
-            self.patch(master, 'Status', lambda master: mock.Mock())
+        # patch out a few other annoying things the master likes to do
+        self.patch(monkeypatches, 'patch_all', lambda: None)
+        self.patch(signal, 'signal', lambda sig, hdlr: None)
+        # XXX temporary
+        self.patch(master, 'Status', lambda master: mock.Mock())
 
-            master.BuildMaster.masterHeartbeatService = mock.Mock()
-            self.reactor = self.make_reactor()
-            self.master = master.BuildMaster(
-                self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
-            self.master.sendBuildbotNetUsageData = mock.Mock()
-            self.master.botmaster = FakeBotMaster()
-            self.db = self.master.db = fakedb.FakeDBConnector(self)
-            self.db.setServiceParent(self.master)
-            self.mq = self.master.mq = fakemq.FakeMQConnector(self)
-            self.mq.setServiceParent(self.master)
-            self.data = self.master.data = fakedata.FakeDataConnector(
-                self.master, self)
-            self.data.setServiceParent(self.master)
-
-        return d
+        master.BuildMaster.masterHeartbeatService = mock.Mock()
+        self.reactor = self.make_reactor()
+        self.master = master.BuildMaster(
+            self.basedir, reactor=self.reactor, config_loader=DefaultLoader())
+        self.master.sendBuildbotNetUsageData = mock.Mock()
+        self.master.botmaster = FakeBotMaster()
+        self.db = self.master.db = fakedb.FakeDBConnector(self)
+        self.db.setServiceParent(self.master)
+        self.mq = self.master.mq = fakemq.FakeMQConnector(self)
+        self.mq.setServiceParent(self.master)
+        self.data = self.master.data = fakedata.FakeDataConnector(
+            self.master, self)
+        self.data.setServiceParent(self.master)
 
     def tearDown(self):
         return self.tearDownDirs()
@@ -235,46 +232,40 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         return r
 
     # tests
+    @defer.inlineCallbacks
     def test_startup_bad_config(self):
         self.master.config_loader = FailingLoader()
 
-        d = self.master.startService()
+        yield self.master.startService()
 
-        @d.addCallback
-        def check(_):
-            self.reactor.stop.assert_called_with()
-            self.assertLogged("oh noes")
-            self.assertLogged("BuildMaster startup failed")
-        return d
+        self.reactor.stop.assert_called_with()
+        self.assertLogged("oh noes")
+        self.assertLogged("BuildMaster startup failed")
 
+    @defer.inlineCallbacks
     def test_startup_db_not_ready(self):
         def db_setup():
             log.msg("GOT HERE")
             raise exceptions.DatabaseNotReadyError()
         self.db.setup = db_setup
 
-        d = self.master.startService()
+        yield self.master.startService()
 
-        @d.addCallback
-        def check(_):
-            self.reactor.stop.assert_called_with()
-            self.assertLogged("GOT HERE")
-            self.assertLogged("BuildMaster startup failed")
-        return d
+        self.reactor.stop.assert_called_with()
+        self.assertLogged("GOT HERE")
+        self.assertLogged("BuildMaster startup failed")
 
+    @defer.inlineCallbacks
     def test_startup_error(self):
         def db_setup():
             raise RuntimeError("oh noes")
         self.db.setup = db_setup
 
-        d = self.master.startService()
+        yield self.master.startService()
 
-        @d.addCallback
-        def check(_):
-            self.reactor.stop.assert_called_with()
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-            self.assertLogged("BuildMaster startup failed")
-        return d
+        self.reactor.stop.assert_called_with()
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        self.assertLogged("BuildMaster startup failed")
 
     @defer.inlineCallbacks
     def test_startup_ok(self):
@@ -348,5 +339,5 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
-        self.assertRaises(config.ConfigErrors, lambda:
-                          self.master.reconfigServiceWithBuildbotConfig(new))
+        self.assertRaises(config.ConfigErrors,
+                          self.master.reconfigServiceWithBuildbotConfig, new)

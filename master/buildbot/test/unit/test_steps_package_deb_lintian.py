@@ -34,8 +34,8 @@ class TestDebLintian(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_fileloc(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          lintian.DebLintian())
+        self.assertRaises(config.ConfigErrors,
+                          lintian.DebLintian)
 
     def test_success(self):
         self.setupStep(lintian.DebLintian('foo_0.23_i386.changes'))

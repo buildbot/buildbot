@@ -482,6 +482,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     @defer.inlineCallbacks
     def test_updateSummary_old_style(self):
         self.setupStep(OldStyleStep())
+        # pylint: disable=unnecessary-lambda
         self.step.start = lambda: self.step.updateSummary()
         self.expectOutcome(result=EXCEPTION)
         yield self.runStep()
@@ -619,7 +620,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.build = mock.Mock()
         step.locks = []
         step.renderables = []
-        step.build.render = lambda x: defer.succeed(x)
+        step.build.render = defer.succeed
         step.master.data.updates.addStep = lambda **kwargs: defer.succeed(
             (0, 0, 0))
         step.addLogWithFailure = lambda x: defer.succeed(None)
@@ -998,7 +999,7 @@ class TestShellMixin(steps.BuildStepMixin,
 
     def test_setupShellMixin_not_new_style(self):
         self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
-        self.assertRaises(AssertionError, lambda: ShellMixinExample())
+        self.assertRaises(AssertionError, ShellMixinExample)
 
     def test_constructor_defaults(self):
         class MySubclass(ShellMixinExample):
@@ -1257,7 +1258,8 @@ class TestWorkerTransition(unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern="'checkSlaveHasCommand' method is deprecated"):
             self.assertRaises(WorkerTooOldError,
-                              lambda: bs.checkSlaveHasCommand("foo"))
+                              bs.checkSlaveHasCommand,
+                              "foo")
 
     def test_getWorkerName_old_api(self):
         bs = buildstep.BuildStep()

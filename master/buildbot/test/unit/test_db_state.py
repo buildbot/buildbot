@@ -245,5 +245,5 @@ class TestStateConnectorComponent(
             fakedb.Object(id=10, name='-', class_name='-'),
         ])
 
-        d = self.db.state.atomicCreateState(10, 'x', lambda: object())
+        d = self.db.state.atomicCreateState(10, 'x', object)
         yield self.assertFailure(d, TypeError)

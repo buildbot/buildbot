@@ -63,7 +63,7 @@ class EndpointMixin(interfaces.InterfaceTests):
             self.matcher[pp] = self.ep
 
         self.pathArgs = [
-            set([arg.split(':', 1)[1] for arg in pp if ':' in arg])
+            {arg.split(':', 1)[1] for arg in pp if ':' in arg}
             for pp in pathPatterns if pp is not None]
 
     def tearDownEndpoint(self):
@@ -74,23 +74,20 @@ class EndpointMixin(interfaces.InterfaceTests):
 
     # call methods, with extra checks
 
+    @defer.inlineCallbacks
     def callGet(self, path, resultSpec=None):
         self.assertIsInstance(path, tuple)
         if resultSpec is None:
             resultSpec = resultspec.ResultSpec()
         endpoint, kwargs = self.matcher[path]
         self.assertIdentical(endpoint, self.ep)
-        d = endpoint.get(resultSpec, kwargs)
-        self.assertIsInstance(d, defer.Deferred)
+        rv = yield endpoint.get(resultSpec, kwargs)
 
-        @d.addCallback
-        def checkNumber(rv):
-            if self.ep.isCollection:
-                self.assertIsInstance(rv, (list, base.ListResult))
-            else:
-                self.assertIsInstance(rv, (dict, type(None)))
-            return rv
-        return d
+        if self.ep.isCollection:
+            self.assertIsInstance(rv, (list, base.ListResult))
+        else:
+            self.assertIsInstance(rv, (dict, type(None)))
+        defer.returnValue(rv)
 
     def callControl(self, action, args, path):
         self.assertIsInstance(path, tuple)

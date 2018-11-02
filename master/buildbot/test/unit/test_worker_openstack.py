@@ -198,11 +198,12 @@ class TestOpenStackWorker(unittest.TestCase):
         image_uuid = yield bs._getImage(self.build)
         self.assertEqual(novaclient.TEST_UUIDS['image'], image_uuid)
 
+    @defer.inlineCallbacks
     def test_start_instance_already_exists(self):
         bs = openstack.OpenStackLatentWorker(
             'bot', 'pass', **self.bs_image_args)
         bs.instance = mock.Mock()
-        self.assertFailure(bs.start_instance(self.build), ValueError)
+        yield self.assertFailure(bs.start_instance(self.build), ValueError)
 
     @defer.inlineCallbacks
     def test_start_instance_first_fetch_fail(self):
