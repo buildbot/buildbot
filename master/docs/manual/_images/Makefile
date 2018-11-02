@@ -1,5 +1,5 @@
 
-SOURCES = overview_src.svg workers_src.svg master_src.svg status_src.svg
+SOURCES = overview_src.svg changes_src.svg workers_src.svg master_src.svg status_src.svg
 SVGS = $(patsubst %_src.svg,%.svg,$(SOURCES))
 PNGS = $(patsubst %_src.svg,%.png,$(SOURCES))
 EPSS = $(patsubst %_src.svg,%.eps,$(SOURCES))
