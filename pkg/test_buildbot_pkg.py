@@ -95,7 +95,7 @@ class BuildbotWWWPkg(unittest.TestCase):
 
 
 class BuildbotMDWWWPkg(BuildbotWWWPkg):
-    pkgPaths = ["www", "md_base"]
+    pkgPaths = ["www"]
 
 
 class BuildbotConsolePkg(BuildbotWWWPkg):

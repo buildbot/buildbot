@@ -1,7 +1,0 @@
-div.build-tab(ng-if="buildtab.build && builder.info.builderid")
-  div.tab-manage-bar(layout="row")
-    build-item(flex, build="buildtab.build")
-    a.md-button.md-primary(ng-click="builder.closeBuildTab(buildtab.number)") close
-  build-info(build="buildtab.build")
-  div.build-steps(ng-if="buildtab.steps.length > 0")
-    build-step(ng-repeat="step in buildtab.steps", step="step")

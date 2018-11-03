@@ -1,8 +1,0 @@
-div.inner-container
-  div.title-bar(layout="row")
-    div.title.no-select(flex, ng-class="{locked: panel.locked}") {{ panel.bind.title }}
-    div.buttons(ng-if="!panel.locked")
-      md-button(ng-click="panel.toggleCollapse()")
-        md-icon(md-svg-icon="expand-panel", ng-show="panel.bind.collapsed")
-        md-icon(md-svg-icon="collapse-panel", ng-show="!panel.bind.collapsed")
-  div.content
