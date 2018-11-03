@@ -57,7 +57,7 @@ def mTimeVersion(init_file):
     for root, dirs, files in os.walk(cwd):
         for f in files:
             m = max(os.path.getmtime(os.path.join(root, f)), m)
-    d = datetime.datetime.fromtimestamp(m)
+    d = datetime.datetime.utcfromtimestamp(m)
     return d.strftime("%Y.%m.%d")
 
 
@@ -84,7 +84,7 @@ def getVersionFromArchiveId(git_archive_id='$Format:%ct %d$'):
 
         # archived revision is not tagged, use the commit date
         tstamp = git_archive_id.strip().split()[0]
-        d = datetime.datetime.fromtimestamp(int(tstamp))
+        d = datetime.datetime.utcfromtimestamp(int(tstamp))
         return d.strftime('%Y.%m.%d')
     return None
 

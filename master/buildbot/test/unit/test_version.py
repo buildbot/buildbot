@@ -26,7 +26,10 @@ class VersioningUtilsTests(unittest.SynchronousTestCase):
     module_under_test = "buildbot"
 
     def setUp(self):
-        self.m = __import__(self.module_under_test)
+        try:
+            self.m = __import__(self.module_under_test)
+        except ImportError:
+            raise unittest.SkipTest(self.module_under_test + " package is not installed")
 
     def test_gitDescribeToPep440devVersion(self):
         self.assertEqual(self.m.gitDescribeToPep440("v0.9.8-20-gf0f45ca"), "0.9.9-dev20")
