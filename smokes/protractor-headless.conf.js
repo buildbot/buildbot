@@ -9,6 +9,12 @@ exports.config = {
 
     SELENIUM_PROMISE_MANAGER: false,
 
+    localSeleniumStandaloneOpts: {
+        // undocumented option to pass the stdio output of selenium webdriver to
+        // console
+        stdio: "inherit",
+    },
+
     capabilities: {
         'browserName': 'chrome',
         'chromeOptions': {
