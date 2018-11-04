@@ -314,15 +314,6 @@ class EC2LatentWorker(AbstractLatentWorker):
                     new_dev_config['Ebs'])
             new_mapping_definitions.append(new_dev_config)
         return new_mapping_definitions
-        if not mapping_definitions:
-            return None
-
-        for mapping_definition in mapping_definitions:
-            ebs = mapping_definition.get('Ebs')
-            if ebs:
-                ebs.setdefault('DeleteOnTermination', True)
-
-        return mapping_definitions
 
     def get_image(self):
         # pylint: disable=too-many-nested-blocks
