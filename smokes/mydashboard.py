@@ -4,7 +4,6 @@ from __future__ import print_function
 import os
 import time
 
-import requests
 from flask import Flask
 from flask import render_template
 
@@ -31,21 +30,18 @@ def main():
 
         build['results_text'] = statusToString(build['results'])
 
-    # Example on how to use requests to get some info from other web servers
-    code_frequency_url = "https://api.github.com/repos/buildbot/buildbot/stats/code_frequency"
-    results = requests.get(code_frequency_url)
-    while results.status_code == 202:
-        # while github calculates statistics, it returns code 202.
-        # this is no problem, we just sleep in our thread..
-        time.sleep(500)
-        results = requests.get(code_frequency_url)
-
-    # some post processing of the data from github
-    graph_data = []
-    for i, data in enumerate(results.json()):
-        graph_data.append(
-            dict(x=data[0], y=data[1])
-        )
+    graph_data = [
+        {'x': 1, 'y': 100},
+        {'x': 2, 'y': 200},
+        {'x': 3, 'y': 300},
+        {'x': 4, 'y': 0},
+        {'x': 5, 'y': 100},
+        {'x': 6, 'y': 200},
+        {'x': 7, 'y': 300},
+        {'x': 8, 'y': 0},
+        {'x': 9, 'y': 100},
+        {'x': 10, 'y': 200},
+    ]
 
     # mydashboard.html is a template inside the template directory
     return render_template('mydashboard.html', builders=builders, builds=builds,
