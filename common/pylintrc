@@ -143,6 +143,9 @@ disable=
   comparison-with-itself,
   assignment-from-no-return,
   stop-iteration-return,
+  old-style-class,
+  redefined-variable-type,
+  deprecated-lambda,
 
 
 [REPORTS]
