@@ -16,7 +16,7 @@ export class BasePage {
     }
 
     async loginUser(user, password) {
-        await browser.get(`http://${user}:${password}@localhost:8010/auth/login`);
+        await browser.get(`http://${user}:${password}@localhost:8011/auth/login`);
         const anonymousButton = element(By.css('.dropdown'));
         expect(await anonymousButton.getText()).not.toContain("Anonymous");
     }
