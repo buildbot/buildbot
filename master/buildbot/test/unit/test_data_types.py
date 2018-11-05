@@ -140,7 +140,7 @@ class Identifier(TypeMixin, unittest.TestCase):
         (b'abcd', u'abcd'),
     ]
     badStringValues = [
-        b'', '\N{SNOWMAN}', b'abcdef'
+        b'', r'\N{SNOWMAN}', b'abcdef'
     ]
     cmpResults = [
         (u'aaaa', b'bbbb', -1),
