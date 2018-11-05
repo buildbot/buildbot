@@ -54,7 +54,7 @@ pycodestyle==2.3.1
 pycparser==2.19
 pyenchant==2.0.0
 pyflakes==2.0.0
-pyinstaller==3.3.1
+pyinstaller==3.4
 pyjade==4.0.0
 PyJWT==1.6.4
 pylint==2.1.1; python_version >= "3.4"
