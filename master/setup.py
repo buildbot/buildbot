@@ -481,6 +481,7 @@ setup_args['install_requires'] = [
     'txaio ' + txaio_ver,
     'autobahn ' + autobahn_ver,
     'PyJWT',
+    'pyyaml'
 ]
 
 # Unit test dependencies.
@@ -540,7 +541,6 @@ setup_args['extras_require'] = {
         'docutils>=0.8',
         'sphinx-jinja',
         'towncrier<=18.5.0', # towncrier 18.6.0 does not support python 2.7
-        'pyyaml'
     ],
 }
 
