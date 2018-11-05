@@ -37,6 +37,9 @@ To sum up the above, to build a project, Buildbot needs to know exactly which ve
 It uses a *source stamp* to do so for each codebase, each of which assigns informs Buildbot that it should use a specific *revision* from that codebase.
 Collectively these source stamps are called *source stamp set* for each project.
 
+.. image:: _images/changes.*
+   :alt: Source Stamp Sets
+
 .. _Version-Control-Systems:
 
 Version Control Systems
