@@ -19,12 +19,15 @@ from __future__ import print_function
 from twisted.internet import defer
 
 from buildbot.process.results import CANCELLED
+from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.util import asyncSleep
 
 
 class InterruptCommand(RunMasterBase):
     """Make sure we can interrupt a command"""
+
+    @flaky(bugNumber=4404, onPlatform='win32')
     @defer.inlineCallbacks
     def test_setProp(self):
         yield self.setupConfig(masterConfig())
