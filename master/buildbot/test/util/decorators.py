@@ -42,13 +42,15 @@ def todo(message):
 
 def flaky(bugNumber=None, issueNumber=None):
     def wrap(fn):
-        if not os.environ.get(_FLAKY_ENV_VAR):
-            if bugNumber is not None:
-                fn.skip = ("Flaky test (http://trac.buildbot.net/ticket/%d) "
-                        "- set $%s to run anyway" % (bugNumber, _FLAKY_ENV_VAR))
-            if issueNumber is not None:
-                fn.skip = ("Flaky test (https://github.com/buildbot/buildbot/issues/%d) "
-                        "- set $%s to run anyway" % (issueNumber, _FLAKY_ENV_VAR))
+        if os.environ.get(_FLAKY_ENV_VAR):
+            return fn
+
+        if bugNumber is not None:
+            fn.skip = ("Flaky test (http://trac.buildbot.net/ticket/%d) "
+                    "- set $%s to run anyway" % (bugNumber, _FLAKY_ENV_VAR))
+        if issueNumber is not None:
+            fn.skip = ("Flaky test (https://github.com/buildbot/buildbot/issues/%d) "
+                    "- set $%s to run anyway" % (issueNumber, _FLAKY_ENV_VAR))
         return fn
     return wrap
 
