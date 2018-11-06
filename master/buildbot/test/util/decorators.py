@@ -40,8 +40,11 @@ def todo(message):
     return wrap
 
 
-def flaky(bugNumber=None, issueNumber=None):
+def flaky(bugNumber=None, issueNumber=None, onPlatform=None):
     def wrap(fn):
+        if onPlatform is not None and sys.platform != onPlatform:
+            return fn
+
         if os.environ.get(_FLAKY_ENV_VAR):
             return fn
 
