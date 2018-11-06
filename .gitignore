@@ -41,5 +41,6 @@ _build
 master/setuptools_trial*
 master/buildbot/www/static/js/default/
 sandbox
+sandbox.*
 .idea/
 /.venv/
