@@ -49,6 +49,7 @@ class RpmBuild(ShellCommand):
                  specdir='`pwd`',
                  srcrpmdir='`pwd`',
                  dist='.el6',
+                 define=None,
                  autoRelease=False,
                  vcsRevision=False,
                  **kwargs):
@@ -71,6 +72,8 @@ class RpmBuild(ShellCommand):
         @param srcrpmdir: define the _srcrpmdir rpm parameter
         @type dist: str
         @param dist: define the dist string.
+        @type define: dict
+        @param define: additional parameters to define
         @type autoRelease: boolean
         @param autoRelease: Use auto incrementing release numbers.
         @type vcsRevision: boolean
@@ -86,6 +89,11 @@ class RpmBuild(ShellCommand):
             ' --define "_specdir %s" --define "_srcrpmdir %s"'
             % (topdir, builddir, rpmdir, sourcedir, specdir,
                srcrpmdir))
+
+        if define is None:
+            define = {}
+        for k, v in iteritems(define):
+            self.base_rpmbuild += " --define \"{} {}\"".format(k, v)
 
         self.specfile = specfile
         self.autoRelease = autoRelease

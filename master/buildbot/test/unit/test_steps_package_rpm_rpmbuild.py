@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from collections import OrderedDict
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -60,6 +62,37 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
                         '`pwd`" --define "_builddir `pwd`" --define "_rpmdir `pwd`" '
                         '--define "_sourcedir `pwd`" --define "_specdir `pwd`" '
                         '--define "_srcrpmdir `pwd`" --define "_release 0" '
+                        '--define "dist .el6" -ba foo.spec')
+            + ExpectShell.log('stdio',
+                              stdout='Your code has been rated at 10/10')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.runStep()
+
+    def test_define(self):
+        defines = [("a", "1"), ("b", "2")]
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec",
+                                         define=OrderedDict(defines)))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
+                        '`pwd`" --define "_sourcedir `pwd`" --define '
+                        '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
+                        '--define "a 1" --define "b 2" --define "dist .el6" '
+                        '-ba foo.spec')
+            + ExpectShell.log('stdio',
+                              stdout='Your code has been rated at 10/10')
+            + 0)
+        self.expectOutcome(result=SUCCESS, state_string='RPMBUILD')
+        return self.runStep()
+
+    def test_define_none(self):
+        self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", define=None))
+        self.expectCommands(
+            ExpectShell(workdir='wkdir', command='rpmbuild --define "_topdir '
+                        '`pwd`" --define "_builddir `pwd`" --define "_rpmdir '
+                        '`pwd`" --define "_sourcedir `pwd`" --define '
+                        '"_specdir `pwd`" --define "_srcrpmdir `pwd`" '
                         '--define "dist .el6" -ba foo.spec')
             + ExpectShell.log('stdio',
                               stdout='Your code has been rated at 10/10')
