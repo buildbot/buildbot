@@ -22,6 +22,7 @@ import shutil
 from twisted.internet import defer
 
 from buildbot.process.results import SUCCESS
+from buildbot.test.util.decorators import flaky
 from buildbot.test.util.integration import RunMasterBase
 
 # This integration test creates a master and worker environment
@@ -43,6 +44,7 @@ class TransferStepsMasterPb(RunMasterBase):
                     contents[fn] = f.read()
         return contents
 
+    @flaky(bugNumber=4407, onPlatform='win32')
     @defer.inlineCallbacks
     def test_transfer(self):
         yield self.setupConfig(masterConfig(bigfilename=self.mktemp()))
