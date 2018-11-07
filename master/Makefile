@@ -1,6 +1,6 @@
 # developer utilities
 pylint:
-	pylint -j2 --rcfile=../common/pylintrc buildbot
+	bash -c "trap 'kill %1' EXIT ; ../common/benchmark_ci_during_run.py & pylint -j2 --rcfile=../common/pylintrc buildbot"
 	@test ! -f fail
 
 tutorial:
