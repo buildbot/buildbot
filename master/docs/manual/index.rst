@@ -11,11 +11,10 @@ Buildbot Manual
    concepts
    secretsmanagement
    configuration
-   worker-transition
    customization
-   new-style-steps
    cmdline
    resources
    optimization
    plugins
    deploy
+   upgrading/index

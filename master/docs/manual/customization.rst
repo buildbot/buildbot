@@ -636,10 +636,9 @@ Writing New BuildSteps
 
 .. warning::
 
-   Buildbot has transitioned to a new, simpler style for writing custom steps.
-   See :doc:`new-style-steps` for details.
+   The API of writing custom build steps has changed significantly in Buildbot-0.9.0.
+   See :ref:`New-Style-Build-Steps` for details about what has changed since pre 0.9.0 releases.
    This section documents new-style steps.
-   Old-style steps are supported in Buildbot-0.9.0, but not in later releases.
 
 While it is a good idea to keep your build process self-contained in the source code tree, sometimes it is convenient to put more intelligence into your Buildbot configuration.
 One way to do this is to write a custom :class:`~buildbot.process.buildstep.BuildStep`.
