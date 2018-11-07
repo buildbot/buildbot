@@ -39,7 +39,7 @@ Buildbot supports several kinds of pluggable components:
 
 * ``www``
 
-which is described in :doc:`web server configuration <../manual/cfg-www>`.
+which is described in :doc:`web server configuration <../manual/configuration/www>`.
 
 Once you have your component packaged, it's quite straightforward: you just need to add a few lines to the ``entry_points`` parameter of your call of ``setup`` function in :file:`setup.py` file:
 

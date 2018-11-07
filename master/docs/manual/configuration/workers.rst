@@ -226,10 +226,10 @@ As of time of writing, Buildbot supports the following latent workers:
 .. toctree::
    :maxdepth: 1
 
-   cfg-workers-ec2.rst
-   cfg-workers-libvirt.rst
-   cfg-workers-openstack.rst
-   cfg-workers-docker.rst
+   workers-ec2.rst
+   workers-libvirt.rst
+   workers-openstack.rst
+   workers-docker.rst
 
 Dangers with Latent Workers
 +++++++++++++++++++++++++++

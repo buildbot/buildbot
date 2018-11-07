@@ -21,25 +21,25 @@ allows to use a component of kind ``kind``.
 Available ``kind``\s are:
 
 ``worker``
-    workers, described in :doc:`cfg-workers`
+    workers, described in :doc:`configuration/workers`
 
 ``changes``
-    change source, described in :doc:`cfg-changesources`
+    change source, described in :doc:`configuration/changesources`
 
 ``schedulers``
-    schedulers, described in :doc:`cfg-schedulers`
+    schedulers, described in :doc:`configuration/schedulers`
 
 ``steps``
-    build steps, described in :doc:`cfg-buildsteps`
+    build steps, described in :doc:`configuration/buildsteps`
 
 ``reporters``
-    reporters (or reporter targets), described in :doc:`cfg-reporters`
+    reporters (or reporter targets), described in :doc:`configuration/reporters`
 
 ``util``
     utility classes.
-    For example, :doc:`BuilderConfig <cfg-builders>`, :doc:`cfg-buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <cfg-interlocks>` are accessible through ``util``.
+    For example, :doc:`BuilderConfig <configuration/builders>`, :doc:`configuration/buildfactories`, :ref:`ChangeFilter <Change-Filters>` and :doc:`Locks <configuration/interlocks>` are accessible through ``util``.
 
-Web interface plugins are not used directly: as described in :doc:`web server configuration <cfg-www>` section, they are listed in the corresponding section of the web server configuration dictionary.
+Web interface plugins are not used directly: as described in :doc:`web server configuration <configuration/www>` section, they are listed in the corresponding section of the web server configuration dictionary.
 
 .. note::
 

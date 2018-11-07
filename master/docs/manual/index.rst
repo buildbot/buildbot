@@ -10,7 +10,7 @@ Buildbot Manual
    installation/index
    concepts
    secretsmanagement
-   configuration
+   configuration/index
    customization
    cmdline
    resources

@@ -119,7 +119,7 @@ Individual features and improvements to the Data API are not described on this p
 
 * Add new :bb:step:`Cppcheck` step.
 
-* Add a new :doc:`Docker latent Workers </manual/cfg-workers-docker>`.
+* Add a new :doc:`Docker latent Workers </manual/configuration/workers-docker>`.
 
 * Add a new configuration for creating custom services in out-of-tree CI systems or plugins. See :py:class:`buildbot.util.service.BuildbotService`
 
