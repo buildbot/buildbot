@@ -133,6 +133,36 @@ There are several common arguments for schedulers, although not all are availabl
                 'owner': ['zorro@example.com', 'silver@example.com']
             })
 
+.. _Scheduler-Attr-Codebases:
+
+``codebases`` (optional)
+    Specifies codebase definitions that are used when the scheduler processes data from more than one repository at the same time.
+
+    The ``codebases`` parameter is only used to fill in missing details about a codebases when scheduling a build.
+    For example, when a change to codebase ``A`` occurs, a scheduler must invent a sourcestamp for codebase ``B``.
+    Source steps that specify codebase ``B`` as their codebase will use the invented timestamp.
+
+    The parameter does not act as a filter on incoming changes -- use a change filter for that purpose.
+
+    This parameter can be specified in two forms:
+
+        - as a list of strings.
+          This is the Simplest form, use it if no special overrides are needed.
+          In this form, just the names of the codebases are listed.
+
+        - as a dictionary of dictionaries.
+          In this form, the per-codebase overrides of repository, branch and revision can be specified.
+
+    Each codebase definition dictionary is a dictionary with any of the keys: ``repository``, ``branch``, ``revision``.
+    The codebase definitions are combined in a dictionary keyed by the name of the codebase.
+
+    .. code-block:: python
+
+        codebases = {'codebase1': {'repository':'....',
+                                   'branch':'default',
+                                   'revision': None},
+                     'codebase2': {'repository':'....'} }
+
 .. _Scheduler-Attr-FileIsImportant:
 
 ``fileIsImportant`` (optional)
@@ -147,33 +177,6 @@ There are several common arguments for schedulers, although not all are availabl
     Note that this is different from ``fileIsImportant``: if the change filter filters out a Change, then it is completely ignored by the scheduler.
     If a Change is allowed by the change filter, but is deemed unimportant, then it will not cause builds to start, but will be remembered and shown in status displays.
     The default value of ``None`` does not filter any changes at all.
-
-.. _Scheduler-Attr-Codebases:
-
-``codebases`` (optional)
-    When the scheduler processes data from more than one repository at the same time, a corresponding codebase definition should be passed for each repository.
-
-    This parameter can be specified either as a list of strings (simplest form; use if no special
-    overrides are needed) or as a dictionary of dictionaries (where each dict is a codebase definition
-    as described next).
-
-    Each codebase definition is a dictionary with any of the keys: ``repository``, ``branch``, ``revision``.
-    The codebase definitions are combined in a dictionary keyed by the name of the codebase.
-
-    .. code-block:: python
-
-        codebases = {'codebase1': {'repository':'....',
-                                   'branch':'default',
-                                   'revision': None},
-                     'codebase2': {'repository':'....'} }
-
-    .. important::
-
-       The ``codebases`` parameter is only used to fill in missing details about a codebases when scheduling a build.
-       For example, when a change to codebase ``A`` occurs, a scheduler must invent a sourcestamp for codebase ``B``.
-       The parameter does not act as a filter on incoming changes -- use a change filter for that purpose.
-
-    Source steps can specify a codebase to which they will apply, and will use the sourcestamp for that codebase.
 
 .. _Scheduler-Attr-OnlyImportant:
 
@@ -333,6 +336,9 @@ The arguments to this scheduler are:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
 ``fileIsImportant`` (optional)
     See :ref:`fileIsImportant scheduler argument <Scheduler-Attr-FileIsImportant>`.
 
@@ -414,6 +420,9 @@ The arguments to this scheduler are:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
 ``fileIsImportant`` (optional)
     See :ref:`fileIsImportant scheduler argument <Scheduler-Attr-FileIsImportant>`.
 
@@ -472,6 +481,9 @@ The keyword arguments to this scheduler are:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
 ``upstream``
     The upstream scheduler to watch.
     Note that this is an *instance*, not the name of the scheduler.
@@ -509,6 +521,9 @@ The arguments to this scheduler are:
 
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
+
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
 
 ``fileIsImportant`` (optional)
     See :ref:`fileIsImportant scheduler argument <Scheduler-Attr-FileIsImportant>`.
@@ -573,6 +588,9 @@ The full list of parameters is:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
 ``fileIsImportant`` (optional)
     See :ref:`fileIsImportant scheduler argument <Scheduler-Attr-FileIsImportant>`.
 
@@ -584,9 +602,6 @@ The full list of parameters is:
 
 ``reason`` (optional)
     See :ref:`reason scheduler argument <Scheduler-Attr-Reason>`.
-
-``codebases`` (optional)
-    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
 
 ``createAbsoluteSourceStamps`` (optional)
     This option only has effect when using multiple codebases.
@@ -782,11 +797,11 @@ The parameters are just the basics:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
+``codebases`` (optional):
+    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
 ``reason`` (optional)
     See :ref:`reason scheduler argument <Scheduler-Attr-Reason>`.
-
-``codebases`` (optional)
-    See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
 
 This class is only useful in conjunction with the :bb:step:`Trigger` step.
 Here is a fully-worked example::
@@ -851,11 +866,11 @@ The parameters are just the basics:
 ``properties`` (optional)
     See :ref:`properties scheduler argument <Scheduler-Attr-Properties>`.
 
-``reason`` (optional)
-    See :ref:`reason scheduler argument <Scheduler-Attr-Reason>`.
-
 ``codebases`` (optional)
     See :ref:`codebases scheduler argument <Scheduler-Attr-Codebases>`.
+
+``reason`` (optional)
+    See :ref:`reason scheduler argument <Scheduler-Attr-Reason>`.
 
 ``minute`` (optional)
     See :bb:sched:`Nightly`.
