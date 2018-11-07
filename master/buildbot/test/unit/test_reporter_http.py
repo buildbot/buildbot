@@ -70,12 +70,18 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
         yield self.master.startService()
 
     @defer.inlineCallbacks
-    def createReporter(self, **kwargs):
+    def createReporter(self, auth=("username", "passwd"), **kwargs):
         self._http = yield fakehttpclientservice.HTTPClientService.getService(
             self.master,
-            "serv", auth=("username", "passwd"))
-        self.sp = sp = HttpStatusPush("serv", auth=(
-            "username", Interpolate("passwd")), **kwargs)
+            "serv", auth=auth)
+
+        interpolated_auth = None
+        if auth is not None:
+            username, passwd = auth
+            passwd = Interpolate(passwd)
+            interpolated_auth = (username, passwd)
+
+        self.sp = sp = HttpStatusPush("serv", auth=interpolated_auth, **kwargs)
         yield sp.setServiceParent(self.master)
 
     @defer.inlineCallbacks
@@ -92,6 +98,17 @@ class TestHttpStatusPush(unittest.TestCase, ReporterTestMixin):
     @defer.inlineCallbacks
     def test_basic(self):
         yield self.createReporter()
+        self._http.expect("post", "", json=BuildLookAlike(complete=False))
+        self._http.expect("post", "", json=BuildLookAlike(complete=True))
+        build = yield self.setupBuildResults(SUCCESS)
+        build['complete'] = False
+        self.sp.buildStarted(("build", 20, "new"), build)
+        build['complete'] = True
+        self.sp.buildFinished(("build", 20, "finished"), build)
+
+    @defer.inlineCallbacks
+    def test_basic_noauth(self):
+        yield self.createReporter(auth=None)
         self._http.expect("post", "", json=BuildLookAlike(complete=False))
         self._http.expect("post", "", json=BuildLookAlike(complete=True))
         build = yield self.setupBuildResults(SUCCESS)
