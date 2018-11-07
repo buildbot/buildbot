@@ -30,6 +30,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
+from buildbot.test.util.decorators import flaky
 
 from . import test_db_logs
 
@@ -123,6 +124,7 @@ class TestCleanupDb(misc.StdoutAssertionsMixin, dirs.DirsMixin,
         # complain
         self.flushLoggedErrors()
 
+    @flaky(bugNumber=4406, onPlatform='win32')
     @defer.inlineCallbacks
     def test_cleanup(self):
 
