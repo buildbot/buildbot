@@ -189,7 +189,7 @@ class Test(TestBRDBase):
     def test_maybeStartBuildsOn_simple(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1'])
-        self.brd.maybeStartBuildsOn(['bldr1'])
+        yield self.brd.maybeStartBuildsOn(['bldr1'])
 
         yield self.brd._waitForFinish()
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
@@ -216,7 +216,7 @@ class Test(TestBRDBase):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(builders)
         for bldr in builders:
-            self.brd.maybeStartBuildsOn([bldr])
+            yield self.brd.maybeStartBuildsOn([bldr])
 
         yield self.brd._waitForFinish()
         self.assertEqual(self.maybeStartBuildsOnBuilder_calls, builders)
@@ -234,7 +234,7 @@ class Test(TestBRDBase):
             return d
         self.brd._maybeStartBuildsOnBuilder = _maybeStartBuildsOnBuilder
 
-        self.brd.maybeStartBuildsOn(['bldr1'])
+        yield self.brd.maybeStartBuildsOn(['bldr1'])
 
         yield self.brd._waitForFinish()
         self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
@@ -244,11 +244,11 @@ class Test(TestBRDBase):
     def test_maybeStartBuildsOn_collapsing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
-        self.brd.maybeStartBuildsOn(['bldr3'])
-        self.brd.maybeStartBuildsOn(['bldr2', 'bldr1'])
-        self.brd.maybeStartBuildsOn(['bldr4'])  # should be ignored
-        self.brd.maybeStartBuildsOn(['bldr2'])  # already queued - ignored
-        self.brd.maybeStartBuildsOn(['bldr3', 'bldr2'])
+        yield self.brd.maybeStartBuildsOn(['bldr3'])
+        yield self.brd.maybeStartBuildsOn(['bldr2', 'bldr1'])
+        yield self.brd.maybeStartBuildsOn(['bldr4'])  # should be ignored
+        yield self.brd.maybeStartBuildsOn(['bldr2'])  # already queued - ignored
+        yield self.brd.maybeStartBuildsOn(['bldr3', 'bldr2'])
 
         yield self.brd._waitForFinish()
         # bldr3 gets invoked twice, since it's considered to have started
@@ -261,7 +261,7 @@ class Test(TestBRDBase):
     def test_maybeStartBuildsOn_builders_missing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
-        self.brd.maybeStartBuildsOn(['bldr1', 'bldr2', 'bldr3'])
+        yield self.brd.maybeStartBuildsOn(['bldr1', 'bldr2', 'bldr3'])
         # bldr1 is already run, so surreptitiously remove the other
         # two - nothing should crash, but the builders should not run
         self.removeBuilder('bldr2')
