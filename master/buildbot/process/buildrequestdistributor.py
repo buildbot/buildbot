@@ -325,6 +325,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self.active = False
 
         self._pendingMSBOCalls = []
+        self._activity_loop_deferred = None
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -390,7 +391,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # start the activity loop, if we aren't already
                 # working on that.
                 if not self.active:
-                    self._activityLoop()
+                    self._activity_loop_deferred = self._activityLoop()
             except Exception:
                 log.err(Failure(),
                         "while attempting to start builds on %s" % self.name)
@@ -513,7 +514,6 @@ class BuildRequestDistributor(service.AsyncMultiService):
         timer.stop()
 
         self.active = False
-        self._quiet()
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
@@ -547,6 +547,8 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # just instantiate the build chooser requested
         return self.BuildChooser(bldr, master)
 
-    def _quiet(self):
+    @defer.inlineCallbacks
+    def _waitForFinish(self):
         # shim for tests
-        pass  # pragma: no cover
+        if self._activity_loop_deferred is not None:
+            yield self._activity_loop_deferred

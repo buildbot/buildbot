@@ -75,19 +75,6 @@ class TestBRDBase(unittest.TestCase):
         self.brd.parent = self.botmaster
         self.brd.startService()
 
-        # TODO: this is a terrible way to detect the "end" of the test -
-        # it regularly completes too early after a simple modification of
-        # a test.  Is there a better way?
-        self.quiet_deferred = defer.Deferred()
-
-        def _quiet():
-            if self.quiet_deferred:
-                d, self.quiet_deferred = self.quiet_deferred, None
-                d.callback(None)
-            else:
-                self.fail("loop has already gone quiet once")
-        self.brd._quiet = _quiet
-
         # a collection of rows that would otherwise clutter up every test
         self.base_rows = [
             fakedb.SourceStamp(id=21),
@@ -198,17 +185,17 @@ class Test(TestBRDBase):
 
     # tests
 
+    @defer.inlineCallbacks
     def test_maybeStartBuildsOn_simple(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1'])
         self.brd.maybeStartBuildsOn(['bldr1'])
 
-        def check(_):
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
-            self.checkAllCleanedUp()
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+        self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
+        self.checkAllCleanedUp()
 
+    @defer.inlineCallbacks
     def test_maybeStartBuildsOn_parallel(self):
         # test 15 "parallel" invocations of maybeStartBuildsOn, with a
         # _sortBuilders that takes a while.  This is a regression test for bug
@@ -231,17 +218,16 @@ class Test(TestBRDBase):
         for bldr in builders:
             self.brd.maybeStartBuildsOn([bldr])
 
-        def check(_):
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls, builders)
-            self.checkAllCleanedUp()
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+        self.assertEqual(self.maybeStartBuildsOnBuilder_calls, builders)
+        self.checkAllCleanedUp()
 
+    @defer.inlineCallbacks
     def test_maybeStartBuildsOn_exception(self):
         self.addBuilders(['bldr1'])
 
         def _maybeStartBuildsOnBuilder(n):
-            # fail slowly, so that the activity loop doesn't go quiet too soon
+            # fail slowly, so that the activity loop doesn't exit too soon
             d = defer.Deferred()
             reactor.callLater(0,
                               d.errback, failure.Failure(RuntimeError("oh noes")))
@@ -250,12 +236,11 @@ class Test(TestBRDBase):
 
         self.brd.maybeStartBuildsOn(['bldr1'])
 
-        def check(_):
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-            self.checkAllCleanedUp()
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        self.checkAllCleanedUp()
 
+    @defer.inlineCallbacks
     def test_maybeStartBuildsOn_collapsing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
@@ -265,15 +250,14 @@ class Test(TestBRDBase):
         self.brd.maybeStartBuildsOn(['bldr2'])  # already queued - ignored
         self.brd.maybeStartBuildsOn(['bldr3', 'bldr2'])
 
-        def check(_):
-            # bldr3 gets invoked twice, since it's considered to have started
-            # already when the first call to maybeStartBuildsOn returns
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls,
-                             ['bldr3', 'bldr1', 'bldr2', 'bldr3'])
-            self.checkAllCleanedUp()
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+        # bldr3 gets invoked twice, since it's considered to have started
+        # already when the first call to maybeStartBuildsOn returns
+        self.assertEqual(self.maybeStartBuildsOnBuilder_calls,
+                         ['bldr3', 'bldr1', 'bldr2', 'bldr3'])
+        self.checkAllCleanedUp()
 
+    @defer.inlineCallbacks
     def test_maybeStartBuildsOn_builders_missing(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['bldr1', 'bldr2', 'bldr3'])
@@ -283,12 +267,11 @@ class Test(TestBRDBase):
         self.removeBuilder('bldr2')
         self.removeBuilder('bldr3')
 
-        def check(_):
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
-            self.checkAllCleanedUp()
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+        self.assertEqual(self.maybeStartBuildsOnBuilder_calls, ['bldr1'])
+        self.checkAllCleanedUp()
 
+    @defer.inlineCallbacks
     def do_test_sortBuilders(self, prioritizeBuilders, oldestRequestTimes,
                              expected, returnDeferred=False):
         self.useMock_maybeStartBuildsOnBuilder()
@@ -305,13 +288,10 @@ class Test(TestBRDBase):
                 t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)
 
-        d = self.brd._sortBuilders(list(oldestRequestTimes))
+        result = yield self.brd._sortBuilders(list(oldestRequestTimes))
 
-        def check(result):
-            self.assertEqual(result, expected)
-            self.checkAllCleanedUp()
-        d.addCallback(check)
-        return d
+        self.assertEqual(result, expected)
+        self.checkAllCleanedUp()
 
     def test_sortBuilders_default_sync(self):
         return self.do_test_sortBuilders(None,  # use the default sort
@@ -348,6 +328,7 @@ class Test(TestBRDBase):
                                          dict(bldr1=1, bldr2=1, bldr3=1),
                                          ['bldr1', 'bldr2', 'bldr3'])
 
+    @defer.inlineCallbacks
     def test_sortBuilders_custom_exception(self):
         self.useMock_maybeStartBuildsOnBuilder()
         self.addBuilders(['x', 'y'])
@@ -358,16 +339,14 @@ class Test(TestBRDBase):
 
         # expect to get the builders back in the same order in the event of an
         # exception
-        d = self.brd._sortBuilders(['y', 'x'])
+        result = yield self.brd._sortBuilders(['y', 'x'])
 
-        def check(result):
-            self.assertEqual(result, ['y', 'x'])
+        self.assertEqual(result, ['y', 'x'])
 
-            # and expect the exception to be logged
-            self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
-        d.addCallback(check)
-        return d
+        # and expect the exception to be logged
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
+    @defer.inlineCallbacks
     def test_stopService(self):
         # check that stopService waits for a builder run to complete, but does not
         # allow a subsequent run to start
@@ -390,13 +369,12 @@ class Test(TestBRDBase):
 
         # start both builds; A should start and complete *before* the service stops,
         # and B should not run.
-        self.brd.maybeStartBuildsOn(['A', 'B'])
+        yield self.brd.maybeStartBuildsOn(['A', 'B'])
 
-        def check(_):
-            self.assertEqual(self.maybeStartBuildsOnBuilder_calls,
-                             ['A', 'finished', '(stopped)'])
-        self.quiet_deferred.addCallback(check)
-        return self.quiet_deferred
+        yield self.brd._waitForFinish()
+
+        self.assertEqual(self.maybeStartBuildsOnBuilder_calls,
+                         ['A', 'finished', '(stopped)'])
 
 
 class TestMaybeStartBuilds(TestBRDBase):
