@@ -341,6 +341,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
+    @defer.inlineCallbacks
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -356,19 +357,22 @@ class BuildRequestDistributor(service.AsyncMultiService):
         d = self._maybeStartBuildsOn(new_builders)
         self._pendingMSBOCalls.append(d)
 
-        @d.addBoth
-        def remove(x):
+        try:
+            yield d
+        except Exception as e:
+            log.err(e, "while starting builds on {0}".format(new_builders))
+        finally:
             self._pendingMSBOCalls.remove(d)
-            return x
-        d.addErrback(log.err, "while starting builds on %s" % (new_builders,))
 
+    @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return
 
         # reset the list of pending builders
         @defer.inlineCallbacks
@@ -391,7 +395,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 log.err(Failure(),
                         "while attempting to start builds on %s" % self.name)
 
-        return self.pending_builders_lock.run(
+        yield self.pending_builders_lock.run(
             resetPendingBuildersList, new_builders)
 
     @defer.inlineCallbacks
