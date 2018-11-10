@@ -65,7 +65,7 @@ class BuildChooserBase(object):
         worker, breq = yield self.popNextBuild()
         if not worker or not breq:
             defer.returnValue((None, None))
-            return
+            return  # pragma: no cover
 
         defer.returnValue((worker, [breq]))
 
@@ -229,7 +229,7 @@ class BasicBuildChooser(BuildChooserBase):
         yield self._fetchUnclaimedBrdicts()
         if not self.unclaimedBrdicts:
             defer.returnValue(None)
-            return
+            return  # pragma: no cover
 
         if self.nextBuild:
             # nextBuild expects BuildRequest objects
@@ -255,7 +255,7 @@ class BasicBuildChooser(BuildChooserBase):
         if self.preferredWorkers:
             worker = self.preferredWorkers.pop(0)
             defer.returnValue(worker)
-            return
+            return  # pragma: no cover
 
         while self.workerpool:
             try:
@@ -274,7 +274,7 @@ class BasicBuildChooser(BuildChooserBase):
             canStart = yield self.bldr.canStartWithWorkerForBuilder(worker, [buildrequest])
             if canStart:
                 defer.returnValue(worker)
-                return
+                return  # pragma: no cover
 
             # save as a last resort, just in case we need them later
             if self.rejectedWorkers is not None:
@@ -284,7 +284,7 @@ class BasicBuildChooser(BuildChooserBase):
         if self.rejectedWorkers:
             worker = self.rejectedWorkers.pop(0)
             defer.returnValue(worker)
-            return
+            return  # pragma: no cover
 
         defer.returnValue(None)
 
@@ -373,7 +373,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
             defer.returnValue(None)
-            return
+            return  # pragma: no cover
 
         # reset the list of pending builders
         @defer.inlineCallbacks
