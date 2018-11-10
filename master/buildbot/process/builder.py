@@ -307,10 +307,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
     deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
                                 compat_name="canStartWithSlavebuilder")
 
+    @defer.inlineCallbacks
     def canStartBuild(self, workerforbuilder, breq):
+        can_start = True
         if callable(self.config.canStartBuild):
-            return defer.maybeDeferred(self.config.canStartBuild, self, workerforbuilder, breq)
-        return defer.succeed(True)
+            can_start = yield self.config.canStartBuild(self, workerforbuilder, breq)
+        defer.returnValue(can_start)
 
     @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
