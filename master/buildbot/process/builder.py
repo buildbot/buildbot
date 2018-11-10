@@ -279,39 +279,30 @@ class Builder(util_service.ReconfigurableServiceMixin,
     deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     @defer.inlineCallbacks
-    def canStartWithWorkerForBuilder(self, workerforbuilder, buildrequests=None):
+    def canStartBuild(self, workerforbuilder, buildrequest):
+        can_start = True
+
+        # check whether the locks that the build will acquire can actually be
+        # acquired
         locks = self.config.locks
         if IRenderable.providedBy(locks):
-            if buildrequests is None:
-                raise RuntimeError("buildrequests parameter must be specified "
-                                   " when using renderable builder locks. Not "
-                                   "specifying buildrequests is deprecated")
-
             # collect properties that would be set for a build if we
             # started it now and render locks using it
             props = Properties()
-            Build.setupPropertiesKnownBeforeBuildStarts(props, buildrequests,
+            Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
                                                         self, workerforbuilder)
             locks = yield props.render(locks)
 
-        # Make sure we don't warn and throw an exception at the same time
-        if buildrequests is None:
-            warnings.warn(
-                "Not passing corresponding buildrequests to "
-                "Builder.canStartWithWorkerForBuilder is deprecated")
-
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in locks]
-        can_start = Build._canAcquireLocks(locks, workerforbuilder)
-        defer.returnValue(can_start)
-    deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
-                                compat_name="canStartWithSlavebuilder")
+        if locks:
+            can_start = Build._canAcquireLocks(locks, workerforbuilder)
+        if can_start is False:
+            defer.returnValue(can_start)
 
-    @defer.inlineCallbacks
-    def canStartBuild(self, workerforbuilder, breq):
-        can_start = True
         if callable(self.config.canStartBuild):
-            can_start = yield self.config.canStartBuild(self, workerforbuilder, breq)
+            can_start = yield self.config.canStartBuild(self, workerforbuilder,
+                                                        buildrequest)
         defer.returnValue(can_start)
 
     @defer.inlineCallbacks

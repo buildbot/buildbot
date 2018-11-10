@@ -46,16 +46,6 @@ def nth_worker(n):
     return pick_nth_by_name
 
 
-class SkipWorkerThatCantGetLock(buildrequestdistributor.BasicBuildChooser):
-
-    """This class disables the 'rejectedWorkers' feature"""
-
-    def __init__(self, *args, **kwargs):
-        buildrequestdistributor.BasicBuildChooser.__init__(
-            self, *args, **kwargs)
-        self.rejectedWorkers = None  # disable this feature
-
-
 class TestBRDBase(unittest.TestCase):
 
     def setUp(self):
@@ -125,7 +115,6 @@ class TestBRDBase(unittest.TestCase):
             reactor.callLater(0, d.callback, True)
             return d
         bldr.maybeStartBuild = maybeStartBuild
-        bldr.canStartWithWorkerForBuilder = lambda _, __: True
         bldr.getCollapseRequestsFn = lambda: False
 
         bldr.workers = []
@@ -492,13 +481,6 @@ class TestMaybeStartBuilds(TestBRDBase):
 
         self.bldr.config.nextWorker = nth_worker(-1)
 
-        workers_attempted = []
-
-        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
-            workers_attempted.append(workerforbuilder.name)
-            return True
-        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
-
         pairs_tested = []
 
         def _canStartBuild(worker, breq):
@@ -525,9 +507,6 @@ class TestMaybeStartBuilds(TestBRDBase):
                                                      exp_claims=[10, 11], exp_builds=[
                                                          ('test-worker1', [10]), ('test-worker3', [11])])
 
-        self.assertEqual(
-            workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
-
         # we expect brids in order (10-11-12),
         # with each searched in reverse order of workers (3-2-1) available (due
         # to nth_worker(-1))
@@ -538,24 +517,10 @@ class TestMaybeStartBuilds(TestBRDBase):
             ('test-worker3', 11),
             ('test-worker2', 12)])
 
-    @mock.patch('buildbot.process.buildrequestdistributor.BuildRequestDistributor.BuildChooser',
-                SkipWorkerThatCantGetLock)
     @defer.inlineCallbacks
     def test_limited_by_canStartBuild_deferreds(self):
-        """Another variant that:
-         * returns Deferred types,
-         * use 'canStartWithWorkerForBuilder' to reject one of the workers
-         * patch using SkipWorkerThatCantGetLock to disable the 'rejectedWorkers' feature"""
-
+        # Another variant that returns Deferred types,
         self.bldr.config.nextWorker = nth_worker(-1)
-
-        workers_attempted = []
-
-        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
-            workers_attempted.append(workerforbuilder.name)
-            allowed = workerforbuilder.name in ['test-worker2', 'test-worker1']
-            return defer.succeed(allowed)   # a deferred here!
-        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
 
         pairs_tested = []
 
@@ -580,42 +545,20 @@ class TestMaybeStartBuilds(TestBRDBase):
                                 submitted_at=140000),
         ]
         yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10], exp_builds=[('test-worker1', [10])])
-
-        self.assertEqual(
-            workers_attempted, ['test-worker3', 'test-worker2', 'test-worker1'])
+                                                     exp_claims=[10, 11],
+                                                     exp_builds=[
+                                                         ('test-worker1', [10]),
+                                                         ('test-worker3', [11])
+                                                     ])
 
         # we expect brids in order (10-11-12),
-        # with worker3 skipped, and worker2 unable to pair
+        # with worker2 unable to pair
         self.assertEqual(pairs_tested, [
+            ('test-worker3', 10),
             ('test-worker2', 10),
             ('test-worker1', 10),
-            ('test-worker2', 11),
+            ('test-worker3', 11),
             ('test-worker2', 12)])
-
-    @defer.inlineCallbacks
-    def test_limited_by_canStartWithWorkerForBuilder(self):
-        self.bldr.config.nextWorker = nth_worker(-1)
-
-        workers_attempted = []
-
-        def _canStartWithWorkerForBuilder(workerforbuilder, buildrequests):
-            workers_attempted.append(workerforbuilder.name)
-            return (workerforbuilder.name == 'test-worker3')
-        self.bldr.canStartWithWorkerForBuilder = _canStartWithWorkerForBuilder
-        self.addWorkers(
-            {'test-worker1': 0, 'test-worker2': 1, 'test-worker3': 1})
-        rows = self.base_rows + [
-            fakedb.BuildRequest(id=10, buildsetid=11, builderid=77,
-                                submitted_at=130000),
-            fakedb.BuildRequest(id=11, buildsetid=11, builderid=77,
-                                submitted_at=135000),
-        ]
-        yield self.do_test_maybeStartBuildsOnBuilder(rows=rows,
-                                                     exp_claims=[10, 11], exp_builds=[
-                                                         ('test-worker3', [10]), ('test-worker2', [11])])
-
-        self.assertEqual(workers_attempted, ['test-worker3', 'test-worker2'])
 
     @defer.inlineCallbacks
     def test_unlimited(self):

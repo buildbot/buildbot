@@ -24,10 +24,8 @@ import mock
 
 from twisted.internet import defer
 from twisted.trial import unittest
-from zope.interface import implementer
 
 from buildbot import config
-from buildbot import interfaces
 from buildbot import locks
 from buildbot.process import builder
 from buildbot.process import factory
@@ -268,6 +266,74 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         canStartBuild.reset_mock()
 
     @defer.inlineCallbacks
+    def test_canStartBuild_cant_acquire_locks_but_no_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccess = \
+            mock.Mock(return_value='dummy')
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            startable = yield self.bldr.canStartBuild('worker', 100)
+            self.assertEqual(startable, True)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccess = \
+            mock.Mock(return_value='dummy')
+
+        lock1 = mock.Mock(spec=locks.MasterLock)
+        lock1.name = "masterlock"
+        self.bldr.config.locks = [lock1]
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            startable = yield self.bldr.canStartBuild('worker', 100)
+            self.assertEqual(startable, False)
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_renderable_locks(self):
+        yield self.makeBuilder()
+
+        self.bldr.botmaster.getLockFromLockAccess = \
+            mock.Mock(return_value='dummy')
+
+        self.bldr.botmaster.getLockFromLockAccess = \
+            mock.Mock(return_value='dummy')
+
+        lock1 = mock.Mock(spec=locks.MasterLock)
+        lock1.name = "masterlock"
+
+        lock2 = mock.Mock(spec=locks.WorkerLock)
+        lock2.name = "workerlock"
+
+        renderedLocks = [False]
+
+        @renderer
+        def rendered_locks(props):
+            renderedLocks[0] = True
+            access1 = locks.LockAccess(lock1, 'counting')
+            access2 = locks.LockAccess(lock2, 'exclusive')
+            return [access1, access2]
+
+        self.bldr.config.locks = rendered_locks
+
+        with mock.patch(
+                'buildbot.process.build.Build._canAcquireLocks',
+                mock.Mock(return_value=False)):
+            with mock.patch(
+                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                    mock.Mock()):
+                startable = yield self.bldr.canStartBuild('worker', 100)
+                self.assertEqual(startable, False)
+
+        self.assertTrue(renderedLocks[0])
+
+    @defer.inlineCallbacks
     def test_canStartBuild_enforceChosenWorker(self):
         """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()
@@ -353,98 +419,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
             old = bldr.slaves
 
         self.assertIdentical(new, old)
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_old_api(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.config.locks = []
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'canStartWithSlavebuilder' method is deprecated"):
-            with mock.patch(
-                    'buildbot.process.build.Build._canAcquireLocks',
-                    mock.Mock(return_value='dummy')):
-                dummy = yield bldr.canStartWithSlavebuilder(mock.Mock(), mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_no_buildrequests(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.config.locks = []
-
-        with assertProducesWarning(
-                Warning,
-                message_pattern=(
-                    "Not passing corresponding buildrequests to "
-                    "Builder.canStartWithWorkerForBuilder is deprecated")):
-            with mock.patch(
-                    'buildbot.process.build.Build._canAcquireLocks',
-                    mock.Mock(return_value='dummy')):
-                dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_renderableLocks_no_buildrequests(self):
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-
-        @renderer
-        def rendered_locks(props):
-            return []
-
-        bldr.config.locks = rendered_locks
-
-        with self.assertRaisesRegex(
-                RuntimeError,
-                'buildrequests parameter must be specified .+'):
-            with mock.patch(
-                    'buildbot.process.build.Build._canAcquireLocks',
-                    mock.Mock(return_value='dummy')):
-                yield bldr.canStartWithWorkerForBuilder(mock.Mock())
-
-    @defer.inlineCallbacks
-    def test_canStartWithWorkerForBuilder_renderableLocks(self):
-
-        @implementer(interfaces.IProperties)
-        class FakeProperties(mock.Mock):
-            def __iter__(self):
-                return iter([])
-
-        bldr = builder.Builder('bldr')
-        bldr.config = mock.Mock()
-        bldr.botmaster = mock.Mock()
-        bldr.botmaster.getLockFromLockAccess = mock.Mock(return_value='dummy')
-
-        lock1 = mock.Mock(spec=locks.MasterLock)
-        lock1.name = "masterlock"
-
-        lock2 = mock.Mock(spec=locks.WorkerLock)
-        lock2.name = "workerlock"
-
-        renderedLocks = [False]
-
-        @renderer
-        def rendered_locks(props):
-            renderedLocks[0] = True
-            access1 = locks.LockAccess(lock1, 'counting')
-            access2 = locks.LockAccess(lock2, 'exclusive')
-            return [access1, access2]
-
-        bldr.config.locks = rendered_locks
-
-        with mock.patch(
-                'buildbot.process.build.Build._canAcquireLocks',
-                mock.Mock(return_value='dummy')):
-            with mock.patch(
-                    'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
-                    mock.Mock()):
-                dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock(), [mock.Mock()])
-                self.assertEqual(dummy, 'dummy')
-
-        self.assertTrue(renderedLocks[0])
 
     def test_addLatentWorker_old_api(self):
         bldr = builder.Builder('bldr')

@@ -152,17 +152,10 @@ class BasicBuildChooser(BuildChooserBase):
     # the workers that cannot be used are "recycled" back into a list
     # to be tried, in order, for the next chosen build.
     #
-    # There are two tests performed on the worker:
-    #   * can the worker start a generic build for the Builder?
-    #   * if so, can the worker start the chosen build on the Builder?
-    # Workers that cannot meet the first criterion are saved into the
-    # self.rejectedWorkers list and will be used as a last resort. An example
-    # of this test is whether the worker can grab the Builder's locks.
-    #
-    # If all workers fail the first test, then the algorithm will assign the
-    # workers in the order originally generated. By setting self.rejectedWorkers
-    # to None, the behavior will instead refuse to ever assign to a worker that
-    # fails the generic test.
+    # We check whether Builder.canStartBuild returns True for a particular
+    # worker. It evaluates any Build properties that are known before build
+    # and checks whether the worker may satisfy them. For example, the worker
+    # must have the locks available.
 
     def __init__(self, bldr, master):
         BuildChooserBase.__init__(self, bldr, master)
@@ -175,11 +168,9 @@ class BasicBuildChooser(BuildChooserBase):
         self.workerpool = self.bldr.getAvailableWorkers()
 
         # Pick workers one at a time from the pool, and if the Builder says
-        # they're usable (eg, locks can be satisfied), then prefer those workers;
-        # otherwise they go in the 'last resort' bucket, and we'll use them if
-        # we need to. (Setting rejectedWorkers to None disables that feature)
+        # they're usable (eg, locks can be satisfied), then prefer those
+        # workers.
         self.preferredWorkers = []
-        self.rejectedWorkers = []
 
         self.nextBuild = self.bldr.config.nextBuild
 
@@ -270,21 +261,8 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             self.workerpool.remove(worker)
-
-            canStart = yield self.bldr.canStartWithWorkerForBuilder(worker, [buildrequest])
-            if canStart:
-                defer.returnValue(worker)
-                return  # pragma: no cover
-
-            # save as a last resort, just in case we need them later
-            if self.rejectedWorkers is not None:
-                self.rejectedWorkers.append(worker)
-
-        # if we chewed through them all, use as last resort:
-        if self.rejectedWorkers:
-            worker = self.rejectedWorkers.pop(0)
             defer.returnValue(worker)
-            return  # pragma: no cover
+            return
 
         defer.returnValue(None)
 

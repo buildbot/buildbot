@@ -1,1 +1,1 @@
-Build.canStartWithWorkerForBuilder static method has been made private.
+Build.canStartWithWorkerForBuilder static method has been made private and renamed to _canAcquireLocks.
