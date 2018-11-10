@@ -549,6 +549,5 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
     @defer.inlineCallbacks
     def _waitForFinish(self):
-        # shim for tests
         if self._activity_loop_deferred is not None:
             yield self._activity_loop_deferred
