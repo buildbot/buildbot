@@ -215,55 +215,60 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def test_getCollapseRequestsFn_builder_function(self):
         self.do_test_getCollapseRequestsFn('callable', None, 'callable')
 
-    # other methods
+    # canStartBuild
 
     @defer.inlineCallbacks
-    def test_canStartBuild(self):
+    def test_canStartBuild_no_constraints(self):
         yield self.makeBuilder()
 
-        # by default, it returns True
         startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
 
         startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, True)
 
-        # set a configurable one
-        record = []
+    @defer.inlineCallbacks
+    def test_canStartBuild_config_canStartBuild_returns_value(self):
+        yield self.makeBuilder()
 
         def canStartBuild(bldr, worker, breq):
-            record.append((bldr, worker, breq))
             return (worker, breq) == ('worker', 100)
+        canStartBuild = mock.Mock(side_effect=canStartBuild)
+
         self.bldr.config.canStartBuild = canStartBuild
 
         startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'worker', 100)])
+        canStartBuild.assert_called_with(self.bldr, 'worker', 100)
+        canStartBuild.reset_mock()
 
         startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(
-            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
+        canStartBuild.assert_called_with(self.bldr, 'worker', 101)
+        canStartBuild.reset_mock()
 
-        # set a configurable one to return Deferred
-        record = []
+    @defer.inlineCallbacks
+    def test_canStartBuild_config_canStartBuild_returns_deferred(self):
+        yield self.makeBuilder()
 
-        def canStartBuild_deferred(bldr, worker, breq):
-            record.append((bldr, worker, breq))
+        def canStartBuild(bldr, worker, breq):
             return defer.succeed((worker, breq) == ('worker', 100))
-        self.bldr.config.canStartBuild = canStartBuild_deferred
+        canStartBuild = mock.Mock(side_effect=canStartBuild)
+
+        self.bldr.config.canStartBuild = canStartBuild
 
         startable = yield self.bldr.canStartBuild('worker', 100)
         self.assertEqual(startable, True)
-        self.assertEqual(record, [(self.bldr, 'worker', 100)])
+        canStartBuild.assert_called_with(self.bldr, 'worker', 100)
+        canStartBuild.reset_mock()
 
         startable = yield self.bldr.canStartBuild('worker', 101)
         self.assertEqual(startable, False)
-        self.assertEqual(
-            record, [(self.bldr, 'worker', 100), (self.bldr, 'worker', 101)])
+        canStartBuild.assert_called_with(self.bldr, 'worker', 101)
+        canStartBuild.reset_mock()
 
     @defer.inlineCallbacks
-    def test_enforceChosenWorker(self):
+    def test_canStartBuild_enforceChosenWorker(self):
         """enforceChosenWorker rejects and accepts builds"""
         yield self.makeBuilder()
 
@@ -293,6 +298,8 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         breq.properties = {'workername': 0}
         result = yield self.bldr.canStartBuild(workerforbuilder, breq)
         self.assertIdentical(True, result)
+
+    # other methods
 
     @defer.inlineCallbacks
     def test_getBuilderId(self):
