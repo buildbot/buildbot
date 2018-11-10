@@ -411,7 +411,7 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         yield self.master.data.updates.finishStep(step.stepid, EXCEPTION, False)
 
     @staticmethod
-    def canStartWithWorkerForBuilder(lockList, workerforbuilder):
+    def _canAcquireLocks(lockList, workerforbuilder):
         for lock, access in lockList:
             worker_lock = lock.getLock(workerforbuilder.worker)
             if not worker_lock.isAvailable(None, access):

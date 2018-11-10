@@ -302,7 +302,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in locks]
-        can_start = Build.canStartWithWorkerForBuilder(locks, workerforbuilder)
+        can_start = Build._canAcquireLocks(locks, workerforbuilder)
         defer.returnValue(can_start)
     deprecatedWorkerClassMethod(locals(), canStartWithWorkerForBuilder,
                                 compat_name="canStartWithSlavebuilder")

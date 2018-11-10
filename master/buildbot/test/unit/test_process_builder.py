@@ -357,7 +357,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern="'canStartWithSlavebuilder' method is deprecated"):
             with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                    'buildbot.process.build.Build._canAcquireLocks',
                     mock.Mock(return_value='dummy')):
                 dummy = yield bldr.canStartWithSlavebuilder(mock.Mock(), mock.Mock())
                 self.assertEqual(dummy, 'dummy')
@@ -374,7 +374,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                     "Not passing corresponding buildrequests to "
                     "Builder.canStartWithWorkerForBuilder is deprecated")):
             with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                    'buildbot.process.build.Build._canAcquireLocks',
                     mock.Mock(return_value='dummy')):
                 dummy = yield bldr.canStartWithWorkerForBuilder(mock.Mock())
                 self.assertEqual(dummy, 'dummy')
@@ -394,7 +394,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
                 RuntimeError,
                 'buildrequests parameter must be specified .+'):
             with mock.patch(
-                    'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                    'buildbot.process.build.Build._canAcquireLocks',
                     mock.Mock(return_value='dummy')):
                 yield bldr.canStartWithWorkerForBuilder(mock.Mock())
 
@@ -429,7 +429,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         bldr.config.locks = rendered_locks
 
         with mock.patch(
-                'buildbot.process.build.Build.canStartWithWorkerForBuilder',
+                'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value='dummy')):
             with mock.patch(
                     'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
