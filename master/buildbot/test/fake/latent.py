@@ -16,8 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from twisted.internet.defer import Deferred
-from twisted.internet.defer import succeed
+from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
@@ -99,16 +98,16 @@ class ControllableLatentWorker(AbstractLatentWorker):
         assert not self._controller.stopping
 
         self._controller.starting = True
-        self._controller._start_deferred = Deferred()
+        self._controller._start_deferred = defer.Deferred()
         return self._controller._start_deferred
 
     def stop_instance(self, build):
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
             self._controller.stopping = False
-            return succeed(True)
-        self._controller._stop_deferred = Deferred()
+            return defer.succeed(True)
+        self._controller._stop_deferred = defer.Deferred()
         return self._controller._stop_deferred
 
     def _soft_disconnect(self):
-        return succeed(True)
+        return defer.succeed(True)
