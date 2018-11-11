@@ -285,6 +285,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # check whether the locks that the build will acquire can actually be
         # acquired
         locks = self.config.locks
+        worker = workerforbuilder.worker
         props = None
 
         # don't unnecessarily setup properties for build
@@ -295,6 +296,15 @@ class Builder(util_service.ReconfigurableServiceMixin,
             Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
                                                         self, workerforbuilder)
             return props
+
+        if worker.builds_may_be_incompatible:
+            # Check if the latent worker is actually compatible with the build.
+            # The instance type of the worker may depend on the properties of
+            # the build that substantiated it.
+            props = setupPropsIfNeeded(props)
+            can_start = yield worker.isCompatibleWithBuild(props)
+            if not can_start:
+                defer.returnValue(False)
 
         if IRenderable.providedBy(locks):
             # collect properties that would be set for a build if we

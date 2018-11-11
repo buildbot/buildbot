@@ -36,6 +36,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
+from buildbot.worker import AbstractLatentWorker
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -82,6 +83,13 @@ class BuilderMixin(object):
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
             defer.returnValue((yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)))
+
+
+class FakeWorker(object):
+    builds_may_be_incompatible = False
+
+    def __init__(self, workername):
+        self.workername = workername
 
 
 class TestBuilder(BuilderMixin, unittest.TestCase):
@@ -219,10 +227,13 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def test_canStartBuild_no_constraints(self):
         yield self.makeBuilder()
 
-        startable = yield self.bldr.canStartBuild('worker', 100)
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertEqual(startable, True)
 
-        startable = yield self.bldr.canStartBuild('worker', 101)
+        startable = yield self.bldr.canStartBuild(wfb, 101)
         self.assertEqual(startable, True)
 
     @defer.inlineCallbacks
@@ -230,39 +241,45 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         yield self.makeBuilder()
 
         def canStartBuild(bldr, worker, breq):
-            return (worker, breq) == ('worker', 100)
+            return breq == 100
         canStartBuild = mock.Mock(side_effect=canStartBuild)
 
         self.bldr.config.canStartBuild = canStartBuild
 
-        startable = yield self.bldr.canStartBuild('worker', 100)
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertEqual(startable, True)
-        canStartBuild.assert_called_with(self.bldr, 'worker', 100)
+        canStartBuild.assert_called_with(self.bldr, wfb, 100)
         canStartBuild.reset_mock()
 
-        startable = yield self.bldr.canStartBuild('worker', 101)
+        startable = yield self.bldr.canStartBuild(wfb, 101)
         self.assertEqual(startable, False)
-        canStartBuild.assert_called_with(self.bldr, 'worker', 101)
+        canStartBuild.assert_called_with(self.bldr, wfb, 101)
         canStartBuild.reset_mock()
 
     @defer.inlineCallbacks
     def test_canStartBuild_config_canStartBuild_returns_deferred(self):
         yield self.makeBuilder()
 
-        def canStartBuild(bldr, worker, breq):
-            return defer.succeed((worker, breq) == ('worker', 100))
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
+        def canStartBuild(bldr, wfb, breq):
+            return defer.succeed(breq == 100)
         canStartBuild = mock.Mock(side_effect=canStartBuild)
 
         self.bldr.config.canStartBuild = canStartBuild
 
-        startable = yield self.bldr.canStartBuild('worker', 100)
+        startable = yield self.bldr.canStartBuild(wfb, 100)
         self.assertEqual(startable, True)
-        canStartBuild.assert_called_with(self.bldr, 'worker', 100)
+        canStartBuild.assert_called_with(self.bldr, wfb, 100)
         canStartBuild.reset_mock()
 
-        startable = yield self.bldr.canStartBuild('worker', 101)
+        startable = yield self.bldr.canStartBuild(wfb, 101)
         self.assertEqual(startable, False)
-        canStartBuild.assert_called_with(self.bldr, 'worker', 101)
+        canStartBuild.assert_called_with(self.bldr, wfb, 101)
         canStartBuild.reset_mock()
 
     @defer.inlineCallbacks
@@ -272,10 +289,13 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.bldr.botmaster.getLockFromLockAccess = \
             mock.Mock(return_value='dummy')
 
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
         with mock.patch(
                 'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value=False)):
-            startable = yield self.bldr.canStartBuild('worker', 100)
+            startable = yield self.bldr.canStartBuild(wfb, 100)
             self.assertEqual(startable, True)
 
     @defer.inlineCallbacks
@@ -289,10 +309,13 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         lock1.name = "masterlock"
         self.bldr.config.locks = [lock1]
 
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
         with mock.patch(
                 'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value=False)):
-            startable = yield self.bldr.canStartBuild('worker', 100)
+            startable = yield self.bldr.canStartBuild(wfb, 100)
             self.assertEqual(startable, False)
 
     @defer.inlineCallbacks
@@ -322,16 +345,47 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
 
         self.bldr.config.locks = rendered_locks
 
+        wfb = mock.Mock()
+        wfb.worker = FakeWorker('worker')
+
         with mock.patch(
                 'buildbot.process.build.Build._canAcquireLocks',
                 mock.Mock(return_value=False)):
             with mock.patch(
                     'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
                     mock.Mock()):
-                startable = yield self.bldr.canStartBuild('worker', 100)
+                startable = yield self.bldr.canStartBuild(wfb, 100)
                 self.assertEqual(startable, False)
 
         self.assertTrue(renderedLocks[0])
+
+    @defer.inlineCallbacks
+    def test_canStartBuild_with_incompatible_latent_worker(self):
+        yield self.makeBuilder()
+
+        class FakeLatentWorker(AbstractLatentWorker):
+            builds_may_be_incompatible = True
+
+            def __init__(self):
+                pass
+
+            def isCompatibleWithBuild(self, build_props):
+                return defer.succeed(False)
+
+            def checkConfig(self, name, _, **kwargs):
+                pass
+
+            def reconfigService(self, name, _, **kwargs):
+                pass
+
+        wfb = mock.Mock()
+        wfb.worker = FakeLatentWorker()
+
+        with mock.patch(
+                'buildbot.process.build.Build.setupPropertiesKnownBeforeBuildStarts',
+                mock.Mock()):
+            startable = yield self.bldr.canStartBuild(wfb, 100)
+        self.assertFalse(startable)
 
     @defer.inlineCallbacks
     def test_canStartBuild_enforceChosenWorker(self):
@@ -341,7 +395,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.bldr.config.canStartBuild = builder.enforceChosenWorker
 
         workerforbuilder = mock.Mock()
-        workerforbuilder.worker.workername = 'worker5'
+        workerforbuilder.worker = FakeWorker('worker5')
 
         breq = mock.Mock()
 

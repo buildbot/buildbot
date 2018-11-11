@@ -40,6 +40,11 @@ class AbstractLatentWorker(AbstractWorker):
 
     To use, subclass and implement start_instance and stop_instance.
 
+    Additionally, if the instances render any kind of data affecting instance
+    type from the build properties, set the class variable
+    builds_may_be_incompatible to True and override isCompatibleWithBuild
+    method.
+
     See ec2.py for a concrete example.
     """
 
