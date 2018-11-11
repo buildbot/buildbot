@@ -37,7 +37,8 @@ class LatentController(object):
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, name, build_wait_timeout=600, **kwargs):
+        self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
         self.starting = False
         self.stopping = False
@@ -91,14 +92,20 @@ class ControllableLatentWorker(AbstractLatentWorker):
     """
 
     def __init__(self, name, controller, **kwargs):
-        AbstractLatentWorker.__init__(self, name, None, **kwargs)
         self._controller = controller
+        AbstractLatentWorker.__init__(self, name, None, **kwargs)
 
     def checkConfig(self, name, _, **kwargs):
-        AbstractLatentWorker.checkConfig(self, name, None, **kwargs)
+        AbstractLatentWorker.checkConfig(
+            self, name, None,
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
 
     def reconfigService(self, name, _, **kwargs):
-        AbstractLatentWorker.reconfigService(self, name, None, **kwargs)
+        AbstractLatentWorker.reconfigService(
+            self, name, None,
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
 
     def start_instance(self, build):
         assert not self._controller.stopping
