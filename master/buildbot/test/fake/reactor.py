@@ -119,3 +119,12 @@ class TestReactor(NonReactor, CoreReactor, Clock):
     def __init__(self):
         Clock.__init__(self)
         CoreReactor.__init__(self)
+
+    def stop(self):
+        # first fire pending calls
+        while self.getDelayedCalls():
+            last = sorted(self.getDelayedCalls(), key=lambda a: a.getTime())[-1]
+            self.advance(last.getTime() - self.seconds())
+
+        # then, fire the shutdown event
+        self.fireSystemEvent('shutdown')
