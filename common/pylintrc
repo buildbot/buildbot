@@ -146,6 +146,7 @@ disable=
   old-style-class,
   redefined-variable-type,
   deprecated-lambda,
+  cyclic-import,  # only happens when pylint is ran in non-parallel mode
 
 
 [REPORTS]
