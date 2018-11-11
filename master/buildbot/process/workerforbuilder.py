@@ -228,7 +228,6 @@ class LatentWorkerForBuilder(AbstractWorkerForBuilder):
             return defer.succeed(False)
 
         self.state = States.DETACHED
-        log.msg("substantiating worker %s" % (self,))
         d = self.substantiate(build)
         return d
 

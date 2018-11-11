@@ -98,6 +98,8 @@ class AbstractLatentWorker(AbstractWorker):
         return self.conn is not None
 
     def substantiate(self, wfb, build):
+        log.msg("substantiating worker %s" % (wfb,))
+
         if self.conn is not None:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
@@ -241,6 +243,8 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def insubstantiate(self, fast=False):
+        log.msg("insubstantiating worker %s" % (self,))
+
         self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
