@@ -360,7 +360,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         try:
             yield d
-        except Exception as e:
+        except Exception as e:  # pragma: no cover
             log.err(e, "while starting builds on {0}".format(new_builders))
         finally:
             self._pendingMSBOCalls.remove(d)
@@ -392,7 +392,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # working on that.
                 if not self.active:
                     self._activity_loop_deferred = self._activityLoop()
-            except Exception:
+            except Exception:  # pragma: no cover
                 log.err(Failure(),
                         "while attempting to start builds on %s" % self.name)
 
