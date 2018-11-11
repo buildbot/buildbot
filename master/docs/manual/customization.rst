@@ -539,25 +539,33 @@ Aside from the service methods, the other concerns in the previous section apply
 Writing a New Latent Worker Implementation
 ------------------------------------------
 
-Writing a new latent worker should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance`.
+Writing a new latent worker should only require subclassing :class:`buildbot.worker.AbstractLatentWorker` and implementing :meth:`start_instance` and :meth:`stop_instance` at a minimum.
 
-::
+.. bb:worker:: AbstractWorkerController
 
-    def start_instance(self):
-        # responsible for starting instance that will try to connect with this
-        # master. Should return deferred. Problems should use an errback. The
-        # callback value can be None, or can be an iterable of short strings to
-        # include in the "substantiate success" status message, such as
-        # identifying the instance that started.
-        raise NotImplementedError
+AbstractLatentController
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-    def stop_instance(self, fast=False):
-        # responsible for shutting down instance. Return a deferred. If `fast`,
-        # we're trying to shut the master down, so callback as soon as is safe.
-        # Callback value is ignored.
-        raise NotImplementedError
+.. py:class:: buildbot.worker.AbstractLatentWorker
+
+This class is the base class of all latent workers and implements some common functionality.
+A custom worker should only need to override :meth:`start_instance` and :meth:`stop_instance` methods.
 
 See :class:`buildbot.worker.ec2.EC2LatentWorker` for an example.
+
+    .. py:method:: start_instance(self)
+
+        This method is responsible for starting instance that will try to connect with this master.
+        A deferred should be returned.
+        Any problems should use an errback.
+        The callback value can be ``None``, or can be an iterable of short strings to include in the "substantiate success" status message, such as identifying the instance that started.
+
+    .. py:method:: stop_instance(self, fast=False)
+
+        This method is responsible for shutting down instance.
+        A deferred should be returned.
+        If ``fast`` is ``True`` then the function should call back as soon as it is safe to do so, as, for example, the master may be shutting down.
+        The value returned by the callback is ignored.
 
 Custom Build Classes
 --------------------
