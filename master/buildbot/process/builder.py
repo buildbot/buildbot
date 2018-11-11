@@ -285,20 +285,29 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # check whether the locks that the build will acquire can actually be
         # acquired
         locks = self.config.locks
-        if IRenderable.providedBy(locks):
-            # collect properties that would be set for a build if we
-            # started it now and render locks using it
+        props = None
+
+        # don't unnecessarily setup properties for build
+        def setupPropsIfNeeded(props):
+            if props is not None:
+                return
             props = Properties()
             Build.setupPropertiesKnownBeforeBuildStarts(props, [buildrequest],
                                                         self, workerforbuilder)
+            return props
+
+        if IRenderable.providedBy(locks):
+            # collect properties that would be set for a build if we
+            # started it now and render locks using it
+            props = setupPropsIfNeeded(props)
             locks = yield props.render(locks)
 
         locks = [(self.botmaster.getLockFromLockAccess(access), access)
                  for access in locks]
         if locks:
             can_start = Build._canAcquireLocks(locks, workerforbuilder)
-        if can_start is False:
-            defer.returnValue(can_start)
+            if can_start is False:
+                defer.returnValue(can_start)
 
         if callable(self.config.canStartBuild):
             can_start = yield self.config.canStartBuild(self, workerforbuilder,
