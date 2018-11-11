@@ -44,6 +44,7 @@ class LatentController(object):
         self.remote_worker = None
 
         self.starting = False
+        self.started = False
         self.stopping = False
         self.auto_stop_flag = False
         self.auto_start_flag = False
@@ -65,7 +66,9 @@ class LatentController(object):
 
     def do_start_instance(self):
         assert self.starting
+        assert not self.started or not self.remote_worker
         self.starting = False
+        self.started = True
         if self.auto_connect_worker:
             self.connect_worker()
 
@@ -156,7 +159,10 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def stop_instance(self, build):
         assert not self._controller.stopping
+        assert self._controller.started or self._controller.starting
 
+        self._controller.started = False
+        self._controller.starting = False
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
             self._controller.do_stop_instance()
