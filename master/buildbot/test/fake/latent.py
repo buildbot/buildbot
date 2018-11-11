@@ -37,13 +37,18 @@ class LatentController(object):
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, name, build_wait_timeout=600, **kwargs):
+    def __init__(self, name, kind=None, build_wait_timeout=600, **kwargs):
         self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
+
         self.starting = False
         self.stopping = False
         self.auto_stop_flag = False
         self.auto_start_flag = False
+
+        self.kind = kind
+        self._started_kind = None
+        self._started_kind_deferred = None
 
     def auto_start(self, result):
         self.auto_start_flag = result
@@ -51,10 +56,13 @@ class LatentController(object):
             self.start_instance(True)
 
     def start_instance(self, result):
-        assert self.starting
-        self.starting = False
+        self.do_start_instance()
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
+
+    def do_start_instance(self):
+        assert self.starting
+        self.starting = False
 
     def auto_stop(self, result):
         self.auto_stop_flag = result
@@ -62,10 +70,14 @@ class LatentController(object):
             self.stop_instance(True)
 
     def stop_instance(self, result):
-        assert self.stopping
-        self.stopping = False
+        self.do_stop_instance()
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
+
+    def do_stop_instance(self):
+        assert self.stopping
+        self.stopping = False
+        self._started_kind = None
 
     def connect_worker(self, case):
         if RemoteWorker is None:
@@ -80,6 +92,16 @@ class LatentController(object):
         # LocalWorker does actually disconnect, so we must force disconnection via detached
         conn.notifyDisconnected()
         return self.remote_worker.disownServiceParent()
+
+    def setup_kind(self, build):
+        self._started_kind_deferred = build.render(self.kind)
+
+    @defer.inlineCallbacks
+    def get_started_kind(self):
+        if self._started_kind_deferred:
+            self._started_kind = yield self._started_kind_deferred
+            self._started_kind_deferred = None
+        defer.returnValue(self._started_kind)
 
     def patchBot(self, case, remoteMethod, patch):
         case.patch(BotBase, remoteMethod, patch)
@@ -108,11 +130,13 @@ class ControllableLatentWorker(AbstractLatentWorker):
             **kwargs)
 
     def start_instance(self, build):
+        self._controller.setup_kind(build)
+
         assert not self._controller.stopping
 
         self._controller.starting = True
         if self._controller.auto_start_flag:
-            self._controller.starting = False
+            self._controller.do_start_instance()
             return defer.succeed(True)
 
         self._controller._start_deferred = defer.Deferred()
@@ -123,7 +147,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
-            self._controller.stopping = False
+            self._controller.do_stop_instance()
             return defer.succeed(True)
         self._controller._stop_deferred = defer.Deferred()
         return self._controller._stop_deferred
