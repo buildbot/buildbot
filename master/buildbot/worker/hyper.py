@@ -90,6 +90,7 @@ class HyperLatentWorker(DockerBaseWorker):
                      'm1', 'm2', 'm3', 'l1', 'l2', 'l3']
     image = None
     reactor = global_reactor
+    builds_may_be_incompatible = True
 
     def checkConfig(self, name, password, hyper_host,
                     hyper_accesskey, hyper_secretkey, image, hyper_size="s3", masterFQDN=None, **kwargs):
@@ -120,14 +121,30 @@ class HyperLatentWorker(DockerBaseWorker):
         self.manager = yield HyperLatentManager.getService(self.master, hyper_host, hyper_accesskey,
                                                            hyper_secretkey)
         self.size = hyper_size
+        self.actual_image = None
+        self.actual_size = None
+        self.instance = None
 
     def deferToThread(self, meth, *args, **kwargs):
         return self.manager.deferToThread(self.reactor, meth, *args, **kwargs)
 
     @defer.inlineCallbacks
+    def isCompatibleWithBuild(self, build_props):
+        if self.instance is None:
+            defer.returnValue(True)
+
+        requested_size, requested_image = \
+            yield build_props.render((self.size, self.image))
+
+        defer.returnValue(requested_size == self.actual_size and
+                          requested_image == self.actual_image)
+
+    @defer.inlineCallbacks
     def start_instance(self, build):
-        image, size = yield build.render((self.image, self.size))
-        yield self.deferToThread(self._thd_start_instance, image, size)
+        self.actual_image, self.actual_size = \
+            yield build.render((self.image, self.size))
+        yield self.deferToThread(self._thd_start_instance, self.actual_image,
+                                 self.actual_size)
         defer.returnValue(True)
 
     def _thd_cleanup_instance(self):
