@@ -19,6 +19,26 @@ from __future__ import print_function
 from buildbot import config
 
 
+class _AssertRaisesConfigErrorContext(object):
+    def __init__(self, substr_or_re, case):
+        self.substr_or_re = substr_or_re
+        self.case = case
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, tb):
+        if exc_type is None:
+            self.case.fail("ConfigErrors not raised")
+
+        if not issubclass(exc_type, config.ConfigErrors):
+            self.case.fail("ConfigErrors not raised, instead got {0}".format(
+                exc_type.__name__))
+
+        self.case.assertConfigError(exc_value, self.substr_or_re)
+        return True
+
+
 class ConfigErrorsMixin(object):
 
     def assertConfigError(self, errors, substr_or_re):
@@ -36,13 +56,12 @@ class ConfigErrorsMixin(object):
                 if not substr_or_re.search(curr_error):
                     self.fail("non-matching error: %s" % (curr_error,))
 
-    def assertRaisesConfigError(self, substr_or_re, fn):
-        try:
+    def assertRaisesConfigError(self, substr_or_re, fn=None):
+        context = _AssertRaisesConfigErrorContext(substr_or_re, self)
+        if fn is None:
+            return context
+        with context:
             fn()
-        except config.ConfigErrors as e:
-            self.assertConfigError(e, substr_or_re)
-        else:
-            self.fail("ConfigErrors not raised")
 
     def assertNoConfigErrors(self, errors):
         self.assertEqual(errors.errors, [])
