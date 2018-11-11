@@ -42,6 +42,12 @@ class LatentController(object):
         self.starting = False
         self.stopping = False
         self.auto_stop_flag = False
+        self.auto_start_flag = False
+
+    def auto_start(self, result):
+        self.auto_start_flag = result
+        if self.auto_start_flag and self.starting:
+            self.start_instance(True)
 
     def start_instance(self, result):
         assert self.starting
@@ -98,10 +104,16 @@ class ControllableLatentWorker(AbstractLatentWorker):
         assert not self._controller.stopping
 
         self._controller.starting = True
+        if self._controller.auto_start_flag:
+            self._controller.starting = False
+            return defer.succeed(True)
+
         self._controller._start_deferred = defer.Deferred()
         return self._controller._start_deferred
 
     def stop_instance(self, build):
+        assert not self._controller.stopping
+
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
             self._controller.stopping = False
