@@ -37,14 +37,17 @@ class LatentController(object):
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, name, kind=None, build_wait_timeout=600, **kwargs):
+    def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
+        self.case = case
         self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
+        self.remote_worker = None
 
         self.starting = False
         self.stopping = False
         self.auto_stop_flag = False
         self.auto_start_flag = False
+        self.auto_connect_worker = False
 
         self.kind = kind
         self._started_kind = None
@@ -63,6 +66,8 @@ class LatentController(object):
     def do_start_instance(self):
         assert self.starting
         self.starting = False
+        if self.auto_connect_worker:
+            self.connect_worker()
 
     def auto_stop(self, result):
         self.auto_stop_flag = result
@@ -78,20 +83,27 @@ class LatentController(object):
         assert self.stopping
         self.stopping = False
         self._started_kind = None
+        self.disconnect_worker()
 
-    def connect_worker(self, case):
+    def connect_worker(self):
+        if self.remote_worker is not None:
+            return
         if RemoteWorker is None:
             raise SkipTest("buildbot-worker package is not installed")
-        workdir = FilePath(case.mktemp())
+        workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
         self.remote_worker.setServiceParent(self.worker)
 
-    def disconnect_worker(self, workdir):
+    def disconnect_worker(self):
+        if self.remote_worker is None:
+            return
         self.worker.conn, conn = None, self.worker.conn
         # LocalWorker does actually disconnect, so we must force disconnection via detached
         conn.notifyDisconnected()
-        return self.remote_worker.disownServiceParent()
+        ret = self.remote_worker.disownServiceParent()
+        self.remote_worker = None
+        return ret
 
     def setup_kind(self, build):
         self._started_kind_deferred = build.render(self.kind)
