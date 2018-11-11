@@ -41,6 +41,7 @@ from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import enable_trace
+from buildbot.util.eventual import _setReactor
 
 
 class TestException(Exception):
@@ -55,6 +56,9 @@ class Tests(SynchronousTestCase):
     def setUp(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
+        self.addCleanup(self.reactor.stop)
+        _setReactor(self.reactor)
+        self.addCleanup(_setReactor, None)
 
         # to ease debugging we display the error logs in the test log
         origAddCompleteLog = BuildStep.addCompleteLog

@@ -78,8 +78,6 @@ def getMaster(case, reactor, config_dict):
     master.db.setup = lambda: None
 
     yield master.startService()
-    # and shutdown the db threadpool, as is normally done at reactor stop
-    case.addCleanup(master.db.pool.shutdown)
     case.addCleanup(master.stopService)
 
     defer.returnValue(master)
