@@ -1,6 +1,6 @@
 # developer utilities
 pylint:
-	pylint -j2 --rcfile=../common/pylintrc buildbot
+	pylint --rcfile=../common/pylintrc buildbot
 	@test ! -f fail
 
 tutorial:
