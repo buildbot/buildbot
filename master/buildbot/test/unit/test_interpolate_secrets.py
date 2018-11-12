@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import gc
+
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -41,6 +43,7 @@ class TestInterpolateSecrets(unittest.TestCase, ConfigErrorsMixin):
     def test_secret_not_found(self):
         command = Interpolate("echo %(secret:fuo)s")
         yield self.assertFailure(self.build.render(command), defer.FirstError)
+        gc.collect()
         self.flushLoggedErrors(defer.FirstError)
         self.flushLoggedErrors(KeyError)
 
@@ -55,6 +58,7 @@ class TestInterpolateSecretsNoService(unittest.TestCase, ConfigErrorsMixin):
     def test_secret(self):
         command = Interpolate("echo %(secret:fuo)s")
         yield self.assertFailure(self.build.render(command), defer.FirstError)
+        gc.collect()
         self.flushLoggedErrors(defer.FirstError)
         self.flushLoggedErrors(KeyError)
 
