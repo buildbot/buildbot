@@ -101,17 +101,17 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         When BuildStep is passed a name that isn't a string, it reports
         a config error.
         """
-        self.assertRaisesConfigError("BuildStep name must be a string",
-                                     lambda: buildstep.BuildStep(name=5))
+        with self.assertRaisesConfigError("BuildStep name must be a string"):
+            buildstep.BuildStep(name=5)
 
     def test_unexpectedKeywordArgument(self):
         """
         When BuildStep is passed an unknown keyword argument, it reports
         a config error.
         """
-        self.assertRaisesConfigError(
-            "__init__ got unexpected keyword argument(s) ['oogaBooga']",
-            lambda: buildstep.BuildStep(oogaBooga=5))
+        with self.assertRaisesConfigError(
+                "__init__ got unexpected keyword argument(s) ['oogaBooga']"):
+            buildstep.BuildStep(oogaBooga=5)
 
     def test_updateBuildSummaryPolicyDefaults(self):
         """
@@ -140,9 +140,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         """
         updateBuildSummaryPolicy raise ConfigError in case of bad type
         """
-        self.assertRaisesConfigError(
-            "BuildStep updateBuildSummaryPolicy must be a list of result ids or boolean but it is 2",
-            lambda: buildstep.BuildStep(updateBuildSummaryPolicy=FAILURE))
+        with self.assertRaisesConfigError(
+                "BuildStep updateBuildSummaryPolicy must be a list of result ids or boolean but it is 2"):
+            buildstep.BuildStep(updateBuildSummaryPolicy=FAILURE)
 
     def test_getProperty(self):
         bs = buildstep.BuildStep()
@@ -986,16 +986,16 @@ class TestShellMixin(steps.BuildStepMixin,
 
     def test_setupShellMixin_bad_arg(self):
         mixin = ShellMixinExample()
-        self.assertRaisesConfigError(
-            "invalid ShellMixinExample argument invarg",
-            lambda: mixin.setupShellMixin({'invarg': 13}))
+        with self.assertRaisesConfigError(
+                "invalid ShellMixinExample argument invarg"):
+            mixin.setupShellMixin({'invarg': 13})
 
     def test_setupShellMixin_prohibited_arg(self):
         mixin = ShellMixinExample()
-        self.assertRaisesConfigError(
-            "invalid ShellMixinExample argument logfiles",
-            lambda: mixin.setupShellMixin({'logfiles': None},
-                                          prohibitArgs=['logfiles']))
+        with self.assertRaisesConfigError(
+                "invalid ShellMixinExample argument logfiles"):
+            mixin.setupShellMixin({'logfiles': None},
+                                  prohibitArgs=['logfiles'])
 
     def test_setupShellMixin_not_new_style(self):
         self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
