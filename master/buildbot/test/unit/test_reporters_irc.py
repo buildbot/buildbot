@@ -289,16 +289,16 @@ class TestIRC(config.ConfigErrorsMixin, unittest.TestCase):
         When L{IRCClient} is called with C{allowForce} not a boolean,
         a config error is reported.
         """
-        self.assertRaisesConfigError("allowForce must be boolean, not",
-                                     lambda: self.makeIRC(allowForce=object()))
+        with self.assertRaisesConfigError("allowForce must be boolean, not"):
+            self.makeIRC(allowForce=object())
 
     def test_allowShutdown_notBool(self):
         """
         When L{IRCClient} is called with C{allowShutdown} not a boolean,
         a config error is reported.
         """
-        self.assertRaisesConfigError("allowShutdown must be boolean, not",
-                                     lambda: self.makeIRC(allowShutdown=object()))
+        with self.assertRaisesConfigError("allowShutdown must be boolean, not"):
+            self.makeIRC(allowShutdown=object())
 
     def test_service(self):
         irc = self.makeIRC()

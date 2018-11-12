@@ -60,9 +60,9 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
                           tags=['fast', 'slow'], builders=['a', 'b'])
 
     def test_init_warns_notifier_mode_all_in_iter(self):
-        self.assertRaisesConfigError(
-            "mode 'all' is not valid in an iterator and must be passed in as a separate string",
-            lambda: NotifierBase(mode=['all']))
+        with self.assertRaisesConfigError(
+               "mode 'all' is not valid in an iterator and must be passed in as a separate string"):
+            NotifierBase(mode=['all'])
 
     @defer.inlineCallbacks
     def test_buildsetComplete_sends_message(self):
