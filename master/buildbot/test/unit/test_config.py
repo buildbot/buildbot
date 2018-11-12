@@ -171,14 +171,14 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
                 f.write(contents)
 
     def test_loadConfig_missing_file(self):
-        self.assertRaisesConfigError(
-            re.compile("configuration file .* does not exist"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                re.compile("configuration file .* does not exist")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_missing_basedir(self):
-        self.assertRaisesConfigError(
-            re.compile("basedir .* does not exist"),
-            lambda: config.loadConfigDict(os.path.join(self.basedir, 'NO'), 'test.cfg'))
+        with self.assertRaisesConfigError(
+                re.compile("basedir .* does not exist")):
+            config.loadConfigDict(os.path.join(self.basedir, 'NO'), 'test.cfg')
 
     def test_loadConfig_open_error(self):
         """
@@ -195,39 +195,41 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         self.patch(builtins, "open", raise_IOError)
 
         # check that we got the expected ConfigError exception
-        self.assertRaisesConfigError(
-            re.compile("unable to open configuration file .*: error_msg"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                re.compile("unable to open configuration file .*: error_msg")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_parse_error(self):
         self.install_config_file('def x:\nbar')
-        self.assertRaisesConfigError(
-            re.compile("encountered a SyntaxError while parsing config file:"),
-            lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(re.compile(
+                "encountered a SyntaxError while parsing config file:")):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_ConfigError(self):
         self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
                 config.error('oh noes!')""")
-        self.assertRaisesConfigError("oh noes",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError("oh noes"):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_eval_otherError(self):
         self.install_config_file("""\
                 from buildbot import config
                 BuildmasterConfig = { 'multiMaster': True }
                 raise ValueError('oh noes')""")
-        self.assertRaisesConfigError("error while parsing config file: oh noes (traceback in logfile)",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                "error while parsing config file: oh noes (traceback in logfile)"):
+            config.loadConfigDict(self.basedir, self.filename)
 
         [error] = self.flushLoggedErrors(ValueError)
         self.assertEqual(error.value.args, ("oh noes",))
 
     def test_loadConfig_no_BuildmasterConfig(self):
         self.install_config_file('x=10')
-        self.assertRaisesConfigError("does not define 'BuildmasterConfig'",
-                                     lambda: config.loadConfigDict(self.basedir, self.filename))
+        with self.assertRaisesConfigError(
+                "does not define 'BuildmasterConfig'"):
+            config.loadConfigDict(self.basedir, self.filename)
 
     def test_loadConfig_with_local_import(self):
         self.install_config_file("""\
@@ -337,16 +339,17 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10)
                 """)
-        self.assertRaisesConfigError("Unknown BuildmasterConfig key foo",
-                                     config.FileLoader(self.basedir, self.filename).loadConfig)
+        with self.assertRaisesConfigError("Unknown BuildmasterConfig key foo"):
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_unknown_keys(self):
         self.patch_load_helpers()
         self.install_config_file("""\
                 BuildmasterConfig = dict(foo=10, bar=20)
                 """)
-        self.assertRaisesConfigError("Unknown BuildmasterConfig keys bar, foo",
-                                     config.FileLoader(self.basedir, self.filename).loadConfig)
+        with self.assertRaisesConfigError(
+                "Unknown BuildmasterConfig keys bar, foo"):
+            config.FileLoader(self.basedir, self.filename).loadConfig()
 
     def test_loadConfig_success(self):
         self.patch_load_helpers()
@@ -1322,110 +1325,103 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     # tests
 
     def test_no_name(self):
-        self.assertRaisesConfigError(
-            "builder's name is required",
-            lambda: config.BuilderConfig(
-                factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError("builder's name is required"):
+            config.BuilderConfig(factory=self.factory, workernames=['a'])
 
     def test_reserved_name(self):
-        self.assertRaisesConfigError(
-            "builder names must not start with an underscore: '_a'",
-            lambda: config.BuilderConfig(name='_a',
-                                         factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError(
+                "builder names must not start with an underscore: '_a'"):
+            config.BuilderConfig(name='_a', factory=self.factory,
+                                 workernames=['a'])
 
     def test_utf8_name(self):
-        self.assertRaisesConfigError(
-            "builder names must be unicode or ASCII",
-            lambda: config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
-                                         factory=self.factory, workernames=['a']))
+        with self.assertRaisesConfigError(
+                "builder names must be unicode or ASCII"):
+            config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
+                                 factory=self.factory, workernames=['a'])
 
     def test_no_factory(self):
-        self.assertRaisesConfigError(
-            "builder 'a' has no factory",
-            lambda: config.BuilderConfig(
-                name='a', workernames=['a']))
+        with self.assertRaisesConfigError("builder 'a' has no factory"):
+            config.BuilderConfig(name='a', workernames=['a'])
 
     def test_wrong_type_factory(self):
-        self.assertRaisesConfigError(
-            "builder 'a's factory is not",
-            lambda: config.BuilderConfig(
-                factory=[], name='a', workernames=['a']))
+        with self.assertRaisesConfigError("builder 'a's factory is not"):
+            config.BuilderConfig(factory=[], name='a', workernames=['a'])
 
     def test_no_workernames(self):
-        self.assertRaisesConfigError(
-            "builder 'a': at least one workername is required",
-            lambda: config.BuilderConfig(
-                name='a', factory=self.factory))
+        with self.assertRaisesConfigError(
+                "builder 'a': at least one workername is required"):
+            config.BuilderConfig(name='a', factory=self.factory)
 
     def test_bogus_workernames(self):
-        self.assertRaisesConfigError(
-            "workernames must be a list or a string",
-            lambda: config.BuilderConfig(
-                name='a', workernames={1: 2}, factory=self.factory))
+        with self.assertRaisesConfigError(
+                "workernames must be a list or a string"):
+            config.BuilderConfig(name='a', workernames={1: 2},
+                                 factory=self.factory)
 
     def test_bogus_workername(self):
-        self.assertRaisesConfigError(
-            "workername must be a string",
-            lambda: config.BuilderConfig(
-                name='a', workername=1, factory=self.factory))
+        with self.assertRaisesConfigError("workername must be a string"):
+            config.BuilderConfig(name='a', workername=1, factory=self.factory)
 
     def test_bogus_category(self):
         with assertProducesWarning(
                 config.ConfigWarning,
                 message_pattern=r"builder categories are deprecated and should be replaced with"):
-            self.assertRaisesConfigError(
-                "category must be a string",
-                lambda: config.BuilderConfig(category=13,
-                                             name='a', workernames=['a'], factory=self.factory))
+            with self.assertRaisesConfigError("category must be a string"):
+                config.BuilderConfig(category=13,
+                                     name='a', workernames=['a'],
+                                     factory=self.factory)
 
     def test_tags_must_be_list(self):
-        self.assertRaisesConfigError(
-            "tags must be a list",
-            lambda: config.BuilderConfig(tags='abc',
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("tags must be a list"):
+            config.BuilderConfig(tags='abc',
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_must_be_list_of_str(self):
-        self.assertRaisesConfigError(
-            "tags list contains something that is not a string",
-            lambda: config.BuilderConfig(tags=['abc', 13],
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "tags list contains something that is not a string"):
+            config.BuilderConfig(tags=['abc', 13],
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_no_tag_dupes(self):
-        self.assertRaisesConfigError(
-            "builder 'a': tags list contains duplicate tags: abc",
-            lambda: config.BuilderConfig(tags=['abc', 'bca', 'abc'],
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "builder 'a': tags list contains duplicate tags: abc"):
+            config.BuilderConfig(tags=['abc', 'bca', 'abc'],
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_tags_no_categories_too(self):
-        self.assertRaisesConfigError(
-            "categories are deprecated and replaced by tags; you should only specify tags",
-            lambda: config.BuilderConfig(tags=['abc'],
-                                         category='def',
-                                         name='a', workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError(
+                "categories are deprecated and replaced by tags; you should only specify tags"):
+            config.BuilderConfig(tags=['abc'], category='def',
+                                 name='a', workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_nextWorker(self):
-        self.assertRaisesConfigError(
-            "nextWorker must be a callable",
-            lambda: config.BuilderConfig(nextWorker="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("nextWorker must be a callable"):
+            config.BuilderConfig(nextWorker="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_nextBuild(self):
-        self.assertRaisesConfigError(
-            "nextBuild must be a callable",
-            lambda: config.BuilderConfig(nextBuild="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("nextBuild must be a callable"):
+            config.BuilderConfig(nextBuild="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_canStartBuild(self):
-        self.assertRaisesConfigError(
-            "canStartBuild must be a callable",
-            lambda: config.BuilderConfig(canStartBuild="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("canStartBuild must be a callable"):
+            config.BuilderConfig(canStartBuild="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_inv_env(self):
-        self.assertRaisesConfigError(
-            "builder's env must be a dictionary",
-            lambda: config.BuilderConfig(env="foo",
-                                         name="a", workernames=['a'], factory=self.factory))
+        with self.assertRaisesConfigError("builder's env must be a dictionary"):
+            config.BuilderConfig(env="foo",
+                                 name="a", workernames=['a'],
+                                 factory=self.factory)
 
     def test_defaults(self):
         cfg = config.BuilderConfig(
