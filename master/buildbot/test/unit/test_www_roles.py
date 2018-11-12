@@ -111,5 +111,5 @@ class RolesFromUsername(unittest.TestCase, ConfigErrorsMixin):
         self.assertEqual(ret, ["developers", "integrators"])
 
     def test_badUsernames(self):
-        self.assertRaisesConfigError('Usernames cannot be None',
-            lambda: roles.RolesFromUsername(roles=[], usernames=[None]))
+        with self.assertRaisesConfigError('Usernames cannot be None'):
+            roles.RolesFromUsername(roles=[], usernames=[None])
