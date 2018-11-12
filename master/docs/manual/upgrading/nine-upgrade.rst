@@ -146,7 +146,7 @@ Steps
 Buildbot-0.8.9 introduced "new-style steps", with an asynchronous ``run`` method.
 In the remaining 0.8.x releases, use of new-style and old-style steps were supported side-by-side.
 In 0.9.x, old-style steps are emulated using a collection of hacks to allow asynchronous calls to be called from synchronous code.
-This emulation is imperfect, and you are strongly encouraged to rewrite any custom steps as :doc:`../new-style-steps`.
+This emulation is imperfect, and you are strongly encouraged to rewrite any custom steps as :ref:`New-Style-Build-Steps`.
 
 Note that new-style steps now "push" their status when it changes, so the ``describe`` method no longer exists.
 

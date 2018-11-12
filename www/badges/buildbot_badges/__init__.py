@@ -32,7 +32,7 @@ from buildbot.util import bytes2NativeString
 class Api(object):
     app = Klein()
 
-    default = {  # note that these defaults are documented in cfg-www.rst
+    default = {  # note that these defaults are documented in configuration/www.rst
         "left_text": "Build Status",
         "left_color": "#555",
         "style": "plastic",

@@ -1024,7 +1024,7 @@ What you need in your config file is something like::
 
 This will result in the following UI:
 
-.. image:: _images/forcedialog1.png
+.. image:: ../_images/forcedialog1.png
    :alt: Force Form Result
 
 
