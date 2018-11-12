@@ -61,7 +61,7 @@ pylint==2.1.1; python_version >= "3.4"
 pyOpenSSL==18.0.0
 pyparsing==2.3.0
 python-dateutil==2.7.5
-pytz==2018.5
+pytz==2018.7
 PyYAML==3.13
 requests==2.20.1
 s3transfer==0.1.13
