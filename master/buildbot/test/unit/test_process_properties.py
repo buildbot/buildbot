@@ -292,56 +292,68 @@ class TestInterpolateConfigure(unittest.TestCase, ConfigErrorsMixin):
     """
 
     def test_invalid_args_and_kwargs(self):
-        self.assertRaisesConfigError("Interpolate takes either positional",
-                                     lambda: Interpolate("%s %(foo)s", 1, foo=2))
+        with self.assertRaisesConfigError("Interpolate takes either positional"):
+            Interpolate("%s %(foo)s", 1, foo=2)
 
     def test_invalid_selector(self):
-        self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
-                                     lambda: Interpolate("%(garbage:test)s"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate selector 'garbage'"):
+            Interpolate("%(garbage:test)s")
 
     def test_no_selector(self):
-        self.assertRaisesConfigError("invalid Interpolate substitution without selector 'garbage'",
-                                     lambda: Interpolate("%(garbage)s"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate substitution without selector 'garbage'"):
+            Interpolate("%(garbage)s")
 
     def test_invalid_default_type(self):
-        self.assertRaisesConfigError("invalid Interpolate default type '@'",
-                                     lambda: Interpolate("%(prop:some_prop:@wacky)s"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate default type '@'"):
+            Interpolate("%(prop:some_prop:@wacky)s")
 
     def test_nested_invalid_selector(self):
-        self.assertRaisesConfigError("invalid Interpolate selector 'garbage'",
-                                     lambda: Interpolate("%(prop:some_prop:~%(garbage:test)s)s"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate selector 'garbage'"):
+            Interpolate("%(prop:some_prop:~%(garbage:test)s)s")
 
     def test_colon_ternary_missing_delimeter(self):
-        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter ':'",
-                                     lambda: Interpolate("echo '%(prop:P:?:one)s'"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate ternary expression 'one' with delimiter ':'"):
+            Interpolate("echo '%(prop:P:?:one)s'")
 
     def test_colon_ternary_paren_delimiter(self):
-        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one(:)' with delimiter ':'",
-                                     lambda: Interpolate("echo '%(prop:P:?:one(:))s'"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate ternary expression 'one(:)' with delimiter ':'"):
+            Interpolate("echo '%(prop:P:?:one(:))s'")
 
     def test_colon_ternary_hash_bad_delimeter(self):
-        self.assertRaisesConfigError("invalid Interpolate ternary expression 'one' with delimiter '|'",
-                                     lambda: Interpolate("echo '%(prop:P:#?|one)s'"))
+        with self.assertRaisesConfigError(
+                "invalid Interpolate ternary expression 'one' with delimiter '|'"):
+            Interpolate("echo '%(prop:P:#?|one)s'")
 
     def test_prop_invalid_character(self):
-        self.assertRaisesConfigError("Property name must be alphanumeric for prop Interpolation 'a+a'",
-                                     lambda: Interpolate("echo '%(prop:a+a)s'"))
+        with self.assertRaisesConfigError(
+                "Property name must be alphanumeric for prop Interpolation 'a+a'"):
+            Interpolate("echo '%(prop:a+a)s'")
 
     def test_kw_invalid_character(self):
-        self.assertRaisesConfigError("Keyword must be alphanumeric for kw Interpolation 'a+a'",
-                                     lambda: Interpolate("echo '%(kw:a+a)s'"))
+        with self.assertRaisesConfigError(
+                "Keyword must be alphanumeric for kw Interpolation 'a+a'"):
+            Interpolate("echo '%(kw:a+a)s'")
 
     def test_src_codebase_invalid_character(self):
-        self.assertRaisesConfigError("Codebase must be alphanumeric for src Interpolation 'a+a:a'",
-                                     lambda: Interpolate("echo '%(src:a+a:a)s'"))
+        with self.assertRaisesConfigError(
+                "Codebase must be alphanumeric for src Interpolation 'a+a:a'"):
+            Interpolate("echo '%(src:a+a:a)s'")
 
     def test_src_attr_invalid_character(self):
-        self.assertRaisesConfigError("Attribute must be alphanumeric for src Interpolation 'a:a+a'",
-                                     lambda: Interpolate("echo '%(src:a:a+a)s'"))
+        with self.assertRaisesConfigError(
+                "Attribute must be alphanumeric for src Interpolation 'a:a+a'"):
+            Interpolate("echo '%(src:a:a+a)s'")
 
     def test_src_missing_attr(self):
-        self.assertRaisesConfigError("Must specify both codebase and attr",
-                                     lambda: Interpolate("echo '%(src:a)s'"))
+        with self.assertRaisesConfigError(
+                "Must specify both codebase and attr"):
+            Interpolate("echo '%(src:a)s'")
 
 
 class TestInterpolatePositional(unittest.TestCase):
@@ -1688,8 +1700,9 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
         self.props = Properties(propname='propvalue')
 
     def test_invalid_first_arg(self):
-        self.assertRaisesConfigError("function given to Transform neither callable nor renderable",
-                                     lambda: Transform(None))
+        with self.assertRaisesConfigError(
+                "function given to Transform neither callable nor renderable"):
+            Transform(None)
 
     def test_argless(self):
         t = Transform(lambda: 'abc')

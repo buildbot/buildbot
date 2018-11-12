@@ -354,17 +354,15 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 
     def test_GitHubAuthBadApiVersion(self):
         for bad_api_version in (2, 5, 'a'):
-            self.assertRaisesConfigError(
-                'GitHubAuth apiVersion must be 3 or 4 not ',
-                lambda api_version=bad_api_version: oauth2.GitHubAuth(
-                    "ghclientID", "clientSECRET", apiVersion=api_version)
-            )
+            with self.assertRaisesConfigError(
+                    'GitHubAuth apiVersion must be 3 or 4 not '):
+                oauth2.GitHubAuth("ghclientID", "clientSECRET",
+                                  apiVersion=bad_api_version)
 
     def test_GitHubAuthRaiseErrorWithApiV3AndGetTeamMembership(self):
-        self.assertRaisesConfigError(
-            'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.',
-            lambda: oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
-        )
+        with self.assertRaisesConfigError(
+                'Retrieving team membership information using GitHubAuth is only possible using GitHub api v4.'):
+            oauth2.GitHubAuth("ghclientID", "clientSECRET", apiVersion=3, getTeamsMembership=True)
 
     @defer.inlineCallbacks
     def test_GitlabVerifyCode(self):

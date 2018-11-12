@@ -67,8 +67,8 @@ class TestSecretInFile(ConfigErrorsMixin, unittest.TestCase):
         expctd_msg_error = " on file tempfile2.txt are too " \
                            "open. It is required that your secret files are" \
                            " NOT accessible by others!"
-        self.assertRaisesConfigError(expctd_msg_error,
-                                     lambda: self.srvfile.checkConfig(self.tmp_dir))
+        with self.assertRaisesConfigError(expctd_msg_error):
+            self.srvfile.checkConfig(self.tmp_dir)
         os.remove(filepath)
 
     @defer.inlineCallbacks

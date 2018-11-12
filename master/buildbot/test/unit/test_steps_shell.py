@@ -71,10 +71,10 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_constructor_args_validity(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "Invalid argument(s) passed to RemoteShellCommand: ",
-            lambda: shell.ShellCommand(workdir='build', command="echo Hello World",
-                                       wrongArg1=1, wrongArg2='two'))
+        with self.assertRaisesConfigError(
+                "Invalid argument(s) passed to RemoteShellCommand: "):
+            shell.ShellCommand(workdir='build', command="echo Hello World",
+                                       wrongArg1=1, wrongArg2='two')
 
     def test_getLegacySummary_from_empty_command(self):
         # this is more of a regression test for a potential failure, really
@@ -316,9 +316,9 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
 
     def test_missing_command_error(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "ShellCommand's `command' argument is not specified",
-            shell.ShellCommand)
+        with self.assertRaisesConfigError(
+                "ShellCommand's `command' argument is not specified"):
+            shell.ShellCommand()
 
 
 class TreeSize(steps.BuildStepMixin, unittest.TestCase):
@@ -1007,10 +1007,10 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
 
     def test_missing_command_error(self):
         # this checks that an exception is raised for invalid arguments
-        self.assertRaisesConfigError(
-            "WarningCountingShellCommand's `command' argument is not "
-            "specified",
-            shell.WarningCountingShellCommand)
+        with self.assertRaisesConfigError(
+                "WarningCountingShellCommand's `command' argument is not "
+                "specified"):
+            shell.WarningCountingShellCommand()
 
 
 class Compile(steps.BuildStepMixin, unittest.TestCase):
