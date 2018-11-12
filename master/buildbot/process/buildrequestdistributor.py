@@ -65,7 +65,7 @@ class BuildChooserBase(object):
         worker, breq = yield self.popNextBuild()
         if not worker or not breq:
             defer.returnValue((None, None))
-            return
+            return  # pragma: no cover
 
         defer.returnValue((worker, [breq]))
 
@@ -229,7 +229,7 @@ class BasicBuildChooser(BuildChooserBase):
         yield self._fetchUnclaimedBrdicts()
         if not self.unclaimedBrdicts:
             defer.returnValue(None)
-            return
+            return  # pragma: no cover
 
         if self.nextBuild:
             # nextBuild expects BuildRequest objects
@@ -255,7 +255,7 @@ class BasicBuildChooser(BuildChooserBase):
         if self.preferredWorkers:
             worker = self.preferredWorkers.pop(0)
             defer.returnValue(worker)
-            return
+            return  # pragma: no cover
 
         while self.workerpool:
             try:
@@ -274,7 +274,7 @@ class BasicBuildChooser(BuildChooserBase):
             canStart = yield self.bldr.canStartWithWorkerForBuilder(worker, [buildrequest])
             if canStart:
                 defer.returnValue(worker)
-                return
+                return  # pragma: no cover
 
             # save as a last resort, just in case we need them later
             if self.rejectedWorkers is not None:
@@ -284,7 +284,7 @@ class BasicBuildChooser(BuildChooserBase):
         if self.rejectedWorkers:
             worker = self.rejectedWorkers.pop(0)
             defer.returnValue(worker)
-            return
+            return  # pragma: no cover
 
         defer.returnValue(None)
 
@@ -325,6 +325,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         self.active = False
 
         self._pendingMSBOCalls = []
+        self._activity_loop_deferred = None
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -341,6 +342,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         if self._pendingMSBOCalls:
             yield defer.DeferredList(self._pendingMSBOCalls)
 
+    @defer.inlineCallbacks
     def maybeStartBuildsOn(self, new_builders):
         """
         Try to start any builds that can be started right now.  This function
@@ -356,19 +358,22 @@ class BuildRequestDistributor(service.AsyncMultiService):
         d = self._maybeStartBuildsOn(new_builders)
         self._pendingMSBOCalls.append(d)
 
-        @d.addBoth
-        def remove(x):
+        try:
+            yield d
+        except Exception as e:  # pragma: no cover
+            log.err(e, "while starting builds on {0}".format(new_builders))
+        finally:
             self._pendingMSBOCalls.remove(d)
-            return x
-        d.addErrback(log.err, "while starting builds on %s" % (new_builders,))
 
+    @defer.inlineCallbacks
     def _maybeStartBuildsOn(self, new_builders):
         new_builders = set(new_builders)
         existing_pending = set(self._pending_builders)
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return  # pragma: no cover
 
         # reset the list of pending builders
         @defer.inlineCallbacks
@@ -386,12 +391,12 @@ class BuildRequestDistributor(service.AsyncMultiService):
                 # start the activity loop, if we aren't already
                 # working on that.
                 if not self.active:
-                    self._activityLoop()
-            except Exception:
+                    self._activity_loop_deferred = self._activityLoop()
+            except Exception:  # pragma: no cover
                 log.err(Failure(),
                         "while attempting to start builds on %s" % self.name)
 
-        return self.pending_builders_lock.run(
+        yield self.pending_builders_lock.run(
             resetPendingBuildersList, new_builders)
 
     @defer.inlineCallbacks
@@ -509,7 +514,6 @@ class BuildRequestDistributor(service.AsyncMultiService):
         timer.stop()
 
         self.active = False
-        self._quiet()
 
     @defer.inlineCallbacks
     def _maybeStartBuildsOnBuilder(self, bldr, _reactor=reactor):
@@ -543,6 +547,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # just instantiate the build chooser requested
         return self.BuildChooser(bldr, master)
 
-    def _quiet(self):
-        # shim for tests
-        pass  # pragma: no cover
+    @defer.inlineCallbacks
+    def _waitForFinish(self):
+        if self._activity_loop_deferred is not None:
+            yield self._activity_loop_deferred
