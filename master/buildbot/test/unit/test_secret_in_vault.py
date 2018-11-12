@@ -70,12 +70,14 @@ class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
         self.assertEqual(self.srvcVault.vaultToken, "someToken")
 
     def testCheckConfigErrorSecretInVaultService(self):
-        self.assertRaisesConfigError("vaultServer must be a string while it is",
-                                     self.srvcVault.checkConfig)
+        with self.assertRaisesConfigError(
+                "vaultServer must be a string while it is"):
+            self.srvcVault.checkConfig()
 
     def testCheckConfigErrorSecretInVaultServiceWrongServerAddress(self):
-        self.assertRaisesConfigError("vaultToken must be a string while it is",
-                                     lambda: self.srvcVault.checkConfig(vaultServer="serveraddr",))
+        with self.assertRaisesConfigError(
+                "vaultToken must be a string while it is"):
+            self.srvcVault.checkConfig(vaultServer="serveraddr")
 
     @defer.inlineCallbacks
     def testReconfigSecretInVaultService(self):
