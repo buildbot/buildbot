@@ -45,17 +45,17 @@ class TestOneShellCommand(steps.BuildStepMixin, unittest.TestCase, configmixin.C
         return self.tearDownBuildStep()
 
     def testShellArgInput(self):
-        self.assertRaisesConfigError(
-            "the 'command' parameter of ShellArg must not be None",
-            lambda: shellsequence.ShellArg(command=None))
+        with self.assertRaisesConfigError(
+             "the 'command' parameter of ShellArg must not be None"):
+            shellsequence.ShellArg(command=None)
         arg1 = shellsequence.ShellArg(command=1)
-        self.assertRaisesConfigError(
-            "1 is an invalid command, it must be a string or a list",
-            arg1.validateAttributes)
+        with self.assertRaisesConfigError(
+                "1 is an invalid command, it must be a string or a list"):
+            arg1.validateAttributes()
         arg2 = shellsequence.ShellArg(command=["make", 1])
-        self.assertRaisesConfigError(
-            "['make', 1] must only have strings in it",
-            arg2.validateAttributes)
+        with self.assertRaisesConfigError(
+                "['make', 1] must only have strings in it"):
+            arg2.validateAttributes()
 
         for goodcmd in ["make p1", ["make", "p1"]]:
             arg = shellsequence.ShellArg(command=goodcmd)

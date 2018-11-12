@@ -2325,9 +2325,10 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         return self.runStep()
 
     def test_mode_full_copy_shallow(self):
-        self.assertRaisesConfigError("shallow only possible with mode 'full' and method 'clobber'", lambda:
-                                     self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
-                                                    mode='full', method='copy', shallow=True))
+        with self.assertRaisesConfigError(
+                "shallow only possible with mode 'full' and method 'clobber'"):
+            self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
+                        mode='full', method='copy', shallow=True)
 
     def test_mode_incremental_no_existing_repo(self):
         self.setupStep(
@@ -2508,8 +2509,8 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
         return self.runStep()
 
     def test_repourl(self):
-        self.assertRaisesConfigError("must provide repourl", lambda:
-                                     self.stepClass(mode="full"))
+        with self.assertRaisesConfigError("must provide repourl"):
+            self.stepClass(mode="full")
 
     def test_mode_full_fresh_revision(self):
         self.setupStep(
