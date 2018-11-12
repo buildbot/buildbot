@@ -4,4 +4,4 @@ sphinxcontrib-blockdiag==1.5.5
 sphinxcontrib-spelling==4.2.0
 sphinxcontrib-websupport==1.1.0
 Pygments==2.2.0
-towncrier==18.5.0
+towncrier==18.5.0 # pyup: ignore
