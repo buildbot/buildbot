@@ -454,14 +454,12 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_builddir_required(self):
-        self.assertRaises(config.ConfigErrors,
-                          python.Sphinx)
+        with self.assertRaises(config.ConfigErrors):
+            python.Sphinx()
 
     def test_bad_mode(self):
-        self.assertRaises(config.ConfigErrors,
-                          python.Sphinx,
-                          sphinx_builddir="_build",
-                          mode="don't care")
+        with self.assertRaises(config.ConfigErrors):
+            python.Sphinx(sphinx_builddir="_build", mode="don't care")
 
     def test_success(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))

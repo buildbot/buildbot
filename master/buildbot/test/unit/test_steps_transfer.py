@@ -112,8 +112,8 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def testConstructorModeType(self):
-        self.assertRaises(config.ConfigErrors,
-                          transfer.FileUpload, workersrc=__file__, masterdest='xyz', mode='g+rwx')
+        with self.assertRaises(config.ConfigErrors):
+            transfer.FileUpload(workersrc=__file__, masterdest='xyz', mode='g+rwx')
 
     def testBasic(self):
         self.setupStep(
@@ -326,8 +326,10 @@ class TestFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrc, 'srcfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.FileUpload)
-        self.assertRaises(TypeError, transfer.FileUpload, 'src')
+        with self.assertRaises(TypeError):
+            transfer.FileUpload()
+        with self.assertRaises(TypeError):
+            transfer.FileUpload('src')
 
 
 class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
@@ -457,8 +459,10 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrc, 'srcfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.DirectoryUpload)
-        self.assertRaises(TypeError, transfer.DirectoryUpload, 'src')
+        with self.assertRaises(TypeError):
+            transfer.DirectoryUpload()
+        with self.assertRaises(TypeError):
+            transfer.DirectoryUpload('src')
 
 
 class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
@@ -820,9 +824,10 @@ class TestMultipleFileUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workersrcs, ['srcfile'])
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.MultipleFileUpload)
-        self.assertRaises(
-            TypeError, transfer.MultipleFileUpload, ['srcfile'])
+        with self.assertRaises(TypeError):
+            transfer.MultipleFileUpload()
+        with self.assertRaises(TypeError):
+            transfer.MultipleFileUpload(['srcfile'])
 
 
 class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -874,8 +879,10 @@ class TestFileDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.FileDownload)
-        self.assertRaises(TypeError, transfer.FileDownload, 'srcfile')
+        with self.assertRaises(TypeError):
+            transfer.FileDownload()
+        with self.assertRaises(TypeError):
+            transfer.FileDownload('srcfile')
 
     @defer.inlineCallbacks
     def testBasic(self):
@@ -1055,9 +1062,10 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.StringDownload)
-        self.assertRaises(
-            TypeError, transfer.StringDownload, 'srcfile')
+        with self.assertRaises(TypeError):
+            transfer.StringDownload()
+        with self.assertRaises(TypeError):
+            transfer.StringDownload('srcfile')
 
 
 class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
@@ -1143,9 +1151,10 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.JSONStringDownload)
-        self.assertRaises(
-            TypeError, transfer.JSONStringDownload, 'srcfile')
+        with self.assertRaises(TypeError):
+            transfer.JSONStringDownload()
+        with self.assertRaises(TypeError):
+            transfer.JSONStringDownload('srcfile')
 
 
 class TestJSONPropertiesDownload(unittest.TestCase):
@@ -1248,4 +1257,5 @@ class TestJSONPropertiesDownload(unittest.TestCase):
         self.assertEqual(step.workerdest, 'dstfile')
 
     def test_init_positional_args(self):
-        self.assertRaises(TypeError, transfer.JSONPropertiesDownload)
+        with self.assertRaises(TypeError):
+            transfer.JSONPropertiesDownload()

@@ -376,8 +376,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_constructor_conflict(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None))
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(property='foo', extract_fn=lambda: None)
 
     def test_run_property(self):
         self.setupStep(
@@ -516,19 +516,18 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         If both ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
         """
-        self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand,
-                          command=["echo", "value"],
-                          property="propname",
-                          extract_fn=lambda x: {"propname": "hello"})
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(command=["echo", "value"],
+                                         property="propname",
+                                         extract_fn=lambda x: {"propname": "hello"})
 
     def test_error_none_set(self):
         """
         If neither ``extract_fn`` and ``property`` are defined,
         ``SetPropertyFromCommand`` reports a config error.
         """
-        self.assertRaises(config.ConfigErrors,
-                          shell.SetPropertyFromCommand, command=["echo", "value"])
+        with self.assertRaises(config.ConfigErrors):
+            shell.SetPropertyFromCommand(command=["echo", "value"])
 
 
 class PerlModuleTest(steps.BuildStepMixin, unittest.TestCase):
