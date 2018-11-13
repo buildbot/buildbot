@@ -51,15 +51,13 @@ class TestOpenStackWorker(unittest.TestCase):
 
     def test_constructor_nonova(self):
         self.patch(openstack, "client", None)
-        self.assertRaises(config.ConfigErrors,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          **self.bs_image_args)
+        with self.assertRaises(config.ConfigErrors):
+            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
 
     def test_constructor_nokeystoneauth(self):
         self.patch(openstack, "loading", None)
-        self.assertRaises(config.ConfigErrors,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          **self.bs_image_args)
+        with self.assertRaises(config.ConfigErrors):
+            openstack.OpenStackLatentWorker('bot', 'pass', **self.bs_image_args)
 
     def test_constructor_minimal(self):
         bs = openstack.OpenStackLatentWorker(
@@ -162,9 +160,9 @@ class TestOpenStackWorker(unittest.TestCase):
         """
         Must have one of image or block_devices specified.
         """
-        self.assertRaises(ValueError,
-                          openstack.OpenStackLatentWorker, 'bot', 'pass',
-                          flavor=1, **self.os_auth)
+        with self.assertRaises(ValueError):
+            openstack.OpenStackLatentWorker('bot', 'pass', flavor=1,
+                                            **self.os_auth)
 
     @defer.inlineCallbacks
     def test_getImage_string(self):
