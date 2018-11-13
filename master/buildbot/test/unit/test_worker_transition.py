@@ -334,10 +334,9 @@ class AttributeMixin(unittest.TestCase):
 
         c = C()
 
-        self.assertRaisesRegex(
-            AttributeError,
-            "'C' object has no attribute 'abc'",
-            lambda: c.abc)
+        with self.assertRaisesRegex(AttributeError,
+                                    "'C' object has no attribute 'abc'"):
+            c.abc()
 
     def test_static_attribute(self):
         class C(WorkerAPICompatMixin):

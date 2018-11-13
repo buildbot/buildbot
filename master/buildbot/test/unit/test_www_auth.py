@@ -73,7 +73,8 @@ class AuthBase(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual((yield self.auth.maybeAutoLogin(self.req)), None)
 
     def test_getLoginResource(self):
-        self.assertRaises(Error, self.auth.getLoginResource)
+        with self.assertRaises(Error):
+            self.auth.getLoginResource()
 
     @defer.inlineCallbacks
     def test_updateUserInfo(self):
