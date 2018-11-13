@@ -188,9 +188,12 @@ class TestBuildbotPlugins(unittest.TestCase):
     def test_missing_plugin(self):
         plugins = db.get_plugins('interface', interface=ITestInterface)
 
-        self.assertRaises(AttributeError, getattr, plugins, 'bad')
-        self.assertRaises(PluginDBError, plugins.get, 'bad')
-        self.assertRaises(PluginDBError, plugins.get, 'good.extra')
+        with self.assertRaises(AttributeError):
+            getattr(plugins, 'bad')
+        with self.assertRaises(PluginDBError):
+            plugins.get('bad')
+        with self.assertRaises(PluginDBError):
+            plugins.get('good.extra')
 
     def test_interface_provided_deep(self):
         # Basic check before the actual test
@@ -216,13 +219,15 @@ class TestBuildbotPlugins(unittest.TestCase):
     def test_interface_provided_deps_failed(self):
         plugins = db.get_plugins('interface_failed', interface=ITestInterface,
                                  check_extras=True)
-        self.assertRaises(PluginDBError, plugins.get, 'good')
+        with self.assertRaises(PluginDBError):
+            plugins.get('good')
 
     def test_required_interface_not_provided(self):
         plugins = db.get_plugins('no_interface_again',
                                  interface=ITestInterface)
         self.assertTrue(plugins._interface is ITestInterface)
-        self.assertRaises(PluginDBError, plugins.get, 'good')
+        with self.assertRaises(PluginDBError):
+            plugins.get('good')
 
     def test_no_interface_provided(self):
         plugins = db.get_plugins('no_interface')
@@ -230,11 +235,12 @@ class TestBuildbotPlugins(unittest.TestCase):
 
     def test_no_interface_provided_deps_failed(self):
         plugins = db.get_plugins('no_interface_failed', check_extras=True)
-        self.assertRaises(PluginDBError, plugins.get, 'good')
+        with self.assertRaises(PluginDBError):
+            plugins.get('good')
 
     def test_failure_on_dups(self):
-        self.assertRaises(PluginDBError, db.get_plugins, 'duplicates',
-                          load_now=True)
+        with self.assertRaises(PluginDBError):
+            db.get_plugins('duplicates', load_now=True)
 
     def test_get_info_on_a_known_plugin(self):
         plugins = db.get_plugins('interface')
@@ -242,11 +248,13 @@ class TestBuildbotPlugins(unittest.TestCase):
 
     def test_failure_on_unknown_plugin_info(self):
         plugins = db.get_plugins('interface')
-        self.assertRaises(PluginDBError, plugins.info, 'bad')
+        with self.assertRaises(PluginDBError):
+            plugins.info('bad')
 
     def test_failure_on_unknown_plugin_get(self):
         plugins = db.get_plugins('interface')
-        self.assertRaises(PluginDBError, plugins.get, 'bad')
+        with self.assertRaises(PluginDBError):
+            plugins.get('bad')
 
 
 class SimpleFakeEntry(FakeEntry):
@@ -312,14 +320,14 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         # Access of newly named workers through old entry point is an error.
         with assertProducesWarning(DeprecatedWorkerNameWarning,
                                    message_pattern="namespace is deprecated"):
-            self.assertRaises(
-                AttributeError, lambda: self.buildslave_ns.Worker)
+            with self.assertRaises(AttributeError):
+                self.buildslave_ns.Worker()
 
     def test_old_api_through_new_namespace(self):
         # Access of old-named workers through new API is an error.
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertRaises(AttributeError,
-                              lambda: self.worker_ns.BuildSlave)
+            with self.assertRaises(AttributeError):
+                self.worker_ns.BuildSlave()
 
     def test_old_api_thirdparty(self):
         with assertProducesWarning(
@@ -352,8 +360,8 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         # new API.
         with assertProducesWarning(DeprecatedWorkerNameWarning,
                                    message_pattern="namespace is deprecated"):
-            self.assertRaises(AttributeError,
-                              lambda: self.buildslave_ns.newthirdparty)
+            with self.assertRaises(AttributeError):
+                self.buildslave_ns.newthirdparty()
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(
                 self.worker_ns.newthirdparty is ClassWithInterface)
@@ -363,8 +371,8 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         # PluginDBError?
         with assertProducesWarning(DeprecatedWorkerNameWarning,
                                    message_pattern="namespace is deprecated"):
-            self.assertRaises(PluginDBError,
-                              lambda: self.buildslave_ns.deep.newthirdparty)
+            with self.assertRaises(PluginDBError):
+                self.buildslave_ns.deep.newthirdparty()
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(
                 self.worker_ns.deep.newthirdparty is ClassWithInterface)
