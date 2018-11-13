@@ -56,8 +56,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         defer.returnValue(mn)
 
     def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
-        self.assertRaises(config.ConfigErrors, NotifierBase,
-                          tags=['fast', 'slow'], builders=['a', 'b'])
+        with self.assertRaises(config.ConfigErrors):
+            NotifierBase(tags=['fast', 'slow'], builders=['a', 'b'])
 
     def test_init_warns_notifier_mode_all_in_iter(self):
         with self.assertRaisesConfigError(
