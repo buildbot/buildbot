@@ -243,6 +243,10 @@ class NotifierBase(service.BuildbotService):
                 all_logs.append(l)
         defer.returnValue(all_logs)
 
+    def getResponsibleUsersForBuild(self, master, buildid):
+        # Use library method but subclassers may want to override that
+        return utils.getResponsibleUsersForBuild(master, buildid)
+
     @defer.inlineCallbacks
     def buildMessage(self, name, builds, results):
         patches = []
@@ -266,7 +270,7 @@ class NotifierBase(service.BuildbotService):
                 previous_results = build['prev_build']['results']
             else:
                 previous_results = None
-            blamelist = yield utils.getResponsibleUsersForBuild(self.master, build['buildid'])
+            blamelist = yield self.getResponsibleUsersForBuild(self.master, build['buildid'])
             buildmsg = yield self.messageFormatter.formatMessageForBuildResults(
                 self.mode, name, build['buildset'], build, self.master,
                 previous_results, blamelist)
