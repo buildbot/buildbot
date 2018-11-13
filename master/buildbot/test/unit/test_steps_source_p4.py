@@ -60,45 +60,37 @@ class TestP4(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.properties.setProperty('builddir', workspace_dir, 'P4')
 
     def test_no_empty_step_config(self):
-        self.assertRaises(config.ConfigErrors, P4)
+        with self.assertRaises(config.ConfigErrors):
+            P4()
 
     def test_no_multiple_type_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4viewspec=('//depot/trunk', ''),
-                          p4base='//depot', p4branch='trunk',
-                          p4extra_views=['src', 'doc'])
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4viewspec=('//depot/trunk', ''), p4base='//depot',
+            p4branch='trunk', p4extra_views=['src', 'doc'])
 
     def test_no_p4viewspec_is_string_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4viewspec='a_bad_idea')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4viewspec='a_bad_idea')
 
     def test_no_p4base_has_trailing_slash_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4base='//depot/')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot/')
 
     def test_no_p4branch_has_trailing_slash_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4base='//depot', p4branch='blah/')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot', p4branch='blah/')
 
     def test_no_p4branch_with_no_p4base_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4branch='blah')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4branch='blah')
 
     def test_no_p4extra_views_with_no_p4base_step_config(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4extra_views='blah')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4extra_views='blah')
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors,
-                          P4,
-                          p4base='//depot',
-                          mode='invalid')
+        with self.assertRaises(config.ConfigErrors):
+            P4(p4base='//depot', mode='invalid')
 
     def test_mode_incremental_p4base_with_revision(self):
         self.setupStep(P4(p4port='localhost:12000', mode='incremental',

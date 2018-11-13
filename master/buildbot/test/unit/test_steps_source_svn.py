@@ -128,20 +128,16 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.patch(svn.SVN, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
-        self.assertRaises(config.ConfigErrors,
-                          svn.SVN)
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN()
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors,
-                          svn.SVN,
-                          repourl='http://svn.local/app/trunk',
-                          mode='invalid')
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN(repourl='http://svn.local/app/trunk', mode='invalid')
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors,
-                          svn.SVN,
-                          repourl='http://svn.local/app/trunk',
-                          method='invalid')
+        with self.assertRaises(config.ConfigErrors):
+            svn.SVN(repourl='http://svn.local/app/trunk', method='invalid')
 
     def test_svn_not_installed(self):
         self.setupStep(svn.SVN(repourl='http://svn.local/app/trunk'))
@@ -221,7 +217,8 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
 
         def _checkType():
             revision = self.step.getProperty('got_revision')
-            self.assertRaises(ValueError, int, revision)
+            with self.assertRaises(ValueError):
+                int(revision)
         d.addCallback(lambda _: _checkType())
         return d
 
@@ -1991,9 +1988,8 @@ class TestGetUnversionedFiles(unittest.TestCase):
             </target>
         </status>
         """
-        self.assertRaises(buildstep.BuildStepFailed,
-                          list,
-                          svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, []))
+        with self.assertRaises(buildstep.BuildStepFailed):
+            list(svn.SVN.getUnversionedFiles(svn_st_xml_corrupt, []))
 
     def test_getUnversionedFiles_no_path(self):
         svn_st_xml = """<?xml version="1.0"?>
