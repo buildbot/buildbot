@@ -74,9 +74,9 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
     # tests
 
     def test_constructor_invalid(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: timed.Periodic(name='test', builderNames=['test'],
-                                                 periodicBuildTimer=-2))
+        with self.assertRaises(config.ConfigErrors):
+            timed.Periodic(name='test', builderNames=['test'],
+                           periodicBuildTimer=-2)
 
     def test_constructor_no_reason(self):
         sched = self.makeScheduler(

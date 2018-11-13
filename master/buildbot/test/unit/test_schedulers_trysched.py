@@ -221,8 +221,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
     def test_parseJob_empty(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO(''))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO(''))
 
     def test_parseJob_longer_than_netstring_MAXLENGTH(self):
         self.patch(basic.NetstringReceiver, 'MAX_LENGTH', 100)
@@ -236,21 +236,20 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
 
         test_temp_file = NativeStringIO(jobstr)
 
-        self.assertRaises(trysched.BadJobfile,
-                          lambda: sched.parseJob(test_temp_file))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(test_temp_file)
 
     def test_parseJob_invalid(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob,
-            NativeStringIO('this is not a netstring'))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO('this is not a netstring'))
 
     def test_parseJob_invalid_version(self):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['a'], jobdir='foo')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO('1:9,'))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO('1:9,'))
 
     def makeNetstring(self, *strings):
         return ''.join(['%d:%s,' % (len(s), s) for s in strings])
@@ -549,8 +548,8 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         sched = trysched.Try_Jobdir(
             name='tsched', builderNames=['buildera', 'builderb'], jobdir='foo')
         jobstr = self.makeNetstring('5', '{"comment": "com}')
-        self.assertRaises(
-            trysched.BadJobfile, sched.parseJob, NativeStringIO(jobstr))
+        with self.assertRaises(trysched.BadJobfile):
+            sched.parseJob(NativeStringIO(jobstr))
 
     # handleJobFile
 
