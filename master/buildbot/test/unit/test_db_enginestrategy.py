@@ -147,8 +147,8 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
     def test_mysql_bad_charset(self):
         u = url.make_url("mysql:///dbname?charset=ebcdic")
         kwargs = dict(basedir='my-base-dir')
-        self.assertRaises(TypeError,
-                          lambda: self.strat.special_case_mysql(u, kwargs))
+        with self.assertRaises(TypeError):
+            self.strat.special_case_mysql(u, kwargs)
 
     def test_mysql_good_use_unicode(self):
         u = url.make_url("mysql:///dbname?use_unicode=True")
@@ -161,8 +161,8 @@ class BuildbotEngineStrategy_special_cases(unittest.TestCase):
     def test_mysql_bad_use_unicode(self):
         u = url.make_url("mysql:///dbname?use_unicode=maybe")
         kwargs = dict(basedir='my-base-dir')
-        self.assertRaises(TypeError,
-                          lambda: self.strat.special_case_mysql(u, kwargs))
+        with self.assertRaises(TypeError):
+            self.strat.special_case_mysql(u, kwargs)
 
     def test_mysql_storage_engine(self):
         u = url.make_url("mysql:///dbname?storage_engine=foo")
