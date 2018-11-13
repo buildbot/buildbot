@@ -170,9 +170,8 @@ class ResultSpec(unittest.TestCase):
                       ('bruce', 'willis'),
                       ('dwayne', 'montague'))
         # note that the REST interface catches this with a nicer error message
-        self.assertRaises(KeyError,
-                          resultspec.ResultSpec(fields=['fn'], order=['ln']).apply,
-                          data)
+        with self.assertRaises(KeyError):
+            resultspec.ResultSpec(fields=['fn'], order=['ln']).apply(data)
 
     def test_sort_null_datetimefields(self):
         data = mklist(('fn', 'ln'),
@@ -234,18 +233,16 @@ class ResultSpec(unittest.TestCase):
         data.limit = 10
         # ResultSpec does not have its offset/limit fields cleared - this is
         # detected as an assertion failure
-        self.assertRaises(AssertionError,
-                          resultspec.ResultSpec(offset=10, limit=20).apply,
-                          data)
+        with self.assertRaises(AssertionError):
+            resultspec.ResultSpec(offset=10, limit=20).apply(data)
 
     def test_endpoint_returns_total_without_applying_filters(self):
         data = base.ListResult(mklist('x', *lrange(10, 20)))
         data.total = 99
         # apply doesn't want to get a total with filters still outstanding
         f = resultspec.Filter(field='x', op='gt', values=[23])
-        self.assertRaises(AssertionError,
-                          resultspec.ResultSpec(filters=[f]).apply,
-                          data)
+        with self.assertRaises(AssertionError):
+            resultspec.ResultSpec(filters=[f]).apply(data)
 
     def test_popProperties(self):
         expected = ['prop1', 'prop2']
@@ -303,7 +300,8 @@ class ResultSpec(unittest.TestCase):
         rs = resultspec.ResultSpec(filters=[
             resultspec.Filter('foo', 'eq', ['bar']),
         ])
-        self.assertRaises(ValueError, rs.popIntegerFilter, 'foo')
+        with self.assertRaises(ValueError):
+            rs.popIntegerFilter('foo')
 
     def test_removeOrder(self):
         rs = resultspec.ResultSpec(order=['foo', '-bar'])

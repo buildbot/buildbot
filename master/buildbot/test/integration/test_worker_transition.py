@@ -206,10 +206,12 @@ class PluginsTransition(unittest.TestCase):
                 DeprecatedWorkerNameWarning,
                 message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
                                 "namespace is deprecated"):
-            self.assertRaises(AttributeError, lambda: buildslave_ns.Worker)
+            with self.assertRaises(AttributeError):
+                buildslave_ns.Worker()
 
         # Access of old-named workers through new API is an error.
-        self.assertRaises(AttributeError, lambda: worker_ns.BuildSlave)
+        with self.assertRaises(AttributeError):
+            worker_ns.BuildSlave()
 
     def test_plugins_util_SlaveLock_import(self):
         from buildbot.plugins import util

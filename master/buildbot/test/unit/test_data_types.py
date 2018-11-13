@@ -41,7 +41,8 @@ class TypeMixin(object):
             self.assertEqual(self.ty.valueFromString(string), expValue,
                              "value of string %r" % (string,))
         for string in self.badStringValues:
-            self.assertRaises(Exception, self.ty.valueFromString, string,
+            with self.assertRaises(Exception):
+                self.ty.valueFromString(string,
                               "expected error for %r" % (string,))
 
     def test_cmp(self):

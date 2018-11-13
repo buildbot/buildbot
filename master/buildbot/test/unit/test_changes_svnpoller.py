@@ -640,7 +640,8 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
 
     def test_use_svnurl(self):
         base = "svn+ssh://svn.twistedmatrix.com/svn/Twisted/trunk"
-        self.assertRaises(TypeError, self.attachSVNPoller, svnurl=base)
+        with self.assertRaises(TypeError):
+            self.attachSVNPoller(svnurl=base)
 
 
 class TestSplitFile(unittest.TestCase):

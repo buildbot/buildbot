@@ -46,8 +46,8 @@ class TestBase(unittest.TestCase):
         self.comp.checkLength(self.tbl.c.str32, "short string")
 
     def test_checkLength_long(self):
-        self.assertRaises(RuntimeError, lambda:
-                          self.comp.checkLength(self.tbl.c.str32, "long string" * 5))
+        with self.assertRaises(RuntimeError):
+            self.comp.checkLength(self.tbl.c.str32, ("long string" * 5))
 
     def test_ensureLength_ok(self):
         v = self.comp.ensureLength(self.tbl.c.str32, "short string")
@@ -59,8 +59,8 @@ class TestBase(unittest.TestCase):
         self.comp.checkLength(self.tbl.c.str32, v)
 
     def test_checkLength_text(self):
-        self.assertRaises(AssertionError, lambda:
-                          self.comp.checkLength(self.tbl.c.txt, "long string" * 5))
+        with self.assertRaises(AssertionError):
+            self.comp.checkLength(self.tbl.c.txt, ("long string" * 5))
 
     def test_checkLength_long_not_mysql(self):
         self.db.pool.engine.dialect.name = 'sqlite'
