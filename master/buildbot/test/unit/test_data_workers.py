@@ -199,7 +199,8 @@ class WorkerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def test_bad_actions(self):
         with self.assertRaises(exceptions.InvalidControlException):
-            yield self.callControl("bad_action", {}, ('masters', 13, 'builders', 40, 'workers', 2))
+            yield self.callControl("bad_action", {},
+                                  ('masters', 13, 'builders', 40, 'workers', 2))
 
 
 class WorkersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -307,5 +308,7 @@ class Worker(interfaces.InterfaceTests, unittest.TestCase):
         self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
 
     def test_findWorkerId_not_id(self):
-        self.assertRaises(ValueError, self.rtype.findWorkerId, b'foo')
-        self.assertRaises(ValueError, self.rtype.findWorkerId, u'123/foo')
+        with self.assertRaises(ValueError):
+            self.rtype.findWorkerId(b'foo')
+        with self.assertRaises(ValueError):
+            self.rtype.findWorkerId(u'123/foo')
