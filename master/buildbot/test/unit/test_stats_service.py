@@ -88,9 +88,8 @@ class TestStatsServicesConfiguration(TestStatsServicesBase):
     def test_bad_configuration(self):
         # Reconfigure with a bad configuration.
         new_storage_backends = [mock.Mock()]
-        self.assertRaises(TypeError,
-                          self.stats_service.reconfigService,
-                          new_storage_backends)
+        with self.assertRaises(TypeError):
+            self.stats_service.reconfigService(new_storage_backends)
 
     def checkEqual(self, new_storage_backends):
         # Check whether the new_storage_backends was set in reconfigService
@@ -116,10 +115,9 @@ class TestInfluxDB(TestStatsServicesBase, logging.LoggingMixin):
             # consume it somehow to please pylint
             [influxdb]
         except ImportError:
-            self.assertRaises(config.ConfigErrors,
-                              lambda: InfluxStorageService(
-                                  "fake_url", "fake_port", "fake_user", "fake_password",
-                                  "fake_db", captures))
+            with self.assertRaises(config.ConfigErrors):
+                InfluxStorageService("fake_url", "fake_port", "fake_user",
+                                     "fake_password", "fake_db", captures)
 
         # if instead influxdb is installed, then initialize it - no errors
         # should be realized
@@ -391,8 +389,8 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             'duration', list(self.fake_storage_service.stored_data[0][0].keys())[0])
 
     def test_build_duration_report_in_error(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: capture.CaptureBuildDuration('builder1', report_in='foobar'))
+        with self.assertRaises(config.ConfigErrors):
+            capture.CaptureBuildDuration('builder1', report_in='foobar')
 
     @defer.inlineCallbacks
     def test_build_duration_capturing_alt_callback(self):
