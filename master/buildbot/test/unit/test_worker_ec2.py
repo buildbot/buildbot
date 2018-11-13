@@ -161,7 +161,8 @@ class TestEC2LatentWorker(unittest.TestCase):
                                 subnet_id="sn-1234"
                                 )
 
-        self.assertRaises(ValueError, create_worker)
+        with self.assertRaises(ValueError):
+            create_worker()
 
     @mock_ec2
     def test_start_vpc_instance(self):
@@ -530,7 +531,8 @@ class TestEC2LatentWorker(unittest.TestCase):
                                 valid_ami_location_regex='foobar.*'
                                 )
 
-        self.assertRaises(ValueError, create_worker)
+        with self.assertRaises(ValueError):
+            create_worker()
 
     @mock_ec2
     def test_fail_multiplier_and_max_are_none(self):
@@ -552,7 +554,8 @@ class TestEC2LatentWorker(unittest.TestCase):
                                 price_multiplier=None,
                                 max_spot_price=None
                                 )
-        self.assertRaises(ValueError, create_worker)
+        with self.assertRaises(ValueError):
+            create_worker()
 
 
 class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):

@@ -43,8 +43,8 @@ class TestLibVirtWorker(unittest.TestCase):
 
     def test_constructor_nolibvirt(self):
         self.patch(libvirtworker, "libvirt", None)
-        self.assertRaises(config.ConfigErrors, self.ConcreteWorker,
-                          'bot', 'pass', None, 'path', 'path')
+        with self.assertRaises(config.ConfigErrors):
+            self.ConcreteWorker('bot', 'pass', None, 'path', 'path')
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):

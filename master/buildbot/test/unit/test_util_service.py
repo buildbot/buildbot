@@ -597,11 +597,12 @@ class BuildbotService(unittest.TestCase):
             'name': 'basic'})
 
     def testNoName(self):
-        self.assertRaises(ValueError, MyService, 1, a=2)
+        with self.assertRaises(ValueError):
+            MyService(1, a=2)
 
     def testChecksDone(self):
-        self.assertRaises(
-            config.ConfigErrors, MyService, 1, name="foo")
+        with self.assertRaises(config.ConfigErrors):
+            MyService(1, name="foo")
 
 
 class BuildbotServiceManager(unittest.TestCase):
@@ -664,11 +665,12 @@ class BuildbotServiceManager(unittest.TestCase):
         self.assertEqual(serv.config, ((1,), dict(a=4)))
 
     def testNoName(self):
-        self.assertRaises(ValueError, MyService, 1, a=2)
+        with self.assertRaises(ValueError):
+            MyService(1, a=2)
 
     def testChecksDone(self):
-        self.assertRaises(
-            config.ConfigErrors, lambda: MyService(1, name="foo"))
+        with self.assertRaises(config.ConfigErrors):
+            MyService(1, name="foo")
 
     @defer.inlineCallbacks
     def testReconfigWithNew(self):

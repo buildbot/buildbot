@@ -52,19 +52,22 @@ class TestWarningsFilter(unittest.TestCase):
         def f1():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 pass
-        self.assertRaises(AssertionError, f1)
+        with self.assertRaises(AssertionError):
+            f1()
 
         def f2():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 warnings.warn("1", SomeWarning)
-        self.assertRaises(AssertionError, f2)
+        with self.assertRaises(AssertionError):
+            f2()
 
         def f3():
             with assertProducesWarnings(SomeWarning, num_warnings=2):
                 warnings.warn("1", SomeWarning)
                 warnings.warn("2", SomeWarning)
                 warnings.warn("3", SomeWarning)
-        self.assertRaises(AssertionError, f3)
+        with self.assertRaises(AssertionError):
+            f3()
 
     def test_warnigs_caught_pattern_check(self):
         # Assertion is correct.
@@ -77,7 +80,8 @@ class TestWarningsFilter(unittest.TestCase):
             with assertProducesWarning(SomeWarning, message_pattern=r"other"):
                 warnings.warn("The test", SomeWarning)
 
-        self.assertRaises(AssertionError, f)
+        with self.assertRaises(AssertionError):
+            f()
 
     def test_warnigs_caught_patterns_check(self):
         # Assertion is correct.
@@ -94,7 +98,8 @@ class TestWarningsFilter(unittest.TestCase):
                                         messages_patterns=["1", "2"]):
                 warnings.warn("msg 1", SomeWarning)
 
-        self.assertRaises(AssertionError, f1)
+        with self.assertRaises(AssertionError):
+            f1()
 
         def f2():
             # Assertion fails.
@@ -103,7 +108,8 @@ class TestWarningsFilter(unittest.TestCase):
                 warnings.warn("msg 2", SomeWarning)
                 warnings.warn("msg 1", SomeWarning)
 
-        self.assertRaises(AssertionError, f2)
+        with self.assertRaises(AssertionError):
+            f2()
 
         def f3():
             # Assertion fails.
@@ -113,7 +119,8 @@ class TestWarningsFilter(unittest.TestCase):
                 warnings.warn("msg 2", SomeWarning)
                 warnings.warn("msg 3", SomeWarning)
 
-        self.assertRaises(AssertionError, f3)
+        with self.assertRaises(AssertionError):
+            f3()
 
     def test_no_warnigs_check(self):
         with assertNotProducesWarnings(SomeWarning):

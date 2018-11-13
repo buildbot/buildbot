@@ -584,8 +584,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
         expected_props = [None, 'test2']
         self.make_request(b'/test')
         self.request.args = {b'property': expected_props}
-        self.assertRaises(BadRequest, lambda: self.rsrc.decodeResultSpec(
-            self.request, endpoint.TestsEndpoint))
+        with self.assertRaises(BadRequest):
+            self.rsrc.decodeResultSpec(self.request, endpoint.TestsEndpoint)
 
     def test_decode_result_spec_limit(self):
         expected_limit = 5
@@ -621,7 +621,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             self.make_request(b'/test')
             self.request.args = {b'limit': limit}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_order(self):
         def expectRaiseBadRequest():
@@ -629,7 +630,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             self.make_request(b'/test')
             self.request.args = {b'order': order}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_offset(self):
         def expectRaiseBadRequest():
@@ -637,7 +639,8 @@ class V2RootResource_REST(www.WwwTestMixin, unittest.TestCase):
             self.make_request(b'/test')
             self.request.args = {b'offset': offset}
             self.rsrc.decodeResultSpec(self.request, endpoint.TestEndpoint)
-        self.assertRaises(rest.BadRequest, expectRaiseBadRequest)
+        with self.assertRaises(rest.BadRequest):
+            expectRaiseBadRequest()
 
     def test_decode_result_spec_not_a_collection_properties(self):
         expected_props = ['test1', 'test2']

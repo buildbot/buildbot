@@ -223,33 +223,30 @@ class LdapUserInfoNoGroups(CommonTestCase):
 class Config(unittest.TestCase):
 
     def test_missing_group_name(self):
-        self.assertRaises(ValueError,
-                          ldapuserinfo.LdapUserInfo,
-                          groupMemberPattern="member=%(dn)s",
-                          groupBase="grpbase",
-                          uri="ldap://uri", bindUser="user", bindPw="pass",
-                          accountBase="accbase",
-                          accountPattern="accpattern",
-                          accountFullName="accountFullName",
-                          accountEmail="accountEmail")
+        with self.assertRaises(ValueError):
+            ldapuserinfo.LdapUserInfo(groupMemberPattern="member=%(dn)s",
+                                      groupBase="grpbase", uri="ldap://uri",
+                                      bindUser="user", bindPw="pass",
+                                      accountBase="accbase",
+                                      accountPattern="accpattern",
+                                      accountFullName="accountFullName",
+                                      accountEmail="accountEmail")
 
     def test_missing_group_base(self):
-        self.assertRaises(ValueError,
-                          ldapuserinfo.LdapUserInfo,
-                          groupMemberPattern="member=%(dn)s",
-                          groupName="group",
-                          uri="ldap://uri", bindUser="user", bindPw="pass",
-                          accountBase="accbase",
-                          accountPattern="accpattern",
-                          accountFullName="accountFullName",
-                          accountEmail="accountEmail")
+        with self.assertRaises(ValueError):
+            ldapuserinfo.LdapUserInfo(groupMemberPattern="member=%(dn)s",
+                                      groupName="group",
+                                      uri="ldap://uri", bindUser="user",
+                                      bindPw="pass", accountBase="accbase",
+                                      accountPattern="accpattern",
+                                      accountFullName="accountFullName",
+                                      accountEmail="accountEmail")
 
     def test_missing_two_params(self):
-        self.assertRaises(ValueError,
-                          ldapuserinfo.LdapUserInfo,
-                          groupName="group",
-                          uri="ldap://uri", bindUser="user", bindPw="pass",
-                          accountBase="accbase",
-                          accountPattern="accpattern",
-                          accountFullName="accountFullName",
-                          accountEmail="accountEmail")
+        with self.assertRaises(ValueError):
+            ldapuserinfo.LdapUserInfo(groupName="group", uri="ldap://uri",
+                                      bindUser="user", bindPw="pass",
+                                      accountBase="accbase",
+                                      accountPattern="accpattern",
+                                      accountFullName="accountFullName",
+                                      accountEmail="accountEmail")

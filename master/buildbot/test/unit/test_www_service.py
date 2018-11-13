@@ -222,7 +222,8 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
             then we should raise KeyError for consumption by caller,
             and log the JWT error
         """
-        self.assertRaises(KeyError, self.site.getSession, "xxx")
+        with self.assertRaises(KeyError):
+            self.site.getSession("xxx")
         self.flushLoggedErrors(jwt.exceptions.DecodeError)
 
     def test_getSession_from_correct_jwt(self):
@@ -237,12 +238,14 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
         exp = calendar.timegm(datetime.datetime.timetuple(exp))
         payload = {'user_info': {'some': 'payload'}, 'exp': exp}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
-        self.assertRaises(KeyError, self.site.getSession, uid)
+        with self.assertRaises(KeyError):
+            self.site.getSession(uid)
 
     def test_getSession_with_no_user_info(self):
         payload = {'foo': 'bar'}
         uid = jwt.encode(payload, self.SECRET, algorithm=service.SESSION_SECRET_ALGORITHM)
-        self.assertRaises(KeyError, self.site.getSession, uid)
+        with self.assertRaises(KeyError):
+            self.site.getSession(uid)
 
     def test_makeSession(self):
         session = self.site.makeSession()

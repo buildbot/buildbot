@@ -76,12 +76,14 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_constructor_nohyper(self):
         self.patch(workerhyper, 'Hyper', None)
-        self.assertRaises(config.ConfigErrors, HyperLatentWorker,
-                          'bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy')
+        with self.assertRaises(config.ConfigErrors):
+            HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar',
+                              'debian:wheezy')
 
     def test_constructor_badsize(self):
-        self.assertRaises(config.ConfigErrors, HyperLatentWorker,
-                          'bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar', 'debian:wheezy', hyper_size="big")
+        with self.assertRaises(config.ConfigErrors):
+            HyperLatentWorker('bot', 'pass', 'tcp://hyper.sh/', 'foo', 'bar',
+                              'debian:wheezy', hyper_size="big")
 
     def makeWorker(self, **kwargs):
         kwargs.setdefault('image', 'debian:wheezy')

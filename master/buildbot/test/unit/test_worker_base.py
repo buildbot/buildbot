@@ -214,9 +214,8 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.notify_on_missing, ['foo@foo.com'])
 
     def test_constructor_notify_on_missing_not_string(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          ConcreteWorker('bot', 'pass',
-                                         notify_on_missing=['a@b.com', 13]))
+        with self.assertRaises(config.ConfigErrors):
+            ConcreteWorker('bot', 'pass', notify_on_missing=['a@b.com', 13])
 
     @defer.inlineCallbacks
     def do_test_reconfigService(self, old, new, existingRegistration=True):

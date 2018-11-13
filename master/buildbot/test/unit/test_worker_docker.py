@@ -60,12 +60,13 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
 
     def test_constructor_nodocker(self):
         self.patch(dockerworker, 'client', None)
-        self.assertRaises(config.ConfigErrors, self.setupWorker,
-                          'bot', 'pass', 'unix://tmp.sock', 'debian:wheezy', [])
+        with self.assertRaises(config.ConfigErrors):
+            self.setupWorker('bot', 'pass', 'unix://tmp.sock', 'debian:wheezy',
+                             [])
 
     def test_constructor_noimage_nodockerfile(self):
-        self.assertRaises(
-            config.ConfigErrors, self.setupWorker, 'bot', 'pass', 'http://localhost:2375')
+        with self.assertRaises(config.ConfigErrors):
+            self.setupWorker('bot', 'pass', 'http://localhost:2375')
 
     def test_constructor_noimage_dockerfile(self):
         bs = self.setupWorker(
@@ -166,9 +167,10 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
                           '~': {'bind': '/backup', 'ro': False}})
 
     def test_volume_bad_format(self):
-        self.assertRaises(config.ConfigErrors, self.setupWorker, 'bot', 'pass', 'http://localhost:2375',
-                          image="worker",
-                          volumes=['abcd=efgh'])
+        with self.assertRaises(config.ConfigErrors):
+            self.setupWorker('bot', 'pass', 'http://localhost:2375',
+                             image="worker",
+                             volumes=['abcd=efgh'])
 
     def test_volume_bad_format_renderable(self):
         bs = self.setupWorker(

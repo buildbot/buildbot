@@ -274,8 +274,8 @@ class Ascii2Unicode(unittest.TestCase):
         self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          util.bytes2unicode(b'a\x85', encoding='ascii'))
+        with self.assertRaises(UnicodeDecodeError):
+            util.bytes2unicode(b'a\x85', encoding='ascii')
 
     def test_None(self):
         self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
@@ -337,8 +337,8 @@ class StringToBoolean(unittest.TestCase):
         self.assertEqual((rv, type(rv)), (u'abcd', text_type))
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          util.bytes2unicode(b'a\x85', encoding='ascii'))
+        with self.assertRaises(UnicodeDecodeError):
+            util.bytes2unicode(b'a\x85', encoding='ascii')
 
     def test_None(self):
         self.assertEqual(util.bytes2unicode(None, encoding='ascii'), None)
@@ -414,7 +414,8 @@ class JoinList(unittest.TestCase):
         self.assertEqual(util.join_list(u'abc'), u'abc')
 
     def test_nonascii(self):
-        self.assertRaises(UnicodeDecodeError, lambda: util.join_list([b'\xff']))
+        with self.assertRaises(UnicodeDecodeError):
+            util.join_list([b'\xff'])
 
 
 class CommandToString(unittest.TestCase):

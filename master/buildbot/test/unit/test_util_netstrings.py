@@ -37,8 +37,8 @@ class NetstringParser(unittest.TestCase):
 
     def test_invalid_netstring(self):
         p = netstrings.NetstringParser()
-        self.assertRaises(basic.NetstringParseError,
-                          lambda: p.feed("5-hello!"))
+        with self.assertRaises(basic.NetstringParseError):
+            p.feed("5-hello!")
 
     def test_incomplete_netstring(self):
         p = netstrings.NetstringParser()

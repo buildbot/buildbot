@@ -315,7 +315,8 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())
-        self.assertRaises(usage.UsageError, self.parse, "--verbose")
+        with self.assertRaises(usage.UsageError):
+            self.parse("--verbose")
         log.startLogging.assert_called_once_with(sys.stderr)
 
 

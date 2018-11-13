@@ -45,7 +45,8 @@ class CompatNameGeneration(unittest.TestCase):
         self.assertEqual(_compat_name("SomeWorkerStuff"), "SomeSlaveStuff")
         self.assertEqual(_compat_name("theworkerstuff"), "theslavestuff")
 
-        self.assertRaises(AssertionError, _compat_name, "worKer")
+        with self.assertRaises(AssertionError):
+            _compat_name("worKer")
 
     def test_dummy_rename(self):
         self.assertEqual(
@@ -53,11 +54,11 @@ class CompatNameGeneration(unittest.TestCase):
             "BuildSlave")
 
         # Deprecated name by definition must contain "slave"
-        self.assertRaises(AssertionError, _compat_name, "worker",
-                          compat_name="somestr")
+        with self.assertRaises(AssertionError):
+            _compat_name("worker", compat_name="somestr")
         # New name always contains "worker" instead of "slave".
-        self.assertRaises(AssertionError, _compat_name, "somestr",
-                          compat_name="slave")
+        with self.assertRaises(AssertionError):
+            _compat_name("somestr", compat_name="slave")
 
 
 class Test_deprecatedWorkerModuleAttribute(unittest.TestCase):
