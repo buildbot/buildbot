@@ -781,8 +781,8 @@ class TestWithProperties(unittest.TestCase):
         self.build = FakeBuild(props=self.props)
 
     def testInvalidParams(self):
-        self.assertRaises(ValueError, lambda:
-                          WithProperties("%s %(foo)s", 1, foo=2))
+        with self.assertRaises(ValueError):
+            WithProperties("%s %(foo)s", 1, foo=2)
 
     def testBasic(self):
         # test basic substitution with WithProperties
@@ -882,8 +882,8 @@ class TestWithProperties(unittest.TestCase):
         return d
 
     def testLambdaCallable(self):
-        self.assertRaises(
-            ValueError, lambda: WithProperties('%(foo)s', foo='bar'))
+        with self.assertRaises(ValueError):
+            WithProperties('%(foo)s', foo='bar')
 
     def testLambdaUseExisting(self):
         self.props.setProperty('x', 10, 'test')
@@ -928,7 +928,8 @@ class TestProperties(unittest.TestCase):
         self.assertTrue('do-tests' in self.props)
         self.assertEqual(self.props['do-tests'], 1)
         self.assertEqual(self.props['do-install'], 2)
-        self.assertRaises(KeyError, lambda: self.props['do-nothing'])
+        with self.assertRaises(KeyError):
+            self.props['do-nothing']
         self.assertEqual(self.props.getProperty('do-install'), 2)
         self.assertIn('do-tests', self.props)
         self.assertNotIn('missing-do-tests', self.props)
@@ -1003,10 +1004,11 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(self.props.getPropertySource('x'), 'old')
 
     def test_setProperty_notJsonable(self):
-        self.assertRaises(TypeError, self.props.setProperty,
-                          "project", ConstantRenderable('testing'), "test")
-        self.assertRaises(
-            TypeError, self.props.setProperty, "project", object, "test")
+        with self.assertRaises(TypeError):
+            self.props.setProperty("project", ConstantRenderable('testing'),
+                                   "test")
+        with self.assertRaises(TypeError):
+            self.props.setProperty("project", object, "test")
 
     # IProperties methods
 
@@ -1042,8 +1044,8 @@ class TestProperties(unittest.TestCase):
 
     def test_setProperty_no_source(self):
         # pylint: disable=no-value-for-parameter
-        self.assertRaises(TypeError, lambda:
-                          self.props.setProperty('x', 'y'))
+        with self.assertRaises(TypeError):
+            self.props.setProperty('x', 'y')
 
     def test_getProperties(self):
         self.assertIdentical(self.props.getProperties(), self.props)
@@ -1052,11 +1054,14 @@ class TestProperties(unittest.TestCase):
         self.assertIdentical(self.props.getBuild(), self.props.build)
 
     def test_unset_sourcestamps(self):
-        self.assertRaises(AttributeError, lambda: self.props.sourcestamps)
+        with self.assertRaises(AttributeError):
+            self.props.sourcestamps()
 
     def test_unset_changes(self):
-        self.assertRaises(AttributeError, lambda: self.props.changes)
-        self.assertRaises(AttributeError, lambda: self.props.files)
+        with self.assertRaises(AttributeError):
+            self.props.changes()
+        with self.assertRaises(AttributeError):
+            self.props.files()
 
     def test_build_attributes(self):
         build = FakeBuild(self.props)
