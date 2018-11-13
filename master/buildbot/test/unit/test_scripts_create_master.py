@@ -172,9 +172,9 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_count(self):
-        self.assertRaises(TypeError,
-                          create_master.makeTAC,
-                          mkconfig(basedir='test', **{'log-count': '30'}))
+        with self.assertRaises(TypeError):
+            create_master.makeTAC(mkconfig(basedir='test',
+                                  **{'log-count': '30'}))
 
     def test_makeTAC_none_log_count(self):
         create_master.makeTAC(mkconfig(basedir='test', **{'log-count': None}))
@@ -187,9 +187,9 @@ class TestCreateMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,
         self.assertWasQuiet()
 
     def test_makeTAC_str_log_size(self):
-        self.assertRaises(TypeError,
-                          create_master.makeTAC,
-                          mkconfig(basedir='test', **{'log-size': '3000'}))
+        with self.assertRaises(TypeError):
+            create_master.makeTAC(mkconfig(basedir='test',
+                                  **{'log-size': '3000'}))
 
     def test_makeTAC_existing_incorrect(self):
         with open(os.path.join('test', 'buildbot.tac'), 'wt') as f:
