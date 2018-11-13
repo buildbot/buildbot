@@ -951,12 +951,10 @@ class TestStringDownload(steps.BuildStepMixin, unittest.TestCase):
     # check that ConfigErrors is raised on invalid 'mode' argument
 
     def testModeConfError(self):
-        self.assertRaisesRegex(
-            config.ConfigErrors,
-            "StringDownload step's mode must be an integer or None,"
-            " got 'not-a-number'",
-            transfer.StringDownload,
-            "string", "file", mode="not-a-number")
+        with self.assertRaisesRegex(config.ConfigErrors,
+                "StringDownload step's mode must be an integer or None,"
+                " got 'not-a-number'"):
+            transfer.StringDownload("string", "file", mode="not-a-number")
 
     @defer.inlineCallbacks
     def testBasic(self):
