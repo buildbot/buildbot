@@ -146,8 +146,8 @@ class OldTriggeringMethods(unittest.TestCase):
         kwargs = (dict(who='author',
                        author='author'),)
         exp_data_kwargs = dict(author='author')
-        self.assertRaises(TypeError, func, kwargs=kwargs,
-                          exp_data_kwargs=exp_data_kwargs)
+        with self.assertRaises(TypeError):
+            func(kwargs=kwargs, exp_data_kwargs=exp_data_kwargs)
 
     def test_addChange_args_properties(self):
         # properties should not be qualified with a source
@@ -176,10 +176,9 @@ class InitTests(unittest.SynchronousTestCase):
         If both configfile and config_loader are specified, a configuration
         error is raised.
         """
-        self.assertRaises(
-            config.ConfigErrors,
-            master.BuildMaster,
-            ".", "master.cfg", reactor=reactor, config_loader=DefaultLoader())
+        with self.assertRaises(config.ConfigErrors):
+            master.BuildMaster(".", "master.cfg",
+                               reactor=reactor, config_loader=DefaultLoader())
 
     def test_configfile_default(self):
         """
@@ -339,5 +338,5 @@ class StartupAndReconfig(dirs.DirsMixin, logging.LoggingMixin, unittest.TestCase
         new = config.MasterConfig()
         new.db['db_url'] = 'bbbb'
 
-        self.assertRaises(config.ConfigErrors,
-                          self.master.reconfigServiceWithBuildbotConfig, new)
+        with self.assertRaises(config.ConfigErrors):
+            self.master.reconfigServiceWithBuildbotConfig(new)
