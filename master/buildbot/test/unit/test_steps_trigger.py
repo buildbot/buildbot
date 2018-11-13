@@ -263,45 +263,38 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
 
     # tests
     def test_no_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger()
 
     def test_unimportantSchedulerNames_not_in_schedulerNames(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['a'], unimportantsShedulerNames=['b'])
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['a'],
+                            unimportantsShedulerNames=['b'])
 
     def test_sourceStamp_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['c'],
-                          sourceStamp=dict(x=1), updateSourceStamp=True)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamp=dict(x=1),
+                            updateSourceStamp=True)
 
     def test_sourceStamps_and_updateSourceStamp(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['c'],
-                          sourceStamps=[dict(x=1), dict(x=2)],
-                          updateSourceStamp=True)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamps=[dict(x=1),
+                            dict(x=2)], updateSourceStamp=True)
 
     def test_updateSourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['c'],
-                          updateSourceStamp=True, alwaysUseLatest=True)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], updateSourceStamp=True,
+                            alwaysUseLatest=True)
 
     def test_sourceStamp_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['c'],
-                          sourceStamp=dict(x=1), alwaysUseLatest=True)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamp=dict(x=1),
+                            alwaysUseLatest=True)
 
     def test_sourceStamps_and_alwaysUseLatest(self):
-        self.assertRaises(config.ConfigErrors,
-                          trigger.Trigger,
-                          schedulerNames=['c'],
-                          sourceStamps=[dict(x=1), dict(x=2)],
-                          alwaysUseLatest=True)
+        with self.assertRaises(config.ConfigErrors):
+            trigger.Trigger(schedulerNames=['c'], sourceStamps=[dict(x=1),
+                            dict(x=2)], alwaysUseLatest=True)
 
     def test_simple(self):
         self.setupStep(trigger.Trigger(schedulerNames=['a'], sourceStamps={}))
