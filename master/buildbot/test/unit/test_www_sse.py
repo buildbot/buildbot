@@ -58,8 +58,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(self.request.finished, True)
         self.assertEqual(request.finished, False)
         request.finish()  # fake close connection on client side
-        self.assertRaises(
-            AssertionError, self.assertReceivesChangeNewMessage, request)
+        with self.assertRaises(AssertionError):
+            self.assertReceivesChangeNewMessage(request)
 
     def test_listen_add_then_remove(self):
         self.render_resource(self.sse, b'/listen')
@@ -71,8 +71,8 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         self.assertEqual(request.finished, False)
         self.render_resource(self.sse, b'/remove/' +
                              unicode2bytes(uuid) + b"/changes/*/*")
-        self.assertRaises(
-            AssertionError, self.assertReceivesChangeNewMessage, request)
+        with self.assertRaises(AssertionError):
+            self.assertReceivesChangeNewMessage(request)
 
     def test_listen_add_nouuid(self):
         self.render_resource(self.sse, b'/listen')
