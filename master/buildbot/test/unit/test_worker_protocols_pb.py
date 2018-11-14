@@ -375,7 +375,8 @@ class Test_wrapRemoteException(unittest.TestCase):
                 raise twisted_pb.RemoteError(
                     'twisted.spread.flavors.NoSuchMethod', None, None)
 
-        self.assertRaises(pb._NoSuchMethod, f)
+        with self.assertRaises(pb._NoSuchMethod):
+            f()
 
     def test_raises_unknown(self):
         class Error(Exception):
@@ -385,7 +386,8 @@ class Test_wrapRemoteException(unittest.TestCase):
             with pb._wrapRemoteException():
                 raise Error()
 
-        self.assertRaises(Error, f)
+        with self.assertRaises(Error):
+            f()
 
     def test_raises_RemoteError(self):
         def f():
@@ -393,4 +395,5 @@ class Test_wrapRemoteException(unittest.TestCase):
                 raise twisted_pb.RemoteError(
                     'twisted.spread.flavors.ProtocolError', None, None)
 
-        self.assertRaises(twisted_pb.RemoteError, f)
+        with self.assertRaises(twisted_pb.RemoteError):
+            f()

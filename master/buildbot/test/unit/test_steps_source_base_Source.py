@@ -177,8 +177,8 @@ class TestSourceAttrGroup(sourcesteps.SourceStepMixin, unittest.TestCase):
                          step.mode_full)
         self.assertEqual(step._getAttrGroupMember('mode', 'incremental'),
                          step.mode_incremental)
-        self.assertRaises(AttributeError,
-                          step._getAttrGroupMember, 'mode', 'nothing')
+        with self.assertRaises(AttributeError):
+            step._getAttrGroupMember('mode', 'nothing')
 
     def test_attrgroup_listattr(self):
         step = AttrGroup()

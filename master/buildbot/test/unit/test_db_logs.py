@@ -347,8 +347,8 @@ class RealTests(Tests):
     def test_splitBigChunk_unicode_misalignment(self):
         unaligned = (u'a ' + u'\N{SNOWMAN}' * 30000 + '\n').encode('utf-8')
         # the first 65536 bytes of that line are not valid utf-8
-        self.assertRaises(UnicodeDecodeError, lambda:
-                          unaligned[:65536].decode('utf-8'))
+        with self.assertRaises(UnicodeDecodeError):
+            unaligned[:65536].decode('utf-8')
         chunk, remainder = self.db.logs._splitBigChunk(unaligned, 1)
         # see that it was truncated by two bytes, and now properly decodes
         self.assertEqual(len(chunk), 65534)

@@ -438,9 +438,9 @@ class TestRunProcess(BasedirMixin, unittest.TestCase):
 
     def testEnvironInt(self):
         b = FakeWorkerForBuilder(self.basedir)
-        self.assertRaises(RuntimeError, lambda:
-                          runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
-                                                environ={"BUILD_NUMBER": 13}))
+        with self.assertRaises(RuntimeError):
+            runprocess.RunProcess(b, stdoutCommand('hello'), self.basedir,
+                                  environ={"BUILD_NUMBER": 13})
 
     def _test_spawnAsBatch(self, cmd, comspec):
 

@@ -119,9 +119,9 @@ class TestMakeBaseDir(misc.StdoutAssertionsMixin, unittest.TestCase):
                    mock.Mock(side_effect=OSError(0, "dummy-error")))
 
         # check that correct exception was raised
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               "error creating directory dummy: dummy-error",
-                               create_worker._makeBaseDir, "dummy", False)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                "error creating directory dummy: dummy-error"):
+            create_worker._makeBaseDir("dummy", False)
 
 
 class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
@@ -153,10 +153,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               expected_message,
-                               create_worker._makeBuildbotTac,
-                               "bdir", "contents", False)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                    expected_message):
+            create_worker._makeBuildbotTac("bdir", "contents", False)
 
     def testTacReadError(self):
         """
@@ -168,10 +167,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "error reading {0}: dummy-msg".format(self.tac_file_path)
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               expected_message,
-                               create_worker._makeBuildbotTac,
-                               "bdir", "contents", False)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                    expected_message):
+            create_worker._makeBuildbotTac("bdir", "contents", False)
 
     def testTacWriteError(self):
         """
@@ -183,10 +181,9 @@ class TestMakeBuildbotTac(misc.StdoutAssertionsMixin,
 
         # call _makeBuildbotTac() and check that correct exception is raised
         expected_message = "could not write {0}: dummy-msg".format(self.tac_file_path)
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               expected_message,
-                               create_worker._makeBuildbotTac,
-                               "bdir", "contents", False)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                    expected_message):
+            create_worker._makeBuildbotTac("bdir", "contents", False)
 
     def checkTacFileCorrect(self, quiet):
         """
@@ -313,11 +310,10 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
         self.patch(os, "mkdir", mock.Mock(side_effect=OSError(0, "err-msg")))
 
         # call _makeInfoFiles() and check that correct exception is raised
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               "error creating directory %s: err-msg" %
-                               _regexp_path("bdir", "info"),
-                               create_worker._makeInfoFiles,
-                               "bdir", quiet)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                    "error creating directory %s: err-msg" %
+                                    _regexp_path("bdir", "info")):
+            create_worker._makeInfoFiles("bdir", quiet)
 
         # check output to stdout
         if quiet:
@@ -362,11 +358,10 @@ class TestMakeInfoFiles(misc.StdoutAssertionsMixin,
             self.fail("unexpected error_type '{0}'".format(error_type))
 
         # call _makeInfoFiles() and check that correct exception is raised
-        self.assertRaisesRegex(create_worker.CreateWorkerError,
-                               "could not write {0}: info-err-msg".format(
-                               _regexp_path("bdir", "info", "admin")),
-                               create_worker._makeInfoFiles,
-                               "bdir", quiet)
+        with self.assertRaisesRegex(create_worker.CreateWorkerError,
+                                    "could not write {0}: info-err-msg".format(
+                                    _regexp_path("bdir", "info", "admin"))):
+            create_worker._makeInfoFiles("bdir", quiet)
 
         # check output to stdout
         if quiet:

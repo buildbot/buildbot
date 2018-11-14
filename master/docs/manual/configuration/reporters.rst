@@ -152,6 +152,8 @@ MailNotifier arguments
 ``sendToInterestedUsers``
     (boolean).
     If ``True`` (the default), send mail to all of the Interested Users.
+    Interested Users are authors of changes and users from the ``owners`` build property.
+    Override ``MailNotifier`` ``getResponsibleUsersForBuild`` method to change that.
     If ``False``, only send mail to the ``extraRecipients`` list.
 
 ``extraRecipients``

@@ -79,9 +79,9 @@ class BaseDirTestsMixin(object):
                          "unexpected basedir path")
 
     def test_too_many_args(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "I wasn't expecting so many arguments",
-                               self.parse, "arg1", "arg2")
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "I wasn't expecting so many arguments"):
+            self.parse("arg1", "arg2")
 
 
 class TestMakerBase(BaseDirTestsMixin, unittest.TestCase):
@@ -154,9 +154,9 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         return opts
 
     def test_defaults(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "incorrect number of arguments",
-                               self.parse)
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "incorrect number of arguments"):
+            self.parse()
 
     def test_synopsis(self):
         opts = runner.CreateWorkerOptions()
@@ -199,54 +199,54 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
                             "passwd": "pswd"})
 
     def test_master_url(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "<master> is not a URL - do not use URL",
-                               self.parse, "a", "http://b.c", "d", "e")
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "<master> is not a URL - do not use URL"):
+            self.parse("a", "http://b.c", "d", "e")
 
     def test_inv_keepalive(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "keepalive parameter needs to be a number",
-                               self.parse, "--keepalive=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "keepalive parameter needs to be a number"):
+            self.parse("--keepalive=X", *self.req_args)
 
     def test_inv_maxdelay(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "maxdelay parameter needs to be a number",
-                               self.parse, "--maxdelay=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "maxdelay parameter needs to be a number"):
+            self.parse("--maxdelay=X", *self.req_args)
 
     def test_inv_log_size(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "log-size parameter needs to be a number",
-                               self.parse, "--log-size=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "log-size parameter needs to be a number"):
+            self.parse("--log-size=X", *self.req_args)
 
     def test_inv_log_count(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "log-count parameter needs to be a number or None",
-                               self.parse, "--log-count=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                           "log-count parameter needs to be a number or None"):
+            self.parse("--log-count=X", *self.req_args)
 
     def test_inv_numcpus(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "numcpus parameter needs to be a number or None",
-                               self.parse, "--numcpus=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                           "numcpus parameter needs to be a number or None"):
+            self.parse("--numcpus=X", *self.req_args)
 
     def test_inv_umask(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "umask parameter needs to be a number or None",
-                               self.parse, "--umask=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                               "umask parameter needs to be a number or None"):
+            self.parse("--umask=X", *self.req_args)
 
     def test_inv_allow_shutdown(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "allow-shutdown needs to be one of 'signal' or 'file'",
-                               self.parse, "--allow-shutdown=X", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                       "allow-shutdown needs to be one of 'signal' or 'file'"):
+            self.parse("--allow-shutdown=X", *self.req_args)
 
     def test_too_few_args(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "incorrect number of arguments",
-                               self.parse, "arg1", "arg2")
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "incorrect number of arguments"):
+            self.parse("arg1", "arg2")
 
     def test_too_many_args(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "incorrect number of arguments",
-                               self.parse, "extra_arg", *self.req_args)
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "incorrect number of arguments"):
+            self.parse("extra_arg", *self.req_args)
 
     def test_validateMasterArgument_no_port(self):
         """
@@ -264,9 +264,9 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         on <master> without host part specified.
         """
         opts = runner.CreateWorkerOptions()
-        self.assertRaisesRegex(usage.UsageError,
-                               "invalid <master> argument ':1234'",
-                               opts.validateMasterArgument, ":1234")
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "invalid <master> argument ':1234'"):
+            opts.validateMasterArgument(":1234")
 
     def test_validateMasterArgument_inv_port(self):
         """
@@ -274,10 +274,10 @@ class TestCreateWorkerOptions(OptionsMixin, unittest.TestCase):
         on <master> without with unparsable port part
         """
         opts = runner.CreateWorkerOptions()
-        self.assertRaisesRegex(usage.UsageError,
-                               "invalid master port 'apple', "
-                               "needs to be a number",
-                               opts.validateMasterArgument, "host:apple")
+        with self.assertRaisesRegex(usage.UsageError,
+                                    "invalid master port 'apple', "
+                                    "needs to be a number"):
+            opts.validateMasterArgument("host:apple")
 
     def test_validateMasterArgument_ok(self):
         """
@@ -305,9 +305,8 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
         return opts
 
     def test_defaults(self):
-        self.assertRaisesRegex(usage.UsageError,
-                               "must specify a command",
-                               self.parse)
+        with self.assertRaisesRegex(usage.UsageError, "must specify a command"):
+            self.parse()
 
     def test_version(self):
         exception = self.assertRaises(SystemExit, self.parse, '--version')
@@ -316,7 +315,8 @@ class TestOptions(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     def test_verbose(self):
         self.patch(log, 'startLogging', mock.Mock())
-        self.assertRaises(usage.UsageError, self.parse, "--verbose")
+        with self.assertRaises(usage.UsageError):
+            self.parse("--verbose")
         log.startLogging.assert_called_once_with(sys.stderr)
 
 

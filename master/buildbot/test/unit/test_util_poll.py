@@ -83,7 +83,8 @@ class TestPollerSync(unittest.TestCase):
     def test_start_twice(self):
         """Calling start on an already-started loop is an error."""
         self.poll.start(interval=1)
-        self.assertRaises(Exception, lambda: self.poll.start(interval=2))
+        with self.assertRaises(Exception):
+            self.poll.start(interval=2)
         return self.poll.stop()
 
     def test_repeats_and_stops(self):

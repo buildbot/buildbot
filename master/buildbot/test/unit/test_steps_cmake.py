@@ -43,10 +43,12 @@ class TestCMake(BuildStepMixin, TestCase):
         return self.runStep()
 
     def test_definitions_type(self):
-        self.assertRaises(ConfigErrors, lambda: CMake(definitions='hello'))
+        with self.assertRaises(ConfigErrors):
+            CMake(definitions='hello')
 
     def test_options_type(self):
-        self.assertRaises(ConfigErrors, lambda: CMake(options='hello'))
+        with self.assertRaises(ConfigErrors):
+            CMake(options='hello')
 
     def test_plain(self):
         self.setupStep(CMake())

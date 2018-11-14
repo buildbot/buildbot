@@ -174,8 +174,8 @@ class DataConnector(unittest.TestCase):
         self.assertEqual(got, (ep, {'fooid': 10}))
 
     def test_getEndpoint_missing(self):
-        self.assertRaises(exceptions.InvalidPathError,
-                          self.data.getEndpoint, ('xyz',))
+        with self.assertRaises(exceptions.InvalidPathError):
+            self.data.getEndpoint(('xyz',))
 
     def test_get(self):
         ep = self.patchFooPattern()

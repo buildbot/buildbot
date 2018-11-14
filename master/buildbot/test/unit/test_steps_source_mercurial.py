@@ -45,24 +45,22 @@ class TestMercurial(sourcesteps.SourceStepMixin, unittest.TestCase):
             mercurial.Mercurial, 'workerVersionIsOlderThan', lambda x, y, z: result)
 
     def test_no_repourl(self):
-        self.assertRaises(config.ConfigErrors,
-                          mercurial.Mercurial, mode="full")
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(mode="full")
 
     def test_incorrect_mode(self):
-        self.assertRaises(config.ConfigErrors,
-                          mercurial.Mercurial,
-                          repourl='http://hg.mozilla.org',
-                          mode='invalid')
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org', mode='invalid')
 
     def test_incorrect_method(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                              method='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                method='invalid')
 
     def test_incorrect_branchType(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mercurial.Mercurial(repourl='http://hg.mozilla.org',
-                                              branchType='invalid'))
+        with self.assertRaises(config.ConfigErrors):
+            mercurial.Mercurial(repourl='http://hg.mozilla.org',
+                                branchType='invalid')
 
     def test_mode_full_clean(self):
         self.setupStep(
