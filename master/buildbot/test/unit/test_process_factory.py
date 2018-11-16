@@ -98,11 +98,12 @@ class TestBuildFactory(unittest.TestCase):
 
     def test_addStep_notAStep(self):
         # This fails because object isn't adaptable to IBuildStepFactory
-        self.assertRaises(TypeError, self.factory.addStep, object())
+        with self.assertRaises(TypeError):
+            self.factory.addStep(object())
 
     def test_addStep_ArgumentsInTheWrongPlace(self):
-        self.assertRaises(
-            TypeError, self.factory.addStep, BuildStep(), name="name")
+        with self.assertRaises(TypeError):
+            self.factory.addStep(BuildStep(), name="name")
         # this also raises a deprecation error, which we don't care about (see
         # test_s)
         self.flushWarnings()

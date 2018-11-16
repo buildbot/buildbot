@@ -72,8 +72,8 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
     # method returns.
 
     def test_constructor_string_arg(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(upstream='foo'))
+        with self.assertRaises(config.ConfigErrors):
+            self.makeScheduler(upstream='foo')
 
     def test_activate(self):
         sched = self.makeScheduler()

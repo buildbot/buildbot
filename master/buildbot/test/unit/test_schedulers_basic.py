@@ -103,8 +103,8 @@ class BaseBasicScheduler(CommonStuffMixin,
     # tests
 
     def test_constructor_positional_exception(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.Subclass("tsched", "master", 60))
+        with self.assertRaises(config.ConfigErrors):
+            self.Subclass("tsched", "master", 60)
 
     def test_activate_no_treeStableTimer(self):
         cf = mock.Mock('cf')
@@ -378,8 +378,8 @@ class SingleBranchScheduler(CommonStuffMixin,
         self.assertEqual(sched.reason, "Changeset")
 
     def test_constructor_branch_mandatory(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: basic.SingleBranchScheduler(name="tsched", treeStableTimer=60))
+        with self.assertRaises(config.ConfigErrors):
+            basic.SingleBranchScheduler(name="tsched", treeStableTimer=60)
 
     def test_constructor_no_branch_but_filter(self):
         # this shouldn't fail
@@ -387,8 +387,9 @@ class SingleBranchScheduler(CommonStuffMixin,
                                     builderNames=['a', 'b'], change_filter=mock.Mock())
 
     def test_constructor_branches_forbidden(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: basic.SingleBranchScheduler(name="tsched", treeStableTimer=60, branches='x'))
+        with self.assertRaises(config.ConfigErrors):
+            basic.SingleBranchScheduler(name="tsched", treeStableTimer=60,
+                                        branches='x')
 
     def test_gotChange_treeStableTimer_important(self):
         # this looks suspiciously like the same test above, because SingleBranchScheduler
@@ -494,8 +495,9 @@ class AnyBranchScheduler(CommonStuffMixin,
         self.tearDownScheduler()
 
     def test_constructor_branch_forbidden(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: basic.SingleBranchScheduler(name="tsched", treeStableTimer=60, branch='x'))
+        with self.assertRaises(config.ConfigErrors):
+            basic.SingleBranchScheduler(name="tsched", treeStableTimer=60,
+                                        branch='x')
 
     def test_gotChange_treeStableTimer_multiple_branches(self):
         """Two changes with different branches get different treeStableTimers"""

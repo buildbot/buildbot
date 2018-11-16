@@ -38,8 +38,8 @@ class RpmBuild(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_specfile(self):
-        self.assertRaises(config.ConfigErrors,
-                          rpmbuild.RpmBuild)
+        with self.assertRaises(config.ConfigErrors):
+            rpmbuild.RpmBuild()
 
     def test_success(self):
         self.setupStep(rpmbuild.RpmBuild(specfile="foo.spec", dist=".el5"))

@@ -999,7 +999,8 @@ class TestShellMixin(steps.BuildStepMixin,
 
     def test_setupShellMixin_not_new_style(self):
         self.patch(ShellMixinExample, 'isNewStyle', lambda self: False)
-        self.assertRaises(AssertionError, ShellMixinExample)
+        with self.assertRaises(AssertionError):
+            ShellMixinExample()
 
     def test_constructor_defaults(self):
         class MySubclass(ShellMixinExample):
@@ -1257,9 +1258,8 @@ class TestWorkerTransition(unittest.TestCase):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
                 message_pattern="'checkSlaveHasCommand' method is deprecated"):
-            self.assertRaises(WorkerTooOldError,
-                              bs.checkSlaveHasCommand,
-                              "foo")
+            with self.assertRaises(WorkerTooOldError):
+                bs.checkSlaveHasCommand("foo")
 
     def test_getWorkerName_old_api(self):
         bs = buildstep.BuildStep()

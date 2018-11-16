@@ -286,9 +286,8 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
                         'foo bar@example.net',
                         'Foo\nBar <foo@example.org>',  # newline in name
                         'test@example..invalid']:     # empty label (..)
-            self.assertRaises(
-                ConfigErrors, MailNotifier,
-                'foo@example.com', extraRecipients=[invalid])
+            with self.assertRaises(ConfigErrors):
+                MailNotifier('foo@example.com', extraRecipients=[invalid])
 
     @defer.inlineCallbacks
     def test_sendMail_real_name_addresses(self):

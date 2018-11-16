@@ -36,8 +36,8 @@ class TestMock(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_root(self):
-        self.assertRaises(config.ConfigErrors,
-                          mock.Mock)
+        with self.assertRaises(config.ConfigErrors):
+            mock.Mock()
 
     def test_class_attrs(self):
         step = self.setupStep(mock.Mock(root='TESTROOT'))
@@ -104,8 +104,8 @@ class TestMockBuildSRPM(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_spec(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.MockBuildSRPM(root='TESTROOT'))
+        with self.assertRaises(config.ConfigErrors):
+            mock.MockBuildSRPM(root='TESTROOT')
 
     def test_success(self):
         self.setupStep(mock.MockBuildSRPM(root='TESTROOT', spec="foo.spec"))
@@ -134,8 +134,8 @@ class TestMockRebuild(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_srpm(self):
-        self.assertRaises(config.ConfigErrors, lambda:
-                          mock.MockRebuild(root='TESTROOT'))
+        with self.assertRaises(config.ConfigErrors):
+            mock.MockRebuild(root='TESTROOT')
 
     def test_success(self):
         self.setupStep(mock.MockRebuild(root='TESTROOT', srpm="foo.src.rpm"))

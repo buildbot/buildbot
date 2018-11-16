@@ -356,8 +356,8 @@ class TestUbuPbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_distribution(self):
-        self.assertRaises(config.ConfigErrors,
-                          pbuilder.UbuPbuilder)
+        with self.assertRaises(config.ConfigErrors):
+            pbuilder.UbuPbuilder()
 
     def test_new(self):
         self.setupStep(pbuilder.UbuPbuilder(distribution='oneiric'))
@@ -390,8 +390,8 @@ class TestUbuCowbuilder(steps.BuildStepMixin, unittest.TestCase):
         return self.tearDownBuildStep()
 
     def test_no_distribution(self):
-        self.assertRaises(config.ConfigErrors,
-                          pbuilder.UbuCowbuilder)
+        with self.assertRaises(config.ConfigErrors):
+            pbuilder.UbuCowbuilder()
 
     def test_new(self):
         self.setupStep(pbuilder.UbuCowbuilder(distribution='oneiric'))

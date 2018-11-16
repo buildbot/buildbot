@@ -75,8 +75,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     # tests
 
     def test_constructor_builderNames(self):
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(builderNames='xxx'))
+        with self.assertRaises(config.ConfigErrors):
+            self.makeScheduler(builderNames='xxx')
 
     def test_constructor_builderNames_unicode(self):
         self.makeScheduler(builderNames=[u'a'])
@@ -99,8 +99,8 @@ class BaseScheduler(scheduler.SchedulerMixin, unittest.TestCase):
     def test_constructor_codebases_invalid(self):
         # scheduler only accepts codebases with at least repository set
         codebases = {"codebase1": {"dictionary": "", "that": "", "fails": ""}}
-        self.assertRaises(config.ConfigErrors,
-                          lambda: self.makeScheduler(codebases=codebases))
+        with self.assertRaises(config.ConfigErrors):
+            self.makeScheduler(codebases=codebases)
 
     @defer.inlineCallbacks
     def test_getCodebaseDict(self):
