@@ -22,13 +22,19 @@ python:
   - "2.7"
 
 env:
-  # we now use travis only for real database testing
-  # travis containers do have much more optimized db installations
+  global:
+    # Current moto (1.3.7) requires dummy credentials to work
+    # https://github.com/spulec/moto/issues/1924
+    - AWS_SECRET_ACCESS_KEY=foobar_secret
+    - AWS_ACCESS_KEY_ID=foobar_key
+  matrix:
+    # we now use travis only for real database testing
+    # travis containers do have much more optimized db installations
 
-  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
-  # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
-  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
-  - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
+    - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=mysql+mysqldb://travis@127.0.0.1/bbtest?storage_engine=InnoDB
+    # Configuration that runs tests with real PostgreSQL database with pg8000 and psycopg2 drivers
+    - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+psycopg2:///bbtest?user=postgres
+    - TWISTED=latest SQLALCHEMY=latest TESTS=coverage BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=postgres
 
 # Dependencies installation commands
 install:

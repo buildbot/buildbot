@@ -2,6 +2,11 @@
 # https://www.appveyor.com/docs
 
 environment:
+  # Current moto (1.3.7) requires dummy credentials to work
+  # https://github.com/spulec/moto/issues/1924
+  AWS_SECRET_ACCESS_KEY: foobar_secret
+  AWS_ACCESS_KEY_ID: foobar_key
+
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
