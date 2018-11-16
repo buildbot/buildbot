@@ -70,6 +70,7 @@ class Tests(SynchronousTestCase):
     def setUp(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
+        self.addCleanup(self.reactor.stop)
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")
