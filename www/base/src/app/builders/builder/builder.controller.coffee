@@ -7,7 +7,6 @@ class Builder extends Controller
         builderid = $stateParams.builder
         $scope.forceschedulers = []
         $scope.is_cancelling = false
-
         data.getBuilders(builderid).onNew = (builder) ->
             $window.document.title = $state.current.data.pageTitle
                 builder: builder['name']
@@ -104,5 +103,12 @@ class Builder extends Controller
                 data.getBuildsets(buildrequest.buildsetid).onNew = (buildset) ->
                     buildset.getProperties().onNew = (properties) ->
                         buildrequest.properties = properties
-            $scope.builds.onChange=refreshContextMenu
+
+            $scope.builds.onChange= ->
+                refreshContextMenu()
+                $scope.successful_builds = []
+                $scope.builds.forEach (b) ->
+                    if b.results == 0 and b.complete_at != null
+                        b.duration = b.complete_at - b.started_at
+                        $scope.successful_builds.push(b)
             $scope.buildrequests.onChange=refreshContextMenu
