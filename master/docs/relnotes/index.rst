@@ -20,7 +20,6 @@ Bug fixes
   :issue:`3904`)
 - Fixed display of the buildrequest number badge text in the builder page when
   on hover.
-- Improved FileUpload efficiency (:issue:`3709`)
 - Fix usage of master paths when doing Git operations on worker (:issue:`4268`)
 
 Improved Documentation
@@ -35,15 +34,20 @@ Features
 --------
 
 - Added a page that lists all pending buildrequests (:issue:`4239`)
-- Builder page now has a plot displaying the evolution of build times over time
+- Builder page now has a chart displaying the evolution of build times over time
+- Improved FileUpload efficiency (:issue:`3709`)
 - Add method ``getResponsibleUsersForBuild`` in
   :py:class:`~buildbot.notifier.NotifierBase` so that users can override
   recipients, for example to skip authors of changes.
+- Add define parameter to RpmBuild to specify additional --define parameters.
 - Added SSL proxy capability to base web application's developer test setup
   (``gulp dev proxy --host the-buildbot-host --secure``).
+
+Deprecations and Removals
+-------------------------
+
 - The Material design Web UI has been removed as unmaintained. It may be
   brought back if a maintainer steps up.
-- Add define parameter to RpmBuild to specify additional --define parameters.
 
 
 Buildbot ``1.5.0`` ( ``2018-10-09`` )
