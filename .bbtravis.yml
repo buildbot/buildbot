@@ -18,10 +18,6 @@ env:
   global:
   - BUILDBOT_TEST_DB_URL=sqlite://
   - HYPER_SIZE=m1
-  # Current moto (1.3.7) requires dummy credentials to work
-  # https://github.com/spulec/moto/issues/1924
-  - AWS_SECRET_ACCESS_KEY=foobar_secret
-  - AWS_ACCESS_KEY_ID=foobar_key
   matrix:
   - TWISTED=latest SQLALCHEMY=latest TESTS=coverage
 
@@ -146,8 +142,13 @@ script:
 
   - title: master and worker tests
     condition: TESTS == "trial"
-    cmd: trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
-
+    # Current moto (1.3.7) requires dummy credentials to work
+    # https://github.com/spulec/moto/issues/1924
+    cmd: |
+      export AWS_SECRET_ACCESS_KEY=foobar_secret
+      export AWS_ACCESS_KEY_ID=foobar_key
+      trial  --reporter=text --rterrors buildbot.test buildbot_worker.test
+ 
   - title: interop tests
     condition: TESTS == "interop"
     cmd: SANDBOXED_WORKER_PATH=/tmp/workerenv/bin/buildbot-worker coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test.integration.interop
@@ -159,12 +160,10 @@ script:
   # run tests under coverage for latest only (it's slower..)
   - title: coverage tests
     condition: TESTS == "coverage"
-    cmd: coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
-
-  # blacklisting testrunner for new version of py3
-  - title: py3 tests
-    condition: TESTS == "py3next"
-    cmd: python common/run_py3_working_tests.py
+    cmd: |
+      export AWS_SECRET_ACCESS_KEY=foobar_secret
+      export AWS_ACCESS_KEY_ID=foobar_key
+      coverage run --rcfile=.coveragerc $(which trial) --reporter=text --rterrors buildbot.test buildbot_worker.test
 
   # Run additional tests in their separate job
   - title: pylint
