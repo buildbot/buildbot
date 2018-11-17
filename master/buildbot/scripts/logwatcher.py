@@ -60,7 +60,7 @@ class LogWatcher(LineOnlyReceiver):
     TIMEOUT_DELAY = 10.0
     delimiter = unicode2bytes(os.linesep)
 
-    def __init__(self, logfile, timeout_delay=None, _reactor=reactor):
+    def __init__(self, logfile, timeout=None, _reactor=reactor):
         self.logfile = logfile
         self.in_reconfig = False
         self.transport = FakeTransport()
@@ -68,7 +68,7 @@ class LogWatcher(LineOnlyReceiver):
         self.pp.lw = self
         self.timer = None
         self._reactor = _reactor
-        self._timeout_delay = timeout_delay or self.TIMEOUT_DELAY
+        self._timeout_delay = timeout or self.TIMEOUT_DELAY
 
     def start(self):
         # If the log file doesn't exist, create it now.

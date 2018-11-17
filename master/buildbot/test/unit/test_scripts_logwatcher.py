@@ -48,7 +48,7 @@ class TestLogWatcher(unittest.SynchronousTestCase):
 
     @defer.inlineCallbacks
     def test_success_before_timeout(self):
-        lw = LogWatcher('test.log', timeout_delay=5, _reactor=self.reactor)
+        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
@@ -57,7 +57,7 @@ class TestLogWatcher(unittest.SynchronousTestCase):
 
     @defer.inlineCallbacks
     def test_failure_after_timeout(self):
-        lw = LogWatcher('test.log', timeout_delay=5, _reactor=self.reactor)
+        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(5.1)
         lw.lineReceived(b'BuildMaster is running')
@@ -66,7 +66,7 @@ class TestLogWatcher(unittest.SynchronousTestCase):
 
     @defer.inlineCallbacks
     def test_progress_restarts_timeout(self):
-        lw = LogWatcher('test.log', timeout_delay=5, _reactor=self.reactor)
+        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'added builder')

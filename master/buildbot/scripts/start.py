@@ -34,10 +34,10 @@ from buildbot.util import rewrap
 
 class Follower:
 
-    def follow(self, basedir, timeout_delay=None):
+    def follow(self, basedir, timeout=None):
         self.rc = 0
         print("Following twistd.log until startup finished..")
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout_delay=timeout_delay)
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"), timeout=timeout)
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
         reactor.run()
@@ -143,5 +143,5 @@ def start(config):
 
     # this is the parent
     rc = Follower().follow(config['basedir'],
-                           timeout_delay=config.get('start_timeout_delay', None))
+                           timeout=config.get('start_timeout', None))
     return rc
