@@ -26,29 +26,32 @@ from twisted.trial import unittest
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.test.fake.reactor import TestReactor
+from buildbot.test.util import dirs
 
 
-class TestLogWatcher(unittest.SynchronousTestCase):
+class TestLogWatcher(unittest.SynchronousTestCase, dirs.DirsMixin):
 
     def setUp(self):
+        self.setUpDirs('workdir')
+        self.addCleanup(self.tearDownDirs)
+
         self.reactor = TestReactor()
         self.addCleanup(self.reactor.stop)
         self.spawned_process = mock.Mock()
         self.reactor.spawnProcess = mock.Mock(return_value=self.spawned_process)
 
     def test_start(self):
-        lw = LogWatcher('test.log', _reactor=self.reactor)
+        lw = LogWatcher('workdir/test.log', _reactor=self.reactor)
         lw._start = mock.Mock()
 
         lw.start()
         self.reactor.spawnProcess.assert_called()
-        self.assertTrue(os.path.exists('test.log'))
+        self.assertTrue(os.path.exists('workdir/test.log'))
         self.assertTrue(lw.running)
-        os.remove('test.log')
 
     @defer.inlineCallbacks
     def test_success_before_timeout(self):
-        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
+        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'BuildMaster is running')
@@ -57,7 +60,7 @@ class TestLogWatcher(unittest.SynchronousTestCase):
 
     @defer.inlineCallbacks
     def test_failure_after_timeout(self):
-        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
+        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(5.1)
         lw.lineReceived(b'BuildMaster is running')
@@ -66,7 +69,7 @@ class TestLogWatcher(unittest.SynchronousTestCase):
 
     @defer.inlineCallbacks
     def test_progress_restarts_timeout(self):
-        lw = LogWatcher('test.log', timeout=5, _reactor=self.reactor)
+        lw = LogWatcher('workdir/test.log', timeout=5, _reactor=self.reactor)
         d = lw.start()
         self.reactor.advance(4.9)
         lw.lineReceived(b'added builder')
