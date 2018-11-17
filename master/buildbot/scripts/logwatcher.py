@@ -60,13 +60,14 @@ class LogWatcher(LineOnlyReceiver):
     TIMEOUT_DELAY = 10.0
     delimiter = unicode2bytes(os.linesep)
 
-    def __init__(self, logfile, timeout_delay=None):
+    def __init__(self, logfile, timeout_delay=None, _reactor=reactor):
         self.logfile = logfile
         self.in_reconfig = False
         self.transport = FakeTransport()
         self.pp = TailProcess()
         self.pp.lw = self
         self.timer = None
+        self._reactor = _reactor
         self._timeout_delay = timeout_delay or self.TIMEOUT_DELAY
 
     def start(self):
@@ -83,10 +84,10 @@ class LogWatcher(LineOnlyReceiver):
             tailBin = "/usr/xpg4/bin/tail"
         else:
             tailBin = "/usr/bin/tail"
-        self.p = reactor.spawnProcess(self.pp, tailBin,
-                                      ("tail", "-f", "-n", "0", self.logfile),
-                                      env=os.environ,
-                                      )
+
+        args = ("tail", "-f", "-n", "0", self.logfile)
+        self.p = self._reactor.spawnProcess(self.pp, tailBin, args,
+                                            env=os.environ)
         self.running = True
         d = defer.maybeDeferred(self._start)
         return d
@@ -97,7 +98,7 @@ class LogWatcher(LineOnlyReceiver):
         return self.d
 
     def startTimer(self):
-        self.timer = reactor.callLater(self._timeout_delay, self.timeout)
+        self.timer = self._reactor.callLater(self._timeout_delay, self.timeout)
 
     def timeout(self):
         # was the timeout set to be ignored? if so, restart it
