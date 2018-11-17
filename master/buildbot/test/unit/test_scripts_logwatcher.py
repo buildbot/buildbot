@@ -23,8 +23,10 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.scripts.logwatcher import BuildmasterStartupError
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
+from buildbot.scripts.logwatcher import ReconfigError
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util import dirs
 
@@ -77,3 +79,29 @@ class TestLogWatcher(unittest.SynchronousTestCase, dirs.DirsMixin):
         lw.lineReceived(b'BuildMaster is running')
         res = yield d
         self.assertEqual(res, 'buildmaster')
+
+    @defer.inlineCallbacks
+    def test_matches_lines(self):
+        lines_and_expected = [
+            (b'reconfig aborted without making any changes', ReconfigError()),
+            (b'WARNING: reconfig partially applied; master may malfunction',
+             ReconfigError()),
+            (b'Server Shut Down', ReconfigError()),
+            (b'BuildMaster startup failed', BuildmasterStartupError()),
+            (b'message from master: attached', 'worker'),
+            (b'configuration update complete', 'buildmaster'),
+            (b'BuildMaster is running', 'buildmaster'),
+        ]
+
+        for line, expected in lines_and_expected:
+            lw = LogWatcher('workdir/test.log', timeout=5,
+                            _reactor=self.reactor)
+            d = lw.start()
+            lw.lineReceived(line)
+
+            if isinstance(expected, Exception):
+                with self.assertRaises(type(expected)):
+                    yield d
+            else:
+                res = yield d
+                self.assertEqual(res, expected)
