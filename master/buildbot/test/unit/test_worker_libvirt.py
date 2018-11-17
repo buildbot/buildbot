@@ -27,6 +27,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.test.fake import libvirt
 from buildbot.test.util.warnings import assertProducesWarning
+from buildbot.util import eventual
 from buildbot.worker import libvirt as libvirtworker
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
@@ -184,6 +185,9 @@ class TestLibVirtWorker(unittest.TestCase):
 
 
 class TestWorkQueue(unittest.TestCase):
+
+    def tearDown(self):
+        return eventual.flushEventualQueue()
 
     def delayed_success(self):
         def work():
