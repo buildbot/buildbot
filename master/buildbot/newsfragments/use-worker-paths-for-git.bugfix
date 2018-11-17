@@ -1,1 +1,0 @@
-Fix usage of master paths when doing Git operations on worker (:issue:`4268`)
