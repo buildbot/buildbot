@@ -75,8 +75,8 @@ class LogWatcher(LineOnlyReceiver):
             open(self.logfile, 'a').close()
 
         # return a Deferred that fires when the reconfig process has
-        # finished. It errbacks with TimeoutError if the finish line has not
-        # been seen within 10 seconds, and with ReconfigError if the error
+        # finished. It errbacks with TimeoutError if the startup has not
+        # progressed for 10 seconds, and with ReconfigError if the error
         # line was seen. If the logfile could not be opened, it errbacks with
         # an IOError.
         if platform.system().lower() == 'sunos' and os.path.exists('/usr/xpg4/bin/tail'):
