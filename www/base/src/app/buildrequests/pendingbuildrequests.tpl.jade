@@ -3,12 +3,13 @@
     h4 Pending Buildrequests:
     span(ng-hide='buildrequests.length>0')
       | None
-    table.table.table-hover.table-striped.table-condensed(ng-show='buildrequests.length>0')
+    table.table.table-hover.table-striped.table-condensed.table-bordered(ng-show='buildrequests.length>0')
       tr
         td(width='100px') #
         td(width='150px') Builder
         td(width='150px') Submitted At
         td(width='150px') Owner
+        td(ng-repeat="(k,v) in properties") {{k}}
       tr(ng-repeat='br in buildrequests | orderBy:"-submitted_at"' )
           td
             a(ui-sref="buildrequest({buildrequest:br.buildrequestid})")
@@ -21,3 +22,5 @@
               | {{br.submitted_at | timeago }}
           td
             span {{br.properties.owner[0]}}
+          td(ng-repeat="(k, v) in properties")
+            span {{br.properties[k][0]}}
