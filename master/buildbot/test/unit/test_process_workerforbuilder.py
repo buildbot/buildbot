@@ -83,34 +83,3 @@ class TestAbstractWorkerForBuilder(TestCase):
             old_worker = w.slave
 
         self.assertTrue(new_worker is old_worker)
-
-
-class TestWorkerTransition(TestCase):
-
-    def test_AbstractSlaveBuilder_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="AbstractSlaveBuilder was deprecated"):
-            from buildbot.process.slavebuilder import AbstractSlaveBuilder
-
-        self.assertIdentical(AbstractSlaveBuilder, AbstractWorkerForBuilder)
-
-    def test_SlaveBuilder_deprecated(self):
-        from buildbot.process.workerforbuilder import WorkerForBuilder
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="SlaveBuilder was deprecated"):
-            from buildbot.process.slavebuilder import SlaveBuilder
-
-        self.assertIdentical(SlaveBuilder, WorkerForBuilder)
-
-    def test_LatentSlaveBuilder_deprecated(self):
-        from buildbot.process.workerforbuilder import LatentWorkerForBuilder
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="LatentSlaveBuilder was deprecated"):
-            from buildbot.process.slavebuilder import LatentSlaveBuilder
-
-        self.assertIdentical(LatentSlaveBuilder, LatentWorkerForBuilder)
