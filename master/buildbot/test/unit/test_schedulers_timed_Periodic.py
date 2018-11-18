@@ -173,21 +173,21 @@ class Periodic(scheduler.SchedulerMixin, unittest.TestCase):
         d = sched.deactivate()
         return d
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_None(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    periodicBuildTimer=13)
         # given None, build right away
-        d = sched.getNextBuildTime(None)
-        d.addCallback(lambda t: self.assertEqual(t, 0))
-        return d
+        t = yield sched.getNextBuildTime(None)
+        self.assertEqual(t, 0)
 
+    @defer.inlineCallbacks
     def test_getNextBuildTime_given(self):
         sched = self.makeScheduler(name='test', builderNames=['test'],
                                    periodicBuildTimer=13)
         # given a time, add the periodicBuildTimer to it
-        d = sched.getNextBuildTime(20)
-        d.addCallback(lambda t: self.assertEqual(t, 33))
-        return d
+        t = yield sched.getNextBuildTime(20)
+        self.assertEqual(t, 33)
 
     @defer.inlineCallbacks
     def test_enabled_callback(self):
