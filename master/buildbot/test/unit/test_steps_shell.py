@@ -19,6 +19,7 @@ from __future__ import print_function
 import re
 import textwrap
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -493,6 +494,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
                            state_string="'cmd' (failure)")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_run_extract_fn_exception(self):
         def extract_fn(rc, stdout, stderr):
             raise RuntimeError("oh noes")
@@ -506,10 +508,8 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         # note that extract_fn *is* called anyway, but returns no properties
         self.expectOutcome(result=EXCEPTION,
                            state_string="'cmd' (exception)")
-        d = self.runStep()
-        d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        return d
+        yield self.runStep()
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_error_both_set(self):
         """
@@ -907,6 +907,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         return self.do_test_suppressions(step, supps_file, stdout, 2,
                                          exp_warning_log)
 
+    @defer.inlineCallbacks
     def test_suppressions_warningExtractor_exc(self):
         def warningExtractor(step, line, match):
             raise RuntimeError("oh noes")
@@ -916,11 +917,9 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         # need at least one supp to trigger warningExtractor
         supps_file = 'x:y'
         stdout = "abc.c:99: warning: seen 1"
-        d = self.do_test_suppressions(step, supps_file, stdout,
-                                      exp_exception=True)
-        d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        return d
+        yield self.do_test_suppressions(step, supps_file, stdout,
+                                        exp_exception=True)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
 
     def test_suppressions_addSuppression(self):
         # call addSuppression "manually" from a subclass
