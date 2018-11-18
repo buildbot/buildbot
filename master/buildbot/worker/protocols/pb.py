@@ -241,14 +241,11 @@ class Connection(base.Connection, pb.Avatar):
 
             defer.returnValue(decode(info))
 
+    @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
-        d = self.mind.callRemote('setBuilderList', builders)
-
-        @d.addCallback
-        def cache_builders(builders):
-            self.builders = builders
-            return builders
-        return d
+        builders = yield self.mind.callRemote('setBuilderList', builders)
+        self.builders = builders
+        defer.returnValue(builders)
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         workerforbuilder = self.builders.get(builderName)
