@@ -75,6 +75,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         with self.assertRaises(config.ConfigErrors):
             self.makeScheduler(upstream='foo')
 
+    @defer.inlineCallbacks
     def test_activate(self):
         sched = self.makeScheduler()
         sched.activate()
@@ -83,12 +84,9 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             sorted([q.filter for q in sched.master.mq.qrefs]),
             [('buildsets', None, 'complete',), ('buildsets', None, 'new',)])
 
-        d = sched.deactivate()
+        yield sched.deactivate()
 
-        def check(_):
-            self.assertEqual([q.filter for q in sched.master.mq.qrefs], [])
-        d.addCallback(check)
-        return d
+        self.assertEqual([q.filter for q in sched.master.mq.qrefs], [])
 
     def sendBuildsetMessage(self, scheduler_name=None, results=-1,
                             complete=False):
