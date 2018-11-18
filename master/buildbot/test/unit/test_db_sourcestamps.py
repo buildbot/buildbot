@@ -139,83 +139,73 @@ class Tests(interfaces.InterfaceTests):
             'ssid': ssid,
         })
 
+    @defer.inlineCallbacks
     def test_getSourceStamp_simple(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=234, branch='br', revision='rv',
                                repository='rep', codebase='cb', project='prj',
                                created_at=CREATED_AT),
         ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStamp(234))
+        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        def check(ssdict):
-            validation.verifyDbDict(self, 'ssdict', ssdict)
-            self.assertEqual(ssdict, {
-                'ssid': 234,
-                'created_at': epoch2datetime(CREATED_AT),
-                'branch': 'br',
-                'revision': 'rv',
-                'repository': 'rep',
-                'codebase': 'cb',
-                'project': 'prj',
-                'patchid': None,
-                'patch_body': None,
-                'patch_level': None,
-                'patch_subdir': None,
-                'patch_author': None,
-                'patch_comment': None,
-            })
-        d.addCallback(check)
-        return d
+        validation.verifyDbDict(self, 'ssdict', ssdict)
+        self.assertEqual(ssdict, {
+            'ssid': 234,
+            'created_at': epoch2datetime(CREATED_AT),
+            'branch': 'br',
+            'revision': 'rv',
+            'repository': 'rep',
+            'codebase': 'cb',
+            'project': 'prj',
+            'patchid': None,
+            'patch_body': None,
+            'patch_level': None,
+            'patch_subdir': None,
+            'patch_author': None,
+            'patch_comment': None,
+        })
 
+    @defer.inlineCallbacks
     def test_getSourceStamp_simple_None(self):
         "check that NULL branch and revision are handled correctly"
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=234, branch=None, revision=None,
                                repository='rep', codebase='cb', project='prj'),
         ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStamp(234))
+        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        def check(ssdict):
-            validation.verifyDbDict(self, 'ssdict', ssdict)
-            self.assertEqual((ssdict['branch'], ssdict['revision']),
-                             (None, None))
-        d.addCallback(check)
-        return d
+        validation.verifyDbDict(self, 'ssdict', ssdict)
+        self.assertEqual((ssdict['branch'], ssdict['revision']),
+                         (None, None))
 
+    @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=234, patchid=99),
         ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStamp(234))
+        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        def check(ssdict):
-            validation.verifyDbDict(self, 'ssdict', ssdict)
-            self.assertEqual(dict((k, v) for k, v in iteritems(ssdict)
-                                  if k.startswith('patch_')),
-                             dict(patch_body=b'hello, world',
-                                  patch_level=3,
-                                  patch_author='bar',
-                                  patch_comment='foo',
-                                  patch_subdir='/foo'))
-        d.addCallback(check)
-        return d
+        validation.verifyDbDict(self, 'ssdict', ssdict)
+        self.assertEqual(dict((k, v) for k, v in iteritems(ssdict)
+                              if k.startswith('patch_')),
+                         dict(patch_body=b'hello, world',
+                              patch_level=3,
+                              patch_author='bar',
+                              patch_comment='foo',
+                              patch_subdir='/foo'))
 
+    @defer.inlineCallbacks
     def test_getSourceStamp_nosuch(self):
-        d = self.db.sourcestamps.getSourceStamp(234)
+        ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
-        def check(ssdict):
-            self.assertEqual(ssdict, None)
-        d.addCallback(check)
-        return d
+        self.assertEqual(ssdict, None)
 
+    @defer.inlineCallbacks
     def test_getSourceStamps(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
@@ -226,13 +216,10 @@ class Tests(interfaces.InterfaceTests):
                                codebase='c2', repository='rep2', branch='b2', patchid=None,
                                created_at=CREATED_AT + 10),
         ])
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStamps())
+        sourcestamps = yield self.db.sourcestamps.getSourceStamps()
 
-        @d.addCallback
-        def check(sourcestamps):
-            self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
-                             sorted([{
+        self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
+                         sorted([{
                                  'branch': u'b',
                                  'codebase': u'c',
                                  'patch_author': u'bar',
@@ -246,7 +233,7 @@ class Tests(interfaces.InterfaceTests):
                                  'revision': u'r',
                                  'created_at': epoch2datetime(CREATED_AT),
                                  'ssid': 234,
-                             }, {
+                                 }, {
                                  'branch': u'b2',
                                  'codebase': u'c2',
                                  'patchid': None,
@@ -260,33 +247,27 @@ class Tests(interfaces.InterfaceTests):
                                  'revision': u'r2',
                                  'created_at': epoch2datetime(CREATED_AT + 10),
                                  'ssid': 235,
-                             }], key=sourceStampKey))
-        return d
+                                 }], key=sourceStampKey))
 
+    @defer.inlineCallbacks
     def test_getSourceStamps_empty(self):
-        d = self.db.sourcestamps.getSourceStamps()
+        sourcestamps = yield self.db.sourcestamps.getSourceStamps()
 
-        @d.addCallback
-        def check(sourcestamps):
-            self.assertEqual(sourcestamps, [])
-        return d
+        self.assertEqual(sourcestamps, [])
 
     def test_signature_getSourceStampsForBuild(self):
         @self.assertArgSpecMatches(self.db.sourcestamps.getSourceStampsForBuild)
         def getSourceStampsForBuild(self, buildid):
             pass
 
+    @defer.inlineCallbacks
     def do_test_getSourceStampsForBuild(self, rows, buildid, expected):
-        d = self.insertTestData(rows)
+        yield self.insertTestData(rows)
 
-        d.addCallback(lambda _:
-                      self.db.sourcestamps.getSourceStampsForBuild(buildid))
+        sourcestamps = yield self.db.sourcestamps.getSourceStampsForBuild(buildid)
 
-        @d.addCallback
-        def check(sourcestamps):
-            self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
-                             sorted(expected, key=sourceStampKey))
-        return d
+        self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
+                         sorted(expected, key=sourceStampKey))
 
     def test_getSourceStampsForBuild_OneCodeBase(self):
         rows = [fakedb.Master(id=88, name="bar"),
@@ -403,8 +384,9 @@ class TestRealDB(unittest.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['sourcestamps',
                          'patches',
                          'masters',
@@ -415,12 +397,8 @@ class TestRealDB(unittest.TestCase,
                          'buildset_sourcestamps',
                          'builds'])
 
-        def finish_setup(_):
-            self.db.sourcestamps = \
-                sourcestamps.SourceStampsConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
+        self.db.sourcestamps = \
+            sourcestamps.SourceStampsConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
