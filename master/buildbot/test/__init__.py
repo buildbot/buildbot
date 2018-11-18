@@ -94,11 +94,6 @@ with assertProducesWarning(
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave\.ec2' module is deprecated"):
-    import buildbot.buildslave.ec2 as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
         message_pattern=r"'buildbot\.buildslave\.libvirt' module is deprecated"):
     import buildbot.buildslave.libvirt as _  # noqa
 

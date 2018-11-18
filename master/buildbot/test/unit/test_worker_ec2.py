@@ -674,16 +674,3 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
                                      )
         self.assertEqual(bs.keypair_name, 'test_keypair')
         self.assertEqual(bs.security_name, 'test_security_group')
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_EC2LatentBuildSlave_deprecated(self):
-        from buildbot.worker.ec2 import EC2LatentWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="EC2LatentBuildSlave was deprecated"):
-            from buildbot.buildslave.ec2 import EC2LatentBuildSlave
-
-        self.assertIdentical(EC2LatentBuildSlave, EC2LatentWorker)
