@@ -735,15 +735,6 @@ class TestRealDB(unittest.TestCase,
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_BuildslavesConnectorComponent_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildslavesConnectorComponent was deprecated"):
-            from buildbot.db.buildslaves import BuildslavesConnectorComponent
-
-        self.assertIdentical(BuildslavesConnectorComponent,
-                             workers.WorkersConnectorComponent)
-
     def test_getWorkers_old_api(self):
         method = mock.Mock(return_value='dummy')
         with mock.patch(
