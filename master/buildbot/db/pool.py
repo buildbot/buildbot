@@ -23,6 +23,7 @@ import traceback
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
 from twisted.internet import threads
 from twisted.python import log
 from twisted.python import threadpool
@@ -216,13 +217,19 @@ class DBThreadPool(object):
             break
         return rv
 
+    @defer.inlineCallbacks
     def do(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(self.reactor, self._pool,
-                                         self.__thd, False, callable, args, kwargs)
+        ret = yield threads.deferToThreadPool(self.reactor, self._pool,
+                                              self.__thd, False, callable,
+                                              args, kwargs)
+        defer.returnValue(ret)
 
+    @defer.inlineCallbacks
     def do_with_engine(self, callable, *args, **kwargs):
-        return threads.deferToThreadPool(self.reactor, self._pool,
-                                         self.__thd, True, callable, args, kwargs)
+        ret = yield threads.deferToThreadPool(self.reactor, self._pool,
+                                              self.__thd, True, callable,
+                                              args, kwargs)
+        defer.returnValue(ret)
 
     def get_sqlite_version(self):
         import sqlite3
