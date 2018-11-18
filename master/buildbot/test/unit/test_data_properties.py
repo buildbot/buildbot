@@ -51,13 +51,11 @@ class BuildsetPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_properties(self):
-        d = self.callGet(('buildsets', 14, 'properties'))
+        props = yield self.callGet(('buildsets', 14, 'properties'))
 
-        @d.addCallback
-        def check(props):
-            self.assertEqual(props, {u'prop': (22, u'fakedb')})
-        return d
+        self.assertEqual(props, {u'prop': (22, u'fakedb')})
 
 
 class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -82,14 +80,12 @@ class BuildPropertiesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_properties(self):
-        d = self.callGet(('builds', 786, 'properties'))
+        props = yield self.callGet(('builds', 786, 'properties'))
 
-        @d.addCallback
-        def check(props):
-            self.assertEqual(
-                props, {u'year': (1651, u'Wikipedia'), u'island_name': ("despair", u'Book')})
-        return d
+        self.assertEqual(props, {u'year': (1651, u'Wikipedia'),
+                         u'island_name': ("despair", u'Book')})
 
 
 class Properties(interfaces.InterfaceTests, unittest.TestCase):
