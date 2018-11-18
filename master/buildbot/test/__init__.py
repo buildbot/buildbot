@@ -74,11 +74,6 @@ from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa pyl
 
 with assertProducesWarning(
         DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave' module is deprecated"):
-    import buildbot.buildslave as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
         message_pattern=r"'buildbot\.steps\.slave' module is deprecated"):
     import buildbot.steps.slave as _  # noqa
 
