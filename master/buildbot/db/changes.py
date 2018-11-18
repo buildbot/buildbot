@@ -42,6 +42,7 @@ class ChDict(dict):
 class ChangesConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    @defer.inlineCallbacks
     def getParentChangeIds(self, branch, repository, project, codebase):
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -55,7 +56,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             parent_id = conn.scalar(q)
             return [parent_id] if parent_id else []
 
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @defer.inlineCallbacks
     def addChange(self, author=None, files=None, comments=None, is_dir=None,
@@ -153,6 +154,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         defer.returnValue((yield self.db.pool.do(thd)))
 
     @base.cached("chdicts")
+    @defer.inlineCallbacks
     def getChange(self, changeid):
         assert changeid >= 0
 
@@ -168,7 +170,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             # and fetch the ancillary data (files, properties)
             return self._chdict_from_change_row_thd(conn, row)
 
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @defer.inlineCallbacks
     def getChangesForBuild(self, buildid):
@@ -213,6 +215,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     changes.append(change)
         defer.returnValue(changes)
 
+    @defer.inlineCallbacks
     def getChangeFromSSid(self, sourcestampid):
         assert sourcestampid >= 0
 
@@ -230,9 +233,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 return None
             # and fetch the ancillary data (files, properties)
             return self._chdict_from_change_row_thd(conn, row)
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getChangeUids(self, changeid):
         assert changeid >= 0
 
@@ -243,8 +246,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             rows = res.fetchall()
             row_uids = [row.uid for row in rows]
             return row_uids
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def getRecentChanges(self, count):
         def thd(conn):
@@ -284,6 +286,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                                         for changeid in changeids])
         return d
 
+    @defer.inlineCallbacks
     def getChangesCount(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -294,9 +297,9 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 r = row[0]
             rp.close()
             return int(r)
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getLatestChangeid(self):
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -304,11 +307,11 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                           order_by=sa.desc(changes_tbl.c.changeid),
                           limit=1)
             return conn.scalar(q)
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     # utility methods
 
+    @defer.inlineCallbacks
     def pruneChanges(self, changeHorizon):
         """
         Called periodically by DBConnector, this method deletes changes older
@@ -316,7 +319,8 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         """
 
         if not changeHorizon:
-            return defer.succeed(None)
+            defer.returnValue(None)
+            return  # pragma: no cover
 
         def thd(conn):
             changes_tbl = self.db.model.changes
@@ -341,7 +345,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     table = self.db.model.metadata.tables[table_name]
                     conn.execute(
                         table.delete(table.c.changeid.in_(batch)))
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     def _chdict_from_change_row_thd(self, conn, ch_row):
         # This method must be run in a db.pool thread, and returns a chdict
