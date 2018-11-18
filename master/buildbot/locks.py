@@ -23,7 +23,6 @@ from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 if False:  # for debugging  pylint: disable=using-constant-test
@@ -341,6 +340,3 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
         # list of tuples
         self._maxCountForWorkerList = tuple(
             sorted(self.maxCountForWorker.items()))
-
-
-deprecatedWorkerModuleAttribute(locals(), WorkerLock)

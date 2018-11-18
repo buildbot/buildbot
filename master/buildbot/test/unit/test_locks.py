@@ -27,14 +27,6 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_SlaveLock_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="SlaveLock was deprecated"):
-            from buildbot.locks import SlaveLock
-
-        self.assertIdentical(SlaveLock, WorkerLock)
-
     def test_maxCountForWorker_old_api(self):
         lock = WorkerLock("lock")
 

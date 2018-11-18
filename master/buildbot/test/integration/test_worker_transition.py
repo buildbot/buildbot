@@ -213,21 +213,6 @@ class PluginsTransition(unittest.TestCase):
         with self.assertRaises(AttributeError):
             worker_ns.BuildSlave()
 
-    def test_plugins_util_SlaveLock_import(self):
-        from buildbot.plugins import util
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = util.WorkerLock
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=re.escape(
-                    "'buildbot.util.SlaveLock' is deprecated, "
-                    "use 'buildbot.util.WorkerLock' instead")):
-            deprecated = util.SlaveLock
-
-        self.assertIdentical(new, deprecated)
-
     def test_plugins_util_enforceChosenSlave_import(self):
         from buildbot.plugins import util
 

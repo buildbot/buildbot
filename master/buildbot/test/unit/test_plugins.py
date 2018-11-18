@@ -377,17 +377,6 @@ class TestWorkerPluginsTransition(unittest.TestCase):
             self.assertTrue(
                 self.worker_ns.deep.newthirdparty is ClassWithInterface)
 
-    def test_util_SlaveLock_import(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=re.escape(
-                    "'buildbot.util.SlaveLock' is deprecated, "
-                    "use 'buildbot.util.WorkerLock' instead")):
-            deprecated = self.util_ns.SlaveLock
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertIdentical(deprecated, ClassWithInterface)
-
     def test_util_enforceChosenSlave_import(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,

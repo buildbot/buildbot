@@ -435,7 +435,6 @@ class _PluginDB(object):
 
                 # Handle deprecated plugins names in util namespace
                 old_new_names = [
-                    ('SlaveLock', 'WorkerLock'),
                     ('enforceChosenSlave', 'enforceChosenWorker'),
                     ('BuildslaveChoiceParameter', 'WorkerChoiceParameter'),
                 ]
