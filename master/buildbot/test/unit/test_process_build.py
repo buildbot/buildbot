@@ -272,6 +272,7 @@ class TestBuild(unittest.TestCase):
         d.callback(False)
         self.assertEqual(b.results, RETRY)
 
+    @defer.inlineCallbacks
     def testAlwaysRunStepStopBuild(self):
         """Test that steps marked with alwaysRun=True still get run even if
         the build is stopped."""
@@ -306,14 +307,11 @@ class TestBuild(unittest.TestCase):
         step2.startStep = startStep2
         step1.stepDone = lambda: False
 
-        d = b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
 
-        def check(ign):
-            self.assertEqual(b.results, CANCELLED)
-            self.assertIn('stop it', step1.interrupted)
-            self.assertTrue(step2Started[0])
-        d.addCallback(check)
-        return d
+        self.assertEqual(b.results, CANCELLED)
+        self.assertIn('stop it', step1.interrupted)
+        self.assertTrue(step2Started[0])
 
     def testBuildcanStartWithWorkerForBuilder(self):
         b = self.build
