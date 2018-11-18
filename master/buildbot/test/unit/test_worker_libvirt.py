@@ -312,16 +312,3 @@ class TestWorkQueue(unittest.TestCase):
             self.assertTrue(flags[2])
 
         yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_LibVirtSlave_deprecated(self):
-        from buildbot.worker.libvirt import LibVirtWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="LibVirtSlave was deprecated"):
-            from buildbot.buildslave.libvirt import LibVirtSlave
-
-        self.assertIdentical(LibVirtSlave, LibVirtWorker)
