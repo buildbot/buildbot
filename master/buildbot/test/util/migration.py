@@ -41,19 +41,17 @@ from buildbot.util import sautils
 
 class MigrateTestMixin(db.RealDatabaseMixin, dirs.DirsMixin):
 
+    @defer.inlineCallbacks
     def setUpMigrateTest(self):
         self.basedir = os.path.abspath("basedir")
         self.setUpDirs('basedir')
 
-        d = self.setUpRealDatabase()
+        yield self.setUpRealDatabase()
 
-        @d.addCallback
-        def make_dbc(_):
-            master = fakemaster.make_master()
-            self.db = connector.DBConnector(self.basedir)
-            self.db.setServiceParent(master)
-            self.db.pool = self.db_pool
-        return d
+        master = fakemaster.make_master()
+        self.db = connector.DBConnector(self.basedir)
+        self.db.setServiceParent(master)
+        self.db.pool = self.db_pool
 
     def tearDownMigrateTest(self):
         self.tearDownDirs()
