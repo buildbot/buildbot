@@ -92,11 +92,6 @@ with assertProducesWarning(
         message_pattern=r"'buildbot\.db\.buildslaves' module is deprecated"):
     import buildbot.db.buildslaves as _  # noqa
 
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
-    import buildbot.buildslave.openstack as _  # noqa
-
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,
 # warnings in tests shall be forcefully tested with assertProducesWarning,
