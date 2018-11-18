@@ -212,11 +212,12 @@ class RealDatabaseMixin(object):
         yield self.db_pool.do(self.__thd_clean_database)
         yield self.db_pool.do(self.__thd_create_tables, table_names)
 
+    @defer.inlineCallbacks
     def tearDownRealDatabase(self):
         if self.__want_pool:
-            return self.db_pool.do(self.__thd_clean_database)
-        return defer.succeed(None)
+            yield self.db_pool.do(self.__thd_clean_database)
 
+    @defer.inlineCallbacks
     def insertTestData(self, rows):
         """Insert test data into the database for use during the test.
 
@@ -240,7 +241,7 @@ class RealDatabaseMixin(object):
                     except Exception:
                         log.msg("while inserting %s - %s" % (row, row.values))
                         raise
-        return self.db_pool.do(thd)
+        yield self.db_pool.do(thd)
 
 
 class TestCase(unittest.TestCase):
