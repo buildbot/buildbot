@@ -202,7 +202,6 @@ class Authz(www.WwwTestMixin, unittest.TestCase):
         ]
 
         self.setAllowRules(allow_rules)
-
         # check if action is denied and last check was exact against not-exist3
         with self.assertRaisesRegex(authz.Forbidden, '.+not-exists3.+'):
             yield self.assertUserAllowed("builds/13", "rebuild", {}, "nineuser")
