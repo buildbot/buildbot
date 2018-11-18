@@ -38,7 +38,6 @@ from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.worker_transition import deprecatedWorkerClassMethod
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -48,9 +47,6 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
             return workername == workerforbuilder.worker.workername
 
     return True
-
-
-deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
 
 
 class Builder(util_service.ReconfigurableServiceMixin,
