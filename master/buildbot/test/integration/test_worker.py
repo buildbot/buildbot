@@ -30,6 +30,7 @@ from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util.integration import getMaster
+from buildbot.util.eventual import _setReactor
 from buildbot.worker.local import LocalWorker
 
 try:
@@ -71,6 +72,8 @@ class Tests(SynchronousTestCase):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         self.addCleanup(self.reactor.stop)
+        _setReactor(self.reactor)
+        self.addCleanup(_setReactor, None)
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")
