@@ -169,6 +169,3 @@ class ControllableLatentWorker(AbstractLatentWorker):
             return defer.succeed(True)
         self._controller._stop_deferred = defer.Deferred()
         return self._controller._stop_deferred
-
-    def _soft_disconnect(self):
-        return defer.succeed(True)
