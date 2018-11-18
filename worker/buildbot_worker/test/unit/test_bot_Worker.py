@@ -57,18 +57,15 @@ class MasterRealm(object):
         self.perspective = perspective
         self.on_attachment = on_attachment
 
+    @defer.inlineCallbacks
     def requestAvatar(self, avatarId, mind, *interfaces):
         assert pb.IPerspective in interfaces
         self.mind = mind
         self.perspective.mind = mind
-        d = defer.succeed(None)
         if self.on_attachment:
-            d.addCallback(lambda _: self.on_attachment(mind))
+            yield self.on_attachment(mind)
 
-        def returnAvatar(_):
-            return pb.IPerspective, self.perspective, lambda: None
-        d.addCallback(returnAvatar)
-        return d
+        defer.returnValue((pb.IPerspective, self.perspective, lambda: None))
 
     def shutdown(self):
         return self.mind.broker.transport.loseConnection()
@@ -86,17 +83,16 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
             shutil.rmtree(self.basedir)
         os.makedirs(self.basedir)
 
+    @defer.inlineCallbacks
     def tearDown(self):
-        d = defer.succeed(None)
         if self.realm:
-            d.addCallback(lambda _: self.realm.shutdown())
+            yield self.realm.shutdown()
         if self.worker and self.worker.running:
-            d.addCallback(lambda _: self.worker.stopService())
+            yield self.worker.stopService()
         if self.listeningport:
-            d.addCallback(lambda _: self.listeningport.stopListening())
+            yield self.listeningport.stopListening()
         if os.path.exists(self.basedir):
             shutil.rmtree(self.basedir)
-        return d
 
     def start_master(self, perspective, on_attachment=None):
         self.realm = MasterRealm(perspective, on_attachment)
