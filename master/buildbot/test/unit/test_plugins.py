@@ -376,14 +376,3 @@ class TestWorkerPluginsTransition(unittest.TestCase):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertTrue(
                 self.worker_ns.deep.newthirdparty is ClassWithInterface)
-
-    def test_util_BuildslaveChoiceParameter_import(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=re.escape(
-                    "'buildbot.util.BuildslaveChoiceParameter' is deprecated, "
-                    "use 'buildbot.util.WorkerChoiceParameter' instead")):
-            deprecated = self.util_ns.BuildslaveChoiceParameter
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertIdentical(deprecated, ClassWithInterface)

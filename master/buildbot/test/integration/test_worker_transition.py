@@ -212,18 +212,3 @@ class PluginsTransition(unittest.TestCase):
         # Access of old-named workers through new API is an error.
         with self.assertRaises(AttributeError):
             worker_ns.BuildSlave()
-
-    def test_plugins_util_BuildslaveChoiceParameter_import(self):
-        from buildbot.plugins import util
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = util.WorkerChoiceParameter
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=re.escape(
-                    "'buildbot.util.BuildslaveChoiceParameter' is deprecated, "
-                    "use 'buildbot.util.WorkerChoiceParameter' instead")):
-            deprecated = util.BuildslaveChoiceParameter
-
-        self.assertIdentical(new, deprecated)

@@ -429,22 +429,6 @@ class _PluginDB(object):
                         compat_name, worker_ns._tree._children[new_name])
 
                 tempo = self._namespaces[namespace]
-
-            elif namespace == 'util':
-                tempo = _Plugins(namespace, interface, check_extras)
-
-                # Handle deprecated plugins names in util namespace
-                old_new_names = [
-                    ('enforceChosenSlave', 'enforceChosenWorker'),
-                    ('BuildslaveChoiceParameter', 'WorkerChoiceParameter'),
-                ]
-                for compat_name, new_name in old_new_names:
-                    entry = tempo._tree._get(new_name)
-                    assert isinstance(entry, _PluginEntry)
-                    proxy_entry = _DeprecatedPluginEntry(
-                        compat_name, new_name, entry)
-                    tempo._tree.add(compat_name, proxy_entry)
-
             else:
                 tempo = _Plugins(namespace, interface, check_extras)
 
