@@ -42,10 +42,6 @@ class WorkerTooOldError(Exception):
     pass
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
-
-
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 

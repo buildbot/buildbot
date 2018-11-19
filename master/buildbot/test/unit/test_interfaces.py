@@ -49,16 +49,6 @@ class TestWorkerTransition(unittest.TestCase):
 
         self.assertIdentical(deprecated, interfaces.IWorkerStatus)
 
-    def test_BuildSlaveTooOldError_deprecated(self):
-        from buildbot.interfaces import WorkerTooOldError
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildSlaveTooOldError was deprecated"):
-            from buildbot.interfaces import BuildSlaveTooOldError
-
-        self.assertIdentical(BuildSlaveTooOldError, WorkerTooOldError)
-
     def test_LatentBuildSlaveFailedToSubstantiate_deprecated(self):
         from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 
