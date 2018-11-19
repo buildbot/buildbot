@@ -162,9 +162,6 @@ class IWorker(IPlugin):
     pass
 
 
-deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
-
-
 class ILatentWorker(IWorker):
 
     """A worker that is not always running, but can run when requested.
