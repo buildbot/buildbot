@@ -525,14 +525,3 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_SlaveBuildStep_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="SlaveBuildStep was deprecated"):
-            from buildbot.steps.slave import SlaveBuildStep
-
-        self.assertIdentical(SlaveBuildStep, worker.WorkerBuildStep)
