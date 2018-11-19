@@ -298,9 +298,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "validation",
         "www",
         "workers",
-
-        # deprecated, c['protocols']['pb']['port'] should be used
-        "slavePortnum",
         "slaves",  # deprecated, "worker" should be used
     ])
     compare_attrs = list(_known_config_keys)
@@ -495,30 +492,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
                     return
-                if (proto == "pb" and options.get("port") and
-                        'slavePortnum' in config_dict):
-                    error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                          " defined, recommended to remove slavePortnum and leave"
-                          " only c['protocols']['pb']['port']")
                 if proto == "wamp":
                     self.check_wamp_proto(options)
         else:
             error("c['protocols'] must be dict")
             return
         self.protocols = protocols
-
-        # saved for backward compatibility
-        if 'slavePortnum' in config_dict:
-            reportDeprecatedWorkerNameUsage(
-                "c['slavePortnum'] key is deprecated, use "
-                "c['protocols']['pb']['port'] instead",
-                filename=filename)
-            port = config_dict.get('slavePortnum')
-            if isinstance(port, int):
-                port = "tcp:%d" % port
-            pb_options = self.protocols.get('pb', {})
-            pb_options['port'] = port
-            self.protocols['pb'] = pb_options
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
