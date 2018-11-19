@@ -48,15 +48,3 @@ class TestWorkerTransition(unittest.TestCase):
             deprecated = interfaces.ISlaveStatus
 
         self.assertIdentical(deprecated, interfaces.IWorkerStatus)
-
-    def test_LatentBuildSlaveFailedToSubstantiate_deprecated(self):
-        from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="LatentBuildSlaveFailedToSubstantiate "
-                                "was deprecated"):
-            from buildbot.interfaces import LatentBuildSlaveFailedToSubstantiate
-
-        self.assertIdentical(LatentBuildSlaveFailedToSubstantiate,
-                             LatentWorkerFailedToSubstantiate)

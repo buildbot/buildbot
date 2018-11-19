@@ -50,11 +50,6 @@ class LatentWorkerCannotSubstantiate(Exception):
     pass
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), LatentWorkerFailedToSubstantiate,
-    compat_name="LatentBuildSlaveFailedToSubstantiate")
-
-
 class LatentWorkerSubstantiatiationCancelled(Exception):
     pass
 
