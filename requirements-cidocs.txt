@@ -1,4 +1,4 @@
-Sphinx==1.8.1
+Sphinx==1.8.2
 sphinx-jinja==1.1.0
 sphinxcontrib-blockdiag==1.5.5
 sphinxcontrib-spelling==4.2.0
