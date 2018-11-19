@@ -193,10 +193,6 @@ class ILatentWorker(IWorker):
         """
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), ILatentWorker, compat_name="ILatentBuildSlave")
-
-
 class IRenderable(Interface):
 
     """An object that can be interpolated with properties from a build.

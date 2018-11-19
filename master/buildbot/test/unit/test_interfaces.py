@@ -25,14 +25,6 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_ILatentBuildSlave_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="ILatentBuildSlave was deprecated"):
-            deprecated = interfaces.ILatentBuildSlave
-
-        self.assertIdentical(deprecated, interfaces.ILatentWorker)
-
     def test_ISlaveStatus_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
