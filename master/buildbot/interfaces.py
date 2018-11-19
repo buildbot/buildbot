@@ -29,8 +29,6 @@ from __future__ import print_function
 from zope.interface import Attribute
 from zope.interface import Interface
 
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-
 # exceptions that can be raised while trying to start a build
 
 
@@ -519,9 +517,6 @@ class IWorkerStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the worker."""
-
-
-deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
 
 
 class ISchedulerStatus(Interface):
