@@ -34,16 +34,6 @@ from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 # exceptions that can be raised while trying to start a build
 
 
-# This class is deprecated and should no longer be used.
-class NoSlaveError(Exception):
-    pass
-
-
-deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
-                                compat_name="NoSlaveError",
-                                new_name="")
-
-
 class BuilderInUseError(Exception):
     pass
 

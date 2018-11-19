@@ -25,12 +25,6 @@ from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_NoSlaveError_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="NoSlaveError was deprecated"):
-            interfaces.NoSlaveError
-
     def test_IBuildSlave_deprecated(self):
         with assertProducesWarning(
                 DeprecatedWorkerNameWarning,
