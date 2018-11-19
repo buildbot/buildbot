@@ -38,7 +38,6 @@ __all__ = (
     "deprecatedWorkerClassMethod",
     "WorkerAPICompatMixin",
     "setupWorkerTransition",
-    "deprecatedWorkerModuleAttribute",
     "reportDeprecatedWorkerNameUsage",
     "reportDeprecatedWorkerModuleUsage",
 )
@@ -177,50 +176,6 @@ def setupWorkerTransition():
             default_warn_method(message, category, stacklevel)
 
     setWarningMethod(custom_warn_method)
-
-
-def deprecatedWorkerModuleAttribute(scope, attribute, compat_name=None,
-                                    new_name=None):
-    """This is similar to Twisted's deprecatedModuleAttribute, but for
-    Worker API Rename warnings.
-
-    Can be used to create compatibility attributes for module-level classes,
-    functions and global variables.
-
-    :param scope: module scope (locals() in the context of a module)
-    :param attribute: module object (class, function, global variable)
-    :param compat_name: optional compatibility name (will be generated if not
-    specified)
-    :param new_name: optional new name (will be used name of attribute object
-    in the module is not specified). If empty string is specified, then no
-    new name is assumed for this attribute.
-    """
-
-    module_name = scope["__name__"]
-    assert module_name in sys.modules, "scope must be module, i.e. locals()"
-    assert sys.modules[module_name].__dict__ is scope, \
-        "scope must be module, i.e. locals()"
-
-    if new_name is None:
-        scope_keys = list(scope.keys())
-        scope_values = list(scope.values())
-        attribute_name = scope_keys[scope_values.index(attribute)]
-    else:
-        attribute_name = new_name
-
-    compat_name = _compat_name(attribute_name, compat_name=compat_name)
-
-    scope[compat_name] = attribute
-
-    if attribute_name:
-        msg = "Use {0} instead.".format(attribute_name)
-    else:
-        msg = "Don't use it."
-
-    _deprecatedModuleAttribute(
-        Version("Buildbot", 0, 9, 0),
-        _WORKER_WARNING_MARK + msg,
-        module_name, compat_name)
 
 
 def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
