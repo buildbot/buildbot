@@ -400,33 +400,10 @@ class TestDirectoryUpload(steps.BuildStepMixin, unittest.TestCase):
         self.assertEqual(
                 len(self.flushLoggedErrors(RuntimeError)), 1)
 
-    def test_workersrc_old_api(self):
-        step = transfer.DirectoryUpload(
-            workersrc='srcfile', masterdest='dstfile')
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = step.workersrc
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavesrc' attribute is deprecated"):
-            old = step.slavesrc
-
-        self.assertIdentical(new, old)
-
     def test_init_workersrc_new_api_no_warns(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             step = transfer.DirectoryUpload(
                 workersrc='srcfile', masterdest='dstfile')
-
-        self.assertEqual(step.workersrc, 'srcfile')
-
-    def test_init_workersrc_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavesrc' keyword argument is deprecated"):
-            step = transfer.DirectoryUpload(
-                slavesrc='srcfile', masterdest='dstfile')
 
         self.assertEqual(step.workersrc, 'srcfile')
 

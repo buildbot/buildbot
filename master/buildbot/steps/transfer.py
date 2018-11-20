@@ -193,17 +193,8 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
     def __init__(self, workersrc=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024,
                  compress=None, url=None, urlText=None,
-                 slavesrc=None,  # deprecated, use `workersrc` instead
                  **buildstep_kwargs
                  ):
-        # Deprecated API support.
-        if slavesrc is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavesrc' keyword argument is deprecated, "
-                "use 'workersrc' instead")
-            assert workersrc is None
-            workersrc = slavesrc
-
         # Emulate that first two arguments are positional.
         if workersrc is None or masterdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -211,7 +202,6 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.workersrc = workersrc
-        self._registerOldWorkerAttr("workersrc")
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
