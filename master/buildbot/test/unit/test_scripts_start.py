@@ -22,6 +22,7 @@ import sys
 import time
 
 import twisted
+from twisted.internet import defer
 from twisted.internet.utils import getProcessOutputAndValue
 from twisted.python import versions
 from twisted.trial import unittest
@@ -88,46 +89,35 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
     @skipIfPythonVersionIsLess((2, 7))
+    @defer.inlineCallbacks
     def test_start_no_daemon(self):
-        d = self.runStart(nodaemon=True)
+        res = yield self.runStart(nodaemon=True)
 
-        @d.addCallback
-        def cb(res):
-            self.assertEqual(res, (b'', b'', 0))
-            print(res)
-        return d
+        self.assertEqual(res, (b'', b'', 0))
 
     @skipIfPythonVersionIsLess((2, 7))
+    @defer.inlineCallbacks
     def test_start_quiet(self):
-        d = self.runStart(quiet=True)
+        res = yield self.runStart(quiet=True)
 
-        @d.addCallback
-        def cb(res):
-            self.assertEqual(res, (b'', b'', 0))
-            print(res)
-        return d
+        self.assertEqual(res, (b'', b'', 0))
 
     @flaky(bugNumber=2760)
     @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
     def test_start(self):
-        d = self.runStart()
+        try:
+            (out, err, rc) = yield self.runStart()
 
-        @d.addCallback
-        def cb(xxx_todo_changeme):
-            (out, err, rc) = xxx_todo_changeme
             self.assertEqual((rc, err), (0, ''))
-            self.assertSubstring('BuildMaster is running', out)
-
-        @d.addBoth
-        def flush(x):
+            self.assertSubstring(
+                'buildmaster appears to have (re)started correctly', out)
+        finally:
             # wait for the pidfile to go away after the reactor.stop
             # in buildbot.tac takes effect
             pidfile = os.path.join('basedir', 'twistd.pid')
             while os.path.exists(pidfile):
                 time.sleep(0.01)
-            return x
-
-        return d
 
     if twisted.version <= versions.Version('twisted', 9, 0, 0):
         test_start.skip = test_start_quiet.skip = "Skipping due to suprious PotentialZombieWarning."
