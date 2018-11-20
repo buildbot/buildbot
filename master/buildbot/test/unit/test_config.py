@@ -1273,13 +1273,6 @@ class MasterConfig_old_worker_api(unittest.TestCase):
     def setUp(self):
         self.cfg = config.MasterConfig()
 
-    def test_worker_old_api(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'slaves' attribute is deprecated, "
-                                r"use 'workers' instead"):
-            self.assertEqual(self.cfg.slaves, [])
-
     def test_workers_new_api(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(self.cfg.workers, [])
@@ -1485,15 +1478,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workername_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavename='a', factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
     def test_init_workername_positional(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
@@ -1508,15 +1492,6 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavenames=['a'], factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
     def test_init_workernames_positional(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
@@ -1524,36 +1499,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_workernames_old_api(self):
-        cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            names_new = cfg.workernames
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' attribute is deprecated"):
-            names_old = cfg.slavenames
-
-        self.assertEqual(names_old, ['a'])
-        self.assertIdentical(names_new, names_old)
-
     def test_init_workerbuilddir_new_api_no_warns(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
                 name='a b c', workername='a', factory=self.factory,
                 workerbuilddir="dir")
-
-        self.assertEqual(cfg.workerbuilddir, 'dir')
-
-    def test_init_workerbuilddir_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavebuilddir' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                slavebuilddir='dir')
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
@@ -1564,40 +1514,12 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_next_worker_old_api(self):
-        f = lambda: None
-        cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory,
-            nextWorker=f)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = cfg.nextWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' attribute is deprecated"):
-            old = cfg.nextSlave
-
-        self.assertIdentical(old, f)
-        self.assertIdentical(new, old)
-
     def test_init_next_worker_new_api_no_warns(self):
         f = lambda: None
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cfg = config.BuilderConfig(
                 name='a b c', workername='a', factory=self.factory,
                 nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
-
-    def test_init_next_worker_old_api_warns(self):
-        f = lambda: None
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextSlave=f)
 
         self.assertEqual(cfg.nextWorker, f)
 

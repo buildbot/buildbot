@@ -239,7 +239,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.secretsProviders = []
         self.builders = []
         self.workers = []
-        self._registerOldWorkerAttr("workers")
         self.change_sources = []
         self.status = []
         self.user_managers = []
@@ -939,41 +938,8 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                  tags=None, category=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None,
-
-                 slavename=None,  # deprecated, use `workername` instead
-                 slavenames=None,  # deprecated, use `workernames` instead
-                 # deprecated, use `workerbuilddir` instead
-                 slavebuilddir=None,
-                 nextSlave=None,  # deprecated, use `nextWorker` instead
+                 canStartBuild=None, defaultProperties=None
                  ):
-
-        # Deprecated API support.
-        if slavename is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavename' keyword argument is deprecated, "
-                "use 'workername' instead")
-            assert workername is None
-            workername = slavename
-        if slavenames is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavenames' keyword argument is deprecated, "
-                "use 'workernames' instead")
-            assert workernames is None
-            workernames = slavenames
-        if slavebuilddir is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavebuilddir' keyword argument is deprecated, "
-                "use 'workerbuilddir' instead")
-            assert workerbuilddir is None
-            workerbuilddir = slavebuilddir
-        if nextSlave is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'nextSlave' keyword argument is deprecated, "
-                "use 'nextWorker' instead")
-            assert nextWorker is None
-            nextWorker = nextSlave
-
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
@@ -1016,7 +982,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                   (name,))
 
         self.workernames = workernames
-        self._registerOldWorkerAttr("workernames")
 
         # builddir defaults to name
         if builddir is None:
@@ -1028,7 +993,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if workerbuilddir is None:
             workerbuilddir = builddir
         self.workerbuilddir = workerbuilddir
-        self._registerOldWorkerAttr("workerbuilddir")
 
         # remainder are optional
 
@@ -1060,7 +1024,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         self.tags = tags
 
         self.nextWorker = nextWorker
-        self._registerOldWorkerAttr("nextWorker")
         if nextWorker and not callable(nextWorker):
             error('nextWorker must be a callable')
         # Keeping support of the previous nextWorker API

@@ -51,69 +51,8 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             config.FileLoader(self.basedir, self.filename).loadConfig()
 
-    def test_0_9_0b5_config(self):
-        with open(self.filename, "w") as f:
-            f.write(sample_0_9_0b5)
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"'buildbot\.plugins\.buildslave' plugins namespace is deprecated",
-                    r"'slavenames' keyword argument is deprecated",
-                    r"c\['slaves'\] key is deprecated"]):
-            config.FileLoader(self.basedir, self.filename).loadConfig()
-
 # sample.cfg from various versions, with comments stripped.  Adjustments made
 # for compatibility are marked with comments
-
-# Template for master configuration just before worker renaming.
-sample_0_9_0b5 = """\
-from buildbot.plugins import *
-
-c = BuildmasterConfig = {}
-
-c['slaves'] = [buildslave.BuildSlave("example-slave", "pass")]
-
-c['protocols'] = {'pb': {'port': 9989}}
-
-c['change_source'] = []
-c['change_source'].append(changes.GitPoller(
-        'https://github.com/buildbot/hello-world.git',
-        workdir='gitpoller-workdir', branch='master',
-        pollinterval=300))
-
-c['schedulers'] = []
-c['schedulers'].append(schedulers.SingleBranchScheduler(
-                            name="all",
-                            change_filter=util.ChangeFilter(branch='master'),
-                            treeStableTimer=None,
-                            builderNames=["runtests"]))
-c['schedulers'].append(schedulers.ForceScheduler(
-                            name="force",
-                            builderNames=["runtests"]))
-
-factory = util.BuildFactory()
-factory.addStep(steps.Git(repourl='https://github.com/buildbot/hello-world.git', mode='incremental'))
-factory.addStep(steps.ShellCommand(command=["trial", "hello"],
-                                   env={"PYTHONPATH": "."}))
-
-c['builders'] = []
-c['builders'].append(
-    util.BuilderConfig(name="runtests",
-      slavenames=["example-slave"],
-      factory=factory))
-
-c['title'] = "Pyflakes"
-c['titleURL'] = "https://launchpad.net/pyflakes"
-
-c['buildbotURL'] = "http://localhost:8020/"
-
-c['www'] = dict(port=8010,
-                plugins=dict(waterfall_view={}, console_view={}))
-
-c['db'] = {
-    'db_url' : "sqlite:///state.sqlite",
-}
-"""
 
 # Template for master configuration just after worker renaming.
 sample_0_9_0b5_api_renamed = """\
