@@ -33,7 +33,6 @@ from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 class RemoteException(Exception):
@@ -382,12 +381,6 @@ class RemoteShellCommand(RemoteCommand):
             # ShellCommand gets its own copy, any start() methods won't be
             # able to modify the original.
             env = env.copy()
-
-        if usePTY == 'slave-config':
-            reportDeprecatedWorkerNameUsage(
-                "'slave-config' value of 'usePTY' attribute is deprecated, "
-                "use None instead.")
-            usePTY = None
 
         args = {'workdir': workdir,
                 'env': env,

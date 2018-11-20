@@ -221,12 +221,3 @@ class TestWorkerTransition(unittest.TestCase):
                 'workdir', 'command', usePTY=False)
 
         self.assertFalse(cmd.args['usePTY'])
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slave-config' value of 'usePTY' "
-                                "attribute is deprecated"):
-            cmd = remotecommand.RemoteShellCommand(
-                'workdir', 'command', usePTY='slave-config')
-
-        self.assertTrue(cmd.args['usePTY'] is None)
