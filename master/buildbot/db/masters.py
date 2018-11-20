@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.db import base
@@ -43,6 +44,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 last_active=_reactor.seconds()
             ))
 
+    @defer.inlineCallbacks
     def setMasterState(self, masterid, active, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.masters
@@ -74,8 +76,9 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
             # return True if there was a change in state
             return was_active != bool(active)
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
@@ -88,22 +91,24 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 rv = self._masterdictFromRow(row)
             res.close()
             return rv
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
             return [
                 self._masterdictFromRow(row)
                 for row in conn.execute(tbl.select()).fetchall()]
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def setAllMastersActiveLongTimeAgo(self, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)
             conn.execute(q)
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):
         return MasterDict(id=row.id, name=row.name,

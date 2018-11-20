@@ -31,6 +31,7 @@ from buildbot.util import epoch2datetime
 class BuildsConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    @defer.inlineCallbacks
     def _getBuild(self, whereclause):
         def thd(conn):
             q = self.db.model.builds.select(whereclause=whereclause)
@@ -42,7 +43,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 rv = self._builddictFromRow(row)
             res.close()
             return rv
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def getBuild(self, buildid):
         return self._getBuild(self.db.model.builds.c.id == buildid)
@@ -52,6 +53,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             (self.db.model.builds.c.builderid == builderid) &
             (self.db.model.builds.c.number == number))
 
+    @defer.inlineCallbacks
     def _getRecentBuilds(self, whereclause, offset=0, limit=1):
         def thd(conn):
             tbl = self.db.model.builds
@@ -65,7 +67,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             return list([self._builddictFromRow(row)
                          for row in res.fetchall()])
 
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @defer.inlineCallbacks
     def getPrevSuccessfulBuild(self, builderid, number, ssBuild):
@@ -98,6 +100,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
 
         defer.returnValue(rv)
 
+    @defer.inlineCallbacks
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):
         def thd(conn):
             tbl = self.db.model.builds
@@ -120,8 +123,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._builddictFromRow(row) for row in res.fetchall()]
 
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def addBuild(self, builderid, buildrequestid, workerid, masterid,
                  state_string, _reactor=reactor, _race_hook=None):
         started_at = _reactor.seconds()
@@ -152,16 +156,18 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                         new_number += 1
                     continue
                 return r.inserted_primary_key[0], new_number
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def setBuildStateString(self, buildid, state_string):
         def thd(conn):
             tbl = self.db.model.builds
 
             q = tbl.update(whereclause=(tbl.c.id == buildid))
             conn.execute(q, state_string=state_string)
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def finishBuild(self, buildid, results, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.builds
@@ -169,8 +175,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q,
                          complete_at=_reactor.seconds(),
                          results=results)
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def getBuildProperties(self, bid):
         def thd(conn):
             bp_tbl = self.db.model.build_properties
@@ -182,8 +189,9 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                 prop = (json.loads(row.value), row.source)
                 props.append((row.name, prop))
             return dict(props)
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def setBuildProperty(self, bid, name, value, source):
         """ A kind of create_or_update, that's between one or two queries per
         call """
@@ -205,7 +213,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
             elif (prop.value != value_js) or (prop.source != source):
                 conn.execute(bp_tbl.update(whereclause=whereclause),
                              dict(value=value_js, source=source))
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     def _builddictFromRow(self, row):
         def mkdt(epoch):
