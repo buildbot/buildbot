@@ -19,6 +19,8 @@ from __future__ import print_function
 import sqlalchemy as sa
 from sqlalchemy.sql.expression import and_
 
+from twisted.internet import defer
+
 from buildbot.db import base
 from buildbot.util import identifiers
 
@@ -30,6 +32,7 @@ class UsDict(dict):
 class UsersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
+    @defer.inlineCallbacks
     def findUserByAttr(self, identifier, attr_type, attr_data, _race_hook=None):
         # note that since this involves two tables, self.findSomethingId is not
         # helpful
@@ -87,10 +90,10 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 return thd(conn, no_recurse=no_recurse, identifier=identifier)
 
             return uid
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     @base.cached("usdicts")
+    @defer.inlineCallbacks
     def getUser(self, uid):
         def thd(conn):
             tbl = self.db.model.users
@@ -107,8 +110,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def thd_createUsDict(self, users_row, rows):
         # make UsDict to return
@@ -125,6 +127,7 @@ class UsersConnectorComponent(base.DBConnectorComponent):
 
         return usdict
 
+    @defer.inlineCallbacks
     def getUserByUsername(self, username):
         def thd(conn):
             tbl = self.db.model.users
@@ -141,9 +144,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
             rows = conn.execute(q).fetchall()
 
             return self.thd_createUsDict(users_row, rows)
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getUsers(self):
         def thd(conn):
             tbl = self.db.model.users
@@ -155,9 +158,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     ud = dict(uid=row.uid, identifier=row.identifier)
                     dicts.append(ud)
             return dicts
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def updateUser(self, uid=None, identifier=None, bb_username=None,
                    bb_password=None, attr_type=None, attr_data=None,
                    _race_hook=None):
@@ -216,9 +219,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                         return
 
             transaction.commit()
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def removeUser(self, uid):
         def thd(conn):
             # delete from dependent tables first, followed by 'users'
@@ -228,9 +231,9 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                     self.db.model.users,
             ]:
                 conn.execute(tbl.delete(whereclause=(tbl.c.uid == uid)))
-        d = self.db.pool.do(thd)
-        return d
+        yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def identifierToUid(self, identifier):
         def thd(conn):
             tbl = self.db.model.users
@@ -241,5 +244,4 @@ class UsersConnectorComponent(base.DBConnectorComponent):
                 return None
 
             return row.uid
-        d = self.db.pool.do(thd)
-        return d
+        defer.returnValue((yield self.db.pool.do(thd)))

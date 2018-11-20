@@ -21,6 +21,7 @@ import migrate.versioning.repository
 import sqlalchemy as sa
 from migrate import exceptions  # pylint: disable=ungrouped-imports
 
+from twisted.internet import defer
 from twisted.python import log
 from twisted.python import util
 
@@ -793,6 +794,7 @@ class Model(base.DBConnectorComponent):
 
     repo_path = util.sibpath(__file__, "migrate")
 
+    @defer.inlineCallbacks
     def is_current(self):
         if ControlledSchema is None:
             # this should have been caught earlier by enginestrategy.py with a
@@ -812,14 +814,17 @@ class Model(base.DBConnectorComponent):
                 return False
 
             return db_version == repo_version
-        return self.db.pool.do_with_engine(thd)
+        ret = yield self.db.pool.do_with_engine(thd)
+        defer.returnValue(ret)
 
+    @defer.inlineCallbacks
     def create(self):
         # this is nice and simple, but used only for tests
         def thd(engine):
             self.metadata.create_all(bind=engine)
-        return self.db.pool.do_with_engine(thd)
+        yield self.db.pool.do_with_engine(thd)
 
+    @defer.inlineCallbacks
     def upgrade(self):
 
         # here, things are a little tricky.  If we have a 'version' table, then
@@ -904,4 +909,4 @@ class Model(base.DBConnectorComponent):
                 version_control(engine, repo.latest)
 
         check_sqlalchemy_migrate_version()
-        return self.db.pool.do_with_engine(thd)
+        yield self.db.pool.do_with_engine(thd)
