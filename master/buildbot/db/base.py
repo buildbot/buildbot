@@ -22,6 +22,8 @@ import itertools
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
+
 from buildbot.util import unicode2bytes
 
 
@@ -72,6 +74,7 @@ class DBConnectorComponent(object):
             value = value[:col.type.length // 2] + hashlib.sha1(unicode2bytes(value)).hexdigest()[:col.type.length // 2]
         return value
 
+    @defer.inlineCallbacks
     def findSomethingId(self, tbl, whereclause, insert_values,
                         _race_hook=None, autoCreate=True):
         def thd(conn, no_recurse=False):
@@ -100,7 +103,7 @@ class DBConnectorComponent(object):
                 if no_recurse:
                     raise
                 return thd(conn, no_recurse=True)
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def hashColumns(self, *args):
         def encode(x):
