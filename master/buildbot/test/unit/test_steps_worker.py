@@ -291,11 +291,14 @@ class CompositeUser(buildstep.LoggingBuildStep, worker.CompositeStepMixin):
         self.logEnviron = False
         buildstep.LoggingBuildStep.__init__(self)
 
+    @defer.inlineCallbacks
     def start(self):
         self.addLogForRemoteCommands('stdio')
-        d = self.payload(self)
-        d.addCallback(self.payloadComplete)
-        d.addErrback(self.failed)
+        try:
+            res = yield self.payload(self)
+            self.payloadComplete(res)
+        except Exception as e:
+            self.failed(e)
 
     def payloadComplete(self, res):
         self.finished(FAILURE if res else SUCCESS)

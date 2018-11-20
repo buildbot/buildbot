@@ -49,22 +49,18 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_existing(self):
-        d = self.callGet(('changes', '13'))
+        change = yield self.callGet(('changes', '13'))
 
-        @d.addCallback
-        def check(change):
-            self.validateData(change)
-            self.assertEqual(change['project'], 'world-domination')
-        return d
+        self.validateData(change)
+        self.assertEqual(change['project'], 'world-domination')
 
+    @defer.inlineCallbacks
     def test_get_missing(self):
-        d = self.callGet(('changes', '99'))
+        change = yield self.callGet(('changes', '99'))
 
-        @d.addCallback
-        def check(change):
-            self.assertEqual(change, None)
-        return d
+        self.assertEqual(change, None)
 
 
 class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -168,6 +164,7 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
                       project=u'', src=None):
             pass
 
+    @defer.inlineCallbacks
     def do_test_addChange(self, kwargs,
                           expectedRoutingKey, expectedMessage, expectedRow,
                           expectedChangeUsers=None):
@@ -175,19 +172,16 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             expectedChangeUsers = []
         clock = task.Clock()
         clock.advance(10000000)
-        d = self.rtype.addChange(_reactor=clock, **kwargs)
+        changeid = yield self.rtype.addChange(_reactor=clock, **kwargs)
 
-        def check(changeid):
-            self.assertEqual(changeid, 500)
-            # check the correct message was received
-            self.master.mq.assertProductions([
-                (expectedRoutingKey, expectedMessage),
-            ])
-            # and that the correct data was inserted into the db
-            self.master.db.changes.assertChange(500, expectedRow)
-            self.master.db.changes.assertChangeUsers(500, expectedChangeUsers)
-        d.addCallback(check)
-        return d
+        self.assertEqual(changeid, 500)
+        # check the correct message was received
+        self.master.mq.assertProductions([
+            (expectedRoutingKey, expectedMessage),
+        ])
+        # and that the correct data was inserted into the db
+        self.master.db.changes.assertChange(500, expectedRow)
+        self.master.db.changes.assertChangeUsers(500, expectedChangeUsers)
 
     def test_addChange(self):
         # src and codebase are default here
