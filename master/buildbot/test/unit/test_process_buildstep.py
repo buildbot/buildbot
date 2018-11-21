@@ -288,6 +288,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self._setupWaterfallTest(True, True)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_hideStepIf_Callable_False(self):
         called = [False]
 
@@ -299,10 +300,10 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
         self._setupWaterfallTest(shouldHide, False)
 
-        d = self.runStep()
-        d.addCallback(lambda _: self.assertTrue(called[0]))
-        return d
+        yield self.runStep()
+        self.assertTrue(called[0])
 
+    @defer.inlineCallbacks
     def test_hideStepIf_Callable_True(self):
         called = [False]
 
@@ -314,9 +315,8 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
         self._setupWaterfallTest(shouldHide, True)
 
-        d = self.runStep()
-        d.addCallback(lambda _: self.assertTrue(called[0]))
-        return d
+        yield self.runStep()
+        self.assertTrue(called[0])
 
     @defer.inlineCallbacks
     def test_hideStepIf_fails(self):
@@ -328,6 +328,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         yield self.runStep()
         self.assertEqual(len(self.flushLoggedErrors(ZeroDivisionError)), 1)
 
+    @defer.inlineCallbacks
     def test_hideStepIf_Callable_Exception(self):
         called = [False]
 
@@ -346,12 +347,12 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                            state_string='finished (exception)')
         self.expectHidden(True)
 
-        d = self.runStep()
-        d.addErrback(log.err)
-        d.addCallback(lambda _:
-                      self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1))
-        d.addCallback(lambda _: self.assertTrue(called[0]))
-        return d
+        try:
+            yield self.runStep()
+        except Exception as e:
+            log.err(e)
+        self.assertEqual(len(self.flushLoggedErrors(RuntimeError)), 1)
+        self.assertTrue(called[0])
 
     @defer.inlineCallbacks
     def test_step_getLog(self):
