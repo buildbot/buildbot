@@ -90,6 +90,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
         defer.returnValue(sourcestampid)
 
     @base.cached("ssdicts")
+    @defer.inlineCallbacks
     def getSourceStamp(self, ssid):
         def thd(conn):
             tbl = self.db.model.sourcestamps
@@ -101,8 +102,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             ssdict = self._rowToSsdict_thd(conn, row)
             res.close()
             return ssdict
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getSourceStampsForBuild(self, buildid):
         assert buildid > 0
 
@@ -129,8 +131,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return [self._rowToSsdict_thd(conn, row)
                     for row in res.fetchall()]
 
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getSourceStamps(self):
         def thd(conn):
             tbl = self.db.model.sourcestamps
@@ -138,7 +141,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._rowToSsdict_thd(conn, row)
                     for row in res.fetchall()]
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
     def _rowToSsdict_thd(self, conn, row):
         ssid = row.id

@@ -18,6 +18,7 @@ from __future__ import print_function
 
 from mock import Mock
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Property
@@ -226,6 +227,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_installdir(self):
         self.setupStep(VCx(installdir=r'C:\I'))
         self.step.exp_installdir = r'C:\I'
@@ -236,12 +238,8 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
-
-        def check_installdir(_):
-            self.assertEqual(self.step.installdir, r'C:\I')
-        d.addCallback(check_installdir)
-        return d
+        yield self.runStep()
+        self.assertEqual(self.step.installdir, r'C:\I')
 
     def test_evaluateCommand_failure(self):
         self.setupStep(VCx())
@@ -316,6 +314,7 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_rendering(self):
         self.setupStep(VCx(
             projectfile=Property('a'),
@@ -331,14 +330,11 @@ class VisualStudio(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
+        yield self.runStep()
 
-        def check_props(_):
-            self.assertEqual(
+        self.assertEqual(
                 [self.step.projectfile, self.step.config, self.step.project],
                 ['aa', 'bb', 'cc'])
-        d.addCallback(check_props)
-        return d
 
 
 class TestVC6(steps.BuildStepMixin, unittest.TestCase):
@@ -637,6 +633,7 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
                            state_string="compile 0 projects 0 files")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_rendering(self):
         self.setupStep(vstudio.VC8(projectfile='pf', config='cfg',
                                    arch=Property('a')))
@@ -651,12 +648,9 @@ class TestVC8(VC8ExpectedEnvMixin, steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS,
                            state_string="compile 0 projects 0 files")
-        d = self.runStep()
+        yield self.runStep()
 
-        def check_props(_):
-            self.assertEqual(self.step.arch, 'x64')
-        d.addCallback(check_props)
-        return d
+        self.assertEqual(self.step.arch, 'x64')
 
 
 class TestVCExpress9(VC8ExpectedEnvMixin, steps.BuildStepMixin,

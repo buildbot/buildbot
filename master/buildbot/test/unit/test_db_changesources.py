@@ -291,17 +291,14 @@ class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['changes', 'changesources', 'masters',
                          'patches', 'sourcestamps', 'changesource_masters'])
 
-        def finish_setup(_):
-            self.db.changesources = \
-                changesources.ChangeSourcesConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
+        self.db.changesources = \
+            changesources.ChangeSourcesConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()

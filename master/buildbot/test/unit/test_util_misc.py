@@ -41,20 +41,20 @@ class deferredLocked(unittest.TestCase):
 
         self.assertFalse(lock.locked)
 
+    @defer.inlineCallbacks
     def test_fn_fails(self):
         lock = defer.DeferredLock()
 
         @util.deferredLocked(lock)
         def do_fail():
             return defer.fail(RuntimeError("oh noes"))
-        d = do_fail()
-
-        def check_unlocked(_):
+        try:
+            yield do_fail()
+            self.fail("didn't errback")
+        except Exception:
             self.assertFalse(lock.locked)
-        d.addCallbacks(lambda _: self.fail("didn't errback"),
-                       lambda _: self.assertFalse(lock.locked))
-        return d
 
+    @defer.inlineCallbacks
     def test_fn_exception(self):
         lock = defer.DeferredLock()
 
@@ -62,13 +62,11 @@ class deferredLocked(unittest.TestCase):
         def do_fail():
             raise RuntimeError("oh noes")
         # using decorators confuses pylint and gives a false positive below
-        d = do_fail()           # pylint: disable=assignment-from-no-return
-
-        def check_unlocked(_):
+        try:
+            yield do_fail()         # pylint: disable=assignment-from-no-return
+            self.fail("didn't errback")
+        except Exception:
             self.assertFalse(lock.locked)
-        d.addCallbacks(lambda _: self.fail("didn't errback"),
-                       lambda _: self.assertFalse(lock.locked))
-        return d
 
     @defer.inlineCallbacks
     def test_method(self):
