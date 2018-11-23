@@ -55,47 +55,37 @@ class MasterEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_existing(self):
-        d = self.callGet(('masters', 14))
+        master = yield self.callGet(('masters', 14))
 
-        @d.addCallback
-        def check(master):
-            self.validateData(master)
-            self.assertEqual(master['name'], 'other:master')
-        return d
+        self.validateData(master)
+        self.assertEqual(master['name'], 'other:master')
 
+    @defer.inlineCallbacks
     def test_get_builderid_existing(self):
-        d = self.callGet(('builders', 23, 'masters', 13))
+        master = yield self.callGet(('builders', 23, 'masters', 13))
 
-        @d.addCallback
-        def check(master):
-            self.validateData(master)
-            self.assertEqual(master['name'], 'some:master')
-        return d
+        self.validateData(master)
+        self.assertEqual(master['name'], 'some:master')
 
+    @defer.inlineCallbacks
     def test_get_builderid_no_match(self):
-        d = self.callGet(('builders', 24, 'masters', 13))
+        master = yield self.callGet(('builders', 24, 'masters', 13))
 
-        @d.addCallback
-        def check(master):
-            self.assertEqual(master, None)
-        return d
+        self.assertEqual(master, None)
 
+    @defer.inlineCallbacks
     def test_get_builderid_missing(self):
-        d = self.callGet(('builders', 25, 'masters', 13))
+        master = yield self.callGet(('builders', 25, 'masters', 13))
 
-        @d.addCallback
-        def check(master):
-            self.assertEqual(master, None)
-        return d
+        self.assertEqual(master, None)
 
+    @defer.inlineCallbacks
     def test_get_missing(self):
-        d = self.callGet(('masters', 99))
+        master = yield self.callGet(('masters', 99))
 
-        @d.addCallback
-        def check(master):
-            self.assertEqual(master, None)
-        return d
+        self.assertEqual(master, None)
 
 
 class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -118,33 +108,27 @@ class MastersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get(self):
-        d = self.callGet(('masters',))
+        masters = yield self.callGet(('masters',))
 
-        @d.addCallback
-        def check(masters):
-            [self.validateData(m) for m in masters]
-            self.assertEqual(sorted([m['masterid'] for m in masters]),
-                             [13, 14])
-        return d
+        [self.validateData(m) for m in masters]
+        self.assertEqual(sorted([m['masterid'] for m in masters]),
+                         [13, 14])
 
+    @defer.inlineCallbacks
     def test_get_builderid(self):
-        d = self.callGet(('builders', 22, 'masters'))
+        masters = yield self.callGet(('builders', 22, 'masters'))
 
-        @d.addCallback
-        def check(masters):
-            [self.validateData(m) for m in masters]
-            self.assertEqual(sorted([m['masterid'] for m in masters]),
-                             [13])
-        return d
+        [self.validateData(m) for m in masters]
+        self.assertEqual(sorted([m['masterid'] for m in masters]),
+                         [13])
 
+    @defer.inlineCallbacks
     def test_get_builderid_missing(self):
-        d = self.callGet(('builders', 23, 'masters'))
+        masters = yield self.callGet(('builders', 23, 'masters'))
 
-        @d.addCallback
-        def check(masters):
-            self.assertEqual(masters, [])
-        return d
+        self.assertEqual(masters, [])
 
 
 class Master(interfaces.InterfaceTests, unittest.TestCase):

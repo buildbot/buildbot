@@ -177,54 +177,46 @@ class DataConnector(unittest.TestCase):
         with self.assertRaises(exceptions.InvalidPathError):
             self.data.getEndpoint(('xyz',))
 
+    @defer.inlineCallbacks
     def test_get(self):
         ep = self.patchFooPattern()
-        d = self.data.get(('foo', '10', 'bar'))
+        gotten = yield self.data.get(('foo', '10', 'bar'))
 
-        @d.addCallback
-        def check(gotten):
-            self.assertEqual(gotten, {'val': 9999})
-            ep.get.assert_called_once_with(mock.ANY, {'fooid': 10})
-        return d
+        self.assertEqual(gotten, {'val': 9999})
+        ep.get.assert_called_once_with(mock.ANY, {'fooid': 10})
 
+    @defer.inlineCallbacks
     def test_get_filters(self):
         ep = self.patchFooListPattern()
-        d = self.data.get(('foo',),
+        gotten = yield self.data.get(('foo',),
                           filters=[resultspec.Filter('val', 'lt', [902])])
 
-        @d.addCallback
-        def check(gotten):
-            self.assertEqual(gotten, base.ListResult(
-                [{'val': 900}, {'val': 901}], total=2))
-            ep.get.assert_called_once_with(mock.ANY, {})
-        return d
+        self.assertEqual(gotten, base.ListResult(
+            [{'val': 900}, {'val': 901}], total=2))
+        ep.get.assert_called_once_with(mock.ANY, {})
 
+    @defer.inlineCallbacks
     def test_get_resultSpec_args(self):
         ep = self.patchFooListPattern()
         f = resultspec.Filter('val', 'gt', [909])
-        d = self.data.get(('foo',), filters=[f], fields=['val'],
+        gotten = yield self.data.get(('foo',), filters=[f], fields=['val'],
                           order=['-val'], limit=2)
 
-        @d.addCallback
-        def check(gotten):
-            self.assertEqual(gotten, base.ListResult(
-                [{'val': 919}, {'val': 918}], total=10, limit=2))
-            ep.get.assert_called_once_with(mock.ANY, {})
-        return d
+        self.assertEqual(gotten, base.ListResult(
+            [{'val': 919}, {'val': 918}], total=10, limit=2))
+        ep.get.assert_called_once_with(mock.ANY, {})
 
+    @defer.inlineCallbacks
     def test_control(self):
         ep = self.patchFooPattern()
         ep.control = mock.Mock(name='MyEndpoint.control')
         ep.control.return_value = defer.succeed('controlled')
 
-        d = self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))
+        gotten = yield self.data.control('foo!', {'arg': 2}, ('foo', '10', 'bar'))
 
-        @d.addCallback
-        def check(gotten):
-            self.assertEqual(gotten, 'controlled')
-            ep.control.assert_called_once_with('foo!', {'arg': 2},
-                                               {'fooid': 10})
-        return d
+        self.assertEqual(gotten, 'controlled')
+        ep.control.assert_called_once_with('foo!', {'arg': 2},
+                                           {'fooid': 10})
 
 # classes discovered by test_scanModule, above
 

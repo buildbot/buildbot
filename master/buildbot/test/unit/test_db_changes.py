@@ -212,59 +212,46 @@ class Tests(interfaces.InterfaceTests):
             'when_timestamp': epoch2datetime(OTHERTIME),
         })
 
+    @defer.inlineCallbacks
     def test_getChange_chdict(self):
-        d = self.insertTestData(self.change14_rows)
+        yield self.insertTestData(self.change14_rows)
 
-        def get14(_):
-            return self.db.changes.getChange(14)
-        d.addCallback(get14)
+        chdict = yield self.db.changes.getChange(14)
 
-        def check14(chdict):
-            validation.verifyDbDict(self, 'chdict', chdict)
-            self.assertEqual(chdict, self.change14_dict)
-        d.addCallback(check14)
-        return d
+        validation.verifyDbDict(self, 'chdict', chdict)
+        self.assertEqual(chdict, self.change14_dict)
 
+    @defer.inlineCallbacks
     def test_getChange_missing(self):
-        d = defer.succeed(None)
+        chdict = yield self.db.changes.getChange(14)
 
-        def get14(_):
-            return self.db.changes.getChange(14)
-        d.addCallback(get14)
-
-        def check14(chdict):
-            self.assertTrue(chdict is None)
-        d.addCallback(check14)
-        return d
+        self.assertTrue(chdict is None)
 
     def test_signature_getChangeUids(self):
         @self.assertArgSpecMatches(self.db.changes.getChangeUids)
         def getChangeUids(self, changeid):
             pass
 
+    @defer.inlineCallbacks
     def test_getChangeUids_missing(self):
-        d = self.db.changes.getChangeUids(1)
+        res = yield self.db.changes.getChangeUids(1)
 
-        def check(res):
-            self.assertEqual(res, [])
-        d.addCallback(check)
-        return d
+        self.assertEqual(res, [])
 
+    @defer.inlineCallbacks
     def test_getChangeUids_found(self):
-        d = self.insertTestData(self.change14_rows + [
+        yield self.insertTestData(self.change14_rows + [
             fakedb.SourceStamp(id=92),
             fakedb.User(uid=1),
             fakedb.ChangeUser(changeid=14, uid=1),
         ])
-        d.addCallback(lambda _: self.db.changes.getChangeUids(14))
+        res = yield self.db.changes.getChangeUids(14)
 
-        def check(res):
-            self.assertEqual(res, [1])
-        d.addCallback(check)
-        return d
+        self.assertEqual(res, [1])
 
+    @defer.inlineCallbacks
     def test_getChangeUids_multi(self):
-        d = self.insertTestData(self.change14_rows + self.change13_rows + [
+        yield self.insertTestData(self.change14_rows + self.change13_rows + [
             fakedb.User(uid=1, identifier="one"),
             fakedb.User(uid=2, identifier="two"),
             fakedb.User(uid=99, identifier="nooo"),
@@ -272,12 +259,9 @@ class Tests(interfaces.InterfaceTests):
             fakedb.ChangeUser(changeid=14, uid=2),
             fakedb.ChangeUser(changeid=13, uid=99),  # not selected
         ])
-        d.addCallback(lambda _: self.db.changes.getChangeUids(14))
+        res = yield self.db.changes.getChangeUids(14)
 
-        def check(res):
-            self.assertEqual(sorted(res), [1, 2])
-        d.addCallback(check)
-        return d
+        self.assertEqual(sorted(res), [1, 2])
 
     def test_signature_getRecentChanges(self):
         @self.assertArgSpecMatches(self.db.changes.getRecentChanges)
@@ -299,58 +283,45 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Change(changeid=12, sourcestampid=922),
         ] + self.change13_rows + self.change14_rows)
 
+    @defer.inlineCallbacks
     def test_getRecentChanges_subset(self):
-        d = self.insert7Changes()
-        d.addCallback(lambda _:
-                      self.db.changes.getRecentChanges(5))
+        yield self.insert7Changes()
+        changes = yield self.db.changes.getRecentChanges(5)
 
-        def check(changes):
-            changeids = [c['changeid'] for c in changes]
-            self.assertEqual(changeids, [10, 11, 12, 13, 14])
-        d.addCallback(check)
-        return d
+        changeids = [c['changeid'] for c in changes]
+        self.assertEqual(changeids, [10, 11, 12, 13, 14])
 
+    @defer.inlineCallbacks
     def test_getChangesCount(self):
-        d = self.insert7Changes()
-        d.addCallback(lambda _:
-                      self.db.changes.getChangesCount())
+        yield self.insert7Changes()
+        n = yield self.db.changes.getChangesCount()
 
-        def check(n):
-            self.assertEqual(n, 7)
-        d.addCallback(check)
-        return d
+        self.assertEqual(n, 7)
 
+    @defer.inlineCallbacks
     def test_getChangesHugeCount(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.SourceStamp(id=92),
         ] + [
             fakedb.Change(changeid=i) for i in range(2, 102)])
-        d.addCallback(lambda _:
-                      self.db.changes.getChangesCount())
+        n = yield self.db.changes.getChangesCount()
 
-        def check(n):
-            self.assertEqual(n, 100)
-        d.addCallback(check)
-        return d
+        self.assertEqual(n, 100)
 
+    @defer.inlineCallbacks
     def test_getRecentChanges_empty(self):
-        d = defer.succeed(None)
-        d.addCallback(lambda _:
-                      self.db.changes.getRecentChanges(5))
+        changes = yield self.db.changes.getRecentChanges(5)
 
-        def check(changes):
-            changeids = [c['changeid'] for c in changes]
-            self.assertEqual(changeids, [])
-        d.addCallback(check)
-        d.addCallback(lambda _:
-                      self.db.changes.getChanges())
-        d.addCallback(check)
-        return d
+        changeids = [c['changeid'] for c in changes]
+        self.assertEqual(changeids, [])
+        yield self.db.changes.getChanges()
 
+        changeids = [c['changeid'] for c in changes]
+        self.assertEqual(changeids, [])
+
+    @defer.inlineCallbacks
     def test_getRecentChanges_missing(self):
-        d = self.insertTestData(self.change13_rows + self.change14_rows)
-        d.addCallback(lambda _:
-                      self.db.changes.getRecentChanges(5))
+        yield self.insertTestData(self.change13_rows + self.change14_rows)
 
         def check(changes):
             # requested all, but only got 2
@@ -363,70 +334,57 @@ class Tests(interfaces.InterfaceTests):
                              sorted(['master/README.txt', 'worker/README.txt']))
             self.assertEqual(changes[0]['properties'],
                              {'notest': ('no', 'Change')})
-        d.addCallback(check)
-        d.addCallback(lambda _:
-                      self.db.changes.getChanges())
-        d.addCallback(check)
-        return d
+
+        changes = yield self.db.changes.getRecentChanges(5)
+        check(changes)
+
+        changes = yield self.db.changes.getChanges()
+        check(changes)
 
     def test_signature_getLatestChangeid(self):
         @self.assertArgSpecMatches(self.db.changes.getLatestChangeid)
         def getLatestChangeid(self):
             pass
 
+    @defer.inlineCallbacks
     def test_getLatestChangeid(self):
-        d = self.insertTestData(self.change13_rows)
+        yield self.insertTestData(self.change13_rows)
 
-        def get(_):
-            return self.db.changes.getLatestChangeid()
-        d.addCallback(get)
+        changeid = yield self.db.changes.getLatestChangeid()
 
-        def check(changeid):
-            self.assertEqual(changeid, 13)
-        d.addCallback(check)
-        return d
+        self.assertEqual(changeid, 13)
 
+    @defer.inlineCallbacks
     def test_getLatestChangeid_empty(self):
-        d = defer.succeed(None)
+        changeid = yield self.db.changes.getLatestChangeid()
 
-        def get(_):
-            return self.db.changes.getLatestChangeid()
-        d.addCallback(get)
-
-        def check(changeid):
-            self.assertEqual(changeid, None)
-        d.addCallback(check)
-        return d
+        self.assertEqual(changeid, None)
 
     def test_signature_getParentChangeIds(self):
         @self.assertArgSpecMatches(self.db.changes.getParentChangeIds)
         def getParentChangeIds(self, branch, repository, project, codebase):
             pass
 
+    @defer.inlineCallbacks
     def test_getParentChangeIds(self):
-        d = self.insertTestData(self.change14_rows + self.change13_rows)
+        yield self.insertTestData(self.change14_rows + self.change13_rows)
 
-        def getParent(_):
-            return self.db.changes.getParentChangeIds(branch='warnerdb',
+        changeid = yield self.db.changes.getParentChangeIds(branch='warnerdb',
                                                       repository='git://warner',
                                                       project='Buildbot',
                                                       codebase='mainapp')
-        d.addCallback(getParent)
-
-        def check(changeid):
-            self.assertEqual(changeid, [14])
-        d.addCallback(check)
-        return d
+        self.assertEqual(changeid, [14])
 
 
 class RealTests(Tests):
 
     # tests that only "real" implementations will pass
 
+    @defer.inlineCallbacks
     def test_addChange(self):
         clock = task.Clock()
         clock.advance(SOMETIME)
-        d = self.db.changes.addChange(
+        changeid = yield self.db.changes.addChange(
             author=u'dustin',
             files=[u'master/LICENSING.txt', u'worker/LICENSING.txt'],
             comments=u'fix spelling',
@@ -442,84 +400,74 @@ class RealTests(Tests):
             _reactor=clock)
         # check all of the columns of the four relevant tables
 
-        def check_change(changeid):
-            def thd(conn):
-                self.assertEqual(changeid, 1)
-                r = conn.execute(self.db.model.changes.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, changeid)
-                self.assertEqual(r[0].author, 'dustin')
-                self.assertEqual(r[0].comments, 'fix spelling')
-                self.assertEqual(r[0].branch, 'master')
-                self.assertEqual(r[0].revision, '2d6caa52')
-                self.assertEqual(r[0].when_timestamp, 266738400)
-                self.assertEqual(r[0].category, None)
-                self.assertEqual(r[0].repository, '')
-                self.assertEqual(r[0].codebase, u'cb')
-                self.assertEqual(r[0].project, '')
-                self.assertEqual(r[0].sourcestampid, 1)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change)
+        def thd_change(conn):
+            self.assertEqual(changeid, 1)
+            r = conn.execute(self.db.model.changes.select())
+            r = r.fetchall()
+            self.assertEqual(len(r), 1)
+            self.assertEqual(r[0].changeid, changeid)
+            self.assertEqual(r[0].author, 'dustin')
+            self.assertEqual(r[0].comments, 'fix spelling')
+            self.assertEqual(r[0].branch, 'master')
+            self.assertEqual(r[0].revision, '2d6caa52')
+            self.assertEqual(r[0].when_timestamp, 266738400)
+            self.assertEqual(r[0].category, None)
+            self.assertEqual(r[0].repository, '')
+            self.assertEqual(r[0].codebase, u'cb')
+            self.assertEqual(r[0].project, '')
+            self.assertEqual(r[0].sourcestampid, 1)
+        yield self.db.pool.do(thd_change)
 
-        def check_change_files(_):
-            def thd(conn):
-                query = self.db.model.change_files.select()
-                query.where(self.db.model.change_files.c.changeid == 1)
-                query.order_by(self.db.model.change_files.c.filename)
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 2)
-                self.assertEqual(r[0].filename, 'master/LICENSING.txt')
-                self.assertEqual(r[1].filename, 'worker/LICENSING.txt')
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_files)
+        def thd_change_files(conn):
+            query = self.db.model.change_files.select()
+            query.where(self.db.model.change_files.c.changeid == 1)
+            query.order_by(self.db.model.change_files.c.filename)
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 2)
+            self.assertEqual(r[0].filename, 'master/LICENSING.txt')
+            self.assertEqual(r[1].filename, 'worker/LICENSING.txt')
+        yield self.db.pool.do(thd_change_files)
 
-        def check_change_properties(_):
-            def thd(conn):
-                query = self.db.model.change_properties.select()
-                query.where(self.db.model.change_properties.c.changeid == 1)
-                query.order_by(self.db.model.change_properties.c.property_name)
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].property_name, 'platform')
-                self.assertEqual(r[0].property_value, '["linux", "Change"]')
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_properties)
+        def thd_change_properties(conn):
+            query = self.db.model.change_properties.select()
+            query.where(self.db.model.change_properties.c.changeid == 1)
+            query.order_by(self.db.model.change_properties.c.property_name)
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 1)
+            self.assertEqual(r[0].property_name, 'platform')
+            self.assertEqual(r[0].property_value, '["linux", "Change"]')
+        yield self.db.pool.do(thd_change_properties)
 
-        def check_change_users(_):
-            def thd(conn):
-                query = self.db.model.change_users.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_users)
+        def thd_change_users(conn):
+            query = self.db.model.change_users.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change_users)
 
-        def check_change_sourcestamps(_):
-            def thd(conn):
-                query = self.db.model.sourcestamps.select()
-                r = conn.execute(query)
-                self.assertEqual([dict(row) for row in r.fetchall()], [{
-                    'branch': u'master',
-                    'codebase': u'cb',
-                    'id': 1,
-                    'patchid': None,
-                    'project': u'',
-                    'repository': u'',
-                    'revision': u'2d6caa52',
-                    'created_at': SOMETIME,
-                    'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
-                }])
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_sourcestamps)
-        return d
+        def thd_change_sourcestamps(conn):
+            query = self.db.model.sourcestamps.select()
+            r = conn.execute(query)
+            self.assertEqual([dict(row) for row in r.fetchall()], [{
+                'branch': u'master',
+                'codebase': u'cb',
+                'id': 1,
+                'patchid': None,
+                'project': u'',
+                'repository': u'',
+                'revision': u'2d6caa52',
+                'created_at': SOMETIME,
+                'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
+            }])
+        yield self.db.pool.do(thd_change_sourcestamps)
 
+    @defer.inlineCallbacks
     def test_addChange_when_timestamp_None(self):
         clock = task.Clock()
         clock.advance(OTHERTIME)
-        d = self.db.changes.addChange(
+        changeid = yield self.db.changes.addChange(
             author=u'dustin',
             files=[],
             comments=u'fix spelling',
@@ -535,50 +483,41 @@ class RealTests(Tests):
             _reactor=clock)
         # check all of the columns of the four relevant tables
 
-        def check_change(changeid):
-            def thd(conn):
-                r = conn.execute(self.db.model.changes.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, changeid)
-                self.assertEqual(r[0].when_timestamp, OTHERTIME)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change)
+        def thd(conn):
+            r = conn.execute(self.db.model.changes.select())
+            r = r.fetchall()
+            self.assertEqual(len(r), 1)
+            self.assertEqual(r[0].changeid, changeid)
+            self.assertEqual(r[0].when_timestamp, OTHERTIME)
+        yield self.db.pool.do(thd)
 
-        def check_change_files(_):
-            def thd(conn):
-                query = self.db.model.change_files.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_files)
+        def thd_change(conn):
+            query = self.db.model.change_files.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change)
 
-        def check_change_properties(_):
-            def thd(conn):
-                query = self.db.model.change_properties.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_properties)
+        def thd_change_file(conn):
+            query = self.db.model.change_properties.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change_file)
 
-        def check_change_users(_):
-            def thd(conn):
-                query = self.db.model.change_users.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_users)
-        return d
+        def thd_change_properties(conn):
+            query = self.db.model.change_users.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change_properties)
 
+    @defer.inlineCallbacks
     def test_addChange_with_uid(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.User(uid=1, identifier="one"),
         ])
-        d.addCallback(lambda _:
-                      self.db.changes.addChange(
+        changeid = yield self.db.changes.addChange(
                           author=u'dustin',
                           files=[],
                           comments=u'fix spelling',
@@ -591,51 +530,43 @@ class RealTests(Tests):
                           repository=u'',
                           codebase=u'',
                           project=u'',
-                          uid=1))
+                          uid=1)
         # check all of the columns of the five relevant tables
 
-        def check_change(changeid):
-            def thd(conn):
-                r = conn.execute(self.db.model.changes.select())
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, changeid)
-                self.assertEqual(r[0].when_timestamp, OTHERTIME)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change)
+        def thd_change(conn):
+            r = conn.execute(self.db.model.changes.select())
+            r = r.fetchall()
+            self.assertEqual(len(r), 1)
+            self.assertEqual(r[0].changeid, changeid)
+            self.assertEqual(r[0].when_timestamp, OTHERTIME)
+        yield self.db.pool.do(thd_change)
 
-        def check_change_files(_):
-            def thd(conn):
-                query = self.db.model.change_files.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_files)
+        def thd_change_files(conn):
+            query = self.db.model.change_files.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change_files)
 
-        def check_change_properties(_):
-            def thd(conn):
-                query = self.db.model.change_properties.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 0)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_properties)
+        def thd_change_properties(conn):
+            query = self.db.model.change_properties.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 0)
+        yield self.db.pool.do(thd_change_properties)
 
-        def check_change_users(_):
-            def thd(conn):
-                query = self.db.model.change_users.select()
-                r = conn.execute(query)
-                r = r.fetchall()
-                self.assertEqual(len(r), 1)
-                self.assertEqual(r[0].changeid, 1)
-                self.assertEqual(r[0].uid, 1)
-            return self.db.pool.do(thd)
-        d.addCallback(check_change_users)
-        return d
+        def thd_change_users(conn):
+            query = self.db.model.change_users.select()
+            r = conn.execute(query)
+            r = r.fetchall()
+            self.assertEqual(len(r), 1)
+            self.assertEqual(r[0].changeid, 1)
+            self.assertEqual(r[0].uid, 1)
+        yield self.db.pool.do(thd_change_users)
 
+    @defer.inlineCallbacks
     def test_pruneChanges(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             fakedb.Scheduler(id=29),
             fakedb.SourceStamp(id=234, branch='aa'),
             fakedb.SourceStamp(id=235, branch='bb'),
@@ -651,26 +582,23 @@ class RealTests(Tests):
         )
 
         # pruning with a horizon of 2 should delete changes 11, 12 and 13
-        d.addCallback(lambda _: self.db.changes.pruneChanges(2))
+        yield self.db.changes.pruneChanges(2)
 
-        def check(_):
-            def thd(conn):
-                results = {}
-                for tbl_name in ('scheduler_changes', 'change_files',
-                                 'change_properties', 'changes'):
-                    tbl = self.db.model.metadata.tables[tbl_name]
-                    res = conn.execute(sa.select([tbl.c.changeid]))
-                    results[tbl_name] = sorted(
-                        [row[0] for row in res.fetchall()])
-                self.assertEqual(results, {
-                    'scheduler_changes': [14],
-                    'change_files': [14],
-                    'change_properties': [],
-                    'changes': [14, 15],
-                })
-            return self.db.pool.do(thd)
-        d.addCallback(check)
-        return d
+        def thd(conn):
+            results = {}
+            for tbl_name in ('scheduler_changes', 'change_files',
+                             'change_properties', 'changes'):
+                tbl = self.db.model.metadata.tables[tbl_name]
+                res = conn.execute(sa.select([tbl.c.changeid]))
+                results[tbl_name] = sorted(
+                    [row[0] for row in res.fetchall()])
+            self.assertEqual(results, {
+                'scheduler_changes': [14],
+                'change_files': [14],
+                'change_properties': [],
+                'changes': [14, 15],
+            })
+        yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_pruneChanges_lots(self):
@@ -696,7 +624,7 @@ class RealTests(Tests):
                 'change_properties': 0,
                 'changes': 1,
             })
-            self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_pruneChanges_None(self):
@@ -709,7 +637,7 @@ class RealTests(Tests):
             res = conn.execute(tbl.select())
             self.assertEqual([row.changeid for row in res.fetchall()],
                              [13])
-        self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def test_getChangesForBuild(self):
