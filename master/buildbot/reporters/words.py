@@ -541,6 +541,7 @@ class Contact(service.AsyncService):
         builderName = builder['name']
         buildNumber = build['number']
         buildResult = build['results']
+        buildChanges = yield self.master.data.get(('builds',build['buildid'],'changes'))
 
         # only notify about builders we are interested in
         if (self.bot.tags is not None and
@@ -567,9 +568,8 @@ class Contact(service.AsyncService):
         r += ' [%s]' % maybeColorize(build['state_string'],
                                      results[1], self.useColors)
 
-        # FIXME: where do we get the list of changes for a build ?
-        # if self.bot.showBlameList and buildResult != SUCCESS and len(build.changes) != 0:
-        #    r += '  blamelist: ' + ', '.join(list(set([c.who for c in build.changes])))
+        if self.bot.showBlameList and buildResult != SUCCESS and len(buildChanges) != 0:
+            r += '  blamelist: ' + ', '.join(list(set([c['author'] for c in buildChanges])))
         r += " - %s" % utils.getURLForBuild(
             self.master, builder['builderid'], buildNumber)
         self.send(r)
