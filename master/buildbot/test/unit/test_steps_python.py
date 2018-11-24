@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot import config
@@ -499,6 +500,7 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
                            state_string="sphinx 0 warnings")
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_warnings(self):
         self.setupStep(python.Sphinx(sphinx_builddir="_build"))
         self.expectCommands(
@@ -511,12 +513,9 @@ class TestSphinx(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=WARNINGS,
                            state_string="sphinx 2 warnings (warnings)")
         self.expectLogfile("warnings", warnings)
-        d = self.runStep()
+        yield self.runStep()
 
-        def check(_):
-            self.assertEqual(self.step.statistics, {'warnings': 2})
-        d.addCallback(check)
-        return d
+        self.assertEqual(self.step.statistics, {'warnings': 2})
 
     def test_constr_args(self):
         self.setupStep(python.Sphinx(sphinx_sourcedir='src',

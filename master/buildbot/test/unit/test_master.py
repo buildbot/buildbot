@@ -80,6 +80,7 @@ class OldTriggeringMethods(unittest.TestCase):
             return defer.succeed(self.fake_Change)
         self.patch(Change, 'fromChdict', staticmethod(fromChdict))
 
+    @defer.inlineCallbacks
     def do_test_addChange_args(self, args=(), kwargs=None, exp_data_kwargs=None):
         # add default arguments
         if kwargs is None:
@@ -104,14 +105,11 @@ class OldTriggeringMethods(unittest.TestCase):
         default_data_kwargs.update(exp_data_kwargs)
         exp_data_kwargs = default_data_kwargs
 
-        d = self.master.addChange(*args, **kwargs)
+        change = yield self.master.addChange(*args, **kwargs)
 
-        @d.addCallback
-        def check(change):
-            self.assertIdentical(change, self.fake_Change)
-            self.assertEqual(self.master.data.updates.changesAdded,
-                             [exp_data_kwargs])
-        return d
+        self.assertIdentical(change, self.fake_Change)
+        self.assertEqual(self.master.data.updates.changesAdded,
+                         [exp_data_kwargs])
 
     def test_addChange_args_author(self):
         # who should come through as author
@@ -141,13 +139,14 @@ class OldTriggeringMethods(unittest.TestCase):
             kwargs=dict(when_timestamp=datetime.datetime(1998, 4, 11, 11, 24, 35)),
             exp_data_kwargs=dict(when_timestamp=892293875))
 
+    @defer.inlineCallbacks
     def test_addChange_args_new_and_old(self):
         func = self.do_test_addChange_args
         kwargs = (dict(who='author',
                        author='author'),)
         exp_data_kwargs = dict(author='author')
         with self.assertRaises(TypeError):
-            func(kwargs=kwargs, exp_data_kwargs=exp_data_kwargs)
+            yield func(kwargs=kwargs, exp_data_kwargs=exp_data_kwargs)
 
     def test_addChange_args_properties(self):
         # properties should not be qualified with a source

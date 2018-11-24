@@ -20,6 +20,7 @@ import itertools
 
 import sqlalchemy as sa
 
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
@@ -69,6 +70,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                           builder_tbl.c.name.label('buildername')
                           ]).select_from(from_clause)
 
+    @defer.inlineCallbacks
     def getBuildRequest(self, brid):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
@@ -81,8 +83,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, self.db.master.masterid)
             res.close()
             return rv
-        return self.db.pool.do(thd)
+        defer.returnValue((yield self.db.pool.do(thd)))
 
+    @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
                          bsid=None, branch=None, repository=None, resultSpec=None):
 
@@ -129,8 +132,10 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
 
             return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()])
-        return self.db.pool.do(thd)
+        res = yield self.db.pool.do(thd)
+        defer.returnValue(res)
 
+    @defer.inlineCallbacks
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         if claimed_at is not None:
             claimed_at = datetime2epoch(claimed_at)
@@ -153,8 +158,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):
         def thd(conn):
             transaction = conn.begin()
@@ -179,8 +185,9 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise
 
             transaction.commit()
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
+    @defer.inlineCallbacks
     def completeBuildRequests(self, brids, results, complete_at=None,
                               _reactor=reactor):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
@@ -218,7 +225,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     transaction.rollback()
                     raise NotClaimedError
             transaction.commit()
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
 
     @staticmethod
     def _brdictFromRow(row, master_masterid):

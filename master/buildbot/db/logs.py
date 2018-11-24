@@ -78,6 +78,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     total_raw_bytes = 0
     total_compressed_bytes = 0
 
+    @defer.inlineCallbacks
     def _getLog(self, whereclause):
         def thd_getLog(conn):
             q = self.db.model.logs.select(whereclause=whereclause)
@@ -89,7 +90,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                 rv = self._logdictFromRow(row)
             res.close()
             return rv
-        return self.db.pool.do(thd_getLog)
+        defer.returnValue((yield self.db.pool.do(thd_getLog)))
 
     def getLog(self, logid):
         return self._getLog(self.db.model.logs.c.id == logid)
@@ -98,6 +99,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         tbl = self.db.model.logs
         return self._getLog((tbl.c.slug == slug) & (tbl.c.stepid == stepid))
 
+    @defer.inlineCallbacks
     def getLogs(self, stepid=None):
         def thdGetLogs(conn):
             tbl = self.db.model.logs
@@ -107,8 +109,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.id)
             res = conn.execute(q)
             return [self._logdictFromRow(row) for row in res.fetchall()]
-        return self.db.pool.do(thdGetLogs)
+        defer.returnValue((yield self.db.pool.do(thdGetLogs)))
 
+    @defer.inlineCallbacks
     def getLogLines(self, logid, first_line, last_line):
         def thdGetLogLines(conn):
             # get a set of chunks that completely cover the requested range
@@ -141,8 +144,9 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                     content = content[:idx]
                 rv.append(content)
             return u'\n'.join(rv) + u'\n' if rv else u''
-        return self.db.pool.do(thdGetLogLines)
+        defer.returnValue((yield self.db.pool.do(thdGetLogLines)))
 
+    @defer.inlineCallbacks
     def addLog(self, stepid, name, slug, type):
         assert type in 'tsh', "Log type must be one of t, s, or h"
 
@@ -155,7 +159,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 raise KeyError(
                     "log with slug '%r' already exists in this step" % (slug,))
-        return self.db.pool.do(thdAddLog)
+        defer.returnValue((yield self.db.pool.do(thdAddLog)))
 
     def thdCompressChunk(self, chunk):
         # Set the default compressed mode to "raw" id
@@ -211,11 +215,12 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                                            content=content,
                                            first_line=num_lines[0])
 
+    @defer.inlineCallbacks
     def appendLog(self, logid, content):
         def thdappendLog(conn):
             return self.thdAppendLog(conn, logid, content)
 
-        return self.db.pool.do(thdappendLog)
+        defer.returnValue((yield self.db.pool.do(thdappendLog)))
 
     def _splitBigChunk(self, content, logid):
         """
@@ -248,12 +253,13 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return truncline, None
         return truncline, content[i + 1:]
 
+    @defer.inlineCallbacks
     def finishLog(self, logid):
         def thdfinishLog(conn):
             tbl = self.db.model.logs
             q = tbl.update(whereclause=(tbl.c.id == logid))
             conn.execute(q, complete=1)
-        return self.db.pool.do(thdfinishLog)
+        yield self.db.pool.do(thdfinishLog)
 
     @defer.inlineCallbacks
     def compressLog(self, logid, force=False):
@@ -345,6 +351,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
         saved = yield self.db.pool.do(thdcompressLog)
         defer.returnValue(saved)
 
+    @defer.inlineCallbacks
     def deleteOldLogChunks(self, older_than_timestamp):
         def thddeleteOldLogs(conn):
             model = self.db.model
@@ -378,7 +385,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             count2 = res.fetchone()[0]
             res.close()
             return count1 - count2
-        return self.db.pool.do(thddeleteOldLogs)
+        defer.returnValue((yield self.db.pool.do(thddeleteOldLogs)))
 
     def _logdictFromRow(self, row):
         rv = dict(row)

@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import defer
 from twisted.internet import error
 from twisted.python.reflect import namedModule
 from twisted.trial import unittest
@@ -181,6 +182,7 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         self.expectOutcome(result=FAILURE)
         return self.runStep()
 
+    @defer.inlineCallbacks
     def test_revision_noninteger(self):
         svnTestStep = svn.SVN(repourl='http://svn.local/app/trunk')
         self.setupStep(svnTestStep)
@@ -213,14 +215,11 @@ class TestSVN(sourcesteps.SourceStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         self.expectProperty('got_revision', 'a10', 'SVN')
-        d = self.runStep()
+        yield self.runStep()
 
-        def _checkType():
-            revision = self.step.getProperty('got_revision')
-            with self.assertRaises(ValueError):
-                int(revision)
-        d.addCallback(lambda _: _checkType())
-        return d
+        revision = self.step.getProperty('got_revision')
+        with self.assertRaises(ValueError):
+            int(revision)
 
     def test_revision_missing(self):
         """Fail if 'revision' tag isn't there"""

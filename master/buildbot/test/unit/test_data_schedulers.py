@@ -50,56 +50,44 @@ class SchedulerEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get_existing(self):
-        d = self.callGet(('schedulers', 14))
+        scheduler = yield self.callGet(('schedulers', 14))
 
-        @d.addCallback
-        def check(scheduler):
-            self.validateData(scheduler)
-            self.assertEqual(scheduler['name'], 'other:scheduler')
-        return d
+        self.validateData(scheduler)
+        self.assertEqual(scheduler['name'], 'other:scheduler')
 
+    @defer.inlineCallbacks
     def test_get_no_master(self):
-        d = self.callGet(('schedulers', 13))
+        scheduler = yield self.callGet(('schedulers', 13))
 
-        @d.addCallback
-        def check(scheduler):
-            self.validateData(scheduler)
-            self.assertEqual(scheduler['master'], None),
-        return d
+        self.validateData(scheduler)
+        self.assertEqual(scheduler['master'], None),
 
+    @defer.inlineCallbacks
     def test_get_masterid_existing(self):
-        d = self.callGet(('masters', 22, 'schedulers', 14))
+        scheduler = yield self.callGet(('masters', 22, 'schedulers', 14))
 
-        @d.addCallback
-        def check(scheduler):
-            self.validateData(scheduler)
-            self.assertEqual(scheduler['name'], 'other:scheduler')
-        return d
+        self.validateData(scheduler)
+        self.assertEqual(scheduler['name'], 'other:scheduler')
 
+    @defer.inlineCallbacks
     def test_get_masterid_no_match(self):
-        d = self.callGet(('masters', 33, 'schedulers', 13))
+        scheduler = yield self.callGet(('masters', 33, 'schedulers', 13))
 
-        @d.addCallback
-        def check(scheduler):
-            self.assertEqual(scheduler, None)
-        return d
+        self.assertEqual(scheduler, None)
 
+    @defer.inlineCallbacks
     def test_get_masterid_missing(self):
-        d = self.callGet(('masters', 99, 'schedulers', 13))
+        scheduler = yield self.callGet(('masters', 99, 'schedulers', 13))
 
-        @d.addCallback
-        def check(scheduler):
-            self.assertEqual(scheduler, None)
-        return d
+        self.assertEqual(scheduler, None)
 
+    @defer.inlineCallbacks
     def test_get_missing(self):
-        d = self.callGet(('schedulers', 99))
+        scheduler = yield self.callGet(('schedulers', 99))
 
-        @d.addCallback
-        def check(scheduler):
-            self.assertEqual(scheduler, None)
-        return d
+        self.assertEqual(scheduler, None)
 
     @defer.inlineCallbacks
     def test_action_enable(self):
@@ -130,33 +118,27 @@ class SchedulersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def tearDown(self):
         self.tearDownEndpoint()
 
+    @defer.inlineCallbacks
     def test_get(self):
-        d = self.callGet(('schedulers',))
+        schedulers = yield self.callGet(('schedulers',))
 
-        @d.addCallback
-        def check(schedulers):
-            [self.validateData(m) for m in schedulers]
-            self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
-                             [13, 14, 15, 16])
-        return d
+        [self.validateData(m) for m in schedulers]
+        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
+                         [13, 14, 15, 16])
 
+    @defer.inlineCallbacks
     def test_get_masterid(self):
-        d = self.callGet(('masters', 33, 'schedulers'))
+        schedulers = yield self.callGet(('masters', 33, 'schedulers'))
 
-        @d.addCallback
-        def check(schedulers):
-            [self.validateData(m) for m in schedulers]
-            self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
-                             [15, 16])
-        return d
+        [self.validateData(m) for m in schedulers]
+        self.assertEqual(sorted([m['schedulerid'] for m in schedulers]),
+                         [15, 16])
 
+    @defer.inlineCallbacks
     def test_get_masterid_missing(self):
-        d = self.callGet(('masters', 23, 'schedulers'))
+        schedulers = yield self.callGet(('masters', 23, 'schedulers'))
 
-        @d.addCallback
-        def check(schedulers):
-            self.assertEqual(schedulers, [])
-        return d
+        self.assertEqual(schedulers, [])
 
 
 class Scheduler(interfaces.InterfaceTests, unittest.TestCase):

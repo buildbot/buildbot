@@ -77,43 +77,35 @@ class TestUpgradeMaster(dirs.DirsMixin, misc.StdoutAssertionsMixin,
 
     # tests
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_success(self):
         self.patchFunctions()
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 0)
-            self.assertInStdout('upgrade complete')
-        return d
+        self.assertEqual(rv, 0)
+        self.assertInStdout('upgrade complete')
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_quiet(self):
         self.patchFunctions()
-        d = upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(quiet=True), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 0)
-            self.assertWasQuiet()
-        return d
+        self.assertEqual(rv, 0)
+        self.assertWasQuiet()
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_bad_basedir(self):
         self.patchFunctions(basedirOk=False)
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 1)
-        return d
+        self.assertEqual(rv, 1)
 
+    @defer.inlineCallbacks
     def test_upgradeMaster_bad_config(self):
         self.patchFunctions(configOk=False)
-        d = upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
+        rv = yield upgrade_master.upgradeMaster(mkconfig(), _noMonkey=True)
 
-        @d.addCallback
-        def check(rv):
-            self.assertEqual(rv, 1)
-        return d
+        self.assertEqual(rv, 1)
 
 
 class TestUpgradeMasterFunctions(www.WwwTestMixin, dirs.DirsMixin,

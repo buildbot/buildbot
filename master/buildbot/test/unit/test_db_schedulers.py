@@ -208,13 +208,12 @@ class Tests(interfaces.InterfaceTests):
                       self.db.schedulers.setSchedulerMaster(25, 13))
         yield self.assertFailure(d, schedulers.SchedulerAlreadyClaimedError)
 
+    @defer.inlineCallbacks
     def test_setSchedulerMaster_inactive_but_linked_to_this_master(self):
-        d = self.insertTestData([
+        yield self.insertTestData([
             self.scheduler25, self.master14, self.scheduler25master,
         ])
-        d.addCallback(lambda _:
-                      self.db.schedulers.setSchedulerMaster(25, 14))
-        return d
+        yield self.db.schedulers.setSchedulerMaster(25, 14)
 
     @defer.inlineCallbacks
     def test_setSchedulerMaster_active(self):
@@ -411,26 +410,24 @@ class TestRealDB(db.TestCase,
                  connector_component.ConnectorComponentMixin,
                  RealTests):
 
+    @defer.inlineCallbacks
     def setUp(self):
-        d = self.setUpConnectorComponent(
+        yield self.setUpConnectorComponent(
             table_names=['changes', 'schedulers', 'masters',
                          'sourcestamps', 'patches', 'scheduler_masters',
                          'scheduler_changes'])
 
-        def finish_setup(_):
-            self.db.schedulers = \
-                schedulers.SchedulersConnectorComponent(self.db)
-        d.addCallback(finish_setup)
-
-        return d
+        self.db.schedulers = \
+            schedulers.SchedulersConnectorComponent(self.db)
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
 
+    @defer.inlineCallbacks
     def addClassifications(self, schedulerid, *classifications):
         def thd(conn):
             q = self.db.model.scheduler_changes.insert()
             conn.execute(q, [
                 dict(changeid=c[0], schedulerid=schedulerid, important=c[1])
                 for c in classifications])
-        return self.db.pool.do(thd)
+        yield self.db.pool.do(thd)
