@@ -21,6 +21,8 @@ import os
 import sys
 import time
 
+import mock
+
 import twisted
 from twisted.internet import defer
 from twisted.internet.utils import getProcessOutputAndValue
@@ -99,6 +101,21 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         res = yield self.runStart(quiet=True)
 
         self.assertEqual(res, (b'', b'', 0))
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_start_timeout_nonnumber(self):
+        res = yield self.runStart(start_timeout='a')
+
+        self.assertEqual(res, (b'Start timeout must be a number\n', b'', 1))
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_start_timeout_number_string(self):
+        # integer values from command-line options come in as strings
+        res = yield self.runStart(start_timeout='10')
+
+        self.assertEqual(res, (mock.ANY, b'', 0))
 
     @flaky(bugNumber=2760)
     @skipUnlessPlatformIs('posix')
