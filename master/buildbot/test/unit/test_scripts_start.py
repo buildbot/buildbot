@@ -31,7 +31,6 @@ from buildbot.scripts import start
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import flaky
-from buildbot.test.util.decorators import skipIfPythonVersionIsLess
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
@@ -88,14 +87,12 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
-    @skipIfPythonVersionIsLess((2, 7))
     @defer.inlineCallbacks
     def test_start_no_daemon(self):
         res = yield self.runStart(nodaemon=True)
 
         self.assertEqual(res, (b'', b'', 0))
 
-    @skipIfPythonVersionIsLess((2, 7))
     @defer.inlineCallbacks
     def test_start_quiet(self):
         res = yield self.runStart(quiet=True)
