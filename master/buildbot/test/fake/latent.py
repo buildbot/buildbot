@@ -16,8 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-from twisted.internet.defer import Deferred
-from twisted.internet.defer import succeed
+from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
@@ -38,17 +37,40 @@ class LatentController(object):
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
     """
 
-    def __init__(self, name, **kwargs):
+    def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
+        self.case = case
+        self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
+        self.remote_worker = None
+
         self.starting = False
+        self.started = False
         self.stopping = False
         self.auto_stop_flag = False
+        self.auto_start_flag = False
+        self.auto_connect_worker = False
+
+        self.kind = kind
+        self._started_kind = None
+        self._started_kind_deferred = None
+
+    def auto_start(self, result):
+        self.auto_start_flag = result
+        if self.auto_start_flag and self.starting:
+            self.start_instance(True)
 
     def start_instance(self, result):
-        assert self.starting
-        self.starting = False
+        self.do_start_instance()
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
+
+    def do_start_instance(self):
+        assert self.starting
+        assert not self.started or not self.remote_worker
+        self.starting = False
+        self.started = True
+        if self.auto_connect_worker:
+            self.connect_worker()
 
     def auto_stop(self, result):
         self.auto_stop_flag = result
@@ -56,24 +78,45 @@ class LatentController(object):
             self.stop_instance(True)
 
     def stop_instance(self, result):
-        assert self.stopping
-        self.stopping = False
+        self.do_stop_instance()
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
-    def connect_worker(self, case):
+    def do_stop_instance(self):
+        assert self.stopping
+        self.stopping = False
+        self._started_kind = None
+        self.disconnect_worker()
+
+    def connect_worker(self):
+        if self.remote_worker is not None:
+            return
         if RemoteWorker is None:
             raise SkipTest("buildbot-worker package is not installed")
-        workdir = FilePath(case.mktemp())
+        workdir = FilePath(self.case.mktemp())
         workdir.createDirectory()
         self.remote_worker = RemoteWorker(self.worker.name, workdir.path, False)
         self.remote_worker.setServiceParent(self.worker)
 
-    def disconnect_worker(self, workdir):
+    def disconnect_worker(self):
+        if self.remote_worker is None:
+            return
         self.worker.conn, conn = None, self.worker.conn
         # LocalWorker does actually disconnect, so we must force disconnection via detached
         conn.notifyDisconnected()
-        return self.remote_worker.disownServiceParent()
+        ret = self.remote_worker.disownServiceParent()
+        self.remote_worker = None
+        return ret
+
+    def setup_kind(self, build):
+        self._started_kind_deferred = build.render(self.kind)
+
+    @defer.inlineCallbacks
+    def get_started_kind(self):
+        if self._started_kind_deferred:
+            self._started_kind = yield self._started_kind_deferred
+            self._started_kind_deferred = None
+        defer.returnValue(self._started_kind)
 
     def patchBot(self, case, remoteMethod, patch):
         case.patch(BotBase, remoteMethod, patch)
@@ -86,29 +129,45 @@ class ControllableLatentWorker(AbstractLatentWorker):
     """
 
     def __init__(self, name, controller, **kwargs):
-        AbstractLatentWorker.__init__(self, name, None, **kwargs)
         self._controller = controller
+        AbstractLatentWorker.__init__(self, name, None, **kwargs)
 
     def checkConfig(self, name, _, **kwargs):
-        AbstractLatentWorker.checkConfig(self, name, None, **kwargs)
+        AbstractLatentWorker.checkConfig(
+            self, name, None,
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
 
     def reconfigService(self, name, _, **kwargs):
-        AbstractLatentWorker.reconfigService(self, name, None, **kwargs)
+        AbstractLatentWorker.reconfigService(
+            self, name, None,
+            build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
 
     def start_instance(self, build):
+        self._controller.setup_kind(build)
+
         assert not self._controller.stopping
 
         self._controller.starting = True
-        self._controller._start_deferred = Deferred()
+        if self._controller.auto_start_flag:
+            self._controller.do_start_instance()
+            return defer.succeed(True)
+
+        self._controller._start_deferred = defer.Deferred()
         return self._controller._start_deferred
 
     def stop_instance(self, build):
+        assert not self._controller.stopping
+        # TODO: we get duplicate stop_instance sometimes, this might indicate
+        # a bug in shutdown code path of AbstractWorkerController
+        # assert self._controller.started or self._controller.starting:
+
+        self._controller.started = False
+        self._controller.starting = False
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
-            self._controller.stopping = False
-            return succeed(True)
-        self._controller._stop_deferred = Deferred()
+            self._controller.do_stop_instance()
+            return defer.succeed(True)
+        self._controller._stop_deferred = defer.Deferred()
         return self._controller._stop_deferred
-
-    def _soft_disconnect(self):
-        return succeed(True)

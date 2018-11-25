@@ -105,8 +105,8 @@ class Tests(SynchronousTestCase):
         concurrently.
         """
         controllers = [
-            LatentController('local1'),
-            LatentController('local2'),
+            LatentController(self, 'local1'),
+            LatentController(self, 'local2'),
         ]
         config_dict = {
             'builders': [
@@ -137,7 +137,7 @@ class Tests(SynchronousTestCase):
         """
         If a latent worker refuses to substantiate, the build request becomes unclaimed.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -177,7 +177,7 @@ class Tests(SynchronousTestCase):
         """
         If a latent worker fails to substantiate, the build request becomes unclaimed.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -220,7 +220,7 @@ class Tests(SynchronousTestCase):
         """
         If a latent worker fails to substantiate, the result is an exception.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -256,7 +256,7 @@ class Tests(SynchronousTestCase):
         """
         If a latent worker fails to substantiate, the worker is still able to accept jobs.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -318,7 +318,7 @@ class Tests(SynchronousTestCase):
         the same time, if the substantiation succeeds then all of
         the builds proceed.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy-1",
@@ -351,7 +351,7 @@ class Tests(SynchronousTestCase):
         # The worker succeeds to substantiate.
         controller.start_instance(True)
 
-        controller.connect_worker(self)
+        controller.connect_worker()
 
         # We check that there were two builds that finished, and
         # that they both finished with success
@@ -364,7 +364,7 @@ class Tests(SynchronousTestCase):
         If a latent worker substantiate, but not connect, and then be unsubstantiated,
         the build request becomes unclaimed.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -406,7 +406,7 @@ class Tests(SynchronousTestCase):
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -441,7 +441,7 @@ class Tests(SynchronousTestCase):
         controller.patchBot(self, 'remote_setBuilderList',
                             remote_setBuilderList)
         controller.start_instance(True)
-        controller.connect_worker(self)
+        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -471,7 +471,7 @@ class Tests(SynchronousTestCase):
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -506,7 +506,7 @@ class Tests(SynchronousTestCase):
                 raise TestException("can't ping")
         controller.patchBot(self, 'remote_print', remote_print)
         controller.start_instance(True)
-        controller.connect_worker(self)
+        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -535,7 +535,7 @@ class Tests(SynchronousTestCase):
         """
         If the worker close connection in the middle of the build, the next build can start correctly
         """
-        controller = LatentController('local', build_wait_timeout=0)
+        controller = LatentController(self, 'local', build_wait_timeout=0)
         # a step that we can finish when we want
         stepcontroller = BuildStepController()
         config_dict = {
@@ -561,12 +561,12 @@ class Tests(SynchronousTestCase):
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
-        controller.connect_worker(self)
+        controller.connect_worker()
 
         builds = self.successResultOf(
             master.data.get(("builds",)))
         self.assertEqual(builds[0]['results'], None)
-        controller.disconnect_worker(self)
+        controller.disconnect_worker()
         builds = self.successResultOf(
             master.data.get(("builds",)))
         self.assertEqual(builds[0]['results'], RETRY)
@@ -574,7 +574,7 @@ class Tests(SynchronousTestCase):
         # Request one build.
         self.createBuildrequest(master, [builder_id])
         controller.start_instance(True)
-        controller.connect_worker(self)
+        controller.connect_worker()
         builds = self.successResultOf(
             master.data.get(("builds",)))
         self.assertEqual(builds[1]['results'], None)
@@ -588,7 +588,7 @@ class Tests(SynchronousTestCase):
         """
         If a build is stopping during latent worker substantiating, the build becomes cancelled
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -625,7 +625,7 @@ class Tests(SynchronousTestCase):
         """
         If master is shutting down during latent worker substantiating, the build becomes retry.
         """
-        controller = LatentController('local')
+        controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",

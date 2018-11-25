@@ -30,6 +30,7 @@ from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util.integration import getMaster
+from buildbot.util.eventual import _setReactor
 from buildbot.worker.local import LocalWorker
 
 try:
@@ -71,6 +72,8 @@ class Tests(SynchronousTestCase):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
         self.addCleanup(self.reactor.stop)
+        _setReactor(self.reactor)
+        self.addCleanup(_setReactor, None)
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")
@@ -80,10 +83,7 @@ class Tests(SynchronousTestCase):
         If max_builds is set, only one build is started on a latent
         worker at a time.
         """
-        controller = LatentController(
-            'local',
-            max_builds=1,
-        )
+        controller = LatentController(self, 'local', max_builds=1)
         step_controller = StepController()
         config_dict = {
             'builders': [
@@ -130,7 +130,7 @@ class Tests(SynchronousTestCase):
         # The worker fails to substantiate.
         controller.start_instance(True)
 
-        controller.connect_worker(self)
+        controller.connect_worker()
 
         self.assertEqual(len(started_builds), 1)
         controller.auto_stop(True)
