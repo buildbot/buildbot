@@ -1,0 +1,1 @@
+Buildbot no longer attempts to start builds that it can prove will have unsatisfied locks.

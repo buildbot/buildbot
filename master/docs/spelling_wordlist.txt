@@ -122,11 +122,13 @@ Callables
 called
 callee
 camelCase
+canAcquireLocks
 cancelled
 cancelling
 candidated
 canonicalize
 canStartBuild
+canStartWithWorkerForBuilder
 catchup
 cd
 cfg
@@ -823,6 +825,7 @@ unimportantSchedulerNames
 unittest
 unittests
 unix
+unmaintained
 unorthodoxy
 Unregister
 unsubscribe
