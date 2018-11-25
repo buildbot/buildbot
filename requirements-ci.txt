@@ -3,25 +3,25 @@ appdirs==1.4.3
 asn1crypto==0.24.0
 astroid==2.0.4; python_version >= "3.4"
 attrs==18.2.0
-autobahn==18.10.1
+autobahn==18.11.1
 Automat==0.7.0
 Babel==2.6.0
 backports.functools-lru-cache==1.5
 blockdiag==1.5.4
 boto==2.49.0
-boto3==1.9.41
-botocore==1.12.41
+boto3==1.9.47
+botocore==1.12.47
 cffi==1.11.5
 click==7.0
 configparser==3.5.0
 constantly==15.1.0
 cookies==2.2.1
-cryptography==2.3.1
+cryptography==2.4.1
 decorator==4.3.0
 dicttoxml==1.7.4
 docutils==0.14
 enum34==1.1.6
-flake8==3.5.0
+flake8==3.6.0
 funcparserlib==0.3.6
 funcsigs==1.0.2
 future==0.17.1
@@ -37,20 +37,20 @@ jsonref==0.2
 lazy-object-proxy==1.3.1
 lz4==2.1.2
 markdown2==2.3.6
-MarkupSafe==1.0
+MarkupSafe==1.1.0
 mccabe==0.6.1
 mock==2.0.0
 moto==1.3.7
 olefile==0.46
 packaging==18.0
 pathlib2==2.3.2
-pbr==5.1.0
+pbr==5.1.1
 pep8==1.7.1
 Pillow==5.3.0
 pyaml==17.12.1
 pyasn1==0.4.4
 pyasn1-modules==0.2.2
-pycodestyle==2.3.1
+pycodestyle==2.4.0
 pycparser==2.19
 pyenchant==2.0.0
 pyflakes==2.0.0
@@ -63,7 +63,7 @@ pyparsing==2.3.0
 python-dateutil==2.7.5
 pytz==2018.7
 PyYAML==3.13
-requests==2.20.0
+requests==2.20.1
 s3transfer==0.1.13
 scandir==1.9.0
 service-identity==17.0.0
@@ -71,7 +71,7 @@ setuptools-trial==0.6.0
 singledispatch==3.4.0.3
 six==1.11.0
 snowballstemmer==1.2.1
-SQLAlchemy==1.2.13
+SQLAlchemy==1.2.14
 sqlalchemy-migrate==0.11.0
 sqlparse==0.2.4
 Tempita==0.5.2
@@ -88,10 +88,10 @@ Werkzeug==0.14.1
 wrapt==1.10.11
 xmltodict==0.11.0
 zope.interface==4.6.0
-coverage==4.5.1
+coverage==4.5.2
 codecov==2.0.15
 -e master
 -e worker
 -e pkg
 # we install buildbot www from pypi to avoid the slow nodejs build at each test
-buildbot-www==1.5.0
+buildbot-www==1.6.0
