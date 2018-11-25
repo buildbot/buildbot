@@ -80,7 +80,8 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     def runStart(self, **config):
         args = [
             '-c',
-            'from buildbot.scripts.start import start; start(%r)' % (
+            'from buildbot.scripts.start import start; import sys; '
+            'sys.exit(start(%r))' % (
                 mkconfig(**config),),
         ]
         env = os.environ.copy()
