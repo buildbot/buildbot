@@ -1,5 +1,5 @@
 class LinePlot extends Directive('common')
-    constructor:  (d3Service, MOMENT) ->
+    constructor:  (d3Service, $filter) ->
         return {
             replace: true
             restrict: 'E'
@@ -14,14 +14,14 @@ class LinePlot extends Directive('common')
             }
             templateUrl: 'views/lineplot.html'
             link: (scope, elem, attrs)->
-                d3Service.get().then (d3) -> linkerWithD3(scope, d3, MOMENT, elem)
+                d3Service.get().then (d3) -> linkerWithD3(scope, d3, $filter, elem)
         }
 
 # an half generic line plot for usage in buildbot views
 # we try to be generic enough to try and hope this can be reused for other kind of plot
 # while not over-engineer it too much
 
-linkerWithD3= ($scope, d3, moment, elem) ->
+linkerWithD3= ($scope, d3, $filter, elem) ->
     margin =
         top: 40
         right: 20
@@ -35,6 +35,7 @@ linkerWithD3= ($scope, d3, moment, elem) ->
             0
             width
         ])
+        .nice()
         xattr = $scope.xattr
         xaccessor = (d) -> new Date(d[xattr]*1000)
         xscaledaccessor = (d) -> x(new Date(d[xattr]*1000))
@@ -43,6 +44,7 @@ linkerWithD3= ($scope, d3, moment, elem) ->
             height
             0
         ])
+        .nice()
         yattr = $scope.yattr
         yaccessor = (d) -> d[yattr]
         yscaledaccessor = (d) -> y(d[yattr])
@@ -76,8 +78,8 @@ linkerWithD3= ($scope, d3, moment, elem) ->
             .scale(y)
             .ticks(3)
         if $scope.yunit == 'seconds'
-            yAxis.tickFormat (d) ->
-                return moment.duration(d*1000).humanize()
+            # duration format is defined in moment.filter.coffee
+            yAxis.tickFormat $filter('durationformat')
 
         # Add the Y Axis
         yaxis_g.call yAxis
