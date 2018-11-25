@@ -106,9 +106,27 @@ class Builder extends Controller
 
             $scope.builds.onChange= ->
                 refreshContextMenu()
+                if $scope.builds.length == 0
+                    return
                 $scope.successful_builds = []
+                $scope.success_ratio = []
+                max_started =  $scope.builds[0].started_at
+                min_started = $scope.builds[$scope.builds.length-1].started_at
+                threshold = (max_started - min_started)/30  # build 30 success ratio points
+                last_started = max_started
+                cur_success = 0
+                num_builds = 0
                 $scope.builds.forEach (b) ->
-                    if b.results == 0 and b.complete_at != null
-                        b.duration = b.complete_at - b.started_at
-                        $scope.successful_builds.push(b)
+                    if b.complete_at != null
+                        num_builds +=1
+                        if b.results == 0
+                            cur_success +=1
+                            b.duration = b.complete_at - b.started_at
+                            $scope.successful_builds.push(b)
+                        # we walk backward? The logic is reversed to avoid another sort
+                        if last_started - b.started_at > threshold
+                            $scope.success_ratio.push date:last_started, success_ratio: 100 * cur_success / num_builds
+                            last_started = b.started_at
+                            num_builds = 0
+                            cur_success = 0
             $scope.buildrequests.onChange=refreshContextMenu
