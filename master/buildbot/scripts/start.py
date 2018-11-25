@@ -142,6 +142,13 @@ def start(config):
         return 0
 
     # this is the parent
-    rc = Follower().follow(config['basedir'],
-                           timeout=config.get('start_timeout', None))
+    timeout = config.get('start_timeout', None)
+    if timeout is not None:
+        try:
+            timeout = float(timeout)
+        except ValueError:
+            print('Start timeout must be a number')
+            return 1
+
+    rc = Follower().follow(config['basedir'], timeout=timeout)
     return rc
