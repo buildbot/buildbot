@@ -123,9 +123,9 @@ class Builder extends Controller
                             cur_success +=1
                             b.duration = b.complete_at - b.started_at
                             $scope.successful_builds.push(b)
-                        # we walk backward, so we the logic is reversed to avoid a resort
+                        # we walk backward? The logic is reversed to avoid another sort
                         if last_started - b.started_at > threshold
-                            $scope.success_ratio.push date:last_started, success_ratio:100*cur_success/num_builds
+                            $scope.success_ratio.push date:last_started, success_ratio: 100 * cur_success / num_builds
                             last_started = b.started_at
                             num_builds = 0
                             cur_success = 0
