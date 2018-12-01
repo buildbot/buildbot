@@ -122,7 +122,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.assertConsumingChanges(fileIsImportant=fII, change_filter=cf,
                                     onlyImportant=False)
         self.db.schedulers.assertClassifications(self.SCHEDULERID, {})
-        sched.deactivate()
+        yield sched.deactivate()
 
     def test_subclass_fileIsImportant(self):
         class Subclass(self.Subclass):
@@ -158,7 +158,7 @@ class BaseBasicScheduler(CommonStuffMixin,
                 self.SCHEDULERID, {20: True})
         self.assertTrue(sched.timer_started)
         self.clock.advance(10)
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_no_treeStableTimer_unimportant(self):
@@ -172,7 +172,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, [])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_no_treeStableTimer_important(self):
@@ -186,7 +186,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, ['B[13]@0'])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_unimportant(self):
@@ -202,7 +202,7 @@ class BaseBasicScheduler(CommonStuffMixin,
         self.clock.advance(10)
         self.assertEqual(self.events, [])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_important(self):
@@ -217,7 +217,7 @@ class BaseBasicScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, ['B[13]@10'])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_sequence(self):
@@ -398,7 +398,7 @@ class SingleBranchScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, ['B[13]@10'])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_createAbsoluteSourceStamps_saveCodebase(self):
@@ -513,7 +513,7 @@ class AnyBranchScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, ['B[13,14]@11', 'B[16]@15'])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_multiple_repositories(self):
@@ -542,7 +542,7 @@ class AnyBranchScheduler(CommonStuffMixin,
 
         self.assertEqual(self.events, ['B[13,14]@11', 'B[15,17]@15'])
 
-        sched.deactivate()
+        yield sched.deactivate()
 
     @defer.inlineCallbacks
     def test_gotChange_treeStableTimer_multiple_projects(self):
