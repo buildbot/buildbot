@@ -151,7 +151,6 @@ class TestUploadFile(CommandTestMixin, unittest.TestCase):
             {'rc': 0}
         ])
 
-
     @defer.inlineCallbacks
     def test_truncated(self):
         self.fakemaster.count_writes = True    # get actual byte counts
