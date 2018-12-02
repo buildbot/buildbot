@@ -431,7 +431,7 @@ class Trial(ShellCommand):
 
         counts = self.observer.counts
 
-        total = counts['total']
+        total = int(counts['total'])
         failures, errors = counts['failures'], counts['errors']
         parsed = (total is not None)
         text = []

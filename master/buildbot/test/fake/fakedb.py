@@ -2093,7 +2093,7 @@ class FakeStepsComponent(FakeDBComponent):
         if b:
             b['complete_at'] = now
             b['results'] = results
-            b['hidden'] = True if hidden else False
+            b['hidden'] = bool(hidden)
         return defer.succeed(None)
 
 
