@@ -317,7 +317,7 @@ class TestGitHubPullrequestPoller(changesource.ChangeSourceMixin,
             'defunkt',
             'defunkt',
             token='1234',
-            pullrequest_filter=lambda pr: True if pr['number'] == 1337 else False
+            pullrequest_filter=lambda pr: pr['number'] == 1337
         )
         self._http.expect(
             method='get',
