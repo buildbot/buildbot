@@ -100,10 +100,10 @@ class TestPropertyMap(unittest.TestCase):
         )
         self.build = FakeBuild(props=self.props)
 
+    @defer.inlineCallbacks
     def doTestSimpleWithProperties(self, fmtstring, expect, **kwargs):
-        d = self.build.render(WithProperties(fmtstring, **kwargs))
-        d.addCallback(self.assertEqual, "%s" % expect)
-        return d
+        res = yield self.build.render(WithProperties(fmtstring, **kwargs))
+        self.assertEqual(res, "%s" % expect)
 
     def testSimpleStr(self):
         return self.doTestSimpleWithProperties('%(prop_str)s', 'a-string')
@@ -208,12 +208,11 @@ class TestPropertyMap(unittest.TestCase):
     def testColonPlusUnset(self):
         return self.doTestSimpleWithProperties('%(prop_nosuch:+present)s', '')
 
+    @defer.inlineCallbacks
     def testClearTempValues(self):
-        d = self.doTestSimpleWithProperties('', '',
+        yield self.doTestSimpleWithProperties('', '',
                                             prop_temp=lambda b: 'present')
-        d.addCallback(lambda _:
-                      self.doTestSimpleWithProperties('%(prop_temp:+present)s', ''))
-        return d
+        yield self.doTestSimpleWithProperties('%(prop_temp:+present)s', '')
 
     def testTempValue(self):
         return self.doTestSimpleWithProperties('%(prop_temp)s', 'present',
@@ -784,134 +783,126 @@ class TestWithProperties(unittest.TestCase):
         with self.assertRaises(ValueError):
             WithProperties("%s %(foo)s", 1, foo=2)
 
+    @defer.inlineCallbacks
     def testBasic(self):
         # test basic substitution with WithProperties
         self.props.setProperty("revision", "47", "test")
         command = WithProperties("build-%s.tar.gz", "revision")
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "build-47.tar.gz")
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, "build-47.tar.gz")
 
+    @defer.inlineCallbacks
     def testDict(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("other", "foo", "test")
         command = WithProperties("build-%(other)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "build-foo.tar.gz")
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, "build-foo.tar.gz")
 
+    @defer.inlineCallbacks
     def testDictColonMinus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
         command = WithProperties(
             "build-%(prop1:-empty)s-%(prop2:-empty)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "build-foo-empty.tar.gz")
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, "build-foo-empty.tar.gz")
 
+    @defer.inlineCallbacks
     def testDictColonPlus(self):
         # test dict-style substitution with WithProperties
         self.props.setProperty("prop1", "foo", "test")
         command = WithProperties(
             "build-%(prop1:+exists)s-%(prop2:+exists)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "build-exists-.tar.gz")
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, "build-exists-.tar.gz")
 
+    @defer.inlineCallbacks
     def testEmpty(self):
         # None should render as ''
         self.props.setProperty("empty", None, "test")
         command = WithProperties("build-%(empty)s.tar.gz")
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      "build-.tar.gz")
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, "build-.tar.gz")
 
+    @defer.inlineCallbacks
     def testRecursiveList(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
         command = [WithProperties("%(x)s %(y)s"), "and",
                    WithProperties("%(y)s %(x)s")]
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      ["10 20", "and", "20 10"])
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, ["10 20", "and", "20 10"])
 
+    @defer.inlineCallbacks
     def testRecursiveTuple(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
         command = (WithProperties("%(x)s %(y)s"), "and",
                    WithProperties("%(y)s %(x)s"))
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      ("10 20", "and", "20 10"))
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, ("10 20", "and", "20 10"))
 
+    @defer.inlineCallbacks
     def testRecursiveDict(self):
         self.props.setProperty("x", 10, "test")
         self.props.setProperty("y", 20, "test")
         command = {WithProperties("%(x)s %(y)s"):
                    WithProperties("%(y)s %(x)s")}
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual,
-                      {"10 20": "20 10"})
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, {"10 20": "20 10"})
 
+    @defer.inlineCallbacks
     def testLambdaSubst(self):
         command = WithProperties('%(foo)s', foo=lambda _: 'bar')
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, 'bar')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, 'bar')
 
+    @defer.inlineCallbacks
     def testLambdaHasattr(self):
         command = WithProperties('%(foo)s',
                                  foo=lambda b: b.hasProperty('x') and 'x' or 'y')
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, 'y')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, 'y')
 
+    @defer.inlineCallbacks
     def testLambdaOverride(self):
         self.props.setProperty('x', 10, 'test')
         command = WithProperties('%(x)s', x=lambda _: 20)
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, '20')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, '20')
 
     def testLambdaCallable(self):
         with self.assertRaises(ValueError):
             WithProperties('%(foo)s', foo='bar')
 
+    @defer.inlineCallbacks
     def testLambdaUseExisting(self):
         self.props.setProperty('x', 10, 'test')
         self.props.setProperty('y', 20, 'test')
         command = WithProperties(
             '%(z)s', z=lambda props: props.getProperty('x') + props.getProperty('y'))
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, '30')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, '30')
 
+    @defer.inlineCallbacks
     def testColon(self):
         self.props.setProperty('some:property', 10, 'test')
         command = WithProperties('%(some:property:-with-default)s')
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, '10')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, '10')
 
+    @defer.inlineCallbacks
     def testColon_default(self):
         command = WithProperties('%(some:property:-with-default)s')
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, 'with-default')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, 'with-default')
 
+    @defer.inlineCallbacks
     def testColon_colon(self):
         command = WithProperties('%(some:property:-with:default)s')
-        d = self.build.render(command)
-        d.addCallback(self.assertEqual, 'with:default')
-        return d
+        res = yield self.build.render(command)
+        self.assertEqual(res, 'with:default')
 
 
 class TestProperties(unittest.TestCase):
@@ -1080,6 +1071,7 @@ class TestProperties(unittest.TestCase):
         self.assertEqual(self.props.changes[0]['author'], 'me')
         self.assertEqual(self.props.files[0], 'main.c')
 
+    @defer.inlineCallbacks
     def test_render(self):
         @implementer(IRenderable)
         class Renderable(object):
@@ -1087,9 +1079,8 @@ class TestProperties(unittest.TestCase):
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'
         self.props.setProperty('x', 'y', 'test')
-        d = self.props.render(Renderable())
-        d.addCallback(self.assertEqual, 'yz')
-        return d
+        res = yield self.props.render(Renderable())
+        self.assertEqual(res, 'yz')
 
 
 class MyPropertiesThing(PropertiesMixin):
@@ -1150,59 +1141,54 @@ class TestProperty(unittest.TestCase):
         self.props = Properties()
         self.build = FakeBuild(props=self.props)
 
+    @defer.inlineCallbacks
     def testIntProperty(self):
         self.props.setProperty("do-tests", 1, "scheduler")
         value = Property("do-tests")
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      1)
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, 1)
 
+    @defer.inlineCallbacks
     def testStringProperty(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = Property("do-tests")
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      "string")
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, "string")
 
+    @defer.inlineCallbacks
     def testMissingProperty(self):
         value = Property("do-tests")
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      None)
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, None)
 
+    @defer.inlineCallbacks
     def testDefaultValue(self):
         value = Property("do-tests", default="Hello!")
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      "Hello!")
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, "Hello!")
 
+    @defer.inlineCallbacks
     def testDefaultValueNested(self):
         self.props.setProperty("xxx", 'yyy', "scheduler")
         value = Property("do-tests",
                          default=WithProperties("a-%(xxx)s-b"))
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      "a-yyy-b")
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, "a-yyy-b")
 
+    @defer.inlineCallbacks
     def testIgnoreDefaultValue(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = Property("do-tests", default="Hello!")
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      "string")
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, "string")
 
+    @defer.inlineCallbacks
     def testIgnoreFalseValue(self):
         self.props.setProperty("do-tests-string", "", "scheduler")
         self.props.setProperty("do-tests-int", 0, "scheduler")
@@ -1214,11 +1200,10 @@ class TestProperty(unittest.TestCase):
                  Property("do-tests-list", default="Hello!"),
                  Property("do-tests-None", default="Hello!")]
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      ["Hello!"] * 4)
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, ["Hello!"] * 4)
 
+    @defer.inlineCallbacks
     def testDefaultWhenFalse(self):
         self.props.setProperty("do-tests-string", "", "scheduler")
         self.props.setProperty("do-tests-int", 0, "scheduler")
@@ -1232,10 +1217,8 @@ class TestProperty(unittest.TestCase):
                      "do-tests-list", default="Hello!", defaultWhenFalse=False),
                  Property("do-tests-None", default="Hello!", defaultWhenFalse=False)]
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      ["", 0, [], None])
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, ["", 0, [], None])
 
     def testDeferredDefault(self):
         default = DeferredRenderable()
@@ -1246,34 +1229,31 @@ class TestProperty(unittest.TestCase):
         default.callback("default-value")
         return d
 
+    @defer.inlineCallbacks
     def testFlattenList(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = FlattenList([Property("do-tests"), ["bla"]])
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      ["string", "bla"])
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, ["string", "bla"])
 
+    @defer.inlineCallbacks
     def testFlattenListAdd(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = FlattenList([Property("do-tests"), ["bla"]])
         value = value + FlattenList([Property("do-tests"), ["bla"]])
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      ["string", "bla", "string", "bla"])
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, ["string", "bla", "string", "bla"])
 
+    @defer.inlineCallbacks
     def testFlattenListAdd2(self):
         self.props.setProperty("do-tests", "string", "scheduler")
         value = FlattenList([Property("do-tests"), ["bla"]])
         value = value + [Property("do-tests"), ["bla"]]
 
-        d = self.build.render(value)
-        d.addCallback(self.assertEqual,
-                      ["string", "bla", "string", "bla"])
-        return d
+        res = yield self.build.render(value)
+        self.assertEqual(res, ["string", "bla", "string", "bla"])
 
     @defer.inlineCallbacks
     def testCompEq(self):
@@ -1709,35 +1689,35 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
                 "function given to Transform neither callable nor renderable"):
             Transform(None)
 
+    @defer.inlineCallbacks
     def test_argless(self):
         t = Transform(lambda: 'abc')
-        d = self.props.render(t)
-        d.addCallback(self.assertEqual, 'abc')
-        return d
+        res = yield self.props.render(t)
+        self.assertEqual(res, 'abc')
 
+    @defer.inlineCallbacks
     def test_argless_renderable(self):
         @renderer
         def function(iprops):
             return lambda: iprops.getProperty('propname')
 
         t = Transform(function)
-        d = self.props.render(t)
-        d.addCallback(self.assertEqual, 'propvalue')
-        return d
+        res = yield self.props.render(t)
+        self.assertEqual(res, 'propvalue')
 
+    @defer.inlineCallbacks
     def test_args(self):
         t = Transform(lambda x, y: x + '|' + y,
                       'abc', Property('propname'))
-        d = self.props.render(t)
-        d.addCallback(self.assertEqual, 'abc|propvalue')
-        return d
+        res = yield self.props.render(t)
+        self.assertEqual(res, 'abc|propvalue')
 
+    @defer.inlineCallbacks
     def test_kwargs(self):
         t = Transform(lambda x, y: x + '|' + y,
                       x='abc', y=Property('propname'))
-        d = self.props.render(t)
-        d.addCallback(self.assertEqual, 'abc|propvalue')
-        return d
+        res = yield self.props.render(t)
+        self.assertEqual(res, 'abc|propvalue')
 
     def test_deferred(self):
         function = DeferredRenderable()

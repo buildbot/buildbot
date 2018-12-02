@@ -73,14 +73,12 @@ class SchedulerManager(unittest.TestCase):
             self.already_started = True
             return base.BaseScheduler.startService(self)
 
+        @defer.inlineCallbacks
         def stopService(self):
-            d = base.BaseScheduler.stopService(self)
+            yield base.BaseScheduler.stopService(self)
 
-            def still_set(_):
-                assert self.master is not None
-                assert self.objectid is not None
-            d.addCallback(still_set)
-            return d
+            assert self.master is not None
+            assert self.objectid is not None
 
         def __repr__(self):
             return "{}(attr={})".format(self.__class__.__name__, self.attr)

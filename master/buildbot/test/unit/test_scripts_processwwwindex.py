@@ -19,6 +19,7 @@ from __future__ import print_function
 import json
 import tempfile
 
+from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.scripts import processwwwindex
@@ -31,22 +32,19 @@ class TestUsersClient(unittest.TestCase):
         self.patch(processwwwindex, 'processwwwindex',
                    processwwwindex.processwwwindex._orig)
 
+    @defer.inlineCallbacks
     def test_no_input_file(self):
-        d = processwwwindex.processwwwindex({})
+        ret = yield processwwwindex.processwwwindex({})
 
-        def check(ret):
-            self.assertEqual(ret, 1)
-        d.addCallback(check)
-        return d
+        self.assertEqual(ret, 1)
 
+    @defer.inlineCallbacks
     def test_invalid_input_file(self):
-        d = processwwwindex.processwwwindex({'index-file': '/some/no/where'})
+        ret = yield processwwwindex.processwwwindex({'index-file': '/some/no/where'})
 
-        def check(ret):
-            self.assertEqual(ret, 2)
-        d.addCallback(check)
-        return d
+        self.assertEqual(ret, 2)
 
+    @defer.inlineCallbacks
     def test_output_config(self):
         # Get temporary file ending with ".html" that has visible to other
         # operations name.
@@ -56,13 +54,9 @@ class TestUsersClient(unittest.TestCase):
         with open(tmpf_name, 'w') as f:
             f.write('{{ configjson|safe }}')
 
-        d = processwwwindex.processwwwindex({'index-file': tmpf_name})
+        ret = yield processwwwindex.processwwwindex({'index-file': tmpf_name})
 
-        def check(ret):
-            self.assertEqual(ret, 0)
-            with open(tmpf_name) as f:
-                config = json.loads(f.read())
-                self.assertTrue(isinstance(config, dict))
-
-        d.addCallback(check)
-        return d
+        self.assertEqual(ret, 0)
+        with open(tmpf_name) as f:
+            config = json.loads(f.read())
+            self.assertTrue(isinstance(config, dict))

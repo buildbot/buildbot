@@ -52,6 +52,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
     # tests
 
+    @defer.inlineCallbacks
     def do_test_createMaster(self, config):
         # mock out everything that createMaster calls, then check that
         # they are called, in order
@@ -65,15 +66,12 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
             self.patch(create_master, fn, repl)
         repls['createDB'].side_effect = (lambda config:
                                          calls.append(fn) or defer.succeed(None))
-        d = create_master.createMaster(config)
+        rc = yield create_master.createMaster(config)
 
-        @d.addCallback
-        def check(rc):
-            self.assertEqual(rc, 0)
-            self.assertEqual(calls, functions)
-            for repl in itervalues(repls):
-                repl.assert_called_with(config)
-        return d
+        self.assertEqual(rc, 0)
+        self.assertEqual(calls, functions)
+        for repl in itervalues(repls):
+            repl.assert_called_with(config)
 
     @defer.inlineCallbacks
     def test_createMaster_quiet(self):
