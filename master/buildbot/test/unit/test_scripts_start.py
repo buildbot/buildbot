@@ -21,6 +21,8 @@ import os
 import sys
 import time
 
+import mock
+
 import twisted
 from twisted.internet import defer
 from twisted.internet.utils import getProcessOutputAndValue
@@ -31,7 +33,6 @@ from buildbot.scripts import start
 from buildbot.test.util import dirs
 from buildbot.test.util import misc
 from buildbot.test.util.decorators import flaky
-from buildbot.test.util.decorators import skipIfPythonVersionIsLess
 from buildbot.test.util.decorators import skipUnlessPlatformIs
 
 
@@ -81,26 +82,40 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     def runStart(self, **config):
         args = [
             '-c',
-            'from buildbot.scripts.start import start; start(%r)' % (
+            'from buildbot.scripts.start import start; import sys; '
+            'sys.exit(start(%r))' % (
                 mkconfig(**config),),
         ]
         env = os.environ.copy()
         env['PYTHONPATH'] = os.pathsep.join(sys.path)
         return getProcessOutputAndValue(sys.executable, args=args, env=env)
 
-    @skipIfPythonVersionIsLess((2, 7))
     @defer.inlineCallbacks
     def test_start_no_daemon(self):
         res = yield self.runStart(nodaemon=True)
 
         self.assertEqual(res, (b'', b'', 0))
 
-    @skipIfPythonVersionIsLess((2, 7))
     @defer.inlineCallbacks
     def test_start_quiet(self):
         res = yield self.runStart(quiet=True)
 
         self.assertEqual(res, (b'', b'', 0))
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_start_timeout_nonnumber(self):
+        res = yield self.runStart(start_timeout='a')
+
+        self.assertEqual(res, (b'Start timeout must be a number\n', b'', 1))
+
+    @skipUnlessPlatformIs('posix')
+    @defer.inlineCallbacks
+    def test_start_timeout_number_string(self):
+        # integer values from command-line options come in as strings
+        res = yield self.runStart(start_timeout='10')
+
+        self.assertEqual(res, (mock.ANY, b'', 0))
 
     @flaky(bugNumber=2760)
     @skipUnlessPlatformIs('posix')

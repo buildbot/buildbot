@@ -191,6 +191,11 @@ class RestartOptions(base.BasedirMixin, base.SubcommandOptions):
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
         ["clean", "c", "Clean shutdown master"],
     ]
+    optParameters = [
+        ['start_timeout', None, None,
+         'The amount of time the script waits for the master to restart until '
+         'it declares the operation as failure'],
+    ]
 
     def getSynopsis(self):
         return "Usage:    buildbot restart [<basedir>]"
@@ -201,6 +206,11 @@ class StartOptions(base.BasedirMixin, base.SubcommandOptions):
     optFlags = [
         ['quiet', 'q', "Don't display startup log messages"],
         ['nodaemon', None, "Don't daemonize (stay in foreground)"],
+    ]
+    optParameters = [
+        ['start_timeout', None, None,
+         'The amount of time the script waits for the master to start until it '
+         'declares the operation as failure'],
     ]
 
     def getSynopsis(self):

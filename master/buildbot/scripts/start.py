@@ -34,10 +34,12 @@ from buildbot.util import rewrap
 
 class Follower:
 
-    def follow(self, basedir):
+    def follow(self, basedir, timeout=None):
         self.rc = 0
+        self._timeout = timeout if timeout else 10.0
         print("Following twistd.log until startup finished..")
-        lw = LogWatcher(os.path.join(basedir, "twistd.log"))
+        lw = LogWatcher(os.path.join(basedir, "twistd.log"),
+                        timeout=self._timeout)
         d = lw.start()
         d.addCallbacks(self._success, self._failure)
         reactor.run()
@@ -51,11 +53,11 @@ class Follower:
     def _failure(self, why):
         if why.check(BuildmasterTimeoutError):
             print(rewrap("""\
-                The buildmaster took more than 10 seconds to start, so we were
+                The buildmaster took more than {0} seconds to start, so we were
                 unable to confirm that it started correctly.
                 Please 'tail twistd.log' and look for a line that says
                 'BuildMaster is running' to verify correct startup.
-                """))
+                """.format(self._timeout)))
         elif why.check(ReconfigError):
             print(rewrap("""\
                 The buildmaster appears to have encountered an error in the
@@ -142,5 +144,13 @@ def start(config):
         return 0
 
     # this is the parent
-    rc = Follower().follow(config['basedir'])
+    timeout = config.get('start_timeout', None)
+    if timeout is not None:
+        try:
+            timeout = float(timeout)
+        except ValueError:
+            print('Start timeout must be a number')
+            return 1
+
+    rc = Follower().follow(config['basedir'], timeout=timeout)
     return rc

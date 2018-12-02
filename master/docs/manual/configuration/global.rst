@@ -131,7 +131,8 @@ Wamp
         'type' : 'wamp',
         'router_url': 'ws://localhost:8080/ws',
         'realm': 'realm1',
-        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
+        # valid are: none, critical, error, warn, info, debug, trace
+        'wamp_debug_level' : 'error'
     }
 
 This is a MQ implementation using `wamp <http://wamp.ws/>`_ protocol.
@@ -194,7 +195,8 @@ To enable multi-master mode in this configuration, you will need to set the :bb:
         'type' : 'wamp',
         'router_url': 'ws://localhost:8080',
         'realm': 'realm1',
-        'wamp_debug_level' : 'error' # valid are: none, critical, error, warn, info, debug, trace
+        # valid are: none, critical, error, warn, info, debug, trace
+        'wamp_debug_level' : 'error'
     }
 
 .. bb:cfg:: buildbotURL
@@ -479,8 +481,10 @@ Two of them use a username+password combination to grant access, one of them use
 
     # some examples:
     from buildbot.plugins import util
-    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys", ssh_hostkey_dir="/data/ssh_host_keys/")
-    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword", ssh_hostkey_dir="/data/ssh_host_keys/")
+    c['manhole'] = util.AuthorizedKeysManhole(1234, "authorized_keys",
+                                              ssh_hostkey_dir="/data/ssh_host_keys/")
+    c['manhole'] = util.PasswordManhole(1234, "alice", "mysecretpassword",
+                                        ssh_hostkey_dir="/data/ssh_host_keys/")
     c['manhole'] = util.TelnetManhole(1234, "bob", "snoop_my_password_please")
 
 The :class:`Manhole` instance can be configured to listen on a specific port.
@@ -489,7 +493,8 @@ You may wish to have this listening port bind to the loopback interface (sometim
 ::
 
     from buildbot.plugins import util
-    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd", ssh_hostkey_dir="/data/ssh_host_keys/")
+    c['manhole'] = util.PasswordManhole("tcp:9999:interface=127.0.0.1","admin","passwd",
+                                        ssh_hostkey_dir="/data/ssh_host_keys/")
 
 To have the :class:`Manhole` listen on all interfaces, use ``"tcp:9999"`` or simply 9999.
 This port specification uses ``twisted.application.strports``, so you can make it listen on SSL or even UNIX-domain sockets if you want.
@@ -900,16 +905,21 @@ BuildbotNetUsageData can be configured with 4 values:
 
 * ``c['buildbotNetUsageData'] = 'full'`` sends the basic information plus additional information:
 
-    * configuration of each builders: how the steps are arranged together. for ex:
+    * configuration of each builders: how the steps are arranged together. for example:
 
     .. code-block:: javascript
 
         {
             'builders': [
-                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
-                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger'],
-                ['buildbot.steps.source.git.Git', '>>>buildbot.process.buildstep.LoggingBuildStep'],
-                ['buildbot.steps.source.git.Git', '>>buildbot.steps.trigger.Trigger']]
+                ['buildbot.steps.source.git.Git',
+                 '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git',
+                 '>>buildbot.steps.trigger.Trigger'],
+                ['buildbot.steps.source.git.Git',
+                 '>>>buildbot.process.buildstep.LoggingBuildStep'],
+                ['buildbot.steps.source.git.Git',
+                 '>>buildbot.steps.trigger.Trigger']
+            ]
         }
 
 * ``c['buildbotNetUsageData'] = myCustomFunction``. You can also specify exactly what to send using a callback.
