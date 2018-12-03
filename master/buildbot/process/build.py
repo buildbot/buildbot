@@ -677,7 +677,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
                 self.workerforbuilder.worker.putInQuarantine()
             elif self.results != RETRY:
                 # This worker looks sane if status is neither retry or exception
-                self.workerforbuilder.worker.resetQuarantine()
+
+                # Avoid a race in case the build step reboot the worker
+                if self.workerforbuilder.worker is not None:
+                    self.workerforbuilder.worker.resetQuarantine()
 
             # mark the build as finished
             self.workerforbuilder.buildFinished()
