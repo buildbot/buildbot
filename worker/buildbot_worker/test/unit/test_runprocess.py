@@ -656,6 +656,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         return self.do_test_pgroup(usePTY=False, useProcGroup=False,
                                    expectChildSurvival=True)
 
+    @defer.inlineCallbacks
     def do_test_pgroup(self, usePTY, useProcGroup=True,
                        expectChildSurvival=False):
         # test that a process group gets killed
@@ -687,16 +688,13 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        d = defer.gatherResults([pidfiles_d, runproc_d])
+        yield defer.gatherResults([pidfiles_d, runproc_d])
 
-        def check_dead(_):
-            self.assertDead(self.parent_pid)
-            if expectChildSurvival:
-                self.assertAlive(self.child_pid)
-            else:
-                self.assertDead(self.child_pid)
-        d.addCallback(check_dead)
-        return d
+        self.assertDead(self.parent_pid)
+        if expectChildSurvival:
+            self.assertAlive(self.child_pid)
+        else:
+            self.assertDead(self.child_pid)
 
     def test_double_fork_usePTY(self):
         return self.do_test_double_fork(usePTY=True)
@@ -710,6 +708,7 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         return self.do_test_double_fork(usePTY=False, useProcGroup=False,
                                         expectChildSurvival=True)
 
+    @defer.inlineCallbacks
     def do_test_double_fork(self, usePTY, useProcGroup=True,
                             expectChildSurvival=False):
         # when a spawned process spawns another process, and then dies itself
@@ -743,16 +742,13 @@ class TestPOSIXKilling(BasedirMixin, unittest.TestCase):
         pidfiles_d.addCallback(kill)
 
         # check that both processes are dead after RunProcess is done
-        d = defer.gatherResults([pidfiles_d, runproc_d])
+        yield defer.gatherResults([pidfiles_d, runproc_d])
 
-        def check_dead(_):
-            self.assertDead(self.parent_pid)
-            if expectChildSurvival:
-                self.assertAlive(self.child_pid)
-            else:
-                self.assertDead(self.child_pid)
-        d.addCallback(check_dead)
-        return d
+        self.assertDead(self.parent_pid)
+        if expectChildSurvival:
+            self.assertAlive(self.child_pid)
+        else:
+            self.assertDead(self.child_pid)
 
 
 class TestLogging(BasedirMixin, unittest.TestCase):

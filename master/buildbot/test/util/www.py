@@ -183,6 +183,7 @@ class WwwTestMixin(RequiresWwwMixin):
             request.finish()
         return request.deferred
 
+    @defer.inlineCallbacks
     def render_control_resource(self, rsrc, path=b'/', params=None,
                                 requestJson=None, action="notfound", id=None,
                                 content_type=b'application/json'):
@@ -196,21 +197,16 @@ class WwwTestMixin(RequiresWwwMixin):
             {"jsonrpc": "2.0", "method": action, "params": params, "id": id}))
         request.input_headers = {b'content-type': content_type}
         rv = rsrc.render(request)
-        if rv != server.NOT_DONE_YET:
-            d = defer.succeed(rv)
-        else:
-            d = request.deferred
+        if rv == server.NOT_DONE_YET:
+            rv = yield request.deferred
 
-        @d.addCallback
-        def check(_json):
-            res = json.loads(bytes2NativeString(_json))
-            self.assertIn("jsonrpc", res)
-            self.assertEqual(res["jsonrpc"], "2.0")
-            if not requestJson:
-                # requestJson is used for invalid requests, so don't expect ID
-                self.assertIn("id", res)
-                self.assertEqual(res["id"], id)
-        return d
+        res = json.loads(bytes2NativeString(rv))
+        self.assertIn("jsonrpc", res)
+        self.assertEqual(res["jsonrpc"], "2.0")
+        if not requestJson:
+            # requestJson is used for invalid requests, so don't expect ID
+            self.assertIn("id", res)
+            self.assertEqual(res["id"], id)
 
     def assertRequest(self, content=None, contentJson=None, contentType=None,
                       responseCode=None, contentDisposition=None, headers=None):
