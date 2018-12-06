@@ -422,6 +422,7 @@ keyring
 keystoneauth
 KiB
 kibibytes
+kv
 kwargs
 latin
 ldap
