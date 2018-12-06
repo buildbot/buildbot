@@ -43,7 +43,7 @@ class SecretsConfig(RunMasterBase):
 
         rv = os.system("docker exec vault_for_buildbot /bin/sh -c "
                        "'export VAULT_ADDR=http://127.0.0.1:8200/\n"
-                       "vault write secret/key value=word'")
+                       "vault kv put secret/key value=word'")
         self.assertEqual(rv, 0)
 
     def remove_container(self):
@@ -69,9 +69,12 @@ def masterConfig():
             name="force",
             builderNames=["testy"])]
 
+    # note that as of December 2018, the vault docker image default to kv
+    # version 2 to be enabled by default
     c['secretsProviders'] = [HashiCorpVaultSecretProvider(
         vaultToken='my_vaulttoken',
-        vaultServer="http://localhost:8200"
+        vaultServer="http://localhost:8200",
+        apiVersion=2
     )]
 
     f = BuildFactory()
