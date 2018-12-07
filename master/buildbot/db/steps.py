@@ -59,7 +59,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             return rv
         defer.returnValue((yield self.db.pool.do(thd)))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getSteps(self, buildid):
         def thd(conn):
             tbl = self.db.model.steps
@@ -68,9 +68,9 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             q = q.order_by(tbl.c.number)
             res = conn.execute(q)
             return [self._stepdictFromRow(row) for row in res.fetchall()]
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def addStep(self, buildid, name, state_string):
         def thd(conn):
             tbl = self.db.model.steps
@@ -113,7 +113,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             r = conn.execute(self.db.model.steps.insert(), insert_row)
             got_id = r.inserted_primary_key[0]
             return (got_id, number, newname)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def startStep(self, stepid, _reactor=reactor):
@@ -125,13 +125,13 @@ class StepsConnectorComponent(base.DBConnectorComponent):
             conn.execute(q, started_at=started_at)
         yield self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def setStepStateString(self, stepid, state_string):
         def thd(conn):
             tbl = self.db.model.steps
             q = tbl.update(whereclause=(tbl.c.id == stepid))
             conn.execute(q, state_string=state_string)
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     def addURL(self, stepid, name, url, _racehook=None):
         # This methods adds an URL to the db
@@ -166,7 +166,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
 
         return self.url_lock.run(lambda: self.db.pool.do(thd))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def finishStep(self, stepid, results, hidden, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.steps
@@ -175,7 +175,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                          complete_at=_reactor.seconds(),
                          results=results,
                          hidden=1 if hidden else 0)
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     def _stepdictFromRow(self, row):
         def mkdt(epoch):

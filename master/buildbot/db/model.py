@@ -817,12 +817,12 @@ class Model(base.DBConnectorComponent):
         ret = yield self.db.pool.do_with_engine(thd)
         defer.returnValue(ret)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def create(self):
         # this is nice and simple, but used only for tests
         def thd(engine):
             self.metadata.create_all(bind=engine)
-        yield self.db.pool.do_with_engine(thd)
+        return self.db.pool.do_with_engine(thd)
 
     @defer.inlineCallbacks
     def upgrade(self):
