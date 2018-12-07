@@ -128,9 +128,9 @@ class Worker(base.ResourceType):
     entityType = EntityType(name)
 
     @base.updateMethod
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
-        yield self.master.db.workers.workerConfigured(
+        return self.master.db.workers.workerConfigured(
             workerid=workerid,
             masterid=masterid,
             builderids=builderids)

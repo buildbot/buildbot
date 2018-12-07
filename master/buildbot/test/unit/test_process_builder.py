@@ -49,7 +49,7 @@ class BuilderMixin(object):
         self.mq = self.master.mq
         self.db = self.master.db
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def makeBuilder(self, name="bldr", patch_random=False, noReconfig=False,
                     **config_kwargs):
         """Set up C{self.bldr}"""
@@ -82,7 +82,7 @@ class BuilderMixin(object):
         mastercfg = config.MasterConfig()
         mastercfg.builders = [self.builder_config]
         if not noReconfig:
-            defer.returnValue((yield self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)))
+            return self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
 
 
 class FakeWorker(object):

@@ -53,7 +53,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 q = q.where(cfg_tbl.c.workerid == workerid)
             conn.execute(q).close()
 
-    @defer.inlineCallbacks
+    # returns a Deferred which returns None
     def deconfigureAllWorkersForMaster(self, masterid):
         def thd(conn):
             # first remove the old configured buildermasterids for this master and worker
@@ -72,9 +72,9 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             res.close()
             self._deleteFromConfiguredWorkers_thd(conn, buildermasterids)
 
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def workerConfigured(self, workerid, masterid, builderids):
 
         def thd(conn):
@@ -117,7 +117,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def getWorker(self, workerid=None, name=None, masterid=None,
@@ -129,7 +129,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
         if workers:
             defer.returnValue(workers[0])
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getWorkers(self, _workerid=None, _name=None, masterid=None,
                    builderid=None, paused=None, graceful=None):
         def thd(conn):
@@ -212,11 +212,11 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                 rv[row.workerid]['connected_to'].append(row.masterid)
 
             return list(itervalues(rv))
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
     deprecatedWorkerClassMethod(
         locals(), getWorkers, compat_name="getBuildslaves")
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def workerConnected(self, workerid, masterid, workerinfo):
         def thd(conn):
             conn_tbl = self.db.model.connected_workers
@@ -231,21 +231,21 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
             bs_tbl = self.db.model.workers
             q = bs_tbl.update(whereclause=(bs_tbl.c.id == workerid))
             conn.execute(q, info=workerinfo)
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def workerDisconnected(self, workerid, masterid):
         def thd(conn):
             tbl = self.db.model.connected_workers
             q = tbl.delete(whereclause=(tbl.c.workerid == workerid) &
                                        (tbl.c.masterid == masterid))
             conn.execute(q)
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def setWorkerState(self, workerid, paused, graceful):
         def thd(conn):
             tbl = self.db.model.workers
             q = tbl.update(whereclause=(tbl.c.id == workerid))
             conn.execute(q, paused=int(paused), graceful=int(graceful))
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)

@@ -33,15 +33,15 @@ class SchedulerAlreadyClaimedError(Exception):
 class SchedulersConnectorComponent(base.DBConnectorComponent):
     # Documentation is in developer/db.rst
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def enable(self, schedulerid, v):
         def thd(conn):
             tbl = self.db.model.schedulers
             q = tbl.update(whereclause=(tbl.c.id == schedulerid))
             conn.execute(q, enabled=int(v))
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def classifyChanges(self, schedulerid, classifications):
         def thd(conn):
             tbl = self.db.model.scheduler_changes
@@ -69,9 +69,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                                  important=imp_int).close()
 
                 transaction.commit()
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def flushChangeClassifications(self, schedulerid, less_than=None):
         def thd(conn):
             sch_ch_tbl = self.db.model.scheduler_changes
@@ -80,9 +80,9 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 wc = wc & (sch_ch_tbl.c.changeid < less_than)
             q = sch_ch_tbl.delete(whereclause=wc)
             conn.execute(q).close()
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getChangeClassifications(self, schedulerid, branch=-1,
                                  repository=-1, project=-1,
                                  codebase=-1):
@@ -117,7 +117,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 whereclause=wc)
             return {r.changeid: [False, True][r.important]
                     for r in conn.execute(q)}
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def findSchedulerId(self, name):
         tbl = self.db.model.schedulers
@@ -130,7 +130,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 name_hash=name_hash,
             ))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def setSchedulerMaster(self, schedulerid, masterid):
         def thd(conn):
             sch_mst_tbl = self.db.model.scheduler_masters
@@ -163,7 +163,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
                 raise SchedulerAlreadyClaimedError(
                     "already claimed by {}".format(row['name']))
 
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def getScheduler(self, schedulerid):
@@ -171,7 +171,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
         if sch:
             defer.returnValue(sch[0])
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getSchedulers(self, active=None, masterid=None, _schedulerid=None):
         def thd(conn):
             sch_tbl = self.db.model.schedulers
@@ -204,4 +204,4 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             return [dict(id=row.id, name=row.name, enabled=bool(row.enabled),
                          masterid=row.masterid)
                     for row in conn.execute(q).fetchall()]
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
