@@ -64,10 +64,14 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         """
         if self.apiVersion == 1:
             path = self.secretsmount + '/' + entry
-            proj = yield self._http.get('/v1/{0}'.format(path))
         else:
             path = self.secretsmount + '/data/' + entry
-            proj = yield self._http.get('/v1/{0}'.format(path))
+
+        # note that the HTTP path contains v1 for both versions of the key-value
+        # secret engine. Different versions of the key-value engine are
+        # effectively separate secret engines in vault, with the same base HTTP
+        # API, but with different paths within it.
+        proj = yield self._http.get('/v1/{0}'.format(path))
         code = yield proj.code
         if code != 200:
             raise KeyError("The key %s does not exist in Vault provider: request"
