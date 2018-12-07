@@ -121,11 +121,13 @@ SecretInVault
 
     c['secretsProviders'] = [secrets.SecretInVault(
                             vaultToken=open('VAULT_TOKEN').read(),
-                            vaultServer="http://localhost:8200"
+                            vaultServer="http://localhost:8200",
+                            apiVersion=2
     )]
 
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
+At the moment buildbot supports KV v1 and v2 backends.
 To be authenticated in Vault, Buildbot need to send a token to the vault server.
 The token is generated when the Vault instance is initialized for the first time.
 
@@ -206,4 +208,4 @@ To add a new secret:
 
 .. code-block:: shell
 
-      vault write secret/new_secret_key value=new_secret_value
+      vault kv put secret/new_secret_key value=new_secret_value

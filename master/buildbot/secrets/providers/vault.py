@@ -28,25 +28,30 @@ from buildbot.util import httpclientservice
 
 class HashiCorpVaultSecretProvider(SecretProviderBase):
     """
-    basic provider where each secret is stored in Vault
+    basic provider where each secret is stored in Vault KV secret engine
     """
 
     name = 'SecretInVault'
 
-    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None):
+    def checkConfig(self, vaultServer=None, vaultToken=None, secretsmount=None,
+                    apiVersion=1):
         if not isinstance(vaultServer, str):
             config.error("vaultServer must be a string while it is %s" % (type(vaultServer,)))
         if not isinstance(vaultToken, str):
             config.error("vaultToken must be a string while it is %s" % (type(vaultToken,)))
+        if apiVersion not in [1, 2]:
+            config.error("apiVersion %s is not supported" % apiVersion)
 
     @defer.inlineCallbacks
-    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None):
+    def reconfigService(self, vaultServer=None, vaultToken=None, secretsmount=None,
+                        apiVersion=1):
         if secretsmount is None:
             self.secretsmount = "secret"
         else:
             self.secretsmount = secretsmount
         self.vaultServer = vaultServer
         self.vaultToken = vaultToken
+        self.apiVersion = apiVersion
         if vaultServer.endswith('/'):
             vaultServer = vaultServer[:-1]
         self._http = yield httpclientservice.HTTPClientService.getService(
@@ -57,11 +62,23 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
         """
         get the value from vault secret backend
         """
-        path = self.secretsmount + '/' + entry
+        if self.apiVersion == 1:
+            path = self.secretsmount + '/' + entry
+        else:
+            path = self.secretsmount + '/data/' + entry
+
+        # note that the HTTP path contains v1 for both versions of the key-value
+        # secret engine. Different versions of the key-value engine are
+        # effectively separate secret engines in vault, with the same base HTTP
+        # API, but with different paths within it.
         proj = yield self._http.get('/v1/{0}'.format(path))
         code = yield proj.code
         if code != 200:
             raise KeyError("The key %s does not exist in Vault provider: request"
                            " return code:%d." % (entry, code))
         json = yield proj.json()
-        defer.returnValue(json.get(u'data', {}).get('value'))
+        if self.apiVersion == 1:
+            ret = json.get(u'data', {}).get('value')
+        else:
+            ret = json.get(u'data', {}).get(u'data', {}).get('value')
+        defer.returnValue(ret)

@@ -25,11 +25,12 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.config import ConfigErrorsMixin
 
 
-class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
+class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, unittest.TestCase):
 
-    def setUp(self):
+    def setUp(self, version):
         self.srvcVault = HashiCorpVaultSecretProvider(vaultServer="http://vaultServer",
-                                                      vaultToken="someToken")
+                                                      vaultToken="someToken",
+                                                      apiVersion=version)
         self.master = fakemaster.make_master(testcase=self, wantData=True)
         self._http = self.successResultOf(
             fakehttpclientservice.HTTPClientService.getFakeService(
@@ -40,6 +41,12 @@ class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def tearDown(self):
         yield self.srvcVault.stopService()
+
+
+class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
+
+    def setUp(self):
+        TestSecretInVaultHttpFakeBase.setUp(self, version=1)
 
     @defer.inlineCallbacks
     def testGetValue(self):
@@ -79,6 +86,13 @@ class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
                 "vaultToken must be a string while it is"):
             self.srvcVault.checkConfig(vaultServer="serveraddr")
 
+    def test_check_config_error_apiVersion_unsupported(self):
+        with self.assertRaisesConfigError(
+                "apiVersion 0 is not supported"):
+            self.srvcVault.checkConfig(vaultServer="serveraddr",
+                                       vaultToken="vaultToken",
+                                       apiVersion=0)
+
     @defer.inlineCallbacks
     def testReconfigSecretInVaultService(self):
         self._http = self.successResultOf(
@@ -88,3 +102,32 @@ class TestSecretInVaultHttpFake(ConfigErrorsMixin, unittest.TestCase):
                                              vaultToken="someToken")
         self.assertEqual(self.srvcVault.vaultServer, "serveraddr")
         self.assertEqual(self.srvcVault.vaultToken, "someToken")
+
+
+class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
+
+    def setUp(self):
+        TestSecretInVaultHttpFakeBase.setUp(self, version=2)
+
+    @defer.inlineCallbacks
+    def testGetValue(self):
+        self._http.expect(method='get', ep='/v1/secret/data/value', params=None,
+                          data=None, json=None, code=200,
+                          content_json={"data": {"data": {"value": "value1"}}})
+        value = yield self.srvcVault.get("value")
+        self.assertEqual(value, "value1")
+
+    @defer.inlineCallbacks
+    def testGetValueNotFound(self):
+        self._http.expect(method='get', ep='/v1/secret/data/value', params=None,
+                          data=None, json=None, code=200,
+                          content_json={"data": {"data": {"valueNotFound": "value1"}}})
+        value = yield self.srvcVault.get("value")
+        self.assertEqual(value, None)
+
+    @defer.inlineCallbacks
+    def testGetError(self):
+        self._http.expect(method='get', ep='/v1/secret/data/valueNotFound', params=None,
+                          data=None, json=None, code=404,
+                          content_json={"data": {"data": {"valueNotFound": "value1"}}})
+        yield self.assertFailure(self.srvcVault.get("valueNotFound"), KeyError)
