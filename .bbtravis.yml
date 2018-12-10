@@ -4,7 +4,7 @@ language: python
 
 # Available Python versions:
 python:
-  - "2.7"
+  - "3.5"
 label_mapping:
   TWISTED: tw
   SQLALCHEMY: sqla
