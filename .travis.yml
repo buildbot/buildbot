@@ -1,6 +1,6 @@
 # Travis CI configuration file
 # http://about.travis-ci.org/docs/
-dist: trusty
+dist: xenial
 addons:
   postgresql: "9.4"
   apt_packages:
@@ -19,7 +19,7 @@ language: python
 # Available Python versions:
 # http://about.travis-ci.org/docs/user/ci-environment/#Python-VM-images
 python:
-  - "2.7"
+  - "3.7"
 
 env:
   global:
