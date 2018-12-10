@@ -10,7 +10,6 @@ environment:
   matrix:
     # For Python versions available on AppVeyor, see
     # http://www.appveyor.com/docs/installed-software#python
-    - PYTHON: "C:\\Python27"
     - PYTHON: "C:\\Python35"
     - PYTHON: "C:\\Python36"
 
@@ -77,4 +76,4 @@ deploy:
   prerelease: false
   on:
     appveyor_repo_tag: true        # deploy on tag push only
-    PYTHON: "C:\\Python27"
+    PYTHON: "C:\\Python35"
