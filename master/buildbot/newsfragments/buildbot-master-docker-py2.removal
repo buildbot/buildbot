@@ -1,0 +1,1 @@
+The Buildbot master Docker image based on Python 2.7 has been removed in favor of a Python 3.7 based image.

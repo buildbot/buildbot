@@ -26,24 +26,24 @@ RUN \
     echo @testing http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
     apk add --no-cache \
         git \
-        python-dev \
+        python3-dev \
         libffi-dev \
         libressl-dev \
         postgresql-dev \
-        py-pip \
+        py3-pip \
         alpine-sdk \
         tar \
         tzdata \
         curl && \
 # install pip dependencies
-    pip install --upgrade pip setuptools wheel && \
-    pip install "buildbot[bundle,tls]" && \
-    pip install -r /usr/src/buildbot/requirements-docker-extras.txt && \
-    pip install "/usr/src/buildbot" && \
+    pip3 install --upgrade pip setuptools wheel && \
+    pip3 install "buildbot[bundle,tls]" && \
+    pip3 install -r /usr/src/buildbot/requirements-docker-extras.txt && \
+    pip3 install "/usr/src/buildbot" && \
     mkdir -p wheels && \
-    pip list --format freeze | grep -v '^buildbot=' > wheels/wheels.txt && \
+    pip3 list --format freeze | grep -v '^buildbot=' > wheels/wheels.txt && \
     cd wheels && \
-    pip wheel -r wheels.txt
+    pip3 wheel -r wheels.txt
 
 
 
@@ -73,9 +73,9 @@ RUN \
     echo @testing http://nl.alpinelinux.org/alpine/edge/testing >> /etc/apk/repositories && \
     apk add --no-cache \
         git \
-        python \
+        python3 \
         postgresql-libs \
-        py-pip \
+        py3-pip \
         gosu@testing \
         dumb-init \
         tar \
@@ -83,10 +83,10 @@ RUN \
         curl \
         openssh && \
 # install pip dependencies
-    pip install --upgrade pip setuptools && \
-    pip install /wheels/*.whl && \
-    pip install "buildbot[bundle,tls]" && \
-    pip install "/usr/src/buildbot" && \
+    pip3 install --upgrade pip setuptools && \
+    pip3 install /wheels/*.whl && \
+    pip3 install "buildbot[bundle,tls]" && \
+    pip3 install "/usr/src/buildbot" && \
     rm -r /root/.cache /wheels
 
 
