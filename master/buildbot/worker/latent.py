@@ -40,6 +40,11 @@ class AbstractLatentWorker(AbstractWorker):
 
     To use, subclass and implement start_instance and stop_instance.
 
+    Additionally, if the instances render any kind of data affecting instance
+    type from the build properties, set the class variable
+    builds_may_be_incompatible to True and override isCompatibleWithBuild
+    method.
+
     See ec2.py for a concrete example.
     """
 
@@ -98,6 +103,8 @@ class AbstractLatentWorker(AbstractWorker):
         return self.conn is not None
 
     def substantiate(self, wfb, build):
+        log.msg("substantiating worker %s" % (wfb,))
+
         if self.conn is not None:
             self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
@@ -241,6 +248,8 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def insubstantiate(self, fast=False):
+        log.msg("insubstantiating worker %s" % (self,))
+
         self.insubstantiating = True
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)

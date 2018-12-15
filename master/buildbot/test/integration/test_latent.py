@@ -31,6 +31,8 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
+from buildbot.process.properties import Interpolate
+from buildbot.process.properties import Properties
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import EXCEPTION
 from buildbot.process.results import RETRY
@@ -83,7 +85,8 @@ class Tests(SynchronousTestCase):
             getMaster(self, self.reactor, config_dict))
         return master
 
-    def createBuildrequest(self, master, builder_ids):
+    def createBuildrequest(self, master, builder_ids, properties=None):
+        properties = properties.asDict() if properties is not None else None
         return self.successResultOf(
             master.data.updates.addBuildset(
                 waited_for=False,
@@ -95,6 +98,7 @@ class Tests(SynchronousTestCase):
                      'revision': None,
                      'project': ''},
                 ],
+                properties=properties,
             )
         )
 
@@ -665,3 +669,143 @@ class Tests(SynchronousTestCase):
         )
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
+
+    @defer.inlineCallbacks
+    def test_rejects_build_on_instance_with_different_type_timeout_zero(self):
+        """
+        If latent worker supports getting its instance type from properties that
+        are rendered from build then the buildrequestdistributor must not
+        schedule any builds on workers that are running different instance type
+        than what these builds will require.
+        """
+        controller = LatentController(self, 'local',
+                                      kind=Interpolate('%(prop:worker_kind)s'),
+                                      build_wait_timeout=0)
+
+        # a step that we can finish when we want
+        stepcontroller = BuildStepController()
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory([stepcontroller.step]),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        # create build request
+        self.createBuildrequest(master, [builder_id],
+                                properties=Properties(worker_kind='a'))
+
+        # start the build and verify the kind of the worker. Note that the
+        # buildmaster needs to restart the worker in order to change the worker
+        # kind, so we allow it both to auto start and stop
+        self.assertEqual(True, controller.starting)
+
+        controller.auto_connect_worker = True
+        controller.auto_disconnect_worker = True
+        controller.auto_start(True)
+        controller.auto_stop(True)
+        controller.connect_worker()
+        self.assertEqual('a', (yield controller.get_started_kind()))
+
+        # before the other build finished, create another build request
+        self.createBuildrequest(master, [builder_id],
+                                properties=Properties(worker_kind='b'))
+        stepcontroller.finish_step(SUCCESS)
+
+        # give the botmaster chance to insubstantiate the worker and
+        # maybe substantiate it for the pending build the builds on worker
+        self.reactor.advance(0.1)
+
+        # verify that the second build restarted with the expected instance
+        # kind
+        self.assertEqual('b', (yield controller.get_started_kind()))
+        stepcontroller.finish_step(SUCCESS)
+
+        dbdict = yield master.db.builds.getBuild(1)
+        self.assertEqual(SUCCESS, dbdict['results'])
+        dbdict = yield master.db.builds.getBuild(2)
+        self.assertEqual(SUCCESS, dbdict['results'])
+
+    @defer.inlineCallbacks
+    def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
+        """
+        If latent worker supports getting its instance type from properties that
+        are rendered from build then the buildrequestdistributor must not
+        schedule any builds on workers that are running different instance type
+        than what these builds will require.
+        """
+        controller = LatentController(self, 'local',
+                                      kind=Interpolate('%(prop:worker_kind)s'),
+                                      build_wait_timeout=5)
+
+        # a step that we can finish when we want
+        stepcontroller = BuildStepController()
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory([stepcontroller.step]),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+
+        master = self.getMaster(config_dict)
+        builder_id = self.successResultOf(
+            master.data.updates.findBuilderId('testy'))
+
+        # create build request
+        self.createBuildrequest(master, [builder_id],
+                                properties=Properties(worker_kind='a'))
+
+        # start the build and verify the kind of the worker. Note that the
+        # buildmaster needs to restart the worker in order to change the worker
+        # kind, so we allow it both to auto start and stop
+        self.assertEqual(True, controller.starting)
+
+        controller.auto_connect_worker = True
+        controller.auto_disconnect_worker = True
+        controller.auto_start(True)
+        controller.auto_stop(True)
+        controller.connect_worker()
+        self.assertEqual('a', (yield controller.get_started_kind()))
+
+        # before the other build finished, create another build request
+        self.createBuildrequest(master, [builder_id],
+                                properties=Properties(worker_kind='b'))
+        stepcontroller.finish_step(SUCCESS)
+
+        # give the botmaster chance to insubstantiate the worker and
+        # maybe substantiate it for the pending build the builds on worker
+        self.reactor.advance(0.1)
+
+        # verify build has not started, even though the worker is waiting
+        # for one
+        self.assertIsNone((yield master.db.builds.getBuild(2)))
+        self.assertTrue(controller.started)
+
+        # wait until the latent worker times out, is insubstantiated,
+        # is substantiated because of pending buildrequest and starts the build
+        self.reactor.advance(6)
+        self.assertIsNotNone((yield master.db.builds.getBuild(2)))
+
+        # verify that the second build restarted with the expected instance
+        # kind
+        self.assertEqual('b', (yield controller.get_started_kind()))
+        stepcontroller.finish_step(SUCCESS)
+
+        dbdict = yield master.db.builds.getBuild(1)
+        self.assertEqual(SUCCESS, dbdict['results'])
+        dbdict = yield master.db.builds.getBuild(2)
+        self.assertEqual(SUCCESS, dbdict['results'])

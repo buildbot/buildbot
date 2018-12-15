@@ -59,6 +59,9 @@ class AbstractWorker(service.BuildbotService, object):
     DEFAULT_MISSING_TIMEOUT = 3600
     DEFAULT_KEEPALIVE_INTERVAL = 3600
 
+    # override to True if isCompatibleWithBuild may return False
+    builds_may_be_incompatible = False
+
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
                     missing_timeout=None,
@@ -312,6 +315,13 @@ class AbstractWorker(service.BuildbotService, object):
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
         yield service.BuildbotService.stopService(self)
+
+    def isCompatibleWithBuild(self, build_props):
+        # given a build properties object, determines whether the build is
+        # compatible with the currently running worker or not. This is most
+        # often useful for latent workers where it's possible to request
+        # different kinds of workers.
+        return defer.succeed(True)
 
     def startMissingTimer(self):
         if self.missing_timeout and self.parent and self.running:
