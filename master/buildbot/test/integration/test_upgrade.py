@@ -143,7 +143,7 @@ class UpgradeTestMixin(db.RealDatabaseMixin):
                     implied = [idx for (tname, idx)
                                in self.db.model.implied_indexes
                                if tname == tbl.name]
-                    exp = sorted(exp + implied)
+                    exp = sorted(exp + implied, key=lambda k: k["name"])
 
                 got = sorted(insp.get_indexes(tbl.name),
                              key=lambda x: x['name'])
