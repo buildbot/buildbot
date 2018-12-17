@@ -64,7 +64,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
             fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283', author='me@foo',
                           repository=u'svn://...', codebase=u'cbsvn',
                           project=u'world-domination', sourcestampid=234),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
                          patch_author='him@foo', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=235, patchid=99),
