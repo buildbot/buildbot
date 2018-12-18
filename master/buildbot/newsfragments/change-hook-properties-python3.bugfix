@@ -1,0 +1,1 @@
+Fixed JSON decoding error when sending build properties to www change hooks on Python 3.
