@@ -11,10 +11,10 @@ from buildbot.www.change_hook import ChangeHookResource
 from buildbot.www.hooks.base import BaseHookHandler
 
 
-def _prepare_base_change_hook(**options):
+def _prepare_base_change_hook(testcase, **options):
     return ChangeHookResource(dialects={
         'base': options
-    }, master=fakeMasterForHooks())
+    }, master=fakeMasterForHooks(testcase))
 
 
 def _prepare_request(payload, headers=None):
@@ -40,7 +40,7 @@ def _prepare_request(payload, headers=None):
 
 class TestChangeHookConfiguredWithBase(unittest.TestCase):
     def setUp(self):
-        self.changeHook = _prepare_base_change_hook()
+        self.changeHook = _prepare_base_change_hook(self)
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):
@@ -75,7 +75,7 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
                               project=args.get(b'project'),
                               codebase=args.get(b'codebase'))
                 return ([chdict], None)
-        self.changeHook = _prepare_base_change_hook(custom_class=CustomBase)
+        self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
 
     @defer.inlineCallbacks
     def _check_base_with_change(self, payload):

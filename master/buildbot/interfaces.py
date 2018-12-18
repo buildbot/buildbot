@@ -87,7 +87,7 @@ class IChangeSource(IPlugin):
     directories are changed in version control, this object should represent
     the changes as a change dictionary and call::
 
-      self.master.addChange(who=.., rev=.., ..)
+      self.master.data.updates.addChange(who=.., rev=.., ..)
 
     See 'Writing Change Sources' in the manual for more information.
     """
@@ -1001,15 +1001,6 @@ class IStatusReceiver(IPlugin):
         @type  otherStatusReceivers: A list of L{IStatusReceiver} objects which
         will contain self.
         """
-
-
-class IControl(Interface):
-
-    def addChange(change):
-        """Add a change to the change queue, for analysis by schedulers."""
-
-    def getBuilder(name):
-        """Retrieve the IBuilderControl object for the given Builder."""
 
 
 class IBuilderControl(Interface):
