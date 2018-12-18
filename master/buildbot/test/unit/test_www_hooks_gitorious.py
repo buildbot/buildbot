@@ -69,7 +69,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
     def setUp(self):
         dialects = {'gitorious': True}
         self.changeHook = change_hook.ChangeHookResource(
-            dialects=dialects, master=fakeMasterForHooks(self))
+            dialects=dialects, master=fakeMasterForHooks())
 
     # Test 'base' hook with attributes. We should get a json string
     # representing a Change object as a dictionary. All values show be set.

@@ -25,8 +25,9 @@ describe('dashboard page', function() {
 
     afterEach(done =>
         browser.manage().logs().get('browser').then(function(browserLog) {
-            console.log(browserLog);
-            expect(browserLog.length).toEqual(0);
+            // uncomment when following bug is fixed https://crbug.com/902918
+            // console.log(browserLog);
+            // expect(browserLog.length).toEqual(0);
             return done();
         })
     );

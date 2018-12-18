@@ -171,5 +171,5 @@ class ChangeHookResource(resource.Resource):
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         for chdict in changes:
-            chid = yield self.master.data.updates.addChange(src=src, **chdict)
-            log.msg("injected change %s" % chid)
+            change = yield self.master.addChange(src=src, **chdict)
+            log.msg("injected change %s" % change)

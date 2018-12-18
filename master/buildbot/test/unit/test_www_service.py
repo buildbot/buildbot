@@ -180,9 +180,9 @@ class Test(www.WwwTestMixin, unittest.TestCase):
         rsrc = self.svc.site.resource.getChildWithDefault(b'change_hook', mock.Mock())
         path = b'/change_hook/base'
         request = test_www_hooks_base._prepare_request({})
-        self.master.data.updates.addChange = mock.Mock()
+        self.master.addChange = mock.Mock()
         yield self.render_resource(rsrc, path, request=request)
-        self.master.data.updates.addChange.assert_called()
+        self.master.addChange.assert_called()
 
     @defer.inlineCallbacks
     def test_setupSiteWithHookAndAuth(self):

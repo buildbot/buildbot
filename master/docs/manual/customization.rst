@@ -520,7 +520,7 @@ A custom change source must implement :class:`buildbot.interfaces.IChangeSource`
 The easiest way to do this is to subclass :class:`buildbot.changes.base.ChangeSource`, implementing the :meth:`describe` method to describe the instance.
 :class:`ChangeSource` is a Twisted service, so you will need to implement the :meth:`startService` and :meth:`stopService` methods to control the means by which your change source receives notifications.
 
-When the class does receive a change, it should call ``self.master.data.updates.addChange(..)`` to submit it to the buildmaster.
+When the class does receive a change, it should call ``self.master.addChange(..)`` to submit it to the buildmaster.
 This method shares the same parameters as ``master.db.changes.addChange``, so consult the API documentation for that function for details on the available arguments.
 
 You will probably also want to set ``compare_attrs`` to the list of object attributes which Buildbot will use to compare one change source to another when reconfiguring.

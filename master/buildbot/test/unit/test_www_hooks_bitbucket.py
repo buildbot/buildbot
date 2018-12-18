@@ -145,7 +145,7 @@ class TestChangeHookConfiguredWithBitbucketChange(unittest.TestCase):
 
     def setUp(self):
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucket': True}, master=fakeMasterForHooks(self))
+            dialects={'bitbucket': True}, master=fakeMasterForHooks())
 
     @inlineCallbacks
     def testGitWithChange(self):
