@@ -27,8 +27,8 @@ from twisted.web import server
 from buildbot.test.fake import fakemaster
 
 
-def fakeMasterForHooks(testcase):
-    master = fakemaster.make_master(wantData=True, testcase=testcase)
+def fakeMasterForHooks():
+    master = fakemaster.make_master()
     master.addedChanges = []
     master.www = Mock()
 
@@ -37,7 +37,7 @@ def fakeMasterForHooks(testcase):
             return defer.fail(AttributeError('isdir/is_dir is not accepted'))
         master.addedChanges.append(kwargs)
         return defer.succeed(Mock())
-    master.data.updates.addChange = addChange
+    master.addChange = addChange
     return master
 
 

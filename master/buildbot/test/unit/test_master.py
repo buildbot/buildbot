@@ -17,6 +17,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import datetime
 import os
 import signal
 
@@ -31,6 +32,7 @@ from zope.interface import implementer
 from buildbot import config
 from buildbot import master
 from buildbot import monkeypatches
+from buildbot.changes.changes import Change
 from buildbot.db import exceptions
 from buildbot.interfaces import IConfigLoader
 from buildbot.test.fake import fakedata
@@ -53,6 +55,117 @@ class DefaultLoader(object):
 
     def loadConfig(self):
         return config.MasterConfig()
+
+
+class OldTriggeringMethods(unittest.TestCase):
+
+    def setUp(self):
+        self.patch(master.BuildMaster, 'create_child_services',
+                   lambda self: None)
+        self.master = master.BuildMaster(basedir=None)
+
+        self.master.data = fakedata.FakeDataConnector(self.master, self)
+        self.master.data.setServiceParent(self.master)
+        self.db = self.master.db = fakedb.FakeDBConnector(self)
+        self.db.setServiceParent(self.master)
+        self.master.db.insertTestData([
+            fakedb.Change(changeid=1, author='this is a test'),
+        ])
+
+        self.fake_Change = mock.Mock(name='fake_Change')
+
+        def fromChdict(master, chdict):
+            if chdict['author'] != 'this is a test':
+                raise AssertionError("did not get expected chdict")
+            return defer.succeed(self.fake_Change)
+        self.patch(Change, 'fromChdict', staticmethod(fromChdict))
+
+    @defer.inlineCallbacks
+    def do_test_addChange_args(self, args=(), kwargs=None, exp_data_kwargs=None):
+        # add default arguments
+        if kwargs is None:
+            kwargs = {}
+        if exp_data_kwargs is None:
+            exp_data_kwargs = {}
+        default_data_kwargs = {
+            'author': None,
+            'branch': None,
+            'category': None,
+            'codebase': None,
+            'comments': None,
+            'files': None,
+            'project': '',
+            'properties': {},
+            'repository': '',
+            'revision': None,
+            'revlink': '',
+            'src': None,
+            'when_timestamp': None,
+        }
+        default_data_kwargs.update(exp_data_kwargs)
+        exp_data_kwargs = default_data_kwargs
+
+        change = yield self.master.addChange(*args, **kwargs)
+
+        self.assertIdentical(change, self.fake_Change)
+        self.assertEqual(self.master.data.updates.changesAdded,
+                         [exp_data_kwargs])
+
+    def test_addChange_args_author(self):
+        # who should come through as author
+        return self.do_test_addChange_args(
+            kwargs=dict(who='me'),
+            exp_data_kwargs=dict(author='me'))
+
+    def test_addChange_args_cyrillic(self):
+        return self.do_test_addChange_args(
+            kwargs=dict(who=b'\xd0\xbf\xd1\x80\xd0\xb8\xd0\xb2\xd0\xb5\xd1\x82',
+                        files=[b'\xd0\xbd\xd0\xb5'],
+                        properties={b'\xd1\x80\xd0\xb0\xd0\xb1\xd0\xbe\xd1\x82\xd0\xb0\xd0\xb5\xd1\x82':
+                                    'a'}),
+            exp_data_kwargs=dict(author=u'привет',
+                                 files=[u'не'],
+                                 properties={u'работает': 'a'}))
+
+    def test_addChange_args_when(self):
+        # when should come through as when_timestamp, as a datetime
+        return self.do_test_addChange_args(
+            kwargs=dict(when=892293875),
+            exp_data_kwargs=dict(when_timestamp=892293875))
+
+    def test_addChange_args_when_timestamp(self):
+        # when_timestamp should come through as an epoch time.
+        return self.do_test_addChange_args(
+            kwargs=dict(when_timestamp=datetime.datetime(1998, 4, 11, 11, 24, 35)),
+            exp_data_kwargs=dict(when_timestamp=892293875))
+
+    @defer.inlineCallbacks
+    def test_addChange_args_new_and_old(self):
+        func = self.do_test_addChange_args
+        kwargs = (dict(who='author',
+                       author='author'),)
+        exp_data_kwargs = dict(author='author')
+        with self.assertRaises(TypeError):
+            yield func(kwargs=kwargs, exp_data_kwargs=exp_data_kwargs)
+
+    def test_addChange_args_properties(self):
+        # properties should not be qualified with a source
+        return self.do_test_addChange_args(
+            kwargs=dict(properties={'a': 'b'}),
+            exp_data_kwargs=dict(properties={u'a': u'b'}))
+
+    def test_addChange_args_properties_tuple(self):
+        # properties should not be qualified with a source
+        return self.do_test_addChange_args(
+            kwargs=dict(properties={'a': ('b', 'Change')}),
+            exp_data_kwargs=dict(properties={'a': ('b', 'Change')}))
+
+    def test_addChange_args_positional(self):
+        # master.addChange can take author, files, comments as positional
+        # arguments
+        return self.do_test_addChange_args(
+            args=('me', ['a'], 'com'),
+            exp_data_kwargs=dict(author='me', files=['a'], comments='com'))
 
 
 class InitTests(unittest.SynchronousTestCase):
