@@ -811,7 +811,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'gitlab': True}, master=fakeMasterForHooks())
+            dialects={'gitlab': True}, master=fakeMasterForHooks(self))
 
     def check_changes_tag_event(self, r, project='', codebase=None):
         self.assertEqual(len(self.changeHook.master.addedChanges), 2)
@@ -1005,7 +1005,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
     def setUp(self):
         self.changeHook = change_hook.ChangeHookResource(
             dialects={'gitlab': {'secret': self._SECRET}},
-            master=fakeMasterForHooks())
+            master=fakeMasterForHooks(self))
 
     @defer.inlineCallbacks
     def test_missing_secret(self):

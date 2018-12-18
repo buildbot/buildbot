@@ -66,7 +66,9 @@ class BaseHookHandler(object):
             properties = {}
 
         revision = firstOrNothing(args.get(b'revision'))
-        when = firstOrNothing(args.get(b'when'))
+        when = firstOrNothing(args.get(b'when_timestamp'))
+        if when is None:
+            when = firstOrNothing(args.get(b'when'))
         if when is not None:
             when = float(when)
         author = firstOrNothing(args.get(b'author'))
@@ -81,7 +83,7 @@ class BaseHookHandler(object):
         codebase = firstOrNothing(args.get(b'codebase'))
 
         chdict = dict(author=author, files=files, comments=comments,
-                      revision=revision, when=when,
+                      revision=revision, when_timestamp=when,
                       branch=branch, category=category, revlink=revlink,
                       properties=properties, repository=repository,
                       project=project, codebase=codebase)

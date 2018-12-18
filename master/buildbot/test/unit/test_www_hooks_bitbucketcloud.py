@@ -648,7 +648,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
 
     def setUp(self):
         self.change_hook = change_hook.ChangeHookResource(
-            dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks())
+            dialects={'bitbucketcloud': {}}, master=fakeMasterForHooks(self))
 
     def _checkPush(self, change):
         self.assertEqual(
