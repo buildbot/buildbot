@@ -10,6 +10,43 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.7.0`` ( ``2018-12-21`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fixed JSON decoding error when sending build properties to www change hooks
+  on Python 3.
+- Buildbot no longer attempts to start builds that it can prove will have
+  unsatisfied locks.
+- Don't run builds that request images or sizes on instances started with
+  different images or sizes.
+
+Features
+--------
+
+- The Buildbot master Docker image at https://hub.docker.com/r/buildbot/ has
+  been upgraded to use Python 3.7 by default.
+- Builder page has been improved with a smoothed build times plot, and a new
+  success rate plot.
+- Allow the Buildbot master initial start timeout to be configurable.
+- An API to check whether an already started instance of a latent worker is
+  compatible with what's required by a build that is about to be started.
+- Add support for v2 of the Vault key-value secret engine in the
+  `SecretInVault` secret provider.
+
+Deprecations and Removals
+-------------------------
+
+- Build.canStartWithWorkerForBuilder static method has been made private and
+  renamed to _canAcquireLocks.
+- The Buildbot master Docker image based on Python 2.7 has been removed in
+  favor of a Python 3.7 based image.
+- Builder.canStartWithWorkerForBuilder method has been removed. Use
+  Builder.canStartBuild.
+
+
 Buildbot ``1.6.0`` ( ``2018-11-16`` )
 =====================================
 
