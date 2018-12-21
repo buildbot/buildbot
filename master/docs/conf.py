@@ -98,9 +98,17 @@ release = version
 blockdiag_html_image_format = 'svg'
 blocdiag_transparency = True
 
+# add a loud note about python 2
+rst_prolog = textwrap.dedent("""\
+.. caution:: Buildbot is deprecating Python 2.7.
+    This is one of the latest release supporting it.
+    `More info <https://github.com/buildbot/buildbot/issues/4439>`_.
+
+""")
+
 # add a loud note for anyone looking at the latest docs
 if release == 'latest':
-    rst_prolog = textwrap.dedent("""\
+    rst_prolog += textwrap.dedent("""\
     .. caution:: This page documents the latest, unreleased version of
         Buildbot.  For documentation for released versions, see
         http://docs.buildbot.net/current/.

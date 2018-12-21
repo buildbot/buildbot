@@ -6,7 +6,7 @@ DOCKERBUILD := docker build --build-arg http_proxy=$$http_proxy --build-arg http
 
 VENV_NAME:=.venv$(VENV_PY_VERSION)
 PIP?=$(VENV_NAME)/bin/pip
-VENV_PY_VERSION?=python
+VENV_PY_VERSION?=python3
 
 WWW_PKGS := www/base www/console_view www/grid_view www/waterfall_view www/wsgi_dashboards www/badges
 WWW_EX_PKGS := www/nestedexample www/codeparameter
