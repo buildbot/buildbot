@@ -1,0 +1,1 @@
+The deprecated ``BuildMaster.addChange`` method has been removed. Use ``BuildMaster.data.updates.addChange`` instead.
