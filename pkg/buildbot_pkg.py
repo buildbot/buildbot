@@ -205,10 +205,13 @@ class BuildJsCommand(distutils.cmd.Command):
             yarn_version = check_output("yarn --version")
             npm_version = check_output("npm -v")
             print("yarn:", yarn_version, "npm: ", npm_version)
-            npm_bin = check_output("npm bin").strip()
-            assert npm_version != "", "need nodejs and npm installed in current PATH"
-            assert LooseVersion(npm_version) >= LooseVersion(
-                "1.4"), "npm < 1.4 (%s)" % (npm_version)
+            if yarn_version != "":
+                npm_bin = check_output("yarn bin").strip()
+            else:
+                assert npm_version != "", "need nodejs and one of npm or yarn installed in current PATH"
+                assert LooseVersion(npm_version) >= LooseVersion(
+                    "1.4"), "npm < 1.4 (%s)" % (npm_version)
+                npm_bin = check_output("npm bin").strip()
 
             commands = []
 
