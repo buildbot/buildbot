@@ -22,11 +22,6 @@ python:
   - "2.7"
 
 env:
-  global:
-    # Current moto (1.3.7) requires dummy credentials to work
-    # https://github.com/spulec/moto/issues/1924
-    - AWS_SECRET_ACCESS_KEY=foobar_secret
-    - AWS_ACCESS_KEY_ID=foobar_key
   matrix:
     # we now use travis only for real database testing
     # travis containers do have much more optimized db installations
