@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import calendar
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -81,15 +79,15 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
 
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         # Gitorious doesn't send changed files
         self.assertEqual(change['files'], [])
         self.assertEqual(change["repository"],
                          "http://gitorious.org/q/mainline")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1326218547
         )
         self.assertEqual(change["author"], "jason <jason@nospam.org>")
@@ -110,7 +108,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         yield self.request.test_render(self.changeHook)
 
         expected = b"Error processing changes."
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(500, expected)
         self.assertEqual(len(self.flushLoggedErrors()), 1)

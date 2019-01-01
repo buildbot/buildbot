@@ -78,8 +78,8 @@ class BaseHookHandler(object):
         branch = firstOrNothing(args.get(b'branch'))
         category = firstOrNothing(args.get(b'category'))
         revlink = firstOrNothing(args.get(b'revlink'))
-        repository = firstOrNothing(args.get(b'repository'))
-        project = firstOrNothing(args.get(b'project'))
+        repository = firstOrNothing(args.get(b'repository')) or u''
+        project = firstOrNothing(args.get(b'project')) or u''
         codebase = firstOrNothing(args.get(b'codebase'))
 
         chdict = dict(author=author, files=files, comments=comments,
