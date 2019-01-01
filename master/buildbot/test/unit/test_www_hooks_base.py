@@ -48,8 +48,8 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
     def _check_base_with_change(self, payload):
         self.request = _prepare_request(payload)
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         def _first_or_nothing(val):
             if isinstance(val, type([])):
@@ -73,12 +73,16 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
             _first_or_nothing(payload.get(b'author', payload.get(b'who'))))
 
         for field in ('revision', 'comments', 'branch', 'category',
-                      'revlink', 'repository', 'project'):
+                      'revlink'):
             self.assertEqual(
                 change[field], _first_or_nothing(payload.get(field.encode())))
 
+        for field in ('repository', 'project'):
+            self.assertEqual(
+                change[field], _first_or_nothing(payload.get(field.encode())) or u'')
+
     def test_base_with_no_change(self):
-        self._check_base_with_change({})
+        return self._check_base_with_change({})
 
     def test_base_with_changes(self):
         self._check_base_with_change({
@@ -102,8 +106,8 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
                 args = request.args
                 chdict = dict(
                               revision=args.get(b'revision'),
-                              repository=args.get(b'_repository'),
-                              project=args.get(b'project'),
+                              repository=args.get(b'_repository') or u'',
+                              project=args.get(b'project') or u'',
                               codebase=args.get(b'codebase'))
                 return ([chdict], None)
         self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
@@ -112,9 +116,9 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
     def _check_base_with_change(self, payload):
         self.request = _prepare_request(payload)
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
-        self.assertEqual(change['repository'], payload.get(b'_repository'))
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
+        self.assertEqual(change['repository'], payload.get(b'_repository') or u'')
 
     def test_base_with_no_change(self):
-        self._check_base_with_change({b'repository': b'foo'})
+        return self._check_base_with_change({b'repository': b'foo'})

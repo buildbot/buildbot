@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import calendar
-
 import mock
 
 from twisted.internet import defer
@@ -814,19 +812,19 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
             dialects={'gitlab': True}, master=fakeMasterForHooks(self))
 
     def check_changes_tag_event(self, r, project='', codebase=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1323692851
         )
         self.assertEqual(change["branch"], "v1.0.0")
 
     def check_changes_mr_event(self, r, project='awesome_project', codebase=None, timestamp=1526309644, source_repo=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 1)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"],
                          "https://gitlab.example.com/mmusterman/awesome_project.git")
@@ -837,7 +835,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change['properties']["target_repository"],
                          "https://gitlab.example.com/mmusterman/awesome_project.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             timestamp
         )
         self.assertEqual(change["branch"], "master")
@@ -847,12 +845,12 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change.get("project"), project)
 
     def check_changes_push_event(self, r, project='diaspora', codebase=None):
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
 
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1323692851
         )
         self.assertEqual(
@@ -865,10 +863,10 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.assertEqual(change[
             "revlink"], "http://localhost/diaspora/commits/b6568db1bc1dcd7f8b4d5a946b0b91f9dacd7327")
 
-        change = self.changeHook.master.addedChanges[1]
+        change = self.changeHook.master.data.updates.changesAdded[1]
         self.assertEqual(change["repository"], "git@localhost:diaspora.git")
         self.assertEqual(
-            calendar.timegm(change["when_timestamp"].utctimetuple()),
+            change["when_timestamp"],
             1325626589
         )
         self.assertEqual(
@@ -935,7 +933,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.received_headers[_HEADER_EVENT] = b"Push Hook"
         yield self.request.test_render(self.changeHook)
 
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
         self.assertIn(b"Error loading JSON:", self.request.written)
         self.request.setResponseCode.assert_called_with(400, mock.ANY)
 
@@ -946,8 +944,8 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
-        change = self.changeHook.master.addedChanges[0]
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["properties"]["event"], "Push Hook")
         self.assertEqual(change["category"], "Push Hook")
 
@@ -956,35 +954,35 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = FakeRequestMR(content=gitJsonPayloadMR_open)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase")
-        change = self.changeHook.master.addedChanges[0]
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithMR_editdesc(self):
         self.request = FakeRequestMR(content=gitJsonPayloadMR_editdesc)
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def testGitWithChange_WithMR_addcommit(self):
         self.request = FakeRequestMR(content=gitJsonPayloadMR_addcommit)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
-        change = self.changeHook.master.addedChanges[0]
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
     def testGitWithChange_WithMR_close(self):
         self.request = FakeRequestMR(content=gitJsonPayloadMR_close)
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def testGitWithChange_WithMR_reopen(self):
         self.request = FakeRequestMR(content=gitJsonPayloadMR_reopen)
         res = yield self.request.test_render(self.changeHook)
         self.check_changes_mr_event(res, codebase="MyCodebase", timestamp=1526395871)
-        change = self.changeHook.master.addedChanges[0]
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
 
     @defer.inlineCallbacks
@@ -994,7 +992,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.check_changes_mr_event(
                 res, codebase="MyCodebase", timestamp=1526736926,
                 source_repo="https://gitlab.example.com/build/awesome_project.git")
-        change = self.changeHook.master.addedChanges[0]
+        change = self.changeHook.master.data.updates.changesAdded[0]
         self.assertEqual(change["category"], "merge_request")
 
 
@@ -1017,7 +1015,7 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
         yield self.request.test_render(self.changeHook)
         expected = b'Invalid secret'
         self.assertEqual(self.request.written, expected)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 0)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
 
     @defer.inlineCallbacks
     def test_valid_secret(self):
@@ -1027,4 +1025,4 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
         self.request.uri = b"/change_hook/gitlab"
         self.request.method = b"POST"
         yield self.request.test_render(self.changeHook)
-        self.assertEqual(len(self.changeHook.master.addedChanges), 2)
+        self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 2)

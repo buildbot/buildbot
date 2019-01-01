@@ -20,8 +20,10 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
+from future.utils import iteritems
 
 import re
+from datetime import datetime
 
 from twisted.internet import defer
 from twisted.python import log
@@ -29,6 +31,8 @@ from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
 from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
+from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
 from buildbot.www import resource
 
@@ -171,5 +175,19 @@ class ChangeHookResource(resource.Resource):
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):
         for chdict in changes:
-            chid = yield self.master.data.updates.addChange(src=src, **chdict)
+            when_timestamp = chdict.get('when_timestamp')
+            if isinstance(when_timestamp, datetime):
+                chdict['when_timestamp'] = datetime2epoch(when_timestamp)
+            # unicodify stuff
+            for k in ('comments', 'author', 'revision', 'branch', 'category',
+                    'revlink', 'repository', 'codebase', 'project'):
+                if k in chdict:
+                    chdict[k] = bytes2unicode(chdict[k])
+            if chdict.get('files'):
+                chdict['files'] = [bytes2unicode(f)
+                                for f in chdict['files']]
+            if chdict.get('properties'):
+                chdict['properties'] = dict((bytes2unicode(k), v)
+                                            for k, v in iteritems(chdict['properties']))
+            chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
             log.msg("injected change %s" % chid)
