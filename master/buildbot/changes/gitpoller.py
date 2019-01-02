@@ -197,13 +197,16 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             log.msg(e.args[0])
             return
 
-        branches = self.branches
+        branches = self.branches if self.branches else []
+        remote_refs = yield self._getBranches()
         if branches is True or callable(branches):
-            branches = yield self._getBranches()
             if callable(self.branches):
-                branches = [b for b in branches if self.branches(b)]
+                branches = [b for b in remote_refs if self.branches(b)]
             else:
-                branches = [b for b in branches if self._headsFilter(b)]
+                branches = [b for b in remote_refs if self._headsFilter(b)]
+        elif branches and remote_refs:
+            remote_branches = [self._removeHeads(b) for b in remote_refs]
+            branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
             u'+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))

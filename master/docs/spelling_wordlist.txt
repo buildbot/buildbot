@@ -331,6 +331,7 @@ github
 GitHub
 GitLab
 Gitorious
+Gitpoller
 glMenuProvider
 google
 gpg
