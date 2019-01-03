@@ -50,7 +50,7 @@ env:
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
-  - TWISTED=16.1.0 SQLALCHEMY=0.8.0 TESTS=trial
+  - TWISTED=16.1.0 SQLALCHEMY=1.1.0 TESTS=trial
   - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
