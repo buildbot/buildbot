@@ -160,7 +160,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
                               )
         if patchid:
             rows.append(
-                fakedb.Patch(id=patchid, patch_base64='aGVsbG8sIHdvcmxk',
+                fakedb.Patch(id=patchid, patch_base64=u'aGVsbG8sIHdvcmxk',
                  patch_author='bar', patch_comment='foo', subdir='/foo',
                  patchlevel=3))
 

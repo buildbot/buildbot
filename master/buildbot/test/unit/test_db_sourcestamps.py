@@ -181,7 +181,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
         yield self.insertTestData([
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=234, patchid=99),
@@ -206,7 +206,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamps(self):
         yield self.insertTestData([
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=234, revision='r', project='p',

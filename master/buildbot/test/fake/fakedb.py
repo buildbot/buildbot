@@ -323,7 +323,7 @@ class Patch(Row):
     defaults = dict(
         id=None,
         patchlevel=0,
-        patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
+        patch_base64=u'aGVsbG8sIHdvcmxk',  # 'hello, world',
         patch_author=None,
         patch_comment=None,
         subdir=None,

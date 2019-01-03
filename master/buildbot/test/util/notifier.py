@@ -47,7 +47,7 @@ class NotifierTestMixin(object):
                        num_lines=7),
             fakedb.LogChunk(logid=60, first_line=0, last_line=1, compressed=0,
                             content=u'Unicode log with non-ascii (\u00E5\u00E4\u00F6).'),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
                          patch_author='him@foo', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
         ])
