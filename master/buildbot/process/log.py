@@ -42,6 +42,8 @@ class Log(object):
         self.finishWaiters = []
         self.lock = defer.DeferredLock()
         self.decoder = decoder
+        self.numChars = 0
+        self.truncated = False
 
     @staticmethod
     def _decoderFromString(cfg):
@@ -81,7 +83,12 @@ class Log(object):
         # formatted for the log type, and newline-terminated
         assert lines[-1] == '\n'
         assert not self.finished
-        yield self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
+        if not self.truncated:
+            self.numChars = self.numChars + len(lines)
+            if self.master.config.logMaxSize is not None and self.numChars > self.master.config.logMaxSize:
+                lines = ' \n\n#### LOG TOO LARGE - TRUNCATED #### - Configured maxLogSize is %d\n' % self.master.config.logMaxSize
+                self.truncated = True
+            yield self.lock.run(lambda: self.master.data.updates.appendLog(self.logid, lines))
 
     # completion
 

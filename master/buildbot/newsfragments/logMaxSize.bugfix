@@ -1,0 +1,1 @@
+bugfix global parameter `logMaxSize` did no longer work
