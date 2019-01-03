@@ -28,6 +28,7 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.worker import kubernetes
+from buildbot.util import kubeclientservice
 
 # This integration test creates a master and kubernetes worker environment,
 # It requires a kubernetes cluster up and running. It tries to get the config
@@ -49,7 +50,7 @@ NUM_CONCURRENT = int(os.environ.get("KUBE_TEST_NUM_CONCURRENT_BUILD", 1))
 
 
 class KubernetesMaster(RunMasterBase):
-
+    timeout=200
     def setUp(self):
         if "TEST_KUBERNETES" not in os.environ:
             raise SkipTest(
@@ -120,18 +121,13 @@ def masterConfig(num_concurrent, extra_steps=None):
     masterFQDN = os.environ.get('masterFQDN')
     c['workers'] = [
         kubernetes.KubeLatentWorker(
-            'kubernetes' + str(i), 'passwd',
-            'buildbot/buildbot-worker', None,
+            'kubernetes' + str(i),
+            'buildbot/buildbot-worker', kube_config=kubeclientservice.KubeCtlProxyConfigLoader(),
             masterFQDN=masterFQDN)
         for i in range(num_concurrent)
     ]
     # un comment for debugging what happens if things looks locked.
-    # c['www'] = {'port': 8080}
-    # if the masterFQDN is forced (proxy case), then we use 9989 default port
-    # else, we try to find a free port
-    if masterFQDN is not None:
-        c['protocols'] = {"pb": {"port": "tcp:9989"}}
-    else:
-        c['protocols'] = {"pb": {"port": "tcp:0"}}
+    c['www'] = {'port': 8080}
+    c['protocols'] = {"pb": {"port": "tcp:9989"}}
 
     return c

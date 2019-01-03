@@ -23,7 +23,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
 from buildbot.util.eventual import _setReactor
 from buildbot.worker import kubernetes
-
+from buildbot.util.kubeclientservice import KubeHardcodedConfig
 
 class FakeBuild(object):
     def render(self, r):
@@ -56,41 +56,27 @@ def mock_delete(*args):
 
 class KubeClientService(fakehttpclientservice.HTTPClientService):
 
-    def __init__(self, kubeconfig=None, *args, **kwargs):
+    def __init__(self, kube_config=None, *args, **kwargs):
+        c = kube_config.getConfig()
         fakehttpclientservice.HTTPClientService.__init__(
-            self, 'tcp://kubernetes.default', *args, **kwargs)
-        self.namespace = 'default'
-
-    @classmethod
-    def getFakeService(cls, master, case, *args, **kwargs):
-        ret = cls.getService(master, *args, **kwargs)
-
-        def assertNotCalled(self, *_args, **_kwargs):
-            case.fail(("KubeClientService called with *{!r}, **{!r}"
-                       "while should be called *{!r} **{!r}").format(
-                _args, _kwargs, args, kwargs))
-        case.patch(kubernetes.KubeClientService, "__init__", assertNotCalled)
-
-        @ret.addCallback
-        def assertNoOutstanding(fake):
-            fake.case = case
-            case.addCleanup(fake.assertNoOutstanding)
-            return fake
-        return ret
+            self, c['master_url'], *args, **kwargs)
+        self.namespace = c['namespace']
+        self.addService(kube_config)
 
 
 class TestKubernetesWorker(unittest.TestCase):
     worker = None
 
     def setupWorker(self, *args, **kwargs):
-        self.worker = worker = kubernetes.KubeLatentWorker(*args, **kwargs)
+        config = KubeHardcodedConfig(master_url="https://kube.example.com")
+        self.worker = worker = kubernetes.KubeLatentWorker(*args, kube_config=config, **kwargs)
         master = fakemaster.make_master(testcase=self, wantData=True)
         self._kube = self.successResultOf(
             KubeClientService.getFakeService(
-                master, self))
+                master, self, kube_config=config))
         worker.setServiceParent(master)
         self.successResultOf(master.startService())
-
+        self.assertTrue(config.running)
         def cleanup():
             self._kube.delete = mock_delete
 
@@ -152,14 +138,7 @@ class TestKubernetesWorker(unittest.TestCase):
             'worker', 'pass', wrong_param='wrong_param')
 
     def test_service_arg(self):
-        self.worker = worker = kubernetes.KubeLatentWorker(
-            'worker', 'pass', kubeconfig='kubeconfig')
-        master = fakemaster.make_master(testcase=self, wantData=True)
-        self._kube = self.successResultOf(
-            KubeClientService.getFakeService(
-                master, self, kubeconfig='kubeconfig'))
-        worker.setServiceParent(master)
-        self.successResultOf(master.startService())
+        return self.setupWorker('worker')
 
     def test_start_service(self):
         self.setupWorker('worker', 'pass')
