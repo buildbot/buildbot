@@ -155,5 +155,5 @@ warnings.filterwarnings('ignore', ".*Using or importing the ABCs from 'collectio
 warnings.filterwarnings('ignore', r".*Use 'list\(elem\)' or iteration over elem instead.*", DeprecationWarning)
 
 # ignore ResourceWarnings for unclosed sockets for the pg8000 driver on Python 3+
-if (sys.version_info[0] >= 3 and os.environ.get("BUILDBOT_TEST_DB_URL", None) and "pg8000" in os.environ["BUILDBOT_TEST_DB_URL"]):
+if (sys.version_info[0] >= 3 and "pg8000" in os.getenv("BUILDBOT_TEST_DB_URL", ""):
     warnings.filterwarnings('ignore', ".*unclosed .*socket", ResourceWarning)
