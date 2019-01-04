@@ -243,8 +243,7 @@ class BuilderStatus(styles.Versioned):
                     return
 
     def eventGenerator(self, branches=None, categories=None, committers=None, projects=None, minTime=0):
-        if False:  # pylint: disable=using-constant-test
-            yield
+        """ Not implemented """
 
     def subscribe(self, receiver):
         # will get builderChangedState, buildStarted, buildFinished,
