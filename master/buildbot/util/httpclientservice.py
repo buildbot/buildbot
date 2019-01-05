@@ -98,6 +98,7 @@ class HTTPClientService(service.SharedService):
         self._base_url = base_url
         self._auth = auth
         self._headers = headers
+        self._pool = None
         self._session = None
         self.verify = verify
         self.debug = debug
@@ -139,7 +140,8 @@ class HTTPClientService(service.SharedService):
     def stopService(self):
         if self._session:
             yield self._session.close()
-        yield self._pool.closeCachedConnections()
+        if self._pool:
+            yield self._pool.closeCachedConnections()
         yield service.SharedService.stopService(self)
 
     def _prepareRequest(self, ep, kwargs):

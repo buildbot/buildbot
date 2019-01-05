@@ -664,6 +664,7 @@ instantiations
 insubstantiate
 insubstantiated
 insubstantiation
+insubstantiating
 integrations
 internet
 interoperability
@@ -736,6 +737,7 @@ keyring
 klass
 knielsen
 kube
+kubectl
 kubernetes
 kv
 kvm
@@ -756,6 +758,7 @@ ldapuserinfo
 lefkowitz
 legator
 len
+lifecycle
 libvirt
 lintian
 linux

@@ -16,19 +16,15 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from future.utils import PY2
-from future.utils import string_types
 
-import os
 import socket
 
 from twisted.internet import defer
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
-from buildbot.util.kubeclientservice import KubeClientService
+from buildbot.util import kubeclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
-
 
 log = Logger()
 
@@ -37,36 +33,26 @@ class KubeLatentWorker(DockerBaseWorker):
 
     instance = None
 
-    def default_job_spec(self):
+    def default_pod_spec(self):
         return {
-            "apiVersion": "batch/v1",
-            "kind": "Job",
+            "apiVersion": "v1",
+            "kind": "Pod",
             "metadata": {
                 "name": self.getContainerName()
             },
             "spec": {
-                "template": {
-                    "metadata": {
-                        "name": self.getContainerName()
-                    },
-                    "spec": {
-                        "containers": [{
-                            "name": self.getContainerName(),
-                            "image": self.image,
-                            "env": [
-                                {"name": "BUILDMASTER",
-                                 "value": self.masterFQDN},
-                                {"name": "BUILDMASTER_PORT",
-                                 "value": "9989"},
-                                {"name": "WORKERNAME",
-                                 "value": self.name},
-                                {"name": "WORKERPASS",
-                                 "value": self.password}
-                            ]
-                        }],
-                        "restartPolicy": "Never"
-                    }
-                }
+                "containers": [{
+                    "name":
+                    self.getContainerName(),
+                    "image":
+                    self.image,
+                    "env": [{
+                        "name": k,
+                        "value": v
+                    } for k, v in self.createEnvironment().items()]
+                }],
+                "restartPolicy":
+                "Never"
             }
         }
 
@@ -80,7 +66,8 @@ class KubeLatentWorker(DockerBaseWorker):
                     **kwargs):
 
         DockerBaseWorker.checkConfig(self, name, None, **kwargs)
-        KubeClientService.checkAvailable(self.__class__.__name__)
+        kubeclientservice.KubeClientService.checkAvailable(
+            self.__class__.__name__)
 
     @defer.inlineCallbacks
     def reconfigService(self,
@@ -102,50 +89,35 @@ class KubeLatentWorker(DockerBaseWorker):
             masterFQDN = masterFQDN()
         yield DockerBaseWorker.reconfigService(
             self, name, image=image, masterFQDN=masterFQDN, **kwargs)
-        self._kube = yield KubeClientService.getService(
+        self._kube = yield kubeclientservice.KubeClientService.getService(
             self.master, kube_config=kube_config)
+        self.namespace = namespace or self._kube.namespace
         self.kube_extra_spec = kube_extra_spec or {}
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
-        job_spec = self.merge_spec(
-             self.default_job_spec(),
-             self.kube_extra_spec
-        )
-        url = '/apis/batch/v1/namespaces/{namespace}/jobs'.format(
-            namespace=self._kube.namespace
-        )
-        res = yield self._kube.post(url, json=job_spec)
-        if res.code != 201:
-            raise LatentWorkerFailedToSubstantiate(
-                "Unable to create Kubernetes job %s" % res.code
-            )
-        res_json = yield res.json()
-        self.instance = res_json
+        pod_spec = self.merge_spec(self.default_pod_spec(),
+                                   self.kube_extra_spec)
+        try:
+            yield self._kube.createPod(self.namespace, pod_spec)
+        except kubeclientservice.KubeError as e:
+            raise LatentWorkerFailedToSubstantiate(str(e))
         defer.returnValue(True)
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):
-        if self.instance is None:
-            # be gentle. Something may just be trying to alert us that an
-            # instance never attached, and it's because, somehow, we never
-            # started.
-            defer.returnValue(True)
-        url = "/apis/batch/v1/namespaces/{namespace}/jobs/{job}".format(
-            namespace=self._kube.namespace,
-            job=self.instance['metadata']['name']
-        )
-        res = yield self._kube.delete(url)
-        self.instance = None
-        if res.code != 204 and reportFailure:
-            res_json = yield res.json()
-            log.warn(
-                "Unable to delete kubenertes job: {_id} {code}: {details}",
-                _id=self.getContainerName(),
-                code=res.code,
-                details=res_json
-            )
+        try:
+            yield self._kube.deletePod(self.namespace, self.getContainerName())
+        except kubeclientservice.KubeError as e:
+            if reportFailure and e.reason != 'NotFound':
+                raise
+        if fast:
+            return
+        yield self._kube.waitForPodDeletion(
+            self.namespace,
+            self.getContainerName(),
+            timeout=self.missing_timeout)
 
     @classmethod
     def merge_spec(cls, spec_obj, patch):
@@ -161,8 +133,7 @@ class KubeLatentWorker(DockerBaseWorker):
                         'Cannot merge kubernetes spec with different type. '
                         '(For example a list with a dict). '
                         'This happens between\n'
-                        '"{0}"\nand\n"{1}"'.format(value, patch_value)
-                    )
+                        '"{0}"\nand\n"{1}"'.format(value, patch_value))
                 if isinstance(value, dict):
                     patch_value = cls.merge_spec(value, patch_value)
                 if isinstance(value, list):

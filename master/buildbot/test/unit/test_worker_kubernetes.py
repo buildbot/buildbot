@@ -19,11 +19,12 @@ from __future__ import print_function
 from twisted.internet import defer
 from twisted.trial import unittest
 
-from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake import fakemaster
-from buildbot.util.eventual import _setReactor
-from buildbot.worker import kubernetes
+from buildbot.test.fake.kube import KubeClientService
+from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
+from buildbot.worker import kubernetes
+
 
 class FakeBuild(object):
     def render(self, r):
@@ -54,29 +55,20 @@ def mock_delete(*args):
     return defer.succeed(FakeResult())
 
 
-class KubeClientService(fakehttpclientservice.HTTPClientService):
-
-    def __init__(self, kube_config=None, *args, **kwargs):
-        c = kube_config.getConfig()
-        fakehttpclientservice.HTTPClientService.__init__(
-            self, c['master_url'], *args, **kwargs)
-        self.namespace = c['namespace']
-        self.addService(kube_config)
-
-
 class TestKubernetesWorker(unittest.TestCase):
     worker = None
 
     def setupWorker(self, *args, **kwargs):
         config = KubeHardcodedConfig(master_url="https://kube.example.com")
-        self.worker = worker = kubernetes.KubeLatentWorker(*args, kube_config=config, **kwargs)
+        self.worker = worker = kubernetes.KubeLatentWorker(
+            *args, kube_config=config, **kwargs)
         master = fakemaster.make_master(testcase=self, wantData=True)
         self._kube = self.successResultOf(
-            KubeClientService.getFakeService(
-                master, self, kube_config=config))
+            KubeClientService.getFakeService(master, self, kube_config=config))
         worker.setServiceParent(master)
         self.successResultOf(master.startService())
         self.assertTrue(config.running)
+
         def cleanup():
             self._kube.delete = mock_delete
 
@@ -84,172 +76,60 @@ class TestKubernetesWorker(unittest.TestCase):
         self.addCleanup(cleanup)
         return worker
 
-    def kube_job_post(self):
-        return {
-            'apiVersion': 'batch/v1',
-            'kind': 'Job',
-            'metadata': {
-                'name': self.worker.getContainerName()
-            },
-            'spec': {
-                'template': {
-                    'metadata': {
-                        'name': self.worker.getContainerName()
-                    },
-                    'spec': {
-                        'containers': [{
-                            'name': self.worker.getContainerName(),
-                            'image': self.worker.image,
-                            'env': [
-                                {'name': 'BUILDMASTER',
-                                 'value': self.worker.masterFQDN},
-                                {'name': 'BUILDMASTER_PORT',
-                                 'value': '9989'},
-                                {'name': 'WORKERNAME',
-                                 'value': self.worker.name},
-                                {'name': 'WORKERPASS',
-                                 'value': self.worker.password}
-                            ]
-                        }],
-                        'restartPolicy': 'Never'
-                    }
-                }
-            }
-        }
-
-    def tearDown(self):
-        if self.worker is not None:
-            class FakeResult(object):
-                code = 204
-
-            def delete():
-                return defer.succeed(FakeResult())
-
-            self._kube.delete = delete
-        _setReactor(None)
-
     def test_instantiate(self):
-        worker = kubernetes.KubeLatentWorker('worker', 'pass')
+        worker = kubernetes.KubeLatentWorker('worker')
         # class instantiation configures nothing
         self.assertEqual(getattr(worker, '_kube', None), None)
 
     def test_wrong_arg(self):
-        self.assertRaises(TypeError, self.setupWorker,
-            'worker', 'pass', wrong_param='wrong_param')
+        self.assertRaises(
+            TypeError, self.setupWorker, 'worker', wrong_param='wrong_param')
 
     def test_service_arg(self):
         return self.setupWorker('worker')
 
     def test_start_service(self):
-        self.setupWorker('worker', 'pass')
+        self.setupWorker('worker')
         # http is lazily created on worker substantiation
         self.assertNotEqual(self.worker._kube, None)
 
     def test_start_worker(self):
-        worker = self.setupWorker('worker', 'pass')
-        self._kube.expect(
-            method='post',
-            ep="/apis/batch/v1/namespaces/default/jobs",
-            json=self.kube_job_post(),
-            code=201,
-            content_json={'metadata': {'name': worker.name}}
-        )
+        worker = self.setupWorker('worker')
         d = worker.substantiate(None, FakeBuild())
         worker.attached(FakeBot())
         self.successResultOf(d)
-
-    def test_start_worker_with_instance_set(self):
-        worker = self.setupWorker('worker', 'pass')
-        worker.instance = {'metadata': {'name': 'oldname'}}
-        self._kube.expect(
-            method='delete',
-            ep="/apis/batch/v1/namespaces/default/jobs/oldname",
-            code=204,
-        )
-        self._kube.expect(
-            method='post',
-            ep="/apis/batch/v1/namespaces/default/jobs",
-            json=self.kube_job_post(),
-            code=201,
-            content_json={'metadata': {'name': worker.name}}
-        )
-        d = worker.substantiate(None, FakeBuild())
-        worker.attached(FakeBot())
-        self.successResultOf(d)
-
-    def test_start_worker_but_no_connection(self):
-        worker = self.setupWorker('worker', 'pass')
-        self._kube.expect(
-            method='post',
-            ep="/apis/batch/v1/namespaces/default/jobs",
-            json=self.kube_job_post(),
-            code=201,
-            content_json={'metadata': {'name': worker.name}}
-        )
-        worker.substantiate(None, FakeBuild())
-        self.assertEqual(worker.instance, {'metadata': {'name': worker.name}})
+        self.assertEqual(len(worker._kube.pods), 1)
+        pod_name = list(worker._kube.pods.keys())[0]
+        self.assertRegex(pod_name, r'default/buildbot-worker-[0-9a-f]+')
+        pod = worker._kube.pods[pod_name]
+        self.assertEqual(
+            sorted(pod['spec'].keys()), ['containers', 'restartPolicy'])
+        self.assertEqual(
+            sorted(pod['spec']['containers'][0].keys()),
+            ['env', 'image', 'name'])
+        self.assertEqual(pod['spec']['containers'][0]['image'],
+                         'buildbot/buildbot-worker')
+        self.assertEqual(pod['spec']['restartPolicy'], 'Never')
 
     def test_start_worker_but_error(self):
-        worker = self.setupWorker('worker', 'pass')
-        self._kube.expect(
-            method='post',
-            ep="/apis/batch/v1/namespaces/default/jobs",
-            json=self.kube_job_post(),
-            code=500,
-            content_json={'metadata': {'name': worker.name}}
-        )
+        worker = self.setupWorker('worker')
+
+        def createPod(self, namespace, spec):
+            raise KubeError({'message': "yeah, but no"})
+
+        self.patch(self._kube, 'createPod', createPod)
         d = worker.substantiate(None, FakeBuild())
         self.failureResultOf(d)
         self.assertEqual(worker.instance, None)
-        self.successResultOf(d)
 
     def test_start_worker_with_params(self):
-        worker = self.setupWorker('worker', 'pass', kube_extra_spec={
-            'spec': {
-                'template': {
-                    'spec': {
-                        'restartPolicy': 'Always'
-                    }
-                }
-            }
-        })
-        self._kube.expect(
-            method='post',
-            ep="/apis/batch/v1/namespaces/default/jobs",
-            json={
-                'apiVersion': 'batch/v1',
-                'kind': 'Job',
-                'metadata': {
-                    'name': self.worker.getContainerName()
-                },
-                'spec': {
-                    'template': {
-                        'metadata': {
-                            'name': self.worker.getContainerName()
-                        },
-                        'spec': {
-                            'containers': [{
-                                'name': self.worker.getContainerName(),
-                                'image': self.worker.image,
-                                'env': [
-                                    {'name': 'BUILDMASTER',
-                                     'value': self.worker.masterFQDN},
-                                    {'name': 'BUILDMASTER_PORT',
-                                     'value': '9989'},
-                                    {'name': 'WORKERNAME',
-                                     'value': self.worker.name},
-                                    {'name': 'WORKERPASS',
-                                     'value': self.worker.password},
-                                ]
-                            }],
-                            'restartPolicy': 'Always'
-                        }
-                    }
-                }
-            },
-            code=201,
-            content_json={'metadata': {'name': worker.name}}
-        )
+        worker = self.setupWorker(
+            'worker', kube_extra_spec={'spec': {
+                'restartPolicy': 'Always'
+            }})
         d = worker.substantiate(None, FakeBuild())
         worker.attached(FakeBot())
         self.successResultOf(d)
+        pod_name = list(worker._kube.pods.keys())[0]
+        pod = worker._kube.pods[pod_name]
+        self.assertEqual(pod['spec']['restartPolicy'], 'Always')
