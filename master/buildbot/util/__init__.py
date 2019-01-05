@@ -298,8 +298,6 @@ class NotABranch:
 
     def __bool__(self):
         return False
-    if not PY3:
-        __nonzero__ = __bool__
 
 
 NotABranch = NotABranch()

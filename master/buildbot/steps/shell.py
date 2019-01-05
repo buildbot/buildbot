@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import PY3
 from future.utils import iteritems
 from future.utils import string_types
 
@@ -134,13 +133,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        if PY3:
-            signature = inspect.signature(
-                remotecommand.RemoteShellCommand.__init__)
-            valid_rsc_args = signature.parameters.keys()
-        else:
-            valid_rsc_args = inspect.getargspec(
-                remotecommand.RemoteShellCommand.__init__)[0]
+        signature = inspect.signature(
+            remotecommand.RemoteShellCommand.__init__)
+        valid_rsc_args = signature.parameters.keys()
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
