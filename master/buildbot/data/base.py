@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 from future.moves.collections import UserList
 
 import copy
@@ -53,8 +52,7 @@ class ResourceType(object):
 
     def getEndpoints(self):
         endpoints = self.endpoints[:]
-        for i in range(len(endpoints)):
-            ep = endpoints[i]
+        for i, ep in enumerate(endpoints):
             if not issubclass(ep, Endpoint):
                 raise TypeError("Not an Endpoint subclass")
             endpoints[i] = ep(self, self.master)

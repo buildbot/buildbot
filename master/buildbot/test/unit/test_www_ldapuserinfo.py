@@ -16,7 +16,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 
 import sys
 import types
@@ -83,7 +82,7 @@ class CommonTestCase(unittest.TestCase):
     def assertSearchCalledWith(self, exp):
         got = self.userInfoProvider.search.call_args_list
         self.assertEqual(len(exp), len(got))
-        for i in range(len(exp)):
+        for i, val in enumerate(exp):
             self.assertEqual(exp[i][0][0], got[i][0][1])
             self.assertEqual(exp[i][0][1], got[i][0][2])
             self.assertEqual(exp[i][0][2], got[i][1]['attributes'])
