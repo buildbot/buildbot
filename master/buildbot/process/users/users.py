@@ -21,7 +21,7 @@ from hashlib import sha1
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import flatten
 from buildbot.util import unicode2bytes
 
@@ -165,7 +165,7 @@ def encrypt(passwd):
     m = sha1()
     salt = hexlify(os.urandom(salt_len))
     m.update(unicode2bytes(passwd) + salt)
-    crypted = bytes2NativeString(salt) + m.hexdigest()
+    crypted = bytes2unicode(salt) + m.hexdigest()
     return crypted
 
 
@@ -182,6 +182,6 @@ def check_passwd(guess, passwd):
     m = sha1()
     salt = passwd[:salt_len * 2]  # salt_len * 2 due to encode('hex_codec')
     m.update(unicode2bytes(guess) + unicode2bytes(salt))
-    crypted_guess = bytes2NativeString(salt) + m.hexdigest()
+    crypted_guess = bytes2unicode(salt) + m.hexdigest()
 
-    return (crypted_guess == bytes2NativeString(passwd))
+    return (crypted_guess == bytes2unicode(passwd))

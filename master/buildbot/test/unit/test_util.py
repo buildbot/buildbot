@@ -284,15 +284,6 @@ class Ascii2Unicode(unittest.TestCase):
         self.assertEqual(type(rv1), text_type)
         self.assertEqual(type(rv2), text_type)
 
-    def test_bytes2NativeString(self):
-        rv = util.bytes2NativeString(b'abcd')
-        self.assertEqual((rv, type(rv)), ('abcd', str))
-        rv = util.bytes2NativeString('efgh')
-        self.assertEqual((rv, type(rv)), ('efgh', str))
-
-        self.assertNotEqual(type('abcd'), type(b'abcd'))
-        self.assertNotEqual(str, bytes)
-
 
 class StringToBoolean(unittest.TestCase):
 

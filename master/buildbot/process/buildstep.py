@@ -57,7 +57,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
 
@@ -191,17 +191,17 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
@@ -834,7 +834,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.bytes2unicode(name), u'h')
         _log = self._newLog(name, u'h', logid)
-        html = bytes2NativeString(html)
+        html = bytes2unicode(html)
         yield _log.addContent(html)
         yield _log.finish()
 

@@ -32,7 +32,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import logfile
 from buildbot.test.fake import remotecommand
 from buildbot.test.fake import worker
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
 def _dict_diff(d1, d2):
@@ -222,7 +222,7 @@ class BuildStepMixin(object):
 
         def addHTMLLog(name, html):
             _log = logfile.FakeLogFile(name, step)
-            html = bytes2NativeString(html)
+            html = bytes2unicode(html)
             _log.addStdout(html)
             return defer.succeed(None)
         step.addHTMLLog = addHTMLLog

@@ -23,7 +23,7 @@ import json
 import re
 
 from buildbot.util import UTC
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 # Base class
 
@@ -266,7 +266,7 @@ class MessageValidator(Validator):
     routingKeyValidator = TupleValidator(StrValidator())
 
     def __init__(self, events, messageValidator):
-        self.events = [bytes2NativeString(e) for e in set(events)]
+        self.events = [bytes2unicode(e) for e in set(events)]
         self.messageValidator = messageValidator
 
     def validate(self, name, routingKey_message):
@@ -664,7 +664,7 @@ def verifyMessage(testcase, routingKey, message_):
     # the "type" of the message is identified by last path name
     # -1 being the event, and -2 the id.
 
-    validator = message[bytes2NativeString(routingKey[-3])]
+    validator = message[bytes2unicode(routingKey[-3])]
     _verify(testcase, validator, '',
             (routingKey, (routingKey, message_)))
 

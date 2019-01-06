@@ -28,7 +28,6 @@ from twisted.python import log
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
@@ -150,7 +149,7 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)

@@ -17,7 +17,6 @@
 from builtins import bytes
 from future.moves.urllib.parse import urlsplit
 from future.moves.urllib.parse import urlunsplit
-from future.utils import PY3
 from future.utils import string_types
 from future.utils import text_type
 
@@ -225,29 +224,6 @@ def bytes2unicode(x, encoding='utf-8', errors='strict'):
     if isinstance(x, (text_type, type(None))):
         return x
     return text_type(x, encoding, errors)
-
-
-def bytes2NativeString(x, encoding='utf-8', errors='strict'):
-    """
-    Convert C{bytes} to a native C{str}.
-
-    On Python 3 and higher, str and bytes
-    are not equivalent.  In this case, decode
-    the bytes, and return a native string.
-
-    On Python 2 and lower, str and bytes
-    are equivalent.  In this case, just
-    just return the native string.
-
-    @param x: a string of type C{bytes}
-    @param encoding: an optional codec, default: 'utf-8'
-    @return: a string of type C{str}
-    """
-    if isinstance(x, bytes) and PY3:
-        # On Python 3 and higher, type("") != type(b"")
-        # so we need to decode() to return a native string.
-        return x.decode(encoding, errors)
-    return x
 
 
 _hush_pyflakes = [json]

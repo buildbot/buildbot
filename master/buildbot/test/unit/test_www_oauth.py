@@ -29,7 +29,7 @@ from twisted.web.server import Site
 
 from buildbot.test.util import www
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 try:
     import requests
@@ -539,7 +539,7 @@ class OAuth2AuthGitHubE2E(www.WwwTestMixin, unittest.TestCase):
 
         def thd():
             res = requests.get('http://localhost:5000/auth/login')
-            content = bytes2NativeString(res.content)
+            content = bytes2unicode(res.content)
             webbrowser.open(content)
         threads.deferToThread(thd)
         res = yield d

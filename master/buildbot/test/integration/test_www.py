@@ -31,7 +31,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
@@ -140,7 +140,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         if expect200 and pg.code != 200:
             self.fail("did not get 200 response for '%s'" % (url,))
 
-        defer.returnValue(json.loads(bytes2NativeString(body)))
+        defer.returnValue(json.loads(bytes2unicode(body)))
 
     def link(self, suffix):
         return self.url + b'api/v2/' + suffix

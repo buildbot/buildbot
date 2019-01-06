@@ -35,7 +35,7 @@ from twisted.web import server
 from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
@@ -358,7 +358,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return bytes2NativeString(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
+            return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
         session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
         self.site.setSessionSecret(session_secret)

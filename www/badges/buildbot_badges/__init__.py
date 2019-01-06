@@ -26,7 +26,7 @@ from twisted.internet import defer
 from buildbot.process.results import Results
 from buildbot.www.plugin import Application
 from xml.sax.saxutils import escape
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
 class Api(object):
@@ -69,8 +69,8 @@ class Api(object):
                 config[k] = v
 
         for k, v in request.args.items():
-            k = bytes2NativeString(k)
-            config[k] = escape(bytes2NativeString(v[0]))
+            k = bytes2unicode(k)
+            config[k] = escape(bytes2unicode(v[0]))
         return config
 
     @app.route("/<string:builder>.png", methods=['GET'])

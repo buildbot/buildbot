@@ -23,7 +23,7 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 from buildbot.reporters import notifier
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
 
@@ -165,7 +165,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(
-            path=bytes2NativeString(path)), json=payload)
+            path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type=None, builderName=None,

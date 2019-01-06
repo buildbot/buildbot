@@ -23,7 +23,7 @@ from twisted.web import resource
 from twisted.web import server
 
 from buildbot.data.exceptions import InvalidPathError
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
@@ -44,7 +44,7 @@ class Consumer(object):
 
     def onMessage(self, event, data):
         request = self.request
-        key = [bytes2NativeString(e) for e in event]
+        key = [bytes2unicode(e) for e in event]
         msg = dict(key=key, message=data)
         request.write(b"event: " + b"event" + b"\n")
         request.write(
@@ -112,7 +112,7 @@ class EventResource(resource.Resource):
             try:
                 d = self.master.mq.startConsuming(
                     consumer.onMessage,
-                    tuple([bytes2NativeString(p) for p in path]))
+                    tuple([bytes2unicode(p) for p in path]))
 
                 @d.addCallback
                 def register(qref):

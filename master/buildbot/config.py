@@ -38,7 +38,7 @@ from buildbot import util
 from buildbot.interfaces import IRenderable
 from buildbot.revlinks import default_revlink_matcher
 from buildbot.util import ComparableMixin
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
@@ -963,7 +963,7 @@ class BuilderConfig(util_config.ConfiguredMixin):
         # builddir defaults to name
         if builddir is None:
             builddir = safeTranslate(name)
-            builddir = bytes2NativeString(builddir)
+            builddir = bytes2unicode(builddir)
         self.builddir = builddir
 
         # workerbuilddir defaults to builddir
