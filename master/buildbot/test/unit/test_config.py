@@ -18,7 +18,6 @@
 # and builtins module on Python 3, because we need to override
 # the actual native open method.
 
-from future.builtins import range
 from future.utils import iteritems
 
 import os

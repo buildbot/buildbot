@@ -63,7 +63,6 @@
 
 # Written by Mark Hammond, 2006.
 
-from future.builtins import range
 
 import os
 import sys

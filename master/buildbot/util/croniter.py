@@ -5,7 +5,6 @@
 # Pyflakes warnings corrected
 
 # -*- coding: utf-8 -*-
-from future.builtins import range
 
 import re
 from datetime import datetime

@@ -16,7 +16,6 @@
 BuildSteps that are specific to the Twisted source tree
 """
 
-from future.builtins import range
 
 import re
 

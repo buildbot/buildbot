@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.builtins import range
 
 from twisted.internet import defer
 

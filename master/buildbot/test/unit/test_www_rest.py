@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.builtins import range
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import string_types

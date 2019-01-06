@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.builtins import range
 
 import base64
 import textwrap

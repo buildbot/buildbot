@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.builtins import range
 from future.moves.urllib import request as urllib_request
 
 import os

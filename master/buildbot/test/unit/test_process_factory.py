@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.builtins import range
 
 from random import choice
 from string import ascii_uppercase
