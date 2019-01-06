@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import PY3
 
 from mock import Mock
 
@@ -248,26 +247,6 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
 
         self.assertNotLogged(unicode2NativeString(
             u'Comment sent to {}'.format(PR_URL)))
-
-    @defer.inlineCallbacks
-    def test_reporter_non_unicode(self):
-        if PY3:
-            raise unittest.SkipTest("not supported in Python3")
-        yield self.setupReporter()
-
-        self.cp.messageFormatter.formatMessageForBuildResults.return_value = \
-            {"body": "body text",
-             "type": "text"}
-
-        _, builds = yield self.setupBuildResults(SUCCESS)
-        build = builds[0]
-        self._http.expect(
-            "post",
-            EXPECTED_API,
-            json={"text": "body text"},
-            code=HTTP_CREATED)
-        build["complete"] = True
-        yield self.cp.buildComplete(("build", 20, "finished"), build)
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):
