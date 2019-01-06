@@ -26,7 +26,6 @@ from buildbot.reporters import notifier
 from buildbot.util import bytes2NativeString
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.util import unicode2NativeString
 
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
@@ -92,19 +91,13 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
 
         for sourcestamp in sourcestamps:
             try:
-                sha = unicode2NativeString(sourcestamp['revision'])
+                sha = sourcestamp['revision']
 
                 if sha is None:
                     log.msg("Unable to get the commit hash")
                     continue
 
-                key = unicode2NativeString(key)
-                state = unicode2NativeString(state)
-                url = unicode2NativeString(build['url'])
-                key = unicode2NativeString(key)
-                description = unicode2NativeString(description)
-                context = unicode2NativeString(context)
-
+                url = build['url']
                 res = yield self.createStatus(
                     sha=sha,
                     state=state,
