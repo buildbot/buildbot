@@ -39,7 +39,7 @@ log = Logger()
 
 # this is a BuildbotService, so that it can be started and destroyed.
 # this is needed to implement kubectl proxy lifecycle
-class KubeConfigBaseLoader(BuildbotService):
+class KubeConfigLoaderBase(BuildbotService):
     name = "KubeConfig"
 
     @abc.abstractmethod
@@ -64,7 +64,7 @@ class KubeConfigBaseLoader(BuildbotService):
         return "{}({})".format(self.__class__.__name__, hash(self))
 
 
-class KubeHardcodedConfig(KubeConfigBaseLoader):
+class KubeHardcodedConfig(KubeConfigLoaderBase):
     def reconfigService(self,
                         master_url=None,
                         headers=None,
@@ -85,7 +85,7 @@ class KubeHardcodedConfig(KubeConfigBaseLoader):
         return self.config
 
 
-class KubeCtlProxyConfigLoader(KubeConfigBaseLoader):
+class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
     """ We use kubectl proxy to connect to kube master.
     Parsing the config and setting up SSL is complex.
     So for now, we use kubectl proxy to load the config and connect to master.
@@ -147,7 +147,7 @@ class KubeCtlProxyConfigLoader(KubeConfigBaseLoader):
         }
 
 
-class KubeInClusterConfigLoader(KubeConfigBaseLoader):
+class KubeInClusterConfigLoader(KubeConfigLoaderBase):
     kube_dir = '/var/run/secrets/kubernetes.io/serviceaccount/'
 
     kube_namespace_file = os.path.join(kube_dir, 'namespace')

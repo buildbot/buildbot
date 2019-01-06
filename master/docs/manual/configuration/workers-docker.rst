@@ -382,18 +382,13 @@ Buildbot supports using Kubernetes_ to host your latent workers.
 .. py:class:: buildbot.worker.kubernetes.KubeLatentWorker
 .. py:class:: buildbot.plugins.worker.KubeLatentWorker
 
-The :class:`KubeLatentWorker` attempts to instantiate a fresh image for each build to assure consistency of the environment between builds
-Each image will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
+The :class:`KubeLatentWorker` attempts to instantiate a fresh container for each build to assure consistency of the environment between builds
+Each container will be discarded once the worker finished processing the build queue (i.e. becomes ``idle``).
 See :ref:`build_wait_timeout <Common-Latent-Workers-Options>` to change this behavior.
 
 .. _Kubernetes: https://kubernetes.io/
 
 In addition to the arguments available for any :ref:`Latent-Workers`, :class:`KubeLatentWorker` will accept the following extra ones:
-
-``password``
-    (optional)
-    The worker password part of the :ref:`Latent-Workers` API.
-    If the password is ``None``, then it will be automatically generated from random number.
 
 ``image``
     (optional, default to ``buildbot/buildbot-worker``)
@@ -402,6 +397,17 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ku
 ``namespace``
     (optional)
     This is the name of the namespace. Default to the current namespace
+
+``kube_config``
+    (mandatory)
+    This is the object specifying how to connect to the kubernetes cluster.
+    This object must be an instance of abstract class :class:`KubeConfigLoaderBase`, which have 3 implementations:
+
+    - :class:`KubeHardcodedConfig`
+
+    - :class:`KubeCtlProxyConfigLoader`
+
+    - :class:`KubeInClusterConfigLoader`
 
 ``masterFQDN``
     (optional, default to ``None``)
@@ -415,3 +421,84 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ku
 
 
 .. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
+
+Kubernetes config loaders
+-------------------------
+
+Kubernetes provides many options to connect to a cluster.
+It is especially more complicated as some cloud providers use specific methods to connect to their managed kubernetes.
+Config loaders objects can be shared between LatentWorker.
+
+Here are the options you can use to connect to your clusters:
+
+
+.. py:class:: buildbot.util.kubeclientservice.KubeCtlProxyConfigLoader
+.. py:class:: buildbot.plugins.util.KubeCtlProxyConfigLoader
+
+``KubeCtlProxyConfigLoader``
+............................
+
+With :class:`KubeCtlProxyConfigLoader`, buildbot will user ``kubectl proxy`` to get access to the cluster.
+This delegates the authentication to the ``kubectl`` ``golang`` binary, and thus avoid to implement a python version for every authentication scheme that kubernetes provides.
+``kubectl`` must be available in the ``PATH``, and configured to be able to start pods.
+While this method is very convenient and easy, it also opens an unauthenticated http access to your cluster via localhost.
+You must ensure that this is properly secured, and your buildbot master machine is not on a shared multi-user server.
+
+``proxy_port``
+    (optional defaults to 8001)
+    HTTP port to use.
+
+``namespace``
+    (optional defaults to ``"default"``
+    default namespace to use if the latent worker do not provide one already.
+
+
+.. py:class:: buildbot.util.kubeclientservice.KubeHardcodedConfig
+.. py:class:: buildbot.plugins.util.KubeHardcodedConfig
+
+``KubeHardcodedConfig``
+.......................
+
+
+With :class:`KubeHardcodedConfig`, you just configure the necessary parameters to connect to the clusters.
+
+``master_url``
+    (mandatory)
+    The http url of you kubernetes master.
+    Only http and https protocols are supported
+
+``headers``
+    (optional)
+    The headers necessary for authentication if needed.
+    For example, for BasicAuth, you would say::
+
+        headers={"Authorization": "Basic %s" % base64.b64encode("userid:password")}
+
+``cert``
+    (optional)
+    Client certificate and key to use to authenticate.
+    This only works if ``txrequests`` is installed::
+
+        cert=('/path/to/certificate.crt', '/path/to/certificate.key')
+
+``verify``
+    (optional)
+    Path to server certificate authenticate the server::
+
+        verify='/path/to/kube_server_certificate.crt'
+
+``namespace``
+    (optional defaults to ``"default"``
+    default namespace to use if the latent worker do not provide one already.
+
+
+.. py:class:: buildbot.util.kubeclientservice.KubeInClusterConfigLoader
+.. py:class:: buildbot.plugins.util.KubeInClusterConfigLoader
+
+``KubeInClusterConfigLoader``
+.............................
+
+Use :class:`KubeInClusterConfigLoader`, if your Buildbot master is itself located within the kubernetes cluster.
+In this case, you would associated a service account to the Buildbot master pod, and :class:`KubeInClusterConfigLoader` will get the credentials from that.
+
+This config loader takes no arguments.

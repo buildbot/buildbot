@@ -266,6 +266,7 @@ setup_args = {
             ('buildbot.worker.openstack', ['OpenStackLatentWorker']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),
             ('buildbot.worker.hyper', ['HyperLatentWorker']),
+            ('buildbot.worker.kubernetes', ['KubeLatentWorker']),
             ('buildbot.worker.local', ['LocalWorker']),
         ]),
         ('buildbot.steps', [
@@ -392,6 +393,7 @@ setup_args = {
                 ('repo.DownloadsFromProperties',
                  'RepoDownloadsFromProperties')]),
             ('buildbot.steps.shellsequence', ['ShellArg']),
+            ('buildbot.util.kubeclientservice', ['KubeHardcodedConfig', 'KubeCtlProxyConfigLoader', 'KubeInClusterConfigLoader']),
             ('buildbot.www.avatar', ['AvatarGravatar']),
             ('buildbot.www.auth', [
                 'UserPasswordAuth', 'HTPasswdAuth', 'RemoteUserAuth', 'CustomAuth']),
