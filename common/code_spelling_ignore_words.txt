@@ -580,6 +580,7 @@ gitattributes
 github
 gitlab
 gitorious
+gitpoller
 gmail
 gmt
 google
