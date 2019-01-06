@@ -45,13 +45,13 @@ class HipChatStatusPush(HttpStatusPushBase):
         self.builder_room_map = builder_room_map
         self.builder_user_map = builder_user_map
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def buildStarted(self, key, build):
-        yield self.send(build, key[2])
+        return self.send(build, key[2])
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def buildFinished(self, key, build):
-        yield self.send(build, key[2])
+        return self.send(build, key[2])
 
     @defer.inlineCallbacks
     def getBuildDetailsAndSendMessage(self, build, key):

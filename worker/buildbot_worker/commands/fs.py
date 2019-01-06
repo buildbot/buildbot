@@ -102,6 +102,7 @@ class RemoveDirectory(base.Command):
 
         return d
 
+    @defer.inlineCallbacks
     def _clobber(self, dummy, chmodDone=False):
         command = ["rm", "-rf", self.dir]
         c = runprocess.RunProcess(self.builder, command, self.builder.basedir,
@@ -112,18 +113,20 @@ class RemoveDirectory(base.Command):
         # sendRC=0 means the rm command will send stdout/stderr to the
         # master, but not the rc=0 when it finishes. That job is left to
         # _sendRC
-        d = c.start()
+        rc = yield c.start()
         # The rm -rf may fail if there is a left-over subdir with chmod 000
         # permissions. So if we get a failure, we attempt to chmod suitable
         # permissions and re-try the rm -rf.
         if not chmodDone:
-            d.addCallback(self._tryChmod)
-        return d
+            rc = yield self._tryChmod(rc)
+        defer.returnValue(rc)
 
+    @defer.inlineCallbacks
     def _tryChmod(self, rc):
         assert isinstance(rc, int)
         if rc == 0:
-            return defer.succeed(0)
+            defer.returnValue(0)
+            return  # pragma: no cover
         # Attempt a recursive chmod and re-try the rm -rf after.
 
         command = ["chmod", "-Rf", "u+rwx",
@@ -139,9 +142,9 @@ class RemoveDirectory(base.Command):
                                   logEnviron=self.logEnviron, usePTY=False)
 
         self.command = c
-        d = c.start()
-        d.addCallback(lambda dummy: self._clobber(dummy, True))
-        return d
+        rc = yield c.start()
+        rc = yield self._clobber(rc, True)
+        defer.returnValue(rc)
 
 
 class CopyDirectory(base.Command):

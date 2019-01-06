@@ -73,6 +73,21 @@ With a little modification these scripts can be used both on Debian and RHEL-bas
     # ... or
     update-rc.d buildmaster defaults
 
+.. _Launching-worker-as-Windows-service:
+
+Launching worker as Windows service
+-----------------------------------
+
+You can find information about installation of Buildbot as Windows service here
+`RunningBuildbotOnWindows <http://trac.buildbot.net/wiki/RunningBuildbotOnWindows>`_.
+Recent version of Buildbot worker has simplified configuration for Windows service.
+
+.. code-block:: bat
+
+    buildbot_worker_windows_service.exe --user YOURDOMAIN\theusername --password thepassword --startup auto install
+
+automatically adds user rights to run Buildbot as service.
+
 .. _Logfiles:
 
 Logfiles

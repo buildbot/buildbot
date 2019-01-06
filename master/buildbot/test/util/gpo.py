@@ -88,20 +88,18 @@ class GetProcessOutputMixin:
         self.assertEqual(self._expected_commands, [],
                          "assert all expected commands were run")
 
+    @defer.inlineCallbacks
     def patched_getProcessOutput(self, bin, args, env=None,
                                  errortoo=False, path=None):
-        d = self.patched_getProcessOutputAndValue(bin, args, env=env,
-                                                  path=path)
-
-        @d.addCallback
-        def cb(res):
-            stdout, stderr, exit = res
-            if errortoo:
-                return defer.succeed(stdout + stderr)
-            if stderr:
-                return defer.fail(IOError("got stderr: %r" % (stderr,)))
-            return defer.succeed(stdout)
-        return d
+        stdout, stderr, exit = \
+            yield self.patched_getProcessOutputAndValue(bin, args, env=env,
+                                                        path=path)
+        if errortoo:
+            defer.returnValue(stdout + stderr)
+            return  # pragma: no cover
+        if stderr:
+            raise IOError("got stderr: %r" % (stderr,))
+        defer.returnValue(stdout)
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,
                                          path=None):

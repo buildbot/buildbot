@@ -232,14 +232,12 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                     if hasattr(self.port_service, 'endpoint'):
                         old_listen = self.port_service.endpoint.listen
 
+                        @defer.inlineCallbacks
                         def listen(factory):
-                            d = old_listen(factory)
+                            port = yield old_listen(factory)
+                            self._getPort = lambda: port
+                            defer.returnValue(port)
 
-                            @d.addCallback
-                            def keep(port):
-                                self._getPort = lambda: port
-                                return port
-                            return d
                         self.port_service.endpoint.listen = listen
                     else:
                         # older twisted's just have the port sitting there

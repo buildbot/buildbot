@@ -21,8 +21,6 @@ import json
 import sqlalchemy as sa
 import sqlalchemy.exc
 
-from twisted.internet import defer
-
 from buildbot.db import base
 
 
@@ -43,14 +41,14 @@ class StateConnectorComponent(base.DBConnectorComponent):
         d.addCallback(lambda objdict: objdict['id'])
         return d
 
+    # returns a Deferred that returns a value
     @base.cached('objectids')
-    @defer.inlineCallbacks
     def _getObjectId(self, name_class_name_tuple):
         name, class_name = name_class_name_tuple
 
         def thd(conn):
             return self.thdGetObjectId(conn, name, class_name)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def thdGetObjectId(self, conn, name, class_name):
         objects_tbl = self.db.model.objects
@@ -96,11 +94,11 @@ class StateConnectorComponent(base.DBConnectorComponent):
     class Thunk:
         pass
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getState(self, objectid, name, default=Thunk):
         def thd(conn):
             return self.thdGetState(conn, objectid, name, default=default)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def thdGetState(self, conn, objectid, name, default=Thunk):
         object_state_tbl = self.db.model.object_state
@@ -123,11 +121,11 @@ class StateConnectorComponent(base.DBConnectorComponent):
             raise TypeError("JSON error loading state value '%s' for %d" %
                             (name, objectid))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def setState(self, objectid, name, value):
         def thd(conn):
             return self.thdSetState(conn, objectid, name, value)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def thdSetState(self, conn, objectid, name, value):
         object_state_tbl = self.db.model.object_state
@@ -173,7 +171,7 @@ class StateConnectorComponent(base.DBConnectorComponent):
         # at an inopportune moment
         pass
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def atomicCreateState(self, objectid, name, thd_create_callback):
         def thd(conn):
             object_state_tbl = self.db.model.object_state
@@ -194,4 +192,4 @@ class StateConnectorComponent(base.DBConnectorComponent):
                     # someone beat us to it - oh well return that value
                     return self.thdGetState(conn, objectid, name)
             return res
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)

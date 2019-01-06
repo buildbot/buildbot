@@ -107,17 +107,15 @@ class WorkerFileUploadCommand(TransferCommand):
         d = defer.Deferred()
         self._reactor.callLater(0, self._loop, d)
 
+        @defer.inlineCallbacks
         def _close_ok(res):
             if self.fp:
                 self.fp.close()
             self.fp = None
-            d1 = self.writer.callRemote("close")
+            yield self.writer.callRemote("close")
 
-            def _utime_ok(res):
-                return self.writer.callRemote("utime", accessed_modified)
             if self.keepstamp:
-                d1.addCallback(_utime_ok)
-            return d1
+                yield self.writer.callRemote("utime", accessed_modified)
 
         def _close_err(f):
             self.rc = 1

@@ -70,7 +70,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                           builder_tbl.c.name.label('buildername')
                           ]).select_from(from_clause)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getBuildRequest(self, brid):
         def thd(conn):
             reqs_tbl = self.db.model.buildrequests
@@ -83,7 +83,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                 rv = self._brdictFromRow(row, self.db.master.masterid)
             res.close()
             return rv
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
@@ -160,7 +160,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
         yield self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def unclaimBuildRequests(self, brids):
         def thd(conn):
             transaction = conn.begin()
@@ -185,7 +185,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
                     raise
 
             transaction.commit()
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def completeBuildRequests(self, brids, results, complete_at=None,

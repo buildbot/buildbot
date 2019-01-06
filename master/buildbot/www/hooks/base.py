@@ -43,43 +43,47 @@ class BaseHookHandler(object):
         def firstOrNothing(value):
             """
             Small helper function to return the first value (if value is a list)
-            or return the whole thing otherwise
+            or return the whole thing otherwise.
+
+            Make sure to properly decode bytes to unicode strings.
             """
             if (isinstance(value, type([]))):
-                return value[0]
-            return value
+                value = value[0]
+            return bytes2unicode(value)
 
         args = request.args
         # first, convert files, links and properties
         files = None
         if args.get(b'files'):
-            files = json.loads(args.get(b'files')[0])
+            files = json.loads(firstOrNothing(args.get(b'files')))
         else:
             files = []
 
         properties = None
         if args.get(b'properties'):
-            properties = json.loads(args.get(b'properties')[0])
+            properties = json.loads(firstOrNothing(args.get(b'properties')))
         else:
             properties = {}
 
         revision = firstOrNothing(args.get(b'revision'))
-        when = firstOrNothing(args.get(b'when'))
+        when = firstOrNothing(args.get(b'when_timestamp'))
+        if when is None:
+            when = firstOrNothing(args.get(b'when'))
         if when is not None:
             when = float(when)
         author = firstOrNothing(args.get(b'author'))
         if not author:
             author = firstOrNothing(args.get(b'who'))
-        comments = bytes2unicode(firstOrNothing(args.get(b'comments')))
+        comments = firstOrNothing(args.get(b'comments'))
         branch = firstOrNothing(args.get(b'branch'))
         category = firstOrNothing(args.get(b'category'))
         revlink = firstOrNothing(args.get(b'revlink'))
-        repository = firstOrNothing(args.get(b'repository'))
-        project = firstOrNothing(args.get(b'project'))
+        repository = firstOrNothing(args.get(b'repository')) or u''
+        project = firstOrNothing(args.get(b'project')) or u''
         codebase = firstOrNothing(args.get(b'codebase'))
 
         chdict = dict(author=author, files=files, comments=comments,
-                      revision=revision, when=when,
+                      revision=revision, when_timestamp=when,
                       branch=branch, category=category, revlink=revlink,
                       properties=properties, repository=repository,
                       project=project, codebase=codebase)

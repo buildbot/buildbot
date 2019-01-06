@@ -25,6 +25,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 from buildbot.db import base
+from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import unicode2bytes
 
@@ -61,10 +62,11 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             patchid = None
             if patch_body:
                 patch_body_bytes = unicode2bytes(patch_body)
+                patch_base64_bytes = base64.b64encode(patch_body_bytes)
                 ins = self.db.model.patches.insert()
                 r = conn.execute(ins, dict(
                     patchlevel=patch_level,
-                    patch_base64=base64.b64encode(patch_body_bytes),
+                    patch_base64=bytes2unicode(patch_base64_bytes),
                     patch_author=patch_author,
                     patch_comment=patch_comment,
                     subdir=patch_subdir))
@@ -89,8 +91,8 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             })
         defer.returnValue(sourcestampid)
 
+    # returns a Deferred that returns a value
     @base.cached("ssdicts")
-    @defer.inlineCallbacks
     def getSourceStamp(self, ssid):
         def thd(conn):
             tbl = self.db.model.sourcestamps
@@ -102,9 +104,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             ssdict = self._rowToSsdict_thd(conn, row)
             res.close()
             return ssdict
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getSourceStampsForBuild(self, buildid):
         assert buildid > 0
 
@@ -131,9 +133,9 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             return [self._rowToSsdict_thd(conn, row)
                     for row in res.fetchall()]
 
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getSourceStamps(self):
         def thd(conn):
             tbl = self.db.model.sourcestamps
@@ -141,7 +143,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._rowToSsdict_thd(conn, row)
                     for row in res.fetchall()]
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def _rowToSsdict_thd(self, conn, row):
         ssid = row.id
@@ -166,8 +168,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 ssdict['patch_subdir'] = row.subdir
                 ssdict['patch_author'] = row.patch_author
                 ssdict['patch_comment'] = row.patch_comment
-                body = base64.b64decode(row.patch_base64)
-                ssdict['patch_body'] = body
+                ssdict['patch_body'] = base64.b64decode(row.patch_base64)
             else:
                 log.msg('patchid %d, referenced from ssid %d, not found'
                         % (patchid, ssid))

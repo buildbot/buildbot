@@ -319,6 +319,7 @@ class ClusteredBuildbotService(BuildbotService):
         self._startActivityPolling()
         yield self._startServiceDeferred
 
+    @defer.inlineCallbacks
     def stopService(self):
         # subclasses should override stopService only to perform actions that should
         # run on all instances, even if they never get activated on this
@@ -328,29 +329,18 @@ class ClusteredBuildbotService(BuildbotService):
 
         # need to wait for prior activations to finish
         if self._activityPollDeferred:
-            d = self._activityPollDeferred
-        else:
-            d = defer.succeed(None)
+            yield self._activityPollDeferred
 
-        @d.addCallback
-        def deactivate_if_needed(_):
-            if self.active:
-                self.active = False
+        if self.active:
+            self.active = False
 
-                d = defer.maybeDeferred(self.deactivate)
-                # no errback here: skip the "unclaim" if the deactivation is
-                # uncertain
+            try:
+                yield self.deactivate()
+                yield self._unclaimService()
+            except Exception as e:
+                log.err(e, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
 
-                d.addCallback(
-                    lambda _: defer.maybeDeferred(self._unclaimService))
-
-                d.addErrback(
-                    log.err, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
-                return d
-
-        d.addCallback(
-            lambda _: super(ClusteredBuildbotService, self).stopService())
-        return d
+        yield super(ClusteredBuildbotService, self).stopService()
 
     def _startActivityPolling(self):
         self._activityPollCall = task.LoopingCall(self._activityPoll)

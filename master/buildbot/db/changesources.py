@@ -42,7 +42,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 name_hash=name_hash,
             ))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def setChangeSourceMaster(self, changesourceid, masterid):
         def thd(conn):
             cs_mst_tbl = self.db.model.changesource_masters
@@ -63,7 +63,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
                 # someone already owns this changesource.
                 raise ChangeSourceAlreadyClaimedError
 
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def getChangeSource(self, changesourceid):
@@ -71,7 +71,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
         if cs:
             defer.returnValue(cs[0])
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getChangeSources(self, active=None, masterid=None, _changesourceid=None):
         def thd(conn):
             cs_tbl = self.db.model.changesources
@@ -104,4 +104,4 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
             return [dict(id=row.id, name=row.name,
                          masterid=row.masterid)
                     for row in conn.execute(q).fetchall()]
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)

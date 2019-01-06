@@ -141,8 +141,8 @@ class Builder(base.ResourceType):
             self.master.mq.produce(('builders', str(builderid), 'started'),
                                    dict(builderid=builderid, masterid=masterid, name=name))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def _masterDeactivated(self, masterid):
         # called from the masters rtype to indicate that the given master is
         # deactivated
-        yield self.updateBuilderList(masterid, [])
+        return self.updateBuilderList(masterid, [])

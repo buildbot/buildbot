@@ -39,20 +39,19 @@ class Poller(object):
         self.stopDeferreds = []
         self._reactor = reactor
 
+    @defer.inlineCallbacks
     def _run(self):
         self.running = True
-        d = defer.maybeDeferred(self.fn, self.instance)
-        # log all errors, so d is always successful
-        d.addErrback(log.err, 'while running %s' % (self.fn,))
+        try:
+            yield defer.maybeDeferred(self.fn, self.instance)
+        except Exception as e:
+            log.err(e, 'while running %s' % (self.fn,))
 
-        @d.addCallback
-        def done(_):
-            self.running = False
-            # loop if there's another pending call
-            if self.pending:
-                self.pending = False
-                return self._run()
-        return d
+        self.running = False
+        # loop if there's another pending call
+        if self.pending:
+            self.pending = False
+            yield self._run()
 
     def __call__(self):
         if self.started:

@@ -239,6 +239,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -278,6 +281,7 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -294,6 +298,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -315,6 +322,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -381,6 +391,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -416,6 +429,11 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\t'
+                    b'refs/heads/release\n'
+                    b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -431,7 +449,7 @@ class TestGitPoller(TestGitPollerBase):
         )
 
         # do the poll
-        self.poller.branches = ['master', 'release']
+        self.poller.branches = ['master', 'release', 'not_on_remote']
         yield self.poller.poll()
 
         self.assertAllCommandsRan()
@@ -446,6 +464,11 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'9118f4ab71963d23d02d4bdc54876ac8bf05acf2\t'
+                    b'refs/heads/release\n'
+                    b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master',
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
@@ -566,6 +589,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/release\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work'),
@@ -605,6 +631,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/release\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work'),
@@ -677,6 +706,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/release\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+release:refs/buildbot/' + self.REPOURL_QUOTED + '/release')
             .path('gitpoller-work'),
@@ -830,6 +862,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -1139,6 +1174,9 @@ class TestGitPoller(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -1370,6 +1408,9 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
             gpo.Expect('git',
                        '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       'ls-remote', '--refs', self.REPOURL),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
                        'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -1409,6 +1450,9 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 2.3.0\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git', 'ls-remote', '--refs', self.REPOURL)
+            .stdout(b'4423cdbcbb89c14e50dd5f4152415afd686c5241\t'
+                    b'refs/heads/master\n'),
             gpo.Expect('git', 'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work')
@@ -1450,6 +1494,9 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
             gpo.Expect('git', '--version')
             .stdout(b'git version 2.10.0\n'),
             gpo.Expect('git', 'init', '--bare', 'gitpoller-work'),
+            gpo.Expect('git',
+                       '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
+                       'ls-remote', '--refs', self.REPOURL),
             gpo.Expect('git',
                        '-c', 'core.sshCommand=ssh -i "{0}"'.format(key_path),
                        'fetch', self.REPOURL,
@@ -1495,6 +1542,12 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
                        'core.sshCommand=ssh -i "{0}" '
                        '-o "UserKnownHostsFile={1}"'.format(
                                key_path, known_hosts_path),
+                       'ls-remote', '--refs', self.REPOURL),
+            gpo.Expect('git',
+                       '-c',
+                       'core.sshCommand=ssh -i "{0}" '
+                       '-o "UserKnownHostsFile={1}"'.format(
+                               key_path, known_hosts_path),
                        'fetch', self.REPOURL,
                        '+master:refs/buildbot/' + self.REPOURL_QUOTED + '/master')
             .path('gitpoller-work'),
@@ -1521,6 +1574,8 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         cleanup_dir_mock.assert_called()
 
         expected_file_writes = [
+            mock.call(key_path, 'ssh-key', mode=0o400),
+            mock.call(known_hosts_path, '* ssh-host-key'),
             mock.call(key_path, 'ssh-key', mode=0o400),
             mock.call(known_hosts_path, '* ssh-host-key'),
         ]

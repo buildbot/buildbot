@@ -92,9 +92,9 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_start_no_daemon(self):
-        res = yield self.runStart(nodaemon=True)
+        (_, err, rc) = yield self.runStart(nodaemon=True)
 
-        self.assertEqual(res, (b'', b'', 0))
+        self.assertEqual((err, rc), (b'', 0))
 
     @defer.inlineCallbacks
     def test_start_quiet(self):
@@ -105,9 +105,10 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
     def test_start_timeout_nonnumber(self):
-        res = yield self.runStart(start_timeout='a')
+        (out, err, rc) = yield self.runStart(start_timeout='a')
 
-        self.assertEqual(res, (b'Start timeout must be a number\n', b'', 1))
+        self.assertEqual((rc, err), (1, b''))
+        self.assertSubstring(b'Start timeout must be a number\n', out)
 
     @skipUnlessPlatformIs('posix')
     @defer.inlineCallbacks
@@ -124,7 +125,7 @@ class TestStart(misc.StdoutAssertionsMixin, dirs.DirsMixin, unittest.TestCase):
         try:
             (out, err, rc) = yield self.runStart()
 
-            self.assertEqual((rc, err), (0, ''))
+            self.assertEqual((rc, err), (0, b''))
             self.assertSubstring(
                 'buildmaster appears to have (re)started correctly', out)
         finally:

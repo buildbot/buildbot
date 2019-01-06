@@ -58,12 +58,6 @@ We will also use a separate directory to demonstrate the distinction between a m
   mkdir -p ~/tmp/bb-master
   cd ~/tmp/bb-master
 
-On Python 2:
-
-.. code-block:: bash
-
-  virtualenv --no-site-packages sandbox
-  source sandbox/bin/activate
 
 On Python 3:
 

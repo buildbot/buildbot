@@ -158,7 +158,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 raise AlreadyCompleteError()
         yield self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getBuildset(self, bsid):
         def thd(conn):
             bs_tbl = self.db.model.buildsets
@@ -168,7 +168,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             if not row:
                 return None
             return self._thd_row2dict(conn, row)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     @defer.inlineCallbacks
     def getBuildsets(self, complete=None, resultSpec=None):
@@ -188,7 +188,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         res = yield self.db.pool.do(thd)
         defer.returnValue(res)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getRecentBuildsets(self, count=None, branch=None, repository=None,
                            complete=None):
         def thd(conn):
@@ -215,10 +215,10 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return list(reversed([self._thd_row2dict(conn, row)
                                   for row in res.fetchall()]))
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
+    # returns a Deferred that returns a value
     @base.cached("BuildsetProperties")
-    @defer.inlineCallbacks
     def getBuildsetProperties(self, bsid):
         def thd(conn):
             bsp_tbl = self.db.model.buildset_properties
@@ -234,7 +234,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 except ValueError:
                     pass
             return BsProps(ret)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
     def _thd_row2dict(self, conn, row):
         # get sourcestamps

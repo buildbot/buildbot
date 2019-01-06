@@ -84,7 +84,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
             return None
         return d
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def addBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             try:
@@ -93,16 +93,16 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
                 conn.execute(q, builderid=builderid, masterid=masterid)
             except (sa.exc.IntegrityError, sa.exc.ProgrammingError):
                 pass
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def removeBuilderMaster(self, builderid=None, masterid=None):
         def thd(conn, no_recurse=False):
             tbl = self.db.model.builder_masters
             conn.execute(tbl.delete(
                 whereclause=((tbl.c.builderid == builderid) &
                              (tbl.c.masterid == masterid))))
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     def getBuilders(self, masterid=None, _builderid=None):
         def thd(conn):

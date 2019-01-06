@@ -475,7 +475,7 @@ setup_args['install_requires'] = [
     'zope.interface >= 4.1.1',
     # python-future required for py2/3 compatibility
     'future',
-    'sqlalchemy>=0.8.0',
+    'sqlalchemy>=1.1.0',
     'sqlalchemy-migrate>=0.9',
     'python-dateutil>=1.5',
     'txaio ' + txaio_ver,

@@ -21,6 +21,7 @@ from twisted.python import threadpool
 from twisted.trial import unittest
 
 from buildbot import config
+from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import hyper
@@ -142,3 +143,27 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
         worker.attached(FakeBot())
         self.successResultOf(d)
         self.assertIsNotNone(worker.client)
+
+    def test_non_substantiated_worker_compatible_with_any_build(self):
+        worker = self.makeWorker(image=Interpolate('%(prop:image)s'),
+                                 hyper_size=Interpolate('%(prop:size)s'))
+
+        build = Properties(image='image1', size='size1')
+        self.assertTrue(worker.isCompatibleWithBuild(build))
+        build = Properties(image='image2', size='size2')
+        self.assertTrue(worker.isCompatibleWithBuild(build))
+
+    @defer.inlineCallbacks
+    def test_substantiated_worker_not_compatible_until_shutdown(self):
+        worker = self.makeWorker(image=Interpolate('%(prop:image)s'),
+                                 hyper_size=Interpolate('%(prop:size)s'))
+
+        build1 = Properties(image='image1', size='size1')
+        build2 = Properties(image='image2', size='size2')
+        yield worker.substantiate(None, build1)
+        yield worker.insubstantiate()
+        self.assertTrue(worker.isCompatibleWithBuild(build1))
+        self.assertTrue(worker.isCompatibleWithBuild(build2))
+        yield worker.substantiate(None, build2)
+        self.assertFalse(worker.isCompatibleWithBuild(build1))
+        self.assertTrue(worker.isCompatibleWithBuild(build2))

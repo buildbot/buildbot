@@ -127,6 +127,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
     """
     A latent worker that can be controlled by tests.
     """
+    builds_may_be_incompatible = True
 
     def __init__(self, name, controller, **kwargs):
         self._controller = controller
@@ -143,6 +144,15 @@ class ControllableLatentWorker(AbstractLatentWorker):
             self, name, None,
             build_wait_timeout=self._controller.build_wait_timeout,
             **kwargs)
+
+    @defer.inlineCallbacks
+    def isCompatibleWithBuild(self, build_props):
+        if not self._controller.starting and not self._controller.started:
+            defer.returnValue(True)
+
+        requested_kind = yield build_props.render((self._controller.kind))
+        curr_kind = yield self._controller.get_started_kind()
+        defer.returnValue(requested_kind == curr_kind)
 
     def start_instance(self, build):
         self._controller.setup_kind(build)

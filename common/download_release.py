@@ -11,7 +11,7 @@ def download(url, fn):
     print(url, fn)
     if os.path.exists(fn):
         return
-    with open(fn, 'w') as f:
+    with open(fn, 'wb') as f:
         r = s.get(url, stream=True)
         for c in r.iter_content(1024):
             f.write(c)

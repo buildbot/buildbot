@@ -323,7 +323,7 @@ class Patch(Row):
     defaults = dict(
         id=None,
         patchlevel=0,
-        patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
+        patch_base64=u'aGVsbG8sIHdvcmxk',  # 'hello, world',
         patch_author=None,
         patch_comment=None,
         subdir=None,
@@ -2093,7 +2093,7 @@ class FakeStepsComponent(FakeDBComponent):
         if b:
             b['complete_at'] = now
             b['results'] = results
-            b['hidden'] = True if hidden else False
+            b['hidden'] = bool(hidden)
         return defer.succeed(None)
 
 

@@ -33,7 +33,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.SourceStamp(id=13, branch=u'oak'),
-            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=14, patchid=99, branch=u'poplar'),

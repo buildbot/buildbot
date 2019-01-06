@@ -18,7 +18,6 @@ from __future__ import print_function
 
 import sqlalchemy as sa
 
-from twisted.internet import defer
 from twisted.internet import reactor
 
 from buildbot.db import base
@@ -44,7 +43,7 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 last_active=_reactor.seconds()
             ))
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def setMasterState(self, masterid, active, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.masters
@@ -76,9 +75,9 @@ class MastersConnectorComponent(base.DBConnectorComponent):
 
             # return True if there was a change in state
             return was_active != bool(active)
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getMaster(self, masterid):
         def thd(conn):
             tbl = self.db.model.masters
@@ -91,24 +90,24 @@ class MastersConnectorComponent(base.DBConnectorComponent):
                 rv = self._masterdictFromRow(row)
             res.close()
             return rv
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns a value
     def getMasters(self):
         def thd(conn):
             tbl = self.db.model.masters
             return [
                 self._masterdictFromRow(row)
                 for row in conn.execute(tbl.select()).fetchall()]
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return self.db.pool.do(thd)
 
-    @defer.inlineCallbacks
+    # returns a Deferred that returns None
     def setAllMastersActiveLongTimeAgo(self, _reactor=reactor):
         def thd(conn):
             tbl = self.db.model.masters
             q = tbl.update().values(active=1, last_active=0)
             conn.execute(q)
-        yield self.db.pool.do(thd)
+        return self.db.pool.do(thd)
 
     def _masterdictFromRow(self, row):
         return MasterDict(id=row.id, name=row.name,

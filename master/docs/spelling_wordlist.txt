@@ -331,6 +331,7 @@ github
 GitHub
 GitLab
 Gitorious
+Gitpoller
 glMenuProvider
 google
 gpg
@@ -422,6 +423,7 @@ keyring
 keystoneauth
 KiB
 kibibytes
+kv
 kwargs
 latin
 ldap

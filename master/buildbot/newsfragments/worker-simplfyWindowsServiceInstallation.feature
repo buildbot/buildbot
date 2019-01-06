@@ -1,0 +1,1 @@
+Simplify/automate configuration of worker as Windows service - eliminate manual configuration of Log on as a service
