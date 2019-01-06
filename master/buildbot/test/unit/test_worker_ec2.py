@@ -41,6 +41,12 @@ if boto3 is not None:
     from buildbot.worker import ec2  # pylint: disable=ungrouped-imports
 
 
+# Current moto (1.3.7) requires dummy credentials to work
+# https://github.com/spulec/moto/issues/1924
+os.environ['AWS_SECRET_ACCESS_KEY'] = 'foobar_secret'
+os.environ['AWS_ACCESS_KEY_ID'] = 'foobar_key'
+
+
 # redefine the mock_ec2 decorator to skip the test if boto3 or moto
 # isn't installed
 def skip_ec2(f):
