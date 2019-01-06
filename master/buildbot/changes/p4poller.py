@@ -17,8 +17,6 @@
 
 # Many thanks to Dave Peticolas for contributing this module
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import text_type
 
 import datetime

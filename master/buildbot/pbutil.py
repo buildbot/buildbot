@@ -17,8 +17,6 @@
 """Base classes handy for use with PB clients.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import iteritems
 
 from twisted.internet import protocol

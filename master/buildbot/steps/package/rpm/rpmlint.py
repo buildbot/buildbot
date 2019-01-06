@@ -17,8 +17,6 @@
 Steps and objects related to rpmlint.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot.steps.package import util as pkgutil
 from buildbot.steps.shell import Test

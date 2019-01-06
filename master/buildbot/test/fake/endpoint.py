@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 # This is a static resource type and set of endpoints used as common data by
 # tests.
 from future.utils import itervalues

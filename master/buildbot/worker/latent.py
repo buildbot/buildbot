@@ -14,8 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import itervalues
 
 import random

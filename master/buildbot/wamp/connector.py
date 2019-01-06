@@ -13,8 +13,6 @@
 #
 # Copyright  Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import txaio
 from autobahn.twisted.wamp import ApplicationSession

@@ -15,8 +15,6 @@
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import iteritems
 
 import os

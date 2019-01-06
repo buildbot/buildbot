@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot.process.properties import Properties
 from buildbot.test.fake.state import State

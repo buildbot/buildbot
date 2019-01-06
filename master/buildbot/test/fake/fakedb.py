@@ -19,8 +19,6 @@ using a database.  These classes should pass the same tests as are applied to
 the real connector components.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import iteritems
 from future.utils import itervalues
 from future.utils import text_type
