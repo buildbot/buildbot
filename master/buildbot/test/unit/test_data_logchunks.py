@@ -90,7 +90,7 @@ class LogChunkEndpointBase(endpoint.EndpointMixin, unittest.TestCase):
                          {'logid': logid, 'firstline': 0, 'content': expContent})
 
         # line-by-line
-        for i in range(len(expLines)):
+        for i, expLine in enumerate(expLines):
             logchunk = yield self.callGet(path,
                                           resultSpec=resultspec.ResultSpec(offset=i, limit=1))
             self.validateData(logchunk)

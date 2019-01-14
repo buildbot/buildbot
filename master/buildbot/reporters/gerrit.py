@@ -18,7 +18,6 @@ Push events to Gerrit
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 from future.utils import iteritems
 
 import time
@@ -371,9 +370,9 @@ class GerritStatusPush(service.BuildbotService):
         if downloads is not None and downloaded is not None:
             downloaded = downloaded.split(" ")
             if downloads and 2 * len(downloads) == len(downloaded):
-                for i in range(0, len(downloads)):
+                for i, download in enumerate(downloads):
                     try:
-                        project, change1 = downloads[i].split(" ")
+                        project, change1 = download.split(" ")
                     except ValueError:
                         return  # something is wrong, abort
                     change2 = downloaded[2 * i]
