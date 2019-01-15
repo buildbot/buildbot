@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 from buildbot.util import service
 from buildbot.util import subscription
 
@@ -36,8 +34,8 @@ class Connection(object):
     # This method replace all Impl args by their Proxy protocol implementation
     def createArgsProxies(self, args):
         newargs = {}
-        for k, v in iteritems(args):
-            for implclass, proxyclass in iteritems(self.proxies):
+        for k, v in args.items():
+            for implclass, proxyclass in self.proxies.items():
                 if isinstance(v, implclass):
                     v = proxyclass(v)
             newargs[k] = v

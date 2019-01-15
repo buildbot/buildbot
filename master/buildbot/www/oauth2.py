@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import json
 import re
 import textwrap
@@ -162,7 +160,7 @@ class OAuth2Auth(auth.AuthBase):
                 content = json.loads(responseContent)
             except ValueError:
                 content = parse_qs(responseContent)
-                for k, v in iteritems(content):
+                for k, v in content.items():
                     content[k] = v[0]
             except TypeError:
                 content = responseContent

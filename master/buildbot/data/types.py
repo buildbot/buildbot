@@ -15,7 +15,6 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import integer_types
-from future.utils import iteritems
 from future.utils import text_type
 
 import datetime
@@ -240,7 +239,7 @@ class SourcedProperties(Type):
         if not isinstance(object, dict):  # we want a dict, and NOT a subclass
             yield "%s is not sourced properties (not a dict)" % (name,)
             return
-        for k, v in iteritems(object):
+        for k, v in object.items():
             if not isinstance(k, text_type):
                 yield "%s property name %r is not unicode" % (name, k)
             if not isinstance(v, tuple) or len(v) != 2:
@@ -304,12 +303,12 @@ class Dict(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in iteritems(self.contents)
+                            for k, v in self.contents.items()
                             ])
 
     def toRaml(self):
         return {'type': "object",
-                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in iteritems(self.contents)}}
+                'properties': {maybeNoneOrList(k, v): v.ramlname for k, v in self.contents.items()}}
 
 
 class JsonObject(Type):
@@ -346,7 +345,7 @@ class Entity(Type):
 
     def __init__(self, name):
         fields = {}
-        for k, v in iteritems(self.__class__.__dict__):
+        for k, v in self.__class__.__dict__.items():
             if isinstance(v, Type):
                 fields[k] = v
         self.fields = fields
@@ -382,11 +381,11 @@ class Entity(Type):
                     fields=[dict(name=k,
                                  type=v.name,
                                  type_spec=v.getSpec())
-                            for k, v in iteritems(self.fields)
+                            for k, v in self.fields.items()
                             ])
 
     def toRaml(self):
         return {'type': "object",
                 'properties': {
                     maybeNoneOrList(k, v): {'type': v.ramlname, 'description': ''}
-                    for k, v in iteritems(self.fields)}}
+                    for k, v in self.fields.items()}}

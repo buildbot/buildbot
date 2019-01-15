@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import string_types
 
 import re
@@ -39,7 +37,7 @@ class CollectedValidationError(ValueError):
     def __init__(self, errors):
         self.errors = errors
         ValueError.__init__(
-            self, "\n".join([k + ":" + v for k, v in iteritems(errors)]))
+            self, "\n".join([k + ":" + v for k, v in errors.items()]))
 
 
 class ValidationErrorCollector(object):
@@ -53,7 +51,7 @@ class ValidationErrorCollector(object):
         try:
             res = yield defer.maybeDeferred(fn, *args, **kwargs)
         except CollectedValidationError as e:
-            for error_name, e in iteritems(e.errors):
+            for error_name, e in e.errors.items():
                 self.errors[error_name] = e
         except ValueError as e:
             self.errors[name] = str(e)
@@ -549,14 +547,14 @@ class CodebaseParameter(NestedParameter):
 
         fields_dict = dict(branch=branch, revision=revision,
                            repository=repository, project=project)
-        for k, v in iteritems(fields_dict):
+        for k, v in fields_dict.items():
             if v is DefaultField:
                 v = StringParameter(name=k, label=k.capitalize() + ":")
             elif isinstance(v, string_types):
                 v = FixedParameter(name=k, default=v)
             fields_dict[k] = v
 
-        fields = [val for k, val in sorted(iteritems(fields_dict), key=lambda x: x[0]) if val]
+        fields = [val for k, val in sorted(fields_dict.items(), key=lambda x: x[0]) if val]
         if patch is not None:
             if patch.name != "patch":
                 config.error(
@@ -783,7 +781,7 @@ class ForceScheduler(base.BaseScheduler):
         changeids = [type(a) == int and a or a.number for a in changeids]
 
         real_properties = Properties()
-        for pname, pvalue in iteritems(properties):
+        for pname, pvalue in properties.items():
             real_properties.setProperty(pname, pvalue, "Force Build Form")
 
         defer.returnValue((real_properties, changeids, sourcestamps))
@@ -813,7 +811,7 @@ class ForceScheduler(base.BaseScheduler):
         # Currently the validation code expects all kwargs to be lists
         # I don't want to refactor that now so much sure we comply...
         kwargs = dict((k, [v]) if not isinstance(v, list) else (k, v)
-                      for k, v in iteritems(kwargs))
+                      for k, v in kwargs.items())
 
         # probably need to clean that out later as the IProperty is already a
         # validation mechanism
@@ -835,9 +833,9 @@ class ForceScheduler(base.BaseScheduler):
         r = self.reasonString % {'owner': owner, 'reason': reason}
 
         # turn sourcestamps into a list
-        for cb, ss in iteritems(sourcestamps):
+        for cb, ss in sourcestamps.items():
             ss['codebase'] = cb
-        sourcestamps = list(itervalues(sourcestamps))
+        sourcestamps = list(sourcestamps.values())
 
         # everything is validated, we can create our source stamp, and
         # buildrequest

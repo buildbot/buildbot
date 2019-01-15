@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import os
 
 import mock
@@ -68,7 +66,7 @@ class TestCreateMaster(misc.StdoutAssertionsMixin, unittest.TestCase):
 
         self.assertEqual(rc, 0)
         self.assertEqual(calls, functions)
-        for repl in itervalues(repls):
+        for repl in repls.values():
             repl.assert_called_with(config)
 
     @defer.inlineCallbacks

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import sqlalchemy as sa
 
 from twisted.python import log
@@ -355,7 +353,7 @@ class ResultSpec(object):
             fields = set(self.fields)
 
             def includeFields(d):
-                return dict((k, v) for k, v in iteritems(d)
+                return dict((k, v) for k, v in d.items()
                             if k in fields)
             applyFields = includeFields
         else:

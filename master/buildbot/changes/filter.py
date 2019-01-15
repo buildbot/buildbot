@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import re
 
 from buildbot.util import ComparableMixin
@@ -81,7 +79,7 @@ class ChangeFilter(ComparableMixin):
     def filter_change(self, change):
         if self.filter_fn is not None and not self.filter_fn(change):
             return False
-        for chg_attr, (filt_list, filt_re, filt_fn) in iteritems(self.checks):
+        for chg_attr, (filt_list, filt_re, filt_fn) in self.checks.items():
             if chg_attr.startswith("prop:"):
                 chg_val = change.properties.getProperty(
                     chg_attr.split(":", 1)[1], '')

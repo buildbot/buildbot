@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import mock
 
 from twisted.internet import defer
@@ -228,7 +226,7 @@ class RunSteps(unittest.TestCase):
 
     def assertLogs(self, exp_logs):
         got_logs = {}
-        for id, l in iteritems(self.master.data.updates.logs):
+        for id, l in self.master.data.updates.logs.items():
             self.assertTrue(l['finished'])
             got_logs[l['name']] = ''.join(l['content'])
         self.assertEqual(got_logs, exp_logs)

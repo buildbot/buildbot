@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import mock
 
 from twisted.internet import defer
@@ -316,7 +314,7 @@ class TestBuildRequest(unittest.TestCase):
         br = yield buildrequest.BuildRequest.fromBrdict(master, brdict)
 
         # check enough of the source stamp to verify it found the changes
-        self.assertEqual([ss.ssid for ss in itervalues(br.sources)], [234])
+        self.assertEqual([ss.ssid for ss in br.sources.values()], [234])
 
         self.assertEqual(br.reason, 'triggered')
 

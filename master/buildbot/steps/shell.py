@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
 from future.utils import string_types
 
 import inspect
@@ -344,14 +343,14 @@ class SetPropertyFromCommand(ShellCommand):
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
-            for k, v in iteritems(new_props):
+            for k, v in new_props.items():
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
         if self.property_changes:
             props_set = ["%s: %r" % (k, v)
-                         for k, v in sorted(iteritems(self.property_changes))]
+                         for k, v in sorted(self.property_changes.items())]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def describe(self, done=False):

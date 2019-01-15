@@ -14,8 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
-from future.utils import itervalues
-
 import time
 
 from twisted.internet import defer
@@ -541,7 +539,7 @@ class AbstractWorker(service.BuildbotService, object):
             return False
 
         if self.max_builds:
-            active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+            active_builders = [wfb for wfb in self.workerforbuilders.values()
                                if wfb.isBusy()]
             if len(active_builders) >= self.max_builds:
                 return False
@@ -565,7 +563,7 @@ class AbstractWorker(service.BuildbotService, object):
         and has no active builders."""
         if not self._graceful:
             return
-        active_builders = [wfb for wfb in itervalues(self.workerforbuilders)
+        active_builders = [wfb for wfb in self.workerforbuilders.values()
                            if wfb.isBusy()]
         if active_builders:
             return

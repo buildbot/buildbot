@@ -14,7 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import integer_types
-from future.utils import iteritems
 
 import json
 import os
@@ -224,7 +223,7 @@ class WwwTestMixin(RequiresWwwMixin):
         if responseCode is not None:
             got['responseCode'] = str(self.request.responseCode)
             exp['responseCode'] = str(responseCode)
-        for header, value in iteritems(headers):
+        for header, value in headers.items():
             got[header] = self.request.headers.get(header)
             exp[header] = value
         self.assertEqual(got, exp)

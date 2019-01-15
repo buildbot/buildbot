@@ -17,7 +17,6 @@ Support for buildsets in the database
 """
 
 from future.utils import integer_types
-from future.utils import iteritems
 
 import json
 
@@ -92,7 +91,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
                 inserts = [
                     dict(buildsetid=bsid, property_name=k,
                          property_value=json.dumps([v, s]))
-                    for k, (v, s) in iteritems(properties)]
+                    for k, (v, s) in properties.items()]
                 for i in inserts:
                     self.checkLength(bs_props_tbl.c.property_name,
                                      i['property_name'])

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
-
 import os
 from urllib.parse import quote as urlquote
 
@@ -244,7 +241,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.botmaster.builders[name].builder_status
 
     def getWorkerNames(self):
-        return list(iteritems(self.workers.workers))
+        return list(self.workers.workers.items())
 
     def getWorker(self, workername):
         return self.workers.workers[workername].worker_status
@@ -389,7 +386,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builderid = msg['builderid']
         buildername = None
         # convert builderid to buildername
-        for b in itervalues(self.botmaster.builders):
+        for b in self.botmaster.builders.values():
             if builderid == (yield b.getBuilderId()):
                 buildername = b.name
                 break

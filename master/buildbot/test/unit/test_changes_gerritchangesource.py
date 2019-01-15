@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import datetime
 import json
 import types
@@ -160,7 +158,7 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
-        for k, v in iteritems(c):
+        for k, v in c.items():
             self.assertEqual(self.expected_change[k], v)
 
     change_merged_event = {
@@ -307,7 +305,7 @@ class TestGerritEventLogPoller(changesource.ChangeSourceMixin,
         yield self.changesource.poll()
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         c = self.master.data.updates.changesAdded[0]
-        for k, v in iteritems(c):
+        for k, v in c.items():
             self.assertEqual(TestGerritChangeSource.expected_change[k], v)
         self.master.db.state.assertState(
             self.OBJECTID, last_event_ts=self.EVENT_TIMESTAMP)

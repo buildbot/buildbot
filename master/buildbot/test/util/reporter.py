@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 from buildbot.test.fake import fakedb
 
 
@@ -79,7 +77,7 @@ class ReporterTestMixin(object):
                 fakedb.BuildProperty(
                     buildid=20 + i, name="buildername", value="Builder0"),
             ])
-            for k, v in iteritems(self.TEST_PROPS):
+            for k, v in self.TEST_PROPS.items():
                 self.db.insertTestData([
                     fakedb.BuildProperty(buildid=20 + i, name=k, value=v)
                 ])

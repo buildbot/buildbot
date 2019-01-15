@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import json
 import os
 import shutil
@@ -70,7 +68,7 @@ def uploadTarFile(filename, **members):
     def behavior(command):
         f = BytesIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-        for name, content in iteritems(members):
+        for name, content in members.items():
             content = unicode2bytes(content)
             archive.addfile(tarfile.TarInfo(name), BytesIO(content))
         writer = command.args['writer']

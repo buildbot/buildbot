@@ -14,8 +14,6 @@
 # Copyright Buildbot Team Members
 
 from future.utils import integer_types
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import string_types
 
 import calendar
@@ -138,7 +136,7 @@ class TempSourceStamp(object):
 
         assert all(
             isinstance(val, string_types + integer_types + (type(None),))
-            for attr, val in iteritems(result)
+            for attr, val in result.items()
         ), result
         return result
 
@@ -281,7 +279,7 @@ class BuildRequest(object):
         if set(selfSources) != set(otherSources):
             defer.returnValue(False)
 
-        for c, selfSS in iteritems(selfSources):
+        for c, selfSS in selfSources.items():
             otherSS = otherSources[c]
             if selfSS['repository'] != otherSS['repository']:
                 defer.returnValue(False)
@@ -336,7 +334,7 @@ class BuildRequest(object):
             # looking at changeids and picking the highest-numbered.
             all_merged_sources[codebase] = all_sources[-1]
 
-        return list(itervalues(all_merged_sources))
+        return list(all_merged_sources.values())
 
     def mergeReasons(self, others):
         """Return a reason for the merged build request."""

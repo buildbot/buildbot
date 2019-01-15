@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import json
 import os
 
@@ -261,11 +259,11 @@ class RemoteBuildSetStatus(pb.Referenceable):
     @defer.inlineCallbacks
     def remote_getBuildRequests(self):
         brids = dict()
-        for builderid, brid in iteritems(self.brids):
+        for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
         defer.returnValue([(n, RemoteBuildRequest(self.master, n, brid))
-                           for n, brid in iteritems(brids)])
+                           for n, brid in brids.items()])
 
 
 class RemoteBuildRequest(pb.Referenceable):

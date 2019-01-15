@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import json
 import uuid
 
@@ -38,7 +36,7 @@ class Consumer(object):
         if key is not None:
             self.qrefs[key].stopConsuming()
         else:
-            for qref in itervalues(self.qrefs):
+            for qref in self.qrefs.values():
                 qref.stopConsuming()
             self.qrefs = {}
 

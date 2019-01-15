@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
@@ -139,20 +136,20 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     @metrics.countMethod('BotMaster.workerLost()')
     def workerLost(self, bot):
         metrics.MetricCountEvent.log("BotMaster.attached_workers", -1)
-        for name, b in iteritems(self.builders):
+        for name, b in self.builders.items():
             if bot.workername in b.config.workernames:
                 b.detached(bot)
 
     @metrics.countMethod('BotMaster.getBuildersForWorker()')
     def getBuildersForWorker(self, workername):
-        return [b for b in itervalues(self.builders)
+        return [b for b in self.builders.values()
                 if workername in b.config.workernames]
 
     def getBuildernames(self):
         return self.builderNames
 
     def getBuilders(self):
-        return list(itervalues(self.builders))
+        return list(self.builders.values())
 
     @defer.inlineCallbacks
     def startService(self):
@@ -161,7 +158,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             builderid = msg['builderid']
             buildername = None
             # convert builderid to buildername
-            for builder in itervalues(self.builders):
+            for builder in self.builders.values():
                 if builderid == (yield builder.getBuilderId()):
                     buildername = builder.name
                     break

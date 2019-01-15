@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
-
 from twisted.internet import defer
 from twisted.python import log
 
@@ -213,7 +210,7 @@ class Trigger(BuildStep):
                 results, brids = results
             builderNames = {}
             if was_cb:  # errors were already logged in worstStatus
-                for builderid, br in iteritems(brids):
+                for builderid, br in brids.items():
                     builds = yield self.master.db.builds.getBuilds(buildrequestid=br)
                     for build in builds:
                         builderid = build['builderid']
@@ -283,8 +280,8 @@ class Trigger(BuildStep):
                 yield self.addLogWithException(e)
                 results = EXCEPTION
             if unimportant:
-                unimportant_brids.extend(itervalues(brids))
-            self.brids.extend(itervalues(brids))
+                unimportant_brids.extend(brids.values())
+            self.brids.extend(brids.values())
             for brid in brids.values():
                 # put the url to the brids, so that we can have the status from
                 # the beginning

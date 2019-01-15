@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import mock
 
 from twisted.internet import defer
@@ -116,7 +114,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                     del actual_ss[key]
             self.assertEqual(expected_ss, actual_ss)
 
-        for brid in itervalues(brids):
+        for brid in brids.values():
             buildrequest = yield self.master.db.buildrequests.getBuildRequest(brid)
             self.assertEqual(
                 buildrequest,

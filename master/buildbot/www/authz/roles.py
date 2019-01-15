@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 
 class RolesFromBase(object):
 
@@ -49,7 +47,7 @@ class RolesFromEmails(RolesFromBase):
     def __init__(self, **kwargs):
         RolesFromBase.__init__(self)
         self.roles = {}
-        for role, emails in iteritems(kwargs):
+        for role, emails in kwargs.items():
             for email in emails:
                 self.roles.setdefault(email, []).append(role)
 
@@ -65,7 +63,7 @@ class RolesFromDomain(RolesFromEmails):
         RolesFromBase.__init__(self)
 
         self.domain_roles = {}
-        for role, domains in iteritems(kwargs):
+        for role, domains in kwargs.items():
             for domain in domains:
                 self.domain_roles.setdefault(domain, []).append(role)
 

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import datetime
 import json
 import os
@@ -205,7 +203,7 @@ class MyResource(resource.Resource):
                 return [bytes2unicode(y) for y in x]
             elif isinstance(x, dict):
                 newArgs = {}
-                for a, b in iteritems(x):
+                for a, b in x.items():
                     newArgs[decode(a)] = decode(b)
                 return newArgs
             return x

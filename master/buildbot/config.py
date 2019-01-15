@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import string_types
 from future.utils import text_type
 
@@ -477,7 +475,7 @@ class MasterConfig(util.ComparableMixin):
 
         protocols = config_dict.get('protocols', {})
         if isinstance(protocols, dict):
-            for proto, options in iteritems(protocols):
+            for proto, options in protocols.items():
                 if not isinstance(proto, str):
                     error("c['protocols'] keys must be strings")
                 if not isinstance(options, dict):
@@ -588,7 +586,7 @@ class MasterConfig(util.ComparableMixin):
             if not isinstance(caches, dict):
                 error("c['caches'] must be a dictionary")
             else:
-                for (name, value) in iteritems(caches):
+                for (name, value) in caches.items():
                     if not isinstance(value, int):
                         error("value for cache size '%s' must be an integer"
                               % name)
@@ -813,7 +811,7 @@ class MasterConfig(util.ComparableMixin):
 
         # check that all builders are implemented on this master
         unscheduled_buildernames = {b.name for b in self.builders}
-        for s in itervalues(self.schedulers):
+        for s in self.schedulers.values():
             builderNames = s.listBuilderNames()
             if interfaces.IRenderable.providedBy(builderNames):
                 unscheduled_buildernames.clear()
@@ -834,7 +832,7 @@ class MasterConfig(util.ComparableMixin):
 
         all_buildernames = {b.name for b in self.builders}
 
-        for s in itervalues(self.schedulers):
+        for s in self.schedulers.values():
             builderNames = s.listBuilderNames()
             if interfaces.IRenderable.providedBy(builderNames):
                 continue
@@ -888,7 +886,7 @@ class MasterConfig(util.ComparableMixin):
     def check_ports(self):
         ports = set()
         if self.protocols:
-            for proto, options in iteritems(self.protocols):
+            for proto, options in self.protocols.items():
                 if proto == 'null':
                     port = -1
                 else:

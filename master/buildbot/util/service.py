@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import hashlib
 
 from twisted.application import service
@@ -427,7 +425,7 @@ class BuildbotServiceManager(AsyncMultiService, config.ConfiguredMixin,
     def getConfigDict(self):
         return {'name': self.name,
                 'childs': [v.getConfigDict()
-                           for v in itervalues(self.namedServices)]}
+                           for v in self.namedServices.values()]}
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):

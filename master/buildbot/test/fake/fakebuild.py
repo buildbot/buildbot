@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import posixpath
 
 import mock
@@ -100,10 +98,10 @@ class FakeBuild(properties.PropertiesMixin):
         return None
 
     def getAllSourceStamps(self):
-        return list(itervalues(self.sources))
+        return list(self.sources.values())
 
     def allChanges(self):
-        for s in itervalues(self.sources):
+        for s in self.sources.values():
             for c in s.changes:
                 yield c
 

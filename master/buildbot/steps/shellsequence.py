@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
 from future.utils import string_types
 
 import copy
@@ -38,7 +37,7 @@ class ShellArg(results.ResultComputingConfigMixin):
                          "must not be None" % (name,))
         self.command = command
         self.logfile = logfile
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             if k not in self.resultConfig:
                 config.error("the parameter '%s' is not "
                              "handled by ShellArg" % (k,))

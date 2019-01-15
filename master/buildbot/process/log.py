@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
 from future.utils import text_type
 
 import re
@@ -189,7 +188,7 @@ class StreamLog(Log):
 
     @defer.inlineCallbacks
     def finish(self):
-        for lbf in itervalues(self.lbfs):
+        for lbf in self.lbfs.values():
             yield lbf.flush()
         yield super(StreamLog, self).finish()
 

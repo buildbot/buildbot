@@ -15,7 +15,6 @@
 
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import integer_types
-from future.utils import iteritems
 from future.utils import text_type
 
 import datetime
@@ -218,7 +217,7 @@ class SourcedPropertiesValidator(Validator):
         if not isinstance(object, dict):
             yield "{} is not sourced properties (not a dict)".format(name)
             return
-        for k, v in iteritems(object):
+        for k, v in object.items():
             if not isinstance(k, text_type):
                 yield "{} property name {!r} is not unicode".format(name, k)
             if not isinstance(v, tuple) or len(v) != 2:

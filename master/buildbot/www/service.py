@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import calendar
 import datetime
 import os
@@ -257,7 +255,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def configPlugins(self, root, new_config):
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
-        for key, plugin in list(iteritems(new_config.www.get('plugins', {}))):
+        for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError(

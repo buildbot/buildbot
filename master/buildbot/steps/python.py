@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import re
 
 from buildbot import config
@@ -245,7 +243,7 @@ class PyLint(ShellCommand):
     def createSummary(self, log):
         counts, summaries = self.counts, self.summaries
         self.descriptionDone = self.descriptionDone[:]
-        for msg, fullmsg in sorted(iteritems(self._MESSAGES)):
+        for msg, fullmsg in sorted(self._MESSAGES.items()):
             if counts[msg]:
                 self.descriptionDone.append("%s=%d" % (fullmsg, counts[msg]))
                 self.addCompleteLog(fullmsg, "\n".join(summaries[msg]))

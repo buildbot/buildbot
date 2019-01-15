@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import mock
 
 from twisted.internet import defer
@@ -87,7 +85,7 @@ class TestBRDBase(unittest.TestCase):
 
     def addWorkers(self, workerforbuilders):
         """C{workerforbuilders} maps name : available"""
-        for name, avail in iteritems(workerforbuilders):
+        for name, avail in workerforbuilders.items():
             wfb = mock.Mock(spec=['isAvailable'], name=name)
             wfb.name = name
             wfb.isAvailable.return_value = avail
@@ -269,7 +267,7 @@ class Test(TestBRDBase):
                 return lambda: defer.succeed(t)
             return lambda: t
 
-        for n, t in iteritems(oldestRequestTimes):
+        for n, t in oldestRequestTimes.items():
             if t is not None:
                 t = epoch2datetime(t)
             self.builders[n].getOldestRequestTime = mklambda(t)

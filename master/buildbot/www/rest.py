@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
 from future.utils import text_type
 
 import cgi
@@ -76,7 +75,7 @@ class RestRootResource(resource.Resource):
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
         latest = max(list(self.version_classes))
-        for version, klass in iteritems(self.version_classes):
+        for version, klass in self.version_classes.items():
             if version < min_vers:
                 continue
             child = klass(master)

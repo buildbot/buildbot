@@ -18,8 +18,6 @@
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
 
-from future.utils import iteritems
-
 import re
 from datetime import datetime
 
@@ -185,6 +183,6 @@ class ChangeHookResource(resource.Resource):
                                 for f in chdict['files']]
             if chdict.get('properties'):
                 chdict['properties'] = dict((bytes2unicode(k), v)
-                                            for k, v in iteritems(chdict['properties']))
+                                            for k, v in chdict['properties'].items())
             chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
             log.msg("injected change %s" % chid)

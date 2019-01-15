@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 from twisted.internet import defer
 
 from buildbot.data import base
@@ -40,7 +38,7 @@ class Db2DataMixin(object):
         if props and filters:  # pragma: no cover
             return (props
                     if '*' in filters
-                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
+                    else dict(((k, v) for k, v in props.items() if k in filters)))
 
     def db2data(self, dbdict):
         data = {

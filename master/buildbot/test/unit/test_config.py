@@ -18,8 +18,6 @@
 # and builtins module on Python 3, because we need to override
 # the actual native open method.
 
-from future.utils import iteritems
-
 import os
 import re
 import textwrap
@@ -161,7 +159,7 @@ class ConfigLoaderTests(ConfigErrorsMixin, dirs.DirsMixin, unittest.SynchronousT
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
-        for file, contents in iteritems(other_files):
+        for file, contents in other_files.items():
             with open(file, "w") as f:
                 f.write(contents)
 
@@ -275,7 +273,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         config_file = textwrap.dedent(config_file)
         with open(os.path.join(self.basedir, self.filename), "w") as f:
             f.write(config_file)
-        for file, contents in iteritems(other_files):
+        for file, contents in other_files.items():
             with open(file, "w") as f:
                 f.write(contents)
     # tests
@@ -301,7 +299,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         expected['buildbotNetUsageData'] = 'basic'
         got = {
             attr: getattr(cfg, attr)
-            for attr, exp in iteritems(expected)}
+            for attr, exp in expected.items()}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
         self.assertEqual(got, expected)
@@ -405,7 +403,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.assertFalse(self.errors, self.errors.errors)
         got = {
             attr: getattr(self.cfg, attr)
-            for attr, exp in iteritems(expected)}
+            for attr, exp in expected.items()}
         got = interfaces.IConfigured(got).getConfigDict()
         expected = interfaces.IConfigured(expected).getConfigDict()
 
@@ -1248,7 +1246,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def assertAttributes(self, cfg, **expected):
         got = {
             attr: getattr(cfg, attr)
-            for attr, exp in iteritems(expected)}
+            for attr, exp in expected.items()}
         self.assertEqual(got, expected)
 
     # tests

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import functools
 
 from twisted.internet import defer
@@ -201,7 +199,7 @@ class Expect(object):
         if behavior == 'rc':
             command.rc = args[0]
             d = defer.succeed(None)
-            for log in itervalues(command.logs):
+            for log in command.logs.values():
                 if hasattr(log, 'unwrap'):
                     # We're handling an old style log that was
                     # used in an old style step. We handle the necessary

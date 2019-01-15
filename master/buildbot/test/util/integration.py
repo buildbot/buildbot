@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import itervalues
-
 import os
 import sys
 from io import StringIO
@@ -119,7 +117,7 @@ class RunMasterBase(unittest.TestCase):
 
         if self.proto == 'pb':
             # We find out the worker port automatically
-            workerPort = list(itervalues(m.pbmanager.dispatchers))[
+            workerPort = list(m.pbmanager.dispatchers.values())[
                 0].port.getHost().port
 
             # create a worker, and attach it to the master, it will be started, and stopped

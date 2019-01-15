@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import json
 
 from twisted.internet import defer
@@ -417,7 +415,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         if expectKind is None:
             expect_props[name] = (expect, 'Force Build Form')
         elif expectKind is dict:
-            for k, v in iteritems(expect):
+            for k, v in expect.items():
                 expect_props[k] = (v, 'Force Build Form')
         else:
             self.fail("expectKind is wrong type!")

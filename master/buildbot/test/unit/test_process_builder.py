@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
 from future.utils import text_type
 
 import random
@@ -121,7 +120,7 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
     def setWorkerForBuilders(self, workerforbuilders):
         """C{workerforbuilders} maps name : available"""
         self.bldr.workers = []
-        for name, avail in iteritems(workerforbuilders):
+        for name, avail in workerforbuilders.items():
             wfb = mock.Mock(spec=['isAvailable'], name=name)
             wfb.name = name
             wfb.isAvailable.return_value = avail

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import copy
 import json
 import os
@@ -78,7 +76,7 @@ class RamlSpec(object):
         if uriParameters is None:
             uriParameters = OrderedDict()
 
-        for k, v in iteritems(api):
+        for k, v in api.items():
             if k.startswith("/"):
                 ep = base + k
                 p = copy.deepcopy(uriParameters)
@@ -112,7 +110,7 @@ class RamlSpec(object):
 
     def iter_actions(self, endpoint):
         ACTIONS_MAGIC = '/actions/'
-        for k, v in iteritems(endpoint):
+        for k, v in endpoint.items():
             if k.startswith(ACTIONS_MAGIC):
                 k = k[len(ACTIONS_MAGIC):]
                 v = v['post']

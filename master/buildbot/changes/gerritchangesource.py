@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import datetime
 import json
 
@@ -114,7 +112,7 @@ class GerritChangeSourceBase(base.ChangeSource):
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
-            for k, v in iteritems(event):
+            for k, v in event.items():
                 name = "%s.%s" % (base, k)
                 if name in self.EVENT_PROPERTY_BLACKLIST:
                     continue

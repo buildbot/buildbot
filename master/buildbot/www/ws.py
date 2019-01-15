@@ -13,7 +13,6 @@
 #
 # Copyright  Team Members
 
-from future.utils import itervalues
 from future.utils import string_types
 
 import json
@@ -122,7 +121,7 @@ class WsProtocol(WebSocketServerProtocol):
     def connectionLost(self, reason):
         if self.debug:
             log.msg("connection lost", system=self)
-        for qref in itervalues(self.qrefs):
+        for qref in self.qrefs.values():
             qref.stopConsuming()
         self.qrefs = None  # to be sure we don't add any more
 

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
-
 import mock
 
 from twisted.internet import defer
@@ -333,7 +330,7 @@ class BuildStepMixin(object):
         # debugging failing tests
         if result != self.exp_result:
             log.msg("unexpected result from step; dumping logs")
-            for l in itervalues(self.step.logs):
+            for l in self.step.logs.values():
                 if l.stdout:
                     log.msg("{0} stdout:\n{1}".format(l.name, l.stdout))
                 if l.stderr:
@@ -350,7 +347,7 @@ class BuildStepMixin(object):
                 "expected state_string {0!r}, got {1!r}".format(
                     self.exp_state_string,
                     stepStateString[stepids[0]]))
-        for pn, (pv, ps) in iteritems(self.exp_properties):
+        for pn, (pv, ps) in self.exp_properties.items():
             self.assertTrue(self.properties.hasProperty(pn),
                             "missing property '%s'" % pn)
             self.assertEqual(self.properties.getProperty(pn),
@@ -363,7 +360,7 @@ class BuildStepMixin(object):
         for pn in self.exp_missing_properties:
             self.assertFalse(self.properties.hasProperty(pn),
                              "unexpected property '%s'" % pn)
-        for l, exp in iteritems(self.exp_logfiles):
+        for l, exp in self.exp_logfiles.items():
             got = self.step.logs[l].stdout
             if got != exp:
                 log.msg("Unexpected log output:\n" + got)

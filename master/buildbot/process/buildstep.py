@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import raise_with_traceback
 from future.utils import string_types
 from future.utils import text_type
@@ -628,7 +626,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def finishUnfinishedLogs(self):
         ok = True
-        not_finished_logs = [v for (k, v) in iteritems(self.logs)
+        not_finished_logs = [v for (k, v) in self.logs.items()
                              if not v.finished]
         finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
                                                consumeErrors=True)
@@ -1006,7 +1004,7 @@ class LoggingBuildStep(BuildStep):
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
-        for logname, remotefilename in iteritems(logfiles):
+        for logname, remotefilename in logfiles.items():
             if self.lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
@@ -1238,7 +1236,7 @@ class ShellMixin(object):
         # set up logging
         if stdio is not None:
             cmd.useLog(stdio, False)
-        for logname, remotefilename in iteritems(self.logfiles):
+        for logname, remotefilename in self.logfiles.items():
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
                 def callback(cmd_arg, local_logname=logname):
@@ -1278,7 +1276,7 @@ def regex_log_evaluator(cmd, _, regexes):
         if worst_status(worst, possible_status) == possible_status:
             if isinstance(err, string_types):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
-            for l in itervalues(cmd.logs):
+            for l in cmd.logs.values():
                 if err.search(l.getText()):
                     worst = possible_status
     return worst

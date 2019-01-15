@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import re
 
 import mock
@@ -130,7 +128,7 @@ class TestContactChannel(unittest.TestCase):
         clock = task.Clock()
         self.patch(reactor, 'callLater', clock.callLater)
         self.patch_send()
-        silly_prompt, silly_response = list(iteritems(self.contact.silly))[0]
+        silly_prompt, silly_response = list(self.contact.silly.items())[0]
 
         self.contact.doSilly(silly_prompt)
         clock.pump([0.5] * 20)

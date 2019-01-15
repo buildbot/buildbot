@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
 from future.utils import string_types
 
 import re
@@ -239,7 +238,7 @@ class MailNotifier(NotifierBase):
                 props.master = self.master
                 extraHeaders = yield props.render(extraHeaders)
 
-            for k, v in iteritems(extraHeaders):
+            for k, v in extraHeaders.items():
                 if k in m:
                     twlog.msg("Warning: Got header " + k +
                               " in self.extraHeaders "

@@ -15,8 +15,6 @@
 #
 # pylint: disable=C0111
 
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import string_types
 
 import traceback
@@ -105,7 +103,7 @@ class _NSNode(object):
         self._children = dict()
 
     def load(self):
-        for child in itervalues(self._children):
+        for child in self._children.values():
             child.load()
 
     def add(self, name, entry):
@@ -174,13 +172,13 @@ class _NSNode(object):
 
     def _info_all(self):
         result = []
-        for key, child in iteritems(self._children):
+        for key, child in self._children.items():
             if isinstance(child, _PluginEntry):
                 result.append((key, child.info))
             else:
                 result.extend([
                     ('%s.%s' % (key, name), value)
-                    for name, value in iteritems(child.info_all())
+                    for name, value in child.info_all().items()
                 ])
         return result
 
@@ -319,7 +317,7 @@ class _PluginDB(object):
         get information about all plugins in registered namespaces
         """
         result = dict()
-        for name, namespace in iteritems(self._namespaces):
+        for name, namespace in self._namespaces.items():
             result[name] = namespace.info_all()
         return result
 

@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.utils import iteritems
-
 import sqlalchemy as sa
 import sqlalchemy.exc
 
@@ -47,7 +45,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
             upd_q = tbl.update(
                 ((tbl.c.schedulerid == schedulerid) &
                  (tbl.c.changeid == sa.bindparam('wc_changeid'))))
-            for changeid, important in iteritems(classifications):
+            for changeid, important in classifications.items():
                 transaction = conn.begin()
                 # convert the 'important' value into an integer, since that
                 # is the column type
