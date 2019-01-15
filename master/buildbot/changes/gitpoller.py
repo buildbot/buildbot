@@ -13,12 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import quote as urlquote
 from future.utils import itervalues
 
 import os
 import re
 import stat
+from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
 from twisted.internet import utils

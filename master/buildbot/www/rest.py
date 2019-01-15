@@ -13,7 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import urlparse
 from future.utils import iteritems
 from future.utils import text_type
 
@@ -23,6 +22,7 @@ import fnmatch
 import json
 import re
 from contextlib import contextmanager
+from urllib.parse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log

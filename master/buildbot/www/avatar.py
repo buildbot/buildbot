@@ -13,10 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import urlencode
-from future.moves.urllib.parse import urljoin
-
 import hashlib
+from urllib.parse import urlencode
+from urllib.parse import urljoin
 
 from twisted.internet import defer
 

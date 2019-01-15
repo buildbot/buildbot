@@ -15,8 +15,6 @@
 
 
 from builtins import bytes
-from future.moves.urllib.parse import urlsplit
-from future.moves.urllib.parse import urlunsplit
 from future.utils import string_types
 from future.utils import text_type
 
@@ -28,6 +26,9 @@ import re
 import textwrap
 import time
 import json
+
+from urllib.parse import urlsplit
+from urllib.parse import urlunsplit
 
 import dateutil.tz
 

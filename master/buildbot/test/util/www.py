@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import parse_qs
-from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import integer_types
 from future.utils import iteritems
 
 import json
 import os
 import pkg_resources
+from urllib.parse import parse_qs
+from urllib.parse import unquote as urlunquote
 from uuid import uuid1
 
 import mock

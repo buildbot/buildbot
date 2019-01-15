@@ -24,7 +24,7 @@
 # `unicode` and `raw_*` attributes for `bytes`.
 
 
-from future.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 import ldap3
 

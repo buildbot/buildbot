@@ -13,10 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.itertools import filterfalse
-
 from collections import defaultdict
 from collections import deque
+from itertools import filterfalse
 from weakref import WeakValueDictionary
 
 from twisted.internet import defer

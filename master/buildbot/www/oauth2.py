@@ -13,14 +13,14 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import parse_qs
-from future.moves.urllib.parse import urlencode
 from future.utils import iteritems
 
 import json
 import re
 import textwrap
 from posixpath import join
+from urllib.parse import parse_qs
+from urllib.parse import urlencode
 
 import jinja2
 import requests

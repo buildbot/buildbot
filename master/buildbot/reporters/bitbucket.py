@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from twisted.internet import defer
 

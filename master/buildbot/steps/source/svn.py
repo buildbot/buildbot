@@ -13,13 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.urllib.parse import unquote as urlunquote
-from future.moves.urllib.parse import urlparse
-from future.moves.urllib.parse import urlunparse
-
 import re
 import xml.dom.minidom
 import xml.parsers.expat
+from urllib.parse import unquote as urlunquote
+from urllib.parse import urlparse
+from urllib.parse import urlunparse
 
 from twisted.internet import defer
 from twisted.internet import reactor

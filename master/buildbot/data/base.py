@@ -13,10 +13,9 @@
 #
 # Copyright Buildbot Team Members
 
-from future.moves.collections import UserList
-
 import copy
 import re
+from collections import UserList
 
 from twisted.internet import defer
 
