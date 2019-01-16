@@ -103,7 +103,7 @@ class DockerBaseWorker(AbstractLatentWorker):
             return None
         return self.instance['Id'][:6]
 
-    def createEnvironment(self):
+    def createEnvironment(self, build=None):
         result = {
             "BUILDMASTER": self.masterFQDN,
             "WORKERNAME": self.name,
@@ -115,6 +115,17 @@ class DockerBaseWorker(AbstractLatentWorker):
             result["BUILDMASTER"], result["BUILDMASTER_PORT"] = self.masterFQDN.split(":")
         return result
 
+    @staticmethod
+    def get_fqdn():
+        return socket.getfqdn()
+
+    @staticmethod
+    def get_ip():
+        fqdn = socket.getfqdn()
+        try:
+            return socket.gethostbyname(fqdn)
+        except socket.gaierror:
+            return fqdn
 
 class DockerLatentWorker(DockerBaseWorker,
                          CompatibleLatentWorkerMixin):

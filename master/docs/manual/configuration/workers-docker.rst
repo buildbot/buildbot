@@ -415,12 +415,36 @@ In addition to the arguments available for any :ref:`Latent-Workers`, :class:`Ku
     The default behaviour is to compute address IP of the master. This option works out-of-the box inside kubernetes but don't leverage the load-balancing through service.
     You can pass any callable, such as ``KubeLatentWorker.get_fqdn`` that will set ``masterFQDN=socket.getfqdn()``.
 
-``kube_extra_config``
-    (optional)
-    Specify patch to the job kube spec
+For more customization, you can subclass :class:`KubeLatentWorker` and override following methods.
+All those methods can optionally return a deferred.
+All those methods take props object which is a L{IProperties} allowing to get some parameters from the build properties
+
+    .. py:method:: createEnvironment(self, props)
+
+        This method compute the environment from your properties.
+        Don't forget to first call `super().createEnvironment(props)` to get the base properties necessary to connect to the master.
+
+    .. py:method:: getBuildContainerResources(self, props)
+
+        This method compute the `pod resources` part of the container spec (`spec.containers[].resources`.
+        This is important to reserve some CPU and memory for your builds, and to trigger node autoscaling if needed.
+        You can also limit the CPU and memory for your container.
+
+    .. py:method:: getBuildContainerResources(self, props)
+
+        This method compute the `pod resources` part of the container spec (`spec.containers[].resources`.
+        This is important to reserve some CPU and memory for your builds, and to trigger node autoscaling if needed.
+        You can also limit the CPU and memory for your container.
+
+    .. py:method:: getServicesContainers(self, props)
+
+        This method compute a list of containers spec to put aside the worker container.
+        This is useful for starting services around your build pod, like a database container.
+        All containers within the same pod share the same localhost interface, so you can access the other containers tcp ports very easily.
 
 
 .. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/
+.. _pod resources: https://kubernetes.io/docs/concepts/configuration/manage-compute-resources-container/#resource-requests-and-limits-of-pod-and-container
 
 Kubernetes config loaders
 -------------------------
