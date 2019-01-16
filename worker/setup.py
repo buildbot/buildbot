@@ -110,10 +110,7 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-if sys.version_info[0] >= 3:
-    twisted_ver = ">= 17.9.0"
-else:
-    twisted_ver = ">= 16.1.0"
+twisted_ver = ">= 17.9.0"
 
 
 try:
