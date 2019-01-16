@@ -32,6 +32,7 @@ log = Logger()
 class KubeLatentWorker(DockerBaseWorker):
 
     instance = None
+    builds_may_be_incompatible = True
 
     @defer.inlineCallbacks
     def getPodSpec(self, build):
@@ -68,12 +69,20 @@ class KubeLatentWorker(DockerBaseWorker):
         # those containers will run within the same localhost as the build container (aka within the same pod)
         return []
 
+
+    @defer.inlineCallbacks
+    def isCompatibleWithBuild(self, build_props):
+        if self.instance is None:
+            defer.returnValue(True)
+
+        needed_pod_spec = yield self.getPodSpec(build_props)
+        return self.current_pod_spec == needed_pod_spec
+
     def checkConfig(self,
                     name,
                     image='buildbot/buildbot-worker',
                     namespace=None,
                     masterFQDN=None,
-                    kube_extra_spec=None,
                     kube_config=None,
                     **kwargs):
 
@@ -87,7 +96,6 @@ class KubeLatentWorker(DockerBaseWorker):
                         image='buildbot/buildbot-worker',
                         namespace=None,
                         masterFQDN=None,
-                        kube_extra_spec=None,
                         kube_config=None,
                         **kwargs):
 
@@ -104,12 +112,12 @@ class KubeLatentWorker(DockerBaseWorker):
         self._kube = yield kubeclientservice.KubeClientService.getService(
             self.master, kube_config=kube_config)
         self.namespace = namespace or self._kube.namespace
-        self.kube_extra_spec = kube_extra_spec or {}
+        self.current_pod_spec = None
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
-        pod_spec = yield self.getPodSpec(build)
+        self.current_pod_spec = pod_spec = yield self.getPodSpec(build)
         try:
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
@@ -118,6 +126,7 @@ class KubeLatentWorker(DockerBaseWorker):
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):
+        self.current_pod_spec = None
         try:
             yield self._kube.deletePod(self.namespace, self.getContainerName())
         except kubeclientservice.KubeError as e:
