@@ -28,3 +28,12 @@ def urlquote(*args, **kwargs):
         if 'errors' in kwargs:
             del new_kwargs['errors']
     return quote(*args, **new_kwargs)
+
+
+if PY3:
+    # just assign the globals into the module namespace
+    TimeoutError = TimeoutError
+else:
+    # TimeoutError is only defined in py3
+    class TimeoutError(RuntimeError):
+        pass
