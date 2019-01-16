@@ -20,18 +20,12 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.process.properties import Properties
+from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.util.eventual import _setReactor
 from buildbot.worker.marathon import MarathonLatentWorker
-
-
-class FakeBuild(object):
-    def render(self, r):
-        if isinstance(r, str):
-            return "rendered:" + r
-        return r
 
 
 class FakeBot(object):
@@ -119,7 +113,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
             },
             code=201,
             content_json={'Id': 'id'})
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         self.successResultOf(d)
@@ -157,7 +151,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
             code=201,
             content_json={'Id': 'id'})
 
-        worker.substantiate(None, FakeBuild())
+        worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertEqual(worker.instance, {'Id': 'id'})
         # teardown makes sure all containers are cleaned up
 
@@ -191,7 +185,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
         self._http.expect(
             method='delete',
             ep='/v2/apps/buildbot-worker/buildbot-bot-masterhash')
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(.1)
         self.failureResultOf(d)
         self.assertEqual(worker.instance, None)
@@ -237,7 +231,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
             },
             code=201,
             content_json={'Id': 'id'})
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         self.successResultOf(d)
