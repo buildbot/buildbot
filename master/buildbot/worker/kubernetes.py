@@ -21,9 +21,9 @@ from twisted.internet import defer
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import kubeclientservice
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
-from buildbot.util.latent import CompatibleLatentWorkerMixin
 
 log = Logger()
 
