@@ -427,14 +427,14 @@ All those methods take props object which is a L{IProperties} allowing to get so
     .. py:method:: getBuildContainerResources(self, props)
 
         This method compute the `pod resources` part of the container spec (`spec.containers[].resources`.
-        This is important to reserve some CPU and memory for your builds, and to trigger node autoscaling if needed.
+        This is important to reserve some CPU and memory for your builds, and to trigger node auto-scaling if needed.
         You can also limit the CPU and memory for your container.
 
     .. py:method:: getServicesContainers(self, props)
 
         This method compute a list of containers spec to put alongside the worker container.
         This is useful for starting services around your build pod, like a database container.
-        All containers within the same pod share the same localhost interface, so you can access the other containers tcp ports very easily.
+        All containers within the same pod share the same localhost interface, so you can access the other containers TCP ports very easily.
 
 
 .. _official buildbot image: https://hub.docker.com/r/buildbot/buildbot-worker/

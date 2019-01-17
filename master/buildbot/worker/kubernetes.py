@@ -17,8 +17,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import socket
-
 from twisted.internet import defer
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
@@ -39,7 +37,7 @@ class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
     def getPodSpec(self, build):
         image = yield build.render(self.image)
         env = yield self.createEnvironment(build)
-        return {
+        defer.returnValue({
             "apiVersion": "v1",
             "kind": "Pod",
             "metadata": {
@@ -59,7 +57,7 @@ class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
                 "restartPolicy":
                 "Never"
             }
-        }
+        })
 
     def getBuildContainerResources(self, build):
         # customization point to generate Build container resources
@@ -69,7 +67,6 @@ class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
         # customization point to create services containers around the build container
         # those containers will run within the same localhost as the build container (aka within the same pod)
         return []
-
 
     def renderWorkerProps(self, build_props):
         return self.getPodSpec(build_props)

@@ -98,13 +98,13 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         def __init__(self):
             self.got_output_deferred = defer.Deferred()
             self.terminated_deferred = defer.Deferred()
-            self.first_line = ""
+            self.first_line = b""
 
         def outReceived(self, data):
             if not self.got_output_deferred.called:
-                self.first_line+=data
-                if "\n" in self.first_line:
-                    self.got_output_deferred.callback(self.first_line.split("\n")[0])
+                self.first_line += data
+                if b"\n" in self.first_line:
+                    self.got_output_deferred.callback(self.first_line.split(b"\n")[0])
 
         def errReceived(self, data):
             if not self.got_output_deferred.called:

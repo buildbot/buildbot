@@ -127,6 +127,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         except socket.gaierror:
             return fqdn
 
+
 class DockerLatentWorker(DockerBaseWorker,
                          CompatibleLatentWorkerMixin):
     instance = None

@@ -149,7 +149,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
             proxy_port=8002, namespace="system")
         yield config.startService()
         self.assertEqual(config.kube_proxy_output,
-                         b'Starting to serve on 127.0.0.1:8002\n')
+                         b'Starting to serve on 127.0.0.1:8002')
         self.assertEqual(config.getConfig(), {
             'master_url': 'http://localhost:8002',
             'namespace': 'system'
@@ -206,28 +206,66 @@ class RealKubeClientServiceTest(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_create_and_delete_pod(self):
-        content = {'kind': 'Pod', 'metadata':{'name':'pod-example'}}
-        self.expect(method='post', ep='/api/v1/namespaces/default/pods', params=None, data=None,
-                    json={'apiVersion': 'v1', 'kind': 'Pod', 'metadata': {'name': 'pod-example'},
-                        'spec': {'containers': [{'name': 'alpine', 'image': 'alpine', 'command': ['sleep'], 'args': ['100']}]}},
-                    content_json=content)
+        content = {'kind': 'Pod', 'metadata': {'name': 'pod-example'}}
+        self.expect(
+            method='post',
+            ep='/api/v1/namespaces/default/pods',
+            params=None,
+            data=None,
+            json={
+                'apiVersion': 'v1',
+                'kind': 'Pod',
+                'metadata': {
+                    'name': 'pod-example'
+                },
+                'spec': {
+                    'containers': [{
+                        'name': 'alpine',
+                        'image': 'alpine',
+                        'command': ['sleep'],
+                        'args': ['100']
+                    }]
+                }
+            },
+            content_json=content)
         res = yield self.kube.createPod(self.kube.namespace, self.POD_SPEC)
         self.assertEqual(res['kind'], 'Pod')
         self.assertEqual(res['metadata']['name'], 'pod-example')
         self.assertNotIn('deletionTimestamp', res['metadata'])
 
         content['metadata']['deletionTimestamp'] = 'now'
-        self.expect(method='delete', ep='/api/v1/namespaces/default/pods/pod-example', params={'graceperiod': 0}, data=None, json=None, code=200, content_json=content)
+        self.expect(
+            method='delete',
+            ep='/api/v1/namespaces/default/pods/pod-example',
+            params={'graceperiod': 0},
+            data=None,
+            json=None,
+            code=200,
+            content_json=content)
 
         res = yield self.kube.deletePod(self.kube.namespace, 'pod-example')
         self.assertEqual(res['kind'], 'Pod')
         self.assertIn('deletionTimestamp', res['metadata'])
 
         # first time present
-        self.expect(method='get', ep='/api/v1/namespaces/default/pods/pod-example/status', params=None, data=None, json=None, code=200, content_json=content)
+        self.expect(
+            method='get',
+            ep='/api/v1/namespaces/default/pods/pod-example/status',
+            params=None,
+            data=None,
+            json=None,
+            code=200,
+            content_json=content)
         # second time deleted
-        content = {'kind': 'Status', 'reason':'NotFound'}
-        self.expect(method='get', ep='/api/v1/namespaces/default/pods/pod-example/status', params=None, data=None, json=None, code=404, content_json=content)
+        content = {'kind': 'Status', 'reason': 'NotFound'}
+        self.expect(
+            method='get',
+            ep='/api/v1/namespaces/default/pods/pod-example/status',
+            params=None,
+            data=None,
+            json=None,
+            code=404,
+            content_json=content)
 
         res = yield self.kube.waitForPodDeletion(
             self.kube.namespace, 'pod-example', timeout=200)
@@ -238,19 +276,48 @@ class RealKubeClientServiceTest(unittest.TestCase):
     def test_create_bad_spec(self):
         spec = copy.deepcopy(self.POD_SPEC)
         del spec['metadata']
-        content = {'kind': 'Status', 'reason':'MissingName', 'message': 'need name'}
-        self.expect(method='post', ep='/api/v1/namespaces/default/pods', params=None, data=None,
-                    json={'apiVersion': 'v1', 'kind': 'Pod',
-                        'spec': {'containers': [{'name': 'alpine', 'image': 'alpine', 'command': ['sleep'], 'args': ['100']}]}},
-                    code=400,
-                    content_json=content)
+        content = {
+            'kind': 'Status',
+            'reason': 'MissingName',
+            'message': 'need name'
+        }
+        self.expect(
+            method='post',
+            ep='/api/v1/namespaces/default/pods',
+            params=None,
+            data=None,
+            json={
+                'apiVersion': 'v1',
+                'kind': 'Pod',
+                'spec': {
+                    'containers': [{
+                        'name': 'alpine',
+                        'image': 'alpine',
+                        'command': ['sleep'],
+                        'args': ['100']
+                    }]
+                }
+            },
+            code=400,
+            content_json=content)
         with self.assertRaises(kubeclientservice.KubeError):
             yield self.kube.createPod(self.kube.namespace, spec)
 
     @defer.inlineCallbacks
     def test_delete_not_existing(self):
-        content = {'kind': 'Status', 'reason':'NotFound', 'message': 'no container by that name'}
-        self.expect(method='delete', ep='/api/v1/namespaces/default/pods/pod-example', params={'graceperiod': 0}, data=None, json=None, code=404, content_json=content)
+        content = {
+            'kind': 'Status',
+            'reason': 'NotFound',
+            'message': 'no container by that name'
+        }
+        self.expect(
+            method='delete',
+            ep='/api/v1/namespaces/default/pods/pod-example',
+            params={'graceperiod': 0},
+            data=None,
+            json=None,
+            code=404,
+            content_json=content)
         with self.assertRaises(kubeclientservice.KubeError):
             yield self.kube.deletePod(self.kube.namespace, 'pod-example')
 
@@ -271,6 +338,7 @@ class FakeKubeClientServiceTest(RealKubeClientServiceTest):
     def createKube(self):
         self.kube = fakekube.KubeClientService(
             kubeclientservice.KubeHardcodedConfig(master_url='http://m'))
+
 
 class PatchedKubeClientServiceTest(RealKubeClientServiceTest):
     def createKube(self):
