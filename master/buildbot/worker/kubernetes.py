@@ -25,11 +25,12 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import kubeclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 
 log = Logger()
 
 
-class KubeLatentWorker(DockerBaseWorker):
+class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
 
     instance = None
     builds_may_be_incompatible = True
@@ -70,13 +71,8 @@ class KubeLatentWorker(DockerBaseWorker):
         return []
 
 
-    @defer.inlineCallbacks
-    def isCompatibleWithBuild(self, build_props):
-        if self.instance is None:
-            defer.returnValue(True)
-
-        needed_pod_spec = yield self.getPodSpec(build_props)
-        return self.current_pod_spec == needed_pod_spec
+    def renderWorkerProps(self, build_props):
+        return self.getPodSpec(build_props)
 
     def checkConfig(self,
                     name,
@@ -112,12 +108,11 @@ class KubeLatentWorker(DockerBaseWorker):
         self._kube = yield kubeclientservice.KubeClientService.getService(
             self.master, kube_config=kube_config)
         self.namespace = namespace or self._kube.namespace
-        self.current_pod_spec = None
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
-        self.current_pod_spec = pod_spec = yield self.getPodSpec(build)
+        pod_spec = yield self.renderWorkerPropsOnStart(build)
         try:
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
