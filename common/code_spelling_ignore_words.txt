@@ -1105,6 +1105,7 @@ regexs
 registeradapter
 reid
 rejectedworkers
+releaselocks
 releasers
 remoteaddresses
 remotecommand
@@ -1453,6 +1454,7 @@ unabbreviated
 unambiguity
 unclaim
 unclaimedbrdicts
+unclosed
 unconfigure
 underpowered
 unencrypted
@@ -1568,6 +1570,7 @@ whitespace
 wiki
 wikipedia
 wildcard
+winerror
 wkdir
 workdir
 workdirs
