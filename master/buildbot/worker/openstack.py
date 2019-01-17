@@ -27,6 +27,7 @@ from twisted.python import log
 
 from buildbot import config
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -48,7 +49,8 @@ DELETED = 'DELETED'
 UNKNOWN = 'UNKNOWN'
 
 
-class OpenStackLatentWorker(AbstractLatentWorker):
+class OpenStackLatentWorker(AbstractLatentWorker,
+                            CompatibleLatentWorkerMixin):
 
     instance = None
     _poll_resolution = 5  # hook point for tests
@@ -198,9 +200,7 @@ class OpenStackLatentWorker(AbstractLatentWorker):
         defer.returnValue(image_uuid)
 
     @defer.inlineCallbacks
-    def start_instance(self, build):
-        if self.instance is not None:
-            raise ValueError('instance active')
+    def renderWorkerProps(self, build):
         image = yield self._getImage(build)
         if self.block_devices is not None:
             block_devices = []
@@ -209,6 +209,14 @@ class OpenStackLatentWorker(AbstractLatentWorker):
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
+        defer.returnValue((image, block_devices))
+
+    @defer.inlineCallbacks
+    def start_instance(self, build):
+        if self.instance is not None:
+            raise ValueError('instance active')
+
+        image, block_devices = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._start_instance, image,
                                           block_devices)
         defer.returnValue(res)

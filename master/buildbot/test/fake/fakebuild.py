@@ -123,3 +123,14 @@ class FakeBuild(properties.PropertiesMixin):
 components.registerAdapter(
     lambda build: build.build_status.properties,
     FakeBuild, interfaces.IProperties)
+
+
+class FakeBuildForRendering(object):
+    def render(self, r):
+        if isinstance(r, str):
+            return "rendered:" + r
+        if isinstance(r, list):
+            return list(self.render(i) for i in r)
+        if isinstance(r, tuple):
+            return tuple(self.render(i) for i in r)
+        return r

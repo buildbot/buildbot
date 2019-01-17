@@ -23,6 +23,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
+from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import hyper
 from buildbot.test.fake.reactor import NonThreadPool
@@ -30,13 +31,6 @@ from buildbot.test.fake.reactor import TestReactor
 from buildbot.util.eventual import _setReactor
 from buildbot.worker import hyper as workerhyper
 from buildbot.worker.hyper import HyperLatentWorker
-
-
-class FakeBuild(object):
-    def render(self, r):
-        if isinstance(r, tuple):
-            return (self.render(i) for i in r)
-        return "rendered:" + r
 
 
 class FakeBot(object):
@@ -104,7 +98,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
     def test_start_worker(self):
         worker = self.makeWorker()
 
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         # we simulate a connection
         worker.attached(FakeBot())
         self.successResultOf(d)
@@ -118,7 +112,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_start_worker_but_no_connection_and_shutdown(self):
         worker = self.makeWorker()
-        worker.substantiate(None, FakeBuild())
+        worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.assertIsNotNone(worker.client)
         self.assertEqual(worker.instance, {
             'Id': '8a61192da2b3bb2d922875585e29b74ec0dc4e0117fcbf84c962204e97564cd7',
@@ -128,7 +122,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
 
     def test_start_worker_but_error(self):
         worker = self.makeWorker(image="buggy")
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(.1)
         self.failureResultOf(d)
         self.assertIsNotNone(worker.client)
@@ -138,7 +132,7 @@ class TestHyperLatentWorker(unittest.SynchronousTestCase):
     def test_start_worker_but_already_created_with_same_name(self):
         worker = self.makeWorker(image="cool")
         worker.client.create_container(image="foo", name=worker.getContainerName())
-        d = worker.substantiate(None, FakeBuild())
+        d = worker.substantiate(None, fakebuild.FakeBuildForRendering())
         self.reactor.advance(.1)
         worker.attached(FakeBot())
         self.successResultOf(d)
