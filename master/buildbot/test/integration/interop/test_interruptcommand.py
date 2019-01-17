@@ -30,7 +30,7 @@ class InterruptCommand(RunMasterBase):
     def test_setProp(self):
         yield self.setupConfig(masterConfig())
         build = yield self.doForceBuild(wantSteps=True)
-        self.assertEqual(build['steps'][0]['results'], CANCELLED)
+        self.assertEqual(build['steps'][-1]['results'], CANCELLED)
 
 
 class InterruptCommandPb(InterruptCommand):

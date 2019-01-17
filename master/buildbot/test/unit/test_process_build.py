@@ -202,6 +202,10 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.build.text = []
         self.build.buildid = 666
 
+    def assertWorkerPreparationFailure(self, reason):
+        states = "".join(self.master.data.updates.stepStateString.values())
+        self.assertIn(states, reason)
+
     def testRunSuccessfulBuild(self):
         b = self.build
 
@@ -239,6 +243,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         self.workerforbuilder.prepare = lambda _: False
         b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, RETRY)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
     def testBuildCancelledWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
         b = self.build
@@ -252,6 +257,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.stopBuild('Cancel Build', CANCELLED)
         d.callback(False)
         self.assertEqual(b.results, CANCELLED)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
     def testBuildRetryWhenWorkerPrepareReturnFalseBecauseBuildStop(self):
         b = self.build
@@ -265,6 +271,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         b.stopBuild('Cancel Build', RETRY)
         d.callback(False)
         self.assertEqual(b.results, RETRY)
+        self.assertWorkerPreparationFailure('error while worker_prepare')
 
     @defer.inlineCallbacks
     def testAlwaysRunStepStopBuild(self):
@@ -731,6 +738,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
             steps.append(step)
         return steps
 
+    @defer.inlineCallbacks
     def testAddStepsAfterCurrentStep(self):
         b = self.build
 
@@ -744,12 +752,13 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "d", "e", "c"]
         executed_names = [s.name for s in b.executedSteps]
         self.assertEqual(executed_names, expected_names)
 
+    @defer.inlineCallbacks
     def testAddStepsAfterLastStep(self):
         b = self.build
 
@@ -763,7 +772,7 @@ class TestBuild(TestReactorMixin, unittest.TestCase):
         steps[1].startStep = startStepB
         b.setStepFactories([FakeStepFactory(s) for s in steps])
 
-        b.startBuild(FakeBuildStatus(), self.workerforbuilder)
+        yield b.startBuild(FakeBuildStatus(), self.workerforbuilder)
         self.assertEqual(b.results, SUCCESS)
         expected_names = ["a", "b", "c", "d", "e"]
         executed_names = [s.name for s in b.executedSteps]

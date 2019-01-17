@@ -25,6 +25,7 @@ from buildbot.test.util.integration import RunMasterBase
 
 expectedOutputRegex = \
     r"""\*\*\* BUILD 1 \*\*\* ==> build successful \(success\)
+    \*\*\* STEP worker_preparation \*\*\* ==> worker ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo hello' \(success\)
         log:stdio \({loglines}\)
     \*\*\* STEP trigger \*\*\* ==> triggered trigsched \(success\)
@@ -33,6 +34,7 @@ expectedOutputRegex = \
     \*\*\* STEP shell_1 \*\*\* ==> 'echo world' \(success\)
         log:stdio \({loglines}\)
 \*\*\* BUILD 2 \*\*\* ==> build successful \(success\)
+    \*\*\* STEP worker_preparation \*\*\* ==> worker ready \(success\)
     \*\*\* STEP shell \*\*\* ==> 'echo ola' \(success\)
         log:stdio \({loglines}\)
 """
@@ -54,7 +56,7 @@ class TriggeringMaster(RunMasterBase):
         build = yield self.doForceBuild(wantSteps=True, useChange=change, wantLogs=True)
 
         self.assertEqual(
-            build['steps'][1]['state_string'], 'triggered trigsched')
+            build['steps'][2]['state_string'], 'triggered trigsched')
         builds = yield self.master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         dump = StringIO()
@@ -62,7 +64,7 @@ class TriggeringMaster(RunMasterBase):
             yield self.printBuild(b, dump)
         # depending on the environment the number of lines is different between
         # test hosts
-        loglines = builds[1]['steps'][0]['logs'][0]['num_lines']
+        loglines = builds[1]['steps'][1]['logs'][0]['num_lines']
         self.assertRegex(dump.getvalue(),
                          expectedOutputRegex.format(loglines=loglines))
 

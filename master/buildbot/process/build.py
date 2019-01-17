@@ -92,6 +92,8 @@ class Build(properties.PropertiesMixin):
         self.workerEnvironment = {}
         self.buildid = None
         self.number = None
+        self.executedSteps = []
+        self.stepnames = {}
 
         self.terminate = False
 
@@ -301,6 +303,12 @@ class Build(properties.PropertiesMixin):
                                                                      ("control", "builds",
                                                                       str(self.buildid),
                                                                       "stop"))
+
+        # the preparation step counts the time needed for preparing the worker and getting the locks.
+        # we cannot use a real step as we don't have a worker yet.
+        self.preparation_step = buildstep.BuildStep(name="worker_preparation")
+        self.preparation_step.setBuild(self)
+        yield self.preparation_step.addStep()
         self.setupOwnProperties()
 
         # then narrow WorkerLocks down to the right worker
@@ -319,7 +327,7 @@ class Build(properties.PropertiesMixin):
         try:
             self.setupBuild()  # create .steps
         except Exception:
-            yield self.buildPreparationFailure(Failure(), "worker_prepare")
+            yield self.buildPreparationFailure(Failure(), "setupBuild")
             self.buildFinished(['Build.setupBuild', 'failed'], EXCEPTION)
             return
 
@@ -388,6 +396,9 @@ class Build(properties.PropertiesMixin):
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'acquiring locks')
         yield self.acquireLocks()
+        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                          "worker ready")
+        yield self.master.data.updates.finishStep(self.preparation_step.stepid, SUCCESS, False)
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
                                                            'building')
@@ -399,12 +410,11 @@ class Build(properties.PropertiesMixin):
     def buildPreparationFailure(self, why, state_string):
         log.err(why, "while " + state_string)
         self.workerforbuilder.worker.putInQuarantine()
-        step = buildstep.BuildStep(name=state_string)
-        step.setBuild(self)
-        yield step.addStep()
         if isinstance(why, failure.Failure):
-            yield step.addLogWithFailure(why)
-        yield self.master.data.updates.finishStep(step.stepid, EXCEPTION, False)
+            yield self.preparation_step.addLogWithFailure(why)
+        yield self.master.data.updates.setStepStateString(self.preparation_step.stepid,
+                                                          "error while " + state_string)
+        yield self.master.data.updates.finishStep(self.preparation_step.stepid, EXCEPTION, False)
 
     @staticmethod
     def _canAcquireLocks(lockList, workerforbuilder):
@@ -462,8 +472,6 @@ class Build(properties.PropertiesMixin):
 
     def setupBuild(self):
         # create the actual BuildSteps.
-        self.executedSteps = []
-        self.stepnames = {}
 
         self.steps = self.setupBuildSteps(self.stepFactories)
 
