@@ -17,7 +17,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from future.builtins import range
 from future.utils import PY3
 from future.utils import text_type
 
@@ -688,8 +687,8 @@ class Contact(service.AsyncService):
             # split props into name:value dict
             pdict = {}
             propertylist = props.split(",")
-            for i in range(0, len(propertylist)):
-                splitproperty = propertylist[i].split("=", 1)
+            for prop in propertylist:
+                splitproperty = prop.split("=", 1)
                 pdict[splitproperty[0]] = splitproperty[1]
 
             # set properties

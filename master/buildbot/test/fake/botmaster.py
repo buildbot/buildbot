@@ -27,7 +27,7 @@ class FakeBotMaster(service.AsyncMultiService):
         service.AsyncMultiService.__init__(self)
         self.setName("fake-botmaster")
         self.locks = {}
-        self.builders = {}
+        self.builders = {}  # dictionary mapping worker names to builders
         self.buildsStartedForWorkers = []
         self.delayShutdown = False
 
@@ -48,6 +48,9 @@ class FakeBotMaster(service.AsyncMultiService):
 
     def maybeStartBuildsForWorker(self, workername):
         self.buildsStartedForWorkers.append(workername)
+
+    def maybeStartBuildsForAllBuilders(self):
+        self.buildsStartedForWorkers += self.builders.keys()
 
     def workerLost(self, bot):
         pass

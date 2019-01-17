@@ -120,6 +120,9 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         Clock.__init__(self)
         CoreReactor.__init__(self)
 
+    def fireCurrentDelayedCalls(self):
+        self.advance(0)
+
     def stop(self):
         # first fire pending calls
         while self.getDelayedCalls():

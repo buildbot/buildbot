@@ -101,7 +101,7 @@ blocdiag_transparency = True
 # add a loud note about python 2
 rst_prolog = textwrap.dedent("""\
 .. caution:: Buildbot is deprecating Python 2.7.
-    This is one of the latest release supporting it.
+    This is one of the last releases supporting it on the buildmaster.
     `More info <https://github.com/buildbot/buildbot/issues/4439>`_.
 
 """)

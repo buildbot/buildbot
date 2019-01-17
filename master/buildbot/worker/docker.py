@@ -30,6 +30,7 @@ from buildbot import config
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import unicode2bytes
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -115,7 +116,8 @@ class DockerBaseWorker(AbstractLatentWorker):
         return result
 
 
-class DockerLatentWorker(DockerBaseWorker):
+class DockerLatentWorker(DockerBaseWorker,
+                         CompatibleLatentWorkerMixin):
     instance = None
 
     def checkConfig(self, name, password, docker_host, image=None, command=None,
@@ -193,13 +195,15 @@ class DockerLatentWorker(DockerBaseWorker):
             docker_client = client.APIClient(**self.client_args)
         return docker_client
 
+    def renderWorkerProps(self, build):
+        return build.render((self.image, self.dockerfile,
+                             self.volumes))
+
     @defer.inlineCallbacks
     def start_instance(self, build):
         if self.instance is not None:
             raise ValueError('instance active')
-        image = yield build.render(self.image)
-        dockerfile = yield build.render(self.dockerfile)
-        volumes = yield build.render(self.volumes)
+        image, dockerfile, volumes = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes)
         defer.returnValue(res)
 

@@ -16,7 +16,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from future.builtins import range
 
 import copy
 import errno
@@ -199,7 +198,7 @@ class SubcommandOptions(usage.Options):
                 optfile = self.optionsFile = self.loadOptionsFile()
                 # pylint: disable=not-an-iterable
                 for optfile_name, option_name in self.buildbotOptions:
-                    for i in range(len(op)):
+                    for i, val in enumerate(op):
                         if (op[i][0] == option_name and
                                 optfile_name in optfile):
                             op[i] = list(op[i])

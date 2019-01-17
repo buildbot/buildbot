@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 
 import json
 import os
@@ -55,7 +54,7 @@ class FakeWampConnector(object):
         owntopic = self.topic.split(".")
         if len(topic) != len(owntopic):
             return False
-        for i in range(len(topic)):
+        for i, topic_item in enumerate(topic):
             if owntopic[i] != "" and topic[i] != owntopic[i]:
                 return False
         return True

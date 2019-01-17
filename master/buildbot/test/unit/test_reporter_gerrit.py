@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 
 import warnings
 from distutils.version import LooseVersion
@@ -179,7 +178,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
 
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
-        for i in range(len(buildResults)):
+        for i, buildResult in enumerate(buildResults):
             info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
                          'resultText': resultText[i], 'text': u'buildText',
                          'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),

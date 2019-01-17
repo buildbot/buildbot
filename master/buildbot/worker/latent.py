@@ -30,6 +30,7 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
+from buildbot.util import asyncSleep
 from buildbot.worker.base import AbstractWorker
 
 
@@ -307,6 +308,9 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def stopService(self):
+        # the worker might be insubstantiating from buildWaitTimeout
+        while self.insubstantiating:
+            yield asyncSleep(0.1)
         if self.conn is not None or self._substantiation_notifier:
             yield self._soft_disconnect()
         self._clearBuildWaitTimer()

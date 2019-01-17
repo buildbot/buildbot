@@ -22,7 +22,6 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
-from future.builtins import range
 
 import sys
 import textwrap
@@ -439,8 +438,8 @@ class TryOptions(base.SubcommandOptions):
         # We need to split the value of this option
         # into a dictionary of properties
         propertylist = option.split(",")
-        for i in range(0, len(propertylist)):
-            splitproperty = propertylist[i].split("=", 1)
+        for prop in propertylist:
+            splitproperty = prop.split("=", 1)
             self['properties'][splitproperty[0]] = splitproperty[1]
 
     def opt_property(self, option):
@@ -567,8 +566,8 @@ class UserOptions(base.SubcommandOptions):
             info_elem["identifier"] = info_list[0]
             self['info'].append(info_elem)
         else:
-            for i in range(0, len(info_list)):
-                split_info = info_list[i].split("=", 1)
+            for info_item in info_list:
+                split_info = info_item.split("=", 1)
 
                 # pull identifier from update --info
                 if ":" in split_info[0]:

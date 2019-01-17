@@ -15,7 +15,6 @@
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.builtins import range
 
 from twisted.trial import unittest
 
@@ -136,8 +135,8 @@ class TestRepo(sourcesteps.SourceStepMixin, unittest.TestCase):
             self.ExpectShell(
                 command=['repo', 'manifest', '-r', '-o', 'manifest-original.xml'])
         ]
-        for i in range(len(commands)):
-            self.expectCommands(commands[i] + (which_fail == i and 1 or 0))
+        for i, command in enumerate(commands):
+            self.expectCommands(command + (which_fail == i and 1 or 0))
             if which_fail == i and breakatfail:
                 break
 
