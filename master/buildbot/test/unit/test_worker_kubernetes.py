@@ -20,18 +20,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.kube import KubeClientService
 from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes
-
-
-class FakeBuild(object):
-    def render(self, r):
-        if isinstance(r, str):
-            return "rendered:" + r
-        else:
-            return r
 
 
 class FakeBot(object):
