@@ -1,4 +1,4 @@
-# This file is part of Buildbot. Buildbot is free software: you can
+# This file is part of Buildbot. Buildbot is free software: you can)uth
 # redistribute it and/or modify it under the terms of the GNU General Public
 # License as published by the Free Software Foundation, version 2.
 #
@@ -159,8 +159,9 @@ class HTTPClientService(service.SharedService):
             kwargs['data'] = jsonBytes
         return url, kwargs
 
+    @defer.inlineCallbacks
     def _doTxRequest(self, method, ep, **kwargs):
-        url, kwargs = self._prepareRequest(ep, kwargs)
+        url, kwargs = yield self._prepareRequest(ep, kwargs)
         if self.debug:
             log.debug("http {url} {kwargs}", url=url, kwargs=kwargs)
 
@@ -170,25 +171,25 @@ class HTTPClientService(service.SharedService):
             if self.debug:
                 log.debug("==> {code}: {content}", code=res.status_code, content=res.content)
             return res
+
         # read the whole content in the thread
         kwargs['background_callback'] = readContent
         if self.verify is False:
             kwargs['verify'] = False
-        d = self._session.request(method, url, **kwargs)
-        d.addCallback(TxRequestsResponseWrapper)
-        d.addCallback(IHttpResponse)
-        return d
 
+        res = yield self._session.request(method, url, **kwargs)
+        return defer.returnValue(IHttpResponse(TxRequestsResponseWrapper(res)))
+
+    @defer.inlineCallbacks
     def _doTReq(self, method, ep, **kwargs):
-        url, kwargs = self._prepareRequest(ep, kwargs)
+        url, kwargs = yield self._prepareRequest(ep, kwargs)
         # treq requires header values to be an array
         kwargs['headers'] = {k: [v]
                              for k, v in kwargs['headers'].items()}
         kwargs['agent'] = self._agent
 
-        d = getattr(treq, method)(url, **kwargs)
-        d.addCallback(IHttpResponse)
-        return d
+        res = yield getattr(treq, method)(url, **kwargs)
+        return defer.returnValue(IHttpResponse(res))
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):

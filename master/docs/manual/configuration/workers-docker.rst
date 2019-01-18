@@ -417,10 +417,34 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 
 ``headers``
     (optional)
-    The headers necessary for authentication if needed.
-    For example, for BasicAuth, you would say::
+    Additional headers to be passed to the HTTP request
 
-        headers={"Authorization": "Basic %s" % base64.b64encode("userid:password")}
+``authorization``
+    (optional)
+    Authorization header, for instance:
+
+        authorization="Basic %s" % base64.b64encode("userid:password")
+
+    Unlike the headers argument, this argument supports secret providers, so
+    you could store e.g. a bearer token in a secret provider and do
+
+        authorization=util.Interpolate("Bearer %(secret:k8s-token)")
+
+    When using the Google Kubernetes Engine (GKE), a bearer token for the
+    default service account can be had with:
+
+        gcloud container clusters get-credentials --region [YOURREGION] YOURCLUSTER
+        kubectl describe sa
+        kubectl describe secret [SECRET_ID]
+
+    Where SECRET_ID is displayed by the "describe sa" line. The default service
+    account does not have rights on the cluster (to create/delete pods), which
+    is required by BuildBot's integration. You may give it this right by making
+    it a cluster admin with
+
+        kubectl create clusterrolebinding service-account-admin \
+            --clusterrole=cluster-admin \
+            --serviceaccount default:default
 
 ``cert``
     (optional)
@@ -434,6 +458,10 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     Path to server certificate authenticate the server::
 
         verify='/path/to/kube_server_certificate.crt'
+
+    When using the Google Kubernetes Engine (GKE), this certificate is available
+    from the admin console, on the Cluster page. Verify that it is valid (i.e. no
+    copy/paste errors) with ``openssl verify PATH_TO_PEM``.
 
 ``namespace``
     (optional defaults to ``"default"``

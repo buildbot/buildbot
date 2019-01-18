@@ -66,6 +66,7 @@ class KubeConfigLoaderBase(BuildbotService):
 class KubeHardcodedConfig(KubeConfigLoaderBase):
     def reconfigService(self,
                         master_url=None,
+                        authorization=None,
                         headers=None,
                         cert=None,
                         verify=None,
@@ -73,6 +74,8 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
         self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
         if headers is not None:
             self.config['headers'] = headers
+        if authorization is not None:
+            self.config['authorization'] = authorization
         if cert is not None:
             self.config['cert'] = cert
         if verify is not None:
@@ -191,8 +194,9 @@ class KubeClientService(HTTPClientService):
         self.config = kube_config
         HTTPClientService.__init__(self, '')
         self._namespace = None
-        self.addService(kube_config)
+        kube_config.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def _prepareRequest(self, ep, kwargs):
         config = self.config.getConfig()
         self._base_url = config['master_url']
@@ -205,12 +209,16 @@ class KubeClientService(HTTPClientService):
                 req_kwargs['headers'] = req_kwargs['headers'].dup
             req_kwargs['headers'].update(config['headers'])
 
+        auth = config.get('authorization', None)
+        if auth is not None:
+            req_kwargs['headers']['Authorization'] = yield self.config.renderSecrets(auth)
+
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:
             if arg in config:
                 req_kwargs[arg] = config[arg]
 
-        return url, req_kwargs
+        return defer.returnValue((url, req_kwargs))
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):

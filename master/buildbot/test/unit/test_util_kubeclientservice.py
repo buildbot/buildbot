@@ -31,6 +31,7 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
+from buildbot.process.properties import Interpolate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttp
 from buildbot.test.fake import kube as fakekube
@@ -154,6 +155,25 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
         service = kubeclientservice.KubeClientService(config)
         url, kwargs = yield service._prepareRequest("/test", {})
         self.assertEqual({'Test': '10'}, kwargs['headers'])
+
+    def test_the_configuration_parent_is_set_to_the_service(self):
+        # This is needed to allow secret expansion
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001")
+        service = kubeclientservice.KubeClientService(config)
+        self.assertEqual(service, self.config.parent)
+
+    @defer.inlineCallbacks
+    def test_verify_authorization_is_expanded(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            authorization=Interpolate("Defer %(kw:test)s", test=10))
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual("Defer 10", kwargs['headers']['Authorization'])
+
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
                                               unittest.TestCase):
