@@ -25,7 +25,7 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=js HYPER_SIZE=m1
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
   - TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
@@ -50,11 +50,11 @@ env:
   #- TWISTED=latest SQLALCHEMY=latest TESTS=trial 'BUILDBOT_TEST_DB_URL=postgresql+pg8000:///bbtest?user=buildbot&password=x'
 
   # Test different versions of SQLAlchemy
-  - TWISTED=16.1.0 SQLALCHEMY=1.1.0 TESTS=trial
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=1.1.0 TESTS=trial
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
 
   # Tests for the worker on old versions of twisted.
-  - TWISTED=16.1.0 SQLALCHEMY=latest TESTS=trial_worker
+  - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial_worker
 
 matrix:
   fast_finish: true

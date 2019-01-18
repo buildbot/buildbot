@@ -22,13 +22,15 @@ from twisted.internet import defer
 from buildbot import util
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util.httpclientservice import HTTPClientService
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 log = Logger()
 
 
-class MarathonLatentWorker(DockerBaseWorker):
+class MarathonLatentWorker(DockerBaseWorker,
+                           CompatibleLatentWorkerMixin):
     """Marathon is a distributed docker container launcher for Mesos"""
     instance = None
     image = None
@@ -77,11 +79,16 @@ class MarathonLatentWorker(DockerBaseWorker):
     def getApplicationId(self):
         return self.marathon_app_prefix + self.getContainerName()
 
+    def renderWorkerProps(self, build):
+        return build.render((self.image, self.marathon_extra_config))
+
     @defer.inlineCallbacks
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
-        image = yield build.render(self.image)
-        marathon_extra_config = yield build.render(self.marathon_extra_config)
+
+        image, marathon_extra_config = \
+            yield self.renderWorkerPropsOnStart(build)
+
         marathon_config = {
             "container": {
                 "docker": {

@@ -86,16 +86,21 @@ class AsyncMultiService(AsyncService, service.MultiService):
             dl.append(defer.maybeDeferred(svc.startService))
         return defer.gatherResults(dl, consumeErrors=True)
 
+    @defer.inlineCallbacks
     def stopService(self):
         service.Service.stopService(self)
-        dl = []
         services = list(self)
         services.reverse()
+        dl = []
         for svc in services:
-            dl.append(defer.maybeDeferred(svc.stopService))
+            if not isinstance(svc, SharedService):
+                dl.append(defer.maybeDeferred(svc.stopService))
         # unlike MultiService, consume errors in each individual deferred, and
         # pass the first error in a child service up to our caller
-        return defer.gatherResults(dl, consumeErrors=True)
+        yield defer.gatherResults(dl, consumeErrors=True)
+        for svc in services:
+            if isinstance(svc, SharedService):
+                yield svc.stopService()
 
     def addService(self, service):
         if service.name is not None:

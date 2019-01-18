@@ -423,6 +423,8 @@ keyring
 keystoneauth
 KiB
 kibibytes
+kube
+kubernetes
 kv
 kwargs
 latin

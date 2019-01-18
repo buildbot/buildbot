@@ -107,6 +107,10 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
         self.results = SUCCESS
         self.properties = properties.Properties()
 
+        # tracks execution during the build finish phase
+        self._locks_released = False
+        self._build_finished = False
+
     def setBuilder(self, builder):
         """
         Set the given builder as our builder.
@@ -682,6 +686,8 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
             # mark the build as finished
             self.workerforbuilder.buildFinished()
             self.builder.buildFinished(self, self.workerforbuilder)
+
+            self._tryScheduleBuildsAfterLockUnlock(build_finished=True)
         except Exception:
             log.err(None, 'from finishing a build; this is a '
                           'serious error - please file a bug at http://buildbot.net')
@@ -689,9 +695,38 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def releaseLocks(self):
         if self.locks:
             log.msg("releaseLocks(%s): %s" % (self, self.locks))
+
         for lock, access in self.locks:
             if lock.isOwner(self, access):
                 lock.release(self, access)
+
+        self._tryScheduleBuildsAfterLockUnlock(locks_released=True)
+
+    def _tryScheduleBuildsAfterLockUnlock(self, locks_released=False,
+                                          build_finished=False):
+        # we need to inform the botmaster to attempt to schedule any pending
+        # build request if we released any locks. This is because buildrequest
+        # may be started for a completely unrelated builder and yet depend on
+        # a lock released by this build.
+        #
+        # TODO: the current approach is dumb as we just attempt to schedule
+        # all buildrequests. A much better idea would be to record the reason
+        # of why a buildrequest was not scheduled in the BuildRequestDistributor
+        # and then attempt to schedule only these buildrequests which may have
+        # had that reason resolved.
+
+        # this function is complicated by the fact that the botmaster must be
+        # informed only when all locks have been released and the actions in
+        # buildFinished have concluded. Since releaseLocks is called using
+        # eventually this may happen in any order.
+        self._locks_released = self._locks_released or locks_released
+        self._build_finished = self._build_finished or build_finished
+
+        if not self.locks:
+            return
+
+        if self._locks_released and self._build_finished:
+            self.builder.botmaster.maybeStartBuildsForAllBuilders()
 
     def getSummaryStatistic(self, name, summary_fn, initial_value=_sentinel):
         step_stats_list = [
