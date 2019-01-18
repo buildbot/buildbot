@@ -70,7 +70,7 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
                         cert=None,
                         verify=None,
                         namespace="default"):
-        self.config = {'master_url': master_url, 'namespace': namespace}
+        self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
         if headers is not None:
             self.config['headers'] = headers
         if cert is not None:
@@ -197,6 +197,13 @@ class KubeClientService(HTTPClientService):
         config = self.config.getConfig()
         self._base_url = config['master_url']
         url, req_kwargs = HTTPClientService._prepareRequest(self, ep, kwargs)
+
+        if config['headers']:
+            if not req_kwargs['headers']:
+                req_kwargs['headers'] = {}
+            else:
+                req_kwargs['headers'] = req_kwargs['headers'].dup
+            req_kwargs['headers'].update(config['headers'])
 
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:

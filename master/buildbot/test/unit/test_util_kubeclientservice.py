@@ -143,6 +143,18 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
         url, kwargs = yield service._prepareRequest("/test", {})
         self.assertEqual('/path/to/pem', kwargs['verify'])
 
+    @defer.inlineCallbacks
+    def test_verify_headers_are_passed_to_the_query(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            headers={'Test': '10'}
+        )
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual({'Test': '10'}, kwargs['headers'])
+
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
                                               unittest.TestCase):
     def patchProxyCmd(self, cmd):
