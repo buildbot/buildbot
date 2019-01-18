@@ -201,7 +201,7 @@ class KubeClientService(HTTPClientService):
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:
             if arg in config:
-                req_kwargs[arg] = self.config[arg]
+                req_kwargs[arg] = config[arg]
 
         return url, req_kwargs
 

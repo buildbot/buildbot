@@ -119,6 +119,30 @@ sys.exit(1)
 """
 
 
+class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
+                                              unittest.TestCase):
+    def test_basic(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default"
+        )
+        self.assertEqual(config.getConfig(), {
+            'master_url': 'http://localhost:8001',
+            'namespace': 'default',
+            'headers': {}
+        })
+
+    @defer.inlineCallbacks
+    def test_verify_is_forwarded_to_keywords(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem"
+        )
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual('/path/to/pem', kwargs['verify'])
+
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
                                               unittest.TestCase):
     def patchProxyCmd(self, cmd):
