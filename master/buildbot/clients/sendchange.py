@@ -20,11 +20,14 @@ from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb
 
+from buildbot.util import unicode2bytes
+
 
 class Sender:
 
     def __init__(self, master, auth=('change', 'changepw'), encoding='utf8'):
-        self.username, self.password = auth
+        self.username = unicode2bytes(auth[0])
+        self.password = unicode2bytes(auth[1])
         self.host, self.port = master.split(":")
         self.port = int(self.port)
         self.encoding = encoding
