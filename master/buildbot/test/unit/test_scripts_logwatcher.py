@@ -31,7 +31,7 @@ from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util import dirs
 
 
-class TestLogWatcher(unittest.SynchronousTestCase, dirs.DirsMixin):
+class TestLogWatcher(unittest.TestCase, dirs.DirsMixin):
 
     def setUp(self):
         self.setUpDirs('workdir')
