@@ -583,6 +583,7 @@ github
 gitlab
 gitorious
 gitpoller
+globals
 gmail
 gmt
 google
