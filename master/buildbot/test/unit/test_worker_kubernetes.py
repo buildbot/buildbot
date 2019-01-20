@@ -20,18 +20,11 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.test.fake import fakemaster
+from buildbot.test.fake.fakebuild import FakeBuildForRendering as FakeBuild
 from buildbot.test.fake.kube import KubeClientService
 from buildbot.util.kubeclientservice import KubeError
 from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes
-
-
-class FakeBuild(object):
-    def render(self, r):
-        if isinstance(r, str):
-            return "rendered:" + r
-        else:
-            return r
 
 
 class FakeBot(object):
@@ -106,9 +99,9 @@ class TestKubernetesWorker(unittest.TestCase):
             sorted(pod['spec'].keys()), ['containers', 'restartPolicy'])
         self.assertEqual(
             sorted(pod['spec']['containers'][0].keys()),
-            ['env', 'image', 'name'])
+            ['env', 'image', 'name', 'resources'])
         self.assertEqual(pod['spec']['containers'][0]['image'],
-                         'buildbot/buildbot-worker')
+                         'rendered:buildbot/buildbot-worker')
         self.assertEqual(pod['spec']['restartPolicy'], 'Never')
 
     def test_start_worker_but_error(self):
@@ -121,15 +114,3 @@ class TestKubernetesWorker(unittest.TestCase):
         d = worker.substantiate(None, FakeBuild())
         self.failureResultOf(d)
         self.assertEqual(worker.instance, None)
-
-    def test_start_worker_with_params(self):
-        worker = self.setupWorker(
-            'worker', kube_extra_spec={'spec': {
-                'restartPolicy': 'Always'
-            }})
-        d = worker.substantiate(None, FakeBuild())
-        worker.attached(FakeBot())
-        self.successResultOf(d)
-        pod_name = list(worker._kube.pods.keys())[0]
-        pod = worker._kube.pods[pod_name]
-        self.assertEqual(pod['spec']['restartPolicy'], 'Always')

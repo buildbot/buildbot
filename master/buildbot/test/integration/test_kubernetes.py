@@ -39,6 +39,7 @@ from buildbot.worker import kubernetes
 # minikube start # [--vm-driver=kvm]
 #
 # export masterFQDN=$(ip route get $(minikube ip)| awk '{ print $5 }')
+# export KUBE_NAMESPACE=`kubectl config get-contexts \`kubectl config current-context\` |tail -n1 |awk '{print $5}'`
 
 # useful commands:
 #  - 'minikube dashboard' to display WebUI of the kubernetes cluster
@@ -121,7 +122,8 @@ def masterConfig(num_concurrent, extra_steps=None):
         kubernetes.KubeLatentWorker(
             'kubernetes' + str(i),
             'buildbot/buildbot-worker',
-            kube_config=kubeclientservice.KubeCtlProxyConfigLoader(),
+            kube_config=kubeclientservice.KubeCtlProxyConfigLoader(
+                namespace=os.getenv("KUBE_NAMESPACE", "default")),
             masterFQDN=masterFQDN) for i in range(num_concurrent)
     ]
     # un comment for debugging what happens if things looks locked.
