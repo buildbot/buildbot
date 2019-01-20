@@ -199,6 +199,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
                                                      masterid=self.masterid)
             yield self.data.updates.expireMasters()
         self.masterHeartbeatService = internet.TimerService(60, heartbeat)
+        self.masterHeartbeatService.clock = self.reactor
         # we do setServiceParent only when the master is configured
         # master should advertise itself only at that time
 

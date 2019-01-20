@@ -23,6 +23,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
 from twisted.internet.interfaces import IReactorCore
 from twisted.internet.interfaces import IReactorThreads
@@ -120,8 +121,32 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         Clock.__init__(self)
         CoreReactor.__init__(self)
 
-    def fireCurrentDelayedCalls(self):
-        self.advance(0)
+        # whether there are calls that should run right now
+        self._pendingCurrentCalls = False
+
+    def _executeCurrentDelayedCalls(self):
+        while self.getDelayedCalls():
+            first = sorted(self.getDelayedCalls(),
+                           key=lambda a: a.getTime())[0]
+            if first.getTime() > self.seconds():
+                break
+            self.advance(0)
+
+        self._pendingCurrentCalls = False
+
+    def callLater(self, when, what, *a, **kw):
+        # Buildbot often uses callLater(0, ...) to defer execution of certain
+        # code to the next iteration of the reactor. This means that often
+        # there are pending callbacks registered to the reactor that might
+        # block other code from proceeding unless the test reactor has an
+        # iteration. To avoid deadlocks in tests we give the real reactor a
+        # chance to advance the test reactor whenever we detect that there
+        # are callbacks that should run in the next iteration of the test
+        # reactor.
+        if when <= 0 and not self._pendingCurrentCalls:
+            reactor.callLater(0, self._executeCurrentDelayedCalls)
+
+        return Clock.callLater(self, when, what, *a, **kw)
 
     def stop(self):
         # first fire pending calls

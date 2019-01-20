@@ -95,14 +95,16 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
     kube_ctl_proxy_cmd = ['kubectl', 'proxy']  # for tests override
 
     class LocalPP(ProcessProtocol):
-        def __init__(self, config_loader):
-            self.config_loader = config_loader
+        def __init__(self):
             self.got_output_deferred = defer.Deferred()
             self.terminated_deferred = defer.Deferred()
+            self.first_line = b""
 
         def outReceived(self, data):
             if not self.got_output_deferred.called:
-                self.got_output_deferred.callback(data)
+                self.first_line += data
+                if b"\n" in self.first_line:
+                    self.got_output_deferred.callback(self.first_line.split(b"\n")[0])
 
         def errReceived(self, data):
             if not self.got_output_deferred.called:
@@ -129,7 +131,7 @@ class KubeCtlProxyConfigLoader(KubeConfigLoaderBase):
         self.proxy_port = proxy_port
         self.namespace = namespace
         yield self.ensureSubprocessKilled()
-        self.pp = self.LocalPP(self)
+        self.pp = self.LocalPP()
         self.process = reactor.spawnProcess(
             self.pp,
             self.kube_ctl_proxy_cmd[0],
@@ -156,7 +158,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
     def checkConfig(self):
         if not os.path.exists(self.kube_dir):
-            return config.error(
+            config.error(
                 "Not in kubernetes cluster (kube_dir not found: {})".format(
                     self.kube_dir))
 

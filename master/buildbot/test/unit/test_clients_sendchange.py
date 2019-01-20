@@ -80,7 +80,7 @@ class Sender(unittest.TestCase):
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ['a'])
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project='', repository='', who=None, files=['a'],
                  comments='comm', branch='branch', revision='rev',
                  category=None, when=None, properties={}, revlink='',
@@ -91,7 +91,7 @@ class Sender(unittest.TestCase):
         s = sendchange.Sender('localhost:1234', auth=('me', 'sekrit'))
         yield s.send('branch', 'rev', 'comm', ['a'])
 
-        self.assertProcess('localhost', 1234, 'me', 'sekrit', [
+        self.assertProcess('localhost', 1234, b'me', b'sekrit', [
             dict(project='', repository='', who=None, files=['a'],
                  comments='comm', branch='branch', revision='rev',
                  category=None, when=None, properties={}, revlink='',
@@ -104,7 +104,7 @@ class Sender(unittest.TestCase):
                    when=1234, properties={'a': 'b'}, repository='r', vc='git',
                    project='p', revlink='rl')
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project='p', repository='r', who='me', files=['a'],
                  comments='comm', branch='branch', revision='rev',
                  category='cats', when=1234, properties={'a': 'b'},
@@ -116,7 +116,7 @@ class Sender(unittest.TestCase):
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ('a', 'b'))
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project='', repository='', who=None, files=['a', 'b'],
                  comments='comm', branch='branch', revision='rev',
                  category=None, when=None, properties={}, revlink='',
@@ -127,7 +127,7 @@ class Sender(unittest.TestCase):
         s = sendchange.Sender('localhost:1234')
         yield s.send('branch', 'rev', 'comm', ['a'], codebase='mycb')
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project='', repository='', who=None, files=['a'],
                  comments='comm', branch='branch', revision='rev',
                  category=None, when=None, properties={}, revlink='',
@@ -148,7 +148,7 @@ class Sender(unittest.TestCase):
                    properties={u'\N{LATIN SMALL LETTER A WITH MACRON}': 'b'},
                    revlink=u'\U0001F517')
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project=u'\N{SKULL AND CROSSBONES}',
                  repository=u'\N{SNOWMAN}',
                  who=u'\N{THAI CHARACTER KHOMUT}',
@@ -179,7 +179,7 @@ class Sender(unittest.TestCase):
                        u'\N{LATIN SMALL LETTER A WITH MACRON}'.encode('utf8'): 'b'},
                    revlink=u'\U0001F517'.encode('utf8'))
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project=u'\N{SKULL AND CROSSBONES}',
                  repository=u'\N{SNOWMAN}',
                  who=u'\N{THAI CHARACTER KHOMUT}',
@@ -213,7 +213,7 @@ class Sender(unittest.TestCase):
                        u'\N{SUPERSCRIPT ONE}'.encode('latin1'): 'b'},
                    revlink=u'\N{INVERTED QUESTION MARK}'.encode('latin1'))
 
-        self.assertProcess('localhost', 1234, 'change', 'changepw', [
+        self.assertProcess('localhost', 1234, b'change', b'changepw', [
             dict(project=u'\N{DEGREE SIGN}',
                  repository=u'\N{SECTION SIGN}',
                  who=u'\N{MACRON}',

@@ -1,0 +1,1 @@
+`buildbot sendchange` has been fixed on Python 3 (:issue:`4138`)

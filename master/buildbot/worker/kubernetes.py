@@ -17,24 +17,27 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import socket
-
 from twisted.internet import defer
 
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.util import kubeclientservice
+from buildbot.util.latent import CompatibleLatentWorkerMixin
 from buildbot.util.logger import Logger
 from buildbot.worker.docker import DockerBaseWorker
 
 log = Logger()
 
 
-class KubeLatentWorker(DockerBaseWorker):
+class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
 
     instance = None
+    builds_may_be_incompatible = True
 
-    def default_pod_spec(self):
-        return {
+    @defer.inlineCallbacks
+    def getPodSpec(self, build):
+        image = yield build.render(self.image)
+        env = yield self.createEnvironment(build)
+        defer.returnValue({
             "apiVersion": "v1",
             "kind": "Pod",
             "metadata": {
@@ -44,24 +47,35 @@ class KubeLatentWorker(DockerBaseWorker):
                 "containers": [{
                     "name":
                     self.getContainerName(),
-                    "image":
-                    self.image,
+                    "image": image,
                     "env": [{
                         "name": k,
                         "value": v
-                    } for k, v in self.createEnvironment().items()]
-                }],
+                    } for k, v in env.items()],
+                    "resources": (yield self.getBuildContainerResources(build))
+                }] + (yield self.getServicesContainers(build)),
                 "restartPolicy":
                 "Never"
             }
-        }
+        })
+
+    def getBuildContainerResources(self, build):
+        # customization point to generate Build container resources
+        return {}
+
+    def getServicesContainers(self, build):
+        # customization point to create services containers around the build container
+        # those containers will run within the same localhost as the build container (aka within the same pod)
+        return []
+
+    def renderWorkerProps(self, build_props):
+        return self.getPodSpec(build_props)
 
     def checkConfig(self,
                     name,
                     image='buildbot/buildbot-worker',
                     namespace=None,
                     masterFQDN=None,
-                    kube_extra_spec=None,
                     kube_config=None,
                     **kwargs):
 
@@ -75,7 +89,6 @@ class KubeLatentWorker(DockerBaseWorker):
                         image='buildbot/buildbot-worker',
                         namespace=None,
                         masterFQDN=None,
-                        kube_extra_spec=None,
                         kube_config=None,
                         **kwargs):
 
@@ -92,13 +105,11 @@ class KubeLatentWorker(DockerBaseWorker):
         self._kube = yield kubeclientservice.KubeClientService.getService(
             self.master, kube_config=kube_config)
         self.namespace = namespace or self._kube.namespace
-        self.kube_extra_spec = kube_extra_spec or {}
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         yield self.stop_instance(reportFailure=False)
-        pod_spec = self.merge_spec(self.default_pod_spec(),
-                                   self.kube_extra_spec)
+        pod_spec = yield self.renderWorkerPropsOnStart(build)
         try:
             yield self._kube.createPod(self.namespace, pod_spec)
         except kubeclientservice.KubeError as e:
@@ -107,6 +118,7 @@ class KubeLatentWorker(DockerBaseWorker):
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):
+        self.current_pod_spec = None
         try:
             yield self._kube.deletePod(self.namespace, self.getContainerName())
         except kubeclientservice.KubeError as e:
@@ -118,37 +130,3 @@ class KubeLatentWorker(DockerBaseWorker):
             self.namespace,
             self.getContainerName(),
             timeout=self.missing_timeout)
-
-    @classmethod
-    def merge_spec(cls, spec_obj, patch):
-        copy_spec = spec_obj.copy()
-        for key, patch_value in patch.items():
-            try:
-                value = spec_obj[key]
-            except KeyError:
-                pass
-            else:
-                if type(value) != type(patch_value):
-                    raise TypeError(
-                        'Cannot merge kubernetes spec with different type. '
-                        '(For example a list with a dict). '
-                        'This happens between\n'
-                        '"{0}"\nand\n"{1}"'.format(value, patch_value))
-                if isinstance(value, dict):
-                    patch_value = cls.merge_spec(value, patch_value)
-                if isinstance(value, list):
-                    patch_value = list(value).extend(patch_value)
-            copy_spec[key] = patch_value
-        return copy_spec
-
-    @staticmethod
-    def get_fqdn():
-        return socket.getfqdn()
-
-    @staticmethod
-    def get_ip():
-        fqdn = socket.getfqdn()
-        try:
-            return socket.gethostbyname(fqdn)
-        except socket.gaierror:
-            return fqdn

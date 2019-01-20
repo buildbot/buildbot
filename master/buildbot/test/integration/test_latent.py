@@ -219,7 +219,6 @@ class Tests(SynchronousTestCase):
         )
         controller.auto_stop(True)
 
-    @defer.inlineCallbacks
     def test_failed_substantiations_get_exception(self):
         """
         If a latent worker fails to substantiate, the result is an exception.
@@ -250,7 +249,8 @@ class Tests(SynchronousTestCase):
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(LatentWorkerCannotSubstantiate)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
+        dbdict = self.successResultOf(
+            master.db.builds.getBuildByNumber(builder_id, 1))
 
         # When the substantiation fails, the result is an exception.
         self.assertEqual(EXCEPTION, dbdict['results'])
@@ -587,7 +587,6 @@ class Tests(SynchronousTestCase):
             master.data.get(("builds",)))
         self.assertEqual(builds[1]['results'], SUCCESS)
 
-    @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
         If a build is stopping during latent worker substantiating, the build becomes cancelled
@@ -619,12 +618,12 @@ class Tests(SynchronousTestCase):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
+        dbdict = self.successResultOf(
+            master.db.builds.getBuildByNumber(builder_id, 1))
         self.assertEqual(CANCELLED, dbdict['results'])
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
-    @defer.inlineCallbacks
     def test_build_stop_with_retry_during_substantiation(self):
         """
         If master is shutting down during latent worker substantiating, the build becomes retry.
@@ -661,7 +660,9 @@ class Tests(SynchronousTestCase):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
+        dbdict = self.successResultOf(
+            master.db.builds.getBuildByNumber(builder_id, 1))
+
         self.assertEqual(RETRY, dbdict['results'])
         self.assertEqual(
             set(brids),
@@ -670,7 +671,6 @@ class Tests(SynchronousTestCase):
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
-    @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_zero(self):
         """
         If latent worker supports getting its instance type from properties that
@@ -714,7 +714,8 @@ class Tests(SynchronousTestCase):
         controller.auto_start(True)
         controller.auto_stop(True)
         controller.connect_worker()
-        self.assertEqual('a', (yield controller.get_started_kind()))
+        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+                         'a')
 
         # before the other build finished, create another build request
         self.createBuildrequest(master, [builder_id],
@@ -727,15 +728,15 @@ class Tests(SynchronousTestCase):
 
         # verify that the second build restarted with the expected instance
         # kind
-        self.assertEqual('b', (yield controller.get_started_kind()))
+        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+                         'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
+        dbdict = self.successResultOf(master.db.builds.getBuild(1))
         self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
+        dbdict = self.successResultOf(master.db.builds.getBuild(2))
         self.assertEqual(SUCCESS, dbdict['results'])
 
-    @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
         """
         If latent worker supports getting its instance type from properties that
@@ -779,7 +780,8 @@ class Tests(SynchronousTestCase):
         controller.auto_start(True)
         controller.auto_stop(True)
         controller.connect_worker()
-        self.assertEqual('a', (yield controller.get_started_kind()))
+        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+                         'a')
 
         # before the other build finished, create another build request
         self.createBuildrequest(master, [builder_id],
@@ -792,20 +794,21 @@ class Tests(SynchronousTestCase):
 
         # verify build has not started, even though the worker is waiting
         # for one
-        self.assertIsNone((yield master.db.builds.getBuild(2)))
+        self.assertIsNone(self.successResultOf(master.db.builds.getBuild(2)))
         self.assertTrue(controller.started)
 
         # wait until the latent worker times out, is insubstantiated,
         # is substantiated because of pending buildrequest and starts the build
         self.reactor.advance(6)
-        self.assertIsNotNone((yield master.db.builds.getBuild(2)))
+        self.assertIsNotNone(self.successResultOf(master.db.builds.getBuild(2)))
 
         # verify that the second build restarted with the expected instance
         # kind
-        self.assertEqual('b', (yield controller.get_started_kind()))
+        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+                         'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
+        dbdict = self.successResultOf(master.db.builds.getBuild(1))
         self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
+        dbdict = self.successResultOf(master.db.builds.getBuild(2))
         self.assertEqual(SUCCESS, dbdict['results'])
