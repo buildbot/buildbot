@@ -187,22 +187,6 @@ class TestFakeRunCommand(unittest.TestCase, Tests):
 
 class TestWorkerTransition(unittest.TestCase):
 
-    def test_worker_old_api(self):
-        cmd = remotecommand.RemoteCommand('cmd', [])
-
-        w = mock.Mock()
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertIdentical(cmd.worker, None)
-
-            cmd.worker = w
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'buildslave' attribute is deprecated"):
-            old = cmd.buildslave
-
-        self.assertIdentical(old, w)
-
     def test_RemoteShellCommand_usePTY(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             cmd = remotecommand.RemoteShellCommand(

@@ -32,14 +32,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
-from buildbot.worker_transition import WorkerAPICompatMixin
 
 
 class RemoteException(Exception):
     pass
 
 
-class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
+class RemoteCommand(base.RemoteCommandImpl):
 
     # class-level unique identifier generator for command ids
     _commandCounter = 0
@@ -70,7 +69,6 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         self.decodeRC = decodeRC
         self.conn = None
         self.worker = None
-        self._registerOldWorkerAttr("worker", name="buildslave")
         self.step = None
         self.builder_name = None
         self.commandID = None
