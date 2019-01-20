@@ -440,60 +440,6 @@ class TestBuilder(BuilderMixin, unittest.TestCase):
         self.assertEqual(builderid, 13)
         fbi.assert_not_called()
 
-    def test_attaching_workers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = bldr.attaching_workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'attaching_slaves' attribute is deprecated"):
-            old = bldr.attaching_slaves
-
-        self.assertIdentical(new, old)
-
-    def test_workers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = bldr.workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slaves' attribute is deprecated"):
-            old = bldr.slaves
-
-        self.assertIdentical(new, old)
-
-    def test_addLatentWorker_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'addLatentSlave' method is deprecated"):
-            method = mock.Mock(return_value='dummy')
-            with mock.patch(
-                    'buildbot.process.builder.Builder.addLatentWorker',
-                    method):
-                dummy = bldr.addLatentSlave(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-                self.assertTrue(method.called)
-
-    def test_getAvailableWorkers_old_api(self):
-        bldr = builder.Builder('bldr')
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'getAvailableSlaves' method is deprecated"):
-            method = mock.Mock(return_value='dummy')
-            with mock.patch(
-                    'buildbot.process.builder.Builder.getAvailableWorkers',
-                    method):
-                dummy = bldr.getAvailableSlaves(mock.Mock())
-                self.assertEqual(dummy, 'dummy')
-                self.assertTrue(method.called)
-
     def test_expectations_deprecated(self):
         self.successResultOf(self.makeBuilder())
 

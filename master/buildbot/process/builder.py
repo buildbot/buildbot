@@ -50,8 +50,7 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
 
 
 class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService,
-              WorkerAPICompatMixin):
+              service.MultiService):
 
     # reconfigure builders before workers
     reconfig_priority = 196
@@ -76,13 +75,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
         self.attaching_workers = []
-        self._registerOldWorkerAttr("attaching_workers")
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.workers = []
-        self._registerOldWorkerAttr("workers")
 
         self.config = None
         self.builder_status = None
