@@ -27,18 +27,17 @@ from buildbot.scripts.logwatcher import BuildmasterStartupError
 from buildbot.scripts.logwatcher import BuildmasterTimeoutError
 from buildbot.scripts.logwatcher import LogWatcher
 from buildbot.scripts.logwatcher import ReconfigError
-from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util import dirs
+from buildbot.test.util.misc import TestReactorMixin
 
 
-class TestLogWatcher(unittest.TestCase, dirs.DirsMixin):
+class TestLogWatcher(unittest.TestCase, dirs.DirsMixin, TestReactorMixin):
 
     def setUp(self):
         self.setUpDirs('workdir')
         self.addCleanup(self.tearDownDirs)
 
-        self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
+        self.setUpTestReactor()
         self.spawned_process = mock.Mock()
         self.reactor.spawnProcess = mock.Mock(return_value=self.spawned_process)
 

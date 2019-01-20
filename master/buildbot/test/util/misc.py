@@ -20,9 +20,13 @@ from future.utils import text_type
 import os
 import sys
 
+from twisted.python import threadpool
 from twisted.python.compat import NativeStringIO
 
 import buildbot
+from buildbot.test.fake.reactor import NonThreadPool
+from buildbot.test.fake.reactor import TestReactor
+from buildbot.util.eventual import _setReactor
 
 
 class PatcherMixin(object):
@@ -61,6 +65,20 @@ class StdoutAssertionsMixin(object):
 
     def getStdout(self):
         return self.stdout.getvalue().strip()
+
+
+class TestReactorMixin(object):
+
+    """
+    Mix this in to get TestReactor as self.reactor which is correctly cleaned up
+    at the end
+    """
+    def setUpTestReactor(self):
+        self.patch(threadpool, 'ThreadPool', NonThreadPool)
+        self.reactor = TestReactor()
+        self.addCleanup(self.reactor.stop)
+        _setReactor(self.reactor)
+        self.addCleanup(_setReactor, None)
 
 
 def encodeExecutableAndArgs(executable, args, encoding="utf-8"):

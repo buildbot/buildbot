@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from twisted.internet.defer import Deferred
-from twisted.python import threadpool
 from twisted.trial.unittest import SynchronousTestCase
 from zope.interface import implementer
 
@@ -27,10 +26,8 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.fake.latent import LatentController
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.util.integration import getMaster
-from buildbot.util.eventual import _setReactor
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.local import LocalWorker
 
 try:
@@ -66,14 +63,10 @@ class ControllableStep(BuildStep):
         self._step_deferred.callback(CANCELLED)
 
 
-class Tests(SynchronousTestCase):
+class Tests(SynchronousTestCase, TestReactorMixin):
 
     def setUp(self):
-        self.patch(threadpool, 'ThreadPool', NonThreadPool)
-        self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
-        _setReactor(self.reactor)
-        self.addCleanup(_setReactor, None)
+        self.setUpTestReactor()
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")

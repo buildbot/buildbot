@@ -17,7 +17,6 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 from twisted.internet import threads
-from twisted.python import threadpool
 from twisted.trial import unittest
 
 from buildbot import config
@@ -27,13 +26,11 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import Property
 from buildbot.test.fake import docker
 from buildbot.test.fake import fakemaster
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
-from buildbot.util.eventual import _setReactor
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker import docker as dockerworker
 
 
-class TestDockerLatentWorker(unittest.SynchronousTestCase):
+class TestDockerLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
 
     def setupWorker(self, *args, **kwargs):
         self.patch(dockerworker, 'docker', docker)
@@ -46,14 +43,13 @@ class TestDockerLatentWorker(unittest.SynchronousTestCase):
         return worker
 
     def setUp(self):
+        self.setUpTestReactor()
+
         def deferToThread(f, *args, **kwargs):
             return threads.deferToThreadPool(self.reactor, self.reactor.getThreadPool(),
                                              f, *args, **kwargs)
-        self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.patch(threads, 'deferToThread', deferToThread)
-        self.reactor = TestReactor()
 
-        _setReactor(self.reactor)
         self.build = Properties(
             image='busybox:latest', builder='docker_worker', distro='wheezy')
         self.patch(dockerworker, 'client', docker)
