@@ -1,1 +1,0 @@
-Fix a regression present in v1.7.0 which caused buildrequests waiting for a lock that got released by an unrelated build not be scheduled (:issue:`4491`)

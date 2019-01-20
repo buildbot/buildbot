@@ -1,1 +1,0 @@
-The deprecated ``BuildMaster.addBuildset`` method has been removed. Use ``BuildMaster.data.updates.addBuildset`` instead.

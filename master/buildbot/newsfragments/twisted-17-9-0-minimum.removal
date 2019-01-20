@@ -1,1 +1,0 @@
-``buildbot`` package now requires Twisted versions >= 17.9.0.  This is required for Python 3 support.  Earlier versions of Twisted are not supported.
