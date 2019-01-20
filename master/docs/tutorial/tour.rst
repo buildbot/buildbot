@@ -328,7 +328,7 @@ Let's try this out by making a one-line change to hello-world, say, to make it t
 
 .. code-block:: bash
 
-  git clone git://github.com/buildbot/hello-world.git hello-world-git
+  git clone https://github.com/buildbot/hello-world.git hello-world-git
   cd hello-world-git/hello
   $EDITOR __init__.py
   # change 'return "hello " + who' on line 6 to 'return "greets " + who'

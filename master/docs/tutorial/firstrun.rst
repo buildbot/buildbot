@@ -40,7 +40,7 @@ To make this work, you will need the following installed:
 
 Preferably, use your distribution package manager to install these.
 
-You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet.
+You will also need a working Internet connection, as virtualenv and pip will need to download other projects from the Internet. The master and builder daemons will need to be able to connect to ``github.com`` via HTTPS to fetch the repo we're testing; if you need to use a proxy for this ensure that either the ``HTTPS_PROXY`` or ``ALL_PROXY`` environment variable is set to your proxy, e.g., by executing ``export HTTPS_PROXY=http://localhost:9080`` in the shell before starting each daemon.
 
 .. note::
 
