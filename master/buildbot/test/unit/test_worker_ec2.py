@@ -23,7 +23,6 @@ from twisted.trial import unittest
 
 from buildbot.test.util.decorators import flaky
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 

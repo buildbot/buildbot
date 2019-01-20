@@ -25,13 +25,10 @@ from __future__ import print_function
 from future.utils import iteritems
 
 import functools
-import sys
 import warnings
 
-from twisted.python.deprecate import deprecatedModuleAttribute as _deprecatedModuleAttribute
 from twisted.python.deprecate import getWarningMethod
 from twisted.python.deprecate import setWarningMethod
-from twisted.python.versions import Version
 
 __all__ = (
     "DeprecatedWorkerNameWarning",

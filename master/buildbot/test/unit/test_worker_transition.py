@@ -16,14 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import re
-import sys
-import types
-
 import mock
 
-from twisted.python.deprecate import deprecatedModuleAttribute
-from twisted.python.versions import Version
 from twisted.trial import unittest
 
 from buildbot.test.util.warnings import assertNotProducesWarnings

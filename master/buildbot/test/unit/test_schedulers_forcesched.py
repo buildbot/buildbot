@@ -41,8 +41,6 @@ from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):

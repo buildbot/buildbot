@@ -43,8 +43,6 @@ from buildbot.process.properties import renderer
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class FakeSource:

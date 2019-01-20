@@ -27,9 +27,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestOpenStackWorker(unittest.TestCase):

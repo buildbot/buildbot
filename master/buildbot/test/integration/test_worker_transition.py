@@ -16,8 +16,6 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
-import re
-
 from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
@@ -32,7 +30,6 @@ from buildbot.test.util import www
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.test.util.warnings import assertProducesWarnings
 from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
