@@ -34,8 +34,6 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.steps.worker import CompositeStepMixin
 from buildbot.util import flatten
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 def makeStatusRemoteCommand(step, remote_command, args):
@@ -88,7 +86,7 @@ class _TransferBuildStep(BuildStep):
             return d
 
 
-class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
+class FileUpload(_TransferBuildStep):
 
     name = 'upload'
 
@@ -184,7 +182,7 @@ class FileUpload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
+class DirectoryUpload(_TransferBuildStep):
 
     name = 'upload'
 
@@ -257,8 +255,7 @@ class DirectoryUpload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
-                         CompositeStepMixin):
+class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
     name = 'upload'
     logEnviron = False
@@ -268,15 +265,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
     def __init__(self, workersrcs=None, masterdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, glob=False,
                  mode=None, compress=None, keepstamp=False, url=None,
-                 slavesrcs=None,  # deprecated, use `workersrcs` instead
                  **buildstep_kwargs):
-        # Deprecated API support.
-        if slavesrcs is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavesrcs' keyword argument is deprecated, "
-                "use 'workersrcs' instead")
-            assert workersrcs is None
-            workersrcs = slavesrcs
 
         # Emulate that first two arguments are positional.
         if workersrcs is None or masterdest is None:
@@ -285,7 +274,6 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
         _TransferBuildStep.__init__(self, workdir=workdir, **buildstep_kwargs)
 
         self.workersrcs = workersrcs
-        self._registerOldWorkerAttr("workersrcs")
         self.masterdest = masterdest
         self.maxsize = maxsize
         self.blocksize = blocksize
@@ -443,7 +431,7 @@ class MultipleFileUpload(_TransferBuildStep, WorkerAPICompatMixin,
         return BuildStep.finished(self, result)
 
 
-class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
+class FileDownload(_TransferBuildStep):
 
     name = 'download'
 
@@ -451,16 +439,7 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
     def __init__(self, mastersrc, workerdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
-                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
-        # Deprecated API support.
-        if slavedest is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavedest' keyword argument is deprecated, "
-                "use 'workerdest' instead")
-            assert workerdest is None
-            workerdest = slavedest
-
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -469,7 +448,6 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
         self.mastersrc = mastersrc
         self.workerdest = workerdest
-        self._registerOldWorkerAttr("workerdest")
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -522,7 +500,7 @@ class FileDownload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
+class StringDownload(_TransferBuildStep):
 
     name = 'string_download'
 
@@ -530,16 +508,7 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
     def __init__(self, s, workerdest=None,
                  workdir=None, maxsize=None, blocksize=16 * 1024, mode=None,
-                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
-        # Deprecated API support.
-        if slavedest is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavedest' keyword argument is deprecated, "
-                "use 'workerdest' instead")
-            assert workerdest is None
-            workerdest = slavedest
-
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -548,7 +517,6 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
 
         self.s = s
         self.workerdest = workerdest
-        self._registerOldWorkerAttr("workerdest")
         self.maxsize = maxsize
         self.blocksize = blocksize
         if not isinstance(mode, (int, type(None))):
@@ -592,21 +560,12 @@ class StringDownload(_TransferBuildStep, WorkerAPICompatMixin):
         d.addCallback(self.finished).addErrback(self.failed)
 
 
-class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
+class JSONStringDownload(StringDownload):
 
     name = "json_download"
 
     def __init__(self, o, workerdest=None,
-                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
-                # Deprecated API support.
-        if slavedest is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavedest' keyword argument is deprecated, "
-                "use 'workerdest' instead")
-            assert workerdest is None
-            workerdest = slavedest
-
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 3 arguments")
@@ -618,21 +577,12 @@ class JSONStringDownload(StringDownload, WorkerAPICompatMixin):
             self, s=s, workerdest=workerdest, **buildstep_kwargs)
 
 
-class JSONPropertiesDownload(StringDownload, WorkerAPICompatMixin):
+class JSONPropertiesDownload(StringDownload):
 
     name = "json_properties_download"
 
     def __init__(self, workerdest=None,
-                 slavedest=None,  # deprecated, use `workerdest` instead
                  **buildstep_kwargs):
-        # Deprecated API support.
-        if slavedest is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavedest' keyword argument is deprecated, "
-                "use 'workerdest' instead")
-            assert workerdest is None
-            workerdest = slavedest
-
         # Emulate that first two arguments are positional.
         if workerdest is None:
             raise TypeError("__init__() takes at least 2 arguments")
