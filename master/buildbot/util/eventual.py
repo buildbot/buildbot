@@ -59,14 +59,6 @@ class _SimpleCallQueue(object):
                 o.callback(None)
 
     def flush(self):
-        if hasattr(self._reactor, 'fireCurrentDelayedCalls'):
-            # if _reactor is TestReactor then firing the delayed calls manually
-            # is the only way to invoke _turn, as the reactor won't do that on
-            # its own. In this case we execute all events synchronously.
-            while self._events:
-                self._reactor.fireCurrentDelayedCalls()
-            return defer.succeed(None)
-
         if not self._events and not self._in_turn:
             return defer.succeed(None)
         d = defer.Deferred()
