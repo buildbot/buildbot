@@ -70,16 +70,3 @@ class TestAbstractWorkerForBuilder(TestCase):
 
         # The following shouldn't raise an exception.
         workerforbuilder.buildStarted()
-
-    def test_worker_old_api(self):
-        w = AbstractWorkerForBuilder()
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new_worker = w.worker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slave' attribute is deprecated"):
-            old_worker = w.slave
-
-        self.assertTrue(new_worker is old_worker)
