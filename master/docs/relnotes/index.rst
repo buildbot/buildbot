@@ -10,6 +10,42 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.8.0`` ( ``2019-01-20`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix a regression present in v1.7.0 which caused buildrequests waiting for a
+  lock that got released by an unrelated build not be scheduled (:issue:`4491`)
+- Don't run builds that request an instance with incompatible properties on
+  Docker, Marathon and OpenStack latent workers.
+- Gitpoller now fetches only branches that are known to exist on remote.
+  Non-existing branches are quietly ignored.
+- The demo repo in sample configuration files and the tutorial is now fetched
+  via ``https:`` instead of ``git:`` to make life easier for those behind
+  firewalls and/or using proxies.
+- `buildbot sendchange` has been fixed on Python 3 (:issue:`4138`)
+
+Features
+--------
+
+- Add a :py:class:`~buildbot.worker.kubernetes.KubeLatentWorker` to launch
+  workers into a kubernetes cluster
+- Simplify/automate configuration of worker as Windows service - eliminate
+  manual configuration of Log on as a service
+
+Deprecations and Removals
+-------------------------
+
+- The deprecated ``BuildMaster.addBuildset`` method has been removed. Use
+  ``BuildMaster.data.updates.addBuildset`` instead.
+- The deprecated ``BuildMaster.addChange`` method has been removed. Use
+  ``BuildMaster.data.updates.addChange`` instead.
+- ``buildbot`` package now requires Twisted versions >= 17.9.0. This is
+  required for Python 3 support. Earlier versions of Twisted are not supported.
+
+
 Buildbot ``1.7.0`` ( ``2018-12-21`` )
 =====================================
 

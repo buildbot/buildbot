@@ -1,1 +1,0 @@
-Don't run builds that request an instance with incompatible properties on Docker, Marathon and OpenStack latent workers.

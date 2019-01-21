@@ -1,1 +1,0 @@
-Gitpoller now fetches only branches that are known to exist on remote. Non-existing branches are quietly ignored.
