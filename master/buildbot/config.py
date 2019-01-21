@@ -295,7 +295,6 @@ class MasterConfig(util.ComparableMixin):
         "validation",
         "www",
         "workers",
-        "slaves",  # deprecated, "worker" should be used
     ])
     compare_attrs = list(_known_config_keys)
 
