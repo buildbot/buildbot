@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import os
 import shutil
+import sys
 from subprocess import call
 from subprocess import check_call
 from textwrap import dedent
@@ -57,13 +58,13 @@ class BuildbotWWWPkg(unittest.TestCase):
         self.rmtree(os.path.join(self.path, "static"))
 
     def run_setup(self, cmd):
-        check_call("python setup.py " + cmd, shell=True, cwd=self.path)
+        check_call([sys.executable, 'setup.py', cmd], cwd=self.path)
 
     def check_correct_installation(self):
         # assert we can import buildbot_www
         # and that it has an endpoint with resource containing file "script.js"
         check_call([
-            'python', '-c', self.loadTestScript % dict(epName=self.epName)])
+            sys.executable, '-c', self.loadTestScript % dict(epName=self.epName)])
 
     def test_install(self):
         self.run_setup("install")
