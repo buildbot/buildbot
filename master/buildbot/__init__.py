@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 #
-# Keep in sync with slave/buildslave/__init__.py
-#
 # We can't put this method in utility modules, because they import dependency packages
 
 from __future__ import division
