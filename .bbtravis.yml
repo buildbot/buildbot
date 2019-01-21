@@ -26,7 +26,6 @@ env:
   - TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
 
   - TWISTED=17.9.0 SQLALCHEMY=latest TESTS=trial
-  - TWISTED=latest SQLALCHEMY=latest TESTS=trial
 
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.6
   - TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=3.4
@@ -59,33 +58,27 @@ env:
 matrix:
   fast_finish: true
   include:
-    # python 3 tests
     # flake8, isort, pylint, docs first as they're more likely to find issues
-    - python: "3.6"
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=flake8
-    - python: "3.6"
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=isort
-    - python: "3.6"
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=pylint HYPER_SIZE=m3
-    - python: "3.6"
+    - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=docs
 
-    - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=coverage
-    - python: "3.5"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=smokes HYPER_SIZE=m2
-
     - python: "3.6"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
-    - python: "3.6"
-      env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
-
     - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=trial
-    - python: "3.7"
-      env: TWISTED=trunk SQLALCHEMY=latest TESTS=trial
+
     - python: "3.7"
       env: TWISTED=latest SQLALCHEMY=latest TESTS=interop WORKER_PYTHON=2.7
+
+    # keep worker supported on py2.7
+    - python: "2.7"
+      env: TWISTED=latest SQLALCHEMY=latest TESTS=trial_worker
 
 # Dependencies installation commands
 install:
@@ -185,7 +178,7 @@ script:
 
   - title: maketarballs
     condition: TESTS == "smokes"
-    cmd: make tarballs 
+    cmd: make tarballs
 
   - title: protractor tests
     condition: TESTS == "smokes"
