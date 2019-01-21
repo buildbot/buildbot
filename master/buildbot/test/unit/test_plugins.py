@@ -267,10 +267,6 @@ _WORKER_FAKE_ENTRIES = {
         SimpleFakeEntry('newthirdparty', ClassWithInterface),
         SimpleFakeEntry('deep.newthirdparty', ClassWithInterface),
     ],
-    'buildbot.buildslave': [
-        SimpleFakeEntry('thirdparty', ClassWithInterface),
-        SimpleFakeEntry('deep.thirdparty', ClassWithInterface),
-    ],
     'buildbot.util': [
         SimpleFakeEntry('WorkerLock', ClassWithInterface),
         SimpleFakeEntry('enforceChosenWorker', ClassWithInterface),
