@@ -33,52 +33,10 @@ from twisted.python.deprecate import setWarningMethod
 __all__ = (
     "DeprecatedWorkerNameWarning",
     "setupWorkerTransition",
-    "reportDeprecatedWorkerNameUsage",
-    "reportDeprecatedWorkerModuleUsage",
 )
 
 
 _WORKER_WARNING_MARK = "[WORKER]"
-
-
-def _compat_name(new_name, compat_name=None):
-    """Returns old API ("slave") name for new name ("worker").
-
-    >>> assert _compat_name("Worker") == "Slave"
-    >>> assert _compat_name("SomeWorkerStuff") == "SomeSlaveStuff"
-    >>> assert _compat_name("SomeWorker", compat_name="SomeBuildSlave") == \
-        "SomeBuildSlave"
-
-    If `compat_name` is not specified old name is construct by replacing in
-    `new_name`:
-        "worker" -> "slave",
-        "Worker" -> "Slave".
-
-    For the sake of simplicity of usage if `compat_name` argument is specified
-    it will returned as the result.
-    """
-
-    if compat_name is not None:
-        assert "slave" in compat_name.lower()
-        assert new_name == "" or "worker" in new_name.lower(), new_name
-        return compat_name
-
-    compat_replacements = {
-        "worker": "slave",
-        "Worker": "Slave",
-    }
-
-    compat_name = new_name
-    assert "slave" not in compat_name.lower()
-    assert "worker" in compat_name.lower()
-    for new_word, old_word in iteritems(compat_replacements):
-        compat_name = compat_name.replace(new_word, old_word)
-
-    assert compat_name != new_name
-    assert "slave" in compat_name.lower()
-    assert "worker" not in compat_name.lower()
-
-    return compat_name
 
 
 # DeprecationWarning or PendingDeprecationWarning may be used as
@@ -135,22 +93,6 @@ def reportDeprecatedWorkerNameUsage(message, stacklevel=None, filename=None,
             filename, lineno)
 
 
-def reportDeprecatedWorkerModuleUsage(message, stacklevel=None):
-    """Hook that is ran when old API module is used.
-
-    :param stacklevel: stack level relative to the caller's frame.
-    Defaults to caller of the caller of this function.
-    """
-
-    if stacklevel is None:
-        # Warning will refer to the caller of the caller of this function.
-        stacklevel = 3
-    else:
-        stacklevel += 2
-
-    warnings.warn(DeprecatedWorkerModuleWarning(message), None, stacklevel)
-
-
 def setupWorkerTransition():
     """Hook Twisted deprecation machinery to use custom warning class
     for Worker API deprecation warnings."""
@@ -171,47 +113,6 @@ def setupWorkerTransition():
             default_warn_method(message, category, stacklevel)
 
     setWarningMethod(custom_warn_method)
-
-
-def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
-                                  new_name=None):
-    """Define compatibility class property.
-
-    Can be used to create compatibility attribute for class property.
-
-    :param scope: class scope (locals() in the context of a scope)
-    :param prop: property object for which compatibility name should be
-    created.
-    :param compat_name: optional compatibility name (will be generated if not
-    specified)
-    :param new_name: optional new name (will be used name of attribute object
-    in the module is not specified). If empty string is specified, then no
-    new name is assumed for this attribute.
-    """
-
-    if new_name is None:
-        scope_keys = list(scope.keys())
-        scope_values = list(scope.values())
-        attribute_name = scope_keys[scope_values.index(prop)]
-    else:
-        attribute_name = new_name
-
-    compat_name = _compat_name(attribute_name, compat_name=compat_name)
-
-    if attribute_name:
-        advice_msg = "use '{0}' instead".format(attribute_name)
-    else:
-        advice_msg = "don't use it"
-
-    def get(self):
-        reportDeprecatedWorkerNameUsage(
-            "'{old}' property is deprecated, "
-            "{advice}.".format(
-                old=compat_name, advice=advice_msg))
-        return getattr(self, attribute_name)
-
-    assert compat_name not in scope
-    scope[compat_name] = property(get)
 
 
 # Enable worker transition hooks
