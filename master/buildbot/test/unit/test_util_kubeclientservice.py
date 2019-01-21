@@ -163,16 +163,36 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
         service = kubeclientservice.KubeClientService(config)
         self.assertEqual(service, self.config.parent)
 
+    def test_cannot_pass_both_bearer_and_basic_auth(self):
+        with self.assertRaises(Exception):
+            kubeclientservice.KubeHardcodedConfig(
+                master_url="http://localhost:8001",
+                namespace="default",
+                verify="/path/to/pem",
+                basicAuth="Bla",
+                bearerToken="Bla")
+
     @defer.inlineCallbacks
-    def test_verify_authorization_is_expanded(self):
+    def test_verify_bearerToken_is_expanded(self):
         self.config = config = kubeclientservice.KubeHardcodedConfig(
             master_url="http://localhost:8001",
             namespace="default",
             verify="/path/to/pem",
-            authorization=Interpolate("Defer %(kw:test)s", test=10))
+            bearerToken=Interpolate("%(kw:test)s", test=10))
         service = kubeclientservice.KubeClientService(config)
         url, kwargs = yield service._prepareRequest("/test", {})
-        self.assertEqual("Defer 10", kwargs['headers']['Authorization'])
+        self.assertEqual("Bearer 10", kwargs['headers']['Authorization'])
+
+    @defer.inlineCallbacks
+    def test_verify_basicAuth_is_expanded(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            basicAuth=Interpolate("%(kw:test)s", test=10))
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual("Basic 10", kwargs['headers']['Authorization'])
 
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,

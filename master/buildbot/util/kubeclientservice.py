@@ -66,7 +66,8 @@ class KubeConfigLoaderBase(BuildbotService):
 class KubeHardcodedConfig(KubeConfigLoaderBase):
     def reconfigService(self,
                         master_url=None,
-                        authorization=None,
+                        bearerToken=None,
+                        basicAuth=None,
                         headers=None,
                         cert=None,
                         verify=None,
@@ -74,8 +75,12 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
         self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
         if headers is not None:
             self.config['headers'] = headers
-        if authorization is not None:
-            self.config['authorization'] = authorization
+        if basicAuth and bearerToken:
+            raise Exception("set one of basicAuth and bearerToken, not both")
+        if basicAuth is not None:
+            self.config['basicAuth'] = basicAuth
+        if bearerToken is not None:
+            self.config['bearerToken'] = bearerToken
         if cert is not None:
             self.config['cert'] = cert
         if verify is not None:
@@ -209,9 +214,15 @@ class KubeClientService(HTTPClientService):
                 req_kwargs['headers'] = req_kwargs['headers'].dup
             req_kwargs['headers'].update(config['headers'])
 
-        auth = config.get('authorization', None)
-        if auth is not None:
-            req_kwargs['headers']['Authorization'] = yield self.config.renderSecrets(auth)
+        bearer = config.get('bearerToken', None)
+        if bearer is not None:
+            bearer = yield self.config.renderSecrets(bearer)
+            req_kwargs['headers']['Authorization'] = "Bearer {token}".format(token=bearer)
+
+        basic = config.get('basicAuth', None)
+        if basic is not None:
+            basic = yield self.config.renderSecrets(basic)
+            req_kwargs['headers']['Authorization'] = "Basic {basic}".format(basic=basic)
 
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:
