@@ -27,7 +27,6 @@ include docs/relnotes/*
 
 include buildbot/scripts/sample.cfg
 include buildbot/scripts/buildbot_tac.tmpl
-include buildbot/buildbot.png
 include buildbot/reporters/templates/*.txt
 
 include buildbot/spec/api.raml

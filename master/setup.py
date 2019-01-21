@@ -208,9 +208,6 @@ setup_args = {
         "buildbot.test.unit",
     ]),
     'data_files': [
-        ("buildbot", [
-            "buildbot/buildbot.png",
-        ]),
         include("buildbot/reporters/templates", "*.txt"),
         ("buildbot/db/migrate", [
             "buildbot/db/migrate/migrate.cfg",
