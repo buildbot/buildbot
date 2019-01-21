@@ -21,7 +21,6 @@ import os
 
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python import threadpool
 from twisted.python.failure import Failure
 from twisted.trial.unittest import SynchronousTestCase
 
@@ -38,12 +37,10 @@ from buildbot.process.results import EXCEPTION
 from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.misc import enable_trace
-from buildbot.util.eventual import _setReactor
 
 
 class TestException(Exception):
@@ -53,14 +50,10 @@ class TestException(Exception):
     """
 
 
-class Tests(SynchronousTestCase):
+class Tests(SynchronousTestCase, TestReactorMixin):
 
     def setUp(self):
-        self.patch(threadpool, 'ThreadPool', NonThreadPool)
-        self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
-        _setReactor(self.reactor)
-        self.addCleanup(_setReactor, None)
+        self.setUpTestReactor()
 
         # to ease debugging we display the error logs in the test log
         origAddCompleteLog = BuildStep.addCompleteLog

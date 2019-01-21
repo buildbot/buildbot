@@ -23,8 +23,7 @@ from buildbot.process.properties import Properties
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
-from buildbot.test.fake.reactor import TestReactor
-from buildbot.util.eventual import _setReactor
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
@@ -41,10 +40,9 @@ class FakeBot(object):
         self.n()
 
 
-class TestMarathonLatentWorker(unittest.SynchronousTestCase):
+class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
     def setUp(self):
-        self.reactor = TestReactor()
-        _setReactor(self.reactor)
+        self.setUpTestReactor()
         self.build = Properties(
             image="busybox:latest", builder="docker_worker")
         self.worker = None
@@ -55,7 +53,6 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase):
                 code = 200
             self._http.delete = lambda _: defer.succeed(FakeResult())
             self.worker.master.stopService()
-        _setReactor(None)
 
     def test_constructor_normal(self):
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
