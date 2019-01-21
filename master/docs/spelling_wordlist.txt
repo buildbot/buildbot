@@ -750,6 +750,7 @@ subcommands
 subdir
 subdirectories
 subdirectory
+submenu
 submodule
 submodules
 subnet

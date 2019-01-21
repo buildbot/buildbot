@@ -187,10 +187,10 @@ You should now be able to go to http://localhost:8010, where you will see a web 
 .. image:: _images/index.png
    :alt: index page
 
-Click on the `Waterfall Display link <http://localhost:8010/#/waterfall>`_ and you get this:
+Click on "Builds" at the left to open the submenu and then `Builders <http://localhost:8010/#/builders>`_ to see that the worker you just started has connected to the master:
 
-.. image:: _images/waterfall-empty.png
-   :alt: empty waterfall.
+.. image:: _images/builders.png
+   :alt: builder runtests is active.
 
 Your master is now quietly waiting for new commits to hello-world.
 This doesn't happen very often though.
