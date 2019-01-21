@@ -992,11 +992,11 @@ class TestJSONStringDownload(steps.BuildStepMixin, unittest.TestCase):
             result=FAILURE, state_string="downloading to hello.json (failure)")
         return self.runStep()
 
-
     def test_init_workerdest_keyword(self):
         step = transfer.JSONStringDownload('srcfile', workerdest='dstfile')
 
         self.assertEqual(step.workerdest, 'dstfile')
+
     def test_init_workerdest_positional(self):
         step = transfer.JSONStringDownload('srcfile', 'dstfile')
 

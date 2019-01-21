@@ -49,6 +49,7 @@ class RealConfigs(dirs.DirsMixin, unittest.TestCase):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             config.FileLoader(self.basedir, self.filename).loadConfig()
 
+
 # sample.cfg from various versions, with comments stripped.  Adjustments made
 # for compatibility are marked with comments
 
