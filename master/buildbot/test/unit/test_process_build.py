@@ -42,10 +42,6 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.fake.fakebuild import FakeBuildStatus
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class FakeChange:

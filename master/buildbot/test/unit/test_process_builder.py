@@ -33,12 +33,9 @@ from buildbot.process.properties import Properties
 from buildbot.process.properties import renderer
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
-from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import epoch2datetime
 from buildbot.worker import AbstractLatentWorker
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class BuilderMixin(object):

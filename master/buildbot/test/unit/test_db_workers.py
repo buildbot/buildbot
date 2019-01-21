@@ -18,8 +18,6 @@ from __future__ import division
 from __future__ import print_function
 from future.builtins import range
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -30,8 +28,6 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 from buildbot.test.util import validation
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 def workerKey(worker):

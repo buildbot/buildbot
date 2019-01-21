@@ -22,9 +22,7 @@ as an error using Python builtin warnings API.
 
 from __future__ import absolute_import
 from __future__ import print_function
-from future.utils import iteritems
 
-import functools
 import warnings
 
 from twisted.python.deprecate import getWarningMethod

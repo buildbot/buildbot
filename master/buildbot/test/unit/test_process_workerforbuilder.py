@@ -19,11 +19,7 @@ from __future__ import print_function
 from twisted.trial.unittest import TestCase
 
 from buildbot.process.workerforbuilder import AbstractWorkerForBuilder
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker.base import AbstractWorker
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestAbstractWorkerForBuilder(TestCase):

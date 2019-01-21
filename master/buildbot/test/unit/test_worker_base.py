@@ -31,12 +31,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class ConcreteWorker(base.AbstractWorker):

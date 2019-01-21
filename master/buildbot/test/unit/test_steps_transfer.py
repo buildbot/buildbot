@@ -41,8 +41,6 @@ from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 

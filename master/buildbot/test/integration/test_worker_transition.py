@@ -20,19 +20,15 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.task import deferLater
 from twisted.python.filepath import FilePath
-from twisted.trial import unittest
 from zope.interface import implementer
 
-import buildbot.worker
 from buildbot import config
 from buildbot.interfaces import IConfigLoader
 from buildbot.test.util import www
 from buildbot.test.util.integration import RunMasterBase
 from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import unicode2bytes
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 # Template for master configuration after renaming.
 sample_0_9_0b5_api_renamed = """\

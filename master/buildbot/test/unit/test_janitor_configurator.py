@@ -34,10 +34,8 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.SynchronousTestCase):

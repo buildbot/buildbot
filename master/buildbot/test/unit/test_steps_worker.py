@@ -18,8 +18,6 @@ from __future__ import print_function
 
 import stat
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -34,8 +32,6 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 def uploadString(string):

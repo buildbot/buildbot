@@ -27,10 +27,6 @@ from zope.interface import implementer
 import buildbot.plugins.db
 from buildbot.errors import PluginDBError
 from buildbot.interfaces import IPlugin
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 # buildbot.plugins.db needs to be imported for patching, however just 'db' is
 # much shorter for using in tests
