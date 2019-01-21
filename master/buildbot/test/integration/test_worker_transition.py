@@ -118,35 +118,3 @@ class RunMaster(RunMasterBase, www.RequiresWwwMixin):
             _, loaded_config = config.loadConfigDict(".", configfile.path)
 
             yield self._run_master(loaded_config)
-
-
-class PluginsTransition(unittest.TestCase):
-
-    def test_api_import(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            # Old API end point, no warning.
-            from buildbot.plugins import buildslave as buildslave_ns
-            # New API.
-            from buildbot.plugins import worker as worker_ns
-            # New API.
-            self.assertTrue(worker_ns.Worker is buildbot.worker.Worker)
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
-                                "namespace is deprecated"):
-            # Old API, with warning
-            self.assertTrue(
-                buildslave_ns.BuildSlave is buildbot.worker.Worker)
-
-        # Access of newly named workers through old entry point is an error.
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'buildbot\.plugins\.buildslave' plugins "
-                                "namespace is deprecated"):
-            with self.assertRaises(AttributeError):
-                buildslave_ns.Worker()
-
-        # Access of old-named workers through new API is an error.
-        with self.assertRaises(AttributeError):
-            worker_ns.BuildSlave()
