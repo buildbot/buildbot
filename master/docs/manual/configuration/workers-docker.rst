@@ -377,8 +377,13 @@ Kubernetes provides many options to connect to a cluster.
 It is especially more complicated as some cloud providers use specific methods to connect to their managed kubernetes.
 Config loaders objects can be shared between LatentWorker.
 
-Here are the options you can use to connect to your clusters:
+There are three options you may use to connect to your clusters.
 
+When running both the master and slaves run on the same Kubernetes cluster, you
+should use the KubeInClusterConfigLoader. If not, but having a configured
+kubectl tool available to the build master is an option for you, you should use
+KubeCtlProxyConfigLoader. If neither of these options is convenient, use
+KubeHardcodedConfig.
 
 .. py:class:: buildbot.util.kubeclientservice.KubeCtlProxyConfigLoader
 .. py:class:: buildbot.plugins.util.KubeCtlProxyConfigLoader
