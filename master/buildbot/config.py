@@ -47,7 +47,6 @@ from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
 from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -192,7 +191,7 @@ class FileLoader(ComparableMixin, object):
         return config
 
 
-class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -708,31 +707,16 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
     def load_workers(self, filename, config_dict):
         config_valid = True
 
-        deprecated_workers = config_dict.get('slaves')
-        if deprecated_workers is not None:
-            reportDeprecatedWorkerNameUsage(
-                "c['slaves'] key is deprecated, use c['workers'] instead",
-                filename=filename)
-            if not self._check_workers(deprecated_workers, "c['slaves']"):
-                config_valid = False
-
         workers = config_dict.get('workers')
         if workers is not None:
             if not self._check_workers(workers, "c['workers']"):
                 config_valid = False
 
-        if deprecated_workers is not None and workers is not None:
-            error("Use of c['workers'] and c['slaves'] at the same time is "
-                  "not supported. Use only c['workers'] instead")
-            return
-
         if not config_valid:
             return
 
-        elif deprecated_workers is not None or workers is not None:
+        elif workers is not None:
             self.workers = []
-            if deprecated_workers is not None:
-                self.workers.extend(deprecated_workers)
             if workers is not None:
                 self.workers.extend(workers)
 

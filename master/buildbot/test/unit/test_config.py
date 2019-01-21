@@ -843,36 +843,10 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                               dict(workers=[wrk]))
         self.assertResults(workers=[wrk])
 
-    def test_load_workers_old_api(self):
+    def test_load_workers(self):
         w = worker.Worker("name", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w]))
+        self.cfg.load_workers(self.filename, dict(workers=[w]))
         self.assertResults(workers=[w])
-
-    def test_load_workers_new_api(self):
-        w = worker.Worker("name", 'x')
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.cfg.load_workers(self.filename, dict(workers=[w]))
-        self.assertResults(workers=[w])
-
-    def test_load_workers_old_and_new_api(self):
-        w1 = worker.Worker("name1", 'x')
-        w2 = worker.Worker("name2", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w1],
-                                                      workers=[w2]))
-
-        self.assertConfigError(
-            self.errors,
-            "Use of c['workers'] and c['slaves'] at the same time "
-            "is not supported")
-        self.errors.errors[:] = []  # clear out the errors
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})

@@ -56,19 +56,6 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         self.expectNoConfigError()
 
-    def test_worker_vs_slaves(self):
-        """The base configurator uses the slaves config if it exists already"""
-        self.config_dict['slaves'] = []
-        self.setupConfigurator(logHorizon=timedelta(weeks=1))
-        self.expectWorker(JANITOR_NAME, LocalWorker)
-        self.expectScheduler(JANITOR_NAME, Nightly)
-        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-                self.expectNoConfigError()
-
 
 class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):
 
