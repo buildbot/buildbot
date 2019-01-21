@@ -33,7 +33,6 @@ from twisted.python.deprecate import setWarningMethod
 __all__ = (
     "DeprecatedWorkerNameWarning",
     "deprecatedWorkerClassMethod",
-    "WorkerAPICompatMixin",
     "setupWorkerTransition",
     "reportDeprecatedWorkerNameUsage",
     "reportDeprecatedWorkerModuleUsage",
@@ -233,54 +232,6 @@ def deprecatedWorkerClassMethod(scope, method, compat_name=None):
     functools.update_wrapper(old_method, method)
 
     scope[compat_name] = old_method
-
-
-class WorkerAPICompatMixin(object):
-
-    """Mixin class for classes that have old-named worker attributes."""
-
-    def __getattr__(self, name):
-        if name not in self.__compat_attrs:
-            raise AttributeError(
-                "'{class_name}' object has no attribute '{attr_name}'".format(
-                    class_name=self.__class__.__name__,
-                    attr_name=name))
-
-        new_name = self.__compat_attrs[name]
-
-        # TODO: Log class name, operation type etc.
-        reportDeprecatedWorkerNameUsage(
-            "'{old}' attribute is deprecated, use '{new}' instead.".format(
-                new=new_name, old=name))
-
-        return getattr(self, new_name)
-
-    def __setattr__(self, name, value):
-        if name in self.__compat_attrs:
-            new_name = self.__compat_attrs[name]
-            # TODO: Log class name, operation type etc.
-            reportDeprecatedWorkerNameUsage(
-                "'{old}' attribute is deprecated, use '{new}' instead.".format(
-                    new=new_name, old=name))
-            return setattr(self, new_name, value)
-        else:
-            object.__setattr__(self, name, value)
-
-    @property
-    def __compat_attrs(self):
-        # It's unreliable to initialize attributes in __init__() since
-        # old-style classes are used and parent initializers are mostly
-        # not called.
-        if "_compat_attrs_mapping" not in self.__dict__:
-            self.__dict__["_compat_attrs_mapping"] = {}
-        return self._compat_attrs_mapping
-
-    def _registerOldWorkerAttr(self, attr_name, name=None):
-        """Define old-named attribute inside class instance."""
-        compat_name = _compat_name(attr_name, compat_name=name)
-        assert compat_name not in self.__dict__
-        assert compat_name not in self.__compat_attrs
-        self.__compat_attrs[compat_name] = attr_name
 
 
 # Enable worker transition hooks
