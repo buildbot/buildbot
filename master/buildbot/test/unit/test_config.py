@@ -843,11 +843,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                               dict(workers=[wrk]))
         self.assertResults(workers=[wrk])
 
-    def test_load_workers(self):
-        w = worker.Worker("name", 'x')
-        self.cfg.load_workers(self.filename, dict(workers=[w]))
-        self.assertResults(workers=[w])
-
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
         self.assertResults(change_sources=[])
@@ -1445,10 +1440,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    'workernames': ['s1'],
                                                    })
 
-    def test_init_workername_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory)
+    def test_init_workername_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workername='a',
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1459,10 +1453,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workernames=['a'], factory=self.factory)
+    def test_init_workernames_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workernames=['a'],
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1473,11 +1466,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workerbuilddir_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                workerbuilddir="dir")
+    def test_init_workerbuilddir_keyword(self):
+        cfg = config.BuilderConfig(
+            name='a b c', workername='a', factory=self.factory,
+            workerbuilddir="dir")
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
@@ -1488,12 +1480,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_init_next_worker_new_api_no_warns(self):
+    def test_init_next_worker_keyword(self):
         f = lambda: None
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextWorker=f)
+        cfg = config.BuilderConfig(
+            name='a b c', workername='a', factory=self.factory,
+            nextWorker=f)
 
         self.assertEqual(cfg.nextWorker, f)
 

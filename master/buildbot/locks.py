@@ -22,7 +22,6 @@ from twisted.python import log
 from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import WorkerAPICompatMixin
 
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
@@ -293,7 +292,7 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 
-class WorkerLock(BaseLockId, WorkerAPICompatMixin):
+class WorkerLock(BaseLockId):
 
     """I am a semaphore that limits simultaneous actions on each worker.
 

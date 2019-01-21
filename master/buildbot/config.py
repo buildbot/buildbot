@@ -46,7 +46,6 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
-from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -915,7 +914,7 @@ class MasterConfig(util.ComparableMixin):
             error("workers are configured, but c['protocols'] not")
 
 
-class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
+class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, workername=None, workernames=None,
                  builddir=None, workerbuilddir=None, factory=None,

@@ -50,7 +50,6 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
-from buildbot.worker_transition import WorkerAPICompatMixin
 from buildbot.www import service as wwwservice
 
 
@@ -61,8 +60,7 @@ class LogRotation(object):
         self.maxRotatedFiles = 10
 
 
-class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService,
-                  WorkerAPICompatMixin):
+class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
     # multiplier on RECLAIM_BUILD_INTERVAL at which a build is considered
     # unclaimed; this should be at least 2 to avoid false positives
