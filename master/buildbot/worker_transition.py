@@ -32,7 +32,6 @@ from twisted.python.deprecate import setWarningMethod
 
 __all__ = (
     "DeprecatedWorkerNameWarning",
-    "deprecatedWorkerClassMethod",
     "setupWorkerTransition",
     "reportDeprecatedWorkerNameUsage",
     "reportDeprecatedWorkerModuleUsage",
@@ -213,25 +212,6 @@ def deprecatedWorkerClassProperty(scope, prop, compat_name=None,
 
     assert compat_name not in scope
     scope[compat_name] = property(get)
-
-
-def deprecatedWorkerClassMethod(scope, method, compat_name=None):
-    """Define old-named method inside class."""
-    method_name = method.__name__
-
-    compat_name = _compat_name(method_name, compat_name=compat_name)
-
-    assert compat_name not in scope
-
-    def old_method(self, *args, **kwargs):
-        reportDeprecatedWorkerNameUsage(
-            "'{old}' method is deprecated, use '{new}' instead.".format(
-                new=method_name, old=compat_name))
-        return getattr(self, method_name)(*args, **kwargs)
-
-    functools.update_wrapper(old_method, method)
-
-    scope[compat_name] = old_method
 
 
 # Enable worker transition hooks

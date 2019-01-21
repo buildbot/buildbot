@@ -731,19 +731,3 @@ class TestRealDB(unittest.TestCase,
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_getWorkers_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.workers.WorkersConnectorComponent.getWorkers',
-                method):
-            m = workers.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getBuildslaves' method is deprecated"):
-                dummy = m.getBuildslaves()
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with()

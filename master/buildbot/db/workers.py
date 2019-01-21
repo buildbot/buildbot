@@ -23,7 +23,6 @@ from twisted.internet import defer
 
 from buildbot.db import base
 from buildbot.util import identifiers
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class WorkersConnectorComponent(base.DBConnectorComponent):
@@ -213,8 +212,6 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
 
             return list(itervalues(rv))
         return self.db.pool.do(thd)
-    deprecatedWorkerClassMethod(
-        locals(), getWorkers, compat_name="getBuildslaves")
 
     # returns a Deferred that returns None
     def workerConnected(self, workerid, masterid, workerinfo):

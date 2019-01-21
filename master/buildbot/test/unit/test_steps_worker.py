@@ -473,19 +473,6 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_getFileContentFromWorker_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker',
-                method):
-            m = worker.CompositeStepMixin()
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getFileContentFromSlave' method is deprecated"):
-                dummy = m.getFileContentFromSlave('file')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('file')
-
     def test_downloadFileContentToWorker(self):
         @defer.inlineCallbacks
         def testFunc(x):

@@ -25,7 +25,6 @@ from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
 from buildbot.worker_transition import DeprecatedWorkerNameWarning
 from buildbot.worker_transition import _compat_name
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
@@ -73,49 +72,3 @@ class test_deprecatedWorkerClassProperty(unittest.TestCase):
                 message_pattern="'slavename' property is deprecated, "
                                 "use 'workername' instead"):
             self.assertEqual(c.slavename, "name")
-
-
-class test_deprecatedWorkerClassMethod(unittest.TestCase):
-
-    def test_method_wrapper(self):
-        class C(object):
-
-            def updateWorker(self, res):
-                return res
-            deprecatedWorkerClassMethod(locals(), updateWorker)
-
-        c = C()
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertEqual(c.updateWorker("test"), "test")
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            self.assertEqual(c.updateSlave("test"), "test")
-
-    def test_method_meta(self):
-        class C(object):
-
-            def updateWorker(self, res):
-                """docstring"""
-                return res
-            deprecatedWorkerClassMethod(locals(), updateWorker)
-
-        self.assertEqual(C.updateSlave.__module__, C.updateWorker.__module__)
-        self.assertEqual(C.updateSlave.__doc__, C.updateWorker.__doc__)
-
-    def test_method_mocking(self):
-        class C(object):
-
-            def updateWorker(self, res):
-                return res
-            deprecatedWorkerClassMethod(locals(), updateWorker)
-
-        c = C()
-
-        c.updateWorker = mock.Mock(return_value="mocked")
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.assertEqual(c.updateWorker("test"), "mocked")
-
-        with assertProducesWarning(DeprecatedWorkerNameWarning):
-            self.assertEqual(c.updateSlave("test"), "mocked")

@@ -36,7 +36,6 @@ from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -195,7 +194,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
             wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
             self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
-    deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
     def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
@@ -268,7 +266,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
-    deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     @defer.inlineCallbacks
     def canStartBuild(self, workerforbuilder, buildrequest):

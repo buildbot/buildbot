@@ -25,7 +25,6 @@ from buildbot.process import remotetransfer
 from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util import bytes2unicode
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class WorkerBuildStep(buildstep.BuildStep):
@@ -326,7 +325,6 @@ class CompositeStepMixin():
         return self.runRemoteCommand('uploadFile', args,
                                      abandonOnFailure=abandonOnFailure,
                                      evaluateCommand=commandComplete)
-    deprecatedWorkerClassMethod(locals(), getFileContentFromWorker)
 
     def downloadFileContentToWorker(self, workerdest, strfile,
                                     abandonOnFailure=False, mode=None,
