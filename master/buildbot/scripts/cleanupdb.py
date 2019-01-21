@@ -20,6 +20,8 @@ from __future__ import print_function
 import os
 import sys
 
+import sqlalchemy as sa
+import sqlalchemy.sql.functions as safunc
 from twisted.internet import defer
 
 from buildbot import config as config_module
@@ -30,14 +32,127 @@ from buildbot.util import in_reactor
 
 
 @defer.inlineCallbacks
-def doCleanupDatabase(config, master_cfg):
-    if not config['quiet']:
-        print("cleaning database (%s)" % (master_cfg.db['db_url']))
+def deleteOldBuilds(db, config):
+    m = db.model
 
-    master = BuildMaster(config['basedir'])
-    master.config = master_cfg
-    db = master.db
-    yield db.setup(check_version=False, verbose=not config['quiet'])
+    def thd(conn):
+        with conn.begin():
+            # Delete soucestamps older than --max-days
+            # The starting point is not "now" but the most recent sourcestamp..
+            max_created_at = conn.execute(
+                sa.select([safunc.max(m.sourcestamps.c.created_at)])).scalar()
+            if max_created_at is None:
+                max_created_at = 0
+            max_created_at -= config['max-days'] * 24 * 60 * 60
+
+            res = conn.execute(m.sourcestamps.delete().where(
+                m.sourcestamps.c.created_at < max_created_at))
+
+            print('Deleted %s sourcestamps' % res.rowcount)
+
+            conn.execute(m.patches.delete().where(
+                m.patches.c.id.notin_(sa.select([m.sourcestamps.c.patchid]))))
+
+            # Delete changes with no link to a sourcestamp.
+            conn.execute(m.changes.delete().where(
+                m.changes.c.sourcestampid.notin_(sa.select([m.sourcestamps.c.id]))))
+
+            conn.execute(m.changes.update().where(
+                m.changes.c.parent_changeids.notin_(
+                    sa.select([m.changes.c.changeid]))).values(
+                        parent_changeids=None))
+
+            conn.execute(m.change_files.delete().where(
+                m.change_files.c.changeid.notin_(sa.select([m.changes.c.changeid]))))
+
+            conn.execute(m.change_properties.delete().where(
+                m.change_properties.c.changeid.notin_(sa.select([m.changes.c.changeid]))))
+
+            conn.execute(m.change_users.delete().where(
+                m.change_users.c.changeid.notin_(sa.select([m.changes.c.changeid]))))
+
+            conn.execute(m.scheduler_changes.delete().where(
+                m.scheduler_changes.c.changeid.notin_(sa.select([m.changes.c.changeid]))))
+
+            # Delete buildsets that have no link to a sourcestamp.
+            conn.execute(m.buildset_sourcestamps.delete().where(
+                m.buildset_sourcestamps.c.sourcestampid.notin_(
+                    sa.select([m.sourcestamps.c.id]))))
+
+            conn.execute(m.buildsets.delete().where(
+                m.buildsets.c.id.notin_(
+                    sa.select([m.buildset_sourcestamps.c.buildsetid]))))
+
+            conn.execute(m.buildset_properties.delete().where(
+                m.buildset_properties.c.buildsetid.notin_(
+                    sa.select([m.buildsets.c.id]))))
+
+            conn.execute(m.buildrequests.delete().where(
+                m.buildrequests.c.buildsetid.notin_(sa.select([m.buildsets.c.id]))))
+
+            conn.execute(m.buildrequest_claims.delete().where(
+                m.buildrequest_claims.c.brid.notin_(sa.select([m.buildrequests.c.id]))))
+
+            conn.execute(m.builds.delete().where(
+                m.builds.c.buildrequestid.notin_(sa.select([m.buildrequests.c.id]))))
+
+            conn.execute(m.buildsets.update().where(
+                m.buildsets.c.parent_buildid.notin_(
+                    sa.select([m.builds.c.id]))).values(
+                        parent_buildid=None, parent_relationship=None))
+
+            conn.execute(m.build_properties.delete().where(
+                m.build_properties.c.buildid.notin_(sa.select([m.builds.c.id]))))
+
+            conn.execute(m.steps.delete().where(
+                m.steps.c.buildid.notin_(sa.select([m.builds.c.id]))))
+
+            conn.execute(m.logs.delete().where(
+                m.logs.c.stepid.notin_(sa.select([m.steps.c.id]))))
+
+            conn.execute(m.logchunks.delete().where(
+                m.logchunks.c.logid.notin_(sa.select([m.logs.c.id]))))
+
+    yield db.pool.do(thd)
+
+
+@defer.inlineCallbacks
+def deleteOldBuilders(db, config):
+    m = db.model
+
+    def thd(conn):
+        with conn.begin():
+            # Delete non-active builders that are not referenced by any build.
+            conn.execute(m.builders.delete().where(
+                m.builders.c.id.notin_(sa.select([m.builder_masters.c.builderid]))
+                & m.builders.c.id.notin_(sa.select([m.builds.c.builderid]))))
+
+            # Delete tags not referenced by any builder.
+            conn.execute(m.builders_tags.delete().where(
+                m.builders_tags.c.builderid.notin_(sa.select([m.builders.c.id]))))
+
+            conn.execute(m.tags.delete().where(
+                m.tags.c.id.notin_(sa.select([m.builders_tags.c.tagid]))))
+
+    yield db.pool.do(thd)
+
+
+@defer.inlineCallbacks
+def deleteOldWorkers(db, config):
+    m = db.model
+
+    def thd(conn):
+        with conn.begin():
+            # Delete non-active workers that are not referenced by any build.
+            conn.execute(m.workers.delete().where(
+                m.workers.c.id.notin_(sa.select([m.configured_workers.c.workerid]))
+                & m.workers.c.id.notin_(sa.select([m.builds.c.workerid]))))
+
+    yield db.pool.do(thd)
+
+
+@defer.inlineCallbacks
+def optimizeLogs(db, config):
     res = yield db.logs.getLogs()
     i = 0
     percent = 0
@@ -50,6 +165,31 @@ def doCleanupDatabase(config, master_cfg):
             print(" {0}%  {1} saved".format(percent, saved))
             saved = 0
             sys.stdout.flush()
+
+
+MAINTENANCE_JOBS = (
+    ('deleteoldbuilds', deleteOldBuilds),
+    ('deleteoldbuilders', deleteOldBuilders),
+    ('deleteoldworkers', deleteOldWorkers),
+    ('optimizelogs', optimizeLogs),
+)
+
+
+@defer.inlineCallbacks
+def doCleanupDatabase(config, master_cfg):
+    if not config['quiet']:
+        print("cleaning database (%s)" % (master_cfg.db['db_url']))
+
+    master = BuildMaster(config['basedir'])
+
+    master.config = master_cfg
+    db = master.db
+    yield db.setup(check_version=False, verbose=not config['quiet'])
+
+    for job, func in MAINTENANCE_JOBS:
+        if job in config['jobs']:
+            print('running job %s...' % job)
+            yield func(db, config)
 
     if master_cfg.db['db_url'].startswith("sqlite"):
         if not config['quiet']:

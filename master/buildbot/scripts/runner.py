@@ -676,14 +676,31 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
         ["quiet", "q", "Do not emit the commands being run"],
         ["force", "f",
             "Force log recompression (useful when changing compression algorithm)"],
-        # when this command has several maintenance jobs, we should make
-        # them optional here. For now there is only one.
     ]
     optParameters = [
+        ["jobs", None, "optimizelogs",
+         "A comma-separated list of maintenance jobs to execute."],
+        ["max-days", None, 30,
+         "All builds/changes/sourcestamps older than that will be deleted by "
+         "the 'deleteoldbuilds' maintenance job.", int],
     ]
 
     def getSynopsis(self):
         return "Usage:    buildbot cleanupdb [options] [<basedir>]"
+
+    def postOptions(self):
+        base.BasedirMixin.postOptions(self)
+
+        if self['max-days'] <= 0:
+            raise usage.UsageError('--max-days must be postitive')
+
+        from buildbot.scripts import cleanupdb
+        validJobs = [job for job, _ in cleanupdb.MAINTENANCE_JOBS]
+        self['jobs'] = set(self['jobs'].split(','))
+        if not self['jobs'] or not self['jobs'].issubset(set(validJobs)):
+            raise usage.UsageError(
+                'Invalid --jobs value. Must be a subset of: %s'
+                % ','.join(validJobs))
 
     longdesc = textwrap.dedent("""
     This command takes an existing buildmaster working directory and
@@ -691,7 +708,13 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
 
     This command is frontend for various database maintenance jobs:
 
-    - optimiselogs: This optimization groups logs into bigger chunks
+    - deleteoldbuilds: This deletes all builds/changes/sourcestamps
+      older than the specified --max-days parameter.
+    - deleteoldbuilders: This deletes all non-active builders that are
+      not referenced by any build.
+    - deleteoldworkers: This deletes all non-active workers that are
+      not referenced by any build.
+    - optimizelogs: This optimization groups logs into bigger chunks
       to apply higher level of compression.
 
     This command uses the database specified in
