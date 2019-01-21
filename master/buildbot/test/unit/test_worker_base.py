@@ -174,21 +174,6 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.access, [])
 
     @defer.inlineCallbacks
-    def test_slavename_deprecated(self):
-        bs = yield self.createWorker('bot', 'pass')
-        yield bs.startService()
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' property is deprecated"):
-            old_name = bs.slavename
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            name = bs.workername
-
-        self.assertEqual(name, old_name)
-
-    @defer.inlineCallbacks
     def test_constructor_full(self):
         lock1, lock2 = mock.Mock(name='lock1'), mock.Mock(name='lock2')
         bs = yield self.createWorker('bot', 'pass',

@@ -33,7 +33,6 @@ from buildbot.status.worker import WorkerStatus
 from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import deprecatedWorkerClassProperty
 
 
 @implementer(IWorker)
@@ -108,7 +107,6 @@ class AbstractWorker(service.BuildbotService, object):
 
         self.properties = Properties()
         self.properties.update(properties, "Worker")
-        self.properties.setProperty("slavename", name, "Worker (deprecated)")
         self.properties.setProperty("workername", name, "Worker")
 
         self.lastMessageReceived = 0
@@ -139,7 +137,6 @@ class AbstractWorker(service.BuildbotService, object):
     def workername(self):
         # workername is now an alias to twisted.Service's name
         return self.name
-    deprecatedWorkerClassProperty(locals(), workername)
 
     @property
     def botmaster(self):
@@ -277,7 +274,6 @@ class AbstractWorker(service.BuildbotService, object):
             properties = {}
         self.properties = Properties()
         self.properties.update(properties, "Worker")
-        self.properties.setProperty("slavename", name, "Worker (deprecated)")
         self.properties.setProperty("workername", name, "Worker")
 
         # update our records with the worker manager
