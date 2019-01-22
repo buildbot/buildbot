@@ -258,7 +258,6 @@ setup_args = {
             ('buildbot.worker.libvirt', ['LibVirtWorker']),
             ('buildbot.worker.openstack', ['OpenStackLatentWorker']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),
-            ('buildbot.worker.hyper', ['HyperLatentWorker']),
             ('buildbot.worker.kubernetes', ['KubeLatentWorker']),
             ('buildbot.worker.local', ['LocalWorker']),
         ]),
