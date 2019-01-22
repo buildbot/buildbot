@@ -43,8 +43,6 @@ from buildbot.process.properties import renderer
 from buildbot.test.fake.fakebuild import FakeBuild
 from buildbot.test.util.config import ConfigErrorsMixin
 from buildbot.test.util.properties import ConstantRenderable
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class FakeSource:
@@ -1733,62 +1731,3 @@ class TestTransform(unittest.TestCase, ConfigErrorsMixin):
         kwarg.callback('def')
 
         return d
-
-
-class TestDeprecatedProperties(unittest.TestCase):
-
-    def setUp(self):
-        self.props = Properties()
-        self.build = FakeBuild(props=self.props)
-
-    @defer.inlineCallbacks
-    def test_workername_property(self):
-        self.props.setProperty("slavename", "worker-1", "source")
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="Property 'slavename' is deprecated, "
-                                "use 'workername' instead."):
-            prop = Property("slavename")
-
-        result = yield self.build.render(prop)
-        self.assertEqual(result, "worker-1")
-
-    @defer.inlineCallbacks
-    def test_workername_interpolate(self):
-        self.props.setProperty("slavename", "worker-1", "source")
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="Property 'slavename' is deprecated, "
-                                "use 'workername' instead."):
-            command = Interpolate("worker=%(prop:slavename)s")
-        result = yield self.build.render(command)
-        self.assertEqual(result, "worker=worker-1")
-
-    @defer.inlineCallbacks
-    def test_workername_WithProperties_kwargs(self):
-        self.props.setProperty("slavename", "worker-1", "source")
-        self.props.setProperty("got_revision", "rev1", "source")
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="Property 'slavename' is deprecated, "
-                                "use 'workername' instead."):
-            value = WithProperties('worker=%(slavename)s rev=%(got_revision)s')
-        result = yield self.build.render(value)
-        self.assertEqual(result, "worker=worker-1 rev=rev1")
-
-    @defer.inlineCallbacks
-    def test_workername_WithProperties_args(self):
-        self.props.setProperty("slavename", "worker-1", "source")
-        self.props.setProperty("got_revision", "rev1", "source")
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="Property 'slavename' is deprecated, "
-                                "use 'workername' instead."):
-            value = WithProperties(
-                'worker=%s rev=%s', 'slavename', 'got_revision')
-        result = yield self.build.render(value)
-        self.assertEqual(result, "worker=worker-1 rev=rev1")

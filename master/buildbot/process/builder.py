@@ -36,9 +36,6 @@ from buildbot.process.results import RETRY
 from buildbot.util import bytes2unicode
 from buildbot.util import epoch2datetime
 from buildbot.util import service as util_service
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerClassMethod
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 def enforceChosenWorker(bldr, workerforbuilder, breq):
@@ -50,12 +47,8 @@ def enforceChosenWorker(bldr, workerforbuilder, breq):
     return True
 
 
-deprecatedWorkerModuleAttribute(locals(), enforceChosenWorker)
-
-
 class Builder(util_service.ReconfigurableServiceMixin,
-              service.MultiService,
-              WorkerAPICompatMixin):
+              service.MultiService):
 
     # reconfigure builders before workers
     reconfig_priority = 196
@@ -80,13 +73,11 @@ class Builder(util_service.ReconfigurableServiceMixin,
         # workers which have connected but which are not yet available.
         # These are always in the ATTACHING state.
         self.attaching_workers = []
-        self._registerOldWorkerAttr("attaching_workers")
 
         # workers at our disposal. Each WorkerForBuilder instance has a
         # .state that is IDLE, PINGING, or BUILDING. "PINGING" is used when a
         # Build is about to start, to make sure that they're still alive.
         self.workers = []
-        self._registerOldWorkerAttr("workers")
 
         self.config = None
         self.builder_status = None
@@ -203,7 +194,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
             wfb = workerforbuilder.LatentWorkerForBuilder(worker, self)
             self.workers.append(wfb)
             self.botmaster.maybeStartBuildsForBuilder(self.name)
-    deprecatedWorkerClassMethod(locals(), addLatentWorker)
 
     def attached(self, worker, commands):
         """This is invoked by the Worker when the self.workername bot
@@ -276,7 +266,6 @@ class Builder(util_service.ReconfigurableServiceMixin,
 
     def getAvailableWorkers(self):
         return [wfb for wfb in self.workers if wfb.isAvailable()]
-    deprecatedWorkerClassMethod(locals(), getAvailableWorkers)
 
     @defer.inlineCallbacks
     def canStartBuild(self, workerforbuilder, buildrequest):

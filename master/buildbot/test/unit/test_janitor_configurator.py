@@ -34,10 +34,8 @@ from buildbot.schedulers.timed import Nightly
 from buildbot.test.util import config as configmixin
 from buildbot.test.util import configurators
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import datetime2epoch
 from buildbot.worker.local import LocalWorker
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.SynchronousTestCase):
@@ -55,19 +53,6 @@ class JanitorConfiguratorTests(configurators.ConfiguratorMixin, unittest.Synchro
         self.expectScheduler(JANITOR_NAME + "_force", ForceScheduler)
         self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
         self.expectNoConfigError()
-
-    def test_worker_vs_slaves(self):
-        """The base configurator uses the slaves config if it exists already"""
-        self.config_dict['slaves'] = []
-        self.setupConfigurator(logHorizon=timedelta(weeks=1))
-        self.expectWorker(JANITOR_NAME, LocalWorker)
-        self.expectScheduler(JANITOR_NAME, Nightly)
-        self.expectBuilderHasSteps(JANITOR_NAME, [LogChunksJanitor])
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-                self.expectNoConfigError()
 
 
 class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin.ConfigErrorsMixin):

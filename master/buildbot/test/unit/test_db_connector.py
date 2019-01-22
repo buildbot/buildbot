@@ -28,10 +28,6 @@ from buildbot.db import connector
 from buildbot.db import exceptions
 from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
@@ -99,17 +95,3 @@ class DBConnector(db.RealDatabaseMixin, unittest.TestCase):
     def test_setup_check_version_good(self):
         self.db.model.is_current = lambda: defer.succeed(True)
         return self.startService(check_version=True)
-
-    @defer.inlineCallbacks
-    def test_workersrc_old_api(self):
-        yield self.startService()
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = self.db.workers
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'buildslaves' attribute is deprecated"):
-            old = self.db.buildslaves
-
-        self.assertIdentical(new, old)

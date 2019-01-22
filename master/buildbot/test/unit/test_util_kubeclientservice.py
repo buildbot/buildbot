@@ -18,6 +18,7 @@ from __future__ import print_function
 
 import copy
 import os
+import sys
 import textwrap
 from io import BytesIO
 from unittest.case import SkipTest
@@ -126,7 +127,7 @@ class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,
             self.config = None
             raise SkipTest('only posix platform is supported by this test')
         self.patch(kubeclientservice.KubeCtlProxyConfigLoader,
-                   'kube_ctl_proxy_cmd', ["python", "-c", cmd])
+                   'kube_ctl_proxy_cmd', [sys.executable, "-c", cmd])
 
     def tearDown(self):
         if self.config is not None:

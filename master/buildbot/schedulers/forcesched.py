@@ -30,7 +30,6 @@ from buildbot.process.properties import Properties
 from buildbot.reporters.mail import VALID_EMAIL_ADDR
 from buildbot.schedulers import base
 from buildbot.util import identifiers
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
 
 
 class ValidationError(ValueError):
@@ -374,10 +373,6 @@ class WorkerChoiceParameter(ChoiceStringParameter):
         workernames.sort()
         workernames.insert(0, self.anySentinel)
         return workernames
-
-
-deprecatedWorkerModuleAttribute(locals(), WorkerChoiceParameter,
-                                compat_name="BuildslaveChoiceParameter")
 
 
 class FileParameter(BaseParameter):

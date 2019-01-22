@@ -31,12 +31,8 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
 from buildbot.test.fake import worker
 from buildbot.test.util import interfaces
-from buildbot.test.util.warnings import assertNotProducesWarnings
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import AbstractLatentWorker
 from buildbot.worker import base
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class ConcreteWorker(base.AbstractWorker):
@@ -172,21 +168,6 @@ class TestAbstractWorker(unittest.TestCase):
         self.assertEqual(bs.missing_timeout, ConcreteWorker.DEFAULT_MISSING_TIMEOUT)
         self.assertEqual(bs.properties.getProperty('workername'), 'bot')
         self.assertEqual(bs.access, [])
-
-    @defer.inlineCallbacks
-    def test_slavename_deprecated(self):
-        bs = yield self.createWorker('bot', 'pass')
-        yield bs.startService()
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' property is deprecated"):
-            old_name = bs.slavename
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            name = bs.workername
-
-        self.assertEqual(name, old_name)
 
     @defer.inlineCallbacks
     def test_constructor_full(self):
@@ -590,41 +571,3 @@ class TestAbstractLatentWorker(unittest.SynchronousTestCase):
         self.do_test_reconfigService(old, new)
 
         self.assertEqual(old.build_wait_timeout, 30)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_AbstractBuildSlave_deprecated_worker(self):
-        from buildbot.worker import AbstractWorker
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="AbstractBuildSlave was deprecated"):
-            deprecated = bs.AbstractBuildSlave
-
-        self.assertIdentical(deprecated, AbstractWorker)
-
-    def test_AbstractLatentBuildSlave_deprecated_worker(self):
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="AbstractLatentBuildSlave was deprecated"):
-            deprecated = bs.AbstractLatentBuildSlave
-
-        self.assertIdentical(deprecated, AbstractLatentWorker)
-
-    def test_BuildSlave_deprecated_worker(self):
-        from buildbot.worker import Worker
-
-        import buildbot.buildslave as bs
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildSlave was deprecated"):
-            deprecated = bs.BuildSlave
-
-        self.assertIdentical(deprecated, Worker)

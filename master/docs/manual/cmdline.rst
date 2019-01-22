@@ -4,8 +4,9 @@ Command-line Tool
 =================
 
 This section describes command-line tools available after buildbot installation.
-Since version 0.8 the one-for-all :command:`buildbot` command-line tool was divided into two parts namely :command:`buildbot` and :command:`buildslave`, starting from version 0.9 :command:`buildslave` command was replaced with :command:`buildbot-worker` command.
-The last one was separated from main command-line tool to minimize dependencies required for running a worker while leaving all other functions to :command:`buildbot` tool.
+
+The two main command-line tools are :command:`buildbot` and :command:`buildbot-worker`.
+The former handles a Buildbot master and the former handles a Buildbot worker.
 
 Every command-line tool has a list of global options and a set of commands which have their own options.
 One can run these tools in the following way:
@@ -325,7 +326,7 @@ Darcs
 
 Git
     ``git branch -v`` lists all the branches available in the local repository along with the revision ID it points to and a short summary of the last commit.
-    The line containing the currently checked out branch begins with "\* " (star and space) while all the others start with "  " (two spaces).
+    The line containing the currently checked out branch begins with "\* " (star and space) while all the others start with "  " (two spaces).
     :command:`try` scans for this line and extracts the branch name and revision from it.
     Then it generates a diff against the base revision.
 

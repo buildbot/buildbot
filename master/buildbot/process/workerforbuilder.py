@@ -21,8 +21,6 @@ from twisted.python import log
 from twisted.python.constants import NamedConstant
 from twisted.python.constants import Names
 
-from buildbot.worker_transition import WorkerAPICompatMixin
-
 
 class States(Names):
     # The worker isn't attached, or is in the process of attaching.
@@ -33,13 +31,12 @@ class States(Names):
     BUILDING = NamedConstant()
 
 
-class AbstractWorkerForBuilder(WorkerAPICompatMixin, object):
+class AbstractWorkerForBuilder(object):
 
     def __init__(self):
         self.ping_watchers = []
         self.state = None  # set in subclass
         self.worker = None
-        self._registerOldWorkerAttr("worker")
         self.builder_name = None
         self.locks = None
 

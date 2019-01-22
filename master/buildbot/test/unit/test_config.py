@@ -51,7 +51,6 @@ from buildbot.test.util.warnings import assertNotProducesWarnings
 from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import service
 from buildbot.worker_transition import DeprecatedWorkerAPIWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 try:
     # Python 2
@@ -438,17 +437,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                              dict(protocols="test"))
         self.assertConfigError(self.errors, "c['protocols'] must be dict")
 
-    def test_load_global_when_slavePortnum_and_protocols_set(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.cfg.load_global(self.filename,
-                                 dict(protocols={"pb": {"port": 123}}, slavePortnum=321))
-        self.assertConfigError(self.errors,
-                               "Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                               " defined, recommended to remove slavePortnum and leave"
-                               " only c['protocols']['pb']['port']")
-
     def test_load_global_protocols_key_int(self):
         self.cfg.load_global(self.filename,
                              dict(protocols={321: {"port": 123}}))
@@ -575,20 +563,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                              dict(prioritizeBuilders='yes'))
         self.assertConfigError(self.errors, "must be a callable")
-
-    def test_load_global_slavePortnum_int(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.do_test_load_global(dict(slavePortnum=123),
-                                     protocols={'pb': {'port': 'tcp:123'}})
-
-    def test_load_global_slavePortnum_str(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slavePortnum'\] key is deprecated"):
-            self.do_test_load_global(dict(slavePortnum='udp:123'),
-                                     protocols={'pb': {'port': 'udp:123'}})
 
     def test_load_global_protocols_str(self):
         self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),
@@ -867,37 +841,6 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_workers(self.filename,
                               dict(workers=[wrk]))
         self.assertResults(workers=[wrk])
-
-    def test_load_workers_old_api(self):
-        w = worker.Worker("name", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w]))
-        self.assertResults(workers=[w])
-
-    def test_load_workers_new_api(self):
-        w = worker.Worker("name", 'x')
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            self.cfg.load_workers(self.filename, dict(workers=[w]))
-        self.assertResults(workers=[w])
-
-    def test_load_workers_old_and_new_api(self):
-        w1 = worker.Worker("name1", 'x')
-        w2 = worker.Worker("name2", 'x')
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"c\['slaves'\] key is deprecated, "
-                                r"use c\['workers'\] instead"):
-            self.cfg.load_workers(self.filename, dict(slaves=[w1],
-                                                      workers=[w2]))
-
-        self.assertConfigError(
-            self.errors,
-            "Use of c['workers'] and c['slaves'] at the same time "
-            "is not supported")
-        self.errors.errors[:] = []  # clear out the errors
 
     def test_load_change_sources_defaults(self):
         self.cfg.load_change_sources(self.filename, {})
@@ -1298,13 +1241,6 @@ class MasterConfig_old_worker_api(unittest.TestCase):
     def setUp(self):
         self.cfg = config.MasterConfig()
 
-    def test_worker_old_api(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern=r"'slaves' attribute is deprecated, "
-                                r"use 'workers' instead"):
-            self.assertEqual(self.cfg.slaves, [])
-
     def test_workers_new_api(self):
         with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
             self.assertEqual(self.cfg.workers, [])
@@ -1503,19 +1439,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
                                                    'workernames': ['s1'],
                                                    })
 
-    def test_init_workername_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workername_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavename' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavename='a', factory=self.factory)
+    def test_init_workername_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workername='a',
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1526,19 +1452,9 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_init_workernames_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workernames=['a'], factory=self.factory)
-
-        self.assertEqual(cfg.workernames, ['a'])
-
-    def test_init_workernames_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', slavenames=['a'], factory=self.factory)
+    def test_init_workernames_keyword(self):
+        cfg = config.BuilderConfig(name='a b c', workernames=['a'],
+                                   factory=self.factory)
 
         self.assertEqual(cfg.workernames, ['a'])
 
@@ -1549,36 +1465,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workernames, ['a'])
 
-    def test_workernames_old_api(self):
+    def test_init_workerbuilddir_keyword(self):
         cfg = config.BuilderConfig(
-            name='a b c', workername='a', factory=self.factory)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            names_new = cfg.workernames
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavenames' attribute is deprecated"):
-            names_old = cfg.slavenames
-
-        self.assertEqual(names_old, ['a'])
-        self.assertIdentical(names_new, names_old)
-
-    def test_init_workerbuilddir_new_api_no_warns(self):
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                workerbuilddir="dir")
-
-        self.assertEqual(cfg.workerbuilddir, 'dir')
-
-    def test_init_workerbuilddir_old_api_warns(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'slavebuilddir' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                slavebuilddir='dir')
+            name='a b c', workername='a', factory=self.factory,
+            workerbuilddir="dir")
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
@@ -1589,40 +1479,11 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
         self.assertEqual(cfg.workerbuilddir, 'dir')
 
-    def test_next_worker_old_api(self):
+    def test_init_next_worker_keyword(self):
         f = lambda: None
         cfg = config.BuilderConfig(
             name='a b c', workername='a', factory=self.factory,
             nextWorker=f)
-
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            new = cfg.nextWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' attribute is deprecated"):
-            old = cfg.nextSlave
-
-        self.assertIdentical(old, f)
-        self.assertIdentical(new, old)
-
-    def test_init_next_worker_new_api_no_warns(self):
-        f = lambda: None
-        with assertNotProducesWarnings(DeprecatedWorkerAPIWarning):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextWorker=f)
-
-        self.assertEqual(cfg.nextWorker, f)
-
-    def test_init_next_worker_old_api_warns(self):
-        f = lambda: None
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="'nextSlave' keyword argument is deprecated"):
-            cfg = config.BuilderConfig(
-                name='a b c', workername='a', factory=self.factory,
-                nextSlave=f)
 
         self.assertEqual(cfg.nextWorker, f)
 

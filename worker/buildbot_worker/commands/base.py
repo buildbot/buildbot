@@ -25,9 +25,7 @@ from buildbot_worker import util
 from buildbot_worker.exceptions import AbandonChain
 from buildbot_worker.interfaces import IWorkerCommand
 
-# this used to be a CVS $-style "Revision" auto-updated keyword, but since I
-# moved to Darcs as the primary repository, this is updated manually each
-# time this file is changed. The last cvs_ver that was here was 1.51 .
+# The following identifier should be updated each time this file is changed
 command_version = "3.1"
 
 # version history:

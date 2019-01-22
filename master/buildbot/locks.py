@@ -22,9 +22,6 @@ from twisted.python import log
 from buildbot import util
 from buildbot.util import subscription
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 if False:  # for debugging  pylint: disable=using-constant-test
     debuglog = log.msg
@@ -295,7 +292,7 @@ class MasterLock(BaseLockId):
         self.maxCount = maxCount
 
 
-class WorkerLock(BaseLockId, WorkerAPICompatMixin):
+class WorkerLock(BaseLockId):
 
     """I am a semaphore that limits simultaneous actions on each worker.
 
@@ -319,28 +316,13 @@ class WorkerLock(BaseLockId, WorkerAPICompatMixin):
     compare_attrs = ('name', 'maxCount', '_maxCountForWorkerList')
     lockClass = RealWorkerLock
 
-    def __init__(self, name, maxCount=1, maxCountForWorker=None,
-                 # deprecated, use `maxCountForWorker` instead
-                 maxCountForSlave=None
-                 ):
-        # Deprecated API support.
-        if maxCountForSlave is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'maxCountForSlave' keyword argument is deprecated, "
-                "use 'maxCountForWorker' instead")
-            assert maxCountForWorker is None
-            maxCountForWorker = maxCountForSlave
-
+    def __init__(self, name, maxCount=1, maxCountForWorker=None):
         self.name = name
         self.maxCount = maxCount
         if maxCountForWorker is None:
             maxCountForWorker = {}
         self.maxCountForWorker = maxCountForWorker
-        self._registerOldWorkerAttr("maxCountForWorker")
         # for comparison purposes, turn this dictionary into a stably-sorted
         # list of tuples
         self._maxCountForWorkerList = tuple(
             sorted(self.maxCountForWorker.items()))
-
-
-deprecatedWorkerModuleAttribute(locals(), WorkerLock)

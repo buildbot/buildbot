@@ -3,7 +3,7 @@ set -e
 set -v
 cd `dirname $0`
 function finish {
-    # uncomment for debug in hyper
+    # uncomment for debug in kube
     # for i in `seq 1000`
     # do
     #   echo please debug me!

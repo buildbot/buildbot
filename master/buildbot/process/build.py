@@ -44,12 +44,10 @@ from buildbot.reporters.utils import getURLForBuild
 from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 @implementer(interfaces.IBuildControl)
-class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
+class Build(properties.PropertiesMixin):
 
     """I represent a single build by a single worker. Specialized Builders can
     use subclasses of Build to hold status information unique to those build
@@ -199,7 +197,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
 
     def getWorkerName(self):
         return self.workerforbuilder.worker.workername
-    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     @staticmethod
     def setupPropertiesKnownBeforeBuildStarts(props, requests, builder,
@@ -259,7 +256,6 @@ class Build(properties.PropertiesMixin, WorkerAPICompatMixin):
     def setupWorkerForBuilder(self, workerforbuilder):
         self.path_module = workerforbuilder.worker.path_module
         self.workername = workerforbuilder.worker.workername
-        self._registerOldWorkerAttr("workername")
         self.build_status.setWorkername(self.workername)
 
     @defer.inlineCallbacks

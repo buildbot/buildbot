@@ -112,7 +112,7 @@ class Model(base.DBConnectorComponent):
                   nullable=False),
         sa.Column('masterid', sa.Integer,
                   sa.ForeignKey('masters.id', ondelete='CASCADE'),
-                  index=True, nullable=True),
+                  index=True, nullable=False),
         sa.Column('claimed_at', sa.Integer, nullable=False),
     )
 
@@ -136,7 +136,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('id', sa.Integer, primary_key=True),
         sa.Column('number', sa.Integer, nullable=False),
         sa.Column('builderid', sa.Integer,
-                  sa.ForeignKey('builders.id', ondelete='CASCADE')),
+                  sa.ForeignKey('builders.id', ondelete='CASCADE'),
+                  nullable=False),
         # note that there is 1:N relationship here.
         # In case of worker loss, build has results RETRY
         # and buildrequest is unclaimed.
@@ -150,7 +151,8 @@ class Model(base.DBConnectorComponent):
         # worker which performed this build
         # keep nullable to support worker-free builds
         sa.Column('workerid', sa.Integer,
-                  sa.ForeignKey('workers.id', ondelete='CASCADE')),
+                  sa.ForeignKey('workers.id', ondelete='SET NULL'),
+                  nullable=True),
         # master which controlled this build
         sa.Column('masterid', sa.Integer,
                   sa.ForeignKey('masters.id', ondelete='CASCADE'),
@@ -170,7 +172,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('number', sa.Integer, nullable=False),
         sa.Column('name', sa.String(50), nullable=False),
         sa.Column('buildid', sa.Integer,
-                  sa.ForeignKey('builds.id', ondelete='CASCADE')),
+                  sa.ForeignKey('builds.id', ondelete='CASCADE'),
+                  nullable=False),
         sa.Column('started_at', sa.Integer),
         sa.Column('complete_at', sa.Integer),
         sa.Column('state_string', sa.Text, nullable=False),
@@ -188,7 +191,8 @@ class Model(base.DBConnectorComponent):
         sa.Column('name', sa.Text, nullable=False),
         sa.Column('slug', sa.String(50), nullable=False),
         sa.Column('stepid', sa.Integer,
-                  sa.ForeignKey('steps.id', ondelete='CASCADE')),
+                  sa.ForeignKey('steps.id', ondelete='CASCADE'),
+                  nullable=False),
         sa.Column('complete', sa.SmallInteger, nullable=False),
         sa.Column('num_lines', sa.Integer, nullable=False),
         # 's' = stdio, 't' = text, 'h' = html, 'd' = deleted
@@ -198,7 +202,8 @@ class Model(base.DBConnectorComponent):
     logchunks = sautils.Table(
         'logchunks', metadata,
         sa.Column('logid', sa.Integer,
-                  sa.ForeignKey('logs.id', ondelete='CASCADE')),
+                  sa.ForeignKey('logs.id', ondelete='CASCADE'),
+                  nullable=False),
         # 0-based line number range in this chunk (inclusive); note that for
         # HTML logs, this counts lines of HTML, not lines of rendered output
         sa.Column('first_line', sa.Integer, nullable=False),
@@ -249,7 +254,8 @@ class Model(base.DBConnectorComponent):
         # http://docs.sqlalchemy.org/en/latest/orm/relationships.html#rows-that-point-to-themselves-mutually-dependent-rows
         sa.Column('parent_buildid', sa.Integer,
                   sa.ForeignKey('builds.id', use_alter=True,
-                                name='parent_buildid', ondelete='CASCADE')),
+                                name='parent_buildid', ondelete='SET NULL'),
+                  nullable=True),
         # text describing what is the relationship with the build
         # could be 'triggered from', 'rebuilt from', 'inherited from'
         sa.Column('parent_relationship', sa.Text),
@@ -401,14 +407,15 @@ class Model(base.DBConnectorComponent):
 
         # the sourcestamp this change brought the codebase to
         sa.Column('sourcestampid', sa.Integer,
-                  sa.ForeignKey('sourcestamps.id', ondelete='CASCADE')),
+                  sa.ForeignKey('sourcestamps.id', ondelete='CASCADE'),
+                  nullable=False),
 
         # The parent of the change
         # Even if for the moment there's only 1 parent for a change, we use plural here because
         # somedays a change will have multiple parent. This way we don't need
         # to change the API
         sa.Column('parent_changeids', sa.Integer,
-                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
+                  sa.ForeignKey('changes.changeid', ondelete='SET NULL'),
                   nullable=True),
     )
 
@@ -456,7 +463,8 @@ class Model(base.DBConnectorComponent):
 
         # the patch to apply to generate this source code
         sa.Column('patchid', sa.Integer,
-                  sa.ForeignKey('patches.id', ondelete='CASCADE')),
+                  sa.ForeignKey('patches.id', ondelete='CASCADE'),
+                  nullable=True),
 
         # the repository from which this source should be checked out
         sa.Column('repository', sa.String(length=512), nullable=False,
@@ -528,9 +536,11 @@ class Model(base.DBConnectorComponent):
     scheduler_changes = sautils.Table(
         'scheduler_changes', metadata,
         sa.Column('schedulerid', sa.Integer,
-                  sa.ForeignKey('schedulers.id', ondelete='CASCADE')),
+                  sa.ForeignKey('schedulers.id', ondelete='CASCADE'),
+                  nullable=False),
         sa.Column('changeid', sa.Integer,
-                  sa.ForeignKey('changes.changeid', ondelete='CASCADE')),
+                  sa.ForeignKey('changes.changeid', ondelete='CASCADE'),
+                  nullable=False),
         # true (nonzero) if this change is important to this scheduler
         sa.Column('important', sa.Integer),
     )

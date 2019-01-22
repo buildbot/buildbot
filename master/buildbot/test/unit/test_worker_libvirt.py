@@ -26,10 +26,8 @@ from twisted.trial import unittest
 
 from buildbot import config
 from buildbot.test.fake import libvirt
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.util import eventual
 from buildbot.worker import libvirt as libvirtworker
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestLibVirtWorker(unittest.TestCase):
@@ -312,16 +310,3 @@ class TestWorkQueue(unittest.TestCase):
             self.assertTrue(flags[2])
 
         yield defer.DeferredList([d1(), d2(), d3()], fireOnOneErrback=True)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_LibVirtSlave_deprecated(self):
-        from buildbot.worker.libvirt import LibVirtWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="LibVirtSlave was deprecated"):
-            from buildbot.buildslave.libvirt import LibVirtSlave
-
-        self.assertIdentical(LibVirtSlave, LibVirtWorker)

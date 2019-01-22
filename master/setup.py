@@ -155,8 +155,6 @@ setup_args = {
         'License :: OSI Approved :: GNU General Public License (GPL)',
         'Topic :: Software Development :: Build Tools',
         'Topic :: Software Development :: Testing',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6'
@@ -164,7 +162,6 @@ setup_args = {
 
     'packages': [
         "buildbot",
-        "buildbot.buildslave",
         "buildbot.configurators",
         "buildbot.worker",
         "buildbot.worker.protocols",
@@ -208,9 +205,6 @@ setup_args = {
         "buildbot.test.unit",
     ]),
     'data_files': [
-        ("buildbot", [
-            "buildbot/buildbot.png",
-        ]),
         include("buildbot/reporters/templates", "*.txt"),
         ("buildbot/db/migrate", [
             "buildbot/db/migrate/migrate.cfg",
@@ -264,7 +258,6 @@ setup_args = {
             ('buildbot.worker.libvirt', ['LibVirtWorker']),
             ('buildbot.worker.openstack', ['OpenStackLatentWorker']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),
-            ('buildbot.worker.hyper', ['HyperLatentWorker']),
             ('buildbot.worker.kubernetes', ['KubeLatentWorker']),
             ('buildbot.worker.local', ['LocalWorker']),
         ]),
@@ -435,12 +428,10 @@ setup_args = {
 if sys.platform == "win32":
     setup_args['zip_safe'] = False
 
-py_27 = sys.version_info[0] > 2 or (
-    sys.version_info[0] == 2 and sys.version_info[1] >= 7)
 py_35 = sys.version_info[0] > 3 or (
     sys.version_info[0] == 3 and sys.version_info[1] >= 5)
-if not py_27 and not py_35:
-    raise RuntimeError("Buildbot master requires at least Python-2.7 or Python-3.5+")
+if not py_35:
+    raise RuntimeError("Buildbot master requires at least Python-3.5")
 
 # pip<1.4 doesn't have the --pre flag, and will thus attempt to install alpha
 # and beta versions of Buildbot.  Prevent that from happening.
