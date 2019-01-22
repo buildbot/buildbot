@@ -221,15 +221,21 @@ def gen_create_branch_changes(newrev, refname, branch):
 
     logging.info("Branch `%s' created", branch)
 
-    f = subprocess.Popen(shlex.split("git rev-parse --not --branches"
-                 + "| grep -v $(git rev-parse %s)" % refname
-                 +
-                 "| git rev-list --reverse --pretty=oneline --stdin %s" % newrev),
-                 stdout=subprocess.PIPE)
+    p = subprocess.Popen(shlex.split("git rev-parse %s" % refname), stdout=subprocess.PIPE)
+    branchref = p.communicate()[0].strip().decode(encoding)
+    f = subprocess.Popen(shlex.split("git rev-parse --not --branches"), stdout=subprocess.PIPE)
+    f2 = subprocess.Popen(shlex.split("grep -v %s" % branchref),
+                          stdin=f.stdout,
+                          stdout=subprocess.PIPE)
+    f3 = subprocess.Popen(
+        shlex.split("git rev-list --reverse --pretty=oneline --stdin %s" % newrev),
+        stdin=f2.stdout,
+        stdout=subprocess.PIPE
+    )
 
-    gen_changes(f, branch)
+    gen_changes(f3, branch)
 
-    status = f.close()
+    status = f3.returncode
     if status:
         logging.warning("git rev-list exited with status %d", status)
 
