@@ -22,6 +22,7 @@ import errno
 import os
 import stat
 import sys
+import textwrap
 import traceback
 from contextlib import contextmanager
 
@@ -276,6 +277,78 @@ class SubcommandOptions(usage.Options):
             else:
                 msg = 'Required argument missing: ' + missing[0]
             raise usage.UsageError(msg)
+
+    def getUsage(self, width=None):
+        # If subOptions exists by now, then there was probably an error while
+        # parsing its options.
+        if hasattr(self, 'subOptions'):
+            return self.subOptions.getUsage(width=width)
+
+        if not width:
+            width = int(os.environ.get('COLUMNS', '80'))
+
+        if hasattr(self, 'subCommands'):
+            cmdDicts = []
+            for (cmd, short, parser, desc) in self.subCommands:
+                cmdDicts.append({
+                    'long': cmd,
+                    'short': short,
+                    'doc': desc,
+                    'optType': 'command',
+                    'default': None
+                })
+            chunks = usage.docMakeChunks(cmdDicts, width)
+            commands = 'Commands:\n' + ''.join(chunks)
+        else:
+            commands = ''
+
+        longToShort = {}
+        for key, value in self.synonyms.items():
+            longname = value
+            if (key != longname) and (len(key) == 1):
+                longToShort[longname] = key
+            else:
+                if longname not in longToShort:
+                    longToShort[longname] = None
+                else:
+                    pass
+
+        optDicts = []
+        for opt in self.longOpt:
+            if opt[-1] == '=':
+                optType = 'parameter'
+                opt = opt[:-1]
+            else:
+                optType = 'flag'
+
+            optDicts.append({
+                'long': opt,
+                'short': longToShort[opt],
+                'doc': self.docs[opt],
+                'optType': optType,
+                'default': self.defaults.get(opt, None),
+                'dispatch': self._dispatch.get(opt, None)
+            })
+
+        if not (getattr(self, "longdesc", None) is None):
+            longdesc = self.longdesc
+        else:
+            import __main__
+            if getattr(__main__, '__doc__', None):
+                longdesc = __main__.__doc__
+            else:
+                longdesc = ''
+
+        if longdesc:
+            longdesc = '\n' + textwrap.dedent(longdesc).strip() + '\n'
+
+        if optDicts:
+            chunks = usage.docMakeChunks(optDicts, width)
+            s = "Options:\n%s" % (''.join(chunks))
+        else:
+            s = "Options: None\n"
+
+        return s + longdesc + commands
 
 
 class BasedirMixin(object):

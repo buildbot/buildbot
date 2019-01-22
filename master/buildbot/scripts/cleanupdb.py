@@ -22,6 +22,7 @@ import sys
 
 import sqlalchemy as sa
 import sqlalchemy.sql.functions as safunc
+
 from twisted.internet import defer
 
 from buildbot import config as config_module
@@ -37,7 +38,7 @@ def deleteOldBuilds(db, config):
 
     def thd(conn):
         with conn.begin():
-            # Delete soucestamps older than --max-days
+            # Delete sourcestamps older than --max-days
             # The starting point is not "now" but the most recent sourcestamp..
             max_created_at = conn.execute(
                 sa.select([safunc.max(m.sourcestamps.c.created_at)])).scalar()

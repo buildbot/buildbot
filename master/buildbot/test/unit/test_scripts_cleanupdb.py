@@ -43,7 +43,8 @@ except ImportError:
 
 
 def mkconfig(**kwargs):
-    config = dict(quiet=False, basedir=os.path.abspath('basedir'), force=True)
+    config = dict(quiet=False, basedir=os.path.abspath('basedir'),
+                  force=True, jobs=['optimizelogs'])
     config.update(kwargs)
     return config
 

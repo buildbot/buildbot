@@ -24,7 +24,6 @@ from __future__ import division
 from __future__ import print_function
 
 import sys
-import textwrap
 
 import sqlalchemy as sa
 
@@ -72,7 +71,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot upgrade-master [options] [<basedir>]"
 
-    longdesc = textwrap.dedent("""
+    longdesc = """
     This command takes an existing buildmaster working directory and
     adds/modifies the files there to work with the current version of
     buildbot. When this command is finished, the buildmaster directory should
@@ -90,7 +89,7 @@ class UpgradeMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     When upgrading the database, this command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
-    """)
+    """
 
 
 class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
@@ -119,7 +118,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     def getSynopsis(self):
         return "Usage:    buildbot create-master [options] [<basedir>]"
 
-    longdesc = textwrap.dedent("""
+    longdesc = """
     This command creates a buildmaster working directory and buildbot.tac file.
     The master will live in <basedir> (defaults to the current directory)
     and create various files there.
@@ -147,7 +146,7 @@ class CreateMasterOptions(base.BasedirMixin, base.SubcommandOptions):
     The --db string is stored verbatim in the buildbot.tac file, and
     evaluated at 'buildbot start' time to pass a DBConnector instance into
     the newly-created BuildMaster object.
-    """)
+    """
 
     def postOptions(self):
         base.BasedirMixin.postOptions(self)
@@ -543,10 +542,10 @@ class UserOptions(base.SubcommandOptions):
     ]
     requiredOptions = ['master']
 
-    longdesc = textwrap.dedent("""
+    longdesc = """
     Currently implemented types for --info= are:\n
     git, svn, hg, cvs, darcs, bzr, email
-    """)
+    """
 
     def __init__(self):
         base.SubcommandOptions.__init__(self)
@@ -702,7 +701,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
                 'Invalid --jobs value. Must be a subset of: %s'
                 % ','.join(validJobs))
 
-    longdesc = textwrap.dedent("""
+    longdesc = """
     This command takes an existing buildmaster working directory and
     do some optimization on the database.
 
@@ -720,7 +719,7 @@ class CleanupDBOptions(base.BasedirMixin, base.SubcommandOptions):
     This command uses the database specified in
     the master configuration file.  If you wish to use a database other than
     the default (sqlite), be sure to set that parameter before upgrading.
-    """)
+    """
 
 
 class Options(usage.Options):
