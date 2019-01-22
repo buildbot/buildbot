@@ -249,7 +249,7 @@ def gen_create_tag_changes(newrev, refname, tag):
     f = subprocess.Popen(shlex.split("git log -n 1 --pretty=oneline %s" % newrev),
                          stdout=subprocess.PIPE)
     gen_changes(f, tag)
-    status = f.close()
+    status = f.returncode
     if status:
         logging.warning("git log exited with status %d", status)
 
@@ -292,7 +292,7 @@ def gen_update_branch_changes(oldrev, newrev, refname, branch):
             logging.debug("  Rewound file: %s", file)
             files.append(text_type(file))
 
-        status = f.terminate()
+        status = f.returncode
         if status:
             logging.warning("git diff exited with status %d", status)
 
