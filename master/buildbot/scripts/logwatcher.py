@@ -27,6 +27,7 @@ from twisted.internet import reactor
 from twisted.protocols.basic import LineOnlyReceiver
 from twisted.python.failure import Failure
 
+from buildbot.util import bytes2NativeString
 from buildbot.util import unicode2bytes
 
 
@@ -131,7 +132,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
 
         if self.in_reconfig:
-            print(line)
+            print(bytes2NativeString(line))
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
