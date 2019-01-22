@@ -422,11 +422,6 @@ This means that you can have the buildmaster listen on a localhost-only port by 
 
 This might be useful if you only run workers on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
 
-.. note::
-
-   In Buildbot versions <=0.8.8 you might see ``slavePortnum`` option.
-   This option contains same value as ``c['protocols']['pb']['port']`` but not recommended to use.
-
 .. index:: Properties; global
 
 .. bb:cfg:: properties

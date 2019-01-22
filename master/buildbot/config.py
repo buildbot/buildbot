@@ -46,8 +46,6 @@ from buildbot.util import config as util_config
 from buildbot.util import identifiers as util_identifiers
 from buildbot.util import safeTranslate
 from buildbot.util import service as util_service
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 from buildbot.www import auth
 from buildbot.www import avatar
 from buildbot.www.authz import authz
@@ -192,7 +190,7 @@ class FileLoader(ComparableMixin, object):
         return config
 
 
-class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
+class MasterConfig(util.ComparableMixin):
 
     def __init__(self):
         # local import to avoid circular imports
@@ -239,7 +237,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         self.secretsProviders = []
         self.builders = []
         self.workers = []
-        self._registerOldWorkerAttr("workers")
         self.change_sources = []
         self.status = []
         self.user_managers = []
@@ -298,10 +295,6 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
         "validation",
         "www",
         "workers",
-
-        # deprecated, c['protocols']['pb']['port'] should be used
-        "slavePortnum",
-        "slaves",  # deprecated, "worker" should be used
     ])
     compare_attrs = list(_known_config_keys)
 
@@ -495,30 +488,12 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
                 if not isinstance(options, dict):
                     error("c['protocols']['%s'] must be a dict" % proto)
                     return
-                if (proto == "pb" and options.get("port") and
-                        'slavePortnum' in config_dict):
-                    error("Both c['slavePortnum'] and c['protocols']['pb']['port']"
-                          " defined, recommended to remove slavePortnum and leave"
-                          " only c['protocols']['pb']['port']")
                 if proto == "wamp":
                     self.check_wamp_proto(options)
         else:
             error("c['protocols'] must be dict")
             return
         self.protocols = protocols
-
-        # saved for backward compatibility
-        if 'slavePortnum' in config_dict:
-            reportDeprecatedWorkerNameUsage(
-                "c['slavePortnum'] key is deprecated, use "
-                "c['protocols']['pb']['port'] instead",
-                filename=filename)
-            port = config_dict.get('slavePortnum')
-            if isinstance(port, int):
-                port = "tcp:%d" % port
-            pb_options = self.protocols.get('pb', {})
-            pb_options['port'] = port
-            self.protocols['pb'] = pb_options
 
         if 'multiMaster' in config_dict:
             self.multiMaster = config_dict["multiMaster"]
@@ -730,31 +705,16 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
     def load_workers(self, filename, config_dict):
         config_valid = True
 
-        deprecated_workers = config_dict.get('slaves')
-        if deprecated_workers is not None:
-            reportDeprecatedWorkerNameUsage(
-                "c['slaves'] key is deprecated, use c['workers'] instead",
-                filename=filename)
-            if not self._check_workers(deprecated_workers, "c['slaves']"):
-                config_valid = False
-
         workers = config_dict.get('workers')
         if workers is not None:
             if not self._check_workers(workers, "c['workers']"):
                 config_valid = False
 
-        if deprecated_workers is not None and workers is not None:
-            error("Use of c['workers'] and c['slaves'] at the same time is "
-                  "not supported. Use only c['workers'] instead")
-            return
-
         if not config_valid:
             return
 
-        elif deprecated_workers is not None or workers is not None:
+        elif workers is not None:
             self.workers = []
-            if deprecated_workers is not None:
-                self.workers.extend(deprecated_workers)
             if workers is not None:
                 self.workers.extend(workers)
 
@@ -953,48 +913,15 @@ class MasterConfig(util.ComparableMixin, WorkerAPICompatMixin):
             error("workers are configured, but c['protocols'] not")
 
 
-class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
+class BuilderConfig(util_config.ConfiguredMixin):
 
     def __init__(self, name=None, workername=None, workernames=None,
                  builddir=None, workerbuilddir=None, factory=None,
                  tags=None, category=None,
                  nextWorker=None, nextBuild=None, locks=None, env=None,
                  properties=None, collapseRequests=None, description=None,
-                 canStartBuild=None, defaultProperties=None,
-
-                 slavename=None,  # deprecated, use `workername` instead
-                 slavenames=None,  # deprecated, use `workernames` instead
-                 # deprecated, use `workerbuilddir` instead
-                 slavebuilddir=None,
-                 nextSlave=None,  # deprecated, use `nextWorker` instead
+                 canStartBuild=None, defaultProperties=None
                  ):
-
-        # Deprecated API support.
-        if slavename is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavename' keyword argument is deprecated, "
-                "use 'workername' instead")
-            assert workername is None
-            workername = slavename
-        if slavenames is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavenames' keyword argument is deprecated, "
-                "use 'workernames' instead")
-            assert workernames is None
-            workernames = slavenames
-        if slavebuilddir is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'slavebuilddir' keyword argument is deprecated, "
-                "use 'workerbuilddir' instead")
-            assert workerbuilddir is None
-            workerbuilddir = slavebuilddir
-        if nextSlave is not None:
-            reportDeprecatedWorkerNameUsage(
-                "'nextSlave' keyword argument is deprecated, "
-                "use 'nextWorker' instead")
-            assert nextWorker is None
-            nextWorker = nextSlave
-
         # name is required, and can't start with '_'
         if not name or type(name) not in (bytes, text_type):
             error("builder's name is required")
@@ -1037,7 +964,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
                   (name,))
 
         self.workernames = workernames
-        self._registerOldWorkerAttr("workernames")
 
         # builddir defaults to name
         if builddir is None:
@@ -1049,7 +975,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         if workerbuilddir is None:
             workerbuilddir = builddir
         self.workerbuilddir = workerbuilddir
-        self._registerOldWorkerAttr("workerbuilddir")
 
         # remainder are optional
 
@@ -1081,7 +1006,6 @@ class BuilderConfig(util_config.ConfiguredMixin, WorkerAPICompatMixin):
         self.tags = tags
 
         self.nextWorker = nextWorker
-        self._registerOldWorkerAttr("nextWorker")
         if nextWorker and not callable(nextWorker):
             error('nextWorker must be a callable')
         # Keeping support of the previous nextWorker API

@@ -32,15 +32,13 @@ from buildbot.process.results import FAILURE
 from buildbot.process.results import SUCCESS
 from buildbot.util.eventual import eventually
 from buildbot.worker.protocols import base
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import reportDeprecatedWorkerNameUsage
 
 
 class RemoteException(Exception):
     pass
 
 
-class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
+class RemoteCommand(base.RemoteCommandImpl):
 
     # class-level unique identifier generator for command ids
     _commandCounter = 0
@@ -71,7 +69,6 @@ class RemoteCommand(base.RemoteCommandImpl, WorkerAPICompatMixin):
         self.decodeRC = decodeRC
         self.conn = None
         self.worker = None
-        self._registerOldWorkerAttr("worker", name="buildslave")
         self.step = None
         self.builder_name = None
         self.commandID = None
@@ -382,12 +379,6 @@ class RemoteShellCommand(RemoteCommand):
             # ShellCommand gets its own copy, any start() methods won't be
             # able to modify the original.
             env = env.copy()
-
-        if usePTY == 'slave-config':
-            reportDeprecatedWorkerNameUsage(
-                "'slave-config' value of 'usePTY' attribute is deprecated, "
-                "use None instead.")
-            usePTY = None
 
         args = {'workdir': workdir,
                 'env': env,

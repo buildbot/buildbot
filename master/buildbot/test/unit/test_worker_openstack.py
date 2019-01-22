@@ -27,9 +27,7 @@ from buildbot import config
 from buildbot import interfaces
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
-from buildbot.test.util.warnings import assertProducesWarning
 from buildbot.worker import openstack
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestOpenStackWorker(unittest.TestCase):
@@ -306,16 +304,3 @@ class TestOpenStackWorker(unittest.TestCase):
         self.assertIn(inst.id, s.instances)
         bs.stop_instance()
         self.assertIn(inst.id, s.instances)
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_OpenStackLatentBuildSlave_deprecated(self):
-        from buildbot.worker.openstack import OpenStackLatentWorker
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="OpenStackLatentBuildSlave was deprecated"):
-            from buildbot.buildslave.openstack import OpenStackLatentBuildSlave
-
-        self.assertIdentical(OpenStackLatentBuildSlave, OpenStackLatentWorker)

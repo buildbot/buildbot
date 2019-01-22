@@ -162,7 +162,6 @@ setup_args = {
 
     'packages': [
         "buildbot",
-        "buildbot.buildslave",
         "buildbot.configurators",
         "buildbot.worker",
         "buildbot.worker.protocols",

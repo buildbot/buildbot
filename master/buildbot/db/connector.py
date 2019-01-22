@@ -43,7 +43,6 @@ from buildbot.db import tags
 from buildbot.db import users
 from buildbot.db import workers
 from buildbot.util import service
-from buildbot.worker_transition import WorkerAPICompatMixin
 
 upgrade_message = textwrap.dedent("""\
 
@@ -57,7 +56,7 @@ upgrade_message = textwrap.dedent("""\
     """).strip()
 
 
-class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
+class DBConnector(service.ReconfigurableServiceMixin,
                   service.AsyncMultiService):
     # The connection between Buildbot and its backend database.  This is
     # generally accessible as master.db, but is also used during upgrades.
@@ -97,7 +96,6 @@ class DBConnector(WorkerAPICompatMixin, service.ReconfigurableServiceMixin,
         self.state = state.StateConnectorComponent(self)
         self.builds = builds.BuildsConnectorComponent(self)
         self.workers = workers.WorkersConnectorComponent(self)
-        self._registerOldWorkerAttr("workers", name="buildslaves")
         self.users = users.UsersConnectorComponent(self)
         self.masters = masters.MastersConnectorComponent(self)
         self.builders = builders.BuildersConnectorComponent(self)

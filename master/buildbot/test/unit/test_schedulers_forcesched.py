@@ -41,8 +41,6 @@ from buildbot.schedulers.forcesched import UserNameParameter
 from buildbot.schedulers.forcesched import oneCodebase
 from buildbot.test.util import scheduler
 from buildbot.test.util.config import ConfigErrorsMixin
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.TestCase):
@@ -743,16 +741,3 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
         with self.assertRaisesConfigError(
                 "Use default='1234' instead of value=... to give a default Parameter value"):
             BaseParameter(name="test", value="1234")
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_BuildslaveChoiceParameter_deprecated(self):
-        from buildbot.schedulers.forcesched import WorkerChoiceParameter
-
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildslaveChoiceParameter was deprecated"):
-            from buildbot.schedulers.forcesched import BuildslaveChoiceParameter
-
-        self.assertIdentical(BuildslaveChoiceParameter, WorkerChoiceParameter)

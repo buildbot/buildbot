@@ -63,8 +63,6 @@ from buildbot.process.results import worst_status
 from buildbot.util import bytes2NativeString
 from buildbot.util import debounce
 from buildbot.util import flatten
-from buildbot.worker_transition import WorkerAPICompatMixin
-from buildbot.worker_transition import deprecatedWorkerClassMethod
 
 
 class BuildStepFailed(Exception):
@@ -260,7 +258,6 @@ class BuildStepStatus(object):
 @implementer(interfaces.IBuildStep)
 class BuildStep(results.ResultComputingConfigMixin,
                 properties.PropertiesMixin,
-                WorkerAPICompatMixin,
                 util.ComparableMixin):
 
     alwaysRun = False
@@ -330,7 +327,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def __init__(self, **kwargs):
         self.worker = None
-        self._registerOldWorkerAttr("worker", name="buildslave")
 
         for p in self.__class__.parms:
             if p in kwargs:
@@ -395,8 +391,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def setWorker(self, worker):
         self.worker = worker
-    deprecatedWorkerClassMethod(
-        locals(), setWorker, compat_name="setBuildSlave")
 
     @deprecate.deprecated(versions.Version("buildbot", 0, 9, 0))
     def setDefaultWorkdir(self, workdir):
@@ -785,7 +779,6 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def workerVersion(self, command, oldversion=None):
         return self.build.getWorkerCommandVersion(command, oldversion)
-    deprecatedWorkerClassMethod(locals(), workerVersion)
 
     def workerVersionIsOlderThan(self, command, minversion):
         sv = self.build.getWorkerCommandVersion(command, None)
@@ -794,17 +787,14 @@ class BuildStep(results.ResultComputingConfigMixin,
         if [int(s) for s in sv.split(".")] < [int(m) for m in minversion.split(".")]:
             return True
         return False
-    deprecatedWorkerClassMethod(locals(), workerVersionIsOlderThan)
 
     def checkWorkerHasCommand(self, command):
         if not self.workerVersion(command):
             message = "worker is too old, does not know about %s" % command
             raise WorkerTooOldError(message)
-    deprecatedWorkerClassMethod(locals(), checkWorkerHasCommand)
 
     def getWorkerName(self):
         return self.build.getWorkerName()
-    deprecatedWorkerClassMethod(locals(), getWorkerName)
 
     def addLog(self, name, type='s', logEncoding=None):
         d = self.master.data.updates.addLog(self.stepid,

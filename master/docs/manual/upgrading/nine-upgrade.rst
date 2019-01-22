@@ -1,7 +1,7 @@
 .. _Upgrading To Nine:
 
-Upgrading to Nine
-=================
+Upgrading from Buildbot 0.8.x
+=============================
 
 Upgrading a Buildbot instance from 0.8.x to 0.9.x may require a number of changes to the master configuration.
 Those changes are summarized here.
@@ -179,7 +179,10 @@ in favor of "worker"-based terminology.
 
 All identifiers, messages and documentation were updated to use "worker"
 instead of "slave".
-Old API names are still available, but deprecated.
+Old API names are still available in Buildbot versions from 0.9.0 to 1.8.0, but deprecated.
+The support for old API names has been removed in Buildbot version 2.0.0.
+To upgrade pre-0.9.0 Buildbot installation a two-stage upgrade is recommended.
+First, upgrade to Buildbot version 1.8.0, then fix all deprecation warnings and finally upgrade to Buildbot version 2.x.y.
 
 For details about changed API and how to control generated warnings see
 :ref:`Transition-to-worker-terminology`.

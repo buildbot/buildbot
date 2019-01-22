@@ -64,49 +64,6 @@ if LooseVersion(mock.__version__) < LooseVersion("0.8"):
     raise ImportError("\nBuildbot tests require mock version 0.8.0 or "
                       "higher; try 'pip install -U mock'")
 
-# Force loading of deprecated modules and check that appropriate warnings
-# were emitted.
-# Without explicit load of deprecated modules it's hard to predict when
-# they will be imported and when warning should be caught.
-from buildbot.test.util.warnings import assertProducesWarning  # noqa pylint: disable=wrong-import-position
-from buildbot.worker_transition import DeprecatedWorkerAPIWarning  # noqa pylint: disable=wrong-import-position
-from buildbot.worker_transition import DeprecatedWorkerModuleWarning  # noqa pylint: disable=wrong-import-position
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave' module is deprecated"):
-    import buildbot.buildslave as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.steps\.slave' module is deprecated"):
-    import buildbot.steps.slave as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.process\.slavebuilder' module is deprecated"):
-    import buildbot.process.slavebuilder as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.db\.buildslaves' module is deprecated"):
-    import buildbot.db.buildslaves as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave\.ec2' module is deprecated"):
-    import buildbot.buildslave.ec2 as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave\.libvirt' module is deprecated"):
-    import buildbot.buildslave.libvirt as _  # noqa
-
-with assertProducesWarning(
-        DeprecatedWorkerModuleWarning,
-        message_pattern=r"'buildbot\.buildslave\.openstack' module is deprecated"):
-    import buildbot.buildslave.openstack as _  # noqa
-
 # All deprecated modules should be loaded, consider future warnings in tests as errors.
 # In order to not pollute the test outputs,
 # warnings in tests shall be forcefully tested with assertProducesWarning,

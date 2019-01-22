@@ -43,9 +43,6 @@ class ConfiguratorBase(object):
         if 'builders' not in c:
             c['builders'] = []
         self.builders = c['builders']
-        if 'workers' not in c and 'slaves' not in c:
-            c['workers'] = self.workers = []
-        elif 'slaves' in c:
-            self.workers = c['slaves']
-        elif 'workers' in c:
-            self.workers = c['workers']
+        if 'workers' not in c:
+            c['workers'] = []
+        self.workers = c['workers']

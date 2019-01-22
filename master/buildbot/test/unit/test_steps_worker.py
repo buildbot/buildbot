@@ -18,8 +18,6 @@ from __future__ import print_function
 
 import stat
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -34,8 +32,6 @@ from buildbot.steps import worker
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 def uploadString(string):
@@ -473,19 +469,6 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
 
-    def test_getFileContentFromWorker_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.steps.worker.CompositeStepMixin.getFileContentFromWorker',
-                method):
-            m = worker.CompositeStepMixin()
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getFileContentFromSlave' method is deprecated"):
-                dummy = m.getFileContentFromSlave('file')
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with('file')
-
     def test_downloadFileContentToWorker(self):
         @defer.inlineCallbacks
         def testFunc(x):
@@ -525,14 +508,3 @@ class TestCompositeStepMixin(steps.BuildStepMixin, unittest.TestCase):
         )
         self.expectOutcome(result=SUCCESS)
         return self.runStep()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_SlaveBuildStep_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="SlaveBuildStep was deprecated"):
-            from buildbot.steps.slave import SlaveBuildStep
-
-        self.assertIdentical(SlaveBuildStep, worker.WorkerBuildStep)

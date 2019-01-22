@@ -18,8 +18,6 @@ from __future__ import division
 from __future__ import print_function
 from future.builtins import range
 
-import mock
-
 from twisted.internet import defer
 from twisted.trial import unittest
 
@@ -30,8 +28,6 @@ from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import querylog
 from buildbot.test.util import validation
-from buildbot.test.util.warnings import assertProducesWarning
-from buildbot.worker_transition import DeprecatedWorkerNameWarning
 
 
 def workerKey(worker):
@@ -731,28 +727,3 @@ class TestRealDB(unittest.TestCase,
 
     def tearDown(self):
         return self.tearDownConnectorComponent()
-
-
-class TestWorkerTransition(unittest.TestCase):
-
-    def test_BuildslavesConnectorComponent_deprecated(self):
-        with assertProducesWarning(
-                DeprecatedWorkerNameWarning,
-                message_pattern="BuildslavesConnectorComponent was deprecated"):
-            from buildbot.db.buildslaves import BuildslavesConnectorComponent
-
-        self.assertIdentical(BuildslavesConnectorComponent,
-                             workers.WorkersConnectorComponent)
-
-    def test_getWorkers_old_api(self):
-        method = mock.Mock(return_value='dummy')
-        with mock.patch(
-                'buildbot.db.workers.WorkersConnectorComponent.getWorkers',
-                method):
-            m = workers.WorkersConnectorComponent(mock.Mock())
-            with assertProducesWarning(
-                    DeprecatedWorkerNameWarning,
-                    message_pattern="'getBuildslaves' method is deprecated"):
-                dummy = m.getBuildslaves()
-        self.assertEqual(dummy, 'dummy')
-        method.assert_called_once_with()

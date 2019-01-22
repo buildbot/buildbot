@@ -34,15 +34,3 @@ class ConfiguratorBaseTests(configurators.ConfiguratorMixin, unittest.Synchronou
             'builders': []
         })
         self.assertEqual(self.configurator.workers, [])
-
-    def test_worker_vs_slaves(self):
-        """The base configurator uses the slaves config if it exists already"""
-        self.config_dict['slaves'] = [1]  # marker
-        self.setupConfigurator()
-        self.assertEqual(self.config_dict, {
-            'schedulers': [],
-            'slaves': [1],
-            'builders': [],
-            'protocols': {}
-        })
-        self.assertEqual(self.configurator.workers, [1])

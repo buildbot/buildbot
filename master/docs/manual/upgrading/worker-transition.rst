@@ -13,6 +13,7 @@ Old API support will be removed in the future versions of Buildbot.
 Rename of API introduced in beta versions of Buildbot 0.9.0 done without
 providing fallback.
 See release notes for the list of breaking changes of private interfaces.
+The fallbacks have been removed in Buildbot version 2.0.0.
 
 Old names fallback settings
 ---------------------------

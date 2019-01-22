@@ -29,19 +29,7 @@ from __future__ import print_function
 from zope.interface import Attribute
 from zope.interface import Interface
 
-from buildbot.worker_transition import deprecatedWorkerModuleAttribute
-
 # exceptions that can be raised while trying to start a build
-
-
-# This class is deprecated and should no longer be used.
-class NoSlaveError(Exception):
-    pass
-
-
-deprecatedWorkerModuleAttribute(locals(), NoSlaveError,
-                                compat_name="NoSlaveError",
-                                new_name="")
 
 
 class BuilderInUseError(Exception):
@@ -52,21 +40,12 @@ class WorkerTooOldError(Exception):
     pass
 
 
-deprecatedWorkerModuleAttribute(
-    locals(), WorkerTooOldError, compat_name="BuildSlaveTooOldError")
-
-
 class LatentWorkerFailedToSubstantiate(Exception):
     pass
 
 
 class LatentWorkerCannotSubstantiate(Exception):
     pass
-
-
-deprecatedWorkerModuleAttribute(
-    locals(), LatentWorkerFailedToSubstantiate,
-    compat_name="LatentBuildSlaveFailedToSubstantiate")
 
 
 class LatentWorkerSubstantiatiationCancelled(Exception):
@@ -181,9 +160,6 @@ class IWorker(IPlugin):
     pass
 
 
-deprecatedWorkerModuleAttribute(locals(), IWorker, compat_name="IBuildSlave")
-
-
 class ILatentWorker(IWorker):
 
     """A worker that is not always running, but can run when requested.
@@ -213,10 +189,6 @@ class ILatentWorker(IWorker):
         @param wfb: a L{LatentWorkerForBuilder}.  The wfb is the one for whom the
         build finished.
         """
-
-
-deprecatedWorkerModuleAttribute(
-    locals(), ILatentWorker, compat_name="ILatentBuildSlave")
 
 
 class IRenderable(Interface):
@@ -545,9 +517,6 @@ class IWorkerStatus(Interface):
     def lastMessageReceived():
         """Return a timestamp (seconds since epoch) indicating when the most
         recent message was received from the worker."""
-
-
-deprecatedWorkerModuleAttribute(locals(), IWorkerStatus)
 
 
 class ISchedulerStatus(Interface):
