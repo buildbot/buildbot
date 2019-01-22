@@ -1,0 +1,1 @@
+Various database integrity problems were fixed. Most notably, it is now possible to delete old changes without wiping all "child" changes in cascade.
