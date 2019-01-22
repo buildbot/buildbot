@@ -436,7 +436,7 @@ def parse_options():
 # information to a file as well (we'll set that up later.)
 stderr = logging.StreamHandler(sys.stderr)
 fmt = logging.Formatter("git_buildbot: %(levelname)s: %(message)s")
-stderr.setLevel(logging.NOTSET)
+stderr.setLevel(logging.WARNING)
 stderr.setFormatter(fmt)
 logging.getLogger().addHandler(stderr)
 logging.getLogger().setLevel(logging.NOTSET)
