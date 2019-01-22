@@ -83,8 +83,10 @@ matrix:
 # Dependencies installation commands
 install:
   - pip install -U pip
-  - condition: TESTS != "smokes"
+  - condition: TESTS not in ("smokes", "trial_worker")
     cmd: pip install -r requirements-ci.txt
+  - condition: TESTS == "trial_worker"
+    cmd: pip install -r requirements-ciworker.txt
   - condition: TESTS == "docs"
     cmd: pip install -r requirements-cidocs.txt
   - condition: '"sqlite" not in BUILDBOT_TEST_DB_URL'
