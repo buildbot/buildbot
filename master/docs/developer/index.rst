@@ -12,5 +12,4 @@ It is intended both for developers writing patches that will be included in Buil
     quickstart
     general
     apis
-    py3-compat
     classes
