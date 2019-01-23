@@ -141,7 +141,8 @@ Your First Build
 By now you're probably thinking: "All this time spent and still not done a single build? What was the name of this project again?"
 
 On the `Builders <http://localhost:8010/#/builders>`_ page, click on the runtests link.
-You'll see a builder page, and an option that allow you to force a build:
+You'll see a builder page, and a blue "force" button that will bring up the
+following dialog box:
 
 .. image:: _images/force-build.png
    :alt: force a build.
