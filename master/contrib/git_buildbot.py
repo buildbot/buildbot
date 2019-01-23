@@ -382,7 +382,7 @@ def process_changes():
 def send_changes():
     # Submit the changes, if any
     if not changes:
-        logging.warning("No changes found")
+        logging.info("No changes found")
         return
 
     host, port = master.split(':')
