@@ -19,10 +19,6 @@
 # Also don't forget to mirror your changes on command-line options in manual
 # pages and reStructuredText documentation.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import sys
 import textwrap
 

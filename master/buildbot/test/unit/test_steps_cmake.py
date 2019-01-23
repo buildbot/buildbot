@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.trial.unittest import TestCase
 
 from buildbot.config import ConfigErrors

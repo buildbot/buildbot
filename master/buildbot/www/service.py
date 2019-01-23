@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import iteritems
-
 import calendar
 import datetime
 import os
@@ -38,7 +33,7 @@ from twisted.web import server
 from zope.interface import implementer
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
@@ -260,7 +255,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def configPlugins(self, root, new_config):
         known_plugins = set(new_config.www.get('plugins', {})) | set(['base'])
-        for key, plugin in list(iteritems(new_config.www.get('plugins', {}))):
+        for key, plugin in list(new_config.www.get('plugins', {}).items()):
             log.msg("initializing www plugin %r" % (key,))
             if key not in self.apps:
                 raise RuntimeError(
@@ -361,7 +356,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             # and other runs of this master
 
             # we encode that in hex for db storage convenience
-            return bytes2NativeString(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
+            return bytes2unicode(hexlify(os.urandom(int(SESSION_SECRET_LENGTH / 8))))
 
         session_secret = yield state.atomicCreateState(objectid, "session_secret", create_session_secret)
         self.site.setSessionSecret(session_secret)

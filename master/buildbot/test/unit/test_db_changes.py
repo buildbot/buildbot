@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.utils import iteritems
-
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -686,7 +681,7 @@ class RealTests(Tests):
             buildRows = [fakedb.Buildset(id=lastID["buildsetid"],
                                          reason='foo',
                                          submitted_at=1300305012, results=-1)]
-            for cb, ss in iteritems(codebase_ss):
+            for cb, ss in codebase_ss.items():
                 lastID["buildsetSourceStampid"] += 1
                 buildRows.append(
                     fakedb.BuildsetSourceStamp(id=lastID["buildsetSourceStampid"],

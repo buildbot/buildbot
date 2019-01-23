@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 from twisted.internet import reactor
 
@@ -41,7 +37,7 @@ class Db2DataMixin(object):
         if props and filters:
             return (props
                     if '*' in filters
-                    else dict(((k, v) for k, v in iteritems(props) if k in filters)))
+                    else dict(((k, v) for k, v in props.items() if k in filters)))
 
     @defer.inlineCallbacks
     def addPropertiesToBuildRequest(self, buildrequest, filters):

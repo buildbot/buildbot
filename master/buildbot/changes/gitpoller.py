@@ -13,14 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import quote as urlquote
-from future.utils import itervalues
-
 import os
 import re
 import stat
+from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
 from twisted.internet import utils
@@ -303,7 +299,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         if not self.lastRev:
             return
         rebuild = False
-        if newRev in itervalues(self.lastRev):
+        if newRev in self.lastRev.values():
             if self.buildPushesWithNoCommits:
                 existingRev = self.lastRev.get(branch)
                 if existingRev is None:
@@ -321,7 +317,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         # get the change list
         revListArgs = (['--format=%H', '{}'.format(newRev)] +
                        ['^' + rev
-                        for rev in sorted(itervalues(self.lastRev))] +
+                        for rev in sorted(self.lastRev.values())] +
                        ['--'])
         self.changeCount = 0
         results = yield self._dovccmd('log', revListArgs, path=self.workdir)

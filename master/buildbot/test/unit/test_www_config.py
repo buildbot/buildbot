@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import json
 
 import mock
@@ -26,7 +23,7 @@ from twisted.python import util
 from twisted.trial import unittest
 
 from buildbot.test.util import www
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.www import auth
 from buildbot.www import config
 
@@ -54,7 +51,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
                  for v in rsrc.getEnvironmentVersions()] + custom_versions
 
         res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2NativeString(res))
+        res = json.loads(bytes2unicode(res))
         _auth.maybeAutoLogin.assert_called_with(mock.ANY)
         exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
             "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
@@ -62,7 +59,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
 
         master.session.user_info = dict(name="me", email="me@me.org")
         res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2NativeString(res))
+        res = json.loads(bytes2unicode(res))
         exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {"name": "NoAuth"},
                "user": {"email": "me@me.org", "name": "me"}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
         self.assertEqual(res, exp)
@@ -71,7 +68,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
             url='h:/a/c/', auth=_auth, versions=custom_versions)
         rsrc.reconfigResource(master.config)
         res = yield self.render_resource(rsrc, b'/')
-        res = json.loads(bytes2NativeString(res))
+        res = json.loads(bytes2unicode(res))
         exp = {"authz": {}, "titleURL": "http://buildbot.net", "versions": vjson, "title": "Buildbot", "auth": {
             "name": "NoAuth"}, "user": {"anonymous": True}, "buildbotURL": "h:/a/b/", "multiMaster": False, "port": None}
         self.assertEqual(res, exp)

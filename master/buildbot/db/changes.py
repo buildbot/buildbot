@@ -17,11 +17,6 @@
 Support for changes in the database
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
-
 import json
 
 import sqlalchemy as sa
@@ -76,7 +71,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             properties = {}
 
         # verify that source is 'Change' for each property
-        for pv in itervalues(properties):
+        for pv in properties.values():
             assert pv[1] == 'Change', ("properties must be qualified with"
                                        "source 'Change'")
 
@@ -137,7 +132,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     dict(changeid=changeid,
                          property_name=k,
                          property_value=json.dumps(v))
-                    for k, v in iteritems(properties)
+                    for k, v in properties.items()
                 ]
                 for i in inserts:
                     self.checkLength(tbl.c.property_name,
@@ -199,7 +194,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                 toChanges[cb] = {'changeid': None}
 
         # For each codebase, append changes until we match the parent
-        for cb, change in iteritems(fromChanges):
+        for cb, change in fromChanges.items():
             # Careful; toChanges[cb] may be None from getChangeFromSSid
             toCbChange = toChanges.get(cb) or {}
             if change and change['changeid'] != toCbChange.get('changeid'):

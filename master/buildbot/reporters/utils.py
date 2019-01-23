@@ -13,11 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.collections import UserList
 from future.utils import lrange
 from future.utils import string_types
+
+from collections import UserList
 
 from twisted.internet import defer
 from twisted.python import log

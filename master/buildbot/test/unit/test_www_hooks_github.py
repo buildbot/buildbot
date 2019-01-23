@@ -14,10 +14,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-
 import hmac
 from copy import deepcopy
 from hashlib import sha1
@@ -753,10 +749,7 @@ class TestChangeHookConfiguredWithGitChange(unittest.TestCase):
         self.request = _prepare_request(b'push', b'')
 
         yield self.request.test_render(self.changeHook)
-        if PY3:
-            expected = b"Expecting value: line 1 column 1 (char 0)"
-        else:
-            expected = b"No JSON object could be decoded"
+        expected = b"Expecting value: line 1 column 1 (char 0)"
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 0)
         self.assertEqual(self.request.written, expected)
         self.request.setResponseCode.assert_called_with(400, expected)

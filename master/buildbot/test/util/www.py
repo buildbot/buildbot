@@ -13,16 +13,13 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import parse_qs
-from future.moves.urllib.parse import unquote as urlunquote
 from future.utils import integer_types
-from future.utils import iteritems
 
 import json
 import os
 import pkg_resources
+from urllib.parse import parse_qs
+from urllib.parse import unquote as urlunquote
 from uuid import uuid1
 
 import mock
@@ -32,7 +29,7 @@ from twisted.python.compat import NativeStringIO
 from twisted.web import server
 
 from buildbot.test.fake import fakemaster
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 from buildbot.www import auth
 from buildbot.www import authz
@@ -72,7 +69,7 @@ class FakeRequest(object):
         self.uri = self.path
         self.postpath = []
         for p in path[1:].split(b'/'):
-            path = urlunquote(bytes2NativeString(p))
+            path = urlunquote(bytes2unicode(p))
             self.postpath.append(unicode2bytes(path))
 
         self.deferred = defer.Deferred()
@@ -200,7 +197,7 @@ class WwwTestMixin(RequiresWwwMixin):
         if rv == server.NOT_DONE_YET:
             rv = yield request.deferred
 
-        res = json.loads(bytes2NativeString(rv))
+        res = json.loads(bytes2unicode(rv))
         self.assertIn("jsonrpc", res)
         self.assertEqual(res["jsonrpc"], "2.0")
         if not requestJson:
@@ -218,7 +215,7 @@ class WwwTestMixin(RequiresWwwMixin):
             exp['content'] = content
         if contentJson is not None:
             got['contentJson'] = json.loads(
-                bytes2NativeString(self.request.written))
+                bytes2unicode(self.request.written))
             exp['contentJson'] = contentJson
         if contentType is not None:
             got['contentType'] = self.request.headers[b'content-type']
@@ -226,7 +223,7 @@ class WwwTestMixin(RequiresWwwMixin):
         if responseCode is not None:
             got['responseCode'] = str(self.request.responseCode)
             exp['responseCode'] = str(responseCode)
-        for header, value in iteritems(headers):
+        for header, value in headers.items():
             got[header] = self.request.headers.get(header)
             exp[header] = value
         self.assertEqual(got, exp)

@@ -15,8 +15,6 @@
 #
 # We can't put this method in utility modules, because they import dependency packages
 
-from __future__ import division
-from __future__ import print_function
 
 import os
 import re

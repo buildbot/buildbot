@@ -836,7 +836,7 @@ If this log file is short and easily stored in memory, this is as simple as a ca
     def run(self):
         ...
         summary = u'\n'.join('%s: %s' % (k, count)
-                             for (k, count) in self.lint_results.iteritems())
+                             for (k, count) in self.lint_results.items())
         yield self.addCompleteLog('summary', summary)
 
 Note that the log contents must be a unicode string.

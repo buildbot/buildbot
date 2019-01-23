@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import urlparse
-from future.utils import iteritems
 from future.utils import text_type
 
 import cgi
@@ -25,6 +21,7 @@ import fnmatch
 import json
 import re
 from contextlib import contextmanager
+from urllib.parse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log
@@ -32,7 +29,6 @@ from twisted.web.error import Error
 
 from buildbot.data import exceptions
 from buildbot.data import resultspec
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
@@ -58,7 +54,7 @@ class ContentTypeParser(object):
 
     def gettype(self):
         mimetype, options = cgi.parse_header(
-            bytes2NativeString(self.typeheader))
+            bytes2unicode(self.typeheader))
         return mimetype
 
 
@@ -79,7 +75,7 @@ class RestRootResource(resource.Resource):
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
         latest = max(list(self.version_classes))
-        for version, klass in iteritems(self.version_classes):
+        for version, klass in self.version_classes.items():
             if version < min_vers:
                 continue
             child = klass(master)
@@ -129,7 +125,7 @@ class V2RootResource(resource.Resource):
     @defer.inlineCallbacks
     def getEndpoint(self, request, method, params):
         # note that trailing slashes are not allowed
-        request_postpath = tuple(bytes2NativeString(p) for p in request.postpath)
+        request_postpath = tuple(bytes2unicode(p) for p in request.postpath)
         yield self.master.www.assertUserAllowed(request, request_postpath,
                                                 method, params)
         ret = yield self.master.data.getEndpoint(request_postpath)
@@ -183,7 +179,7 @@ class V2RootResource(resource.Resource):
                               JSONRPC_CODES["invalid_request"])
 
         try:
-            data = json.loads(bytes2NativeString(request.content.read()))
+            data = json.loads(bytes2unicode(request.content.read()))
         except Exception as e:
             raise BadJsonRpc2("JSON parse error: %s" % (str(e),),
                               JSONRPC_CODES["parse_error"])
@@ -218,7 +214,7 @@ class V2RootResource(resource.Resource):
 
         def writeError(msg, errcode=399,
                        jsonrpccode=JSONRPC_CODES["internal_error"]):
-            msg = bytes2NativeString(msg)
+            msg = bytes2unicode(msg)
             if self.debug:
                 log.msg("JSONRPC error: %s" % (msg,))
             request.setResponseCode(errcode)
@@ -260,7 +256,7 @@ class V2RootResource(resource.Resource):
 
         def checkFields(fields, negOk=False):
             for field in fields:
-                k = bytes2NativeString(field)
+                k = bytes2unicode(field)
                 if k[0] == '-' and negOk:
                     k = k[1:]
                 if k not in entityType.fieldNames:
@@ -270,9 +266,9 @@ class V2RootResource(resource.Resource):
         limit = offset = order = fields = None
         filters, properties = [], []
         for arg in reqArgs:
-            argStr = bytes2NativeString(arg)
+            argStr = bytes2unicode(arg)
             if arg == b'order':
-                order = tuple([bytes2NativeString(o) for o in reqArgs[arg]])
+                order = tuple([bytes2unicode(o) for o in reqArgs[arg]])
                 checkFields(order, True)
                 continue
             elif arg == b'field':
@@ -335,7 +331,7 @@ class V2RootResource(resource.Resource):
 
         # if ordering or filtering is on a field that's not in fields, bail out
         if fields:
-            fields = [bytes2NativeString(f) for f in fields]
+            fields = [bytes2unicode(f) for f in fields]
             fieldsSet = set(fields)
             if order and {o.lstrip('-') for o in order} - fieldsSet:
                 raise BadRequest("cannot order on un-selected fields")
@@ -369,13 +365,13 @@ class V2RootResource(resource.Resource):
                 log.msg("REST error: %s" % (msg,))
             request.setResponseCode(errcode)
             request.setHeader(b'content-type', b'text/plain; charset=utf-8')
-            msg = bytes2NativeString(msg)
+            msg = bytes2unicode(msg)
             data = json.dumps(dict(error=msg))
             data = unicode2bytes(data)
             request.write(data)
 
         with self.handleErrors(writeError):
-            ep, kwargs = yield self.getEndpoint(request, bytes2NativeString(request.method), {})
+            ep, kwargs = yield self.getEndpoint(request, bytes2unicode(request.method), {})
 
             rspec = self.decodeResultSpec(request, ep)
             data = yield ep.get(rspec, kwargs)
@@ -460,7 +456,7 @@ class V2RootResource(resource.Resource):
         # pre-translate the origin entries in the config
         self.origins = []
         for o in new_config.www.get('allowed_origins', [origin_self]):
-            origin = bytes2NativeString(o).lower()
+            origin = bytes2unicode(o).lower()
             self.origins.append(re.compile(fnmatch.translate(origin)))
 
         # and copy some other flags
@@ -469,7 +465,7 @@ class V2RootResource(resource.Resource):
 
     def render(self, request):
         def writeError(msg, errcode=400):
-            msg = bytes2NativeString(msg)
+            msg = bytes2unicode(msg)
             if self.debug:
                 log.msg("HTTP error: %s" % (msg,))
             request.setResponseCode(errcode)
@@ -497,7 +493,7 @@ class V2RootResource(resource.Resource):
             if reqOrigin:
                 err = None
                 reqOrigin = reqOrigin.lower()
-                if not any(o.match(bytes2NativeString(reqOrigin)) for o in self.origins):
+                if not any(o.match(bytes2unicode(reqOrigin)) for o in self.origins):
                     err = b"invalid origin"
                 elif request.method == b'OPTIONS':
                     preflightMethod = request.getHeader(

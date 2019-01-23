@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.cred import credentials
 from twisted.internet import reactor
 from twisted.spread import pb

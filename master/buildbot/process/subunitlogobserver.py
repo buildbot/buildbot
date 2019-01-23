@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 # this used to be referenced here, so we keep a link for old time's sake
 import buildbot.steps.subunit

@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import json
 import os
 import shutil
@@ -41,7 +37,7 @@ from buildbot.steps import transfer
 from buildbot.test.fake.remotecommand import Expect
 from buildbot.test.fake.remotecommand import ExpectRemoteRef
 from buildbot.test.util import steps
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -72,7 +68,7 @@ def uploadTarFile(filename, **members):
     def behavior(command):
         f = BytesIO()
         archive = tarfile.TarFile(fileobj=f, name=filename, mode='w')
-        for name, content in iteritems(members):
+        for name, content in members.items():
             content = unicode2bytes(content)
             archive.addfile(tarfile.TarInfo(name), BytesIO(content))
         writer = command.args['writer']
@@ -1035,7 +1031,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['workerdest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                data = bytes2NativeString(data)
+                data = bytes2unicode(data)
                 actualJson = json.loads(data)
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)
@@ -1067,7 +1063,7 @@ class TestJSONPropertiesDownload(unittest.TestCase):
                 self.assertEqual(kwargs['slavedest'], 'props.json')
                 reader = kwargs['reader']
                 data = reader.remote_read(100)
-                data = bytes2NativeString(data)
+                data = bytes2unicode(data)
                 actualJson = json.loads(data)
                 expectedJson = dict(sourcestamps=[ss.asDict()], properties={'key1': 'value1'})
                 self.assertEqual(actualJson, expectedJson)

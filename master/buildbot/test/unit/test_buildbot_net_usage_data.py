@@ -13,14 +13,10 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
-from future.moves.urllib import request as urllib_request
-
 import os
 import platform
 from unittest.case import SkipTest
+from urllib import request as urllib_request
 
 from twisted.internet import reactor
 from twisted.python.filepath import FilePath

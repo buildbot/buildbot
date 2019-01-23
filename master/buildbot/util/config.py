@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import re
 
 from twisted.cred.checkers import FilePasswordDB
@@ -59,7 +55,7 @@ class _DictConfigured(object):
         self.value = value
 
     def getConfigDict(self):
-        return {k: IConfigured(v).getConfigDict() for k, v in iteritems(self.value)}
+        return {k: IConfigured(v).getConfigDict() for k, v in self.value.items()}
 
 
 registerAdapter(_DictConfigured, dict, IConfigured)

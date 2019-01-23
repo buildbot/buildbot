@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
 from future.utils import text_type
 
 from twisted.internet import defer
@@ -81,7 +78,7 @@ class FakeLogFile(object):
         return defer.Deferred()
 
     def flushFakeLogfile(self):
-        for lbf in itervalues(self.lbfs):
+        for lbf in self.lbfs.values():
             lbf.flush()
 
     def finish(self):

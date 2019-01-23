@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
 from future.utils import text_type
 
 from twisted.internet import defer
@@ -281,7 +278,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             return self.step.build.properties.cleanupTextFromSecrets(data)
 
         if self.debug:
-            for k, v in iteritems(update):
+            for k, v in update.items():
                 log.msg("Update[%s]: %s" % (k, v))
         if "stdout" in update:
             # 'stdout': data
@@ -317,7 +314,7 @@ class RemoteCommand(base.RemoteCommandImpl):
             delta = (util.now() - self._startTime) - self._remoteElapsed
             metrics.MetricTimeEvent.log("RemoteCommand.overhead", delta)
 
-        for name, loog in iteritems(self.logs):
+        for name, loog in self.logs.items():
             if self._closeWhenFinished[name]:
                 if maybeFailure:
                     loog = yield self._unwrap(loog)

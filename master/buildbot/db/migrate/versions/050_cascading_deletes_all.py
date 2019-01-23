@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import sqlalchemy as sa
 from migrate.changeset.constraint import ForeignKeyConstraint
 from migrate.exceptions import NotSupportedError
@@ -37,7 +33,7 @@ def upgrade(migrate_engine):
     # fk name that was put.
     # Mysql and postgres have different naming convention so this is not very
     # easy to have generic code working.
-    for t, keys in iteritems(TABLES_FKEYS):
+    for t, keys in TABLES_FKEYS.items():
         table = tables[t]
         for fk in table.constraints:
             if not isinstance(fk, sa.ForeignKeyConstraint):

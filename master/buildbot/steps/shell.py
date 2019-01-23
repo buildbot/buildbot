@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-from future.utils import iteritems
 from future.utils import string_types
 
 import inspect
@@ -134,13 +130,9 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         # check validity of arguments being passed to RemoteShellCommand
         invalid_args = []
-        if PY3:
-            signature = inspect.signature(
-                remotecommand.RemoteShellCommand.__init__)
-            valid_rsc_args = signature.parameters.keys()
-        else:
-            valid_rsc_args = inspect.getargspec(
-                remotecommand.RemoteShellCommand.__init__)[0]
+        signature = inspect.signature(
+            remotecommand.RemoteShellCommand.__init__)
+        valid_rsc_args = signature.parameters.keys()
         for arg in kwargs:
             if arg not in valid_rsc_args:
                 invalid_args.append(arg)
@@ -351,14 +343,14 @@ class SetPropertyFromCommand(ShellCommand):
             new_props = self.extract_fn(cmd.rc,
                                         self.observer.getStdout(),
                                         self.observer.getStderr())
-            for k, v in iteritems(new_props):
+            for k, v in new_props.items():
                 self.setProperty(k, v, "SetPropertyFromCommand Step")
             self.property_changes = new_props
 
     def createSummary(self, log):
         if self.property_changes:
             props_set = ["%s: %r" % (k, v)
-                         for k, v in sorted(iteritems(self.property_changes))]
+                         for k, v in sorted(self.property_changes.items())]
             self.addCompleteLog('property changes', "\n".join(props_set))
 
     def describe(self, done=False):

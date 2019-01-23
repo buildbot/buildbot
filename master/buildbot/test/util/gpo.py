@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 from twisted.internet import utils
 
@@ -26,7 +22,7 @@ def _check_env_is_expected(test, expected_env, env):
         return
 
     env = env or {}
-    for var, value in iteritems(expected_env):
+    for var, value in expected_env.items():
         test.assertEqual(env.get(var), value,
                          'Expected environment to have %s = %r' % (var, value))
 
