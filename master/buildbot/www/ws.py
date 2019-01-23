@@ -13,9 +13,6 @@
 #
 # Copyright  Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
 from future.utils import string_types
 
 import json
@@ -26,7 +23,7 @@ from autobahn.twisted.websocket import WebSocketServerProtocol
 from twisted.internet import defer
 from twisted.python import log
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import toJson
 from buildbot.util import unicode2bytes
 
@@ -47,7 +44,7 @@ class WsProtocol(WebSocketServerProtocol):
             log.msg("FRAME %s" % frame)
         # parse the incoming request
 
-        frame = json.loads(bytes2NativeString(frame))
+        frame = json.loads(bytes2unicode(frame))
         _id = frame.get("_id")
         if _id is None:
             return self.sendJsonMessage(error="no '_id' in websocket frame", code=400, _id=None)
@@ -124,7 +121,7 @@ class WsProtocol(WebSocketServerProtocol):
     def connectionLost(self, reason):
         if self.debug:
             log.msg("connection lost", system=self)
-        for qref in itervalues(self.qrefs):
+        for qref in self.qrefs.values():
             qref.stopConsuming()
         self.qrefs = None  # to be sure we don't add any more
 

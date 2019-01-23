@@ -22,9 +22,6 @@
 # exactly statements should generate warnings and which shouldn't.
 # Also this implementation allows nested checks.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import contextlib
 import re

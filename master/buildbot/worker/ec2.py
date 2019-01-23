@@ -19,11 +19,7 @@ A latent worker that uses EC2 to instantiate the workers on demand.
 Tested with Python boto 1.5c
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 from future.utils import integer_types
-from future.utils import iteritems
 from future.utils import string_types
 
 import os
@@ -295,7 +291,7 @@ class EC2LatentWorker(AbstractLatentWorker):
 
     def _convert_deprecated_block_device_mapping(self, mapping_definitions):
         new_mapping_definitions = []
-        for dev_name, dev_config in iteritems(mapping_definitions):
+        for dev_name, dev_config in mapping_definitions.items():
             new_dev_config = {}
             new_dev_config['DeviceName'] = dev_name
             if dev_config:
@@ -381,7 +377,7 @@ class EC2LatentWorker(AbstractLatentWorker):
     def _remove_none_opts(self, *args, **opts):
         if args:
             opts = args[0]
-        return dict((k, v) for k, v in iteritems(opts) if v is not None)
+        return dict((k, v) for k, v in opts.items() if v is not None)
 
     def _start_instance(self):
         image = self.get_image()

@@ -20,9 +20,6 @@ Use of old API generates Python warning which may be logged, ignored or treated
 as an error using Python builtin warnings API.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import warnings
 
 from twisted.python.deprecate import getWarningMethod
@@ -35,6 +32,46 @@ __all__ = (
 
 
 _WORKER_WARNING_MARK = "[WORKER]"
+
+
+def _compat_name(new_name, compat_name=None):
+    """Returns old API ("slave") name for new name ("worker").
+
+    >>> assert _compat_name("Worker") == "Slave"
+    >>> assert _compat_name("SomeWorkerStuff") == "SomeSlaveStuff"
+    >>> assert _compat_name("SomeWorker", compat_name="SomeBuildSlave") == \
+        "SomeBuildSlave"
+
+    If `compat_name` is not specified old name is construct by replacing in
+    `new_name`:
+        "worker" -> "slave",
+        "Worker" -> "Slave".
+
+    For the sake of simplicity of usage if `compat_name` argument is specified
+    it will returned as the result.
+    """
+
+    if compat_name is not None:
+        assert "slave" in compat_name.lower()
+        assert new_name == "" or "worker" in new_name.lower(), new_name
+        return compat_name
+
+    compat_replacements = {
+        "worker": "slave",
+        "Worker": "Slave",
+    }
+
+    compat_name = new_name
+    assert "slave" not in compat_name.lower()
+    assert "worker" in compat_name.lower()
+    for new_word, old_word in compat_replacements.items():
+        compat_name = compat_name.replace(new_word, old_word)
+
+    assert compat_name != new_name
+    assert "slave" in compat_name.lower()
+    assert "worker" not in compat_name.lower()
+
+    return compat_name
 
 
 # DeprecationWarning or PendingDeprecationWarning may be used as

@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from mock import Mock
 
 from twisted.internet import defer
@@ -34,7 +31,6 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.logging import LoggingMixin
 from buildbot.test.util.notifier import NotifierTestMixin
 from buildbot.test.util.reporter import ReporterTestMixin
-from buildbot.util import unicode2NativeString
 
 HTTP_NOT_FOUND = 404
 
@@ -228,8 +224,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build["complete"] = True
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
-        self.assertLogged(unicode2NativeString(
-            u'Comment sent to {}'.format(PR_URL)))
+        self.assertLogged(u'Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_basic_without_logging(self):
@@ -245,8 +240,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
 
-        self.assertNotLogged(unicode2NativeString(
-            u'Comment sent to {}'.format(PR_URL)))
+        self.assertNotLogged(u'Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):

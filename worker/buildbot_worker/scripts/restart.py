@@ -13,9 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
+# This module is left for backward compatibility of old-named worker API.
+# It should never be imported by Buildbot.
 
 from buildbot_worker.scripts import base
 from buildbot_worker.scripts import start

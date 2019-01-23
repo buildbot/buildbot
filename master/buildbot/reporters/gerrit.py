@@ -16,10 +16,6 @@
 Push events to Gerrit
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import time
 import warnings
 from distutils.version import LooseVersion
@@ -36,7 +32,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.reporters import utils
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 
 # Cache the version that the gerrit server is running for this many seconds
@@ -213,7 +209,7 @@ class GerritStatusPush(service.BuildbotService):
                 return
             vers = data[len(vstr):].strip()
             log.msg(b"gerrit version: " + vers)
-            self.gerrit_version = LooseVersion(bytes2NativeString(vers))
+            self.gerrit_version = LooseVersion(bytes2unicode(vers))
 
         def errReceived(self, data):
             log.msg(b"gerriterr: " + data)
@@ -428,7 +424,7 @@ class GerritStatusPush(service.BuildbotService):
             else:
                 add_label = _new_add_label
 
-            for label, value in iteritems(labels):
+            for label, value in labels.items():
                 command.extend(add_label(label, value))
 
         command.append(revision)

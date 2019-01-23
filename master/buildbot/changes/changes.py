@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
 from future.utils import text_type
 
 import html  # py2: via future
@@ -80,7 +77,7 @@ class Change:
         change.files = sorted(chdict['files'])
 
         change.properties = Properties()
-        for n, (v, s) in iteritems(chdict['properties']):
+        for n, (v, s) in chdict['properties'].items():
             change.properties.setProperty(n, v, s)
 
         return defer.succeed(change)

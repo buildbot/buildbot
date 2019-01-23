@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from distutils.version import LooseVersion
 
 from twisted.internet import defer
@@ -178,7 +174,7 @@ class GitStepMixin(GitMixin):
         full_env = self.env.copy() if self.env else {}
 
         if self.config is not None:
-            for name, value in iteritems(self.config):
+            for name, value in self.config.items():
                 full_command.append('-c')
                 full_command.append('%s=%s' % (name, value))
 

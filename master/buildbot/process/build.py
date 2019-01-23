@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 from functools import reduce
 
@@ -41,7 +38,6 @@ from buildbot.process.results import computeResultAndTermination
 from buildbot.process.results import statusToString
 from buildbot.process.results import worst_status
 from buildbot.reporters.utils import getURLForBuild
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util.eventual import eventually
 
@@ -249,8 +245,8 @@ class Build(properties.PropertiesMixin):
         # object that came from the config, and get its properties
         if workerforbuilder.worker.worker_basedir:
             builddir = path_module.join(
-                bytes2NativeString(workerforbuilder.worker.worker_basedir),
-                bytes2NativeString(self.builder.config.workerbuilddir))
+                bytes2unicode(workerforbuilder.worker.worker_basedir),
+                bytes2unicode(self.builder.config.workerbuilddir))
             self.setProperty("builddir", builddir, "Worker")
 
     def setupWorkerForBuilder(self, workerforbuilder):

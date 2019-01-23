@@ -13,11 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 # See "Type Validation" in master/docs/developer/tests.rst
 from future.utils import integer_types
-from future.utils import iteritems
 from future.utils import text_type
 
 import datetime
@@ -25,7 +22,7 @@ import json
 import re
 
 from buildbot.util import UTC
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 # Base class
 
@@ -220,7 +217,7 @@ class SourcedPropertiesValidator(Validator):
         if not isinstance(object, dict):
             yield "{} is not sourced properties (not a dict)".format(name)
             return
-        for k, v in iteritems(object):
+        for k, v in object.items():
             if not isinstance(k, text_type):
                 yield "{} property name {!r} is not unicode".format(name, k)
             if not isinstance(v, tuple) or len(v) != 2:
@@ -268,7 +265,7 @@ class MessageValidator(Validator):
     routingKeyValidator = TupleValidator(StrValidator())
 
     def __init__(self, events, messageValidator):
-        self.events = [bytes2NativeString(e) for e in set(events)]
+        self.events = [bytes2unicode(e) for e in set(events)]
         self.messageValidator = messageValidator
 
     def validate(self, name, routingKey_message):
@@ -666,7 +663,7 @@ def verifyMessage(testcase, routingKey, message_):
     # the "type" of the message is identified by last path name
     # -1 being the event, and -2 the id.
 
-    validator = message[bytes2NativeString(routingKey[-3])]
+    validator = message[bytes2unicode(routingKey[-3])]
     _verify(testcase, validator, '',
             (routingKey, (routingKey, message_)))
 

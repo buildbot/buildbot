@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.python import failure
@@ -89,7 +85,7 @@ class DebounceTest(unittest.TestCase):
                 db.stopDeferreds.pop()
             else:
                 self.fail("unknown scenario event %s" % e)
-            for db in itervalues(dbs):
+            for db in dbs.values():
                 self.assertEqual(db.calls, db.expCalls)
 
     def test_called_once(self):

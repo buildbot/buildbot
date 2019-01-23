@@ -17,8 +17,6 @@
 Steps and objects related to lintian
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot import config
 from buildbot.process import buildstep

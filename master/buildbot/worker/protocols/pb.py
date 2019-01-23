@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import itervalues
-
 import contextlib
 
 from twisted.internet import defer
@@ -282,7 +277,7 @@ class Connection(base.Connection, pb.Avatar):
         # remote builder, which will cause the worker buildbot process to exit.
         def old_way():
             d = None
-            for b in itervalues(self.worker.workerforbuilders):
+            for b in self.worker.workerforbuilders.values():
                 if b.remote:
                     d = b.mind.callRemote("shutdown")
                     break

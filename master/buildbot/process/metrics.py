@@ -32,10 +32,6 @@ Basic architecture:
     MetricWatcher
 """
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import iteritems
 from future.utils import lrange
 
 import gc
@@ -488,13 +484,13 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
 
     def asDict(self):
         retval = {}
-        for interface, handler in iteritems(self.handlers):
+        for interface, handler in self.handlers.items():
             retval.update(handler.asDict())
         return retval
 
     def report(self):
         try:
-            for interface, handler in iteritems(self.handlers):
+            for interface, handler in self.handlers.items():
                 report = handler.report()
                 if not report:
                     continue

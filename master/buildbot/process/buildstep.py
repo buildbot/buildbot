@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import PY3
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import raise_with_traceback
 from future.utils import string_types
 from future.utils import text_type
@@ -60,7 +55,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.process.results import WARNINGS
 from buildbot.process.results import Results
 from buildbot.process.results import worst_status
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import debounce
 from buildbot.util import flatten
 
@@ -194,17 +189,17 @@ class SyncLogFileWrapper(logobserver.LogObserver):
     # write methods
 
     def addStdout(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.STDOUT, data))
         self._delay(lambda: self.asyncLogfile.addStdout(data))
 
     def addStderr(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.STDERR, data))
         self._delay(lambda: self.asyncLogfile.addStderr(data))
 
     def addHeader(self, data):
-        data = bytes2NativeString(data)
+        data = bytes2unicode(data)
         self.chunks.append((self.HEADER, data))
         self._delay(lambda: self.asyncLogfile.addHeader(data))
 
@@ -631,7 +626,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def finishUnfinishedLogs(self):
         ok = True
-        not_finished_logs = [v for (k, v) in iteritems(self.logs)
+        not_finished_logs = [v for (k, v) in self.logs.items()
                              if not v.finished]
         finish_logs = yield defer.DeferredList([v.finish() for v in not_finished_logs],
                                                consumeErrors=True)
@@ -739,9 +734,7 @@ class BuildStep(results.ResultComputingConfigMixin,
 
     def isNewStyle(self):
         # **temporary** method until new-style steps are the only supported style
-        if PY3:
-            return self.run.__func__ is not BuildStep.run
-        return self.run.im_func is not BuildStep.run.im_func
+        return self.run.__func__ is not BuildStep.run
 
     def start(self):
         # New-style classes implement 'run'.
@@ -839,7 +832,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         logid = yield self.master.data.updates.addLog(self.stepid,
                                                       util.bytes2unicode(name), u'h')
         _log = self._newLog(name, u'h', logid)
-        html = bytes2NativeString(html)
+        html = bytes2unicode(html)
         yield _log.addContent(html)
         yield _log.finish()
 
@@ -1011,7 +1004,7 @@ class LoggingBuildStep(BuildStep):
         d.addErrback(self.failed)
 
     def setupLogfiles(self, cmd, logfiles):
-        for logname, remotefilename in iteritems(logfiles):
+        for logname, remotefilename in logfiles.items():
             if self.lazylogfiles:
                 # Ask RemoteCommand to watch a logfile, but only add
                 # it when/if we see any data.
@@ -1243,7 +1236,7 @@ class ShellMixin(object):
         # set up logging
         if stdio is not None:
             cmd.useLog(stdio, False)
-        for logname, remotefilename in iteritems(self.logfiles):
+        for logname, remotefilename in self.logfiles.items():
             if self.lazylogfiles:
                 # it's OK if this does, or does not, return a Deferred
                 def callback(cmd_arg, local_logname=logname):
@@ -1283,7 +1276,7 @@ def regex_log_evaluator(cmd, _, regexes):
         if worst_status(worst, possible_status) == possible_status:
             if isinstance(err, string_types):
                 err = re.compile(".*%s.*" % err, re.DOTALL)
-            for l in itervalues(cmd.logs):
+            for l in cmd.logs.values():
                 if err.search(l.getText()):
                     worst = possible_status
     return worst

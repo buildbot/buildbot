@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.builtins import range
 
 import base64
 import textwrap
@@ -31,7 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import connector_component
 from buildbot.test.util import interfaces
 from buildbot.test.util import validation
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import unicode2bytes
 
 
@@ -230,11 +227,11 @@ class Tests(interfaces.InterfaceTests):
         content = self.bug3101Content
         yield self.insertTestData(self.backgroundData + self.bug3101Rows)
         # overall content is the same, with '\n' padding at the end
-        expected = bytes2NativeString(self.bug3101Content + b'\n')
+        expected = bytes2unicode(self.bug3101Content + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 99)),
                          expected)
         # try to fetch just one line
-        expected = bytes2NativeString(content.split(b'\n')[0] + b'\n')
+        expected = bytes2unicode(content.split(b'\n')[0] + b'\n')
         self.assertEqual((yield self.db.logs.getLogLines(1470, 0, 0)),
                          expected)
 

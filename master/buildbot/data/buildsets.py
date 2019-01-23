@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import copy
 
 from twisted.internet import defer
@@ -158,7 +154,7 @@ class Buildset(base.ResourceType):
             submitted_at=epoch2datetime(submitted_at),
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
 
-        yield BuildRequestCollapser(self.master, list(itervalues(brids))).collapse()
+        yield BuildRequestCollapser(self.master, list(brids.values())).collapse()
 
         # get each of the sourcestamps for this buildset (sequentially)
         bsdict = yield self.master.db.buildsets.getBuildset(bsid)
@@ -170,7 +166,7 @@ class Buildset(base.ResourceType):
 
         # notify about the component build requests
         brResource = self.master.data.getResourceType("buildrequest")
-        brResource.generateEvent(list(itervalues(brids)), 'new')
+        brResource.generateEvent(list(brids.values()), 'new')
 
         # and the buildset itself
         msg = dict(

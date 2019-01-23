@@ -18,10 +18,6 @@
 # otherwise, Andrew Melo <andrew.melo@gmail.com> wrote the rest
 # but "the rest" is pretty minimal
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import re
 from datetime import datetime
 
@@ -30,7 +26,6 @@ from twisted.python import log
 from twisted.web import server
 
 from buildbot.plugins.db import get_plugins
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util import datetime2epoch
 from buildbot.util import unicode2bytes
@@ -152,7 +147,7 @@ class ChangeHookResource(resource.Resource):
 
         if DIALECT is unspecified, a sample implementation is provided
         """
-        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2NativeString(request.uri))
+        uriRE = re.search(r'^/change_hook/?([a-zA-Z0-9_]*)', bytes2unicode(request.uri))
 
         if not uriRE:
             log.msg("URI doesn't match change_hook regex: %s" % request.uri)
@@ -188,6 +183,6 @@ class ChangeHookResource(resource.Resource):
                                 for f in chdict['files']]
             if chdict.get('properties'):
                 chdict['properties'] = dict((bytes2unicode(k), v)
-                                            for k, v in iteritems(chdict['properties']))
+                                            for k, v in chdict['properties'].items())
             chid = yield self.master.data.updates.addChange(src=bytes2unicode(src), **chdict)
             log.msg("injected change %s" % chid)

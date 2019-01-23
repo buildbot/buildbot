@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-from future.utils import itervalues
 from future.utils import text_type
 
 import mock
@@ -487,7 +483,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
 
     def checkSummary(self, got, step, build=None):
         self.assertTrue(all(isinstance(k, text_type) for k in got))
-        self.assertTrue(all(isinstance(k, text_type) for k in itervalues(got)))
+        self.assertTrue(all(isinstance(k, text_type) for k in got.values()))
         exp = {u'step': step}
         if build:
             exp[u'build'] = build

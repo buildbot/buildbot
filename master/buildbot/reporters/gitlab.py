@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import quote_plus as urlquote_plus
+from urllib.parse import quote_plus as urlquote_plus
 
 from twisted.internet import defer
 from twisted.python import log
@@ -32,7 +30,6 @@ from buildbot.process.results import WARNINGS
 from buildbot.reporters import http
 from buildbot.util import giturlparse
 from buildbot.util import httpclientservice
-from buildbot.util import unicode2NativeString
 
 HOSTED_BASE_URL = 'https://gitlab.com'
 
@@ -100,7 +97,6 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         if url is None:
             defer.returnValue(None)
         project_full_name = u"%s/%s" % (url.owner, url.repo)
-        project_full_name = unicode2NativeString(project_full_name)
 
         # gitlab needs project name to be fully url quoted to get the project id
         project_full_name = urlquote_plus(project_full_name)
@@ -155,12 +151,8 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                 if 'source_branch' in props:
                     branch = props['source_branch']
                 else:
-                    branch = unicode2NativeString(sourcestamp['branch'])
-                sha = unicode2NativeString(sha)
-                state = unicode2NativeString(state)
-                target_url = unicode2NativeString(build['url'])
-                context = unicode2NativeString(context)
-                description = unicode2NativeString(description)
+                    branch = sourcestamp['branch']
+                target_url = build['url']
                 res = yield self.createStatus(
                     project_id=proj_id,
                     branch=branch,

@@ -16,8 +16,6 @@
 # This change hook allows GitHub or a hand crafted curl invocation to "knock on
 # the door" and trigger a change source to poll.
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 from buildbot.changes.base import PollingChangeSource
 from buildbot.util import bytes2unicode

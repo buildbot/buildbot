@@ -13,14 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 
 import pkg_resources
 
 from twisted.web import static
 
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
 class Application(object):
@@ -29,7 +27,7 @@ class Application(object):
         self.description = description
         self.version = pkg_resources.resource_string(
             modulename, "/VERSION").strip()
-        self.version = bytes2NativeString(self.version)
+        self.version = bytes2unicode(self.version)
         self.static_dir = pkg_resources.resource_filename(
             modulename, "/static")
         self.resource = static.File(self.static_dir)

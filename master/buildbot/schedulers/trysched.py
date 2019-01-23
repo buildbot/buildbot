@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import json
 import os
 
@@ -28,7 +24,6 @@ from twisted.spread import pb
 from buildbot import pbutil
 from buildbot.process.properties import Properties
 from buildbot.schedulers import base
-from buildbot.util import bytes2NativeString
 from buildbot.util import bytes2unicode
 from buildbot.util import netstrings
 from buildbot.util.maildir import MaildirService
@@ -163,7 +158,7 @@ class Try_Jobdir(TryBase):
             raise BadJobfile("unable to parse netstrings")
         if not p.strings:
             raise BadJobfile("could not find any complete netstrings")
-        ver = bytes2NativeString(p.strings.pop(0))
+        ver = bytes2unicode(p.strings.pop(0))
 
         v1_keys = ['jobid', 'branch', 'baserev', 'patch_level', 'patch_body']
         v2_keys = v1_keys + ['repository', 'project']
@@ -176,7 +171,7 @@ class Try_Jobdir(TryBase):
 
         def extract_netstrings(p, keys):
             for i, key in enumerate(keys):
-                parsed_job[key] = bytes2NativeString(p.strings[i])
+                parsed_job[key] = bytes2unicode(p.strings[i])
 
         def postprocess_parsed_job():
             # apply defaults and handle type casting
@@ -190,12 +185,12 @@ class Try_Jobdir(TryBase):
         if ver <= "4":
             i = int(ver) - 1
             extract_netstrings(p, keys[i])
-            parsed_job['builderNames'] = [bytes2NativeString(s)
+            parsed_job['builderNames'] = [bytes2unicode(s)
                                           for s in p.strings[len(keys[i]):]]
             postprocess_parsed_job()
         elif ver == "5":
             try:
-                data = bytes2NativeString(p.strings[0])
+                data = bytes2unicode(p.strings[0])
                 parsed_job = json.loads(data)
             except ValueError:
                 raise BadJobfile("unable to parse JSON")
@@ -264,11 +259,11 @@ class RemoteBuildSetStatus(pb.Referenceable):
     @defer.inlineCallbacks
     def remote_getBuildRequests(self):
         brids = dict()
-        for builderid, brid in iteritems(self.brids):
+        for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
         defer.returnValue([(n, RemoteBuildRequest(self.master, n, brid))
-                           for n, brid in iteritems(brids)])
+                           for n, brid in brids.items()])
 
 
 class RemoteBuildRequest(pb.Referenceable):

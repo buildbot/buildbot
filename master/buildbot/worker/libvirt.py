@@ -14,9 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright 2010 Isotoma Limited
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
 
 import os
 

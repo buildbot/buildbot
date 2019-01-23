@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import abc
 import copy
 
@@ -45,7 +41,7 @@ class HttpStatusPushBase(service.BuildbotService):
         self.verify = verify
         self.builders = builders
         self.neededDetails = copy.copy(self.neededDetails)
-        for k, v in iteritems(kwargs):
+        for k, v in kwargs.items():
             if k.startswith("want"):
                 self.neededDetails[k] = v
 

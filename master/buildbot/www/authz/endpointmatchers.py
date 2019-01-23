@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import string_types
 
 import inspect
@@ -22,7 +20,7 @@ import inspect
 from twisted.internet import defer
 
 from buildbot.data.exceptions import InvalidPathError
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 
 
 class EndpointMatcherBase(object):
@@ -111,7 +109,7 @@ class AnyControlEndpointMatcher(EndpointMatcherBase):
         EndpointMatcherBase.__init__(self, **kwargs)
 
     def match(self, ep, action="", options=None):
-        if bytes2NativeString(action).lower() != "get":
+        if bytes2unicode(action).lower() != "get":
             return defer.succeed(Match(self.master))
         return defer.succeed(None)
 

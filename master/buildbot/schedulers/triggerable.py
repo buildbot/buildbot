@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 from twisted.internet import defer
 from twisted.python import failure
 from zope.interface import implementer
@@ -96,7 +92,7 @@ class Triggerable(base.BaseScheduler):
         # and errback any outstanding deferreds
         if self._waiters:
             msg = 'Triggerable scheduler stopped before build was complete'
-            for d, brids in itervalues(self._waiters):
+            for d, brids in self._waiters.values():
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 

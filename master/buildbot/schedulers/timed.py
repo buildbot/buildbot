@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
 from future.utils import string_types
 
 from twisted.internet import defer
@@ -155,7 +152,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
 
         # if onlyIfChanged is True, then we will skip this build if no
         # important changes have occurred since the last invocation
-        if self.onlyIfChanged and not any(itervalues(classifications)):
+        if self.onlyIfChanged and not any(classifications.values()):
             log.msg(("%s scheduler <%s>: skipping build " +
                      "- No important changes") %
                     (self.__class__.__name__, self.name))
@@ -383,7 +380,7 @@ class NightlyTriggerable(NightlyBase):
                                          lastTrigger[3])
                 # handle state from before Buildbot-0.9.0
                 elif isinstance(lastTrigger[0], dict):
-                    self._lastTrigger = (list(itervalues(lastTrigger[0])),
+                    self._lastTrigger = (list(lastTrigger[0].values()),
                                          properties.Properties.fromDict(
                                              lastTrigger[1]),
                                          None,

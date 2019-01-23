@@ -13,8 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
 from future.utils import text_type
 
 import datetime
@@ -28,7 +26,6 @@ from twisted.internet import task
 from twisted.trial import unittest
 
 from buildbot import util
-from buildbot.util import PY3
 
 
 class formatInterval(unittest.TestCase):
@@ -286,28 +283,6 @@ class Ascii2Unicode(unittest.TestCase):
 
         self.assertEqual(type(rv1), text_type)
         self.assertEqual(type(rv2), text_type)
-
-    def test_bytes2NativeString(self):
-        rv = util.bytes2NativeString(b'abcd')
-        self.assertEqual((rv, type(rv)), ('abcd', str))
-        rv = util.bytes2NativeString('efgh')
-        self.assertEqual((rv, type(rv)), ('efgh', str))
-
-        if PY3:
-            self.assertNotEqual(type('abcd'), type(b'abcd'))
-            self.assertNotEqual(str, bytes)
-        else:
-            self.assertEqual(type('abcd'), type(b'abcd'))
-            self.assertEqual(str, bytes)
-
-
-class Unicode2NativeString(unittest.TestCase):
-
-    def test_unicode2NativeString(self):
-        rv = util.unicode2NativeString(u'abcd')
-        self.assertEqual((rv, type(rv)), ('abcd', str))
-        rv = util.unicode2NativeString('efgh')
-        self.assertEqual((rv, type(rv)), ('efgh', str))
 
 
 class StringToBoolean(unittest.TestCase):

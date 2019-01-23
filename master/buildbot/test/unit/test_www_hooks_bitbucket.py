@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 # Copyright Manba Team
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet.defer import inlineCallbacks
 from twisted.trial import unittest
 
