@@ -13,9 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
 from future.utils import text_type
 
 import os
@@ -120,7 +117,7 @@ class MasterShellCommand(BuildStep):
         else:
             assert isinstance(self.env, dict)
             env = self.env
-            for key, v in iteritems(self.env):
+            for key, v in self.env.items():
                 if isinstance(v, list):
                     # Need to do os.pathsep translation.  We could either do that
                     # by replacing all incoming ':'s with os.pathsep, or by
@@ -135,7 +132,7 @@ class MasterShellCommand(BuildStep):
             def subst(match):
                 return os.environ.get(match.group(1), "")
             newenv = {}
-            for key, v in iteritems(env):
+            for key, v in env.items():
                 if v is not None:
                     if not isinstance(v, (text_type, bytes)):
                         raise RuntimeError("'env' values must be strings or "
@@ -206,7 +203,7 @@ class SetProperties(BuildStep):
     def run(self):
         if self.properties is None:
             return defer.succeed(SUCCESS)
-        for k, v in iteritems(self.properties):
+        for k, v in self.properties.items():
             self.setProperty(k, v, self.name, runtime=True)
         return defer.succeed(SUCCESS)
 

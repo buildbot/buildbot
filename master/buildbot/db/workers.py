@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import sqlalchemy as sa
 
 from twisted.internet import defer
@@ -210,7 +206,7 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
                     continue
                 rv[row.workerid]['connected_to'].append(row.masterid)
 
-            return list(itervalues(rv))
+            return list(rv.values())
         return self.db.pool.do(thd)
 
     # returns a Deferred that returns None

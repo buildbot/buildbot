@@ -16,9 +16,6 @@
 # this class is known to contain cruft and will be looked at later, so
 # no current implementation utilizes it aside from scripts.runner.
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import mock
 
 from twisted.internet import defer

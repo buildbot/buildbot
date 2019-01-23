@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import mock
 
 from twisted.internet import defer
@@ -37,7 +33,6 @@ from buildbot.steps import shell
 from buildbot.test.fake import fakedb
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import fakeprotocol
-from buildbot.util import unicode2NativeString
 from buildbot.worker.base import Worker
 
 
@@ -98,7 +93,7 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
     @defer.inlineCallbacks
     def run(self):
         _log = yield self.addLog('xx')
-        output_str = unicode2NativeString(u'\N{CENT SIGN}', encoding='latin-1')
+        output_str = u'\N{CENT SIGN}'
         yield _log.addStdout(output_str)
         yield _log.finish()
         defer.returnValue(results.SUCCESS)
@@ -231,7 +226,7 @@ class RunSteps(unittest.TestCase):
 
     def assertLogs(self, exp_logs):
         got_logs = {}
-        for id, l in iteritems(self.master.data.updates.logs):
+        for id, l in self.master.data.updates.logs.items():
             self.assertTrue(l['finished'])
             got_logs[l['name']] = ''.join(l['content'])
         self.assertEqual(got_logs, exp_logs)

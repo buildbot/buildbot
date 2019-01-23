@@ -17,10 +17,6 @@
 """Base classes handy for use with PB clients.
 """
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import protocol
 from twisted.python import log
 from twisted.spread import pb
@@ -172,6 +168,6 @@ def decode(data, encoding='utf-8', errors='strict'):
         return bytes2unicode(data, encoding, errors)
     if data_type in (dict, list, tuple):
         if data_type == dict:
-            data = iteritems(data)
+            data = data.items()
         return data_type(map(decode, data))
     return data

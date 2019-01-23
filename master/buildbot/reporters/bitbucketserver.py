@@ -13,9 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import urlparse
+from urllib.parse import urlparse
 
 from twisted.internet import defer
 from twisted.python import log
@@ -25,10 +23,9 @@ from buildbot.process.properties import Properties
 from buildbot.process.results import SUCCESS
 from buildbot.reporters import http
 from buildbot.reporters import notifier
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import unicode2bytes
-from buildbot.util import unicode2NativeString
 
 # Magic words understood by Bitbucket Server REST API
 INPROGRESS = 'INPROGRESS'
@@ -94,19 +91,13 @@ class BitbucketServerStatusPush(http.HttpStatusPushBase):
 
         for sourcestamp in sourcestamps:
             try:
-                sha = unicode2NativeString(sourcestamp['revision'])
+                sha = sourcestamp['revision']
 
                 if sha is None:
                     log.msg("Unable to get the commit hash")
                     continue
 
-                key = unicode2NativeString(key)
-                state = unicode2NativeString(state)
-                url = unicode2NativeString(build['url'])
-                key = unicode2NativeString(key)
-                description = unicode2NativeString(description)
-                context = unicode2NativeString(context)
-
+                url = build['url']
                 res = yield self.createStatus(
                     sha=sha,
                     state=state,
@@ -174,7 +165,7 @@ class BitbucketServerPRCommentPush(notifier.NotifierBase):
         path = urlparse(unicode2bytes(pr_url)).path
         payload = {'text': text}
         return self._http.post(COMMENT_API_URL.format(
-            path=bytes2NativeString(path)), json=payload)
+            path=bytes2unicode(path)), json=payload)
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type=None, builderName=None,

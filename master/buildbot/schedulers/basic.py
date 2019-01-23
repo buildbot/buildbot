@@ -13,11 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
-
 from collections import defaultdict
 
 from twisted.internet import defer
@@ -121,7 +116,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
         @util.deferredLocked(self._stable_timers_lock)
         def cancel_timers():
-            for timer in itervalues(self._stable_timers):
+            for timer in self._stable_timers.values():
                 if timer:
                     timer.cancel()
             self._stable_timers.clear()
@@ -170,7 +165,7 @@ class BaseBasicScheduler(base.BaseScheduler):
             yield self.master.db.schedulers.getChangeClassifications(self.serviceid)
 
         # call gotChange for each change, after first fetching it from the db
-        for changeid, important in iteritems(classifications):
+        for changeid, important in classifications.items():
             chdict = yield self.master.db.changes.getChange(changeid)
 
             if not chdict:

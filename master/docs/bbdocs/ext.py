@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from docutils import nodes
 from docutils.parsers.rst import Directive
 from sphinx import addnodes
@@ -146,7 +142,7 @@ class BBIndex(Index):
     def generate(self, docnames=None):
         content = {}
         idx_targets = self.domain.data['targets'].get(self.name, {})
-        for name, (docname, targetname) in iteritems(idx_targets):
+        for name, (docname, targetname) in idx_targets.items():
             letter = name[0].upper()
             content.setdefault(letter, []).append(
                 (name, 0, docname, targetname, '', '', ''))

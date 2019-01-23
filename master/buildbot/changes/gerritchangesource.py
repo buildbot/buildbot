@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import datetime
 import json
 
@@ -29,7 +25,7 @@ from buildbot import config
 from buildbot import util
 from buildbot.changes import base
 from buildbot.changes.filter import ChangeFilter
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 
 
@@ -93,7 +89,7 @@ class GerritChangeSourceBase(base.ChangeSource):
 
     def lineReceived(self, line):
         try:
-            event = json.loads(bytes2NativeString(line))
+            event = json.loads(bytes2unicode(line))
         except ValueError:
             msg = "bad json line: %s"
             log.msg(msg % line)
@@ -116,7 +112,7 @@ class GerritChangeSourceBase(base.ChangeSource):
 
         # flatten the event dictionary, for easy access with WithProperties
         def flatten(properties, base, event):
-            for k, v in iteritems(event):
+            for k, v in event.items():
                 name = "%s.%s" % (base, k)
                 if name in self.EVENT_PROPERTY_BLACKLIST:
                     continue

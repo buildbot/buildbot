@@ -15,10 +15,6 @@
 # Portions Copyright Dan Radez <dradez+buildbot@redhat.com>
 # Portions Copyright Steve 'Ashcrow' Milner <smilner+buildbot@redhat.com>
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 import os
 
 from buildbot import config
@@ -92,7 +88,7 @@ class RpmBuild(ShellCommand):
 
         if define is None:
             define = {}
-        for k, v in iteritems(define):
+        for k, v in define.items():
             self.base_rpmbuild += " --define \"{} {}\"".format(k, v)
 
         self.specfile = specfile
@@ -132,7 +128,7 @@ class RpmBuild(ShellCommand):
 
         # The unit tests expect a certain order, so we sort the dict to keep
         # format the same every time
-        for k, v in sorted(iteritems(rpm_extras_dict)):
+        for k, v in sorted(rpm_extras_dict.items()):
             self.rpmbuild = '{0} --define "{1} {2}"'.format(
                 self.rpmbuild, k, v)
 

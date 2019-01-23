@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from datetime import datetime
 from fnmatch import fnmatch
 
@@ -44,7 +40,7 @@ link_urls = {
 class PullRequestMixin(object):
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
-            for k, v in iteritems(info_dict):
+            for k, v in info_dict.items():
                 name = ".".join([base, k])
                 if isinstance(v, dict):
                     flatten(properties, name, v)

@@ -13,13 +13,8 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import quote as urlquote
-from future.utils import iteritems
-from future.utils import itervalues
-
 import os
+from urllib.parse import quote as urlquote
 
 from twisted.internet import defer
 from twisted.python import log
@@ -32,7 +27,7 @@ from buildbot.status import builder
 from buildbot.status import buildrequest
 from buildbot.status import buildset
 from buildbot.util import bbcollections
-from buildbot.util import bytes2NativeString
+from buildbot.util import bytes2unicode
 from buildbot.util import service
 from buildbot.util.eventual import eventually
 
@@ -246,7 +241,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         return self.botmaster.builders[name].builder_status
 
     def getWorkerNames(self):
-        return list(iteritems(self.workers.workers))
+        return list(self.workers.workers.items())
 
     def getWorker(self, workername):
         return self.workers.workers[workername].worker_status
@@ -348,8 +343,8 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builder_status.setTags(tags)
         builder_status.description = description
         builder_status.master = self.master
-        builder_status.basedir = os.path.join(bytes2NativeString(self.basedir),
-                                              bytes2NativeString(basedir))
+        builder_status.basedir = os.path.join(bytes2unicode(self.basedir),
+                                              bytes2unicode(basedir))
         builder_status.name = name  # it might have been updated
         builder_status.status = self
 
@@ -391,7 +386,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         builderid = msg['builderid']
         buildername = None
         # convert builderid to buildername
-        for b in itervalues(self.botmaster.builders):
+        for b in self.botmaster.builders.values():
             if builderid == (yield b.getBuilderId()):
                 buildername = b.name
                 break

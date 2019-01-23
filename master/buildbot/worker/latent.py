@@ -14,10 +14,6 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import itervalues
-
 import random
 import string
 
@@ -79,7 +75,7 @@ class AbstractLatentWorker(AbstractWorker):
     @property
     def building(self):
         # A LatentWorkerForBuilder will only be busy if it is building.
-        return {wfb for wfb in itervalues(self.workerforbuilders)
+        return {wfb for wfb in self.workerforbuilders.values()
                 if wfb.isBusy()}
 
     def failed_to_start(self, instance_id, instance_state):

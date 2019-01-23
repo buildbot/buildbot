@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-
 from twisted.internet import defer
 from twisted.internet import task
 from twisted.trial import unittest
@@ -189,7 +185,7 @@ class Tests(interfaces.InterfaceTests):
         ssdict = yield self.db.sourcestamps.getSourceStamp(234)
 
         validation.verifyDbDict(self, 'ssdict', ssdict)
-        self.assertEqual(dict((k, v) for k, v in iteritems(ssdict)
+        self.assertEqual(dict((k, v) for k, v in ssdict.items()
                               if k.startswith('patch_')),
                          dict(patch_body=b'hello, world',
                               patch_level=3,

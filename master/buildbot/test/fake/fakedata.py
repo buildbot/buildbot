@@ -13,10 +13,6 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.utils import iteritems
-from future.utils import itervalues
 from future.utils import text_type
 
 import json
@@ -62,7 +58,7 @@ class FakeUpdates(service.AsyncService):
 
     def assertProperties(self, sourced, properties):
         self.testcase.assertIsInstance(properties, dict)
-        for k, v in iteritems(properties):
+        for k, v in properties.items():
             self.testcase.assertIsInstance(k, text_type)
             if sourced:
                 self.testcase.assertIsInstance(v, tuple)
@@ -237,7 +233,7 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         if name not in self.schedulerIds:
             self.schedulerIds[name] = max(
-                [0] + list(itervalues(self.schedulerIds))) + 1
+                [0] + list(self.schedulerIds.values())) + 1
         return defer.succeed(self.schedulerIds[name])
 
     def findChangeSourceId(self, name):
@@ -245,7 +241,7 @@ class FakeUpdates(service.AsyncService):
                               validation.StringValidator())
         if name not in self.changesourceIds:
             self.changesourceIds[name] = max(
-                [0] + list(itervalues(self.changesourceIds))) + 1
+                [0] + list(self.changesourceIds.values())) + 1
         return defer.succeed(self.changesourceIds[name])
 
     def findBuilderId(self, name):

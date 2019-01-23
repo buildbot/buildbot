@@ -14,9 +14,6 @@
 # Copyright Buildbot Team Members
 # Portions Copyright 2013 Bad Dog Consulting
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 import platform
 import textwrap
 

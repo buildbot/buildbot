@@ -13,16 +13,12 @@
 #
 # Copyright Buildbot Team Members
 
-from __future__ import absolute_import
-from __future__ import print_function
-from future.moves.urllib.parse import parse_qs
-from future.moves.urllib.parse import urlencode
-from future.utils import iteritems
-
 import json
 import re
 import textwrap
 from posixpath import join
+from urllib.parse import parse_qs
+from urllib.parse import urlencode
 
 import jinja2
 import requests
@@ -164,7 +160,7 @@ class OAuth2Auth(auth.AuthBase):
                 content = json.loads(responseContent)
             except ValueError:
                 content = parse_qs(responseContent)
-                for k, v in iteritems(content):
+                for k, v in content.items():
                     content[k] = v[0]
             except TypeError:
                 content = responseContent
