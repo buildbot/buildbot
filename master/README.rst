@@ -3,7 +3,7 @@ Buildbot: The Continuous Integration Framework
 
 :Site: https://buildbot.net
 :Original author: Brian Warner <warner-buildbot @ lothar . com>
-:Current maintainer: Dustin J. Mitchell <dustin@buildbot.net>
+:Current maintainer: `The Botherders <https://github.com/buildbot/botherders>`_.
 
 .. contents::
    :local:
@@ -56,7 +56,8 @@ Please send your patches to https://github.com/buildbot/buildbot/
 Support
 -------
 
-Please send questions, bugs, patches, etc, to the buildbot-devel mailing list reachable through https://buildbot.net/, so that everyone can see them.
+Please send questions, file bugs, etc, on the Buildbot Github project https://github.com/buildbot/buildbot/issues.
+Alternatively, write to the buildbot-devel mailing list reachable through https://buildbot.net/.
 
 Copying
 -------
