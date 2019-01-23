@@ -38,7 +38,7 @@ setup_www_plugin(
     packages=['buildbot_badges'],
     install_requires=[
         'klein',
-        'CairoSVG==1.0.22',  # cairoSVG 2+ is not py2 compatible
+        'CairoSVG',
         'cairocffi', 'Jinja2'
     ],
     package_data={
