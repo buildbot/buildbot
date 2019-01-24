@@ -128,7 +128,7 @@ class LogWatcher(LineOnlyReceiver):
             self.in_reconfig = True
 
         if self.in_reconfig:
-            print(line)
+            print(line.decode())
 
         # certain lines indicate progress, so we "cancel" the timeout
         # and it will get re-added when it fires
