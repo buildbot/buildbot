@@ -185,7 +185,7 @@ class AbstractLatentWorker(AbstractWorker):
         return self._substantiation_failed(defer.TimeoutError())
 
     def _substantiation_failed(self, failure):
-        if self.substantiation_build:
+        if self._substantiation_notifier:
             self.substantiation_build = None
             self._substantiation_notifier.notify(failure)
         d = self.insubstantiate()
