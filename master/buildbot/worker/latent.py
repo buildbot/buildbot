@@ -103,7 +103,6 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg("substantiating worker %s" % (wfb,))
 
         if self.conn is not None:
-            self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
             return defer.succeed(True)
         if not self._substantiation_notifier:
