@@ -54,7 +54,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         self.setupStep(
             shell.ShellCommand(command="echo hello", doStepIf=False))
         self.expectOutcome(result=SKIPPED,
-                           state_string=u"'echo hello' (skipped)")
+                           state_string="'echo hello' (skipped)")
         return self.runStep()
 
     def test_constructor_args_kwargs(self):
@@ -83,7 +83,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_getLegacySummary_from_short_command(self):
         step = shell.ShellCommand(workdir='build', command="true")
         step.rendered = True
-        self.assertLegacySummary(step, u"'true'")
+        self.assertLegacySummary(step, "'true'")
 
     def test_getLegacySummary_from_short_command_list(self):
         step = shell.ShellCommand(workdir='build', command=["true"])
@@ -93,42 +93,42 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
     def test_getLegacySummary_from_med_command(self):
         step = shell.ShellCommand(command="echo hello")
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello'")
+        self.assertLegacySummary(step, "'echo hello'")
 
     def test_getLegacySummary_from_med_command_list(self):
         step = shell.ShellCommand(command=["echo", "hello"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello'")
+        self.assertLegacySummary(step, "'echo hello'")
 
     def test_getLegacySummary_from_long_command(self):
         step = shell.ShellCommand(command="this is a long command")
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_long_command_list(self):
         step = shell.ShellCommand(command="this is a long command".split())
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list(self):
         step = shell.ShellCommand(command=["this", ["is", "a"], "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_tuples(self):
         step = shell.ShellCommand(command=["this", ("is", "a"), "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list_empty(self):
         step = shell.ShellCommand(command=["this", [], ["is", "a"], "nested"])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_from_nested_command_list_deep(self):
         step = shell.ShellCommand(command=[["this", [[["is", ["a"]]]]]])
         step.rendered = True
-        self.assertLegacySummary(step, u"'this is ...'")
+        self.assertLegacySummary(step, "'this is ...'")
 
     def test_getLegacySummary_custom(self):
         step = shell.ShellCommand(command="echo hello",
@@ -141,7 +141,7 @@ class TestShellCommandExecution(steps.BuildStepMixin, unittest.TestCase, configm
         step = shell.ShellCommand(
             command="echo hello", descriptionSuffix="suffix")
         step.rendered = True
-        self.assertLegacySummary(step, u"'echo hello' suffix")
+        self.assertLegacySummary(step, "'echo hello' suffix")
 
     def test_getLegacySummary_unrendered_WithProperties(self):
         step = shell.ShellCommand(command=properties.WithProperties(''))
@@ -389,7 +389,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
+        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
         return self.runStep()
 
     def test_renderable_workdir(self):
@@ -404,7 +404,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "abcdef")  # note: stripped
-        self.expectLogfile('property changes', r"res: " + repr(u'abcdef'))
+        self.expectLogfile('property changes', r"res: " + repr('abcdef'))
         return self.runStep()
 
     def test_run_property_no_strip(self):
@@ -419,7 +419,7 @@ class SetPropertyFromCommand(steps.BuildStepMixin, unittest.TestCase):
         self.expectOutcome(result=SUCCESS,
                            state_string="property 'res' set")
         self.expectProperty("res", "\n\nabcdef\n")
-        self.expectLogfile('property changes', r"res: " + repr(u'\n\nabcdef\n'))
+        self.expectLogfile('property changes', r"res: " + repr('\n\nabcdef\n'))
         return self.runStep()
 
     def test_run_failure(self):
@@ -848,7 +848,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             server-src.* : BBB
             """).strip()
         # note that this uses the unicode smart-quotes that gcc loves so much
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             make: Entering directory \u2019amar-src\u2019
             amar.c:164: warning: XXX
             amar.c:165: warning: YYY
@@ -875,7 +875,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  directoryEnterPattern="^IN: (.*)",
                                                  directoryLeavePattern="^OUT:")
         supps_file = "dir1/dir2/abc.c : .*"
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             IN: dir1
             IN: decoy
             OUT: decoy
@@ -891,13 +891,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  suppressionFile='supps',
                                                  warningExtractor=warningExtractor)
         supps_file = "abc.c:.*:100-199\ndef.c:.*:22"
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -930,12 +930,12 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
             return line.split(':', 2)
         step = MyWCSC(command=['make'], suppressionFile='supps',
                       warningExtractor=warningExtractor)
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -953,13 +953,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
         step = shell.WarningCountingShellCommand(command=['make'],
                                                  suppressionList=supps,
                                                  warningExtractor=warningExtractor)
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)
@@ -979,13 +979,13 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
                                                  suppressionList=properties.Property("suppressionsList"),
                                                  warningExtractor=warningExtractor)
 
-        stdout = textwrap.dedent(u"""\
+        stdout = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:150: warning: unseen
             def.c:22: warning: unseen
             abc.c:200: warning: seen 2
             """)
-        exp_warning_log = textwrap.dedent(u"""\
+        exp_warning_log = textwrap.dedent("""\
             abc.c:99: warning: seen 1
             abc.c:200: warning: seen 2
             """)

@@ -34,8 +34,8 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         return self.db.insertTestData([
-            fakedb.Builder(id=1, name=u'buildera'),
-            fakedb.Builder(id=2, name=u'builderb'),
+            fakedb.Builder(id=1, name='buildera'),
+            fakedb.Builder(id=2, name='builderb'),
             fakedb.Master(id=13),
             fakedb.BuilderMaster(id=1, builderid=2, masterid=13),
         ])
@@ -48,7 +48,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builder = yield self.callGet(('builders', 2))
 
         self.validateData(builder)
-        self.assertEqual(builder['name'], u'builderb')
+        self.assertEqual(builder['name'], 'builderb')
 
     @defer.inlineCallbacks
     def test_get_missing(self):
@@ -67,7 +67,7 @@ class BuilderEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         builder = yield self.callGet(('masters', 13, 'builders', 2))
 
         self.validateData(builder)
-        self.assertEqual(builder['name'], u'builderb')
+        self.assertEqual(builder['name'], 'builderb')
 
     @defer.inlineCallbacks
     def test_get_existing_with_different_master(self):
@@ -90,13 +90,13 @@ class BuildersEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         return self.db.insertTestData([
-            fakedb.Builder(id=1, name=u'buildera'),
-            fakedb.Builder(id=2, name=u'builderb'),
-            fakedb.Builder(id=3, name=u'builderTagA'),
-            fakedb.Builder(id=4, name=u'builderTagB'),
-            fakedb.Builder(id=5, name=u'builderTagAB'),
-            fakedb.Tag(id=3, name=u"tagA"),
-            fakedb.Tag(id=4, name=u"tagB"),
+            fakedb.Builder(id=1, name='buildera'),
+            fakedb.Builder(id=2, name='builderb'),
+            fakedb.Builder(id=3, name='builderTagA'),
+            fakedb.Builder(id=4, name='builderTagB'),
+            fakedb.Builder(id=5, name='builderTagAB'),
+            fakedb.Tag(id=3, name="tagA"),
+            fakedb.Tag(id=4, name="tagB"),
             fakedb.BuildersTags(builderid=3, tagid=3),
             fakedb.BuildersTags(builderid=4, tagid=4),
             fakedb.BuildersTags(builderid=5, tagid=3),
@@ -203,17 +203,17 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
     @defer.inlineCallbacks
     def test_updateBuilderList(self):
         # add one builder master
-        yield self.rtype.updateBuilderList(13, [u'somebuilder'])
+        yield self.rtype.updateBuilderList(13, ['somebuilder'])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders())),
                          sorted([
                              dict(id=1, masterids=[13],
                                   name='somebuilder', description=None, tags=[]),
                          ]))
         self.master.mq.assertProductions([(('builders', '1', 'started'),
-                                           {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'})])
+                                           {'builderid': 1, 'masterid': 13, 'name': 'somebuilder'})])
 
         # add another
-        yield self.rtype.updateBuilderList(13, [u'somebuilder', u'another'])
+        yield self.rtype.updateBuilderList(13, ['somebuilder', 'another'])
 
         def builderKey(builder):
             return builder['id']
@@ -226,10 +226,10 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                                   name='another', description=None, tags=[]),
                          ], key=builderKey))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
-                                           {'builderid': 2, 'masterid': 13, 'name': u'another'})])
+                                           {'builderid': 2, 'masterid': 13, 'name': 'another'})])
 
         # add one for another master
-        yield self.rtype.updateBuilderList(14, [u'another'])
+        yield self.rtype.updateBuilderList(14, ['another'])
         self.assertEqual(sorted((yield self.master.db.builders.getBuilders()), key=builderKey),
                          sorted([
                              dict(id=1, masterids=[13],
@@ -238,7 +238,7 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                                   name='another', description=None, tags=[]),
                          ], key=builderKey))
         self.master.mq.assertProductions([(('builders', '2', 'started'),
-                                           {'builderid': 2, 'masterid': 14, 'name': u'another'})])
+                                           {'builderid': 2, 'masterid': 14, 'name': 'another'})])
 
         # remove both for the first master
         yield self.rtype.updateBuilderList(13, [])
@@ -251,9 +251,9 @@ class Builder(interfaces.InterfaceTests, unittest.TestCase):
                          ], key=builderKey))
         self.master.mq.assertProductions([
             (('builders', '1', 'stopped'),
-             {'builderid': 1, 'masterid': 13, 'name': u'somebuilder'}),
+             {'builderid': 1, 'masterid': 13, 'name': 'somebuilder'}),
             (('builders', '2', 'stopped'),
-             {'builderid': 2, 'masterid': 13, 'name': u'another'}),
+             {'builderid': 2, 'masterid': 13, 'name': 'another'}),
         ])
 
     @defer.inlineCallbacks

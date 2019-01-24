@@ -377,7 +377,7 @@ def stripUrlPassword(url):
 
 def join_list(maybeList):
     if isinstance(maybeList, (list, tuple)):
-        return u' '.join(bytes2unicode(s) for s in maybeList)
+        return ' '.join(bytes2unicode(s) for s in maybeList)
     return bytes2unicode(maybeList)
 
 

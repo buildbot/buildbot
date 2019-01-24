@@ -69,7 +69,7 @@ class LogChunksJanitorTests(steps.BuildStepMixin, unittest.TestCase, configmixin
             LogChunksJanitor(logHorizon=timedelta(weeks=1)))
         self.master.db.logs.deleteOldLogChunks = mock.Mock(return_value=3)
         self.expectOutcome(result=SUCCESS,
-                           state_string=u"deleted 3 logchunks")
+                           state_string="deleted 3 logchunks")
         yield self.runStep()
         expected_timestamp = datetime2epoch(datetime.datetime(year=2016, month=12, day=25))
         self.master.db.logs.deleteOldLogChunks.assert_called_with(expected_timestamp)

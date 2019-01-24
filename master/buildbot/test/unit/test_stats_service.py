@@ -35,7 +35,7 @@ from buildbot.test.util import steps
 
 class TestStatsServicesBase(unittest.TestCase):
 
-    BUILDER_NAMES = [u'builder1', u'builder2']
+    BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [1, 2]
 
     def setUp(self):
@@ -214,7 +214,7 @@ class TestStatsServicesConsumers(steps.BuildStepMixin, TestStatsServicesBase):
             started_at=build['started_at'],
             complete=True,
             complete_at=build['complete_at'],
-            state_string=u'',
+            state_string='',
             results=0,
         )
 

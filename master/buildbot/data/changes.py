@@ -124,8 +124,8 @@ class Change(base.ResourceType):
     @base.updateMethod
     @defer.inlineCallbacks
     def addChange(self, files=None, comments=None, author=None, revision=None,
-                  when_timestamp=None, branch=None, category=None, revlink=u'',
-                  properties=None, repository=u'', codebase=None, project=u'',
+                  when_timestamp=None, branch=None, category=None, revlink='',
+                  properties=None, repository='', codebase=None, project='',
                   src=None, _reactor=reactor):
         metrics.MetricCountEvent.log("added_changes", 1)
 
@@ -133,7 +133,7 @@ class Change(base.ResourceType):
             properties = {}
         # add the source to the properties
         for k in properties:
-            properties[k] = (properties[k], u'Change')
+            properties[k] = (properties[k], 'Change')
 
         # get a user id
         if src:
@@ -145,7 +145,7 @@ class Change(base.ResourceType):
 
         if not revlink and revision and repository and callable(self.master.config.revlink):
             # generate revlink from revision and repository using the configured callable
-            revlink = self.master.config.revlink(revision, repository) or u''
+            revlink = self.master.config.revlink(revision, repository) or ''
 
         if callable(category):
             pre_change = self.master.config.preChangeGenerator(author=author,
@@ -177,7 +177,7 @@ class Change(base.ResourceType):
             codebase = self.master.config.codebaseGenerator(pre_change)
             codebase = text_type(codebase)
         else:
-            codebase = codebase or u''
+            codebase = codebase or ''
 
         # add the Change to the database
         changeid = yield self.master.db.changes.addChange(
@@ -202,7 +202,7 @@ class Change(base.ResourceType):
         self.produceEvent(change, 'new')
 
         # log, being careful to handle funny characters
-        msg = u"added change with revision %s to database" % (revision,)
+        msg = "added change with revision %s to database" % (revision,)
         log.msg(msg.encode('utf-8', 'replace'))
 
         defer.returnValue(changeid)

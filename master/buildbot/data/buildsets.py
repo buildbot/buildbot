@@ -136,7 +136,7 @@ class Buildset(base.ResourceType):
 
     @base.updateMethod
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
                     parent_buildid=None, parent_relationship=None,
                     _reactor=reactor):

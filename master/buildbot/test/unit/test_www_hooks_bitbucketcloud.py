@@ -29,7 +29,7 @@ from buildbot.www.hooks.bitbucketcloud import _HEADER_EVENT
 
 _CT_JSON = b'application/json'
 
-pushJsonPayload = u"""
+pushJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -85,7 +85,7 @@ pushJsonPayload = u"""
 }
 """
 
-pullRequestCreatedJsonPayload = u"""
+pullRequestCreatedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -184,7 +184,7 @@ pullRequestCreatedJsonPayload = u"""
 }
 """
 
-pullRequestUpdatedJsonPayload = u"""
+pullRequestUpdatedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -283,7 +283,7 @@ pullRequestUpdatedJsonPayload = u"""
 }
 """
 
-pullRequestRejectedJsonPayload = u"""
+pullRequestRejectedJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -382,7 +382,7 @@ pullRequestRejectedJsonPayload = u"""
 }
 """
 
-pullRequestFulfilledJsonPayload = u"""
+pullRequestFulfilledJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -481,7 +481,7 @@ pullRequestFulfilledJsonPayload = u"""
 }
 """
 
-deleteTagJsonPayload = u"""
+deleteTagJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -530,7 +530,7 @@ deleteTagJsonPayload = u"""
 }
 """
 
-deleteBranchJsonPayload = u"""
+deleteBranchJsonPayload = """
 {
     "actor": {
         "username": "John",
@@ -579,7 +579,7 @@ deleteBranchJsonPayload = u"""
 }
 """
 
-newTagJsonPayload = u"""
+newTagJsonPayload = """
 {
     "actor": {
         "username": "John",

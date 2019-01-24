@@ -159,19 +159,19 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
     def describe(self, done=False):
         if self.stopped and not self.rendered:
-            return u"stopped early"
+            return "stopped early"
         assert(self.rendered)
         desc = self._describe(done)
         if not desc:
             return None
         if self.descriptionSuffix:
-            desc = desc + u' ' + join_list(self.descriptionSuffix)
+            desc = desc + ' ' + join_list(self.descriptionSuffix)
         return desc
 
     def getCurrentSummary(self):
         cmdsummary = self._getLegacySummary(False)
         if cmdsummary:
-            return {u'step': cmdsummary}
+            return {'step': cmdsummary}
         return super(ShellCommand, self).getCurrentSummary()
 
     def getResultSummary(self):
@@ -179,8 +179,8 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
         if cmdsummary:
             if self.results != SUCCESS:
-                cmdsummary += u' (%s)' % Results[self.results]
-            return {u'step': cmdsummary}
+                cmdsummary += ' (%s)' % Results[self.results]
+            return {'step': cmdsummary}
 
         return super(ShellCommand, self).getResultSummary()
 
@@ -208,7 +208,7 @@ class ShellCommand(buildstep.LoggingBuildStep):
 
             # add the descriptionSuffix, if one was given
             if self.descriptionSuffix:
-                rv = rv + u' ' + join_list(self.descriptionSuffix)
+                rv = rv + ' ' + join_list(self.descriptionSuffix)
 
             return rv
 
@@ -392,8 +392,8 @@ class WarningCountingShellCommand(ShellCommand, CompositeStepMixin):
     warnCount = 0
     warningPattern = '(?i).*warning[: ].*'
     # The defaults work for GNU Make.
-    directoryEnterPattern = (u"make.*: Entering directory "
-                             u"[\u2019\"`'](.*)[\u2019'`\"]")
+    directoryEnterPattern = ("make.*: Entering directory "
+                             "[\u2019\"`'](.*)[\u2019'`\"]")
     directoryLeavePattern = "make.*: Leaving directory"
     suppressionFile = None
 

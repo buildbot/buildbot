@@ -72,7 +72,7 @@ class OldStyleCustomBuildStep(buildstep.BuildStep):
 
             _log = self.addLog('foo')
             _log.addStdout('stdout\n')
-            _log.addStdout(u'\N{SNOWMAN}\n'.encode('utf-8'))
+            _log.addStdout('\N{SNOWMAN}\n'.encode('utf-8'))
             _log.addStderr('stderr\n')
             _log.finish()
 
@@ -93,7 +93,7 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
     @defer.inlineCallbacks
     def run(self):
         _log = yield self.addLog('xx')
-        output_str = u'\N{CENT SIGN}'
+        output_str = '\N{CENT SIGN}'
         yield _log.addStdout(output_str)
         yield _log.finish()
         defer.returnValue(results.SUCCESS)
@@ -189,7 +189,7 @@ class RunSteps(unittest.TestCase):
 
         # add the buildset/request
         self.bsid, brids = yield self.master.db.buildsets.addBuildset(
-            sourcestamps=[{}], reason=u'x', properties={},
+            sourcestamps=[{}], reason='x', properties={},
             builderids=[80], waited_for=False)
 
         self.brdict = \
@@ -256,18 +256,18 @@ class RunSteps(unittest.TestCase):
         yield self.do_test_step()
 
         self.assertLogs({
-            u'compl.html': u'<blink>A very short logfile</blink>\n',
+            'compl.html': '<blink>A very short logfile</blink>\n',
             # this is one of the things that differs independently of
             # new/old style: encoding of logs and newlines
-            u'foo':
+            'foo':
             # 'stdout\n\xe2\x98\x83\nstderr\n',
-            u'ostdout\no\N{SNOWMAN}\nestderr\n',
-            u'obs':
+            'ostdout\no\N{SNOWMAN}\nestderr\n',
+            'obs':
             # if slowDB, the observer won't see anything before the end of this
             # instant step
-            u'Observer saw []\n' if slowDB else
+            'Observer saw []\n' if slowDB else
             # 'Observer saw [\'stdout\\n\', \'\\xe2\\x98\\x83\\n\']',
-            u'Observer saw [' + repr(u'stdout\n') + u", " + repr(u"\u2603\n") + u"]\n"
+            'Observer saw [' + repr('stdout\n') + ", " + repr("\u2603\n") + "]\n"
         })
 
     def test_OldStyleCustomBuildStep(self):
@@ -308,7 +308,7 @@ class RunSteps(unittest.TestCase):
             Latin1ProducingCustomBuildStep(logEncoding='latin-1'))
         yield self.do_test_step()
         self.assertLogs({
-            u'xx': u'o\N{CENT SIGN}\n',
+            'xx': 'o\N{CENT SIGN}\n',
         })
 
     @defer.inlineCallbacks

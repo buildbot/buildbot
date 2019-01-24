@@ -145,14 +145,14 @@ class BitbucketPullrequestPoller(base.PollingChangeSource):
                         author=bytes2unicode(author),
                         revision=bytes2unicode(revision),
                         revlink=bytes2unicode(revlink),
-                        comments=u'pull-request #%d: %s\n%s' % (
+                        comments='pull-request #%d: %s\n%s' % (
                             nr, title, prlink),
                         when_timestamp=datetime2epoch(updated),
                         branch=bytes2unicode(branch),
                         category=self.category,
                         project=self.project,
                         repository=bytes2unicode(repo),
-                        src=u'bitbucket',
+                        src='bitbucket',
                     )
 
     def _processChangesFailure(self, f):

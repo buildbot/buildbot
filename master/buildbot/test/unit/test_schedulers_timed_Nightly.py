@@ -207,19 +207,19 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False}),
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False}),
             ('addBuildsetForSourceStampsWithDefaults', {
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1260 + self.localtime_offset)
@@ -242,7 +242,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'builderNames': None,
                 'sourcestamps': [{'codebase': ''}],
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=300 + self.localtime_offset)
@@ -327,7 +327,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'changeids': [3, 5, 6],
                 'external_idstring': None,
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly',
                                          last_build=1500 + self.localtime_offset)
@@ -354,7 +354,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'changeids': [3],
                 'external_idstring': None,
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3)})
@@ -391,7 +391,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'changeids': [3],
                 'external_idstring': None,
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),
@@ -420,7 +420,7 @@ class Nightly(scheduler.SchedulerMixin, unittest.TestCase):
                 'changeids': [3, 4],
                 'external_idstring': None,
                 'properties': None,
-                'reason': u"The Nightly scheduler named 'test' triggered this build",
+                'reason': "The Nightly scheduler named 'test' triggered this build",
                 'waited_for': False})])
         self.db.state.assertStateByClass('test', 'Nightly', lastCodebases={
             'a': dict(revision='2345:bcd', branch=None, repository='', lastChange=3),

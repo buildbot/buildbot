@@ -87,7 +87,7 @@ class TestBase(unittest.TestCase):
 
     def test_hashColumns_unicode_ascii_match(self):
         self.assertEqual(self.comp.hashColumns('master'),
-                         self.comp.hashColumns(u'master'))
+                         self.comp.hashColumns('master'))
 
 
 class TestBaseAsConnectorComponent(unittest.TestCase,

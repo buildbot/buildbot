@@ -180,7 +180,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
         return branch
 
     def _trackerBranch(self, branch):
-        return u"refs/buildbot/{}/{}".format(urlquote(self.repourl, ''),
+        return "refs/buildbot/{}/{}".format(urlquote(self.repourl, ''),
                                         self._removeHeads(branch))
 
     @defer.inlineCallbacks
@@ -205,7 +205,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             branches = sorted(list(set(branches) & set(remote_branches)))
 
         refspecs = [
-            u'+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
+            '+{}:{}'.format(self._removeHeads(branch), self._trackerBranch(branch))
             for branch in branches
         ]
 
@@ -364,7 +364,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 branch=bytes2unicode(self._removeHeads(branch)),
                 project=self.project,
                 repository=bytes2unicode(self.repourl, encoding=self.encoding),
-                category=self.category, src=u'git')
+                category=self.category, src='git')
 
     def _isSshPrivateKeyNeededForCommand(self, command):
         commandsThatNeedKey = [

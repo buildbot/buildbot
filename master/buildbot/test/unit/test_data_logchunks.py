@@ -190,11 +190,11 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         logchunk = yield self.callGet(path)
         self.validateData(logchunk)
         if logid == 60:
-            expContent = u'\n'.join([line[1:] for line in expLines])
+            expContent = '\n'.join([line[1:] for line in expLines])
             expFilename = "stdio"
         else:
-            expContent = u'\n'.join(expLines) + '\n'
+            expContent = '\n'.join(expLines) + '\n'
             expFilename = "errors"
 
         self.assertEqual(logchunk,
-                         {'filename': expFilename, 'mime-type': u"text/plain", 'raw': expContent})
+                         {'filename': expFilename, 'mime-type': "text/plain", 'raw': expContent})

@@ -117,7 +117,7 @@ class EventResource(www.WwwTestMixin, unittest.TestCase):
         kw = self.readEvent(request)
         self.assertEqual(kw[b"event"], b"event")
         msg = json.loads(bytes2unicode(kw[b"data"]))
-        self.assertEqual(msg["key"], [u'changes', u'500', u'new'])
+        self.assertEqual(msg["key"], ['changes', '500', 'new'])
         self.assertEqual(msg["message"], json.loads(
             json.dumps(test_data_changes.Change.changeEvent, default=self._toJson)))
 

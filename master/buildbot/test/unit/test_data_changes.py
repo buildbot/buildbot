@@ -39,9 +39,9 @@ class ChangeEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.SourceStamp(id=234),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=234),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=234),
         ])
 
     def tearDown(self):
@@ -70,13 +70,13 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.setUpEndpoint()
         self.db.insertTestData([
             fakedb.SourceStamp(id=133),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=133),
+            fakedb.Change(changeid=13, branch='trunk', revision='9283',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=133),
             fakedb.SourceStamp(id=144),
-            fakedb.Change(changeid=14, branch=u'devel', revision=u'9284',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=144),
+            fakedb.Change(changeid=14, branch='devel', revision='9284',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=144),
         ])
 
     def tearDown(self):
@@ -120,27 +120,27 @@ class ChangesEndpoint(endpoint.EndpointMixin, unittest.TestCase):
 
 class Change(interfaces.InterfaceTests, unittest.TestCase):
     changeEvent = {
-        'author': u'warner',
-        'branch': u'warnerdb',
-        'category': u'devel',
-        'codebase': u'',
-        'comments': u'fix whitespace',
+        'author': 'warner',
+        'branch': 'warnerdb',
+        'category': 'devel',
+        'codebase': '',
+        'comments': 'fix whitespace',
         'changeid': 500,
-        'files': [u'master/buildbot/__init__.py'],
+        'files': ['master/buildbot/__init__.py'],
         'parent_changeids': [],
-        'project': u'Buildbot',
-        'properties': {u'foo': (20, u'Change')},
-        'repository': u'git://warner',
-        'revision': u'0e92a098b',
-        'revlink': u'http://warner/0e92a098b',
+        'project': 'Buildbot',
+        'properties': {'foo': (20, 'Change')},
+        'repository': 'git://warner',
+        'revision': '0e92a098b',
+        'revlink': 'http://warner/0e92a098b',
         'when_timestamp': 256738404,
         'sourcestamp': {
-            'branch': u'warnerdb',
-            'codebase': u'',
+            'branch': 'warnerdb',
+            'codebase': '',
             'patch': None,
-            'project': u'Buildbot',
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
+            'project': 'Buildbot',
+            'repository': 'git://warner',
+            'revision': '0e92a098b',
             'created_at': epoch2datetime(10000000),
             'ssid': 100,
         },
@@ -158,8 +158,8 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
             self.rtype.addChange)  # real
         def addChange(self, files=None, comments=None, author=None,
                       revision=None, when_timestamp=None, branch=None, category=None,
-                      revlink=u'', properties=None, repository=u'', codebase=None,
-                      project=u'', src=None):
+                      revlink='', properties=None, repository='', codebase=None,
+                      project='', src=None):
             pass
 
     @defer.inlineCallbacks
@@ -183,13 +183,13 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addChange(self):
         # src and codebase are default here
-        kwargs = dict(author=u'warner', branch=u'warnerdb',
-                      category=u'devel', comments=u'fix whitespace',
-                      files=[u'master/buildbot/__init__.py'],
-                      project=u'Buildbot', repository=u'git://warner',
-                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+        kwargs = dict(author='warner', branch='warnerdb',
+                      category='devel', comments='fix whitespace',
+                      files=['master/buildbot/__init__.py'],
+                      project='Buildbot', repository='git://warner',
+                      revision='0e92a098b', revlink='http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={'foo': 20})
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = self.changeEvent
         expectedRow = fakedb.Change(
@@ -214,36 +214,36 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         createUserObject = mock.Mock(spec=users.createUserObject)
         createUserObject.return_value = defer.succeed(123)
         self.patch(users, 'createUserObject', createUserObject)
-        kwargs = dict(author=u'warner', branch=u'warnerdb',
-                      category=u'devel', comments=u'fix whitespace',
-                      files=[u'master/buildbot/__init__.py'],
-                      project=u'Buildbot', repository=u'git://warner',
-                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+        kwargs = dict(author='warner', branch='warnerdb',
+                      category='devel', comments='fix whitespace',
+                      files=['master/buildbot/__init__.py'],
+                      project='Buildbot', repository='git://warner',
+                      revision='0e92a098b', revlink='http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20}, src=u'git', codebase=u'cb')
+                      properties={'foo': 20}, src='git', codebase='cb')
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'codebase': u'cb',
-            'comments': u'fix whitespace',
+            'author': 'warner',
+            'branch': 'warnerdb',
+            'category': 'devel',
+            'codebase': 'cb',
+            'comments': 'fix whitespace',
             'changeid': 500,
-            'files': [u'master/buildbot/__init__.py'],
+            'files': ['master/buildbot/__init__.py'],
             'parent_changeids': [],
-            'project': u'Buildbot',
-            'properties': {u'foo': (20, u'Change')},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'http://warner/0e92a098b',
+            'project': 'Buildbot',
+            'properties': {'foo': (20, 'Change')},
+            'repository': 'git://warner',
+            'revision': '0e92a098b',
+            'revlink': 'http://warner/0e92a098b',
             'when_timestamp': 256738404,
             'sourcestamp': {
-                'branch': u'warnerdb',
-                'codebase': u'cb',
+                'branch': 'warnerdb',
+                'codebase': 'cb',
                 'patch': None,
-                'project': u'Buildbot',
-                'repository': u'git://warner',
-                'revision': u'0e92a098b',
+                'project': 'Buildbot',
+                'repository': 'git://warner',
+                'revision': '0e92a098b',
                 'created_at': epoch2datetime(10000000),
                 'ssid': 100,
             },
@@ -276,36 +276,36 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         self.master.config.preChangeGenerator = preChangeGenerator
         self.master.config.codebaseGenerator = \
             lambda change: 'cb-%s' % change['category']
-        kwargs = dict(author=u'warner', branch=u'warnerdb',
-                      category=u'devel', comments=u'fix whitespace',
-                      files=[u'master/buildbot/__init__.py'],
-                      project=u'Buildbot', repository=u'git://warner',
-                      revision=u'0e92a098b', revlink=u'http://warner/0e92a098b',
+        kwargs = dict(author='warner', branch='warnerdb',
+                      category='devel', comments='fix whitespace',
+                      files=['master/buildbot/__init__.py'],
+                      project='Buildbot', repository='git://warner',
+                      revision='0e92a098b', revlink='http://warner/0e92a098b',
                       when_timestamp=256738404,
-                      properties={u'foo': 20})
+                      properties={'foo': 20})
         expectedRoutingKey = ('changes', '500', 'new')
         expectedMessage = {
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'codebase': u'cb-devel',
-            'comments': u'fix whitespace',
+            'author': 'warner',
+            'branch': 'warnerdb',
+            'category': 'devel',
+            'codebase': 'cb-devel',
+            'comments': 'fix whitespace',
             'changeid': 500,
-            'files': [u'master/buildbot/__init__.py'],
+            'files': ['master/buildbot/__init__.py'],
             'parent_changeids': [],
-            'project': u'Buildbot',
-            'properties': {u'foo': (20, u'Change')},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'http://warner/0e92a098b',
+            'project': 'Buildbot',
+            'properties': {'foo': (20, 'Change')},
+            'repository': 'git://warner',
+            'revision': '0e92a098b',
+            'revlink': 'http://warner/0e92a098b',
             'when_timestamp': 256738404,
             'sourcestamp': {
-                'branch': u'warnerdb',
-                'codebase': u'cb-devel',
+                'branch': 'warnerdb',
+                'codebase': 'cb-devel',
                 'patch': None,
-                'project': u'Buildbot',
-                'repository': u'git://warner',
-                'revision': u'0e92a098b',
+                'project': 'Buildbot',
+                'repository': 'git://warner',
+                'revision': '0e92a098b',
                 'created_at': epoch2datetime(10000000),
                 'ssid': 100,
             },
@@ -332,38 +332,38 @@ class Change(interfaces.InterfaceTests, unittest.TestCase):
         self.master.config = mock.Mock(name='master.config')
         self.master.config.revlink = lambda rev, repo: 'foo%sbar%sbaz' % (repo, rev)
         # revlink is default here
-        kwargs = dict(author=u'warner', branch=u'warnerdb',
-                      category=u'devel', comments=u'fix whitespace',
-                      files=[u'master/buildbot/__init__.py'],
-                      project=u'Buildbot', repository=u'git://warner',
-                      codebase=u'', revision=u'0e92a098b', when_timestamp=256738404,
-                      properties={u'foo': 20})
+        kwargs = dict(author='warner', branch='warnerdb',
+                      category='devel', comments='fix whitespace',
+                      files=['master/buildbot/__init__.py'],
+                      project='Buildbot', repository='git://warner',
+                      codebase='', revision='0e92a098b', when_timestamp=256738404,
+                      properties={'foo': 20})
         expectedRoutingKey = ('changes', '500', 'new')
         # When no revlink is passed to addChange, but a repository and revision is
         # passed, the revlink should be constructed by calling the revlink callable
         # in the config. We thus expect a revlink of 'foogit://warnerbar0e92a098bbaz'
         expectedMessage = {
-            'author': u'warner',
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'codebase': u'',
-            'comments': u'fix whitespace',
+            'author': 'warner',
+            'branch': 'warnerdb',
+            'category': 'devel',
+            'codebase': '',
+            'comments': 'fix whitespace',
             'changeid': 500,
-            'files': [u'master/buildbot/__init__.py'],
+            'files': ['master/buildbot/__init__.py'],
             'parent_changeids': [],
-            'project': u'Buildbot',
-            'properties': {u'foo': (20, u'Change')},
-            'repository': u'git://warner',
-            'revision': u'0e92a098b',
-            'revlink': u'foogit://warnerbar0e92a098bbaz',
+            'project': 'Buildbot',
+            'properties': {'foo': (20, 'Change')},
+            'repository': 'git://warner',
+            'revision': '0e92a098b',
+            'revlink': 'foogit://warnerbar0e92a098bbaz',
             'when_timestamp': 256738404,
             'sourcestamp': {
-                'branch': u'warnerdb',
-                'codebase': u'',
+                'branch': 'warnerdb',
+                'codebase': '',
                 'patch': None,
-                'project': u'Buildbot',
-                'repository': u'git://warner',
-                'revision': u'0e92a098b',
+                'project': 'Buildbot',
+                'repository': 'git://warner',
+                'revision': '0e92a098b',
                 'created_at': epoch2datetime(10000000),
                 'ssid': 100,
             },

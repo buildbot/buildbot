@@ -35,7 +35,7 @@ def test_unicode(migrate_engine):
     test_unicode.create()
 
     # insert a unicode value in there
-    u = u"Frosty the \N{SNOWMAN}"
+    u = "Frosty the \N{SNOWMAN}"
     b = b'\xff\xff\x00'
     ins = test_unicode.insert().values(u=u, b=b)
     migrate_engine.execute(ins)

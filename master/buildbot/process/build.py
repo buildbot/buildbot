@@ -313,7 +313,7 @@ class Build(properties.PropertiesMixin):
         # events
         yield self._flushProperties(None)
         self.build_status.buildStarted(self)
-        yield self.master.data.updates.setBuildStateString(self.buildid, u'starting')
+        yield self.master.data.updates.setBuildStateString(self.buildid, 'starting')
         yield self.master.data.updates.generateNewBuildEvent(self.buildid)
 
         try:
@@ -327,7 +327,7 @@ class Build(properties.PropertiesMixin):
         yield self._flushProperties(None)
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'preparing worker')
+                                                           'preparing worker')
         try:
             ready_or_failure = yield workerforbuilder.prepare(self)
         except Exception:
@@ -354,7 +354,7 @@ class Build(properties.PropertiesMixin):
         # situations where the worker is live but is pushing lots of data to
         # us in a build.
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'pinging worker')
+                                                           'pinging worker')
         log.msg("starting build %s.. pinging the worker %s"
                 % (self, workerforbuilder))
         try:
@@ -386,11 +386,11 @@ class Build(properties.PropertiesMixin):
             return
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'acquiring locks')
+                                                           'acquiring locks')
         yield self.acquireLocks()
 
         yield self.master.data.updates.setBuildStateString(self.buildid,
-                                                           u'building')
+                                                           'building')
 
         # start the sequence of steps
         self.startNextStep()

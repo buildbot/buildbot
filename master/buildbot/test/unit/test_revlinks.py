@@ -90,7 +90,7 @@ class TestRevlinkMatch(unittest.TestCase):
 
     def testSingleUnicode(self):
         revision = 'rev'
-        matcher = RevlinkMatch(u'test', 'out%s')
+        matcher = RevlinkMatch('test', 'out%s')
         self.assertEqual(matcher(revision, 'test'), 'outrev')
 
     def testTwoCaptureGroups(self):

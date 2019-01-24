@@ -120,7 +120,7 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
         return d
 
     def test_get_commit_author(self):
-        authorStr = u'Sammy Jankis <email@example.com>'
+        authorStr = 'Sammy Jankis <email@example.com>'
         authorBytes = unicode2bytes(authorStr)
         return self._perform_git_output_test(self.poller._get_commit_author,
                                              ['log', '--no-walk', '--format=%aN <%aE>',
@@ -135,13 +135,13 @@ class GitOutputParsing(gpo.GetProcessOutputMixin, unittest.TestCase):
                                              commentBytes, commentStr, emptyRaisesException=False)
 
     def test_get_commit_comments(self):
-        comments = [u'this is a commit message\n\nthat is multiline',
-                    u'single line message', u'']
+        comments = ['this is a commit message\n\nthat is multiline',
+                    'single line message', '']
         return defer.DeferredList([self._test_get_commit_comments(commentStr) for commentStr in comments])
 
     def test_get_commit_files(self):
         filesBytes = b'\n\nfile1\nfile2\n"\146ile_octal"\nfile space'
-        filesRes = [u'file1', u'file2', u'file_octal', u'file space']
+        filesRes = ['file1', 'file2', 'file_octal', 'file space']
         return self._perform_git_output_test(self.poller._get_commit_files,
                                              ['log', '--name-only', '--no-walk',
                                               '--format=%n', self.dummyRevStr, '--'],
@@ -509,15 +509,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -536,12 +536,12 @@ class TestGitPoller(TestGitPollerBase):
 
         self.assertEqual(self.master.data.updates.changesAdded, [
             {
-                'author': u'by:4423cdbc',
-                'branch': u'master',
+                'author': 'by:4423cdbc',
+                'branch': 'master',
                 'category': None,
                 'codebase': None,
-                'comments': u'hello!',
-                'files': [u'/etc/442'],
+                'comments': 'hello!',
+                'files': ['/etc/442'],
                 'project': '',
                 'properties': {},
                 'repository': 'git@example.com:foo/baz.git',
@@ -551,12 +551,12 @@ class TestGitPoller(TestGitPollerBase):
                 'when_timestamp': 1273258009,
             },
             {
-                'author': u'by:64a5dc2a',
-                'branch': u'master',
+                'author': 'by:64a5dc2a',
+                'branch': 'master',
                 'category': None,
                 'codebase': None,
-                'comments': u'hello!',
-                'files': [u'/etc/64a'],
+                'comments': 'hello!',
+                'files': ['/etc/64a'],
                 'project': '',
                 'properties': {},
                 'repository': 'git@example.com:foo/baz.git',
@@ -566,12 +566,12 @@ class TestGitPoller(TestGitPollerBase):
                 'when_timestamp': 1273258009,
             },
             {
-                'author': u'by:9118f4ab',
-                'branch': u'release',
+                'author': 'by:9118f4ab',
+                'branch': 'release',
                 'category': None,
                 'codebase': None,
-                'comments': u'hello!',
-                'files': [u'/etc/911'],
+                'comments': 'hello!',
+                'files': ['/etc/911'],
                 'project': '',
                 'properties': {},
                 'repository': 'git@example.com:foo/baz.git',
@@ -657,15 +657,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -684,18 +684,18 @@ class TestGitPoller(TestGitPollerBase):
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
-            {'author': u'by:4423cdbc',
-             'branch': u'release',
+            {'author': 'by:4423cdbc',
+             'branch': 'release',
              'category': None,
              'codebase': None,
-             'comments': u'hello!',
-             'files': [u'/etc/442'],
-             'project': u'',
+             'comments': 'hello!',
+             'files': ['/etc/442'],
+             'project': '',
              'properties': {},
-             'repository': u'git@example.com:foo/baz.git',
-             'revision': u'4423cdbcbb89c14e50dd5f4152415afd686c5241',
-             'revlink': u'',
-             'src': u'git',
+             'repository': 'git@example.com:foo/baz.git',
+             'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+             'revlink': '',
+             'src': 'git',
              'when_timestamp': 1273258009}]
         )
 
@@ -733,15 +733,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -761,18 +761,18 @@ class TestGitPoller(TestGitPollerBase):
             'release': '4423cdbcbb89c14e50dd5f4152415afd686c5241'
         })
         self.assertEqual(self.master.data.updates.changesAdded, [
-            {'author': u'by:4423cdbc',
-             'branch': u'release',
+            {'author': 'by:4423cdbc',
+             'branch': 'release',
              'category': None,
              'codebase': None,
-             'comments': u'hello!',
-             'files': [u'/etc/442'],
-             'project': u'',
+             'comments': 'hello!',
+             'files': ['/etc/442'],
+             'project': '',
              'properties': {},
-             'repository': u'git@example.com:foo/baz.git',
-             'revision': u'4423cdbcbb89c14e50dd5f4152415afd686c5241',
-             'revlink': u'',
-             'src': u'git',
+             'repository': 'git@example.com:foo/baz.git',
+             'revision': '4423cdbcbb89c14e50dd5f4152415afd686c5241',
+             'revlink': '',
+             'src': 'git',
              'when_timestamp': 1273258009}]
         )
 
@@ -810,15 +810,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -841,13 +841,13 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[0]['when_timestamp'], 1273258009)
         self.assertEqual(added[0]['comments'], 'hello!')
         self.assertEqual(added[0]['branch'], 'master')
-        self.assertEqual(added[0]['files'], [u'/etc/442'])
+        self.assertEqual(added[0]['files'], ['/etc/442'])
         self.assertEqual(added[0]['src'], 'git')
 
         self.assertEqual(added[1]['author'], 'by:64a5dc2a')
         self.assertEqual(added[1]['when_timestamp'], 1273258009)
         self.assertEqual(added[1]['comments'], 'hello!')
-        self.assertEqual(added[1]['files'], [u'/etc/64a'])
+        self.assertEqual(added[1]['files'], ['/etc/64a'])
         self.assertEqual(added[1]['src'], 'git')
 
     @defer.inlineCallbacks
@@ -942,15 +942,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -1029,15 +1029,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -1119,15 +1119,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         def pullFilter(branch):
@@ -1157,7 +1157,7 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[0]['author'], 'by:9118f4ab')
         self.assertEqual(added[0]['when_timestamp'], 1273258009)
         self.assertEqual(added[0]['comments'], 'hello!')
-        self.assertEqual(added[0]['files'], [u'/etc/911'])
+        self.assertEqual(added[0]['files'], ['/etc/911'])
         self.assertEqual(added[0]['src'], 'git')
 
     @defer.inlineCallbacks
@@ -1203,15 +1203,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -1295,15 +1295,15 @@ class TestGitPoller(TestGitPollerBase):
         self.patch(self.poller, '_get_commit_timestamp', timestamp)
 
         def author(rev):
-            return defer.succeed(u'by:' + rev[:8])
+            return defer.succeed('by:' + rev[:8])
         self.patch(self.poller, '_get_commit_author', author)
 
         def files(rev):
-            return defer.succeed([u'/etc/' + rev[:3]])
+            return defer.succeed(['/etc/' + rev[:3]])
         self.patch(self.poller, '_get_commit_files', files)
 
         def comments(rev):
-            return defer.succeed(u'hello!')
+            return defer.succeed('hello!')
         self.patch(self.poller, '_get_commit_comments', comments)
 
         # do the poll
@@ -1332,16 +1332,16 @@ class TestGitPoller(TestGitPollerBase):
         self.assertEqual(added[0]['when_timestamp'], 1273258009)
         self.assertEqual(added[0]['comments'], 'hello!')
         self.assertEqual(added[0]['branch'], 'master')
-        self.assertEqual(added[0]['files'], [u'/etc/442'])
+        self.assertEqual(added[0]['files'], ['/etc/442'])
         self.assertEqual(added[0]['src'], 'git')
-        self.assertEqual(added[0]['category'], u'4423cd')
+        self.assertEqual(added[0]['category'], '4423cd')
 
         self.assertEqual(added[1]['author'], 'by:64a5dc2a')
         self.assertEqual(added[1]['when_timestamp'], 1273258009)
         self.assertEqual(added[1]['comments'], 'hello!')
-        self.assertEqual(added[1]['files'], [u'/etc/64a'])
+        self.assertEqual(added[1]['files'], ['/etc/64a'])
         self.assertEqual(added[1]['src'], 'git')
-        self.assertEqual(added[1]['category'], u'64a5dc')
+        self.assertEqual(added[1]['category'], '64a5dc')
 
     @defer.inlineCallbacks
     def test_startService(self):

@@ -76,8 +76,8 @@ class Tests(interfaces.InterfaceTests):
             fakedb.Builder(id=8, name='some:builder8'),
         ])
 
-        yield self.db.builders.updateBuilderInfo(7, u'a string which describe the builder', [u'cat1', u'cat2'])
-        yield self.db.builders.updateBuilderInfo(8, u'a string which describe the builder', [])
+        yield self.db.builders.updateBuilderInfo(7, 'a string which describe the builder', ['cat1', 'cat2'])
+        yield self.db.builders.updateBuilderInfo(8, 'a string which describe the builder', [])
         builderdict7 = yield self.db.builders.getBuilder(7)
         validation.verifyDbDict(self, 'builderdict', builderdict7)
         builderdict7['tags'].sort()  # order is unspecified

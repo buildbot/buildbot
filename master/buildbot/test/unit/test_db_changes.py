@@ -65,17 +65,17 @@ class Tests(interfaces.InterfaceTests):
     change14_dict = {
         'changeid': 14,
         'parent_changeids': [],
-        'author': u'warner',
-        'branch': u'warnerdb',
-        'category': u'devel',
-        'comments': u'fix whitespace',
-        'files': [u'master/buildbot/__init__.py'],
-        'project': u'Buildbot',
+        'author': 'warner',
+        'branch': 'warnerdb',
+        'category': 'devel',
+        'comments': 'fix whitespace',
+        'files': ['master/buildbot/__init__.py'],
+        'project': 'Buildbot',
         'properties': {},
-        'repository': u'git://warner',
-        'codebase': u'mainapp',
-        'revision': u'0e92a098b',
-        'revlink': u'http://warner/0e92a098b',
+        'repository': 'git://warner',
+        'codebase': 'mainapp',
+        'revision': '0e92a098b',
+        'revlink': 'http://warner/0e92a098b',
         'when_timestamp': epoch2datetime(266738404),
         'sourcestampid': 233,
     }
@@ -100,18 +100,18 @@ class Tests(interfaces.InterfaceTests):
         clock = task.Clock()
         clock.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
-            author=u'dustin',
+            author='dustin',
             files=[],
-            comments=u'fix spelling',
-            revision=u'2d6caa52',
+            comments='fix spelling',
+            revision='2d6caa52',
             when_timestamp=epoch2datetime(OTHERTIME),
-            branch=u'master',
+            branch='master',
             category=None,
             revlink=None,
             properties={},
-            repository=u'repo://',
-            codebase=u'cb',
-            project=u'proj',
+            repository='repo://',
+            codebase='cb',
+            project='proj',
             _reactor=clock)
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
@@ -119,31 +119,31 @@ class Tests(interfaces.InterfaceTests):
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
         chdict['sourcestampid'] = ss
         self.assertEqual(chdict, {
-            'author': u'dustin',
-            'branch': u'master',
+            'author': 'dustin',
+            'branch': 'master',
             'category': None,
             'changeid': changeid,
             'parent_changeids': [],
-            'codebase': u'cb',
-            'comments': u'fix spelling',
+            'codebase': 'cb',
+            'comments': 'fix spelling',
             'files': [],
-            'project': u'proj',
+            'project': 'proj',
             'properties': {},
-            'repository': u'repo://',
-            'revision': u'2d6caa52',
+            'repository': 'repo://',
+            'revision': '2d6caa52',
             'revlink': None,
             'sourcestampid': {
-                'branch': u'master',
-                'codebase': u'cb',
+                'branch': 'master',
+                'codebase': 'cb',
                 'patch_author': None,
                 'patch_body': None,
                 'patch_comment': None,
                 'patch_level': None,
                 'patch_subdir': None,
                 'patchid': None,
-                'project': u'proj',
-                'repository': u'repo://',
-                'revision': u'2d6caa52',
+                'project': 'proj',
+                'repository': 'repo://',
+                'revision': '2d6caa52',
                 'created_at': epoch2datetime(SOMETIME),
                 'ssid': ss['ssid'],
             },
@@ -157,18 +157,18 @@ class Tests(interfaces.InterfaceTests):
         clock = task.Clock()
         clock.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
-            author=u'delanne',
+            author='delanne',
             files=[],
-            comments=u'child of changeid14',
-            revision=u'50adad56',
+            comments='child of changeid14',
+            revision='50adad56',
             when_timestamp=epoch2datetime(OTHERTIME),
-            branch=u'warnerdb',
-            category=u'devel',
+            branch='warnerdb',
+            category='devel',
             revlink=None,
             properties={},
-            repository=u'git://warner',
-            codebase=u'mainapp',
-            project=u'Buildbot',
+            repository='git://warner',
+            codebase='mainapp',
+            project='Buildbot',
             _reactor=clock)
         chdict = yield self.db.changes.getChange(changeid)
         validation.verifyDbDict(self, 'chdict', chdict)
@@ -176,22 +176,22 @@ class Tests(interfaces.InterfaceTests):
         ss = yield self.db.sourcestamps.getSourceStamp(chdict['sourcestampid'])
         chdict['sourcestampid'] = ss
         self.assertEqual(chdict, {
-            'author': u'delanne',
-            'branch': u'warnerdb',
-            'category': u'devel',
+            'author': 'delanne',
+            'branch': 'warnerdb',
+            'category': 'devel',
             'changeid': changeid,
             'parent_changeids': [14],
-            'codebase': u'mainapp',
-            'comments': u'child of changeid14',
+            'codebase': 'mainapp',
+            'comments': 'child of changeid14',
             'files': [],
-            'project': u'Buildbot',
+            'project': 'Buildbot',
             'properties': {},
-            'repository': u'git://warner',
-            'revision': u'50adad56',
+            'repository': 'git://warner',
+            'revision': '50adad56',
             'revlink': None,
             'sourcestampid': {
-                'branch': u'warnerdb',
-                'codebase': u'mainapp',
+                'branch': 'warnerdb',
+                'codebase': 'mainapp',
                 'created_at': epoch2datetime(SOMETIME),
                 'patch_author': None,
                 'patch_body': None,
@@ -199,9 +199,9 @@ class Tests(interfaces.InterfaceTests):
                 'patch_level': None,
                 'patch_subdir': None,
                 'patchid': None,
-                'project': u'Buildbot',
-                'repository': u'git://warner',
-                'revision': u'50adad56',
+                'project': 'Buildbot',
+                'repository': 'git://warner',
+                'revision': '50adad56',
                 'ssid': ss['ssid']
             },
             'when_timestamp': epoch2datetime(OTHERTIME),
@@ -380,18 +380,18 @@ class RealTests(Tests):
         clock = task.Clock()
         clock.advance(SOMETIME)
         changeid = yield self.db.changes.addChange(
-            author=u'dustin',
-            files=[u'master/LICENSING.txt', u'worker/LICENSING.txt'],
-            comments=u'fix spelling',
-            revision=u'2d6caa52',
+            author='dustin',
+            files=['master/LICENSING.txt', 'worker/LICENSING.txt'],
+            comments='fix spelling',
+            revision='2d6caa52',
             when_timestamp=epoch2datetime(266738400),
-            branch=u'master',
+            branch='master',
             category=None,
             revlink=None,
-            properties={u'platform': (u'linux', 'Change')},
-            repository=u'',
-            codebase=u'cb',
-            project=u'',
+            properties={'platform': ('linux', 'Change')},
+            repository='',
+            codebase='cb',
+            project='',
             _reactor=clock)
         # check all of the columns of the four relevant tables
 
@@ -408,7 +408,7 @@ class RealTests(Tests):
             self.assertEqual(r[0].when_timestamp, 266738400)
             self.assertEqual(r[0].category, None)
             self.assertEqual(r[0].repository, '')
-            self.assertEqual(r[0].codebase, u'cb')
+            self.assertEqual(r[0].codebase, 'cb')
             self.assertEqual(r[0].project, '')
             self.assertEqual(r[0].sourcestampid, 1)
         yield self.db.pool.do(thd_change)
@@ -446,13 +446,13 @@ class RealTests(Tests):
             query = self.db.model.sourcestamps.select()
             r = conn.execute(query)
             self.assertEqual([dict(row) for row in r.fetchall()], [{
-                'branch': u'master',
-                'codebase': u'cb',
+                'branch': 'master',
+                'codebase': 'cb',
                 'id': 1,
                 'patchid': None,
-                'project': u'',
-                'repository': u'',
-                'revision': u'2d6caa52',
+                'project': '',
+                'repository': '',
+                'revision': '2d6caa52',
                 'created_at': SOMETIME,
                 'ss_hash': 'b777dbd10d1d4c76651335f6a78e278e88b010d6',
             }])
@@ -463,18 +463,18 @@ class RealTests(Tests):
         clock = task.Clock()
         clock.advance(OTHERTIME)
         changeid = yield self.db.changes.addChange(
-            author=u'dustin',
+            author='dustin',
             files=[],
-            comments=u'fix spelling',
-            revision=u'2d6caa52',
+            comments='fix spelling',
+            revision='2d6caa52',
             when_timestamp=None,
-            branch=u'master',
+            branch='master',
             category=None,
             revlink=None,
             properties={},
-            repository=u'',
-            codebase=u'',
-            project=u'',
+            repository='',
+            codebase='',
+            project='',
             _reactor=clock)
         # check all of the columns of the four relevant tables
 
@@ -513,18 +513,18 @@ class RealTests(Tests):
             fakedb.User(uid=1, identifier="one"),
         ])
         changeid = yield self.db.changes.addChange(
-                          author=u'dustin',
+                          author='dustin',
                           files=[],
-                          comments=u'fix spelling',
-                          revision=u'2d6caa52',
+                          comments='fix spelling',
+                          revision='2d6caa52',
                           when_timestamp=epoch2datetime(OTHERTIME),
-                          branch=u'master',
+                          branch='master',
                           category=None,
                           revlink=None,
                           properties={},
-                          repository=u'',
-                          codebase=u'',
-                          project=u'',
+                          repository='',
+                          codebase='',
+                          project='',
                           uid=1)
         # check all of the columns of the five relevant tables
 
@@ -737,13 +737,13 @@ class RealTests(Tests):
             got_commits = [c['comments'] for c in got]
             self.assertEqual(sorted(got_commits), sorted(commits))
 
-        yield expect(1, [u'2nd commit', u'3rd commit', u'1st commit'])
-        yield expect(2, [u'4th commit'])
-        yield expect(3, [u'6th commit'])
+        yield expect(1, ['2nd commit', '3rd commit', '1st commit'])
+        yield expect(2, ['4th commit'])
+        yield expect(3, ['6th commit'])
         yield expect(4, [])
-        yield expect(5, [u'8th commit', u'9th commit', u'7th commit'])
-        yield expect(6, [u'10th commit'])
-        yield expect(7, [u'11th commit'])
+        yield expect(5, ['8th commit', '9th commit', '7th commit'])
+        yield expect(6, ['10th commit'])
+        yield expect(7, ['11th commit'])
 
 
 class TestFakeDB(unittest.TestCase, Tests):

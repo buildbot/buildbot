@@ -441,7 +441,7 @@ class BzrLaunchpadEmailMaildirSource(MaildirSource):
 
         # Put these into a dictionary, otherwise we cannot assign them
         # from nested function definitions.
-        d = {'files': [], 'comments': u""}
+        d = {'files': [], 'comments': ""}
         gobbler = None
         rev = None
         author = None

@@ -27,22 +27,22 @@ from buildbot.test.util import endpoint
 from buildbot.test.util import interfaces
 
 testData = [
-    fakedb.Builder(id=40, name=u'b1'),
-    fakedb.Builder(id=41, name=u'b2'),
+    fakedb.Builder(id=40, name='b1'),
+    fakedb.Builder(id=41, name='b2'),
     fakedb.Master(id=13),
     fakedb.Master(id=14),
     fakedb.BuilderMaster(id=4013, builderid=40, masterid=13),
     fakedb.BuilderMaster(id=4014, builderid=40, masterid=14),
     fakedb.BuilderMaster(id=4113, builderid=41, masterid=13),
 
-    fakedb.Worker(id=1, name=u'linux', info={}),
+    fakedb.Worker(id=1, name='linux', info={}),
     fakedb.ConfiguredWorker(id=14013,
                             workerid=1, buildermasterid=4013),
     fakedb.ConfiguredWorker(id=14014,
                             workerid=1, buildermasterid=4014),
     fakedb.ConnectedWorker(id=113, masterid=13, workerid=1),
 
-    fakedb.Worker(id=2, name=u'windows', info={"a": "b"}),
+    fakedb.Worker(id=2, name='windows', info={"a": "b"}),
     fakedb.ConfiguredWorker(id=24013,
                             workerid=2, buildermasterid=4013),
     fakedb.ConfiguredWorker(id=24014,
@@ -283,10 +283,10 @@ class Worker(interfaces.InterfaceTests, unittest.TestCase):
         rv = defer.succeed(None)
         self.master.db.workers.findWorkerId = \
             mock.Mock(return_value=rv)
-        self.assertIdentical(self.rtype.findWorkerId(u'foo'), rv)
+        self.assertIdentical(self.rtype.findWorkerId('foo'), rv)
 
     def test_findWorkerId_not_id(self):
         with self.assertRaises(ValueError):
             self.rtype.findWorkerId(b'foo')
         with self.assertRaises(ValueError):
-            self.rtype.findWorkerId(u'123/foo')
+            self.rtype.findWorkerId('123/foo')

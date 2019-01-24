@@ -43,7 +43,7 @@ class SetPropertyFromCommand(RunMasterBase):
         build = yield self.doForceBuild(wantProperties=True)
 
         self.assertEqual(
-            build['properties']['test'], (u'foo', u'SetPropertyFromCommand Step'))
+            build['properties']['test'], ('foo', 'SetPropertyFromCommand Step'))
 
 
 class SetPropertyFromCommandPB(SetPropertyFromCommand):

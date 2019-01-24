@@ -55,7 +55,7 @@ class TestPollingChangeHook(unittest.TestCase):
         yield self.otherpoller.setServiceParent(master.change_svc)
 
         anotherchangesrc = base.ChangeSource(name=b'notapoller')
-        anotherchangesrc.setName(u"notapoller")
+        anotherchangesrc.setName("notapoller")
         yield anotherchangesrc.setServiceParent(master.change_svc)
 
         yield self.request.test_render(self.changeHook)

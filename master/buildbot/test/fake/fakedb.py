@@ -257,16 +257,16 @@ class Change(Row):
 
     defaults = dict(
         changeid=None,
-        author=u'frank',
-        comments=u'test change',
-        branch=u'master',
-        revision=u'abcd',
-        revlink=u'http://vc/abcd',
+        author='frank',
+        comments='test change',
+        branch='master',
+        revision='abcd',
+        revlink='http://vc/abcd',
         when_timestamp=1200000,
-        category=u'cat',
-        repository=u'repo',
-        codebase=u'',
-        project=u'proj',
+        category='cat',
+        repository='repo',
+        codebase='',
+        project='proj',
         sourcestampid=92,
         parent_changeids=None,
     )
@@ -319,7 +319,7 @@ class Patch(Row):
     defaults = dict(
         id=None,
         patchlevel=0,
-        patch_base64=u'aGVsbG8sIHdvcmxk',  # 'hello, world',
+        patch_base64='aGVsbG8sIHdvcmxk',  # 'hello, world',
         patch_author=None,
         patch_comment=None,
         subdir=None,
@@ -509,7 +509,7 @@ class Build(Row):
         masterid=None,
         started_at=1304262222,
         complete_at=None,
-        state_string=u"test",
+        state_string="test",
         results=None)
 
     id_column = 'id'
@@ -573,7 +573,7 @@ class LogChunk(Row):
         logid=None,
         first_line=0,
         last_line=0,
-        content=u'',
+        content='',
         compressed=0)
 
     required_columns = ('logid', )
@@ -2156,7 +2156,7 @@ class FakeLogsComponent(FakeDBComponent):
             return defer.succeed('')
         lines = self.log_lines.get(logid, [])
         rv = lines[first_line:last_line + 1]
-        return defer.succeed(u'\n'.join(rv) + u'\n' if rv else u'')
+        return defer.succeed('\n'.join(rv) + '\n' if rv else '')
 
     def addLog(self, stepid, name, slug, type):
         id = self._newId()
@@ -2171,7 +2171,7 @@ class FakeLogsComponent(FakeDBComponent):
                               validation.IntValidator())
         validation.verifyType(self.t, 'content', content,
                               validation.StringValidator())
-        self.t.assertEqual(content[-1], u'\n')
+        self.t.assertEqual(content[-1], '\n')
         content = content[:-1].split('\n')
         lines = self.log_lines[logid]
         lines.extend(content)

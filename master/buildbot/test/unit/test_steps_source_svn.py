@@ -2040,7 +2040,7 @@ class TestGetUnversionedFiles(unittest.TestCase):
         """
         unversioned_files = list(svn.SVN.getUnversionedFiles(svn_st_xml, []))
         self.assertEqual(
-            [u"Path/To/Content/Developers/François"], unversioned_files)
+            ["Path/To/Content/Developers/François"], unversioned_files)
 
 
 class TestSvnUriCanonicalize(unittest.TestCase):

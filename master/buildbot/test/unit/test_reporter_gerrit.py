@@ -176,8 +176,8 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
         for i, buildResult in enumerate(buildResults):
-            info.append({'name': u"Builder%d" % i, 'result': buildResults[i],
-                         'resultText': resultText[i], 'text': u'buildText',
+            info.append({'name': "Builder%d" % i, 'result': buildResults[i],
+                         'resultText': resultText[i], 'text': 'buildText',
                          'url': "http://localhost:8080/#builders/%d/builds/%d" % (79 + i, i),
                          'build': builds[i]})
         return info
@@ -348,7 +348,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
                               'way to communicate results.  The outcome '
                               'might be not what is expected.'])
 
-        defer.returnValue(str({'name': u'Builder0', 'result': buildResult}))
+        defer.returnValue(str({'name': 'Builder0', 'result': buildResult}))
 
     # same goes for check_single_build and check_single_build_legacy
     @defer.inlineCallbacks

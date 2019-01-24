@@ -58,26 +58,26 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
 
     user1_dict = {
         'uid': 1,
-        'identifier': u'soap',
+        'identifier': 'soap',
         'bb_username': None,
         'bb_password': None,
-        'IPv9': u'0578cc6.8db024',
+        'IPv9': '0578cc6.8db024',
     }
 
     user2_dict = {
         'uid': 2,
-        'identifier': u'lye',
+        'identifier': 'lye',
         'bb_username': None,
         'bb_password': None,
-        'irc': u'durden',
-        'git': u'Tyler Durden <tyler@mayhem.net>'
+        'irc': 'durden',
+        'git': 'Tyler Durden <tyler@mayhem.net>'
     }
 
     user3_dict = {
         'uid': 3,
-        'identifier': u'marla',
-        'bb_username': u'marla',
-        'bb_password': u'cancer',
+        'identifier': 'marla',
+        'bb_username': 'marla',
+        'bb_password': 'cancer',
     }
 
     # tests
@@ -147,13 +147,13 @@ class TestUsersConnectorComponent(connector_component.ConnectorComponentMixin,
                 sorted([tuple(i) for i in infos])
             ), (
                 [
-                    (1, u'soap', None, None),
-                    (2, u'lye', None, None),
-                    (3, u'marla', u'marla', u'cancer'),
+                    (1, 'soap', None, None),
+                    (2, 'lye', None, None),
+                    (3, 'marla', 'marla', 'cancer'),
                 ], [
-                    (1, u'IPv9', u'0578cc6.8db024'),
-                    (2, u'git', u'Tyler Durden <tyler@mayhem.net>'),
-                    (2, u'irc', u'durden')
+                    (1, 'IPv9', '0578cc6.8db024'),
+                    (2, 'git', 'Tyler Durden <tyler@mayhem.net>'),
+                    (2, 'irc', 'durden')
                 ]))
         yield self.db.pool.do(thd)
 

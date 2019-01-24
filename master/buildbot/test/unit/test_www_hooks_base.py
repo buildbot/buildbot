@@ -76,7 +76,7 @@ class TestChangeHookConfiguredWithBase(unittest.TestCase):
 
         for field in ('repository', 'project'):
             self.assertEqual(
-                change[field], _first_or_nothing(payload.get(field.encode())) or u'')
+                change[field], _first_or_nothing(payload.get(field.encode())) or '')
 
     def test_base_with_no_change(self):
         return self._check_base_with_change({})
@@ -103,8 +103,8 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
                 args = request.args
                 chdict = dict(
                               revision=args.get(b'revision'),
-                              repository=args.get(b'_repository') or u'',
-                              project=args.get(b'project') or u'',
+                              repository=args.get(b'_repository') or '',
+                              project=args.get(b'project') or '',
                               codebase=args.get(b'codebase'))
                 return ([chdict], None)
         self.changeHook = _prepare_base_change_hook(self, custom_class=CustomBase)
@@ -115,7 +115,7 @@ class TestChangeHookConfiguredWithCustomBase(unittest.TestCase):
         yield self.request.test_render(self.changeHook)
         self.assertEqual(len(self.changeHook.master.data.updates.changesAdded), 1)
         change = self.changeHook.master.data.updates.changesAdded[0]
-        self.assertEqual(change['repository'], payload.get(b'_repository') or u'')
+        self.assertEqual(change['repository'], payload.get(b'_repository') or '')
 
     def test_base_with_no_change(self):
         return self._check_base_with_change({b'repository': b'foo'})

@@ -216,7 +216,7 @@ class UpgradeTestEmpty(UpgradeTestMixin, unittest.TestCase):
     def test_emptydb_modelmatches(self):
         os_encoding = locale.getpreferredencoding()
         try:
-            u'\N{SNOWMAN}'.encode(os_encoding)
+            '\N{SNOWMAN}'.encode(os_encoding)
         except UnicodeEncodeError:
             # Default encoding of Windows console is 'cp1252'
             # which cannot encode the snowman.

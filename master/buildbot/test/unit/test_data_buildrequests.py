@@ -97,7 +97,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         buildrequest = yield self.callGet(('buildrequests', 44),
                            resultSpec=resultspec.ResultSpec(properties=[prop]))
         self.assertEqual(buildrequest['buildrequestid'], 44)
-        self.assertEqual(buildrequest['properties'], {u'prop1': (u'one', u'fake1')})
+        self.assertEqual(buildrequest['properties'], {'prop1': ('one', 'fake1')})
 
     @defer.inlineCallbacks
     def testGetProperties(self):
@@ -106,7 +106,7 @@ class TestBuildRequestEndpoint(endpoint.EndpointMixin, unittest.TestCase):
                            resultSpec=resultspec.ResultSpec(properties=[prop]))
         self.assertEqual(buildrequest['buildrequestid'], 44)
         self.assertEqual(buildrequest['properties'],
-            {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
+            {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')})
 
 
 class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -178,7 +178,7 @@ class TestBuildRequestsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.assertEqual(len(buildrequests), 1)
         self.assertEqual(buildrequests[0]['buildrequestid'], 46)
         self.assertEqual(buildrequests[0]['properties'],
-            {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
+            {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')})
 
     @defer.inlineCallbacks
     def testGetNoFilters(self):
@@ -557,10 +557,10 @@ class TestBuildRequest(interfaces.InterfaceTests, unittest.TestCase):
         self.assertEqual(buildset, {'bsid': 200, 'complete_at': None, 'submitted_at': None,
                                     'sourcestamps': None, 'parent_buildid': None,
                                     'results': -1, 'parent_relationship': None,
-                                    'reason': u'rebuild',
-                                    'external_idstring': u'extid',
+                                    'reason': 'rebuild',
+                                    'external_idstring': 'extid',
                                     'complete': False})
 
         properties = yield self.master.data.get(('buildsets', new_bsid, 'properties'))
         self.assertEqual(
-            properties, {u'prop1': (u'one', u'fake1'), u'prop2': (u'two', u'fake2')})
+            properties, {'prop1': ('one', 'fake1'), 'prop2': ('two', 'fake2')})

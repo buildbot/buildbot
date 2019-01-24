@@ -30,7 +30,7 @@ SUBMITTED_AT_TIME = 111111111
 COMPLETE_AT_TIME = 222222222
 OBJECTID = 33
 SCHEDULERID = 133
-UPSTREAM_NAME = u'uppy'
+UPSTREAM_NAME = 'uppy'
 
 
 class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
@@ -97,7 +97,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
             complete=complete,
             complete_at=COMPLETE_AT_TIME if complete else None,
             external_idstring=None,
-            reason=u'Because',
+            reason='Because',
             results=results if complete else -1,
             parent_buildid=None,
             parent_relationship=None,
@@ -135,7 +135,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                 complete=False,
                 complete_at=None,
                 external_idstring=None,
-                reason=u'Because',
+                reason='Because',
                 results=-1,
             ),
             fakedb.BuildsetSourceStamp(buildsetid=44, sourcestampid=93),
@@ -159,7 +159,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
                     builderNames=None,  # defaults
                     external_idstring=None,
                     properties=None,
-                    reason=u'downstream',
+                    reason='downstream',
                     sourcestamps=[93])),
             ])
         else:
@@ -175,7 +175,7 @@ class Dependent(scheduler.SchedulerMixin, unittest.TestCase):
         return self.do_test(UPSTREAM_NAME, True, FAILURE, False)
 
     def test_unrelated_buildset(self):
-        return self.do_test(u'unrelated', False, SUCCESS, False)
+        return self.do_test('unrelated', False, SUCCESS, False)
 
     @defer.inlineCallbacks
     def test_getUpstreamBuildsets_missing(self):

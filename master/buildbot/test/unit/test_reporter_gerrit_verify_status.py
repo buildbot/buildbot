@@ -78,7 +78,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -90,7 +90,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -102,7 +102,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': -1,
@@ -131,7 +131,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'started Builder0',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -143,7 +143,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'finished Builder0',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -169,7 +169,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'builder Builder0',
+                'name': 'builder Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -181,7 +181,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'builder Builder0',
+                'name': 'builder Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -207,7 +207,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': True,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -219,7 +219,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': True,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -246,7 +246,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'comment': 'Build started.',
                 'abstain': False,
                 'category': 'Builder0',
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -259,7 +259,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
                 'comment': 'Build done.',
                 'abstain': False,
                 'category': 'Builder0',
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -285,7 +285,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'Builder0',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -297,7 +297,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build done.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'Builder0',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 1,
@@ -321,7 +321,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,
@@ -341,7 +341,7 @@ class TestGerritVerifyStatusPush(unittest.TestCase, ReporterTestMixin, logging.L
             json={
                 'comment': 'Build started.',
                 'abstain': False,
-                'name': u'Builder0',
+                'name': 'Builder0',
                 'reporter': 'buildbot',
                 'url': 'http://localhost:8080/#builders/79/builds/0',
                 'value': 0,

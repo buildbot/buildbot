@@ -41,10 +41,10 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             fakedb.Build(id=13, builderid=77, masterid=88, workerid=13,
                          buildrequestid=82, number=3),
             fakedb.Step(id=50, buildid=13, number=5, name='make'),
-            fakedb.Log(id=60, stepid=50, name=u'stdio',
-                       slug=u'stdio', type='s'),
-            fakedb.Log(id=61, stepid=50, name=u'errors',
-                       slug=u'errors', type='t'),
+            fakedb.Log(id=60, stepid=50, name='stdio',
+                       slug='stdio', type='s'),
+            fakedb.Log(id=61, stepid=50, name='errors',
+                       slug='errors', type='t'),
         ])
 
     def tearDown(self):
@@ -56,12 +56,12 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         self.validateData(log)
         self.assertEqual(log, {
             'logid': 60,
-            'name': u'stdio',
-            'slug': u'stdio',
+            'name': 'stdio',
+            'slug': 'stdio',
             'stepid': 50,
             'complete': False,
             'num_lines': 0,
-            'type': u's'})
+            'type': 's'})
 
     @defer.inlineCallbacks
     def test_get_missing(self):
@@ -72,20 +72,20 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def test_get_by_stepid(self):
         log = yield self.callGet(('steps', 50, 'logs', 'errors'))
         self.validateData(log)
-        self.assertEqual(log['name'], u'errors')
+        self.assertEqual(log['name'], 'errors')
 
     @defer.inlineCallbacks
     def test_get_by_buildid(self):
         log = yield self.callGet(('builds', 13, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
-        self.assertEqual(log['name'], u'errors')
+        self.assertEqual(log['name'], 'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder(self):
         log = yield self.callGet(
             ('builders', '77', 'builds', 3, 'steps', 5, 'logs', 'errors'))
         self.validateData(log)
-        self.assertEqual(log['name'], u'errors')
+        self.assertEqual(log['name'], 'errors')
 
     @defer.inlineCallbacks
     def test_get_by_builder_step_name(self):
@@ -93,7 +93,7 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ('builders', '77', 'builds', 3, 'steps', 'make',
              'logs', 'errors'))
         self.validateData(log)
-        self.assertEqual(log['name'], u'errors')
+        self.assertEqual(log['name'], 'errors')
 
     @defer.inlineCallbacks
     def test_get_by_buildername_step_name(self):
@@ -101,7 +101,7 @@ class LogEndpoint(endpoint.EndpointMixin, unittest.TestCase):
             ('builders', 'builder77', 'builds', 3, 'steps', 'make',
              'logs', 'errors'))
         self.validateData(log)
-        self.assertEqual(log['name'], u'errors')
+        self.assertEqual(log['name'], 'errors')
 
 
 class LogsEndpoint(endpoint.EndpointMixin, unittest.TestCase):
@@ -222,12 +222,12 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
             return defer.succeed(23)
         self.patch(self.master.db.logs, 'addLog', addLog)
         logid = yield self.rtype.addLog(
-            stepid=13, name=u'foo', type=u's')
+            stepid=13, name='foo', type='s')
         self.assertEqual(logid, 23)
         self.assertEqual(tries, [
-            (13, u'foo', u'foo', 's'),
-            (13, u'foo', u'foo_2', 's'),
-            (13, u'foo', u'foo_3', 's'),
+            (13, 'foo', 'foo', 's'),
+            (13, 'foo', 'foo_2', 's'),
+            (13, 'foo', 'foo_3', 's'),
         ])
 
     def test_signature_finishLog(self):
@@ -263,4 +263,4 @@ class Log(interfaces.InterfaceTests, unittest.TestCase):
     def test_appendLog(self):
         self.do_test_callthrough('appendLog',
                                  self.rtype.appendLog,
-                                 logid=10, content=u'foo\nbar\n')
+                                 logid=10, content='foo\nbar\n')

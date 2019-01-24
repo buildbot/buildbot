@@ -116,16 +116,16 @@ class WampMQ(unittest.TestCase):
         yield self.mq.startConsuming(None, ('a', 'b'))
         options = ComparableSubscribeOptions(details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
-            mock.ANY, u'org.buildbot.mq.a.b', options=options)
+            mock.ANY, 'org.buildbot.mq.a.b', options=options)
 
     @defer.inlineCallbacks
     def test_startConsuming_wildcard(self):
         self.master.wamp.subscribe = mock.Mock()
         yield self.mq.startConsuming(None, ('a', None))
         options = ComparableSubscribeOptions(
-            match=u"wildcard", details_arg='details')
+            match="wildcard", details_arg='details')
         self.master.wamp.subscribe.assert_called_with(
-            mock.ANY, u'org.buildbot.mq.a.', options=options)
+            mock.ANY, 'org.buildbot.mq.a.', options=options)
 
     @defer.inlineCallbacks
     def test_forward_data(self):
@@ -136,7 +136,7 @@ class WampMQ(unittest.TestCase):
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
-        self.assertEqual(self.master.wamp.last_data, u'foo')
+        self.assertEqual(self.master.wamp.last_data, 'foo')
 
     @defer.inlineCallbacks
     def test_forward_data_wildcard(self):
@@ -147,7 +147,7 @@ class WampMQ(unittest.TestCase):
         # calling produce should eventually call the callback with decoding of
         # topic
         callback.assert_called_with(('a', 'b'), 'foo')
-        self.assertEqual(self.master.wamp.last_data, u'foo')
+        self.assertEqual(self.master.wamp.last_data, 'foo')
 
 
 class FakeConfig(object):

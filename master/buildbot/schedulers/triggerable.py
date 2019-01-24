@@ -51,7 +51,7 @@ class Triggerable(base.BaseScheduler):
             reason = set_props.getProperty('reason')
 
         if reason is None:
-            reason = u"The Triggerable scheduler named '%s' triggered this build" % self.name
+            reason = "The Triggerable scheduler named '%s' triggered this build" % self.name
 
         # note that this does not use the buildset subscriptions mechanism, as
         # the duration of interest to the caller is bounded by the lifetime of

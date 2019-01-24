@@ -132,7 +132,7 @@ class Step(base.ResourceType):
     @defer.inlineCallbacks
     def addStep(self, buildid, name):
         stepid, num, name = yield self.master.db.steps.addStep(
-            buildid=buildid, name=name, state_string=u'pending')
+            buildid=buildid, name=name, state_string='pending')
         yield self.generateEvent(stepid, 'new')
         defer.returnValue((stepid, num, name))
 

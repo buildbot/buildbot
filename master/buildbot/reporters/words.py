@@ -694,12 +694,12 @@ class Contact(service.AsyncService):
                     return
                 properties.setProperty(pname, pvalue, "Force Build chat")
 
-        reason = u"forced: by %s: %s" % (self.describeUser(), reason)
+        reason = "forced: by %s: %s" % (self.describeUser(), reason)
         try:
             yield self.master.data.updates.addBuildset(builderids=[builder['builderid']],
                                                        # For now, we just use
                                                        # this as the id.
-                                                       scheduler=u"status.words",
+                                                       scheduler="status.words",
                                                        sourcestamps=[{
                                                            'codebase': codebase, 'branch': branch,
                                                            'revision': revision, 'project': project,

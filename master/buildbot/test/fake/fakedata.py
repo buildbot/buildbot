@@ -76,8 +76,8 @@ class FakeUpdates(service.AsyncService):
 
     def addChange(self, files=None, comments=None, author=None,
                   revision=None, when_timestamp=None, branch=None, category=None,
-                  revlink=u'', properties=None, repository=u'', codebase=None,
-                  project=u'', src=None):
+                  revlink='', properties=None, repository='', codebase=None,
+                  project='', src=None):
         if properties is None:
             properties = {}
 
@@ -136,7 +136,7 @@ class FakeUpdates(service.AsyncService):
         return defer.succeed(None)
 
     @defer.inlineCallbacks
-    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason=u'',
+    def addBuildset(self, waited_for, scheduler=None, sourcestamps=None, reason='',
                     properties=None, builderids=None, external_idstring=None,
                     parent_buildid=None, parent_relationship=None):
         if sourcestamps is None:
@@ -383,7 +383,7 @@ class FakeUpdates(service.AsyncService):
                               validation.IntValidator())
         validation.verifyType(self.testcase, 'content', content,
                               validation.StringValidator())
-        self.testcase.assertEqual(content[-1], u'\n')
+        self.testcase.assertEqual(content[-1], '\n')
         self.logs[logid]['content'].append(content)
         return defer.succeed(None)
 

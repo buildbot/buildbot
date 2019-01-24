@@ -76,7 +76,7 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
                            " return code:%d." % (entry, code))
         json = yield proj.json()
         if self.apiVersion == 1:
-            ret = json.get(u'data', {}).get('value')
+            ret = json.get('data', {}).get('value')
         else:
-            ret = json.get(u'data', {}).get(u'data', {}).get('value')
+            ret = json.get('data', {}).get('data', {}).get('value')
         defer.returnValue(ret)

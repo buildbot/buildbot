@@ -48,7 +48,7 @@ class GerritChangeFilter(ChangeFilter):
             del self.checks["branch"]
 
 
-def _gerrit_user_to_author(props, username=u"unknown"):
+def _gerrit_user_to_author(props, username="unknown"):
     """
     Convert Gerrit account properties to Buildbot format
 
@@ -57,7 +57,7 @@ def _gerrit_user_to_author(props, username=u"unknown"):
     username = props.get("username", username)
     username = props.get("name", username)
     if "email" in props:
-        username += u" <%(email)s>" % props
+        username += " <%(email)s>" % props
     return username
 
 
@@ -161,19 +161,19 @@ class GerritChangeSourceBase(base.ChangeSource):
             return self.addChange({
                 'author': _gerrit_user_to_author(event_change["owner"]),
                 'project': util.bytes2unicode(event_change["project"]),
-                'repository': u"{}/{}".format(
+                'repository': "{}/{}".format(
                     self.gitBaseURL, event_change["project"]),
                 'branch': self.getGroupingPolicyFromEvent(event),
                 'revision': event["patchSet"]["revision"],
                 'revlink': event_change["url"],
                 'comments': event_change["subject"],
-                'files': [u"unknown"],
+                'files': ["unknown"],
                 'category': event["type"],
                 'properties': properties})
 
     def eventReceived_ref_updated(self, properties, event):
         ref = event["refUpdate"]
-        author = u"gerrit"
+        author = "gerrit"
 
         if "submitter" in event:
             author = _gerrit_user_to_author(event["submitter"], author)
@@ -186,7 +186,7 @@ class GerritChangeSourceBase(base.ChangeSource):
             branch=ref["refName"],
             revision=ref["newRev"],
             comments="Gerrit: patchset(s) merged.",
-            files=[u"unknown"],
+            files=["unknown"],
             category=event["type"],
             properties=properties))
 
@@ -219,7 +219,7 @@ class GerritChangeSource(GerritChangeSourceBase):
                     identity_file=None,
                     **kwargs):
         if self.name is None:
-            self.name = u"GerritChangeSource:%s@%s:%d" % (
+            self.name = "GerritChangeSource:%s@%s:%d" % (
                 username, gerritserver, gerritport)
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = "automatic at reconfigure"
@@ -341,7 +341,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                     pollAtLaunch=True,
                     **kwargs):
         if self.name is None:
-            self.name = u"GerritEventLogPoller:{}".format(baseURL)
+            self.name = "GerritEventLogPoller:{}".format(baseURL)
         GerritChangeSourceBase.checkConfig(self, **kwargs)
 
     @defer.inlineCallbacks

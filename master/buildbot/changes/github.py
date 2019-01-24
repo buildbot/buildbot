@@ -256,7 +256,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     author=bytes2unicode(author),
                     revision=bytes2unicode(revision),
                     revlink=bytes2unicode(revlink),
-                    comments=u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
+                    comments='GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.
                     format(prnumber, commits, 's'
                            if commits > 0 else '', title, comments),
                     when_timestamp=datetime2epoch(updated),
@@ -266,7 +266,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
                     repository=bytes2unicode(repo),
                     files=files,
                     properties=properties,
-                    src=u'git')
+                    src='git')
 
     @defer.inlineCallbacks
     def poll(self):

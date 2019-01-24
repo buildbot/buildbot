@@ -132,9 +132,9 @@ class Change:
             self.revlink = ""
 
     def __str__(self):
-        return (u"Change(revision=%r, who=%r, branch=%r, comments=%r, " +
-                u"when=%r, category=%r, project=%r, repository=%r, " +
-                u"codebase=%r)") % (
+        return ("Change(revision=%r, who=%r, branch=%r, comments=%r, " +
+                "when=%r, category=%r, project=%r, repository=%r, " +
+                "codebase=%r)") % (
             self.revision, self.who, self.branch, self.comments,
             self.when, self.category, self.project, self.repository,
             self.codebase)

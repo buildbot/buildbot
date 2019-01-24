@@ -86,7 +86,7 @@ def masterConfig():
 
         def getResultSummary(self):
             service = self.master.service_manager.namedServices['myService']
-            return dict(step=u"num reconfig: %d" % (service.num_reconfig,))
+            return dict(step="num reconfig: %d" % (service.num_reconfig,))
 
     class MyService(BuildbotService):
         name = "myService"

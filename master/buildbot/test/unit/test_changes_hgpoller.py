@@ -197,8 +197,8 @@ class TestHgPoller(gpo.GetProcessOutputMixin,
 
         self.assertEqual(len(self.master.data.updates.changesAdded), 1)
         change = self.master.data.updates.changesAdded[0]
-        self.assertEqual(change['revision'], u'784bd')
-        self.assertEqual(change['comments'], u'Comment for rev 5')
+        self.assertEqual(change['revision'], '784bd')
+        self.assertEqual(change['comments'], 'Comment for rev 5')
 
 
 class HgPollerNoTimestamp(TestHgPoller):

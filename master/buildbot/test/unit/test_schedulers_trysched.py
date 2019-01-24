@@ -581,9 +581,9 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStamps', dict(
                 builderNames=['buildera', 'builderb'],
-                external_idstring=u'extid',
+                external_idstring='extid',
                 properties={},
-                reason=u"'try' job by user who",
+                reason="'try' job by user who",
                 sourcestamps=[
                     dict(
                         branch='trunk',
@@ -628,9 +628,9 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStamps', dict(
                 builderNames=['buildera'],
-                external_idstring=u'extid',
+                external_idstring='extid',
                 properties={},
-                reason=u"'try' job by user who",
+                reason="'try' job by user who",
                 sourcestamps=[
                     dict(
                         branch='trunk',
@@ -654,9 +654,9 @@ class Try_Jobdir(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStamps', dict(
                 builderNames=['buildera', 'builderb'],
-                external_idstring=u'extid',
-                properties={'foo': ('bar', u'try build')},
-                reason=u"'try' job by user who",
+                external_idstring='extid',
+                properties={'foo': ('bar', 'try build')},
+                reason="'try' job by user who",
                 sourcestamps=[
                     dict(
                         branch='trunk',
@@ -727,8 +727,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
             ('addBuildsetForSourceStamps', dict(
                 builderNames=['a'],
                 external_idstring=None,
-                properties={'pr': ('op', u'try build')},
-                reason=u"'try' job",
+                properties={'pr': ('op', 'try build')},
+                reason="'try' job",
                 sourcestamps=[
                     dict(
                         branch='default',
@@ -754,8 +754,8 @@ class Try_Userpass_Perspective(scheduler.SchedulerMixin, unittest.TestCase):
             ('addBuildsetForSourceStamps', dict(
                 builderNames=['a'],
                 external_idstring=None,
-                properties={'pr': ('op', u'try build')},
-                reason=u"'try' job by user who (comment)",
+                properties={'pr': ('op', 'try build')},
+                reason="'try' job by user who (comment)",
                 sourcestamps=[
                     dict(
                         branch='default',

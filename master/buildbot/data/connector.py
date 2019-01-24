@@ -142,7 +142,7 @@ class DataConnector(service.AsyncService):
         """
         paths = []
         for k, v in sorted(self.matcher.iterPatterns()):
-            paths.append(dict(path=u"/".join(k),
+            paths.append(dict(path="/".join(k),
                               plural=text_type(v.rtype.plural),
                               type=text_type(v.rtype.entityType.name),
                               type_spec=v.rtype.entityType.getSpec()))

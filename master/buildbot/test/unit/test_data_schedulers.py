@@ -167,8 +167,8 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
                'master': {'active': False,
                           'last_active': fakedb._mkdt(SOMETIME),
                           'masterid': 22,
-                          'name': u'some:master'},
-               'name': u'some:scheduler',
+                          'name': 'some:master'},
+               'name': 'some:scheduler',
                'schedulerid': 13})])
         yield self.rtype.schedulerEnable(13, True)
         self.master.mq.assertProductions(
@@ -177,8 +177,8 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
                'master': {'active': False,
                           'last_active': fakedb._mkdt(SOMETIME),
                           'masterid': 22,
-                          'name': u'some:master'},
-               'name': u'some:scheduler',
+                          'name': 'some:master'},
+               'name': 'some:scheduler',
                'schedulerid': 13})])
 
     def test_signature_findSchedulerId(self):
@@ -192,8 +192,8 @@ class Scheduler(interfaces.InterfaceTests, unittest.TestCase):
     def test_findSchedulerId(self):
         self.master.db.schedulers.findSchedulerId = mock.Mock(
             return_value=defer.succeed(10))
-        self.assertEqual((yield self.rtype.findSchedulerId(u'sch')), 10)
-        self.master.db.schedulers.findSchedulerId.assert_called_with(u'sch')
+        self.assertEqual((yield self.rtype.findSchedulerId('sch')), 10)
+        self.master.db.schedulers.findSchedulerId.assert_called_with('sch')
 
     def test_signature_trySetSchedulerMaster(self):
         @self.assertArgSpecMatches(

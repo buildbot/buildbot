@@ -329,7 +329,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         for el in new_logentries:
             revision = text_type(el.getAttribute("revision"))
 
-            revlink = u''
+            revlink = ''
 
             if self.revlinktmpl and revision:
                 revlink = self.revlinktmpl % urlquote_plus(revision)
@@ -353,7 +353,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
             for p in pathlist.getElementsByTagName("path"):
                 kind = p.getAttribute("kind")
                 action = p.getAttribute("action")
-                path = u"".join([t.data for t in p.childNodes])
+                path = "".join([t.data for t in p.childNodes])
                 if path.startswith("/"):
                     path = path[1:]
                 if kind == "dir" and not path.endswith("/"):
@@ -394,7 +394,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
                     branch]['number_of_directories']
                 number_of_files_changed = len(files)
 
-                if (action == u'D' and number_of_directories_changed == 1 and
+                if (action == 'D' and number_of_directories_changed == 1 and
                         number_of_files_changed == 1 and files[0] == ''):
                     log.msg("Ignoring deletion of branch '%s'" % branch)
                 else:
@@ -421,7 +421,7 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
     @defer.inlineCallbacks
     def submit_changes(self, changes):
         for chdict in changes:
-            yield self.master.data.updates.addChange(src=u'svn', **chdict)
+            yield self.master.data.updates.addChange(src='svn', **chdict)
 
     def finished_ok(self, res):
         if self.cachepath:

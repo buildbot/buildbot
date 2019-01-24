@@ -59,13 +59,13 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
             sourcestamps = {}
         if properties is None:
             properties = {}
-        properties['scheduler'] = ('test', u'Scheduler')
+        properties['scheduler'] = ('test', 'Scheduler')
         self.assertEqual(self.addBuildsetCalls, [
             ('addBuildsetForSourceStampsWithDefaults', dict(
                 builderNames=None,  # uses the default
                 properties=properties,
-                reason=u"The NightlyTriggerable scheduler named 'test' "
-                       u"triggered this build",
+                reason="The NightlyTriggerable scheduler named 'test' "
+                       "triggered this build",
                 sourcestamps=sourcestamps,
                 waited_for=False)),
         ])
@@ -337,7 +337,7 @@ class NightlyTriggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.clock.advance(60 * 60)  # Run for 1h
 
         self.assertBuildsetAdded(
-            properties={'testprop': (u'test', u'TEST')},
+            properties={'testprop': ('test', 'TEST')},
             sourcestamps=[
                 dict(codebase='cb', branch='br', project='p', repository='r',
                      revision='myrev'),

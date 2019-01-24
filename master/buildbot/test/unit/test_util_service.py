@@ -144,16 +144,16 @@ class ClusteredBuildbotService(unittest.TestCase):
         svc.deactivate = self.makeMock(deactivate)
 
     def test_name_PreservesUnicodePromotion(self):
-        svc = self.makeService(name=u'n')
+        svc = self.makeService(name='n')
 
         self.assertIsInstance(svc.name, text_type)
-        self.assertEqual(svc.name, u'n')
+        self.assertEqual(svc.name, 'n')
 
     def test_name_GetsUnicodePromotion(self):
         svc = self.makeService(name='n')
 
         self.assertIsInstance(svc.name, text_type)
-        self.assertEqual(svc.name, u'n')
+        self.assertEqual(svc.name, 'n')
 
     def test_compare(self):
         a = self.makeService(name='a', serviceid=20)

@@ -444,9 +444,9 @@ class RealTests(Tests):
             # one buildrequests row
             r = conn.execute(self.db.model.buildrequests.select())
             self.assertEqual(r.keys(),
-                             [u'id', u'buildsetid', u'builderid', u'priority',
-                              u'complete', u'results', u'submitted_at',
-                              u'complete_at', u'waited_for'])
+                             ['id', 'buildsetid', 'builderid', 'priority',
+                              'complete', 'results', 'submitted_at',
+                              'complete_at', 'waited_for'])
             self.assertEqual(r.fetchall(),
                              [(bsid, brids[2], 2, 0, 0,
                                -1, self.now, None, 1)])
@@ -454,7 +454,7 @@ class RealTests(Tests):
             # one buildset_sourcestamps row
             r = conn.execute(self.db.model.buildset_sourcestamps.select())
             self.assertEqual(
-                list(r.keys()), [u'id', u'buildsetid', u'sourcestampid'])
+                list(r.keys()), ['id', 'buildsetid', 'sourcestampid'])
             self.assertEqual(r.fetchall(), [(1, bsid, 234)])
         yield self.db.pool.do(thd)
 
@@ -478,7 +478,7 @@ class RealTests(Tests):
                      row.complete, row.complete_at, row.results)
                     for row in r.fetchall()]
             self.assertEqual(rows,
-                             [(bsid, None, u'because', 0, None, -1)])
+                             [(bsid, None, 'because', 0, None, -1)])
 
             # one property row
             r = conn.execute(self.db.model.buildset_properties.select())

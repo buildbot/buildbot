@@ -141,7 +141,7 @@ _GH_PARSED_PROPS = {
     'github.base.repo.full_name': 'buildbot/buildbot',
     'github.base.ref': 'master',
     'github.base.sha': '4c9a7f03e04e551a5e012064b581577f949dd3a4',
-    'github.head.repo.full_name': u'defunkt/buildbot',
+    'github.head.repo.full_name': 'defunkt/buildbot',
     'github.mergeable_state': 'clean',
     'github.mergeable': True,
     'github.head.ref': 'defunkt/change',

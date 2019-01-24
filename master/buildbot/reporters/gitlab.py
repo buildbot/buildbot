@@ -96,7 +96,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         url = giturlparse(sourcestamp['repository'])
         if url is None:
             defer.returnValue(None)
-        project_full_name = u"%s/%s" % (url.owner, url.repo)
+        project_full_name = "%s/%s" % (url.owner, url.repo)
 
         # gitlab needs project name to be fully url quoted to get the project id
         project_full_name = urlquote_plus(project_full_name)

@@ -158,8 +158,8 @@ class BufferLogObserver(LogObserver):
 
     def _get(self, chunks):
         if chunks is None or not chunks:
-            return u''
-        return u''.join(chunks)
+            return ''
+        return ''.join(chunks)
 
     def getStdout(self):
         return self._get(self.stdout)

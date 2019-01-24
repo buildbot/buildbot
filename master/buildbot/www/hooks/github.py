@@ -197,7 +197,7 @@ class GitHubEventHandler(PullRequestMixin):
             'category': 'pull',
             # TODO: Get author name based on login id using txgithub module
             'author': payload['sender']['login'],
-            'comments': u'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
+            'comments': 'GitHub Pull Request #{0} ({1} commit{2})\n{3}\n{4}'.format(
                 number, commits, 's' if commits != 1 else '', title, comments),
             'properties': properties,
         }
@@ -278,7 +278,7 @@ class GitHubEventHandler(PullRequestMixin):
             log.msg("New revision: {}".format(commit['id'][:8]))
 
             change = {
-                'author': u'{} <{}>'.format(commit['author']['name'],
+                'author': '{} <{}>'.format(commit['author']['name'],
                                            commit['author']['email']),
                 'files': files,
                 'comments': commit['message'],
