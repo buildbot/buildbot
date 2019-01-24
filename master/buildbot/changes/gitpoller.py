@@ -390,37 +390,34 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
     def _downloadSshKnownHosts(self, path):
         self._writeLocalFile(path, getSshKnownHostsContents(self.sshHostKey))
 
-    def _getSshDataPath(self):
-        return os.path.join(self.workdir, '.buildbot-ssh')
+    def _getSshPrivateKeyPath(self, ssh_data_path):
+        return os.path.join(ssh_data_path, 'ssh-key')
 
-    def _getSshPrivateKeyPath(self):
-        return os.path.join(self._getSshDataPath(), 'ssh-key')
-
-    def _getSshKnownHostsPath(self):
-        return os.path.join(self._getSshDataPath(), 'ssh-known-hosts')
+    def _getSshKnownHostsPath(self, ssh_data_path):
+        return os.path.join(ssh_data_path, 'ssh-known-hosts')
 
     @defer.inlineCallbacks
     def _dovccmd(self, command, args, path=None):
         if self._isSshPrivateKeyNeededForCommand(command):
-            key_dir = self._getSshDataPath()
-            with private_tempdir.PrivateTemporaryDirectory(name=key_dir):
-                stdout = yield self._dovccmdImpl(command, args, path)
+            with private_tempdir.PrivateTemporaryDirectory(
+                    dir=self.workdir, prefix='.buildbot-ssh') as tmp_path:
+                stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
         else:
-            stdout = yield self._dovccmdImpl(command, args, path)
+            stdout = yield self._dovccmdImpl(command, args, path, None)
         defer.returnValue(stdout)
 
     @defer.inlineCallbacks
-    def _dovccmdImpl(self, command, args, path):
+    def _dovccmdImpl(self, command, args, path, ssh_workdir):
         full_args = []
         full_env = os.environ.copy()
 
         if self._isSshPrivateKeyNeededForCommand(command):
-            key_path = self._getSshPrivateKeyPath()
+            key_path = self._getSshPrivateKeyPath(ssh_workdir)
             self._downloadSshPrivateKey(key_path)
 
             known_hosts_path = None
             if self.sshHostKey is not None:
-                known_hosts_path = self._getSshKnownHostsPath()
+                known_hosts_path = self._getSshKnownHostsPath(ssh_workdir)
                 self._downloadSshKnownHosts(known_hosts_path)
 
             self.adjustCommandParamsForSshPrivateKey(full_args, full_env,

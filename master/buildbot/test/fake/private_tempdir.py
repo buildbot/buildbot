@@ -13,30 +13,36 @@
 #
 # Copyright Buildbot Team Members
 
+from __future__ import absolute_import
+from __future__ import print_function
 
-import shutil
-import tempfile
+import os
 
 
-class PrivateTemporaryDirectory(object):
-    """ Works similarly to python 3.2+ TemporaryDirectory except the
-        also sets the permissions of the created directory and
-
-        Note, that Windows ignores the permissions.
-    """
-
+class FakePrivateTemporaryDirectory(object):
     def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
-        self.name = tempfile.mkdtemp(suffix, prefix, dir)
+        dir = dir or '/'
+        prefix = prefix or ''
+        suffix = suffix or ''
+
+        self.name = os.path.join(dir, prefix + '@@@' + suffix)
         self.mode = mode
-        self._cleanup_needed = True
 
     def __enter__(self):
         return self.name
 
     def __exit__(self, exc, value, tb):
-        self.cleanup()
+        pass
 
     def cleanup(self):
-        if self._cleanup_needed:
-            shutil.rmtree(self.name)
-            self._cleanup_needed = False
+        pass
+
+
+class MockPrivateTemporaryDirectory(object):
+    def __init__(self):
+        self.dirs = []
+
+    def __call__(self, *args, **kwargs):
+        ret = FakePrivateTemporaryDirectory(*args, **kwargs)
+        self.dirs.append((ret.name, ret.mode))
+        return ret

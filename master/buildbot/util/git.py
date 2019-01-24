@@ -144,25 +144,23 @@ class GitStepMixin(GitMixin):
         basename = '.{0}.buildbot'.format(path_module.basename(workdir))
         return path_module.join(parent_path, basename)
 
-    def _getSshPrivateKeyPath(self):
-        return self.build.path_module.join(self._getSshDataPath(), 'ssh-key')
+    def _getSshPrivateKeyPath(self, ssh_data_path):
+        return self.build.path_module.join(ssh_data_path, 'ssh-key')
 
-    def _getSshHostKeyPath(self):
-        return self.build.path_module.join(self._getSshDataPath(), 'ssh-known-hosts')
+    def _getSshHostKeyPath(self, ssh_data_path):
+        return self.build.path_module.join(ssh_data_path, 'ssh-known-hosts')
 
-    def _getSshWrapperScriptPath(self):
-        return self.build.path_module.join(self._getSshDataPath(), 'ssh-wrapper.sh')
-
-    def _getSshWrapperScript(self):
-        return getSshWrapperScriptContents(self._getSshPrivateKeyPath)
+    def _getSshWrapperScriptPath(self, ssh_data_path):
+        return self.build.path_module.join(ssh_data_path, 'ssh-wrapper.sh')
 
     def _adjustCommandParamsForSshPrivateKey(self, full_command, full_env):
 
-        key_path = self._getSshPrivateKeyPath()
-        ssh_wrapper_path = self._getSshWrapperScriptPath()
+        ssh_data_path = self._getSshDataPath()
+        key_path = self._getSshPrivateKeyPath(ssh_data_path)
+        ssh_wrapper_path = self._getSshWrapperScriptPath(ssh_data_path)
         host_key_path = None
         if self.sshHostKey is not None:
-            host_key_path = self._getSshHostKeyPath()
+            host_key_path = self._getSshHostKeyPath(ssh_data_path)
 
         self.adjustCommandParamsForSshPrivateKey(full_command, full_env,
                                                  key_path, ssh_wrapper_path,
@@ -249,20 +247,27 @@ class GitStepMixin(GitMixin):
         # options
         workdir = self._getSshDataWorkDir()
 
-        yield self.runMkdir(self._getSshDataPath())
+        ssh_data_path = self._getSshDataPath()
+        yield self.runMkdir(ssh_data_path)
 
         if not self.supportsSshPrivateKeyAsEnvOption:
-            yield self.downloadFileContentToWorker(self._getSshWrapperScriptPath(),
-                                                   self._getSshWrapperScript(),
+            script_path = self._getSshWrapperScriptPath(ssh_data_path)
+            script_contents = getSshWrapperScriptContents(
+                self._getSshPrivateKeyPath(ssh_data_path))
+
+            yield self.downloadFileContentToWorker(script_path,
+                                                   script_contents,
                                                    workdir=workdir, mode=0o700)
 
-        yield self.downloadFileContentToWorker(self._getSshPrivateKeyPath(),
+        private_key_path = self._getSshPrivateKeyPath(ssh_data_path)
+        yield self.downloadFileContentToWorker(private_key_path,
                                                private_key,
                                                workdir=workdir, mode=0o400)
 
         if self.sshHostKey is not None:
+            known_hosts_path = self._getSshHostKeyPath(ssh_data_path)
             known_hosts_contents = getSshKnownHostsContents(host_key)
-            yield self.downloadFileContentToWorker(self._getSshHostKeyPath(),
+            yield self.downloadFileContentToWorker(known_hosts_path,
                                                    known_hosts_contents,
                                                    workdir=workdir, mode=0o400)
 

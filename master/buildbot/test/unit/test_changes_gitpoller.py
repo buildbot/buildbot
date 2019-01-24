@@ -25,6 +25,7 @@ from twisted.internet import defer
 from twisted.trial import unittest
 
 from buildbot.changes import gitpoller
+from buildbot.test.fake.private_tempdir import MockPrivateTemporaryDirectory
 from buildbot.test.util import changesource
 from buildbot.test.util import config
 from buildbot.test.util import gpo
@@ -1373,12 +1374,12 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
     def createPoller(self):
         return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key')
 
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+                new_callable=MockPrivateTemporaryDirectory)
     @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
     @defer.inlineCallbacks
     def test_check_git_features_ssh_1_7(self, write_local_file_mock,
-                                        cleanup_dir_mock, create_dir_mock):
+                                        temp_dir_mock):
         self.expectCommands(
             gpo.Expect('git', '--version')
             .stdout(b'git version 1.7.5\n'),
@@ -1388,17 +1389,15 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
         self.assertAllCommandsRan()
 
-        create_dir_mock.assert_not_called()
-        cleanup_dir_mock.assert_not_called()
+        self.assertEqual(len(temp_dir_mock.dirs), 0)
         write_local_file_mock.assert_not_called()
 
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+                new_callable=MockPrivateTemporaryDirectory)
     @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
     @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, write_local_file_mock, cleanup_dir_mock,
-                               create_dir_mock):
-        key_path = os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')
+    def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
+        key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1430,19 +1429,19 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
 
-        create_dir_mock.assert_called_with(
-                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
-        cleanup_dir_mock.assert_called()
+        temp_dir_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@')
+        self.assertEqual(temp_dir_mock.dirs,
+                         [(temp_dir_path, 0o700),
+                          (temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key',
                                                  mode=0o400)
 
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+                new_callable=MockPrivateTemporaryDirectory)
     @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
     @defer.inlineCallbacks
-    def test_poll_initial_2_3(self, write_local_file_mock, cleanup_dir_mock,
-                              create_dir_mock):
-        key_path = os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')
+    def test_poll_initial_2_3(self, write_local_file_mock, temp_dir_mock):
+        key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1473,19 +1472,20 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
 
-        create_dir_mock.assert_called_with(
-                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
-        cleanup_dir_mock.assert_called()
+        temp_dir_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@')
+        self.assertEqual(temp_dir_mock.dirs,
+                         [(temp_dir_path, 0o700),
+                          (temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key',
                                                  mode=0o400)
 
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+                new_callable=MockPrivateTemporaryDirectory)
     @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
     @defer.inlineCallbacks
     def test_poll_failFetch_git_2_10(self, write_local_file_mock,
-                                     cleanup_dir_mock, create_dir_mock):
-        key_path = os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')
+                                     temp_dir_mock):
+        key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
 
         # make sure we cleanup the private key when fetch fails
         self.expectCommands(
@@ -1507,9 +1507,10 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
         self.assertAllCommandsRan()
 
-        create_dir_mock.assert_called_with(
-                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
-        cleanup_dir_mock.assert_called()
+        temp_dir_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@')
+        self.assertEqual(temp_dir_mock.dirs,
+                         [(temp_dir_path, 0o700),
+                          (temp_dir_path, 0o700)])
         write_local_file_mock.assert_called_with(key_path, 'ssh-key',
                                                  mode=0o400)
 
@@ -1520,16 +1521,15 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
         return gitpoller.GitPoller(self.REPOURL, sshPrivateKey='ssh-key',
                                    sshHostKey='ssh-host-key')
 
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory._create_dir')
-    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory.cleanup')
+    @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
+                new_callable=MockPrivateTemporaryDirectory)
     @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
     @defer.inlineCallbacks
-    def test_poll_initial_2_10(self, write_local_file_mock, cleanup_dir_mock,
-                               create_dir_mock):
+    def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
 
-        key_path = os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-key')
-        known_hosts_path = \
-            os.path.join('gitpoller-work', '.buildbot-ssh', 'ssh-known-hosts')
+        key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
+        known_hosts_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@',
+                                        'ssh-known-hosts')
 
         self.expectCommands(
             gpo.Expect('git', '--version')
@@ -1567,9 +1567,10 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
                 'master': 'bf0b01df6d00ae8d1ffa0b2e2acbe642a6cd35d5'
             })
 
-        create_dir_mock.assert_called_with(
-                os.path.join('gitpoller-work', '.buildbot-ssh'), 0o700)
-        cleanup_dir_mock.assert_called()
+        temp_dir_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@')
+        self.assertEqual(temp_dir_mock.dirs,
+                         [(temp_dir_path, 0o700),
+                          (temp_dir_path, 0o700)])
 
         expected_file_writes = [
             mock.call(key_path, 'ssh-key', mode=0o400),

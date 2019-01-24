@@ -34,34 +34,19 @@ class TestTemporaryDirectory(unittest.TestCase):
         shutil.rmtree(self.tempdir)
 
     def test_simple(self):
-        dir = os.path.join(self.tempdir, 'simple')
-
-        with PrivateTemporaryDirectory(dir):
+        with PrivateTemporaryDirectory(dir=self.tempdir) as dir:
             self.assertTrue(os.path.isdir(dir))
         self.assertFalse(os.path.isdir(dir))
 
     @skipUnlessPlatformIs('posix')
     def test_mode(self):
-        dir = os.path.join(self.tempdir, 'mode')
-
-        with PrivateTemporaryDirectory(dir, mode=0o700):
+        with PrivateTemporaryDirectory(dir=self.tempdir, mode=0o700) as dir:
             self.assertEqual(0o40700, os.stat(dir).st_mode)
 
-    def test_already_exists(self):
-        dir = os.path.join(self.tempdir, 'already_exists')
-
-        os.makedirs(dir)
-        with self.assertRaises(Exception):
-            with PrivateTemporaryDirectory(dir):
-                pass
-        shutil.rmtree(dir)
-
     def test_cleanup(self):
-        dir = os.path.join(self.tempdir, 'cleanup')
-
-        with PrivateTemporaryDirectory(dir) as ctx:
-            self.assertTrue(os.path.isdir(dir))
-            ctx.cleanup()
-            self.assertFalse(os.path.isdir(dir))
-            ctx.cleanup()  # also check whether multiple calls don't throw
-            ctx.cleanup()
+        ctx = PrivateTemporaryDirectory(dir=self.tempdir)
+        self.assertTrue(os.path.isdir(ctx.name))
+        ctx.cleanup()
+        self.assertFalse(os.path.isdir(ctx.name))
+        ctx.cleanup()  # also check whether multiple calls don't throw
+        ctx.cleanup()
