@@ -18,6 +18,9 @@ import mock
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.plugins import util
+from buildbot.secrets.manager import SecretManager
+from buildbot.test.fake.secrets import FakeSecretStorage
 from buildbot.test.fake.web import FakeRequest
 from buildbot.test.fake.web import fakeMasterForHooks
 from buildbot.www import change_hook
@@ -998,9 +1001,19 @@ class TestChangeHookConfiguredWithSecret(unittest.TestCase):
     _SECRET = 'thesecret'
 
     def setUp(self):
+
+        self.master = fakeMasterForHooks(self)
+
+        fakeStorageService = FakeSecretStorage()
+        fakeStorageService.reconfigService(secretdict={"secret_key": self._SECRET})
+
+        self.secretService = SecretManager()
+        self.secretService.services = [fakeStorageService]
+        self.master.addService(self.secretService)
+
         self.changeHook = change_hook.ChangeHookResource(
-            dialects={'gitlab': {'secret': self._SECRET}},
-            master=fakeMasterForHooks(self))
+            dialects={'gitlab': {'secret': util.Secret("secret_key")}},
+            master=self.master)
 
     @defer.inlineCallbacks
     def test_missing_secret(self):

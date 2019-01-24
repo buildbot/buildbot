@@ -19,8 +19,10 @@ import re
 
 from dateutil.parser import parse as dateparse
 
+from twisted.internet.defer import inlineCallbacks
 from twisted.python import log
 
+from buildbot.process.properties import Properties
 from buildbot.util import bytes2unicode
 from buildbot.www.hooks.base import BaseHookHandler
 
@@ -151,6 +153,7 @@ class GitLabHandler(BaseHookHandler):
             changes[0]['codebase'] = codebase
         return changes
 
+    @inlineCallbacks
     def getChanges(self, request):
         """
         Reponds only to POST events and starts the build process
@@ -163,7 +166,12 @@ class GitLabHandler(BaseHookHandler):
         if expected_secret:
             received_secret = request.getHeader(_HEADER_GITLAB_TOKEN)
             received_secret = bytes2unicode(received_secret)
-            if received_secret != expected_secret:
+
+            p = Properties()
+            p.master = self.master
+            expected_secret_value = yield p.render(expected_secret)
+
+            if received_secret != expected_secret_value:
                 raise ValueError("Invalid secret")
         try:
             content = request.content.read()
