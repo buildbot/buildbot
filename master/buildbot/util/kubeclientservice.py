@@ -28,7 +28,6 @@ from twisted.internet.protocol import ProcessProtocol
 from twisted.python.failure import Failure
 
 from buildbot import config
-from buildbot.compat import TimeoutError
 from buildbot.util import asyncSleep
 from buildbot.util.httpclientservice import HTTPClientService
 from buildbot.util.logger import Logger

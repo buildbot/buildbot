@@ -31,7 +31,6 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
-from buildbot.compat import TimeoutError
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttp
 from buildbot.test.fake import kube as fakekube

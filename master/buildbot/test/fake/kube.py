@@ -19,7 +19,6 @@ from __future__ import print_function
 import copy
 import time
 
-from buildbot.compat import TimeoutError
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.util.kubeclientservice import KubeError
 
