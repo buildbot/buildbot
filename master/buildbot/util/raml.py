@@ -44,7 +44,7 @@ def construct_mapping(loader, node):
 RamlLoader.add_constructor(
     yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG,
     construct_mapping)
-RamlLoader.add_constructor(u'!include', construct_include)
+RamlLoader.add_constructor('!include', construct_include)
 
 
 class RamlSpec(object):

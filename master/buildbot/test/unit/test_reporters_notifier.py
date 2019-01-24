@@ -283,11 +283,11 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         build = builds[0]
         mn.messageFormatter.formatMessageForBuildResults.assert_called_with(
             ('change',), 'mybldr', build['buildset'], build, self.master,
-            None, [u'me@foo'])
+            None, ['me@foo'])
 
         self.assertEqual(mn.sendMessage.call_count, 1)
         mn.sendMessage.assert_called_with('body', 'subject', 'text', 'mybldr', SUCCESS, builds,
-                                          [u'me@foo'], [], [])
+                                          ['me@foo'], [], [])
 
     @defer.inlineCallbacks
     def test_buildMessage_addLogs(self):
@@ -305,12 +305,12 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         self.assertEqual(mn.sendMessage.call_count, 1)
         # make sure the patch are sent
         self.assertEqual(mn.sendMessage.call_args[0][7],
-                         [{'author': u'him@foo',
+                         [{'author': 'him@foo',
                            'body': b'hello, world',
-                           'comment': u'foo',
+                           'comment': 'foo',
                            'level': 3,
                            'patchid': 99,
-                           'subdir': u'/foo'}])
+                           'subdir': '/foo'}])
 
     @defer.inlineCallbacks
     def test_buildMessage_addPatchNoPatch(self):

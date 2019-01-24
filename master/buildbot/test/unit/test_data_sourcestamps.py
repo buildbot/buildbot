@@ -29,11 +29,11 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
     def setUp(self):
         self.setUpEndpoint()
         self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch=u'oak'),
-            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
+            fakedb.SourceStamp(id=13, branch='oak'),
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
-            fakedb.SourceStamp(id=14, patchid=99, branch=u'poplar'),
+            fakedb.SourceStamp(id=14, patchid=99, branch='poplar'),
         ])
 
     def tearDown(self):
@@ -44,7 +44,7 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         sourcestamp = yield self.callGet(('sourcestamps', 13))
 
         self.validateData(sourcestamp)
-        self.assertEqual(sourcestamp['branch'], u'oak')
+        self.assertEqual(sourcestamp['branch'], 'oak')
         self.assertEqual(sourcestamp['patch'], None)
 
     @defer.inlineCallbacks
@@ -52,14 +52,14 @@ class SourceStampEndpoint(endpoint.EndpointMixin, unittest.TestCase):
         sourcestamp = yield self.callGet(('sourcestamps', 14))
 
         self.validateData(sourcestamp)
-        self.assertEqual(sourcestamp['branch'], u'poplar')
+        self.assertEqual(sourcestamp['branch'], 'poplar')
         self.assertEqual(sourcestamp['patch'], {
             'patchid': 99,
-            'author': u'bar',
+            'author': 'bar',
             'body': b'hello, world',
-            'comment': u'foo',
+            'comment': 'foo',
             'level': 3,
-            'subdir': u'/foo',
+            'subdir': '/foo',
         })
 
     @defer.inlineCallbacks

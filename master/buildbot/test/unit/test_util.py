@@ -119,14 +119,14 @@ class safeTranslate(unittest.TestCase):
                          b"p\ath\x01ogy")  # bad chars still here!
 
     def test_unicode_good(self):
-        self.assertEqual(util.safeTranslate(u"full"), b"full")
+        self.assertEqual(util.safeTranslate("full"), b"full")
 
     def test_unicode_bad(self):
         self.assertEqual(util.safeTranslate(text_type("speed=slow;quality=high")),
                          b"speed_slow_quality_high")
 
     def test_unicode_pathological(self):
-        self.assertEqual(util.safeTranslate(u"\u0109"),
+        self.assertEqual(util.safeTranslate("\u0109"),
                          b"\xc4\x89")  # yuck!
 
 
@@ -221,7 +221,7 @@ class MakeList(unittest.TestCase):
         self.assertEqual(util.makeList('hello'), ['hello'])
 
     def test_unicode(self):
-        self.assertEqual(util.makeList(u'\N{SNOWMAN}'), [u'\N{SNOWMAN}'])
+        self.assertEqual(util.makeList('\N{SNOWMAN}'), ['\N{SNOWMAN}'])
 
     def test_list(self):
         self.assertEqual(util.makeList(['a', 'b']), ['a', 'b'])
@@ -263,12 +263,12 @@ class Flatten(unittest.TestCase):
 class Ascii2Unicode(unittest.TestCase):
 
     def test_unicode(self):
-        rv = util.bytes2unicode(u'\N{SNOWMAN}', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'\N{SNOWMAN}', text_type))
+        rv = util.bytes2unicode('\N{SNOWMAN}', encoding='ascii')
+        self.assertEqual((rv, type(rv)), ('\N{SNOWMAN}', text_type))
 
     def test_ascii(self):
         rv = util.bytes2unicode('abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', text_type))
 
     def test_nonascii(self):
         with self.assertRaises(UnicodeDecodeError):
@@ -309,7 +309,7 @@ class StringToBoolean(unittest.TestCase):
 
     def test_ascii(self):
         rv = util.bytes2unicode(b'abcd', encoding='ascii')
-        self.assertEqual((rv, type(rv)), (u'abcd', text_type))
+        self.assertEqual((rv, type(rv)), ('abcd', text_type))
 
     def test_nonascii(self):
         with self.assertRaises(UnicodeDecodeError):
@@ -377,16 +377,16 @@ class StripUrlPassword(unittest.TestCase):
 class JoinList(unittest.TestCase):
 
     def test_list(self):
-        self.assertEqual(util.join_list(['aa', 'bb']), u'aa bb')
+        self.assertEqual(util.join_list(['aa', 'bb']), 'aa bb')
 
     def test_tuple(self):
-        self.assertEqual(util.join_list(('aa', 'bb')), u'aa bb')
+        self.assertEqual(util.join_list(('aa', 'bb')), 'aa bb')
 
     def test_string(self):
-        self.assertEqual(util.join_list('abc'), u'abc')
+        self.assertEqual(util.join_list('abc'), 'abc')
 
     def test_unicode(self):
-        self.assertEqual(util.join_list(u'abc'), u'abc')
+        self.assertEqual(util.join_list('abc'), 'abc')
 
     def test_nonascii(self):
         with self.assertRaises(UnicodeDecodeError):
@@ -396,18 +396,18 @@ class JoinList(unittest.TestCase):
 class CommandToString(unittest.TestCase):
 
     def test_short_string(self):
-        self.assertEqual(util.command_to_string("ab cd"), u"'ab cd'")
+        self.assertEqual(util.command_to_string("ab cd"), "'ab cd'")
 
     def test_long_string(self):
-        self.assertEqual(util.command_to_string("ab cd ef"), u"'ab cd ...'")
+        self.assertEqual(util.command_to_string("ab cd ef"), "'ab cd ...'")
 
     def test_list(self):
         self.assertEqual(util.command_to_string(['ab', 'cd', 'ef']),
-                         u"'ab cd ...'")
+                         "'ab cd ...'")
 
     def test_nested_list(self):
         self.assertEqual(util.command_to_string(['ab', ['cd', ['ef']]]),
-                         u"'ab cd ...'")
+                         "'ab cd ...'")
 
     def test_object(self):
         # this looks like a renderable
@@ -416,10 +416,10 @@ class CommandToString(unittest.TestCase):
     def test_list_with_objects(self):
         # the object looks like a renderable, and is skipped
         self.assertEqual(util.command_to_string(['ab', object(), 'cd']),
-                         u"'ab cd'")
+                         "'ab cd'")
 
     def test_invalid_ascii(self):
-        self.assertEqual(util.command_to_string(b'a\xffc'), u"'a\ufffdc'")
+        self.assertEqual(util.command_to_string(b'a\xffc'), "'a\ufffdc'")
 
 
 class TestRewrap(unittest.TestCase):

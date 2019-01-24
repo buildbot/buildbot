@@ -138,7 +138,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
                         idx = content.rindex('\n', 0, idx)
                     content = content[:idx]
                 rv.append(content)
-            return u'\n'.join(rv) + u'\n' if rv else u''
+            return '\n'.join(rv) + '\n' if rv else ''
         return self.db.pool.do(thdGetLogLines)
 
     # returns a Deferred that returns a value
@@ -194,7 +194,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
     def thdAppendLog(self, conn, logid, content):
         # check for trailing newline and strip it for storage -- chunks omit
         # the trailing newline
-        assert content[-1] == u'\n'
+        assert content[-1] == '\n'
         # Note that row.content is stored as bytes, and our caller is sending unicode
         content = content[:-1].encode('utf-8')
         q = sa.select([self.db.model.logs.c.num_lines])

@@ -159,7 +159,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
 
         # initial checkin
         yield self.rtype.masterActive(
-            name=u'myname', masterid=13, _reactor=clock)
+            name='myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(60)))
@@ -173,7 +173,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         clock.advance(60)
         yield self.master.db.masters.markMasterInactive(13)
         yield self.rtype.masterActive(
-            u'myname', masterid=13, _reactor=clock)
+            'myname', masterid=13, _reactor=clock)
         master = yield self.master.db.masters.getMaster(13)
         self.assertEqual(master, dict(id=13, name='myname',
                                       active=True, last_active=epoch2datetime(120)))
@@ -196,12 +196,12 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         clock.advance(60)
 
         self.master.db.insertTestData([
-            fakedb.Master(id=13, name=u'aname', active=1,
+            fakedb.Master(id=13, name='aname', active=1,
                           last_active=clock.seconds()),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
-        yield self.rtype.masterStopped(name=u'aname', masterid=13)
+        yield self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated. \
             assert_called_with(13, 'aname')
 
@@ -211,12 +211,12 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
         clock.advance(60)
 
         self.master.db.insertTestData([
-            fakedb.Master(id=13, name=u'aname', active=0,
+            fakedb.Master(id=13, name='aname', active=0,
                           last_active=0),
         ])
 
         self.rtype._masterDeactivated = mock.Mock()
-        yield self.rtype.masterStopped(name=u'aname', masterid=13)
+        yield self.rtype.masterStopped(name='aname', masterid=13)
         self.rtype._masterDeactivated.assert_not_called()
 
     def test_signature_expireMasters(self):
@@ -269,7 +269,7 @@ class Master(interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Step(id=200, buildid=13),
             fakedb.Log(id=2000, stepid=200, num_lines=2),
             fakedb.LogChunk(logid=2000, first_line=1, last_line=2,
-                            content=u'ab\ncd')
+                            content='ab\ncd')
         ])
 
         # mock out the _masterDeactivated methods this will call

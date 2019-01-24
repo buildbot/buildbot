@@ -129,10 +129,10 @@ expected_default = {
                     'required': False,
                     'tablabel': '',
                     'type': 'nested'}],
-    'builder_names': [u'builder'],
-    'button_name': u'defaultforce',
-    'label': u'defaultforce',
-    'name': u'defaultforce',
+    'builder_names': ['builder'],
+    'button_name': 'defaultforce',
+    'label': 'defaultforce',
+    'name': 'defaultforce',
     'enabled': True}
 
 

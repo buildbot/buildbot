@@ -43,7 +43,7 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
 
     def insertData(self):
         self.db.insertTestData([
-            fakedb.SourceStamp(id=13, branch=u'secret'),
+            fakedb.SourceStamp(id=13, branch='secret'),
             fakedb.Build(
                 id=15, buildrequestid=16, masterid=1, workerid=2, builderid=21),
             fakedb.BuildRequest(id=16, buildsetid=17),

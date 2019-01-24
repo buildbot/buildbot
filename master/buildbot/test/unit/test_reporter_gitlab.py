@@ -32,7 +32,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.LoggingMixin):
     # repository must be in the form http://gitlab/<owner>/<project>
-    TEST_REPO = u'http://gitlab/buildbot/buildbot'
+    TEST_REPO = 'http://gitlab/buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -99,7 +99,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
 
     @defer.inlineCallbacks
     def test_sshurl(self):
-        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
         self._http.expect(
@@ -119,7 +119,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
 
     @defer.inlineCallbacks
     def test_merge_request_forked(self):
-        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
         self.TEST_PROPS['source_project_id'] = 20922342342
         build = yield self.setupBuildResults(SUCCESS)
         self._http.expect(
@@ -136,7 +136,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
 
     @defer.inlineCallbacks
     def test_noproject(self):
-        self.TEST_REPO = u'git@gitlab:buildbot/buildbot.git'
+        self.TEST_REPO = 'git@gitlab:buildbot/buildbot.git'
         self.setUpLogging()
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made
@@ -152,7 +152,7 @@ class TestGitLabStatusPush(unittest.TestCase, ReporterTestMixin, logging.Logging
 
     @defer.inlineCallbacks
     def test_nourl(self):
-        self.TEST_REPO = u''
+        self.TEST_REPO = ''
         build = yield self.setupBuildResults(SUCCESS)
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)

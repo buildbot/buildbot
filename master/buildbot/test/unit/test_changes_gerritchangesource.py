@@ -33,7 +33,7 @@ from buildbot.test.util import changesource
 class TestGerritHelpers(unittest.TestCase):
 
     def test_proper_json(self):
-        self.assertEqual(u"Justin Case <justin.case@example.com>",
+        self.assertEqual("Justin Case <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
                              "username": "justincase",
                              "name": "Justin Case",
@@ -41,47 +41,47 @@ class TestGerritHelpers(unittest.TestCase):
                          }))
 
     def test_missing_username(self):
-        self.assertEqual(u"Justin Case <justin.case@example.com>",
+        self.assertEqual("Justin Case <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
                              "name": "Justin Case",
                              "email": "justin.case@example.com"
                          }))
 
     def test_missing_name(self):
-        self.assertEqual(u"unknown <justin.case@example.com>",
+        self.assertEqual("unknown <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
                              "email": "justin.case@example.com"
                          }))
-        self.assertEqual(u"gerrit <justin.case@example.com>",
+        self.assertEqual("gerrit <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
                              "email": "justin.case@example.com"
-                         }, u"gerrit"))
-        self.assertEqual(u"justincase <justin.case@example.com>",
+                         }, "gerrit"))
+        self.assertEqual("justincase <justin.case@example.com>",
                          gerritchangesource._gerrit_user_to_author({
                              "username": "justincase",
                              "email": "justin.case@example.com"
-                         }, u"gerrit"))
+                         }, "gerrit"))
 
     def test_missing_email(self):
-        self.assertEqual(u"Justin Case",
+        self.assertEqual("Justin Case",
                          gerritchangesource._gerrit_user_to_author({
                              "username": "justincase",
                              "name": "Justin Case"
                          }))
-        self.assertEqual(u"Justin Case",
+        self.assertEqual("Justin Case",
                          gerritchangesource._gerrit_user_to_author({
                              "name": "Justin Case"
                          }))
-        self.assertEqual(u"justincase",
+        self.assertEqual("justincase",
                          gerritchangesource._gerrit_user_to_author({
                              "username": "justincase"
                          }))
-        self.assertEqual(u"unknown",
+        self.assertEqual("unknown",
                          gerritchangesource._gerrit_user_to_author({
                          }))
-        self.assertEqual(u"gerrit",
+        self.assertEqual("gerrit",
                          gerritchangesource._gerrit_user_to_author({
-                         }, u"gerrit"))
+                         }, "gerrit"))
 
 
 class TestGerritChangeSource(changesource.ChangeSourceMixin,
@@ -117,28 +117,28 @@ class TestGerritChangeSource(changesource.ChangeSourceMixin,
 
     # this variable is reused in test_steps_source_repo
     # to ensure correct integration between change source and repo step
-    expected_change = {'category': u'patchset-created',
+    expected_change = {'category': 'patchset-created',
                        'files': ['unknown'],
-                       'repository': u'ssh://someuser@somehost:29418/pr',
-                       'author': u'Dustin <dustin@mozilla.com>',
-                       'comments': u'fix 1234',
-                       'project': u'pr',
-                       'branch': u'br/4321',
-                       'revlink': u'http://buildbot.net',
+                       'repository': 'ssh://someuser@somehost:29418/pr',
+                       'author': 'Dustin <dustin@mozilla.com>',
+                       'comments': 'fix 1234',
+                       'project': 'pr',
+                       'branch': 'br/4321',
+                       'revlink': 'http://buildbot.net',
                        'codebase': None,
-                       'revision': u'abcdef',
+                       'revision': 'abcdef',
                        'src': None,
                        'when_timestamp': None,
-                       'properties': {u'event.change.owner.email': u'dustin@mozilla.com',
-                                      u'event.change.subject': u'fix 1234',
-                                      u'event.change.project': u'pr',
-                                      u'event.change.owner.name': u'Dustin',
-                                      u'event.change.number': u'4321',
-                                      u'event.change.url': u'http://buildbot.net',
-                                      u'event.change.branch': u'br',
-                                      u'event.type': u'patchset-created',
-                                      u'event.patchSet.revision': u'abcdef',
-                                      u'event.patchSet.number': u'12'}}
+                       'properties': {'event.change.owner.email': 'dustin@mozilla.com',
+                                      'event.change.subject': 'fix 1234',
+                                      'event.change.project': 'pr',
+                                      'event.change.owner.name': 'Dustin',
+                                      'event.change.number': '4321',
+                                      'event.change.url': 'http://buildbot.net',
+                                      'event.change.branch': 'br',
+                                      'event.type': 'patchset-created',
+                                      'event.patchSet.revision': 'abcdef',
+                                      'event.patchSet.number': '12'}}
 
     @defer.inlineCallbacks
     def test_lineReceived_patchset_created(self):

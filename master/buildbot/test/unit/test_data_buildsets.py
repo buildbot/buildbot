@@ -138,8 +138,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             fakedb.Builder(id=43, name='bldr2'),
         ])
 
-    SS234_DATA = {'branch': u'br', 'codebase': u'cb', 'patch': None,
-                  'project': u'pr', 'repository': u'rep', 'revision': u'rev',
+    SS234_DATA = {'branch': 'br', 'codebase': 'cb', 'patch': None,
+                  'project': 'pr', 'repository': 'rep', 'revision': 'rev',
                   'created_at': epoch2datetime(89834834), 'ssid': 234}
 
     def test_signature_addBuildset(self):
@@ -210,8 +210,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
              'buildrequests', str(brid), 'new'),
             self._buildRequestMessageDict(brid, bsid, builderid))
 
-    def _buildsetMessage(self, bsid, external_idstring=u'extid',
-                         reason=u'because', scheduler=u'fakesched', sourcestampids=None,
+    def _buildsetMessage(self, bsid, external_idstring='extid',
+                         reason='because', scheduler='fakesched', sourcestampids=None,
                          submitted_at=A_TIMESTAMP):
         if sourcestampids is None:
             sourcestampids = [234]
@@ -225,8 +225,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
                  submitted_at=submitted_at))
 
     def _buildsetCompleteMessage(self, bsid, complete_at=A_TIMESTAMP_EPOCH,
-                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring=u'extid',
-                                 reason=u'because', results=0, sourcestampids=None):
+                                 submitted_at=A_TIMESTAMP_EPOCH, external_idstring='extid',
+                                 reason='because', results=0, sourcestampids=None):
         if sourcestampids is None:
             sourcestampids = [234]
         ssmap = {234: self.SS234_DATA}
@@ -242,8 +242,8 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         class FakeSched(object):
             name = 'fakesched'
 
-        kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                      sourcestamps=[234], external_idstring=u'extid',
+        kwargs = dict(scheduler='fakesched', reason='because',
+                      sourcestamps=[234], external_idstring='extid',
                       builderids=[42, 43], waited_for=True)
         expectedReturn = (200, {42: 1000, 43: 1001})
         expectedMessages = [
@@ -255,9 +255,9 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
             self._buildRequestMessage3(1001, 200, 43),
             self._buildsetMessage(200),
         ]
-        expectedBuildset = dict(reason=u'because',
+        expectedBuildset = dict(reason='because',
                                 properties={},
-                                external_idstring=u'extid')
+                                external_idstring='extid')
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 
@@ -266,17 +266,17 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
         class FakeSched(object):
             name = 'fakesched'
 
-        kwargs = dict(scheduler=u'fakesched', reason=u'because',
-                      sourcestamps=[234], external_idstring=u'extid', waited_for=False)
+        kwargs = dict(scheduler='fakesched', reason='because',
+                      sourcestamps=[234], external_idstring='extid', waited_for=False)
         expectedReturn = (200, {})
         expectedMessages = [
             self._buildsetMessage(200),
             # with no builderNames, this is done already
             self._buildsetCompleteMessage(200),
         ]
-        expectedBuildset = dict(reason=u'because',
+        expectedBuildset = dict(reason='because',
                                 properties={},
-                                external_idstring=u'extid')
+                                external_idstring='extid')
         return self.do_test_addBuildset(kwargs,
                                         expectedReturn, expectedMessages, expectedBuildset)
 

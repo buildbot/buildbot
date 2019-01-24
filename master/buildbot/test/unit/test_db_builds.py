@@ -136,7 +136,7 @@ class Tests(interfaces.InterfaceTests):
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string=u'build 5', results=None))
+                                     state_string='build 5', results=None))
 
     @defer.inlineCallbacks
     def test_getBuild_missing(self):
@@ -203,13 +203,13 @@ class Tests(interfaces.InterfaceTests):
         yield self.insertTestData(self.backgroundData)
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock)
+                                                   state_string='test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
@@ -222,27 +222,27 @@ class Tests(interfaces.InterfaceTests):
         ])
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock)
+                                                   state_string='test test2', _reactor=clock)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(number, 11)
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks
     def test_setBuildStateString(self):
         yield self.insertTestData(self.backgroundData + [self.threeBuilds[0]])
         yield self.db.builds.setBuildStateString(buildid=50,
-                                                 state_string=u'test test2')
+                                                 state_string='test test2')
         bdict = yield self.db.builds.getBuild(50)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
         self.assertEqual(bdict, dict(id=50, number=5, buildrequestid=42,
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1), complete_at=None,
-                                     state_string=u'test test2', results=None))
+                                     state_string='test test2', results=None))
 
     @defer.inlineCallbacks
     def test_finishBuild(self):
@@ -256,7 +256,7 @@ class Tests(interfaces.InterfaceTests):
                                      masterid=88, builderid=77, workerid=13,
                                      started_at=epoch2datetime(TIME1),
                                      complete_at=epoch2datetime(TIME4),
-                                     state_string=u'build 5',
+                                     state_string='build 5',
                                      results=7))
 
     @defer.inlineCallbacks
@@ -316,7 +316,7 @@ class RealTests(Tests):
 
         id, number = yield self.db.builds.addBuild(builderid=77,
                                                    buildrequestid=41, workerid=13, masterid=88,
-                                                   state_string=u'test test2', _reactor=clock,
+                                                   state_string='test test2', _reactor=clock,
                                                    _race_hook=raceHook)
         bdict = yield self.db.builds.getBuild(id)
         validation.verifyDbDict(self, 'dbbuilddict', bdict)
@@ -324,7 +324,7 @@ class RealTests(Tests):
         self.assertEqual(bdict, {'buildrequestid': 41, 'builderid': 77,
                                  'id': id, 'masterid': 88, 'number': number, 'workerid': 13,
                                  'started_at': epoch2datetime(TIME1),
-                                 'complete_at': None, 'state_string': u'test test2',
+                                 'complete_at': None, 'state_string': 'test test2',
                                  'results': None})
 
     @defer.inlineCallbacks

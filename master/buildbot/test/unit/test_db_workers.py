@@ -41,9 +41,9 @@ class Tests(interfaces.InterfaceTests):
     baseRows = [
         fakedb.Master(id=10, name='m10'),
         fakedb.Master(id=11, name='m11'),
-        fakedb.Builder(id=20, name=u'a'),
-        fakedb.Builder(id=21, name=u'b'),
-        fakedb.Builder(id=22, name=u'c'),
+        fakedb.Builder(id=20, name='a'),
+        fakedb.Builder(id=21, name='b'),
+        fakedb.Builder(id=22, name='c'),
         fakedb.Worker(id=30, name='zero'),
         fakedb.Worker(id=31, name='one'),
     ]
@@ -127,7 +127,7 @@ class Tests(interfaces.InterfaceTests):
 
     @defer.inlineCallbacks
     def test_findWorkerId_insert(self):
-        id = yield self.db.workers.findWorkerId(name=u"xyz")
+        id = yield self.db.workers.findWorkerId(name="xyz")
         worker = yield self.db.workers.getWorker(workerid=id)
         self.assertEqual(worker['name'], 'xyz')
         self.assertEqual(worker['workerinfo'], {})
@@ -135,7 +135,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_findWorkerId_existing(self):
         yield self.insertTestData(self.baseRows)
-        id = yield self.db.workers.findWorkerId(name=u"one")
+        id = yield self.db.workers.findWorkerId(name="one")
         self.assertEqual(id, 31)
 
     @defer.inlineCallbacks
@@ -700,7 +700,7 @@ class TestRealDB(unittest.TestCase,
     @defer.inlineCallbacks
     def test_workerConfiguredManyBuilders(self):
         manyWorkers = [
-            fakedb.Builder(id=100 + n, name=u'a' + str(n))
+            fakedb.Builder(id=100 + n, name='a' + str(n))
             for n in range(1000)
         ] + [
             fakedb.Worker(id=50 + n, name='zero' + str(n))

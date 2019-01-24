@@ -278,7 +278,7 @@ class HgPoller(base.PollingChangeSource):
                                                path=self._absWorkdir(), env=os.environ, errortoo=False)
         results = results.decode(self.encoding)
 
-        revNodeList = [rn.split(u':', 1) for rn in results.strip().split()]
+        revNodeList = [rn.split(':', 1) for rn in results.strip().split()]
 
         log.msg('hgpoller: processing %d changes: %r in %r'
                 % (len(revNodeList), revNodeList, self._absWorkdir()))
@@ -295,7 +295,7 @@ class HgPoller(base.PollingChangeSource):
                 category=bytes2unicode(self.category),
                 project=bytes2unicode(self.project),
                 repository=bytes2unicode(self.repourl),
-                src=u'hg')
+                src='hg')
             # writing after addChange so that a rev is never missed,
             # but at once to avoid impact from later errors
             yield self._setCurrentRev(rev, oid=oid)

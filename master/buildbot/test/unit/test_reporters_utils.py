@@ -28,7 +28,7 @@ from buildbot.test.util import logging
 
 
 class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
-    LOGCONTENT = textwrap.dedent(u"""\
+    LOGCONTENT = textwrap.dedent("""\
         line zero
         line 1
         """)
@@ -58,10 +58,10 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
                          masterid=92, results=SUCCESS),
             fakedb.BuildsetSourceStamp(buildsetid=98, sourcestampid=234),
             fakedb.SourceStamp(id=234),
-            fakedb.Change(changeid=13, branch=u'trunk', revision=u'9283', author='me@foo',
-                          repository=u'svn://...', codebase=u'cbsvn',
-                          project=u'world-domination', sourcestampid=234),
-            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
+            fakedb.Change(changeid=13, branch='trunk', revision='9283', author='me@foo',
+                          repository='svn://...', codebase='cbsvn',
+                          project='world-domination', sourcestampid=234),
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='him@foo', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=235, patchid=99),
@@ -99,9 +99,9 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         build1 = res['builds'][0]
         build2 = res['builds'][1]
         buildset = res['buildset']
-        self.assertEqual(build1['properties'], {u'reason': (u'because', u'fakedb'),
-                                                u'owner': (u'him', u'fakedb'),
-                                                u'workername': (u'wrk', u'fakedb')})
+        self.assertEqual(build1['properties'], {'reason': ('because', 'fakedb'),
+                                                'owner': ('him', 'fakedb'),
+                                                'workername': ('wrk', 'fakedb')})
         self.assertEqual(len(build1['steps']), 2)
         self.assertEqual(build1['buildid'], 20)
         self.assertEqual(build2['buildid'], 21)

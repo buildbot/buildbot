@@ -261,7 +261,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                        'number': 1,
                        'results': None,
                        'started_at': epoch2datetime(1),
-                       'state_string': u'created',
+                       'state_string': 'created',
                        'properties': {}}
 
     def setUp(self):
@@ -300,7 +300,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
                                         builderid=10, buildrequestid=13, workerid=20,
                                         exp_kwargs=dict(builderid=10, buildrequestid=13,
                                                         workerid=20, masterid=self.master.masterid,
-                                                        state_string=u'created'))
+                                                        state_string='created'))
 
     def test_newBuildEvent(self):
 
@@ -327,7 +327,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     def test_setBuildStateString(self):
         return self.do_test_callthrough('setBuildStateString',
                                         self.rtype.setBuildStateString,
-                                        buildid=10, state_string=u'a b')
+                                        buildid=10, state_string='a b')
 
     def test_signature_finishBuild(self):
         @self.assertArgSpecMatches(

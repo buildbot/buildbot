@@ -120,7 +120,7 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
 
         defer.returnValue({
             'raw': logLines,
-            'mime-type': u'text/html' if dbdict['type'] == 'h' else u'text/plain',
+            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
             'filename': dbdict['slug']})
 
 

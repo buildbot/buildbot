@@ -58,23 +58,23 @@ class Tests(interfaces.InterfaceTests):
         clock = task.Clock()
         clock.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
-            branch=u'production', revision=u'abdef',
-            repository=u'test://repo', codebase=u'cb', project=u'stamper',
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper',
             _reactor=clock)
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
         validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(ssdict, {
-            'branch': u'production',
-            'codebase': u'cb',
+            'branch': 'production',
+            'codebase': 'cb',
             'patchid': None,
             'patch_author': None,
             'patch_body': None,
             'patch_comment': None,
             'patch_level': None,
             'patch_subdir': None,
-            'project': u'stamper',
-            'repository': u'test://repo',
-            'revision': u'abdef',
+            'project': 'stamper',
+            'repository': 'test://repo',
+            'revision': 'abdef',
             'ssid': ssid,
             'created_at': epoch2datetime(CREATED_AT),
         })
@@ -113,24 +113,24 @@ class Tests(interfaces.InterfaceTests):
         clock = task.Clock()
         clock.advance(CREATED_AT)
         ssid = yield self.db.sourcestamps.findSourceStampId(
-            branch=u'production', revision=u'abdef',
-            repository=u'test://repo', codebase=u'cb', project=u'stamper',
-            patch_body=b'my patch', patch_level=3, patch_subdir=u'master/',
-            patch_author=u'me', patch_comment=u"comment", _reactor=clock)
+            branch='production', revision='abdef',
+            repository='test://repo', codebase='cb', project='stamper',
+            patch_body=b'my patch', patch_level=3, patch_subdir='master/',
+            patch_author='me', patch_comment="comment", _reactor=clock)
         ssdict = yield self.db.sourcestamps.getSourceStamp(ssid)
         validation.verifyDbDict(self, 'ssdict', ssdict)
         self.assertEqual(ssdict, {
-            'branch': u'production',
-            'codebase': u'cb',
+            'branch': 'production',
+            'codebase': 'cb',
             'patchid': 1,
             'patch_author': 'me',
             'patch_body': b'my patch',
             'patch_comment': 'comment',
             'patch_level': 3,
             'patch_subdir': 'master/',
-            'project': u'stamper',
-            'repository': u'test://repo',
-            'revision': u'abdef',
+            'project': 'stamper',
+            'repository': 'test://repo',
+            'revision': 'abdef',
             'created_at': epoch2datetime(CREATED_AT),
             'ssid': ssid,
         })
@@ -177,7 +177,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamp_patch(self):
         yield self.insertTestData([
-            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=234, patchid=99),
@@ -202,7 +202,7 @@ class Tests(interfaces.InterfaceTests):
     @defer.inlineCallbacks
     def test_getSourceStamps(self):
         yield self.insertTestData([
-            fakedb.Patch(id=99, patch_base64=u'aGVsbG8sIHdvcmxk',
+            fakedb.Patch(id=99, patch_base64='aGVsbG8sIHdvcmxk',
                          patch_author='bar', patch_comment='foo', subdir='/foo',
                          patchlevel=3),
             fakedb.SourceStamp(id=234, revision='r', project='p',
@@ -216,31 +216,31 @@ class Tests(interfaces.InterfaceTests):
 
         self.assertEqual(sorted(sourcestamps, key=sourceStampKey),
                          sorted([{
-                                 'branch': u'b',
-                                 'codebase': u'c',
-                                 'patch_author': u'bar',
+                                 'branch': 'b',
+                                 'codebase': 'c',
+                                 'patch_author': 'bar',
                                  'patchid': 99,
                                  'patch_body': b'hello, world',
-                                 'patch_comment': u'foo',
+                                 'patch_comment': 'foo',
                                  'patch_level': 3,
-                                 'patch_subdir': u'/foo',
-                                 'project': u'p',
-                                 'repository': u'rep',
-                                 'revision': u'r',
+                                 'patch_subdir': '/foo',
+                                 'project': 'p',
+                                 'repository': 'rep',
+                                 'revision': 'r',
                                  'created_at': epoch2datetime(CREATED_AT),
                                  'ssid': 234,
                                  }, {
-                                 'branch': u'b2',
-                                 'codebase': u'c2',
+                                 'branch': 'b2',
+                                 'codebase': 'c2',
                                  'patchid': None,
                                  'patch_author': None,
                                  'patch_body': None,
                                  'patch_comment': None,
                                  'patch_level': None,
                                  'patch_subdir': None,
-                                 'project': u'p2',
-                                 'repository': u'rep2',
-                                 'revision': u'r2',
+                                 'project': 'p2',
+                                 'repository': 'rep2',
+                                 'revision': 'r2',
                                  'created_at': epoch2datetime(CREATED_AT + 10),
                                  'ssid': 235,
                                  }], key=sourceStampKey))
@@ -282,8 +282,8 @@ class Tests(interfaces.InterfaceTests):
                              started_at=1304262222), ]
 
         expected = [{
-            'branch': u'master',
-            'codebase': u'A',
+            'branch': 'master',
+            'codebase': 'A',
             'created_at': epoch2datetime(CREATED_AT),
             'patch_author': None,
             'patch_body': None,
@@ -291,9 +291,9 @@ class Tests(interfaces.InterfaceTests):
             'patch_level': None,
             'patch_subdir': None,
             'patchid': None,
-            'project': u'proj',
-            'repository': u'repo',
-            'revision': u'aaa',
+            'project': 'proj',
+            'repository': 'repo',
+            'revision': 'aaa',
             'ssid': 234}]
 
         return self.do_test_getSourceStampsForBuild(rows, 50, expected)
@@ -320,8 +320,8 @@ class Tests(interfaces.InterfaceTests):
                              builderid=77, state_string="test", workerid=13,
                              started_at=1304262222), ]
 
-        expected = [{'branch': u'master',
-                     'codebase': u'A',
+        expected = [{'branch': 'master',
+                     'codebase': 'A',
                      'created_at': epoch2datetime(CREATED_AT),
                      'patch_author': None,
                      'patch_body': None,
@@ -329,12 +329,12 @@ class Tests(interfaces.InterfaceTests):
                      'patch_level': None,
                      'patch_subdir': None,
                      'patchid': None,
-                     'project': u'proj',
-                     'repository': u'repo',
-                     'revision': u'aaa',
+                     'project': 'proj',
+                     'repository': 'repo',
+                     'revision': 'aaa',
                      'ssid': 234},
-                    {'branch': u'master',
-                     'codebase': u'B',
+                    {'branch': 'master',
+                     'codebase': 'B',
                      'created_at': epoch2datetime(CREATED_AT + 10),
                      'patch_author': None,
                      'patch_body': None,
@@ -342,12 +342,12 @@ class Tests(interfaces.InterfaceTests):
                      'patch_level': None,
                      'patch_subdir': None,
                      'patchid': None,
-                     'project': u'proj',
-                     'repository': u'repo',
-                     'revision': u'bbb',
+                     'project': 'proj',
+                     'repository': 'repo',
+                     'revision': 'bbb',
                      'ssid': 235},
-                    {'branch': u'master',
-                     'codebase': u'C',
+                    {'branch': 'master',
+                     'codebase': 'C',
                      'created_at': epoch2datetime(CREATED_AT + 20),
                      'patch_author': None,
                      'patch_body': None,
@@ -355,9 +355,9 @@ class Tests(interfaces.InterfaceTests):
                      'patch_level': None,
                      'patch_subdir': None,
                      'patchid': None,
-                     'project': u'proj',
-                     'repository': u'repo',
-                     'revision': u'ccc',
+                     'project': 'proj',
+                     'repository': 'repo',
+                     'revision': 'ccc',
                      'ssid': 236}]
         return self.do_test_getSourceStampsForBuild(rows, 50, expected)
 

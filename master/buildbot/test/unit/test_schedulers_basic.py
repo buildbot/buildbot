@@ -413,8 +413,8 @@ class SingleBranchScheduler(CommonStuffMixin,
         yield sched.gotChange(self.mkch(codebase='b', revision='2345:bcd', repository='B', number=1), True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
-            'a': dict(branch='master', repository='A', revision=u'1234:abc', lastChange=0),
-            'b': dict(branch='master', repository='B', revision=u'2345:bcd', lastChange=1)})
+            'a': dict(branch='master', repository='A', revision='1234:abc', lastChange=0),
+            'b': dict(branch='master', repository='B', revision='2345:bcd', lastChange=1)})
 
         yield sched.deactivate()
 
@@ -439,7 +439,7 @@ class SingleBranchScheduler(CommonStuffMixin,
         yield sched.gotChange(self.mkch(codebase='a', revision='1234:abc', repository='A', number=10), True)
 
         self.db.state.assertState(self.OBJECTID, lastCodebases={
-            'a': dict(branch='master', repository='A', revision=u'5555:def', lastChange=20)})
+            'a': dict(branch='master', repository='A', revision='5555:def', lastChange=20)})
 
         yield sched.deactivate()
 
@@ -450,11 +450,11 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=True)
         sched._lastCodebases = {'a': dict(branch='master', repository='A',
-                                          revision=u'5555:def', lastChange=20)}
+                                          revision='5555:def', lastChange=20)}
 
         cbd = yield sched.getCodebaseDict('a')
         self.assertEqual(cbd, dict(branch='master', repository='A',
-                                   revision=u'5555:def', lastChange=20))
+                                   revision='5555:def', lastChange=20))
 
     @defer.inlineCallbacks
     def test_getCodebaseDict_no_createAbsoluteSourceStamps(self):
@@ -463,7 +463,7 @@ class SingleBranchScheduler(CommonStuffMixin,
                                        codebases=self.codebases,
                                        createAbsoluteSourceStamps=False)
         sched._lastCodebases = {'a': dict(branch='master', repository='A',
-                                          revision=u'5555:def', lastChange=20)}
+                                          revision='5555:def', lastChange=20)}
 
         cbd = yield sched.getCodebaseDict('a')
         # _lastCodebases is ignored

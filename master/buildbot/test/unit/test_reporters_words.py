@@ -31,7 +31,7 @@ from buildbot.util import datetime2epoch
 
 class TestContactChannel(unittest.TestCase):
 
-    BUILDER_NAMES = [u'builder1', u'builder2']
+    BUILDER_NAMES = ['builder1', 'builder2']
     BUILDER_IDS = [23, 45]
 
     def setUp(self):
@@ -372,8 +372,8 @@ class TestContactChannel(unittest.TestCase):
         # Make first builder configured, but not connected
         # Make second builder configured and connected
         self.master.db.insertTestData([
-            fakedb.Worker(id=1, name=u'linux', info={}),  # connected one
-            fakedb.Worker(id=2, name=u'linux', info={}),  # disconnected one
+            fakedb.Worker(id=1, name='linux', info={}),  # connected one
+            fakedb.Worker(id=2, name='linux', info={}),  # disconnected one
             fakedb.BuilderMaster(
                 id=4012, masterid=13, builderid=self.BUILDER_IDS[0]),
             fakedb.BuilderMaster(
@@ -547,7 +547,7 @@ class TestContactChannel(unittest.TestCase):
                                         complete=True,
                                         complete_at=datetime2epoch(
                                             build['complete_at']),
-                                        state_string=u'',
+                                        state_string='',
                                         results=results,
         ))
 
@@ -604,13 +604,13 @@ class TestContactChannel(unittest.TestCase):
         self.contact.bot.groupChat = groupChat
 
         self.contact.send("unmuted")
-        self.contact.send(u"unmuted, unicode \N{SNOWMAN}")
+        self.contact.send("unmuted, unicode \N{SNOWMAN}")
         self.contact.muted = True
         self.contact.send("muted")
 
         self.assertEqual(events, [
             ('#buildbot', 'unmuted'),
-            ('#buildbot', u'unmuted, unicode \u2603'),
+            ('#buildbot', 'unmuted, unicode \u2603'),
         ])
 
     def test_act(self):
@@ -621,13 +621,13 @@ class TestContactChannel(unittest.TestCase):
         self.contact.bot.groupDescribe = groupDescribe
 
         self.contact.act("unmuted")
-        self.contact.act(u"unmuted, unicode \N{SNOWMAN}")
+        self.contact.act("unmuted, unicode \N{SNOWMAN}")
         self.contact.muted = True
         self.contact.act("muted")
 
         self.assertEqual(events, [
             ('#buildbot', 'unmuted'),
-            ('#buildbot', u'unmuted, unicode \u2603'),
+            ('#buildbot', 'unmuted, unicode \u2603'),
         ])
 
     @defer.inlineCallbacks

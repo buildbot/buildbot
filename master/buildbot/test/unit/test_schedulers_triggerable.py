@@ -71,7 +71,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         if properties is None:
                 properties = {}
         bsid, brids = yield idsDeferred
-        properties.update({u'scheduler': ('n', u'Scheduler')})
+        properties.update({'scheduler': ('n', 'Scheduler')})
 
         self.assertEqual(
             self.master.db.buildsets.buildsets[bsid]['properties'],
@@ -91,7 +91,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 'complete': False,
                 'complete_at': None,
                 'external_idstring': None,
-                'reason': u"The Triggerable scheduler named 'n' triggered this build",
+                'reason': "The Triggerable scheduler named 'n' triggered this build",
                 'results': -1,
                 'submitted_at': datetime(1999, 12, 31, 23, 59, 59, tzinfo=UTC),
                 'parent_buildid': None,
@@ -120,7 +120,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                 buildrequest,
                 {
                     'buildrequestid': brid,
-                    'buildername': u'b',
+                    'buildername': 'b',
                     'builderid': 77,
                     'buildsetid': bsid,
                     'claimed': False,
@@ -143,7 +143,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
                                         complete=True,
                                         complete_at=200,
                                         external_idstring=None,
-                                        reason=u'triggering',
+                                        reason='triggering',
                                         results=results,
                                         sourcestamps=[],
                                         parent_buildid=None,
@@ -187,7 +187,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
         self.assertTriggeredBuildset(
             idsDeferred,
             waited_for,
-            properties={u'pr': ('op', u'test')},
+            properties={'pr': ('op', 'test')},
             sourcestamps=[
                 dict(branch='br', project='p', repository='r',
                      codebase='cb', revision='myrev'),

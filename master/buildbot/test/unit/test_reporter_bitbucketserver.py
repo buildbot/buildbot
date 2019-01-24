@@ -67,23 +67,23 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'description': 'Build done.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': u'Builder0',
+                  'state': 'FAILED', 'key': 'Builder0',
                   'description': 'Build done.'})
         build['complete'] = False
         self.sp.buildStarted(("build", 20, "started"), build)
@@ -106,23 +106,23 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build started.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'SUCCESSFUL', 'key': u'Builder0',
+                  'state': 'SUCCESSFUL', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'FAILED', 'key': u'Builder0',
+                  'state': 'FAILED', 'key': 'Builder0',
                   'name': 'Build', 'description': 'Build finished.'},
             code=HTTP_PROCESSED)
         build['complete'] = False
@@ -139,9 +139,9 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         # we make sure proper calls to txrequests have been made
         self._http.expect(
             'post',
-            u'/rest/build-status/1.0/commits/d34db33fd43db33f',
+            '/rest/build-status/1.0/commits/d34db33fd43db33f',
             json={'url': 'http://localhost:8080/#builders/79/builds/0',
-                  'state': 'INPROGRESS', 'key': u'Builder0',
+                  'state': 'INPROGRESS', 'key': 'Builder0',
                   'description': 'Build started.'},
             code=HTTP_NOT_FOUND,
             content_json={
@@ -172,8 +172,8 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
         self.sp.buildFinished(("build", 20, "finished"), build)
 
 
-UNICODE_BODY = u"body: \u00E5\u00E4\u00F6 text"
-EXPECTED_API = u'/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
+UNICODE_BODY = "body: \u00E5\u00E4\u00F6 text"
+EXPECTED_API = '/rest/api/1.0/projects/PRO/repos/myrepo/pull-requests/20/comments'
 PR_URL = "http://example.com/projects/PRO/repos/myrepo/pull-requests/20"
 
 
@@ -224,7 +224,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build["complete"] = True
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
-        self.assertLogged(u'Comment sent to {}'.format(PR_URL))
+        self.assertLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_basic_without_logging(self):
@@ -240,7 +240,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         self.setUpLogging()
         yield self.cp.buildComplete(("build", 20, "finished"), build)
 
-        self.assertNotLogged(u'Comment sent to {}'.format(PR_URL))
+        self.assertNotLogged('Comment sent to {}'.format(PR_URL))
 
     @defer.inlineCallbacks
     def test_reporter_without_pullrequest(self):
@@ -274,8 +274,8 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         build = builds[0]
 
         http_error_code = 500
-        error_body = {u"errors": [
-            {u"message": u"A dataXXXbase error has occurred."}]}
+        error_body = {"errors": [
+            {"message": "A dataXXXbase error has occurred."}]}
 
         self._http.expect(
             "post",

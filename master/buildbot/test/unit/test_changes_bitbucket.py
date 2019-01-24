@@ -365,18 +365,18 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'contributor',
-            'branch': u'default',
+            'author': 'contributor',
+            'branch': 'default',
             'category': None,
             'codebase': None,
-            'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'1111111111111111111111111111111111111111',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-            'src': u'bitbucket',
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
             'when_timestamp': 1381869500,
         }])
 
@@ -390,18 +390,18 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'contributor',
-            'branch': u'default',
+            'author': 'contributor',
+            'branch': 'default',
             'category': None,
             'codebase': None,
-            'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'1111111111111111111111111111111111111111',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-            'src': u'bitbucket',
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
             'when_timestamp': 1381869500,
         }])
 
@@ -418,19 +418,19 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'contributor',
-            'branch': u'default',
+            'author': 'contributor',
+            'branch': 'default',
             'category': None,
             'codebase': None,
-            'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'https://bitbucket.org/contributor/slug',
+            'repository': 'https://bitbucket.org/contributor/slug',
 
-            'revision': u'1111111111111111111111111111111111111111',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-            'src': u'bitbucket',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
             'when_timestamp': 1381869500,
         }])
         self.patch(client, "getPage", self.pr_list2.getPage)
@@ -438,33 +438,33 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         self.assertEqual(self.master.data.updates.changesAdded, [
             {
-                'author': u'contributor',
-                'branch': u'default',
+                'author': 'contributor',
+                'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
-                'project': u'',
+                'project': '',
                 'properties': {},
-                'repository': u'https://bitbucket.org/contributor/slug',
-                'revision': u'1111111111111111111111111111111111111111',
-                'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-                'src': u'bitbucket',
+                'repository': 'https://bitbucket.org/contributor/slug',
+                'revision': '1111111111111111111111111111111111111111',
+                'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+                'src': 'bitbucket',
                 'when_timestamp': 1381869500,
             },
             {
-                'author': u'contributor',
-                'branch': u'default',
+                'author': 'contributor',
+                'branch': 'default',
                 'category': None,
                 'codebase': None,
-                'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+                'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
                 'files': None,
-                'project': u'',
+                'project': '',
                 'properties': {},
-                'repository': u'https://bitbucket.org/contributor/slug',
-                'revision': u'2222222222222222222222222222222222222222',
-                'revlink': u'https://bitbucket.org/contributor/slug/commits/222222222222',
-                'src': u'bitbucket',
+                'repository': 'https://bitbucket.org/contributor/slug',
+                'revision': '2222222222222222222222222222222222222222',
+                'revlink': 'https://bitbucket.org/contributor/slug/commits/222222222222',
+                'src': 'bitbucket',
                 'when_timestamp': 1381869500,
             }
         ])
@@ -498,18 +498,18 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
         yield self.changesource.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'contributor',
-            'branch': u'default',
+            'author': 'contributor',
+            'branch': 'default',
             'category': None,
             'codebase': None,
-            'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'1111111111111111111111111111111111111111',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-            'src': u'bitbucket',
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
             'when_timestamp': 1381869500,
         }])
 
@@ -527,17 +527,17 @@ class TestBitbucketPullrequestPoller(changesource.ChangeSourceMixin, unittest.Te
 
         yield self.changesource.poll()
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'contributor',
-            'branch': u'default',
+            'author': 'contributor',
+            'branch': 'default',
             'category': None,
             'codebase': None,
-            'comments': u'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
+            'comments': 'pull-request #1: title\nhttps://bitbucket.org/owner/slug/pull-request/1',
             'files': None,
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'https://bitbucket.org/contributor/slug',
-            'revision': u'1111111111111111111111111111111111111111',
-            'revlink': u'https://bitbucket.org/contributor/slug/commits/111111111111',
-            'src': u'bitbucket',
+            'repository': 'https://bitbucket.org/contributor/slug',
+            'revision': '1111111111111111111111111111111111111111',
+            'revlink': 'https://bitbucket.org/contributor/slug/commits/111111111111',
+            'src': 'bitbucket',
             'when_timestamp': 1396825656,
         }])

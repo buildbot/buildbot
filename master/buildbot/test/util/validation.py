@@ -100,7 +100,7 @@ class IdentifierValidator(Validator):
     name = 'identifier'
     hasArgs = True
 
-    ident_re = re.compile(u'^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
+    ident_re = re.compile('^[a-zA-Z\u00a0-\U0010ffff_-][a-zA-Z0-9\u00a0-\U0010ffff_-]*$', flags=re.UNICODE)
 
     def __init__(self, len):
         self.len = len
@@ -300,7 +300,7 @@ class Selector(Validator):
         try:
             arg, object = arg_object
         except (TypeError, ValueError) as e:
-            yield u"{!r}: not a not data options and data dict: {}".format(arg_object, e)
+            yield "{!r}: not a not data options and data dict: {}".format(arg_object, e)
         for selector, validator in self.selectors:
             if selector is None or selector(arg):
                 for msg in validator.validate(name, object):

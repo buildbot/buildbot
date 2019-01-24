@@ -98,11 +98,11 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
@@ -135,11 +135,11 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
@@ -167,11 +167,11 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass"
                 }
             },
@@ -215,11 +215,11 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
                     },
                     'type': 'DOCKER'
                 },
-                'id': u'buildbot-worker/buildbot-bot-masterhash',
+                'id': 'buildbot-worker/buildbot-bot-masterhash',
                 'env': {
                     'BUILDMASTER': "master",
                     'BUILDMASTER_PORT': '1234',
-                    'WORKERNAME': u'bot',
+                    'WORKERNAME': 'bot',
                     'WORKERPASS': "pass",
                     'PARAMETER': 'foo'
                 }

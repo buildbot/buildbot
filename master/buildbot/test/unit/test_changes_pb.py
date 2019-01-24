@@ -221,12 +221,12 @@ class TestChangePerspective(unittest.TestCase):
         yield cp.perspective_addChange(dict(who="bar", files=['a']))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'bar',
+            'author': 'bar',
             'branch': None,
             'category': None,
             'codebase': None,
             'comments': None,
-            'files': [u'a'],
+            'files': ['a'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -242,10 +242,10 @@ class TestChangePerspective(unittest.TestCase):
         yield cp.perspective_addChange(dict(who="bar", files=[], codebase='cb'))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'bar',
+            'author': 'bar',
             'branch': None,
             'category': None,
-            'codebase': u'cb',
+            'codebase': 'cb',
             'comments': None,
             'files': [],
             'project': '',
@@ -264,12 +264,12 @@ class TestChangePerspective(unittest.TestCase):
             dict(who="bar", files=['xx/a', 'yy/b']))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'bar',
+            'author': 'bar',
             'branch': None,
             'category': None,
             'codebase': None,
             'comments': None,
-            'files': [u'a'],
+            'files': ['a'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -293,11 +293,11 @@ class TestChangePerspective(unittest.TestCase):
             'codebase': None,
             'comments': None,
             'files': [],
-            'project': u'',
+            'project': '',
             'properties': {},
-            'repository': u'',
+            'repository': '',
             'revision': None,
-            'revlink': u'',
+            'revlink': '',
             'src': None,
             'when_timestamp': None,
         }])
@@ -338,7 +338,7 @@ class TestChangePerspective(unittest.TestCase):
             'category': None,
             'codebase': None,
             'comments': None,
-            'files': [u'a', u'b'],
+            'files': ['a', 'b'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -351,17 +351,17 @@ class TestChangePerspective(unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_unicode(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(author=u"\N{SNOWMAN}",
-                                          comments=u"\N{SNOWMAN}",
-                                          files=[u'\N{VERY MUCH GREATER-THAN}']))
+        yield cp.perspective_addChange(dict(author="\N{SNOWMAN}",
+                                          comments="\N{SNOWMAN}",
+                                          files=['\N{VERY MUCH GREATER-THAN}']))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'\u2603',
+            'author': '\u2603',
             'branch': None,
             'category': None,
             'codebase': None,
-            'comments': u'\u2603',
-            'files': [u'\u22d9'],
+            'comments': '\u2603',
+            'files': ['\u22d9'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -374,18 +374,18 @@ class TestChangePerspective(unittest.TestCase):
     @defer.inlineCallbacks
     def test_addChange_unicode_as_bytestring(self):
         cp = pb.ChangePerspective(self.master, None)
-        yield cp.perspective_addChange(dict(author=u"\N{SNOWMAN}".encode('utf8'),
-                                          comments=u"\N{SNOWMAN}".encode(
+        yield cp.perspective_addChange(dict(author="\N{SNOWMAN}".encode('utf8'),
+                                          comments="\N{SNOWMAN}".encode(
                                               'utf8'),
-                                          files=[u'\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
+                                          files=['\N{VERY MUCH GREATER-THAN}'.encode('utf8')]))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'\u2603',
+            'author': '\u2603',
             'branch': None,
             'category': None,
             'codebase': None,
-            'comments': u'\u2603',
-            'files': [u'\u22d9'],
+            'comments': '\u2603',
+            'files': ['\u22d9'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -408,7 +408,7 @@ class TestChangePerspective(unittest.TestCase):
             'category': None,
             'codebase': None,
             'comments': None,
-            'files': [u'a'],
+            'files': ['a'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -425,7 +425,7 @@ class TestChangePerspective(unittest.TestCase):
                                           files=[]))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'me',
+            'author': 'me',
             'branch': None,
             'category': None,
             'codebase': None,
@@ -446,7 +446,7 @@ class TestChangePerspective(unittest.TestCase):
         yield cp.perspective_addChange(dict(who="c <h@c>", src='git'))
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'c <h@c>',
+            'author': 'c <h@c>',
             'branch': None,
             'category': None,
             'codebase': None,
@@ -457,6 +457,6 @@ class TestChangePerspective(unittest.TestCase):
             'repository': '',
             'revision': None,
             'revlink': '',
-            'src': u'git',
+            'src': 'git',
             'when_timestamp': None,
         }])

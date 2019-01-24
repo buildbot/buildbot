@@ -39,15 +39,15 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
     def test_basic(self):
         def thd():
             workersInDB = ['foo', 'bar']
-            self.dbConfig.set(u"workers", workersInDB)
-            workers = self.dbConfig.get(u"workers")
+            self.dbConfig.set("workers", workersInDB)
+            workers = self.dbConfig.get("workers")
             self.assertEqual(workers, workersInDB)
 
         return threads.deferToThread(thd)
 
     def test_default(self):
         def thd():
-            workers = self.dbConfig.get(u"workers", "default")
+            workers = self.dbConfig.get("workers", "default")
             self.assertEqual(workers, "default")
 
         return threads.deferToThread(thd)
@@ -55,7 +55,7 @@ class TestDbConfig(db.RealDatabaseMixin, unittest.TestCase):
     def test_error(self):
         def thd():
             with self.assertRaises(KeyError):
-                self.dbConfig.get(u"workers")
+                self.dbConfig.get("workers")
 
         return threads.deferToThread(thd)
 
@@ -86,7 +86,7 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
     def test_default(self):
         def thd():
             db = self.createDbConfig()
-            self.assertEqual("foo", db.get(u"workers", "foo"))
+            self.assertEqual("foo", db.get("workers", "foo"))
 
         return threads.deferToThread(thd)
 
@@ -94,7 +94,7 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         def thd():
             db = self.createDbConfig()
             with self.assertRaises(KeyError):
-                db.get(u"workers")
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
@@ -102,7 +102,7 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         def thd():
             db = self.createDbConfig("garbage://")
             with self.assertRaises(KeyError):
-                db.get(u"workers")
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
@@ -110,7 +110,7 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         def thd():
             db = self.createDbConfig("trash")
             with self.assertRaises(KeyError):
-                db.get(u"workers")
+                db.get("workers")
 
         return threads.deferToThread(thd)
 
@@ -118,6 +118,6 @@ class TestDbConfigNotInitialized(db.RealDatabaseMixin, unittest.TestCase):
         def thd():
             db = self.createDbConfig("sqlite://bad")
             with self.assertRaises(KeyError):
-                db.get(u"workers")
+                db.get("workers")
 
         return threads.deferToThread(thd)

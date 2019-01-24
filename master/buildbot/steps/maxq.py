@@ -58,5 +58,5 @@ class MaxQ(ShellCommand):
 
     def getResultSummary(self):
         if self.failures:
-            return {u'step': u"%d maxq failures" % self.failures}
-        return {u'step': u'success'}
+            return {'step': "%d maxq failures" % self.failures}
+        return {'step': 'success'}

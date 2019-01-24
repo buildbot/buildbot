@@ -47,47 +47,47 @@ class Change(unittest.TestCase):
         self.master = fakemaster.make_master(testcase=self, wantDb=True)
         self.change23 = changes.Change(**dict(  # using **dict(..) forces kwargs
             category='devel',
-            repository=u'git://warner',
-            codebase=u'mainapp',
-            who=u'dustin',
+            repository='git://warner',
+            codebase='mainapp',
+            who='dustin',
             when=266738404,
-            comments=u'fix whitespace',
-            project=u'Buildbot',
-            branch=u'warnerdb',
-            revlink=u'http://warner/0e92a098b',
+            comments='fix whitespace',
+            project='Buildbot',
+            branch='warnerdb',
+            revlink='http://warner/0e92a098b',
             properties={'notest': "no"},
-            files=[u'master/README.txt', u'worker/README.txt'],
-            revision=u'deadbeef'))
+            files=['master/README.txt', 'worker/README.txt'],
+            revision='deadbeef'))
         self.change23.number = 23
 
         self.change24 = changes.Change(**dict(
             category='devel',
-            repository=u'git://warner',
-            codebase=u'mainapp',
-            who=u'dustin',
+            repository='git://warner',
+            codebase='mainapp',
+            who='dustin',
             when=266738405,
-            comments=u'fix whitespace again',
-            project=u'Buildbot',
-            branch=u'warnerdb',
-            revlink=u'http://warner/0e92a098c',
+            comments='fix whitespace again',
+            project='Buildbot',
+            branch='warnerdb',
+            revlink='http://warner/0e92a098c',
             properties={'notest': "no"},
-            files=[u'master/README.txt', u'worker/README.txt'],
-            revision=u'deadbeef'))
+            files=['master/README.txt', 'worker/README.txt'],
+            revision='deadbeef'))
         self.change24.number = 24
 
         self.change25 = changes.Change(**dict(
             category='devel',
-            repository=u'git://warner',
-            codebase=u'mainapp',
-            who=u'dustin',
+            repository='git://warner',
+            codebase='mainapp',
+            who='dustin',
             when=266738406,
-            comments=u'fix whitespace again',
-            project=u'Buildbot',
-            branch=u'warnerdb',
-            revlink=u'http://warner/0e92a098d',
+            comments='fix whitespace again',
+            project='Buildbot',
+            branch='warnerdb',
+            revlink='http://warner/0e92a098d',
             properties={'notest': "no"},
-            files=[u'master/README.txt', u'worker/README.txt'],
-            revision=u'deadbeef'))
+            files=['master/README.txt', 'worker/README.txt'],
+            revision='deadbeef'))
         self.change25.number = 25
 
     @defer.inlineCallbacks
@@ -126,7 +126,7 @@ class Change(unittest.TestCase):
 
     def test_asText(self):
         text = self.change23.asText()
-        self.assertTrue(re.match(textwrap.dedent(u'''\
+        self.assertTrue(re.match(textwrap.dedent('''\
             Files:
              master/README.txt
              worker/README.txt
@@ -144,21 +144,21 @@ class Change(unittest.TestCase):
         self.assertIn('1978', dict['at'])  # timezone-sensitive
         del dict['at']
         self.assertEqual(dict, {
-            'branch': u'warnerdb',
-            'category': u'devel',
-            'codebase': u'mainapp',
-            'comments': u'fix whitespace',
-            'files': [{'name': u'master/README.txt'},
-                      {'name': u'worker/README.txt'}],
+            'branch': 'warnerdb',
+            'category': 'devel',
+            'codebase': 'mainapp',
+            'comments': 'fix whitespace',
+            'files': [{'name': 'master/README.txt'},
+                      {'name': 'worker/README.txt'}],
             'number': 23,
-            'project': u'Buildbot',
+            'project': 'Buildbot',
             'properties': [('notest', 'no', 'Change')],
-            'repository': u'git://warner',
-            'rev': u'deadbeef',
-            'revision': u'deadbeef',
-            'revlink': u'http://warner/0e92a098b',
+            'repository': 'git://warner',
+            'rev': 'deadbeef',
+            'revision': 'deadbeef',
+            'revlink': 'http://warner/0e92a098b',
             'when': 266738404,
-            'who': u'dustin'})
+            'who': 'dustin'})
 
     def test_getShortAuthor(self):
         self.assertEqual(self.change23.getShortAuthor(), 'dustin')

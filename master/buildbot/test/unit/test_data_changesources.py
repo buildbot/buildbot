@@ -160,9 +160,9 @@ class ChangeSource(interfaces.InterfaceTests, unittest.TestCase):
     def test_findChangeSourceId(self):
         self.master.db.changesources.findChangeSourceId = mock.Mock(
             return_value=defer.succeed(10))
-        self.assertEqual((yield self.rtype.findChangeSourceId(u'cs')), 10)
+        self.assertEqual((yield self.rtype.findChangeSourceId('cs')), 10)
         self.master.db.changesources.findChangeSourceId.assert_called_with(
-            u'cs')
+            'cs')
 
     def test_signature_trySetChangeSourceMaster(self):
         @self.assertArgSpecMatches(

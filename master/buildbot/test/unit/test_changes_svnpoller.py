@@ -376,7 +376,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['project'], '')
         self.assertEqual(changes[0]['repository'], base)
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], [u"çmain.c"])
+        self.assertEqual(changes[1]['files'], ["çmain.c"])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], '')
         self.assertEqual(changes[1]['repository'], base)
@@ -385,7 +385,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], None)
         self.assertEqual(changes[0]['revision'], '4')
-        self.assertEqual(changes[0]['files'], [u"version.c"])
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
         # r5 should *not* create a change as it's a branch deletion
         changes = s.create_changes([logentries[5]])
@@ -396,7 +396,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(len(changes), 1)
         self.assertEqual(changes[0]['branch'], 'branch')
         self.assertEqual(changes[0]['revision'], '6')
-        self.assertEqual(changes[0]['files'], [u"version.c"])
+        self.assertEqual(changes[0]['files'], ["version.c"])
 
     def makeInfoExpect(self, password='bbrocks'):
         args = ['svn', 'info', '--xml', '--non-interactive', sample_base,
@@ -440,7 +440,7 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         self.assertEqual(changes[0]['codebase'], "overridden-codebase")
 
         self.assertEqual(changes[1]['branch'], "branch")
-        self.assertEqual(changes[1]['files'], [u'çmain.c'])
+        self.assertEqual(changes[1]['files'], ['çmain.c'])
         self.assertEqual(changes[1]['revision'], '3')
         self.assertEqual(changes[1]['project'], "overridden-project")
         self.assertEqual(changes[1]['repository'], "overridden-repository")
@@ -475,12 +475,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         yield s.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'warner',
+            'author': 'warner',
             'branch': 'branch',
             'category': None,
             'codebase': None,
-            'comments': u'make_branch',
-            'files': [u''],
+            'comments': 'make_branch',
+            'files': [''],
             'project': '',
             'properties': {},
             'repository':
@@ -497,12 +497,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
         yield s.poll()
 
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'warner',
+            'author': 'warner',
             'branch': 'branch',
             'category': None,
             'codebase': None,
-            'comments': u'commit_on_branch',
-            'files': [u'çmain.c'],
+            'comments': 'commit_on_branch',
+            'files': ['çmain.c'],
             'project': '',
             'properties': {},
             'repository':
@@ -512,12 +512,12 @@ class TestSVNPoller(gpo.GetProcessOutputMixin,
             'src': 'svn',
             'when_timestamp': None,
         }, {
-            'author': u'warner',
+            'author': 'warner',
             'branch': None,
             'category': None,
             'codebase': None,
-            'comments': u'revised_to_2',
-            'files': [u'version.c'],
+            'comments': 'revised_to_2',
+            'files': ['version.c'],
             'project': '',
             'properties': {},
             'repository':

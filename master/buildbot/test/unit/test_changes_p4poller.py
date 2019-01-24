@@ -60,7 +60,7 @@ Affected files ...
 """
 
 p4_describe_3 = \
-    u"""Change 3 by bob@testclient on 2006/04/13 21:51:39
+    """Change 3 by bob@testclient on 2006/04/13 21:51:39
 
 \tshort desc truncated because this is a long description.
 \tASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.
@@ -178,12 +178,12 @@ class TestP4Poller(changesource.ChangeSourceMixin,
         if changesAdded[1]['branch'] == 'branch_c':
             changesAdded[1:] = reversed(changesAdded[1:])
         self.assertEqual(self.master.data.updates.changesAdded, [{
-            'author': u'slamb',
-            'branch': u'trunk',
+            'author': 'slamb',
+            'branch': 'trunk',
             'category': None,
             'codebase': None,
-            'comments': u'creation',
-            'files': [u'whatbranch'],
+            'comments': 'creation',
+            'files': ['whatbranch'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -192,14 +192,14 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             'src': None,
             'when_timestamp': datetime2epoch(when1),
         }, {
-            'author': u'bob',
-            'branch': u'branch_b',
+            'author': 'bob',
+            'branch': 'branch_b',
             'category': None,
             'codebase': None,
             'comments':
-                u'short desc truncated because this is a long description.\n'
-                u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
-            'files': [u'branch_b_file', u'whatbranch'],
+                'short desc truncated because this is a long description.\n'
+                'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+            'files': ['branch_b_file', 'whatbranch'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -208,14 +208,14 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             'src': None,
             'when_timestamp': datetime2epoch(when2),
         }, {
-            'author': u'bob',
-            'branch': u'branch_c',
+            'author': 'bob',
+            'branch': 'branch_c',
             'category': None,
             'codebase': None,
             'comments':
-                u'short desc truncated because this is a long description.\n'
-                u'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
-            'files': [u'whatbranch'],
+                'short desc truncated because this is a long description.\n'
+                'ASDF-GUI-P3-\u2018Upgrade Icon\u2019 disappears sometimes.',
+            'files': ['whatbranch'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -373,12 +373,12 @@ class TestP4Poller(changesource.ChangeSourceMixin,
 
         self.assertEqual(sorted(self.master.data.updates.changesAdded, key=changeKey),
             sorted([{
-            'author': u'mpatel',
-            'branch': u'branch_c',
+            'author': 'mpatel',
+            'branch': 'branch_c',
             'category': None,
             'codebase': None,
-            'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-            'files': [u'branch_c_file'],
+            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'files': ['branch_c_file'],
             'project': '',
             'properties': {},
             'repository': '',
@@ -387,12 +387,12 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             'src': None,
             'when_timestamp': datetime2epoch(when),
         }, {
-            'author': u'mpatel',
-            'branch': u'branch_b',
+            'author': 'mpatel',
+            'branch': 'branch_b',
             'category': None,
             'codebase': None,
-            'comments': u'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
-            'files': [u'branch_b_file'],
+            'comments': 'This is a multiline comment with tabs and spaces\n\nA list:\n  Item 1\n\tItem 2',
+            'files': ['branch_b_file'],
             'project': '',
             'properties': {},
             'repository': '',

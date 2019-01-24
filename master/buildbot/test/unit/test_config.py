@@ -380,10 +380,10 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
             'when_timestamp': None,
             'branch': None,
             'category': None,
-            'revlink': u'',
+            'revlink': '',
             'properties': {},
-            'repository': u'',
-            'project': u'',
+            'repository': '',
+            'project': '',
             'codebase': None},
             cfg.preChangeGenerator())
 
@@ -807,22 +807,22 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_not_identifiers(self):
-        for name in (u"123 no initial digits", u"spaces not allowed",
-                     u'a/b', u"a.b.c.d", u"a-b_c.d9",):
+        for name in ("123 no initial digits", "spaces not allowed",
+                     'a/b', "a.b.c.d", "a-b_c.d9",):
             self.cfg.load_workers(self.filename,
                                   dict(workers=[worker.Worker(name, 'x')]))
             self.assertConfigError(self.errors, "is not an identifier")
             self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_too_long(self):
-        name = u"a" * 51
+        name = "a" * 51
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
         self.assertConfigError(self.errors, "is longer than")
         self.errors.errors[:] = []  # clear out the errors
 
     def test_load_workers_empty(self):
-        name = u""
+        name = ""
         self.cfg.load_workers(self.filename,
                               dict(workers=[worker.Worker(name, 'x')]))
         self.errors.errors[:] = self.errors.errors[
@@ -1264,7 +1264,7 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
     def test_utf8_name(self):
         with self.assertRaisesConfigError(
                 "builder names must be unicode or ASCII"):
-            config.BuilderConfig(name=u"\N{SNOWMAN}".encode('utf-8'),
+            config.BuilderConfig(name="\N{SNOWMAN}".encode('utf-8'),
                                  factory=self.factory, workernames=['a'])
 
     def test_no_factory(self):
@@ -1369,10 +1369,10 @@ class BuilderConfig(ConfigErrorsMixin, unittest.TestCase):
 
     def test_unicode_name(self):
         cfg = config.BuilderConfig(
-            name=u'a \N{SNOWMAN} c', workername='a', factory=self.factory)
+            name='a \N{SNOWMAN} c', workername='a', factory=self.factory)
         self.assertIdentical(cfg.factory, self.factory)
         self.assertAttributes(cfg,
-                              name=u'a \N{SNOWMAN} c')
+                              name='a \N{SNOWMAN} c')
 
     def test_args(self):
         cfg = config.BuilderConfig(

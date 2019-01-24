@@ -81,7 +81,7 @@ class IndexResource(www.WwwTestMixin, unittest.TestCase):
             import pyjade
             [pyjade]
             exp.update({'plugin/views/plugin.html':
-                        json.dumps(u'<div class="myclass"><pre>this is customized</pre></div>')})
+                        json.dumps('<div class="myclass"><pre>this is customized</pre></div>')})
         except ImportError:
             log.msg("Only testing html based template override")
         template_dir = util.sibpath(__file__, "test_templates_dir")

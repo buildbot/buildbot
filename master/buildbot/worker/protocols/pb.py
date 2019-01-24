@@ -113,7 +113,7 @@ def _wrapRemoteException():
         yield
     except pb.RemoteError as ex:
         if ex.remoteType in (b'twisted.spread.flavors.NoSuchMethod',
-                             u'twisted.spread.flavors.NoSuchMethod'):
+                             'twisted.spread.flavors.NoSuchMethod'):
             raise _NoSuchMethod(ex)
         else:
             raise

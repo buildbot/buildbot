@@ -300,10 +300,10 @@ class MasterConfig(util.ComparableMixin):
             'when_timestamp': kwargs.get('when_timestamp', None),
             'branch': kwargs.get('branch', None),
             'category': kwargs.get('category', None),
-            'revlink': kwargs.get('revlink', u''),
+            'revlink': kwargs.get('revlink', ''),
             'properties': kwargs.get('properties', {}),
-            'repository': kwargs.get('repository', u''),
-            'project': kwargs.get('project', u''),
+            'repository': kwargs.get('repository', ''),
+            'project': kwargs.get('project', ''),
             'codebase': kwargs.get('codebase', None)
         }
 

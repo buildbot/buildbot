@@ -32,7 +32,7 @@ from buildbot.test.util.reporter import ReporterTestMixin
 
 class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
     # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot/buildbot'
+    TEST_PROJECT = 'buildbot/buildbot'
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -115,8 +115,8 @@ class TestGitHubStatusPush(unittest.TestCase, ReporterTestMixin):
 
 class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
     # project must be in the form <owner>/<project>
-    TEST_PROJECT = u'buildbot'
-    TEST_REPO = u'https://github.com/buildbot1/buildbot1.git'
+    TEST_PROJECT = 'buildbot'
+    TEST_REPO = 'https://github.com/buildbot1/buildbot1.git'
 
     @defer.inlineCallbacks
     def setUp(self):
@@ -153,7 +153,7 @@ class TestGitHubStatusPushURL(unittest.TestCase, ReporterTestMixin):
 
     @defer.inlineCallbacks
     def test_ssh(self):
-        self.TEST_REPO = u'git@github.com:buildbot2/buildbot2.git'
+        self.TEST_REPO = 'git@github.com:buildbot2/buildbot2.git'
 
         build = yield self.setupBuildResults(SUCCESS)
         # we make sure proper calls to txrequests have been made

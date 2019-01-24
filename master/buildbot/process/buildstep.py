@@ -437,29 +437,29 @@ class BuildStep(results.ResultComputingConfigMixin,
         if self.description is not None:
             stepsumm = util.join_list(self.description)
             if self.descriptionSuffix:
-                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
         else:
-            stepsumm = u'running'
-        return {u'step': stepsumm}
+            stepsumm = 'running'
+        return {'step': stepsumm}
 
     def getResultSummary(self):
         if self.descriptionDone is not None or self.description is not None:
             stepsumm = util.join_list(self.descriptionDone or self.description)
             if self.descriptionSuffix:
-                stepsumm += u' ' + util.join_list(self.descriptionSuffix)
+                stepsumm += ' ' + util.join_list(self.descriptionSuffix)
         else:
-            stepsumm = u'finished'
+            stepsumm = 'finished'
 
         if self.results != SUCCESS:
-            stepsumm += u' (%s)' % Results[self.results]
+            stepsumm += ' (%s)' % Results[self.results]
 
-        return {u'step': stepsumm}
+        return {'step': stepsumm}
 
     @defer.inlineCallbacks
     def getBuildResultSummary(self):
         summary = yield self.getResultSummary()
-        if self.results in self.updateBuildSummaryPolicy and u'build' not in summary and u'step' in summary:
-            summary[u'build'] = summary[u'step']
+        if self.results in self.updateBuildSummaryPolicy and 'build' not in summary and 'step' in summary:
+            summary['build'] = summary['step']
         defer.returnValue(summary)
 
     @debounce.method(wait=1)
@@ -481,7 +481,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                 raise TypeError('getCurrentSummary must return a dictionary: ' +
                                 methodInfo(self.getCurrentSummary))
 
-        stepResult = summary.get('step', u'finished')
+        stepResult = summary.get('step', 'finished')
         if not isinstance(stepResult, text_type):
             raise TypeError("step result string must be unicode (got %r)"
                             % (stepResult,))
@@ -821,8 +821,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addCompleteLog(self, name, text):
         logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), u't')
-        _log = self._newLog(name, u't', logid)
+                                                      util.bytes2unicode(name), 't')
+        _log = self._newLog(name, 't', logid)
         yield _log.addContent(text)
         yield _log.finish()
 
@@ -830,8 +830,8 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addHTMLLog(self, name, html):
         logid = yield self.master.data.updates.addLog(self.stepid,
-                                                      util.bytes2unicode(name), u'h')
-        _log = self._newLog(name, u'h', logid)
+                                                      util.bytes2unicode(name), 'h')
+        _log = self._newLog(name, 'h', logid)
         html = bytes2unicode(html)
         yield _log.addContent(html)
         yield _log.finish()
@@ -1254,7 +1254,7 @@ class ShellMixin(object):
         summary = util.command_to_string(self.command)
         if not summary:
             return super(ShellMixin, self).getResultSummary()
-        return {u'step': summary}
+        return {'step': summary}
 
 # Parses the logs for a list of regexs. Meant to be invoked like:
 # regexes = ((re.compile(...), FAILURE), (re.compile(...), WARNINGS))

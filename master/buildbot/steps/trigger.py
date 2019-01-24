@@ -314,10 +314,10 @@ class Trigger(BuildStep):
 
     def getResultSummary(self):
         if self.ended:
-            return {u'step': u'interrupted'}
-        return {u'step': self.getCurrentSummary()[u'step']} if self.triggeredNames else {}
+            return {'step': 'interrupted'}
+        return {'step': self.getCurrentSummary()['step']} if self.triggeredNames else {}
 
     def getCurrentSummary(self):
         if not self.triggeredNames:
-            return {u'step': u'running'}
-        return {u'step': u'triggered %s' % (u', '.join(self.triggeredNames))}
+            return {'step': 'running'}
+        return {'step': 'triggered %s' % (', '.join(self.triggeredNames))}

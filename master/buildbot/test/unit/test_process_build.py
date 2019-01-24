@@ -87,7 +87,7 @@ class FakeBuildStep(BuildStep):
         BuildStep.__init__(
             self, haltOnFailure=False, flunkOnWarnings=False, flunkOnFailure=True,
             warnOnWarnings=True, warnOnFailure=False, alwaysRun=False, name='fake')
-        self._summary = {u'step': u'result', u'build': u'build result'}
+        self._summary = {'step': 'result', 'build': 'build result'}
         self._expected_results = SUCCESS
 
     def run(self):
@@ -712,7 +712,7 @@ class TestBuild(unittest.TestCase):
         res = yield b._flushProperties(result)
         self.assertEqual(res, result)
         self.assertEqual(self.master.data.updates.properties,
-                         [(43, u'foo', 'bar', u'test')])
+                         [(43, 'foo', 'bar', 'test')])
 
     def create_fake_steps(self, names):
         steps = []

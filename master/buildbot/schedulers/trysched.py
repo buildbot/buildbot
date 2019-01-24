@@ -234,9 +234,9 @@ class Try_Jobdir(TryBase):
                            patch_subdir='',
                            project=parsed_job['project'],
                            repository=parsed_job['repository'])
-        reason = u"'try' job"
+        reason = "'try' job"
         if parsed_job['who']:
-            reason += u" by user {}".format(bytes2unicode(parsed_job['who']))
+            reason += " by user {}".format(bytes2unicode(parsed_job['who']))
         properties = parsed_job['properties']
         requested_props = Properties()
         requested_props.update(properties, "try build")
@@ -393,13 +393,13 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
         if not builderNames:
             return
 
-        reason = u"'try' job"
+        reason = "'try' job"
 
         if who:
-            reason += u" by user {}".format(bytes2unicode(who))
+            reason += " by user {}".format(bytes2unicode(who))
 
         if comment:
-            reason += u" ({})".format(bytes2unicode(comment))
+            reason += " ({})".format(bytes2unicode(comment))
 
         sourcestamp = dict(
             branch=branch, revision=revision, repository=repository,

@@ -123,7 +123,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
                  pollInterval=60 * 10, histmax=None, pollinterval=-2,
                  encoding='utf8', project=None, name=None,
                  use_tickets=False, ticket_login_interval=60 * 60 * 24,
-                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (u''), resolvewho=lambda who: (who)):
+                 server_tz=None, pollAtLaunch=False, revlink=lambda branch, revision: (''), resolvewho=lambda who: (who)):
 
         # for backward compatibility; the parameter used to be spelled with 'i'
         if pollinterval != -2:
@@ -249,7 +249,7 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         try:
             result = bytes2unicode(result, self.encoding)
         except UnicodeError as ex:
-            log.msg(u"{}: cannot fully decode {} in {}".format(
+            log.msg("{}: cannot fully decode {} in {}".format(
                     ex, repr(result), self.encoding))
             result = bytes2unicode(result, encoding=self.encoding, errors="replace")
 

@@ -388,7 +388,7 @@ class TestEC2LatentWorker(unittest.TestCase):
         instances = list(instances)
         self.assertEqual(len(instances), 1)
         self.assertEqual(instances[0].id, id)
-        self.assertEqual(instances[0].tags, [{u'Value': 'bar', u'Key': 'foo'}])
+        self.assertEqual(instances[0].tags, [{'Value': 'bar', 'Key': 'foo'}])
 
     @mock_ec2
     def test_start_instance_ip(self):

@@ -227,7 +227,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_start_returns_SKIPPED(self):
         self.setupStep(self.SkippingBuildStep())
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -236,7 +236,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_doStepIf_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=False))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -248,7 +248,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
             return False
         self.setupStep(self.FakeBuildStep(doStepIf=dostepif))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -257,7 +257,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def test_doStepIf_returns_false(self):
         self.setupStep(self.FakeBuildStep(doStepIf=lambda step: False))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -267,7 +267,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         self.setupStep(self.FakeBuildStep(
             doStepIf=lambda step: defer.succeed(False)))
         self.step.finished = mock.Mock()
-        self.expectOutcome(result=SKIPPED, state_string=u'finished (skipped)')
+        self.expectOutcome(result=SKIPPED, state_string='finished (skipped)')
         yield self.runStep()
         # 837: we want to specifically avoid calling finished() if skipping
         self.step.finished.assert_not_called()
@@ -404,9 +404,9 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def setup_summary_test(self):
         self.clock = task.Clock()
         self.patch(NewStyleStep, 'getCurrentSummary',
-                   lambda self: defer.succeed({'step': u'C'}))
+                   lambda self: defer.succeed({'step': 'C'}))
         self.patch(NewStyleStep, 'getResultSummary',
-                   lambda self: defer.succeed({'step': u'CS', 'build': u'CB'}))
+                   lambda self: defer.succeed({'step': 'CS', 'build': 'CB'}))
         step = NewStyleStep()
         step.master = fakemaster.make_master(testcase=self,
                                              wantData=True, wantDb=True)
@@ -421,7 +421,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = True
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], u'C')
+        self.assertEqual(step.master.data.updates.stepStateString[13], 'C')
 
     def test_updateSummary_running_empty_dict(self):
         step = self.setup_summary_test()
@@ -430,7 +430,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.updateSummary()
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13],
-                         u'finished')
+                         'finished')
 
     def test_updateSummary_running_not_unicode(self):
         step = self.setup_summary_test()
@@ -453,7 +453,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step._running = False
         step.updateSummary()
         self.clock.advance(1)
-        self.assertEqual(step.master.data.updates.stepStateString[13], u'CS')
+        self.assertEqual(step.master.data.updates.stepStateString[13], 'CS')
 
     def test_updateSummary_finished_empty_dict(self):
         step = self.setup_summary_test()
@@ -462,7 +462,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
         step.updateSummary()
         self.clock.advance(1)
         self.assertEqual(step.master.data.updates.stepStateString[13],
-                         u'finished')
+                         'finished')
 
     def test_updateSummary_finished_not_dict(self):
         step = self.setup_summary_test()
@@ -484,100 +484,100 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
     def checkSummary(self, got, step, build=None):
         self.assertTrue(all(isinstance(k, text_type) for k in got))
         self.assertTrue(all(isinstance(k, text_type) for k in got.values()))
-        exp = {u'step': step}
+        exp = {'step': step}
         if build:
-            exp[u'build'] = build
+            exp['build'] = build
         self.assertEqual(got, exp)
 
     def test_getCurrentSummary(self):
         st = buildstep.BuildStep()
         st.description = None
-        self.checkSummary(st.getCurrentSummary(), u'running')
+        self.checkSummary(st.getCurrentSummary(), 'running')
 
     def test_getCurrentSummary_description(self):
         st = buildstep.BuildStep()
         st.description = 'fooing'
-        self.checkSummary(st.getCurrentSummary(), u'fooing')
+        self.checkSummary(st.getCurrentSummary(), 'fooing')
 
     def test_getCurrentSummary_descriptionSuffix(self):
         st = buildstep.BuildStep()
         st.description = 'fooing'
         st.descriptionSuffix = 'bar'
-        self.checkSummary(st.getCurrentSummary(), u'fooing bar')
+        self.checkSummary(st.getCurrentSummary(), 'fooing bar')
 
     def test_getCurrentSummary_description_list(self):
         st = buildstep.BuildStep()
         st.description = ['foo', 'ing']
-        self.checkSummary(st.getCurrentSummary(), u'foo ing')
+        self.checkSummary(st.getCurrentSummary(), 'foo ing')
 
     def test_getCurrentSummary_descriptionSuffix_list(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = ['foo', 'ing']
         st.descriptionSuffix = ['bar', 'bar2']
-        self.checkSummary(st.getCurrentSummary(), u'foo ing bar bar2')
+        self.checkSummary(st.getCurrentSummary(), 'foo ing bar bar2')
 
     def test_getResultSummary(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = None
-        self.checkSummary(st.getResultSummary(), u'finished')
+        self.checkSummary(st.getResultSummary(), 'finished')
 
     def test_getResultSummary_description(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = 'fooing'
-        self.checkSummary(st.getResultSummary(), u'fooing')
+        self.checkSummary(st.getResultSummary(), 'fooing')
 
     def test_getResultSummary_descriptionDone(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = 'fooing'
         st.descriptionDone = 'fooed'
-        self.checkSummary(st.getResultSummary(), u'fooed')
+        self.checkSummary(st.getResultSummary(), 'fooed')
 
     def test_getResultSummary_descriptionSuffix(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = 'fooing'
         st.descriptionSuffix = 'bar'
-        self.checkSummary(st.getResultSummary(), u'fooing bar')
+        self.checkSummary(st.getResultSummary(), 'fooing bar')
 
     def test_getResultSummary_descriptionDone_and_Suffix(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.descriptionDone = 'fooed'
         st.descriptionSuffix = 'bar'
-        self.checkSummary(st.getResultSummary(), u'fooed bar')
+        self.checkSummary(st.getResultSummary(), 'fooed bar')
 
     def test_getResultSummary_description_list(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = ['foo', 'ing']
-        self.checkSummary(st.getResultSummary(), u'foo ing')
+        self.checkSummary(st.getResultSummary(), 'foo ing')
 
     def test_getResultSummary_descriptionSuffix_list(self):
         st = buildstep.BuildStep()
         st.results = SUCCESS
         st.description = ['foo', 'ing']
         st.descriptionSuffix = ['bar', 'bar2']
-        self.checkSummary(st.getResultSummary(), u'foo ing bar bar2')
+        self.checkSummary(st.getResultSummary(), 'foo ing bar bar2')
 
     @defer.inlineCallbacks
     def test_getResultSummary_descriptionSuffix_failure(self):
         st = buildstep.BuildStep()
         st.results = FAILURE
         st.description = 'fooing'
-        self.checkSummary((yield st.getBuildResultSummary()), u'fooing (failure)', u'fooing (failure)')
-        self.checkSummary(st.getResultSummary(), u'fooing (failure)')
+        self.checkSummary((yield st.getBuildResultSummary()), 'fooing (failure)', 'fooing (failure)')
+        self.checkSummary(st.getResultSummary(), 'fooing (failure)')
 
     @defer.inlineCallbacks
     def test_getResultSummary_descriptionSuffix_skipped(self):
         st = buildstep.BuildStep()
         st.results = SKIPPED
         st.description = 'fooing'
-        self.checkSummary((yield st.getBuildResultSummary()), u'fooing (skipped)')
-        self.checkSummary(st.getResultSummary(), u'fooing (skipped)')
+        self.checkSummary((yield st.getBuildResultSummary()), 'fooing (skipped)')
+        self.checkSummary(st.getResultSummary(), 'fooing (skipped)')
 
     # Test calling checkWorkerHasCommand() when worker have support for
     # requested remote command.
@@ -1036,7 +1036,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('cleanup').stdout,
-                         u'cleaning\ncleaned\n')
+                         'cleaning\ncleaned\n')
 
     @defer.inlineCallbacks
     def test_example_build_workdir(self):
@@ -1143,7 +1143,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('stdio').header,
-                         u'NOTE: worker does not allow master to override usePTY\n'
+                         'NOTE: worker does not allow master to override usePTY\n'
                          'NOTE: worker does not allow master to specify interruptSignal\n')
 
     @defer.inlineCallbacks
@@ -1158,7 +1158,7 @@ class TestShellMixin(steps.BuildStepMixin,
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
         self.assertEqual(self.step.getLog('stdio').header,
-                         u'')
+                         '')
 
     @defer.inlineCallbacks
     def test_description(self):
@@ -1168,9 +1168,9 @@ class TestShellMixin(steps.BuildStepMixin,
             ExpectShell(workdir='build', command=['foo', 'BAR']) +
             0,
         )
-        self.expectOutcome(result=SUCCESS, state_string=u"'foo BAR'")
+        self.expectOutcome(result=SUCCESS, state_string="'foo BAR'")
         yield self.runStep()
 
     def test_getResultSummary(self):
         self.setupStep(SimpleShellCommand(command=['a', ['b', 'c']]))
-        self.assertEqual(self.step.getResultSummary(), {u'step': u"'a b ...'"})
+        self.assertEqual(self.step.getResultSummary(), {'step': "'a b ...'"})

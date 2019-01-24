@@ -216,7 +216,7 @@ class Build(base.ResourceType):
             buildrequestid=buildrequestid,
             workerid=workerid,
             masterid=self.master.masterid,
-            state_string=u'created')
+            state_string='created')
         defer.returnValue(res)
 
     @base.updateMethod

@@ -74,7 +74,7 @@ class TestMessage(unittest.TestCase):
     def test_message_success(self):
         res = yield self.doOneTest(SUCCESS, SUCCESS)
         self.assertEqual(res['type'], "plain")
-        self.assertEqual(res['body'], textwrap.dedent(u'''\
+        self.assertEqual(res['body'], textwrap.dedent('''\
             The Buildbot has detected a passing build on builder Builder1 while building Buildbot.
             Full details are available at:
                 http://localhost:8080/#builders/80/builds/1

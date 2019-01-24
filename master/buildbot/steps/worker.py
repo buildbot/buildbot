@@ -154,12 +154,12 @@ class CopyDirectory(WorkerBuildStep):
     def getResultSummary(self):
         src = bytes2unicode(self.src, errors='replace')
         dest = bytes2unicode(self.dest, errors='replace')
-        copy = u"{} to {}".format(src, dest)
+        copy = "{} to {}".format(src, dest)
         if self.results == SUCCESS:
-            rv = u'Copied ' + copy
+            rv = 'Copied ' + copy
         else:
-            rv = u'Copying ' + copy + ' failed.'
-        return {u'step': rv}
+            rv = 'Copying ' + copy + ' failed.'
+        return {'step': rv}
 
 
 class RemoveDirectory(WorkerBuildStep):
