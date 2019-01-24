@@ -19,6 +19,8 @@ directly from this module.
 
 from future.utils import string_types
 
+import os
+
 from twisted.internet import reactor
 
 
@@ -44,3 +46,10 @@ def cancelAfter(seconds, deferred, _reactor=reactor):
         return x
 
     return deferred
+
+
+def writeLocalFile(path, contents, mode=None):  # pragma: no cover
+    with open(path, 'w') as file:
+        if mode is not None:
+            os.chmod(path, mode)
+        file.write(contents)
