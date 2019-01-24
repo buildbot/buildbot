@@ -16,6 +16,7 @@
 import re
 import xml.dom.minidom
 import xml.parsers.expat
+from urllib.parse import quote as urlquote
 from urllib.parse import unquote as urlunquote
 from urllib.parse import urlparse
 from urllib.parse import urlunparse
@@ -24,7 +25,6 @@ from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.python import log
 
-from buildbot.compat import urlquote
 from buildbot.config import ConfigErrors
 from buildbot.process import buildstep
 from buildbot.process import remotecommand
