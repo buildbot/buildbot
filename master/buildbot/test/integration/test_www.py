@@ -140,7 +140,7 @@ class Www(db.RealDatabaseMixin, www.RequiresWwwMixin, unittest.TestCase):
         if expect200 and pg.code != 200:
             self.fail("did not get 200 response for '%s'" % (url,))
 
-        defer.returnValue(json.loads(bytes2unicode(body)))
+        return json.loads(bytes2unicode(body))
 
     def link(self, suffix):
         return self.url + b'api/v2/' + suffix

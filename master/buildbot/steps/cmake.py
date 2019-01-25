@@ -84,4 +84,4 @@ class CMake(ShellMixin, BuildStep):
 
         yield self.runCommand(cmd)
 
-        defer.returnValue(cmd.results())
+        return cmd.results()

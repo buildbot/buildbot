@@ -404,7 +404,7 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                 stdout = yield self._dovccmdImpl(command, args, path, tmp_path)
         else:
             stdout = yield self._dovccmdImpl(command, args, path, None)
-        defer.returnValue(stdout)
+        return stdout
 
     @defer.inlineCallbacks
     def _dovccmdImpl(self, command, args, path, ssh_workdir):
@@ -437,4 +437,4 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                                full_args, path, self.repourl, code, stderr))
             raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
                                    full_args, path, self.repourl, code, stderr))
-        defer.returnValue(stdout.strip())
+        return stdout.strip()

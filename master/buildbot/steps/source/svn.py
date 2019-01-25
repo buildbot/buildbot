@@ -264,8 +264,7 @@ class SVN(Source):
         # first, perform a stat to ensure that this is really an svn directory
         res = yield self.pathExists(self.build.path_module.join(self.workdir, '.svn'))
         if not res:
-            defer.returnValue(False)
-            return
+            return False
 
         # then run 'svn info --xml' to check that the URL matches our repourl
         stdout, stderr = yield self._dovccmd(['info', '--xml'], collectStdout=True,
@@ -274,8 +273,7 @@ class SVN(Source):
         # svn: E155037: Previous operation has not finished; run 'cleanup' if
         # it was interrupted
         if 'E155037:' in stderr:
-            defer.returnValue(False)
-            return
+            return False
 
         try:
             stdout_xml = xml.dom.minidom.parseString(stdout)
@@ -285,9 +283,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(
-            extractedurl == self.svnUriCanonicalize(self.repourl))
-        return
+        return extractedurl == self.svnUriCanonicalize(self.repourl)
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _):
@@ -337,7 +333,7 @@ class SVN(Source):
         self.stdio_log.addHeader(msg)
         self.updateSourceProperty('got_revision', revision)
 
-        defer.returnValue(cmd.rc)
+        return cmd.rc
 
     def purge(self, ignore_ignores):
         """Delete everything that shown up on status."""
@@ -393,9 +389,8 @@ class SVN(Source):
         for filename in files:
             res = yield self.runRmdir(filename, abandonOnFailure=False, timeout=self.timeout)
             if res:
-                defer.returnValue(res)
-                return
-        defer.returnValue(0)
+                return res
+        return 0
 
     def checkSvn(self):
         cmd = remotecommand.RemoteShellCommand(self.workdir, ['svn', '--version'],

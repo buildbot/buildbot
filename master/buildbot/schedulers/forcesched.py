@@ -55,7 +55,7 @@ class ValidationErrorCollector(object):
                 self.errors[error_name] = e
         except ValueError as e:
             self.errors[name] = str(e)
-        defer.returnValue(res)
+        return res
 
     def maybeRaiseCollectedErrors(self):
         errors = self.errors
@@ -784,7 +784,7 @@ class ForceScheduler(base.BaseScheduler):
         for pname, pvalue in properties.items():
             real_properties.setProperty(pname, pvalue, "Force Build Form")
 
-        defer.returnValue((real_properties, changeids, sourcestamps))
+        return (real_properties, changeids, sourcestamps)
 
     @defer.inlineCallbacks
     def computeBuilderNames(self, builderNames=None, builderid=None):
@@ -797,7 +797,7 @@ class ForceScheduler(base.BaseScheduler):
         else:
             builderNames = sorted(
                 set(builderNames).intersection(self.builderNames))
-        defer.returnValue(builderNames)
+        return builderNames
 
     @defer.inlineCallbacks
     def force(self, owner, builderNames=None, builderid=None, **kwargs):
@@ -846,4 +846,4 @@ class ForceScheduler(base.BaseScheduler):
             builderNames=builderNames,
         )
 
-        defer.returnValue(res)
+        return res

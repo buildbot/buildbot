@@ -311,7 +311,7 @@ class AbstractLatentWorker(AbstractWorker):
             yield self._soft_disconnect()
         self._clearBuildWaitTimer()
         res = yield AbstractWorker.stopService(self)
-        defer.returnValue(res)
+        return res
 
     def updateWorker(self):
         """Called to add or remove builders after the worker has connected.

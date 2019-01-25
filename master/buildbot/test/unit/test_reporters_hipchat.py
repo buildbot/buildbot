@@ -57,7 +57,7 @@ class TestHipchatStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin):
     def setupBuildResults(self):
         self.insertTestData([SUCCESS], SUCCESS)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_authtokenTypeCheck(self):

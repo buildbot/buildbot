@@ -48,4 +48,4 @@ def user(config):
     if output:
         print(output)
 
-    defer.returnValue(0)
+    return 0

@@ -87,7 +87,7 @@ class SourceStampsConnectorComponent(base.DBConnectorComponent):
                 'ss_hash': ss_hash,
                 'created_at': _reactor.seconds(),
             })
-        defer.returnValue(sourcestampid)
+        return sourcestampid
 
     # returns a Deferred that returns a value
     @base.cached("ssdicts")

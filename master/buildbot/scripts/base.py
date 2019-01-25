@@ -21,7 +21,6 @@ import sys
 import traceback
 from contextlib import contextmanager
 
-from twisted.internet import defer
 from twisted.python import runtime
 from twisted.python import usage
 
@@ -35,7 +34,7 @@ def captureErrors(errors, msg):
     except errors as e:
         print(msg)
         print(e)
-        defer.returnValue(1)
+        return 1
 
 
 class BusyError(RuntimeError):

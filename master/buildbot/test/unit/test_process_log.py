@@ -37,8 +37,7 @@ class Tests(unittest.TestCase):
     def makeLog(self, type, logEncoding='utf-8'):
         logid = yield self.master.data.updates.addLog(
             stepid=27, name='testlog', type=text_type(type))
-        defer.returnValue(log.Log.new(self.master, 'testlog', type,
-                                      logid, logEncoding))
+        return log.Log.new(self.master, 'testlog', type, logid, logEncoding)
 
     @defer.inlineCallbacks
     def test_creation(self):

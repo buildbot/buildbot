@@ -61,7 +61,7 @@ class TestBitbucketServerStatusPush(unittest.TestCase, ReporterTestMixin, Loggin
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(("builds", 20))
-        defer.returnValue(build)
+        return build
 
     def _check_start_and_finish_build(self, build):
         # we make sure proper calls to txrequests have been made
@@ -209,7 +209,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         if set_pr:
             yield self.master.db.builds.setBuildProperty(
                 20, "pullrequesturl", PR_URL, "test")
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)
 
     @defer.inlineCallbacks
     def test_reporter_basic(self):

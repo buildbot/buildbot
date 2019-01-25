@@ -344,7 +344,7 @@ class LogsConnectorComponent(base.DBConnectorComponent):
             return totlength - newsize
 
         saved = yield self.db.pool.do(thdcompressLog)
-        defer.returnValue(saved)
+        return saved
 
     # returns a Deferred that returns a value
     def deleteOldLogChunks(self, older_than_timestamp):

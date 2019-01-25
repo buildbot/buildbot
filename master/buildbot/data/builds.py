@@ -105,7 +105,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                     props, filters)
                 if filtered_properties:
                     data['properties'] = filtered_properties
-        defer.returnValue(data)
+        return data
 
     @defer.inlineCallbacks
     def actionStop(self, args, kwargs):
@@ -126,7 +126,7 @@ class BuildEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         build = yield self.get(ResultSpec(), kwargs)
         buildrequest = yield self.master.data.get(('buildrequests', build['buildrequestid']))
         res = yield self.master.data.updates.rebuildBuildrequest(buildrequest)
-        defer.returnValue(res)
+        return res
 
 
 class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -149,7 +149,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         if 'builderid' in kwargs or 'buildername' in kwargs:
             builderid = yield self.getBuilderId(kwargs)
             if builderid is None:
-                defer.returnValue([])
+                return []
         complete = resultSpec.popBooleanFilter("complete")
         buildrequestid = resultSpec.popIntegerFilter("buildrequestid")
         resultSpec.fieldMapping = self.fieldMapping
@@ -172,7 +172,7 @@ class BuildsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
                 if filtered_properties:
                     data['properties'] = filtered_properties
             buildscol.append(data)
-        defer.returnValue(buildscol)
+        return buildscol
 
 
 class Build(base.ResourceType):
@@ -217,7 +217,7 @@ class Build(base.ResourceType):
             workerid=workerid,
             masterid=self.master.masterid,
             state_string='created')
-        defer.returnValue(res)
+        return res
 
     @base.updateMethod
     def generateNewBuildEvent(self, buildid):
@@ -229,7 +229,7 @@ class Build(base.ResourceType):
         res = yield self.master.db.builds.setBuildStateString(
             buildid=buildid, state_string=state_string)
         yield self.generateEvent(buildid, "update")
-        defer.returnValue(res)
+        return res
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -237,4 +237,4 @@ class Build(base.ResourceType):
         res = yield self.master.db.builds.finishBuild(
             buildid=buildid, results=results)
         yield self.generateEvent(buildid, "finished")
-        defer.returnValue(res)
+        return res

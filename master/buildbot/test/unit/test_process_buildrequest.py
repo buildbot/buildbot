@@ -50,7 +50,7 @@ class TestBuildRequestCollapser(unittest.TestCase):
         self.builders[name] = bldr
         bldr.getCollapseRequestsFn = lambda: False
 
-        defer.returnValue(bldr)
+        return bldr
 
     def tearDown(self):
         pass

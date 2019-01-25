@@ -31,7 +31,7 @@ class StateMixin(object):
 
         rv = yield self.master.db.state.getState(self._objectid, *args,
                                                  **kwargs)
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def setState(self, key, value):

@@ -143,7 +143,7 @@ class Dependent(base.BaseScheduler):
             yield self.master.db.state.setState(self.objectid,
                                                 'upstream_bsids', self._cached_upstream_bsids)
 
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def _addUpstreamBuildset(self, bsid):

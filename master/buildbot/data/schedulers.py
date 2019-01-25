@@ -36,7 +36,7 @@ class Db2DataMixin(object):
             'enabled': dbdict['enabled'],
             'master': master,
         }
-        defer.returnValue(data)
+        return data
 
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
@@ -54,8 +54,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -63,7 +62,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
             schedulerid = kwargs['schedulerid']
             v = args['enabled']
             yield self.master.data.updates.schedulerEnable(schedulerid, v)
-        defer.returnValue(None)
+        return None
 
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
@@ -82,7 +81,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
         schdicts = yield defer.DeferredList(
             [self.db2data(schdict) for schdict in schedulers],
             consumeErrors=True, fireOnOneErrback=True)
-        defer.returnValue([r for (s, r) in schdicts])
+        return [r for (s, r) in schdicts]
 
 
 class Scheduler(base.ResourceType):
@@ -112,7 +111,7 @@ class Scheduler(base.ResourceType):
     def schedulerEnable(self, schedulerid, v):
         yield self.master.db.schedulers.enable(schedulerid, v)
         yield self.generateEvent(schedulerid, 'updated')
-        defer.returnValue(None)
+        return None
 
     @base.updateMethod
     def findSchedulerId(self, name):

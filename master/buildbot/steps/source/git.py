@@ -264,7 +264,7 @@ class Git(Source, GitStepMixin):
         rc = yield self._cleanSubmodule()
         if rc != RC_SUCCESS:
             raise buildstep.BuildStepFailed
-        defer.returnValue(RC_SUCCESS)
+        return RC_SUCCESS
 
     @defer.inlineCallbacks
     def clobber(self):
@@ -305,7 +305,7 @@ class Git(Source, GitStepMixin):
             yield self.runCommand(cmd)
             if cmd.didFail():
                 raise buildstep.BuildStepFailed()
-            defer.returnValue(RC_SUCCESS)
+            return RC_SUCCESS
         finally:
             self.workdir = old_workdir
 
@@ -325,14 +325,13 @@ class Git(Source, GitStepMixin):
         log.msg("Got Git revision %s" % (revision, ))
         self.updateSourceProperty('got_revision', revision)
 
-        defer.returnValue(RC_SUCCESS)
+        return RC_SUCCESS
 
     @defer.inlineCallbacks
     def parseCommitDescription(self, _=None):
         # dict() should not return here
         if isinstance(self.getDescription, bool) and not self.getDescription:
-            defer.returnValue(RC_SUCCESS)
-            return
+            return RC_SUCCESS
 
         cmd = ['describe']
         if isinstance(self.getDescription, dict):
@@ -353,7 +352,7 @@ class Git(Source, GitStepMixin):
         except Exception:
             pass
 
-        defer.returnValue(RC_SUCCESS)
+        return RC_SUCCESS
 
     def _getSshDataWorkDir(self):
         if self.method == 'copy' and self.mode == 'full':
@@ -395,7 +394,7 @@ class Git(Source, GitStepMixin):
             # Ignore errors
             yield self._dovccmd(['checkout', '-B', self.branch], abandonOnFailure=False)
 
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def _fetchOrFallback(self, _=None):
@@ -405,8 +404,7 @@ class Git(Source, GitStepMixin):
         """
         res = yield self._fetch(None)
         if res == RC_SUCCESS:
-            defer.returnValue(res)
-            return
+            return res
         elif self.retryFetch:
             yield self._fetch(None)
         elif self.clobberOnFailure:
@@ -462,7 +460,7 @@ class Git(Source, GitStepMixin):
                 reactor.callLater(delay, df.callback, None)
                 res = yield df
 
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def _fullClone(self, shallowClone=False):
@@ -471,8 +469,7 @@ class Git(Source, GitStepMixin):
         """
         res = yield self._clone(shallowClone)
         if res != RC_SUCCESS:
-            defer.returnValue(res)
-            return
+            return res
 
         # If revision specified checkout that revision
         if self.revision:
@@ -486,7 +483,7 @@ class Git(Source, GitStepMixin):
                                        '--init', '--recursive'],
                                       shallowClone)
 
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def _fullCloneOrFallback(self):
@@ -499,7 +496,7 @@ class Git(Source, GitStepMixin):
             if not self.clobberOnFailure:
                 raise buildstep.BuildStepFailed()
             res = yield self.clobber()
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def _doClobber(self):
@@ -507,7 +504,7 @@ class Git(Source, GitStepMixin):
         rc = yield self.runRmdir(self.workdir, timeout=self.timeout)
         if rc != RC_SUCCESS:
             raise RuntimeError("Failed to delete directory")
-        defer.returnValue(rc)
+        return rc
 
     def computeSourceRevision(self, changes):
         if not changes:
@@ -519,7 +516,7 @@ class Git(Source, GitStepMixin):
         rc = RC_SUCCESS
         if self.submodules:
             rc = yield self._dovccmd(['submodule', 'sync'])
-        defer.returnValue(rc)
+        return rc
 
     @defer.inlineCallbacks
     def _updateSubmodule(self, _=None):
@@ -531,7 +528,7 @@ class Git(Source, GitStepMixin):
             if self.supportsSubmoduleCheckout:
                 vccmd.extend(['--checkout'])
             rc = yield self._dovccmd(vccmd)
-        defer.returnValue(rc)
+        return rc
 
     @defer.inlineCallbacks
     def _cleanSubmodule(self, _=None):
@@ -542,7 +539,7 @@ class Git(Source, GitStepMixin):
             if self.mode == 'full' and self.method == 'fresh':
                 command.append('-x')
             rc = yield self._dovccmd(command)
-        defer.returnValue(rc)
+        return rc
 
     def _getMethod(self):
         if self.method is not None and self.mode != 'incremental':
@@ -557,7 +554,7 @@ class Git(Source, GitStepMixin):
         yield self._dovccmd(['update-index', '--refresh'])
 
         res = yield self._dovccmd(['apply', '--index', '-p', str(patch[0])], initialStdin=patch[1])
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def _sourcedirIsUpdatable(self):
@@ -566,9 +563,9 @@ class Git(Source, GitStepMixin):
             exists = yield self.pathExists(git_path)
 
             if exists:
-                defer.returnValue("update")
+                return "update"
 
-            defer.returnValue("clone")
+            return "clone"
 
         cmd = buildstep.RemoteCommand('listdir',
                                       {'dir': self.workdir,
@@ -579,14 +576,14 @@ class Git(Source, GitStepMixin):
 
         if 'files' not in cmd.updates:
             # no files - directory doesn't exist
-            defer.returnValue("clone")
+            return "clone"
         files = cmd.updates['files'][0]
         if '.git' in files:
-            defer.returnValue("update")
+            return "update"
         elif files:
-            defer.returnValue("clobber")
+            return "clobber"
         else:
-            defer.returnValue("clone")
+            return "clone"
 
 
 class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
@@ -686,7 +683,7 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             yield self._downloadSshPrivateKeyIfNeeded()
             ret = yield self._doPush()
             yield self._removeSshPrivateKeyIfNeeded()
-            defer.returnValue(ret)
+            return ret
 
         except Exception as e:
             yield self._removeSshPrivateKeyIfNeeded()
@@ -699,4 +696,4 @@ class GitPush(buildstep.BuildStep, GitStepMixin, CompositeStepMixin):
             cmd.append('--force')
 
         ret = yield self._dovccmd(cmd)
-        defer.returnValue(ret)
+        return ret

@@ -209,7 +209,7 @@ class MessageFormatter(MessageFormatterBase):
                    )
         yield self.buildAdditionalContext(master, ctx)
         msgdict = self.renderMessage(ctx)
-        defer.returnValue(msgdict)
+        return msgdict
 
 
 class MessageFormatterMissingWorker(MessageFormatterBase):
@@ -222,4 +222,4 @@ class MessageFormatterMissingWorker(MessageFormatterBase):
                    worker=worker)
         yield self.buildAdditionalContext(master, ctx)
         msgdict = self.renderMessage(ctx)
-        defer.returnValue(msgdict)
+        return msgdict

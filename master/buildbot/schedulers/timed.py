@@ -81,8 +81,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         yield base.BaseScheduler.activate(self)
 
         if not self.enabled:
-            yield defer.returnValue(None)
-            return
+            return None
 
         # no need to lock this
         # nothing else can run before the service is started
@@ -106,8 +105,7 @@ class Timed(base.BaseScheduler, AbsoluteSourceStampsMixin):
         yield base.BaseScheduler.deactivate(self)
 
         if not self.enabled:
-            yield defer.returnValue(None)
-            return
+            return None
 
         # shut down any pending actuation, and ensure that we wait for any
         # current actuation to complete by acquiring the lock.  This ensures

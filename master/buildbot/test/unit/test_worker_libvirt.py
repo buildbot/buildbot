@@ -138,7 +138,7 @@ class TestLibVirtWorker(unittest.TestCase):
         bs = self.ConcreteWorker('b', 'p', self.conn, 'p', 'o')
         yield bs._find_existing_deferred
         bs.updateLocks()
-        defer.returnValue(bs)
+        return bs
 
     @defer.inlineCallbacks
     def test_canStartBuild(self):

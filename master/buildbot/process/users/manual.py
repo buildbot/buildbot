@@ -186,7 +186,7 @@ class CommandlineUserManagerPerspective(pbutil.NewCredPerspective):
                             results.append(result)
                             uid = result
         results = self.formatResults(op, results)
-        defer.returnValue(results)
+        return results
 
 
 class CommandlineUserManager(service.AsyncMultiService):

@@ -55,7 +55,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn = MailNotifier(*args, **kwargs)
         yield mn.setServiceParent(self.master)
         yield mn.startService()
-        defer.returnValue(mn)
+        return mn
 
     @defer.inlineCallbacks
     def test_change_name(self):
@@ -201,7 +201,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.createEmail.return_value = "<email>"
         mn.sendMail = Mock(spec=mn.sendMail)
         yield mn.buildMessage("mybldr", builds, SUCCESS)
-        defer.returnValue((mn, builds))
+        return (mn, builds)
 
     @defer.inlineCallbacks
     def test_buildMessage(self):
@@ -332,7 +332,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.createEmail.return_value.as_string = Mock(return_value="<email>")
 
         yield mn.buildMessage("mybldr", builds, SUCCESS)
-        defer.returnValue((mn, builds))
+        return (mn, builds)
 
     @defer.inlineCallbacks
     def test_sendMessageOverTcp(self):

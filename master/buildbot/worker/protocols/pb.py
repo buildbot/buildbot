@@ -51,7 +51,7 @@ class Listener(base.Listener):
                 reg = self.master.pbmanager.register(
                     portStr, username, password, self._getPerspective)
                 self._registrations[username] = (password, portStr, reg)
-                defer.returnValue(reg)
+                return reg
 
     @defer.inlineCallbacks
     def _getPerspective(self, mind, workerName):
@@ -73,7 +73,7 @@ class Listener(base.Listener):
 
         # return the Connection as the perspective
         if accepted:
-            defer.returnValue(conn)
+            return conn
         else:
             # TODO: return something more useful
             raise RuntimeError("rejecting duplicate worker")
@@ -141,7 +141,7 @@ class Connection(base.Connection, pb.Avatar):
         # worker
         yield self.worker.attached(self)
         # and then return a reference to the avatar
-        defer.returnValue(self)
+        return self
 
     def detached(self, mind):
         self.stopKeepaliveTimer()
@@ -196,7 +196,7 @@ class Connection(base.Connection, pb.Avatar):
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
                 info = yield self.mind.callRemote('getWorkerInfo')
-            defer.returnValue(decode(info))
+            return decode(info)
         except _NoSuchMethod:
             yield self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
@@ -217,7 +217,7 @@ class Connection(base.Connection, pb.Avatar):
             if "slave_commands" in info:
                 assert "worker_commands" not in info
                 info["worker_commands"] = info.pop("slave_commands")
-                defer.returnValue(info)
+                return info
 
             # Old version buildslave - need to retrieve list of supported
             # commands and version using separate requests.
@@ -234,13 +234,13 @@ class Connection(base.Connection, pb.Avatar):
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
-            defer.returnValue(decode(info))
+            return decode(info)
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):
         builders = yield self.mind.callRemote('setBuilderList', builders)
         self.builders = builders
-        defer.returnValue(builders)
+        return builders
 
     def remoteStartCommand(self, remoteCommand, builderName, commandId, commandName, args):
         workerforbuilder = self.builders.get(builderName)
@@ -260,14 +260,14 @@ class Connection(base.Connection, pb.Avatar):
                 with _wrapRemoteException():
                     yield self.mind.callRemote('shutdown')
                     # successful shutdown request
-                    defer.returnValue(True)
+                    return True
             except _NoSuchMethod:
                 # fall through to the old way
-                defer.returnValue(False)
+                return False
 
             except pb.PBConnectionLost:
                 # the worker is gone, so call it finished
-                defer.returnValue(True)
+                return True
 
         if (yield new_way()):
             return  # done!

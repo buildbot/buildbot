@@ -38,7 +38,7 @@ class SetPropertyFromCommand(RunMasterBase):
             # tricky
             yield task.deferLater(reactor, .1, lambda: None)
             res = yield oldNewLog(*arg, **kw)
-            defer.returnValue(res)
+            return res
         self.master.data.updates.addLog = newLog
         build = yield self.doForceBuild(wantProperties=True)
 

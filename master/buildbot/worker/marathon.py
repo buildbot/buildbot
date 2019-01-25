@@ -107,7 +107,7 @@ class MarathonLatentWorker(DockerBaseWorker,
                     self.getApplicationId(), res.code, res_json['message'],
                     res_json))
         self.instance = res_json
-        defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def stop_instance(self, fast=False, reportFailure=True):

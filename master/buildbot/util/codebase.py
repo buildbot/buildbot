@@ -30,7 +30,7 @@ class AbsoluteSourceStampsMixin(object):
             self._lastCodebases = yield self.getState('lastCodebases', {})
 
         # may fail with KeyError
-        defer.returnValue(self._lastCodebases.get(codebase, self.codebases[codebase]))
+        return self._lastCodebases.get(codebase, self.codebases[codebase])
 
     @defer.inlineCallbacks
     def recordChange(self, change):

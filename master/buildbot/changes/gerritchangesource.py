@@ -385,7 +385,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
         res = yield GerritChangeSourceBase.eventReceived(self, event)
         if 'eventCreatedOn' in event:
             yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
-        defer.returnValue(res)
+        return res
 
     # FIXME this copy the code from PollingChangeSource
     # but as PollingChangeSource and its subclasses need to be ported to reconfigurability

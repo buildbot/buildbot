@@ -90,7 +90,7 @@ class Authz(object):
                             self.getOwnerRolesFromUser(userDetails, owner))
                 for role in roles:
                     if self.match(role, rule.role):
-                        defer.returnValue(None)
+                        return None
 
                 if not rule.defaultDeny:
                     continue   # check next suitable rule if not denied
@@ -98,4 +98,4 @@ class Authz(object):
                     error_msg = unicode2bytes(
                         "you need to have role '%s'" % rule.role)
                     raise Forbidden(error_msg)
-        defer.returnValue(None)
+        return None

@@ -155,7 +155,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             [resultspec.Filter('claimed', 'eq', [False])],
             order=['submitted_at'], limit=1)
         if unclaimed:
-            defer.returnValue(unclaimed[0]['submitted_at'])
+            return unclaimed[0]['submitted_at']
 
     @defer.inlineCallbacks
     def getNewestCompleteTime(self):
@@ -170,9 +170,9 @@ class Builder(util_service.ReconfigurableServiceMixin,
             [resultspec.Filter('complete', 'eq', [False])],
             order=['-complete_at'], limit=1)
         if completed:
-            defer.returnValue(completed[0]['complete_at'])
+            return completed[0]['complete_at']
         else:
-            defer.returnValue(None)
+            return None
 
     def getBuild(self, number):
         for b in self.building:
@@ -291,7 +291,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             props = setupPropsIfNeeded(props)
             can_start = yield worker.isCompatibleWithBuild(props)
             if not can_start:
-                defer.returnValue(False)
+                return False
 
         if IRenderable.providedBy(locks):
             # collect properties that would be set for a build if we
@@ -304,12 +304,12 @@ class Builder(util_service.ReconfigurableServiceMixin,
         if locks:
             can_start = Build._canAcquireLocks(locks, workerforbuilder)
             if can_start is False:
-                defer.returnValue(can_start)
+                return can_start
 
         if callable(self.config.canStartBuild):
             can_start = yield self.config.canStartBuild(self, workerforbuilder,
                                                         buildrequest)
-        defer.returnValue(can_start)
+        return can_start
 
     @defer.inlineCallbacks
     def _startBuildFor(self, workerforbuilder, buildrequests):
@@ -365,7 +365,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
         d.addErrback(log.err, 'from a running build; this is a '
                      'serious error - please file a bug at http://buildbot.net')
 
-        defer.returnValue(True)
+        return True
 
     def setupProperties(self, props):
         props.setProperty("buildername", self.name, "Builder")
@@ -488,8 +488,8 @@ class BuilderControl:
             buildrequests.append(br)
 
         # and return the corresponding control objects
-        defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
-                           for r in buildrequests])
+        return [buildrequest.BuildRequestControl(self.original, r)
+            for r in buildrequests]
 
     def getBuild(self, number):
         return self.original.getBuild(number)

@@ -531,7 +531,7 @@ LoggingBuildStep
                 if res == results.SUCCESS:
                      cmd = RemoteCommand(...)
                      res = yield self.setupLogRunCommandAndProcessResults(cmd)
-                defer.returnValue(res)
+                return res
 
     To refine the status output, override one or more of the following methods.
     The :class:`LoggingBuildStep` implementations are stubs, so there is no need to call the parent method.

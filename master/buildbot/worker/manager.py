@@ -142,4 +142,4 @@ class WorkerManager(MeasuredBuildbotServiceManager):
         conn.notifyOnDisconnect(remove)
 
         # accept the connection
-        defer.returnValue(True)
+        return True

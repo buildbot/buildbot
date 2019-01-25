@@ -86,7 +86,7 @@ class TestDataUtils(unittest.TestCase, logging.LoggingMixin):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
+            return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
 

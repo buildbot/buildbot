@@ -169,7 +169,7 @@ class FakeUpdates(service.AsyncService):
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     def maybeBuildsetComplete(self, bsid):
         self.maybeBuildsetCompleteCalls += 1
@@ -182,15 +182,14 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'claimed_at', claimed_at,
                               validation.NoneOk(validation.DateTimeValidator()))
         if not brids:
-            defer.returnValue(True)
-            return
+            return True
         try:
             yield self.master.db.buildrequests.claimBuildRequests(
                 brids=brids, claimed_at=claimed_at, _reactor=_reactor)
         except AlreadyClaimedError:
-            defer.returnValue(False)
+            return False
         self.claimedBuildRequests.update(set(brids))
-        defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):

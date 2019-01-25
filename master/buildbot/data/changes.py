@@ -42,7 +42,7 @@ class FixerMixin(object):
             sskey = ('sourcestamps', str(change['sourcestampid']))
             change['sourcestamp'] = yield self.master.data.get(sskey)
             del change['sourcestampid']
-        defer.returnValue(change)
+        return change
 
 
 class ChangeEndpoint(FixerMixin, base.Endpoint):
@@ -91,7 +91,7 @@ class ChangesEndpoint(FixerMixin, base.Endpoint):
         results = []
         for ch in changes:
             results.append((yield self._fixChange(ch)))
-        defer.returnValue(results)
+        return results
 
 
 class Change(base.ResourceType):
@@ -205,4 +205,4 @@ class Change(base.ResourceType):
         msg = "added change with revision %s to database" % (revision,)
         log.msg(msg.encode('utf-8', 'replace'))
 
-        defer.returnValue(changeid)
+        return changeid

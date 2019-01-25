@@ -36,7 +36,7 @@ def waitFor(fn):
     while True:
         res = yield fn()
         if res:
-            defer.returnValue(res)
+            return res
         yield util.asyncSleep(.01)
 
 

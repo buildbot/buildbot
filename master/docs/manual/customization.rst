@@ -77,13 +77,13 @@ For example::
         otherSourcestamps = otherBuildset['sourcestamps']
 
         if len(selfSourcestamps) != len(otherSourcestamps):
-            defer.returnValue(False)
+            return False
 
         for selfSourcestamp, otherSourcestamp in zip(selfSourcestamps, otherSourcestamps):
             if selfSourcestamp['branch'] != otherSourcestamp['branch']:
-                defer.returnValue(False)
+                return False
 
-        defer.returnValue(True)
+        return True
 
     c['collapseRequests'] = collapseRequests
 
@@ -99,9 +99,9 @@ Note the use of the :py:meth:`buildrequest.BuildRequest.canBeCollapsed` method t
     def collapseRequests(master, builder, req1, req2):
         canBeCollapsed = yield buildrequest.BuildRequest.canBeCollapsed(master, req1, req2)
         if canBeCollapsed and req1.reason == req2.reason:
-           defer.returnValue(True)
+           return True
         else:
-           defer.returnValue(False)
+           return False
     c['collapseRequests'] = collapseRequests
 
 Another common example is to prevent collapsing of requests coming from a :bb:step:`Trigger` step.
@@ -123,9 +123,9 @@ In other cases, ``parent_buildid`` from buildset can be used::
             master.data.get(('buildsets', req2['buildsetid']))
         ])
         if canBeCollapsed and selfBuildset['parent_buildid'] != None and otherBuildset['parent_buildid'] != None:
-           defer.returnValue(True)
+           return True
         else:
-           defer.returnValue(False)
+           return False
     c['collapseRequests'] = collapseRequests
 
 
@@ -143,7 +143,7 @@ For example::
             getMergeInfo(req1),
             getMergeInfo(req2),
         ])
-        defer.returnValue(info1 == info2)
+        return info1 == info2
 
     c['collapseRequests'] = collapseRequests
 
@@ -252,9 +252,9 @@ If the file does not exist on the given worker, refuse to run the build to force
            cmd.worker = wfb.worker
            res = yield cmd.run(None, wfb.worker.conn, builder.name)
            if res.rc != 0:
-               defer.returnValue(False)
+               return False
 
-       defer.returnValue(True)
+       return True
 
 Here is a more complete example that checks if a worker is fit to start a build.
 If the load average is higher than the number of CPU cores or if there is less than 2GB of free memory, refuse to run the build on that worker.
@@ -281,7 +281,7 @@ Otherwise, let the build start on that worker.
        cmd = RemoteCommand('shell', args, stdioLogName=None)
        cmd.worker = worker
        yield cmd.run(FakeStep(), worker.conn, builder.name)
-       defer.returnValue(cmd.rc)
+       return cmd.rc
 
    @defer.inlineCallbacks
    def canStartBuild(builder, wfb, request):
@@ -293,7 +293,7 @@ Otherwise, let the build start on that worker.
            log.msg('loadavg is too high to take new builds',
                    system=repr(wfb.worker))
            wfb.worker.putInQuarantine()
-           defer.returnValue(False)
+           return False
 
        # check there is enough free memory
        sed_expr = r's/^MemAvailable:[[:space:]]+([0-9]+)[[:space:]]+kB$/\1/p'
@@ -304,7 +304,7 @@ Otherwise, let the build start on that worker.
            log.msg('not enough free memory to take new builds',
                    system=repr(wfb.worker))
            wfb.worker.putInQuarantine()
-           defer.returnValue(False)
+           return False
 
        # The build may now proceed.
        #
@@ -320,7 +320,7 @@ Otherwise, let the build start on that worker.
        # timeout value to default.
        wfb.worker.resetQuarantine()
 
-       defer.returnValue(True)
+       return True
 
 You can extend these examples using any remote command described in the :doc:`../developer/master-worker`.
 
@@ -766,7 +766,7 @@ A simple example of a step using the shell mixin is::
                         command=[self.cleanupScript, '--force'],
                         logEnviron=False)
                 yield self.runCommand(cmd)
-            defer.returnValue(cmd.results())
+            return cmd.results()
 
     @defer.inlineCallbacks
     def run(self):

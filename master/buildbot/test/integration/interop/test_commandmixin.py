@@ -56,29 +56,29 @@ class TestCommandMixinStep(BuildStep, CommandMixin):
     def run(self):
         contents = yield self.runGlob('*')
         if contents != []:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         yield self.runMkdir('composite_mixin_test')
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if not hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         contents = yield self.runGlob('*')
         if not contents[0].endswith('composite_mixin_test'):
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
         yield self.runRmdir('composite_mixin_test')
 
         hasPath = yield self.pathExists('composite_mixin_test')
         if hasPath:
-            defer.returnValue(results.FAILURE)
+            return results.FAILURE
 
-        defer.returnValue(results.SUCCESS)
+        return results.SUCCESS
 
 
 # master configuration

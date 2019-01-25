@@ -165,7 +165,7 @@ class SchedulersConnectorComponent(base.DBConnectorComponent):
     def getScheduler(self, schedulerid):
         sch = yield self.getSchedulers(_schedulerid=schedulerid)
         if sch:
-            defer.returnValue(sch[0])
+            return sch[0]
 
     # returns a Deferred that returns a value
     def getSchedulers(self, active=None, masterid=None, _schedulerid=None):

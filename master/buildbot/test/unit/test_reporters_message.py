@@ -68,7 +68,7 @@ class TestMessage(unittest.TestCase):
         res = yield self.message.formatMessageForBuildResults(
             mode, "Builder1", buildset, build, self.master,
             lastresults, ["him@bar", "me@foo"])
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def test_message_success(self):

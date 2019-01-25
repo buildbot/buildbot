@@ -85,7 +85,7 @@ class EndpointMixin(interfaces.InterfaceTests):
             self.assertIsInstance(rv, (list, base.ListResult))
         else:
             self.assertIsInstance(rv, (dict, type(None)))
-        defer.returnValue(rv)
+        return rv
 
     def callControl(self, action, args, path):
         self.assertIsInstance(path, tuple)

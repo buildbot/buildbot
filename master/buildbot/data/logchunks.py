@@ -31,14 +31,14 @@ class LogChunkEndpointBase(base.BuildNestingMixin, base.Endpoint):
         else:
             stepid = yield self.getStepid(kwargs)
             if stepid is None:
-                defer.returnValue((None, None))
+                return (None, None)
             dbdict = yield self.master.db.logs.getLogBySlug(stepid,
                                                             kwargs.get('log_slug'))
             if not dbdict:
-                defer.returnValue((None, None))
+                return (None, None)
             logid = dbdict['id']
 
-        defer.returnValue((logid, dbdict))
+        return (logid, dbdict)
 
 
 class LogChunkEndpoint(LogChunkEndpointBase):
@@ -79,10 +79,9 @@ class LogChunkEndpoint(LogChunkEndpointBase):
 
         logLines = yield self.master.db.logs.getLogLines(
             logid, firstline, lastline)
-        defer.returnValue({
-            'logid': logid,
-            'firstline': firstline,
-            'content': logLines})
+        return {'logid': logid,
+                'firstline': firstline,
+                'content': logLines}
 
 
 class RawLogChunkEndpoint(LogChunkEndpointBase):
@@ -118,10 +117,9 @@ class RawLogChunkEndpoint(LogChunkEndpointBase):
         if dbdict['type'] == 's':
             logLines = "\n".join([line[1:] for line in logLines.splitlines()])
 
-        defer.returnValue({
-            'raw': logLines,
-            'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
-            'filename': dbdict['slug']})
+        return {'raw': logLines,
+                'mime-type': 'text/html' if dbdict['type'] == 'h' else 'text/plain',
+                'filename': dbdict['slug']}
 
 
 class LogChunk(base.ResourceType):

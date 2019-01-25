@@ -95,7 +95,7 @@ class GitLabStatusPush(http.HttpStatusPushBase):
         # retrieve project id via cache
         url = giturlparse(sourcestamp['repository'])
         if url is None:
-            defer.returnValue(None)
+            return None
         project_full_name = "%s/%s" % (url.owner, url.repo)
 
         # gitlab needs project name to be fully url quoted to get the project id
@@ -109,10 +109,10 @@ class GitLabStatusPush(http.HttpStatusPushBase):
                     'Unknown (or hidden) gitlab project'
                     '{repo}: {message}'.format(
                         repo=project_full_name, **proj))
-                defer.returnValue(None)
+                return None
             self.project_ids[project_full_name] = proj['id']
 
-        defer.returnValue(self.project_ids[project_full_name])
+        return self.project_ids[project_full_name]
 
     @defer.inlineCallbacks
     def send(self, build):

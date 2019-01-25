@@ -52,7 +52,7 @@ def sendchange(config):
     except Exception:
         print("change not sent:")
         traceback.print_exc(file=sys.stdout)
-        defer.returnValue(1)
+        return 1
     else:
         print("change sent successfully")
-        defer.returnValue(0)
+        return 0

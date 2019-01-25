@@ -58,7 +58,7 @@ class HipChatStatusPush(HttpStatusPushBase):
         postData['message'] = yield self.getMessage(build, key)
         extra_params = yield self.getExtraParams(build, key)
         postData.update(extra_params)
-        defer.returnValue(postData)
+        return postData
 
     def getRecipientList(self, build, event_name):
         result = {}

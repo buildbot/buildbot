@@ -63,7 +63,7 @@ class WorkerEndpoint(Db2DataMixin, base.Endpoint):
             masterid=kwargs.get('masterid'),
             builderid=kwargs.get('builderid'))
         if sldict:
-            defer.returnValue(self.db2data(sldict))
+            return self.db2data(sldict)
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -99,7 +99,7 @@ class WorkersEndpoint(Db2DataMixin, base.Endpoint):
             masterid=kwargs.get('masterid'),
             paused=paused,
             graceful=graceful)
-        defer.returnValue([self.db2data(w) for w in workers_dicts])
+        return [self.db2data(w) for w in workers_dicts]
 
 
 class Worker(base.ResourceType):

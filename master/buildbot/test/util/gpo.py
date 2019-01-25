@@ -91,11 +91,10 @@ class GetProcessOutputMixin:
             yield self.patched_getProcessOutputAndValue(bin, args, env=env,
                                                         path=path)
         if errortoo:
-            defer.returnValue(stdout + stderr)
-            return  # pragma: no cover
+            return stdout + stderr
         if stderr:
             raise IOError("got stderr: %r" % (stderr,))
-        defer.returnValue(stdout)
+        return stdout
 
     def patched_getProcessOutputAndValue(self, bin, args, env=None,
                                          path=None):

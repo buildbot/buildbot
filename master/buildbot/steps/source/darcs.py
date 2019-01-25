@@ -216,7 +216,7 @@ class Darcs(Source):
     def parseGotRevision(self, _):
         revision = yield self._dovccmd(['darcs', 'changes', '--max-count=1'], collectStdout=True)
         self.updateSourceProperty('got_revision', revision)
-        defer.returnValue(0)
+        return 0
 
     def _dovccmd(self, command, collectStdout=False, initialStdin=None, decodeRC=None,
                  abandonOnFailure=True, wkdir=None):

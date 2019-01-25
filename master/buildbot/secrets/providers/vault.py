@@ -79,4 +79,4 @@ class HashiCorpVaultSecretProvider(SecretProviderBase):
             ret = json.get('data', {}).get('value')
         else:
             ret = json.get('data', {}).get('data', {}).get('value')
-        defer.returnValue(ret)
+        return ret

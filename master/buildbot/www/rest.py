@@ -129,7 +129,7 @@ class V2RootResource(resource.Resource):
         yield self.master.www.assertUserAllowed(request, request_postpath,
                                                 method, params)
         ret = yield self.master.data.getEndpoint(request_postpath)
-        defer.returnValue(ret)
+        return ret
 
     @contextmanager
     def handleErrors(self, writeError):
@@ -515,7 +515,7 @@ class V2RootResource(resource.Resource):
 
                 # if this was a preflight request, we're done
                 if isPreflight:
-                    defer.returnValue(b"")
+                    return b""
 
         # based on the method, this is either JSONRPC or REST
         if request.method == b'POST':
@@ -525,7 +525,7 @@ class V2RootResource(resource.Resource):
         else:
             raise Error(400, b"invalid HTTP method")
 
-        defer.returnValue(res)
+        return res
 
 
 RestRootResource.addApiVersion(2, V2RootResource)

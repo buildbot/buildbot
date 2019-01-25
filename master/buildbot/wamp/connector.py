@@ -113,13 +113,13 @@ class WampConnector(service.ReconfigurableServiceMixin, service.AsyncMultiServic
         except TransportLost:
             log.err(failure.Failure(), "while publishing event " + topic)
             return
-        defer.returnValue(ret)
+        return ret
 
     @defer.inlineCallbacks
     def subscribe(self, callback, topic=None, options=None):
         service = yield self.getService()
         ret = yield service.subscribe(callback, topic, options)
-        defer.returnValue(ret)
+        return ret
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):

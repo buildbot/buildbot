@@ -1017,7 +1017,7 @@ Here's a complete example of posting build results as a github comment:
                     for i, sl in enumerate(step_logs):
                         all_logs.append(sl[1:])
                     all_logs.append('```')
-        defer.returnValue('\n'.join(all_logs))
+        return '\n'.join(all_logs)
 
     gc = GitHubCommentPush(token='githubAPIToken',
                            endDescription=getresults,

@@ -43,7 +43,7 @@ class TestPushjetNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn = PushjetNotifier(secret, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()
-        defer.returnValue(pn)
+        return pn
 
     @defer.inlineCallbacks
     def test_sendMessage(self):

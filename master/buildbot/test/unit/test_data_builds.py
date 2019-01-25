@@ -308,7 +308,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
         def addBuild(*args, **kwargs):
             buildid, _ = yield self.rtype.addBuild(*args, **kwargs)
             yield self.rtype.generateNewBuildEvent(buildid)
-            defer.returnValue(None)
+            return None
 
         return self.do_test_event(addBuild,
                                   builderid=10, buildrequestid=13, workerid=20,

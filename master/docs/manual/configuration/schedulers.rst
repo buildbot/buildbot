@@ -108,7 +108,7 @@ There are several common arguments for schedulers, although not all are availabl
                    continue
                builders.append(b['name'])
 
-           defer.returnValue(builders)
+           return builders
 
        c['schedulers'] = [
           schedulers.AnyBranchScheduler(

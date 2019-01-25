@@ -200,7 +200,7 @@ class Trigger(BuildStep):
             if set(unimportant_brids).issuperset(set(brids_dict.values())):
                 continue
             overall_results = worst_status(overall_results, results)
-        defer.returnValue(overall_results)
+        return overall_results
 
     @defer.inlineCallbacks
     def addBuildUrls(self, rclist):
@@ -290,7 +290,7 @@ class Trigger(BuildStep):
             dl.append(resultsDeferred)
             triggeredNames.append(sch.name)
             if self.ended:
-                defer.returnValue(CANCELLED)
+                return CANCELLED
         self.triggeredNames = triggeredNames
 
         if self.waitForFinish:
@@ -301,7 +301,7 @@ class Trigger(BuildStep):
                 pass
             # we were interrupted, don't bother update status
             if self.ended:
-                defer.returnValue(CANCELLED)
+                return CANCELLED
             yield self.addBuildUrls(rclist)
             results = yield self.worstStatus(results, rclist, unimportant_brids)
         else:
@@ -310,7 +310,7 @@ class Trigger(BuildStep):
                 d.addErrback(log.err,
                              '(ignored) while invoking Triggerable schedulers:')
 
-        defer.returnValue(results)
+        return results
 
     def getResultSummary(self):
         if self.ended:

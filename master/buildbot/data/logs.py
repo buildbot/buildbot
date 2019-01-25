@@ -54,9 +54,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
-            defer.returnValue((yield self.db2data(dbdict))
-                              if dbdict else None)
-            return
+            return (yield self.db2data(dbdict)) if dbdict else None
 
         stepid = yield self.getStepid(kwargs)
         if stepid is None:
@@ -64,8 +62,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
         dbdict = yield self.master.db.logs.getLogBySlug(stepid,
                                                         kwargs.get('log_slug'))
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
@@ -85,13 +82,12 @@ class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         stepid = yield self.getStepid(kwargs)
         if not stepid:
-            defer.returnValue([])
-            return
+            return []
         logs = yield self.master.db.logs.getLogs(stepid=stepid)
         results = []
         for dbdict in logs:
             results.append((yield self.db2data(dbdict)))
-        defer.returnValue(results)
+        return results
 
 
 class Log(base.ResourceType):
@@ -133,21 +129,21 @@ class Log(base.ResourceType):
                 slug = identifiers.incrementIdentifier(50, slug)
                 continue
             self.generateEvent(logid, "new")
-            defer.returnValue(logid)
+            return logid
 
     @base.updateMethod
     @defer.inlineCallbacks
     def appendLog(self, logid, content):
         res = yield self.master.db.logs.appendLog(logid=logid, content=content)
         self.generateEvent(logid, "append")
-        defer.returnValue(res)
+        return res
 
     @base.updateMethod
     @defer.inlineCallbacks
     def finishLog(self, logid):
         res = yield self.master.db.logs.finishLog(logid=logid)
         self.generateEvent(logid, "finished")
-        defer.returnValue(res)
+        return res
 
     @base.updateMethod
     def compressLog(self, logid):

@@ -332,9 +332,8 @@ class Mercurial(Source):
             cmd.useLog(self.stdio_log, False)
             yield self.runCommand(cmd)
             if cmd.rc != 0:
-                defer.returnValue(cmd.rc)
-                return
-        defer.returnValue(0)
+                return cmd.rc
+        return 0
 
     def _update(self, _):
         command = ['update', '--clean']

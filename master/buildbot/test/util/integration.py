@@ -75,7 +75,7 @@ def getMaster(case, reactor, config_dict):
     yield master.startService()
     case.addCleanup(master.stopService)
 
-    defer.returnValue(master)
+    return master
 
 
 class RunMasterBase(unittest.TestCase):
@@ -207,7 +207,7 @@ class RunMasterBase(unittest.TestCase):
         build = builds[-1]
         finishedConsumer.stopConsuming()
         yield self.enrichBuild(build, wantSteps, wantProperties, wantLogs)
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def enrichBuild(self, build, wantSteps=False, wantProperties=False, wantLogs=False):
@@ -253,8 +253,8 @@ class RunMasterBase(unittest.TestCase):
                     if onlyStdout and line[0] != 'o':
                         continue
                     if expectedLog in line:
-                        defer.returnValue(True)
-        defer.returnValue(False)
+                        return True
+        return False
 
     def printLog(self, log, out):
         print(u" " * 8 + "*********** LOG: %s *********" %

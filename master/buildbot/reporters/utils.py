@@ -36,9 +36,9 @@ def getPreviousBuild(master, build):
     while n >= 0:
         prev = yield master.data.get(("builders", build['builderid'], "builds", n))
         if prev and prev['results'] != RETRY:
-            defer.returnValue(prev)
+            return prev
         n -= 1
-    defer.returnValue(None)
+    return None
 
 
 @defer.inlineCallbacks
@@ -64,7 +64,7 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
         yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
                                   wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
 
-    defer.returnValue(dict(buildset=buildset, builds=builds))
+    return dict(buildset=buildset, builds=builds)
 
 
 @defer.inlineCallbacks
@@ -76,7 +76,7 @@ def getDetailsForBuild(master, build, wantProperties=False, wantSteps=False,
     ret = yield getDetailsForBuilds(master, buildset, [build],
                                     wantProperties=wantProperties, wantSteps=wantSteps,
                                     wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
-    raise defer.returnValue(ret)
+    return ret
 
 
 @defer.inlineCallbacks
@@ -150,7 +150,7 @@ def getResponsibleUsersForSourceStamp(master, sourcestampid):
         blamelist.add(sourcestamp['patch']['author'])
     blamelist = list(blamelist)
     blamelist.sort()
-    defer.returnValue(blamelist)
+    return blamelist
 
 
 # perhaps we need data api for users with builds/:id/users
@@ -185,7 +185,7 @@ def getResponsibleUsersForBuild(master, buildid):
 
     blamelist = list(blamelist)
     blamelist.sort()
-    defer.returnValue(blamelist)
+    return blamelist
 
 
 def getURLForBuild(master, builderid, build_number):

@@ -872,7 +872,7 @@ class FakeChangesComponent(FakeDBComponent):
         if uid:
             ch['uids'].append(uid)
 
-        defer.returnValue(changeid)
+        return changeid
 
     def getLatestChangeid(self):
         if self.changes:
@@ -1238,7 +1238,7 @@ class FakeSourceStampsComponent(FakeDBComponent):
         results = []
         for ssid in bset['sourcestamps']:
             results.append((yield self.getSourceStamp(ssid)))
-        defer.returnValue(results)
+        return results
 
 
 class FakeBuildsetsComponent(FakeDBComponent):
@@ -1314,8 +1314,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             ssids.append(ss)
         self.buildset_sourcestamps[bsid] = ssids
 
-        defer.returnValue((bsid,
-                           {br.builderid: br.id for br in br_rows}))
+        return (bsid, {br.builderid: br.id for br in br_rows})
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -1351,8 +1350,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
     def getRecentBuildsets(self, count=None, branch=None, repository=None,
                            complete=None):
         if not count:
-            defer.returnValue([])
-            return
+            return []
         rv = []
         for bs in (yield self.getBuildsets(complete=complete)):
             if branch or repository:
@@ -1374,7 +1372,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         rv.sort(key=lambda bs: -bs['bsid'])
 
-        defer.returnValue(list(reversed(rv[:count])))
+        return list(reversed(rv[:count]))
 
     def _row2dict(self, row):
         row = row.copy()
@@ -1733,9 +1731,9 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 row.claimed_at = None
             builder = yield self.db.builders.getBuilder(row.builderid)
             row.buildername = builder["name"]
-            defer.returnValue(self._brdictFromRow(row))
+            return self._brdictFromRow(row)
         else:
-            defer.returnValue(None)
+            return None
 
     @defer.inlineCallbacks
     def getBuildRequests(self, builderid=None, complete=None, claimed=None,
@@ -1787,7 +1785,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
             rv.append(self._brdictFromRow(br))
         if resultSpec is not None:
             rv = self.applyResultSpec(rv, resultSpec)
-        defer.returnValue(rv)
+        return rv
 
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
         for brid in brids:

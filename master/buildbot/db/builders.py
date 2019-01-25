@@ -70,7 +70,7 @@ class BuildersConnectorComponent(base.DBConnectorComponent):
 
             transaction.commit()
 
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return (yield self.db.pool.do(thd))
 
     def getBuilder(self, builderid):
         d = self.getBuilders(_builderid=builderid)

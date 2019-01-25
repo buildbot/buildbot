@@ -114,7 +114,7 @@ class LatentController(object):
         if self._started_kind_deferred:
             self._started_kind = yield self._started_kind_deferred
             self._started_kind_deferred = None
-        defer.returnValue(self._started_kind)
+        return self._started_kind
 
     def patchBot(self, case, remoteMethod, patch):
         case.patch(BotBase, remoteMethod, patch)
@@ -146,11 +146,11 @@ class ControllableLatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):
         if not self._controller.starting and not self._controller.started:
-            defer.returnValue(True)
+            return True
 
         requested_kind = yield build_props.render((self._controller.kind))
         curr_kind = yield self._controller.get_started_kind()
-        defer.returnValue(requested_kind == curr_kind)
+        return requested_kind == curr_kind
 
     def start_instance(self, build):
         self._controller.setup_kind(build)

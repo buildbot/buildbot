@@ -576,7 +576,7 @@ class BuildbotService(unittest.TestCase):
         yield serv.setServiceParent(self.master)
         yield self.master.startService()
         yield serv.reconfigServiceWithSibling(serv)
-        defer.returnValue(serv)
+        return serv
 
     @defer.inlineCallbacks
     def testNominal(self):
@@ -616,7 +616,7 @@ class BuildbotServiceManager(unittest.TestCase):
         yield self.manager.setServiceParent(self.master)
         yield self.master.startService()
         yield self.master.reconfigServiceWithBuildbotConfig(self.master.config)
-        defer.returnValue(serv)
+        return serv
 
     @defer.inlineCallbacks
     def testNominal(self):

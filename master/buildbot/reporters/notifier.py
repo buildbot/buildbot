@@ -239,7 +239,7 @@ class NotifierBase(service.BuildbotService):
                 l['stepname'] = step['name']
                 l['content'] = yield self.master.data.get(("logs", l['logid'], 'contents'))
                 all_logs.append(l)
-        defer.returnValue(all_logs)
+        return all_logs
 
     def getResponsibleUsersForBuild(self, master, buildid):
         # Use library method but subclassers may want to override that

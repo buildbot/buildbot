@@ -359,7 +359,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                 log1 = yield self.addLog('testy')
                 log2 = self.getLog('testy')
                 testcase.assertIdentical(log1, log2)
-                defer.returnValue(SUCCESS)
+                return SUCCESS
         self.setupStep(TestGetLogStep())
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -807,7 +807,7 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
     def run(self):
         rv = yield self.testMethod()
         self.method_return_value = rv
-        defer.returnValue(SUCCESS)
+        return SUCCESS
 
 
 class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):
@@ -948,7 +948,7 @@ class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
                 command=[self.cleanupScript, '--force'],
                 logEnviron=False)
             yield self.runCommand(cmd)
-        defer.returnValue(cmd.results())
+        return cmd.results()
 
 
 class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
@@ -963,7 +963,7 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     def run(self):
         cmd = yield self.makeRemoteShellCommand(**self.makeRemoteShellCommandKwargs)
         yield self.runCommand(cmd)
-        defer.returnValue(cmd.results())
+        return cmd.results()
 
 
 class TestShellMixin(steps.BuildStepMixin,

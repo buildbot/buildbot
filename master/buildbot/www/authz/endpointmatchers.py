@@ -81,14 +81,14 @@ class Match(object):
     def getOwnerFromBuild(self, build):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         owner = yield self.getOwnerFromBuildRequest(br)
-        defer.returnValue(owner)
+        return owner
 
     @defer.inlineCallbacks
     def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
         props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'], "properties"))
         if 'owner' in props:
-            defer.returnValue(props['owner'][0])
-        defer.returnValue(None)
+            return props['owner'][0]
+        return None
 
     getOwnerFromBuildRequest = getOwnerFromBuildsetOrBuildRequest
     getOwnerFromBuildSet = getOwnerFromBuildsetOrBuildRequest
@@ -125,33 +125,33 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         if builderid is not None:
             builder = yield self.master.data.get(('builders', builderid))
             buildername = builder['name']
-            defer.returnValue(self.authz.match(buildername, self.builder))
-        defer.returnValue(False)
+            return self.authz.match(buildername, self.builder)
+        return False
 
     @defer.inlineCallbacks
     def match_BuildEndpoint_stop(self, epobject, epdict, options):
         build = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
-            defer.returnValue(Match(self.master, build=build))
+            return Match(self.master, build=build)
         # if filtering needed, we need to get some more info
         ret = yield self.matchFromBuilderId(build['builderid'])
         if ret:
-            defer.returnValue(Match(self.master, build=build))
+            return Match(self.master, build=build)
 
-        defer.returnValue(None)
+        return None
 
     @defer.inlineCallbacks
     def match_BuildRequestEndpoint_stop(self, epobject, epdict, options):
         buildrequest = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
-            defer.returnValue(Match(self.master, buildrequest=buildrequest))
+            return Match(self.master, buildrequest=buildrequest)
         # if filtering needed, we need to get some more info
         ret = yield self.matchFromBuilderId(buildrequest['builderid'])
         if ret:
-            defer.returnValue(Match(self.master, buildrequest=buildrequest))
-        defer.returnValue(None)
+            return Match(self.master, buildrequest=buildrequest)
+        return None
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
@@ -164,7 +164,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
     def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
         if self.builder is None:
             # no filtering needed: we match without querying!
-            defer.returnValue(Match(self.master))
+            return Match(self.master)
         sched = yield epobject.findForceScheduler(epdict['schedulername'])
         if sched is not None:
             builderNames = options.get('builderNames')
@@ -172,8 +172,8 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
             builderNames = yield sched.computeBuilderNames(builderNames, builderid)
             for buildername in builderNames:
                 if self.authz.match(buildername, self.builder):
-                    defer.returnValue(Match(self.master))
-        defer.returnValue(None)
+                    return Match(self.master)
+        return None
 
 
 class RebuildBuildEndpointMatcher(EndpointMatcherBase):
@@ -185,7 +185,7 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
     @defer.inlineCallbacks
     def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
         build = yield epobject.get({}, epdict)
-        defer.returnValue(Match(self.master, build=build))
+        return Match(self.master, build=build)
 
 
 class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
