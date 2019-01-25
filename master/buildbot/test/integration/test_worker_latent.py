@@ -76,6 +76,26 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         ))
 
     @defer.inlineCallbacks
+    def create_single_worker_config(self):
+        controller = LatentController(self, 'local')
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
+
+        return controller, master, builder_id
+
+    @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
         """
         If there are two latent workers configured, and two build
@@ -113,23 +133,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_refused_substantiations_get_requeued(self):
         """
-        If a latent worker refuses to substantiate, the build request becomes unclaimed.
+        If a latent worker refuses to substantiate, the build request becomes
+        unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
@@ -153,23 +161,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_failed_substantiations_get_requeued(self):
         """
-        If a latent worker fails to substantiate, the build request becomes unclaimed.
+        If a latent worker fails to substantiate, the build request becomes
+        unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
@@ -197,21 +193,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         """
         If a latent worker fails to substantiate, the result is an exception.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         yield self.createBuildrequest(master, [builder_id])
@@ -231,23 +214,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_worker_accepts_builds_after_failure(self):
         """
-        If a latent worker fails to substantiate, the worker is still able to accept jobs.
+        If a latent worker fails to substantiate, the worker is still able to
+        accept jobs.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         controller.auto_stop(True)
         # Trigger a buildrequest
@@ -339,24 +310,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
-        If a latent worker substantiate, but not connect, and then be unsubstantiated,
-        the build request becomes unclaimed.
+        If a latent worker substantiate, but not connect, and then be
+        unsubstantiated, the build request becomes unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
@@ -384,21 +342,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
@@ -449,21 +394,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
@@ -559,24 +491,13 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
-        If a build is stopping during latent worker substantiating, the build becomes cancelled
+        If a build is stopping during latent worker substantiating, the build
+        becomes cancelled
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
+
         builder = master.botmaster.builders['testy']
-        builder_id = yield builder.getBuilderId()
 
         # Trigger a buildrequest
         yield self.createBuildrequest(master, [builder_id])
@@ -598,22 +519,10 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         """
         If master is shutting down during latent worker substantiating, the build becomes retry.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
+
         builder = master.botmaster.builders['testy']
-        builder_id = yield builder.getBuilderId()
 
         # Trigger a buildrequest
         _, brids = yield self.createBuildrequest(master, [builder_id])
