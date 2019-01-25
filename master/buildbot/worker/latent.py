@@ -118,33 +118,22 @@ class AbstractLatentWorker(AbstractWorker):
             return d
         return self._substantiation_notifier.wait()
 
+    @defer.inlineCallbacks
     def _substantiate(self, build):
         # register event trigger
         try:
-            d = self.start_instance(build)
-        except Exception:
-            # if start_instance crashes without defer, we still handle the
-            # cleanup
-            d = defer.fail(failure.Failure())
+            start_success = yield self.start_instance(build)
 
-        def start_instance_result(result):
-            # If we don't report success, then preparation failed.
-            # we let the errback handle the issue
-            if not result:
+            if not start_success:
                 # this behaviour is kept as compatibility, but it is better
                 # to just errback with a workable reason
                 msg = "Worker does not want to substantiate at this time"
-                return failure.Failure(LatentWorkerFailedToSubstantiate(self.name, msg))
-            return result
+                raise LatentWorkerFailedToSubstantiate(self.name, msg)
 
-        def clean_up(failure):
+        except Exception as e:
             self.stopMissingTimer()
-            self._substantiation_failed(failure)
-            # swallow the failure as it is given to notified
-            return None
-        d.addCallback(start_instance_result)
-        d.addErrback(clean_up)
-        return d
+            self._substantiation_failed(failure.Failure(e))
+            # swallow the failure as it is notified
 
     @defer.inlineCallbacks
     def attached(self, bot):
