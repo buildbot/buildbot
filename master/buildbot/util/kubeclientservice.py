@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
+import base64
 import os
 import time
 
@@ -77,16 +78,28 @@ class KubeHardcodedConfig(KubeConfigLoaderBase):
             self.config['headers'] = headers
         if basicAuth and bearerToken:
             raise Exception("set one of basicAuth and bearerToken, not both")
-        if basicAuth is not None:
-            self.config['basicAuth'] = basicAuth
-        if bearerToken is not None:
-            self.config['bearerToken'] = bearerToken
+        self.basicAuth = basicAuth
+        self.bearerToken = bearerToken
         if cert is not None:
             self.config['cert'] = cert
         if verify is not None:
             self.config['verify'] = verify
 
     checkConfig = reconfigService
+
+    @defer.inlineCallbacks
+    def getAuthorization(self):
+        if self.basicAuth is not None:
+            basicAuth = yield self.renderSecrets(self.basicAuth)
+            authstring = "{user}:{password}".format(**basicAuth).encode('utf-8')
+            encoded = base64.b64encode(authstring)
+            return defer.returnValue("Basic {0}".format(encoded))
+
+        if self.bearerToken is not None:
+            bearerToken = yield self.renderSecrets(self.bearerToken)
+            return defer.returnValue("Bearer {0}".format(bearerToken))
+
+        return defer.returnValue(None)
 
     def getConfig(self):
         return self.config
@@ -214,15 +227,9 @@ class KubeClientService(HTTPClientService):
                 req_kwargs['headers'] = req_kwargs['headers'].dup
             req_kwargs['headers'].update(config['headers'])
 
-        bearer = config.get('bearerToken', None)
-        if bearer is not None:
-            bearer = yield self.config.renderSecrets(bearer)
-            req_kwargs['headers']['Authorization'] = "Bearer {token}".format(token=bearer)
-
-        basic = config.get('basicAuth', None)
-        if basic is not None:
-            basic = yield self.config.renderSecrets(basic)
-            req_kwargs['headers']['Authorization'] = "Basic {basic}".format(basic=basic)
+        auth = yield self.config.getAuthorization()
+        if auth is not None:
+            req_kwargs['headers']['Authorization'] = auth
 
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:

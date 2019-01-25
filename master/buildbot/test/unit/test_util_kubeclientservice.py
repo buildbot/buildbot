@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import base64
 import copy
 import os
 import sys
@@ -189,10 +190,12 @@ class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
             master_url="http://localhost:8001",
             namespace="default",
             verify="/path/to/pem",
-            basicAuth=Interpolate("%(kw:test)s", test=10))
+            basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)})
         service = kubeclientservice.KubeClientService(config)
         url, kwargs = yield service._prepareRequest("/test", {})
-        self.assertEqual("Basic 10", kwargs['headers']['Authorization'])
+
+        expected = "Basic {0}".format(base64.b64encode("name:10".encode('utf-8')))
+        self.assertEqual(expected, kwargs['headers']['Authorization'])
 
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,

@@ -424,16 +424,22 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     (optional)
     Additional headers to be passed to the HTTP request
 
-``authorization``
+``basicAuth``
     (optional)
-    Authorization header, for instance:
+    Basic authorization info to connect to the cluster, as a `{'user':
+    'username', 'password': 'psw' }` dict.
 
-        authorization="Basic %s" % base64.b64encode("userid:password")
+    Unlike the headers argument, this argument supports secret providers, e.g.
 
-    Unlike the headers argument, this argument supports secret providers, so
-    you could store e.g. a bearer token in a secret provider and do
+        basicAuth={'user': 'username', 'password': Secret('k8spassword')}
 
-        authorization=util.Interpolate("Bearer %(secret:k8s-token)")
+``bearerToken``
+    (optional)
+
+    A bearer token to authenticate to the cluster, as a string. Unlike the
+    headers argument, this argument supports secret providers, e.g.
+
+        bearerToken=Secret('k8s-token')
 
     When using the Google Kubernetes Engine (GKE), a bearer token for the
     default service account can be had with:
