@@ -28,6 +28,7 @@ from buildbot.util import bytes2unicode
 from buildbot.util import private_tempdir
 from buildbot.util.git import GitMixin
 from buildbot.util.git import getSshKnownHostsContents
+from buildbot.util.misc import writeLocalFile
 from buildbot.util.state import StateMixin
 
 
@@ -375,20 +376,14 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
             return True
         return False
 
-    def _writeLocalFile(self, path, contents, mode=None):  # pragma: no cover
-        with open(path, 'w') as file:
-            if mode is not None:
-                os.chmod(path, mode)
-            file.write(contents)
-
     def _downloadSshPrivateKey(self, keyPath):
         # We change the permissions of the key file to be user-readable only so
         # that ssh does not complain. This is not used for security because the
         # parent directory will have proper permissions.
-        self._writeLocalFile(keyPath, self.sshPrivateKey, mode=stat.S_IRUSR)
+        writeLocalFile(keyPath, self.sshPrivateKey, mode=stat.S_IRUSR)
 
     def _downloadSshKnownHosts(self, path):
-        self._writeLocalFile(path, getSshKnownHostsContents(self.sshHostKey))
+        writeLocalFile(path, getSshKnownHostsContents(self.sshHostKey))
 
     def _getSshPrivateKeyPath(self, ssh_data_path):
         return os.path.join(ssh_data_path, 'ssh-key')

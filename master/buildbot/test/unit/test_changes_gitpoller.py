@@ -1376,7 +1376,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
                 new_callable=MockPrivateTemporaryDirectory)
-    @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
+    @mock.patch('buildbot.changes.gitpoller.writeLocalFile')
     @defer.inlineCallbacks
     def test_check_git_features_ssh_1_7(self, write_local_file_mock,
                                         temp_dir_mock):
@@ -1394,7 +1394,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
                 new_callable=MockPrivateTemporaryDirectory)
-    @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
+    @mock.patch('buildbot.changes.gitpoller.writeLocalFile')
     @defer.inlineCallbacks
     def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
@@ -1438,7 +1438,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
                 new_callable=MockPrivateTemporaryDirectory)
-    @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
+    @mock.patch('buildbot.changes.gitpoller.writeLocalFile')
     @defer.inlineCallbacks
     def test_poll_initial_2_3(self, write_local_file_mock, temp_dir_mock):
         key_path = os.path.join('gitpoller-work', '.buildbot-ssh@@@', 'ssh-key')
@@ -1481,7 +1481,7 @@ class TestGitPollerWithSshPrivateKey(TestGitPollerBase):
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
                 new_callable=MockPrivateTemporaryDirectory)
-    @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
+    @mock.patch('buildbot.changes.gitpoller.writeLocalFile')
     @defer.inlineCallbacks
     def test_poll_failFetch_git_2_10(self, write_local_file_mock,
                                      temp_dir_mock):
@@ -1523,7 +1523,7 @@ class TestGitPollerWithSshHostKey(TestGitPollerBase):
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
                 new_callable=MockPrivateTemporaryDirectory)
-    @mock.patch('buildbot.changes.gitpoller.GitPoller._writeLocalFile')
+    @mock.patch('buildbot.changes.gitpoller.writeLocalFile')
     @defer.inlineCallbacks
     def test_poll_initial_2_10(self, write_local_file_mock, temp_dir_mock):
 
