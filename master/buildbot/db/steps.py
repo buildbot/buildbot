@@ -55,7 +55,7 @@ class StepsConnectorComponent(base.DBConnectorComponent):
                 rv = self._stepdictFromRow(row)
             res.close()
             return rv
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return (yield self.db.pool.do(thd))
 
     # returns a Deferred that returns a value
     def getSteps(self, buildid):

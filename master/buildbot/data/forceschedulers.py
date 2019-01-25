@@ -53,7 +53,7 @@ class ForceSchedulerEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         sched = yield self.findForceScheduler(kwargs['schedulername'])
         if sched is not None:
-            defer.returnValue(forceScheduler2Data(sched))
+            return forceScheduler2Data(sched)
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):

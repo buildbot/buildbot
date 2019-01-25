@@ -62,10 +62,9 @@ class BuildChooserBase(object):
 
         worker, breq = yield self.popNextBuild()
         if not worker or not breq:
-            defer.returnValue((None, None))
-            return  # pragma: no cover
+            return (None, None)
 
-        defer.returnValue((worker, [breq]))
+        return (worker, [breq])
 
     # Must be implemented by subclass
     def popNextBuild(self):

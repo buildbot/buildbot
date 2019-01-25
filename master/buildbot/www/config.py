@@ -157,4 +157,4 @@ class IndexResource(resource.Resource):
         tpl = tpl.render(configjson=json.dumps(config, default=toJson),
                          custom_templates=self.custom_templates,
                          config=self.config)
-        defer.returnValue(unicode2bytes(tpl, encoding='ascii'))
+        return unicode2bytes(tpl, encoding='ascii')

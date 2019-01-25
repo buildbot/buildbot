@@ -339,7 +339,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             external_idstring=external_idstring, builderNames=builderNames,
             properties=properties, **kw)
 
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     @defer.inlineCallbacks
     def addBuildsetForSourceStamps(self, waited_for=False, sourcestamps=None,
@@ -399,4 +399,4 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             scheduler=self.name, sourcestamps=sourcestamps, reason=reason,
             waited_for=waited_for, properties=properties_dict, builderids=builderids,
             external_idstring=external_idstring, **kw)
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)

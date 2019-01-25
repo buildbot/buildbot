@@ -209,7 +209,7 @@ class TestBitbucketServerPRCommentPush(unittest.TestCase, NotifierTestMixin, Log
         if set_pr:
             yield self.master.db.builds.setBuildProperty(
                 20, "pullrequesturl", PR_URL, "test")
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)
 
     @defer.inlineCallbacks
     def test_reporter_basic(self):

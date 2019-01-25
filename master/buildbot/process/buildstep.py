@@ -1092,9 +1092,9 @@ class CommandMixin(object):
         if abandonOnFailure and cmd.didFail():
             raise BuildStepFailed()
         if makeResult:
-            defer.returnValue(makeResult(cmd))
+            return makeResult(cmd)
         else:
-            defer.returnValue(not cmd.didFail())
+            return not cmd.didFail()
 
     def runRmdir(self, dir, log=None, abandonOnFailure=True):
         return self._runRemoteCommand('rmdir', abandonOnFailure,

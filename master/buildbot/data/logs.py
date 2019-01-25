@@ -54,9 +54,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'logid' in kwargs:
             dbdict = yield self.master.db.logs.getLog(kwargs['logid'])
-            defer.returnValue((yield self.db2data(dbdict))
-                              if dbdict else None)
-            return
+            return (yield self.db2data(dbdict)) if dbdict else None
 
         stepid = yield self.getStepid(kwargs)
         if stepid is None:
@@ -64,8 +62,7 @@ class LogEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):
 
         dbdict = yield self.master.db.logs.getLogBySlug(stepid,
                                                         kwargs.get('log_slug'))
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class LogsEndpoint(EndpointMixin, base.BuildNestingMixin, base.Endpoint):

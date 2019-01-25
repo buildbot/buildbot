@@ -743,7 +743,7 @@ class _ComparisonRenderer(util.ComparableMixin, object):
     def getRenderingFor(self, props):
         v1 = yield props.render(self.v1)
         v2 = yield props.render(self.v2)
-        defer.returnValue(self.comparator(v1, v2))
+        return self.comparator(v1, v2)
 
     def __repr__(self):
         return '%r %r %r' % (self.v1, self.cstr, self.v2)
@@ -974,4 +974,4 @@ class Transform(object):
         rfunction = yield iprops.render(self._function)
         rargs = yield iprops.render(self._args)
         rkwargs = yield iprops.render(self._kwargs)
-        defer.returnValue(rfunction(*rargs, **rkwargs))
+        return rfunction(*rargs, **rkwargs)

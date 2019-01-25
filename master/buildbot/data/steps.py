@@ -56,9 +56,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         if 'stepid' in kwargs:
             dbdict = yield self.master.db.steps.getStep(kwargs['stepid'])
-            defer.returnValue((yield self.db2data(dbdict))
-                              if dbdict else None)
-            return
+            return (yield self.db2data(dbdict)) if dbdict else None
         buildid = yield self.getBuildid(kwargs)
         if buildid is None:
             return
@@ -66,8 +64,7 @@ class StepEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
             buildid=buildid,
             number=kwargs.get('step_number'),
             name=kwargs.get('step_name'))
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
@@ -134,7 +131,7 @@ class Step(base.ResourceType):
         stepid, num, name = yield self.master.db.steps.addStep(
             buildid=buildid, name=name, state_string='pending')
         yield self.generateEvent(stepid, 'new')
-        defer.returnValue((stepid, num, name))
+        return (stepid, num, name)
 
     @base.updateMethod
     @defer.inlineCallbacks

@@ -72,4 +72,4 @@ class NotifierTestMixin(object):
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)

@@ -169,7 +169,7 @@ class FakeUpdates(service.AsyncService):
             properties=properties, builderids=builderids,
             waited_for=waited_for, external_idstring=external_idstring,
             parent_buildid=parent_buildid, parent_relationship=parent_relationship)
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     def maybeBuildsetComplete(self, bsid):
         self.maybeBuildsetCompleteCalls += 1

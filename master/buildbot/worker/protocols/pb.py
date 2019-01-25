@@ -196,7 +196,7 @@ class Connection(base.Connection, pb.Avatar):
             with _wrapRemoteException():
                 # Try to call buildbot-worker method.
                 info = yield self.mind.callRemote('getWorkerInfo')
-            defer.returnValue(decode(info))
+            return decode(info)
         except _NoSuchMethod:
             yield self.remotePrint(
                 "buildbot-slave detected, failing back to deprecated buildslave API. "
@@ -234,7 +234,7 @@ class Connection(base.Connection, pb.Avatar):
             except _NoSuchMethod:
                 log.msg("Worker.getVersion is unavailable - ignoring")
 
-            defer.returnValue(decode(info))
+            return decode(info)
 
     @defer.inlineCallbacks
     def remoteSetBuilderList(self, builders):

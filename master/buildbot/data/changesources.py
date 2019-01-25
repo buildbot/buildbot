@@ -52,8 +52,7 @@ class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
 
 class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
@@ -72,7 +71,7 @@ class ChangeSourcesEndpoint(Db2DataMixin, base.Endpoint):
         csdicts = yield defer.DeferredList(
             [self.db2data(cs) for cs in changesources],
             consumeErrors=True, fireOnOneErrback=True)
-        defer.returnValue([r for (s, r) in csdicts])
+        return [r for (s, r) in csdicts]
 
 
 class ChangeSource(base.ResourceType):

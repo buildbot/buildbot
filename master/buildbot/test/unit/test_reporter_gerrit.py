@@ -171,7 +171,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
             return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
-        defer.returnValue((buildset, builds))
+        return (buildset, builds)
 
     def makeBuildInfo(self, buildResults, resultText, builds):
         info = []
@@ -195,7 +195,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
                              ['The Gerrit status callback uses the old '
                               'way to communicate results.  The outcome '
                               'might be not what is expected.'])
-        defer.returnValue(str(info))
+        return str(info)
 
     # check_summary_build and check_summary_build_legacy differ in two things:
     #   * the callback used
@@ -348,7 +348,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
                               'way to communicate results.  The outcome '
                               'might be not what is expected.'])
 
-        defer.returnValue(str({'name': 'Builder0', 'result': buildResult}))
+        return str({'name': 'Builder0', 'result': buildResult})
 
     # same goes for check_single_build and check_single_build_legacy
     @defer.inlineCallbacks

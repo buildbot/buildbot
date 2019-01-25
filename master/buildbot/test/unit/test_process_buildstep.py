@@ -948,7 +948,7 @@ class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
                 command=[self.cleanupScript, '--force'],
                 logEnviron=False)
             yield self.runCommand(cmd)
-        defer.returnValue(cmd.results())
+        return cmd.results()
 
 
 class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
@@ -963,7 +963,7 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
     def run(self):
         cmd = yield self.makeRemoteShellCommand(**self.makeRemoteShellCommandKwargs)
         yield self.runCommand(cmd)
-        defer.returnValue(cmd.results())
+        return cmd.results()
 
 
 class TestShellMixin(steps.BuildStepMixin,

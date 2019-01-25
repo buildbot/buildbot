@@ -283,9 +283,7 @@ class SVN(Source):
             msg = "Corrupted xml, aborting step"
             self.stdio_log.addHeader(msg)
             raise buildstep.BuildStepFailed()
-        defer.returnValue(
-            extractedurl == self.svnUriCanonicalize(self.repourl))
-        return
+        return extractedurl == self.svnUriCanonicalize(self.repourl)
 
     @defer.inlineCallbacks
     def parseGotRevision(self, _):

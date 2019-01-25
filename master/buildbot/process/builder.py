@@ -488,8 +488,8 @@ class BuilderControl:
             buildrequests.append(br)
 
         # and return the corresponding control objects
-        defer.returnValue([buildrequest.BuildRequestControl(self.original, r)
-                           for r in buildrequests])
+        return [buildrequest.BuildRequestControl(self.original, r)
+            for r in buildrequests]
 
     def getBuild(self, number):
         return self.original.getBuild(number)

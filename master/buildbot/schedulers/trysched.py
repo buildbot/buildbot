@@ -262,8 +262,8 @@ class RemoteBuildSetStatus(pb.Referenceable):
         for builderid, brid in self.brids.items():
             builderDict = yield self.master.data.get(('builders', builderid))
             brids[builderDict['name']] = brid
-        defer.returnValue([(n, RemoteBuildRequest(self.master, n, brid))
-                           for n, brid in brids.items()])
+        return [(n, RemoteBuildRequest(self.master, n, brid))
+            for n, brid in brids.items()]
 
 
 class RemoteBuildRequest(pb.Referenceable):

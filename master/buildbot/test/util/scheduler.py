@@ -191,7 +191,7 @@ class SchedulerMixin(interfaces.InterfaceTests):
         assert len(builderids) == len(builderNames)
         bsid = next(self._bsidGenerator)
         brids = dict(zip(builderids, self._bridGenerator))
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     def fake_addBuildsetForSourceStampsWithDefaults(self, reason, sourcestamps=None,
                                                     waited_for=False, properties=None,

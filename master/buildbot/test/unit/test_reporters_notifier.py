@@ -274,7 +274,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.messageFormatter.formatMessageForBuildResults.return_value = {"body": "body", "type": "text",
                                                                          "subject": "subject"}
         yield mn.buildMessage("mybldr", builds, SUCCESS)
-        defer.returnValue((mn, builds))
+        return (mn, builds)
 
     @defer.inlineCallbacks
     def test_buildMessage_nominal(self):

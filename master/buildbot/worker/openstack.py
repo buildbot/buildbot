@@ -206,7 +206,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
                 block_devices.append(rendered_block_device)
         else:
             block_devices = None
-        defer.returnValue((image, block_devices))
+        return (image, block_devices)
 
     @defer.inlineCallbacks
     def start_instance(self, build):

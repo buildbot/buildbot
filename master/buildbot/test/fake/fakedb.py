@@ -1314,8 +1314,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
             ssids.append(ss)
         self.buildset_sourcestamps[bsid] = ssids
 
-        defer.returnValue((bsid,
-                           {br.builderid: br.id for br in br_rows}))
+        return (bsid, {br.builderid: br.id for br in br_rows})
 
     def completeBuildset(self, bsid, results, complete_at=None,
                          _reactor=reactor):
@@ -1373,7 +1372,7 @@ class FakeBuildsetsComponent(FakeDBComponent):
 
         rv.sort(key=lambda bs: -bs['bsid'])
 
-        defer.returnValue(list(reversed(rv[:count])))
+        return list(reversed(rv[:count]))
 
     def _row2dict(self, row):
         row = row.copy()
@@ -1732,7 +1731,7 @@ class FakeBuildRequestsComponent(FakeDBComponent):
                 row.claimed_at = None
             builder = yield self.db.builders.getBuilder(row.builderid)
             row.buildername = builder["name"]
-            defer.returnValue(self._brdictFromRow(row))
+            return self._brdictFromRow(row)
         else:
             return None
 

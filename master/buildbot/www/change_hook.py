@@ -165,7 +165,7 @@ class ChangeHookResource(resource.Resource):
 
         handler = self.makeHandler(dialect)
         changes, src = yield handler.getChanges(request)
-        defer.returnValue((changes, src))
+        return (changes, src)
 
     @defer.inlineCallbacks
     def submitChanges(self, changes, request, src):

@@ -129,7 +129,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
         # Seed the buildset property cache.
         self.getBuildsetProperties.cache.put(bsid, BsProps(properties))
 
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     @defer.inlineCallbacks
     def completeBuildset(self, bsid, results, complete_at=None,

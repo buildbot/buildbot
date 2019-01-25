@@ -41,12 +41,11 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if kwargs['masterid'] not in bdict['masterids']:
                 return None
-        defer.returnValue(
-            dict(builderid=builderid,
-                 name=bdict['name'],
-                 masterids=bdict['masterids'],
-                 description=bdict['description'],
-                 tags=bdict['tags']))
+        return dict(builderid=builderid,
+                    name=bdict['name'],
+                    masterids=bdict['masterids'],
+                    description=bdict['description'],
+                    tags=bdict['tags'])
 
 
 class BuildersEndpoint(base.Endpoint):
@@ -62,13 +61,12 @@ class BuildersEndpoint(base.Endpoint):
     def get(self, resultSpec, kwargs):
         bdicts = yield self.master.db.builders.getBuilders(
             masterid=kwargs.get('masterid', None))
-        defer.returnValue([
-            dict(builderid=bd['id'],
-                 name=bd['name'],
-                 masterids=bd['masterids'],
-                 description=bd['description'],
-                 tags=bd['tags'])
-            for bd in bdicts])
+        return [dict(builderid=bd['id'],
+                     name=bd['name'],
+                     masterids=bd['masterids'],
+                     description=bd['description'],
+                     tags=bd['tags'])
+               for bd in bdicts]
 
 
 class Builder(base.ResourceType):

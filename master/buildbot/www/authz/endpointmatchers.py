@@ -125,7 +125,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         if builderid is not None:
             builder = yield self.master.data.get(('builders', builderid))
             buildername = builder['name']
-            defer.returnValue(self.authz.match(buildername, self.builder))
+            return self.authz.match(buildername, self.builder)
         return False
 
     @defer.inlineCallbacks
@@ -133,11 +133,11 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         build = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
-            defer.returnValue(Match(self.master, build=build))
+            return Match(self.master, build=build)
         # if filtering needed, we need to get some more info
         ret = yield self.matchFromBuilderId(build['builderid'])
         if ret:
-            defer.returnValue(Match(self.master, build=build))
+            return Match(self.master, build=build)
 
         return None
 
@@ -146,11 +146,11 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         buildrequest = yield epobject.get({}, epdict)
         if self.builder is None:
             # no filtering needed: we match!
-            defer.returnValue(Match(self.master, buildrequest=buildrequest))
+            return Match(self.master, buildrequest=buildrequest)
         # if filtering needed, we need to get some more info
         ret = yield self.matchFromBuilderId(buildrequest['builderid'])
         if ret:
-            defer.returnValue(Match(self.master, buildrequest=buildrequest))
+            return Match(self.master, buildrequest=buildrequest)
         return None
 
 
@@ -164,7 +164,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
     def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
         if self.builder is None:
             # no filtering needed: we match without querying!
-            defer.returnValue(Match(self.master))
+            return Match(self.master)
         sched = yield epobject.findForceScheduler(epdict['schedulername'])
         if sched is not None:
             builderNames = options.get('builderNames')
@@ -172,7 +172,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
             builderNames = yield sched.computeBuilderNames(builderNames, builderid)
             for buildername in builderNames:
                 if self.authz.match(buildername, self.builder):
-                    defer.returnValue(Match(self.master))
+                    return Match(self.master)
         return None
 
 
@@ -185,7 +185,7 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
     @defer.inlineCallbacks
     def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
         build = yield epobject.get({}, epdict)
-        defer.returnValue(Match(self.master, build=build))
+        return Match(self.master, build=build)
 
 
 class EnableSchedulerEndpointMatcher(EndpointMatcherBase):

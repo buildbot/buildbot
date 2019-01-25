@@ -95,7 +95,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
         if buildrequest:
             filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
             yield self.addPropertiesToBuildRequest(buildrequest, filters)
-            defer.returnValue((yield self.db2data(buildrequest)))
+            return (yield self.db2data(buildrequest))
         return None
 
     @defer.inlineCallbacks

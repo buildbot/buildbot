@@ -350,8 +350,7 @@ class P4(Source):
 
         stdout = yield self._dovccmd(['client', '-i'], collectStdout=True, initialStdin=client_spec)
         mo = re.search(r'Client (\S+) (.+)$', stdout, re.M)
-        defer.returnValue(
-            mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.'))
+        return mo and (mo.group(2) == 'saved.' or mo.group(2) == 'not changed.')
 
     @defer.inlineCallbacks
     def _acquireTicket(self, _):

@@ -189,7 +189,7 @@ class Buildset(base.ResourceType):
         if not builderids:
             yield self.maybeBuildsetComplete(bsid, _reactor=_reactor)
 
-        defer.returnValue((bsid, brids))
+        return (bsid, brids)
 
     @base.updateMethod
     @defer.inlineCallbacks

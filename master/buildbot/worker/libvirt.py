@@ -135,13 +135,13 @@ class Connection(object):
     def lookupByName(self, name):
         """ I lookup an existing predefined domain """
         res = yield queue.executeInThread(self.connection.lookupByName, name)
-        defer.returnValue(self.DomainClass(self, res))
+        return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def create(self, xml):
         """ I take libvirt XML and start a new VM """
         res = yield queue.executeInThread(self.connection.createXML, xml, 0)
-        defer.returnValue(self.DomainClass(self, res))
+        return self.DomainClass(self, res)
 
     @defer.inlineCallbacks
     def all(self):

@@ -64,7 +64,7 @@ def getDetailsForBuildset(master, bsid, wantProperties=False, wantSteps=False,
         yield getDetailsForBuilds(master, buildset, builds, wantProperties=wantProperties,
                                   wantSteps=wantSteps, wantPreviousBuild=wantPreviousBuild, wantLogs=wantLogs)
 
-    defer.returnValue(dict(buildset=buildset, builds=builds))
+    return dict(buildset=buildset, builds=builds)
 
 
 @defer.inlineCallbacks

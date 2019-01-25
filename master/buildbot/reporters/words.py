@@ -252,7 +252,7 @@ class Contact(service.AsyncService):
             builders = worker['configured_on']
             builderids = [builder['builderid'] for builder in builders]
             online_builderids.update(builderids)
-        defer.returnValue(list(online_builderids))
+        return list(online_builderids)
 
     @defer.inlineCallbacks
     def getRevisionsForBuild(self, bdict):

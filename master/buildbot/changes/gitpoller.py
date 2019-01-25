@@ -437,4 +437,4 @@ class GitPoller(base.PollingChangeSource, StateMixin, GitMixin):
                                full_args, path, self.repourl, code, stderr))
             raise EnvironmentError('command {} in {} on repourl {} failed with exit code {}: {}'.format(
                                    full_args, path, self.repourl, code, stderr))
-        defer.returnValue(stdout.strip())
+        return stdout.strip()

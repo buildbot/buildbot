@@ -54,8 +54,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
         if 'masterid' in kwargs:
             if dbdict['masterid'] != kwargs['masterid']:
                 return
-        defer.returnValue((yield self.db2data(dbdict))
-                          if dbdict else None)
+        return (yield self.db2data(dbdict)) if dbdict else None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -82,7 +81,7 @@ class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
         schdicts = yield defer.DeferredList(
             [self.db2data(schdict) for schdict in schedulers],
             consumeErrors=True, fireOnOneErrback=True)
-        defer.returnValue([r for (s, r) in schdicts])
+        return [r for (s, r) in schdicts]
 
 
 class Scheduler(base.ResourceType):

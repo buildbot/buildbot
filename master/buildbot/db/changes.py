@@ -146,7 +146,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
             transaction.commit()
 
             return changeid
-        defer.returnValue((yield self.db.pool.do(thd)))
+        return (yield self.db.pool.do(thd))
 
     # returns a Deferred that returns a value
     @base.cached("chdicts")

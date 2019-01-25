@@ -735,7 +735,7 @@ class Build(properties.PropertiesMixin):
     @defer.inlineCallbacks
     def getUrl(self):
         builder_id = yield self.getBuilderId()
-        defer.returnValue(getURLForBuild(self.master, builder_id, self.number))
+        return getURLForBuild(self.master, builder_id, self.number)
 
     def waitUntilFinished(self):
         return self.master.mq.waitUntilEvent(

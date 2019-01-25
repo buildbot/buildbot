@@ -766,7 +766,7 @@ A simple example of a step using the shell mixin is::
                         command=[self.cleanupScript, '--force'],
                         logEnviron=False)
                 yield self.runCommand(cmd)
-            defer.returnValue(cmd.results())
+            return cmd.results()
 
     @defer.inlineCallbacks
     def run(self):

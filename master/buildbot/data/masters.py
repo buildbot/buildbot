@@ -54,7 +54,7 @@ class MasterEndpoint(base.Endpoint):
             if not builder or kwargs['masterid'] not in builder['masterids']:
                 return None
         m = yield self.master.db.masters.getMaster(kwargs['masterid'])
-        defer.returnValue(_db2data(m) if m else None)
+        return _db2data(m) if m else None
 
 
 class MastersEndpoint(base.Endpoint):
@@ -77,7 +77,7 @@ class MastersEndpoint(base.Endpoint):
                 masterlist = [m for m in masterlist if m['id'] in masterids]
             else:
                 masterlist = []
-        defer.returnValue([_db2data(m) for m in masterlist])
+        return [_db2data(m) for m in masterlist]
 
 
 class Master(base.ResourceType):

@@ -784,7 +784,7 @@ class ForceScheduler(base.BaseScheduler):
         for pname, pvalue in properties.items():
             real_properties.setProperty(pname, pvalue, "Force Build Form")
 
-        defer.returnValue((real_properties, changeids, sourcestamps))
+        return (real_properties, changeids, sourcestamps)
 
     @defer.inlineCallbacks
     def computeBuilderNames(self, builderNames=None, builderid=None):

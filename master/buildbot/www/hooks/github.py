@@ -178,12 +178,12 @@ class GitHubEventHandler(PullRequestMixin):
         if self._has_skip(head_msg):
             log.msg("GitHub PR #{}, Ignoring: "
                     "head commit message contains skip pattern".format(number))
-            defer.returnValue(([], 'git'))
+            return ([], 'git')
 
         action = payload.get('action')
         if action not in ('opened', 'reopened', 'synchronize'):
             log.msg("GitHub PR #{} {}, ignoring".format(number, action))
-            defer.returnValue((changes, 'git'))
+            return (changes, 'git')
 
         properties = self.extractProperties(payload['pull_request'])
         properties.update({'event': event})
@@ -211,7 +211,7 @@ class GitHubEventHandler(PullRequestMixin):
 
         log.msg("Received {} changes from GitHub PR #{}".format(
             len(changes), number))
-        defer.returnValue((changes, 'git'))
+        return (changes, 'git')
 
     @defer.inlineCallbacks
     def _get_commit_msg(self, repo, sha):
