@@ -103,7 +103,6 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg("substantiating worker %s" % (wfb,))
 
         if self.conn is not None:
-            self._clearBuildWaitTimer()
             self._setBuildWaitTimer()
             return defer.succeed(True)
         if not self._substantiation_notifier:
@@ -186,7 +185,7 @@ class AbstractLatentWorker(AbstractWorker):
         return self._substantiation_failed(defer.TimeoutError())
 
     def _substantiation_failed(self, failure):
-        if self.substantiation_build:
+        if self._substantiation_notifier:
             self.substantiation_build = None
             self._substantiation_notifier.notify(failure)
         d = self.insubstantiate()

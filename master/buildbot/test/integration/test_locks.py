@@ -14,12 +14,8 @@
 # Copyright Buildbot Team Members
 
 
-from __future__ import absolute_import
-from __future__ import print_function
-
 from twisted.internet import defer
 from twisted.python import log
-from twisted.python import threadpool
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import TestCase
 
@@ -28,23 +24,17 @@ from buildbot.plugins import util
 from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
-from buildbot.test.fake.reactor import NonThreadPool
-from buildbot.test.fake.reactor import TestReactor
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
-from buildbot.util.eventual import _setReactor
+from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import flushEventualQueue
 from buildbot.worker.local import LocalWorker
 
 
-class Tests(TestCase):
+class Tests(TestCase, TestReactorMixin):
 
     def setUp(self):
-        self.patch(threadpool, 'ThreadPool', NonThreadPool)
-        self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
-        _setReactor(self.reactor)
-        self.addCleanup(_setReactor, None)
+        self.setUpTestReactor()
 
         # to ease debugging we display the error logs in the test log
         origAddCompleteLog = BuildStep.addCompleteLog
