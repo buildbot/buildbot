@@ -182,15 +182,14 @@ class FakeUpdates(service.AsyncService):
         validation.verifyType(self.testcase, 'claimed_at', claimed_at,
                               validation.NoneOk(validation.DateTimeValidator()))
         if not brids:
-            defer.returnValue(True)
-            return
+            return True
         try:
             yield self.master.db.buildrequests.claimBuildRequests(
                 brids=brids, claimed_at=claimed_at, _reactor=_reactor)
         except AlreadyClaimedError:
-            defer.returnValue(False)
+            return False
         self.claimedBuildRequests.update(set(brids))
-        defer.returnValue(True)
+        return True
 
     @defer.inlineCallbacks
     def unclaimBuildRequests(self, brids):

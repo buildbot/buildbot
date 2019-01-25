@@ -144,7 +144,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls', str(pull_number)]))
         my_json = yield result.json()
-        defer.returnValue(my_json)
+        return my_json
 
     @defer.inlineCallbacks
     def _getPulls(self):
@@ -154,13 +154,13 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._http.get('/'.join(
             ['/repos', self.owner, self.repo, 'pulls']))
         my_json = yield result.json()
-        defer.returnValue(my_json)
+        return my_json
 
     @defer.inlineCallbacks
     def _getEmail(self, user):
         result = yield self._http.get("/".join(['/users', user]))
         my_json = yield result.json()
-        defer.returnValue(my_json["email"])
+        return my_json["email"]
 
     @defer.inlineCallbacks
     def _getFiles(self, prnumber):
@@ -169,7 +169,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         ]))
         my_json = yield result.json()
 
-        defer.returnValue([f["filename"] for f in my_json])
+        return [f["filename"] for f in my_json]
 
     @defer.inlineCallbacks
     def _getCurrentRev(self, prnumber):
@@ -178,7 +178,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         result = yield self._getStateObjectId()
         rev = yield self.master.db.state.getState(result, 'pull_request%d' %
                                                   prnumber, None)
-        defer.returnValue(rev)
+        return rev
 
     @defer.inlineCallbacks
     def _setCurrentRev(self, prnumber, rev):
@@ -193,7 +193,7 @@ class GitHubPullrequestPoller(base.ReconfigurablePollingChangeSource,
         # Return a deferred for object id in state db.
         result = yield self.master.db.state.getObjectId(
             '%s/%s' % (self.owner, self.repo), self.db_class_name)
-        defer.returnValue(result)
+        return result
 
     @defer.inlineCallbacks
     def _processChanges(self, github_result):

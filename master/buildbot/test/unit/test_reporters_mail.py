@@ -55,7 +55,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn = MailNotifier(*args, **kwargs)
         yield mn.setServiceParent(self.master)
         yield mn.startService()
-        defer.returnValue(mn)
+        return mn
 
     @defer.inlineCallbacks
     def test_change_name(self):

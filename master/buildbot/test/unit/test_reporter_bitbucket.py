@@ -62,7 +62,7 @@ class TestBitbucketStatusPush(unittest.TestCase, ReporterTestMixin, LoggingMixin
     def setupBuildResults(self, buildResults):
         self.insertTestData([buildResults], buildResults)
         build = yield self.master.data.get(('builds', 20))
-        defer.returnValue(build)
+        return build
 
     @defer.inlineCallbacks
     def test_basic(self):

@@ -219,14 +219,14 @@ class DBThreadPool(object):
         ret = yield threads.deferToThreadPool(self.reactor, self._pool,
                                               self.__thd, False, callable,
                                               args, kwargs)
-        defer.returnValue(ret)
+        return ret
 
     @defer.inlineCallbacks
     def do_with_engine(self, callable, *args, **kwargs):
         ret = yield threads.deferToThreadPool(self.reactor, self._pool,
                                               self.__thd, True, callable,
                                               args, kwargs)
-        defer.returnValue(ret)
+        return ret
 
     def get_sqlite_version(self):
         import sqlite3

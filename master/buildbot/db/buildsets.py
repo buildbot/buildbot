@@ -183,7 +183,7 @@ class BuildsetsConnectorComponent(base.DBConnectorComponent):
             res = conn.execute(q)
             return [self._thd_row2dict(conn, row) for row in res.fetchall()]
         res = yield self.db.pool.do(thd)
-        defer.returnValue(res)
+        return res
 
     # returns a Deferred that returns a value
     def getRecentBuildsets(self, count=None, branch=None, repository=None,

@@ -52,8 +52,7 @@ class MasterEndpoint(base.Endpoint):
             builder = yield self.master.db.builders.getBuilder(
                 builderid=kwargs['builderid'])
             if not builder or kwargs['masterid'] not in builder['masterids']:
-                defer.returnValue(None)
-                return
+                return None
         m = yield self.master.db.masters.getMaster(kwargs['masterid'])
         defer.returnValue(_db2data(m) if m else None)
 

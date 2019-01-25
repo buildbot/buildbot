@@ -81,4 +81,4 @@ class Properties(base.ResourceType):
         res = yield self.master.db.builds.setBuildProperty(
             buildid, name, value, source)
         yield self.generateUpdateEvent(buildid, dict(name=(value, source)))
-        defer.returnValue(res)
+        return res

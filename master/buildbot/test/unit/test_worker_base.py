@@ -152,7 +152,7 @@ class TestAbstractWorker(unittest.TestCase):
             yield worker.setServiceParent(self.workers)
         if attached:
             worker.conn = fakeprotocol.FakeConnection(self.master, worker)
-        defer.returnValue(worker)
+        return worker
 
     @defer.inlineCallbacks
     def test_constructor_minimal(self):

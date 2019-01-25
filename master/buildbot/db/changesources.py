@@ -67,7 +67,7 @@ class ChangeSourcesConnectorComponent(base.DBConnectorComponent):
     def getChangeSource(self, changesourceid):
         cs = yield self.getChangeSources(_changesourceid=changesourceid)
         if cs:
-            defer.returnValue(cs[0])
+            return cs[0]
 
     # returns a Deferred that returns a value
     def getChangeSources(self, active=None, masterid=None, _changesourceid=None):

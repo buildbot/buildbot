@@ -3260,7 +3260,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             Simulate the case where there is no git command.
             """
             yield
-            defer.returnValue("command not found:")
+            return "command not found:"
 
         step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                               mode='full', method='clean')
@@ -3277,7 +3277,7 @@ class TestGit(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest.Te
             to exercise error handling.
             """
             yield
-            defer.returnValue("git ")
+            return "git "
 
         step = self.stepClass(repourl='http://github.com/buildbot/buildbot.git',
                               mode='full', method='clean')

@@ -231,7 +231,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
                         def listen(factory):
                             port = yield old_listen(factory)
                             self._getPort = lambda: port
-                            defer.returnValue(port)
+                            return port
 
                         self.port_service.endpoint.listen = listen
                     else:

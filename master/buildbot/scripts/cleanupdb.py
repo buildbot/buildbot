@@ -83,8 +83,7 @@ def cleanupDatabase(config, _noMonkey=False):  # pragma: no cover
 def _cleanupDatabase(config, _noMonkey=False):
 
     if not base.checkBasedir(config):
-        defer.returnValue(1)
-        return
+        return 1
 
     config['basedir'] = os.path.abspath(config['basedir'])
     os.chdir(config['basedir'])
@@ -98,12 +97,11 @@ def _cleanupDatabase(config, _noMonkey=False):
         master_cfg = base.loadConfig(config, configFile)
 
     if not master_cfg:
-        defer.returnValue(1)
-        return
+        return 1
 
     yield doCleanupDatabase(config, master_cfg)
 
     if not config['quiet']:
         print("cleanup complete")
 
-    defer.returnValue(0)
+    return 0

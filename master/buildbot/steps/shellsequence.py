@@ -66,7 +66,7 @@ class ShellArg(results.ResultComputingConfigMixin):
         for p_attr in self.publicAttributes:
             res = yield build.render(getattr(self, p_attr))
             setattr(rv, p_attr, res)
-        defer.returnValue(rv)
+        return rv
 
 
 class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
@@ -89,19 +89,19 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
         terminate = False
         if commands is None:
             log.msg("After rendering, ShellSequence `commands` is None")
-            defer.returnValue(results.EXCEPTION)
+            return results.EXCEPTION
         overall_result = results.SUCCESS
         for arg in commands:
             if not isinstance(arg, ShellArg):
                 log.msg("After rendering, ShellSequence `commands` list "
                         "contains something that is not a ShellArg")
-                defer.returnValue(results.EXCEPTION)
+                return results.EXCEPTION
             try:
                 arg.validateAttributes()
             except config.ConfigErrors as e:
                 log.msg("After rendering, ShellSequence `commands` is "
                         "invalid: %s" % (e,))
-                defer.returnValue(results.EXCEPTION)
+                return results.EXCEPTION
 
             # handle the command from the arg
             command = arg.command
@@ -118,7 +118,7 @@ class ShellSequence(buildstep.ShellMixin, buildstep.BuildStep):
                 arg, cmd.results(), overall_result)
             if terminate:
                 break
-        defer.returnValue(overall_result)
+        return overall_result
 
     def run(self):
         return self.runShellSequence(self.commands)

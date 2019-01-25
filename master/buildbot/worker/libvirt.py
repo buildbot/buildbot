@@ -152,7 +152,7 @@ class Connection(object):
             domain = yield queue.executeInThread(self.connection.lookupByID, did)
             domains.append(self.DomainClass(self, domain))
 
-        defer.returnValue(domains)
+        return domains
 
 
 class LibVirtWorker(AbstractLatentWorker):
@@ -183,7 +183,7 @@ class LibVirtWorker(AbstractLatentWorker):
         I find existing VMs that are already running that might be orphaned instances of this worker.
         """
         if not self.connection:
-            defer.returnValue(None)
+            return None
 
         domains = yield self.connection.all()
         for d in domains:
@@ -256,7 +256,7 @@ class LibVirtWorker(AbstractLatentWorker):
         if self.domain is not None:
             log.msg("Cannot start_instance '%s' as already active" %
                     self.workername)
-            defer.returnValue(False)
+            return False
 
         yield self._prepare_base_image()
 
@@ -271,9 +271,9 @@ class LibVirtWorker(AbstractLatentWorker):
                     "Cannot start a VM (%s), failing gracefully and triggering"
                     "a new build check" % self.workername)
             self.domain = None
-            defer.returnValue(False)
+            return False
 
-        defer.returnValue(True)
+        return True
 
     def stop_instance(self, fast=False):
         """

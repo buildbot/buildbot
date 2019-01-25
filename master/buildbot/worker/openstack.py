@@ -157,7 +157,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             source_uuid = rendered_block_device['uuid']
             volume_size = self._determineVolumeSize(source_type, source_uuid)
             rendered_block_device['volume_size'] = volume_size
-        defer.returnValue(rendered_block_device)
+        return rendered_block_device
 
     def _determineVolumeSize(self, source_type, source_uuid):
         """
@@ -194,7 +194,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
             image_uuid = image(self.novaclient.images.list())
         else:
             image_uuid = yield build.render(image)
-        defer.returnValue(image_uuid)
+        return image_uuid
 
     @defer.inlineCallbacks
     def renderWorkerProps(self, build):
@@ -216,7 +216,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
         image, block_devices = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._start_instance, image,
                                           block_devices)
-        defer.returnValue(res)
+        return res
 
     def _start_instance(self, image_uuid, block_devices):
         boot_args = [self.workername, image_uuid, self.flavor]

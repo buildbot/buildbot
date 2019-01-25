@@ -359,7 +359,7 @@ class TestBuildStep(steps.BuildStepMixin, config.ConfigErrorsMixin, unittest.Tes
                 log1 = yield self.addLog('testy')
                 log2 = self.getLog('testy')
                 testcase.assertIdentical(log1, log2)
-                defer.returnValue(SUCCESS)
+                return SUCCESS
         self.setupStep(TestGetLogStep())
         self.expectOutcome(result=SUCCESS)
         yield self.runStep()
@@ -807,7 +807,7 @@ class CommandMixinExample(buildstep.CommandMixin, buildstep.BuildStep):
     def run(self):
         rv = yield self.testMethod()
         self.method_return_value = rv
-        defer.returnValue(SUCCESS)
+        return SUCCESS
 
 
 class TestCommandMixin(steps.BuildStepMixin, unittest.TestCase):

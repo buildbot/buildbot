@@ -96,7 +96,7 @@ class BuildsConnectorComponent(base.DBConnectorComponent):
                     break
             offset += 10
 
-        defer.returnValue(rv)
+        return rv
 
     # returns a Deferred that returns a value
     def getBuilds(self, builderid=None, buildrequestid=None, workerid=None, complete=None, resultSpec=None):

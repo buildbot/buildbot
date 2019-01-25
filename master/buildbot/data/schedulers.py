@@ -36,7 +36,7 @@ class Db2DataMixin(object):
             'enabled': dbdict['enabled'],
             'master': master,
         }
-        defer.returnValue(data)
+        return data
 
 
 class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
@@ -63,7 +63,7 @@ class SchedulerEndpoint(Db2DataMixin, base.Endpoint):
             schedulerid = kwargs['schedulerid']
             v = args['enabled']
             yield self.master.data.updates.schedulerEnable(schedulerid, v)
-        defer.returnValue(None)
+        return None
 
 
 class SchedulersEndpoint(Db2DataMixin, base.Endpoint):
@@ -112,7 +112,7 @@ class Scheduler(base.ResourceType):
     def schedulerEnable(self, schedulerid, v):
         yield self.master.db.schedulers.enable(schedulerid, v)
         yield self.generateEvent(schedulerid, 'updated')
-        defer.returnValue(None)
+        return None
 
     @base.updateMethod
     def findSchedulerId(self, name):

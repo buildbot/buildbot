@@ -823,7 +823,7 @@ class Model(base.DBConnectorComponent):
 
             return db_version == repo_version
         ret = yield self.db.pool.do_with_engine(thd)
-        defer.returnValue(ret)
+        return ret
 
     # returns a Deferred that returns None
     def create(self):

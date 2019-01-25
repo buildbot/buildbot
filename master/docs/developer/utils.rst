@@ -1313,7 +1313,7 @@ For example, a particular daily scheduler could be configured on multiple master
                         raise Exception("%d: server did not succeed" % (res.code))
                     res_json = yield res.json()
                     # res.json() returns a deferred to account for the time needed to fetch the entire body
-                    defer.returnValue(res_json)
+                    return res_json
 
 
             class Test(unittest.SynchronousTestCase):

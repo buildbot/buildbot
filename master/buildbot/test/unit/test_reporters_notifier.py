@@ -51,7 +51,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
         mn.sendMessage.return_value = "<message>"
         yield mn.setServiceParent(self.master)
         yield mn.startService()
-        defer.returnValue(mn)
+        return mn
 
     def test_init_enforces_tags_and_builders_are_mutually_exclusive(self):
         with self.assertRaises(config.ConfigErrors):

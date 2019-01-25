@@ -96,7 +96,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             filters = resultSpec.popProperties() if hasattr(resultSpec, 'popProperties') else []
             yield self.addPropertiesToBuildRequest(buildrequest, filters)
             defer.returnValue((yield self.db2data(buildrequest)))
-        defer.returnValue(None)
+        return None
 
     @defer.inlineCallbacks
     def control(self, action, args, kwargs):
@@ -125,7 +125,7 @@ class BuildRequestEndpoint(Db2DataMixin, base.Endpoint):
             for b in builds:
                 self.master.mq.produce(("control", "builds", str(b['buildid']), "stop"),
                                        mqKwargs)
-            defer.returnValue(None)
+            return None
 
         # then complete it with 'CANCELLED'; this is the closest we can get to
         # cancelling a request without running into trouble with dangling
@@ -170,7 +170,7 @@ class BuildRequestsEndpoint(Db2DataMixin, base.Endpoint):
         for br in buildrequests:
             yield self.addPropertiesToBuildRequest(br, filters)
             results.append((yield self.db2data(br)))
-        defer.returnValue(results)
+        return results
 
 
 class BuildRequest(base.ResourceType):
@@ -212,16 +212,16 @@ class BuildRequest(base.ResourceType):
     def callDbBuildRequests(self, brids, db_callable, event, **kw):
         if not brids:
             # empty buildrequest list. No need to call db API
-            defer.returnValue(True)
+            return True
         try:
             yield db_callable(brids, **kw)
         except AlreadyClaimedError:
             # the db layer returned an AlreadyClaimedError exception, usually
             # because one of the buildrequests has already been claimed by
             # another master
-            defer.returnValue(False)
+            return False
         yield self.generateEvent(brids, event)
-        defer.returnValue(True)
+        return True
 
     @base.updateMethod
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):
@@ -245,7 +245,7 @@ class BuildRequest(base.ResourceType):
         assert results != RETRY, "a buildrequest cannot be completed with a retry status!"
         if not brids:
             # empty buildrequest list. No need to call db API
-            defer.returnValue(True)
+            return True
         try:
             yield self.master.db.buildrequests.completeBuildRequests(
                 brids,
@@ -256,7 +256,7 @@ class BuildRequest(base.ResourceType):
             # the db layer returned a NotClaimedError exception, usually
             # because one of the buildrequests has been claimed by another
             # master
-            defer.returnValue(False)
+            return False
         yield self.generateEvent(brids, "complete")
 
         # check for completed buildsets -- one call for each build request with
@@ -272,7 +272,7 @@ class BuildRequest(base.ResourceType):
                 seen_bsids.add(bsid)
                 yield self.master.data.updates.maybeBuildsetComplete(bsid)
 
-        defer.returnValue(True)
+        return True
 
     @base.updateMethod
     @defer.inlineCallbacks
@@ -289,4 +289,4 @@ class BuildRequest(base.ResourceType):
                                                          parent_buildid=buildset['parent_buildid'], parent_relationship=buildset[
                                                              'parent_relationship'],
                                                          )
-        defer.returnValue(res)
+        return res

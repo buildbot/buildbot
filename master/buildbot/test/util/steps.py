@@ -432,7 +432,7 @@ class BuildStepMixin(object):
         finally:
             if not exp.shouldKeepMatchingAfter(command):
                 self.expected_remote_commands.pop(0)
-        defer.returnValue(command)
+        return command
 
     def changeWorkerSystem(self, system):
         self.worker.worker_system = system

@@ -386,18 +386,18 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
                     os.path.join(self.workdir, source), abandonOnFailure=False) for source in sources
             ])
             results = [self.workerPathToMasterPath(p) for p in flatten(results)]
-            defer.returnValue(results)
+            return results
 
         @defer.inlineCallbacks
         def uploadSources(sources):
             if not sources:
-                defer.returnValue(SKIPPED)
+                return SKIPPED
             else:
                 for source in sources:
                     result = yield self.startUpload(source, masterdest)
                     if result == FAILURE:
-                        defer.returnValue(FAILURE)
-                defer.returnValue(SUCCESS)
+                        return FAILURE
+                return SUCCESS
 
         def logUpload(sources):
             log.msg("MultipleFileUpload started, from worker %r to master %r" %

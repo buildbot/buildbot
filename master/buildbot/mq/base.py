@@ -37,7 +37,7 @@ class MQBase(service.AsyncService):
         else:
             res = None
         yield buildCompleteConsumer.stopConsuming()
-        defer.returnValue(res)
+        return res
 
 
 class QueueRef(object):

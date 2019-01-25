@@ -214,7 +214,7 @@ class DockerLatentWorker(DockerBaseWorker,
             raise ValueError('instance active')
         image, dockerfile, volumes = yield self.renderWorkerPropsOnStart(build)
         res = yield threads.deferToThread(self._thd_start_instance, image, dockerfile, volumes)
-        defer.returnValue(res)
+        return res
 
     def _image_exists(self, client, name):
         # Make sure the image exists

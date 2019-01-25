@@ -44,7 +44,7 @@ class TestPushoverNotifier(ConfigErrorsMixin, unittest.TestCase):
         pn = PushoverNotifier(user_key, api_token, **kwargs)
         yield pn.setServiceParent(self.master)
         yield pn.startService()
-        defer.returnValue(pn)
+        return pn
 
     @defer.inlineCallbacks
     def test_sendMessage(self):

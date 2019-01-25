@@ -118,11 +118,11 @@ class WorkersConnectorComponent(base.DBConnectorComponent):
     def getWorker(self, workerid=None, name=None, masterid=None,
                   builderid=None):
         if workerid is None and name is None:
-            defer.returnValue(None)
+            return None
         workers = yield self.getWorkers(_workerid=workerid,
                                         _name=name, masterid=masterid, builderid=builderid)
         if workers:
-            defer.returnValue(workers[0])
+            return workers[0]
 
     # returns a Deferred that returns a value
     def getWorkers(self, _workerid=None, _name=None, masterid=None,

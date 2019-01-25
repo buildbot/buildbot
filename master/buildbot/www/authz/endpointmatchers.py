@@ -81,14 +81,14 @@ class Match(object):
     def getOwnerFromBuild(self, build):
         br = yield self.master.data.get(("buildrequests", build['buildrequestid']))
         owner = yield self.getOwnerFromBuildRequest(br)
-        defer.returnValue(owner)
+        return owner
 
     @defer.inlineCallbacks
     def getOwnerFromBuildsetOrBuildRequest(self, buildsetorbuildrequest):
         props = yield self.master.data.get(("buildsets", buildsetorbuildrequest['buildsetid'], "properties"))
         if 'owner' in props:
-            defer.returnValue(props['owner'][0])
-        defer.returnValue(None)
+            return props['owner'][0]
+        return None
 
     getOwnerFromBuildRequest = getOwnerFromBuildsetOrBuildRequest
     getOwnerFromBuildSet = getOwnerFromBuildsetOrBuildRequest
@@ -126,7 +126,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
             builder = yield self.master.data.get(('builders', builderid))
             buildername = builder['name']
             defer.returnValue(self.authz.match(buildername, self.builder))
-        defer.returnValue(False)
+        return False
 
     @defer.inlineCallbacks
     def match_BuildEndpoint_stop(self, epobject, epdict, options):
@@ -139,7 +139,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         if ret:
             defer.returnValue(Match(self.master, build=build))
 
-        defer.returnValue(None)
+        return None
 
     @defer.inlineCallbacks
     def match_BuildRequestEndpoint_stop(self, epobject, epdict, options):
@@ -151,7 +151,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
         ret = yield self.matchFromBuilderId(buildrequest['builderid'])
         if ret:
             defer.returnValue(Match(self.master, buildrequest=buildrequest))
-        defer.returnValue(None)
+        return None
 
 
 class ForceBuildEndpointMatcher(EndpointMatcherBase):
@@ -173,7 +173,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
             for buildername in builderNames:
                 if self.authz.match(buildername, self.builder):
                     defer.returnValue(Match(self.master))
-        defer.returnValue(None)
+        return None
 
 
 class RebuildBuildEndpointMatcher(EndpointMatcherBase):

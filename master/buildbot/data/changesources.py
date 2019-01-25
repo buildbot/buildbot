@@ -35,7 +35,7 @@ class Db2DataMixin(object):
             'name': dbdict['name'],
             'master': master,
         }
-        defer.returnValue(data)
+        return data
 
 
 class ChangeSourceEndpoint(Db2DataMixin, base.Endpoint):

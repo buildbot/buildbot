@@ -59,7 +59,7 @@ def masterConfig():
             yield asyncSleep(1)
             self.interrupt("just testing")
             res = yield d
-            defer.returnValue(res)
+            return res
 
     c['schedulers'] = [
         schedulers.ForceScheduler(

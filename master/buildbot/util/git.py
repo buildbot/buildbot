@@ -221,9 +221,8 @@ class GitStepMixin(GitMixin):
             log.msg("Source step failed while running command %s" % cmd)
             raise buildstep.BuildStepFailed()
         if collectStdout:
-            defer.returnValue(cmd.stdout)
-            return
-        defer.returnValue(cmd.rc)
+            return cmd.stdout
+        return cmd.rc
 
     @defer.inlineCallbacks
     def checkBranchSupport(self):
@@ -231,12 +230,12 @@ class GitStepMixin(GitMixin):
 
         self.parseGitFeatures(stdout)
 
-        defer.returnValue(self.gitInstalled)
+        return self.gitInstalled
 
     @defer.inlineCallbacks
     def _downloadSshPrivateKeyIfNeeded(self):
         if self.sshPrivateKey is None:
-            defer.returnValue(RC_SUCCESS)
+            return RC_SUCCESS
 
         p = Properties()
         p.master = self.master
@@ -272,12 +271,12 @@ class GitStepMixin(GitMixin):
                                                    workdir=workdir, mode=0o400)
 
         self.didDownloadSshPrivateKey = True
-        defer.returnValue(RC_SUCCESS)
+        return RC_SUCCESS
 
     @defer.inlineCallbacks
     def _removeSshPrivateKeyIfNeeded(self):
         if not self.didDownloadSshPrivateKey:
-            defer.returnValue(RC_SUCCESS)
+            return RC_SUCCESS
 
         yield self.runRmdir(self._getSshDataPath())
-        defer.returnValue(RC_SUCCESS)
+        return RC_SUCCESS

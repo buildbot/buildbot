@@ -69,7 +69,7 @@ class NotifierTestMixin(object):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
+            return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
         defer.returnValue((buildset, builds))

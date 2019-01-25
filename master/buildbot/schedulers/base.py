@@ -104,8 +104,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
     @defer.inlineCallbacks
     def activate(self):
         if not self.enabled:
-            yield defer.returnValue(None)
-            return
+            return None
 
         # even if we aren't called via _activityPoll(), at this point we
         # need to ensure the service id is set correctly
@@ -288,7 +287,7 @@ class BaseScheduler(ClusteredBuildbotService, StateMixin):
             sourcestamps=stampsWithDefaults, reason=reason,
             waited_for=waited_for, properties=properties,
             builderNames=builderNames, **kw)
-        defer.returnValue(rv)
+        return rv
 
     def getCodebaseDict(self, codebase):
         # Hook for subclasses to change codebase parameters when a codebase does

@@ -52,7 +52,7 @@ def sampleReviewCBDeferred(builderName, build, result, status, arg):
     verified = 1 if result == SUCCESS else -1
     result = yield makeReviewResult(str({'name': builderName, 'result': result}),
                                     (GERRIT_LABEL_VERIFIED, verified))
-    defer.returnValue(result)
+    return result
 
 
 def sampleStartCB(builderName, build, arg):
@@ -64,7 +64,7 @@ def sampleStartCB(builderName, build, arg):
 def sampleStartCBDeferred(builderName, build, arg):
     result = yield makeReviewResult(str({'name': builderName}),
                                     (GERRIT_LABEL_REVIEWED, 0))
-    defer.returnValue(result)
+    return result
 
 
 def sampleSummaryCB(buildInfoList, results, status, arg):
@@ -108,7 +108,7 @@ def sampleSummaryCBDeferred(buildInfoList, results, master, arg):
 
     result = yield makeReviewResult(str(buildInfoList),
                                     (GERRIT_LABEL_VERIFIED, verified))
-    defer.returnValue(result)
+    return result
 
 
 def legacyTestReviewCB(builderName, build, result, status, arg):
@@ -149,13 +149,13 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         gsp = GerritStatusPush(serv, username, *args, **kwargs)
         yield gsp.setServiceParent(self.master)
         yield gsp.startService()
-        defer.returnValue(gsp)
+        return gsp
 
     @defer.inlineCallbacks
     def setupGerritStatusPush(self, *args, **kwargs):
         gsp = yield self.setupGerritStatusPushSimple(*args, **kwargs)
         gsp.sendCodeReview = Mock()
-        defer.returnValue(gsp)
+        return gsp
 
     @defer.inlineCallbacks
     def setupBuildResults(self, buildResults, finalResult):
@@ -168,7 +168,7 @@ class TestGerritStatusPush(unittest.TestCase, ReporterTestMixin):
         def getChangesForBuild(buildid):
             assert buildid == 20
             ch = yield self.master.db.changes.getChange(13)
-            defer.returnValue([ch])
+            return [ch]
 
         self.master.db.changes.getChangesForBuild = getChangesForBuild
         defer.returnValue((buildset, builds))

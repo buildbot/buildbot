@@ -433,7 +433,7 @@ class _Lookup(util.ComparableMixin, object):
                 rv = yield build.render(value[index])
         if rv is None:
             rv = yield build.render(self.elideNoneAs)
-        defer.returnValue(rv)
+        return rv
 
 
 def _getInterpolationList(fmtstring):
@@ -472,7 +472,7 @@ class _SecretRenderer(object):
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secret_name)
         properties.useSecret(secret_detail.value, self.secret_name)
-        defer.returnValue(secret_detail.value)
+        return secret_detail.value
 
 
 class Secret(_SecretRenderer):
@@ -495,7 +495,7 @@ class Secret(_SecretRenderer):
         secret_detail = yield credsservice.get(self.secretKey)
         if secret_detail is None:
             raise KeyError("secret key %s is not found in any provider" % self.secretKey)
-        defer.returnValue(secret_detail.value)
+        return secret_detail.value
 
 
 class _SecretIndexer(object):
@@ -863,7 +863,7 @@ class _Renderer(util.ComparableMixin, object):
         # We allow the renderer fn to return a renderable for convenience
         result = yield self.fn(props, *args, **kwargs)
         result = yield props.render(result)
-        defer.returnValue(result)
+        return result
 
     def __repr__(self):
         if self.args or self.kwargs:

@@ -235,7 +235,7 @@ class Contact(service.AsyncService):
             else:
                 which = 'number %s' % builderid
             raise UsageError("no such builder '%s'" % which)
-        defer.returnValue(bdict)
+        return bdict
 
     def getAllBuilders(self):
         d = self.master.data.get(('builders',))
@@ -258,7 +258,7 @@ class Contact(service.AsyncService):
     def getRevisionsForBuild(self, bdict):
         # FIXME: Need to get revision info! (build -> buildreq -> buildset ->
         # sourcestamps)
-        defer.returnValue(["TODO"])
+        return ["TODO"]
 
     def convertTime(self, seconds):
         if seconds < 60:
@@ -578,10 +578,10 @@ class Contact(service.AsyncService):
     @defer.inlineCallbacks
     def notify_for_finished(self, build):
         if self.notify_for('finished'):
-            defer.returnValue(True)
+            return True
 
         if self.notify_for(self.results_descriptions.get(build['results'])[0].lower()):
-            defer.returnValue(True)
+            return True
 
         prevBuild = yield self.master.data.get(
             ('builders', build['builderid'], 'builds', build['number'] - 1))
@@ -594,9 +594,9 @@ class Contact(service.AsyncService):
                  self.results_descriptions.get(build['results'])[0].capitalize()))
 
             if (self.notify_for(required_notification_control_string)):
-                defer.returnValue(True)
+                return True
 
-        defer.returnValue(False)
+        return False
 
     @defer.inlineCallbacks
     def watchedBuildFinished(self, build):

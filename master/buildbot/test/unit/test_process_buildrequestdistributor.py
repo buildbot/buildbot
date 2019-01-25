@@ -127,7 +127,7 @@ class TestBRDBase(unittest.TestCase):
             return not can or can(*args)
         bldr.canStartBuild = canStartBuild
 
-        defer.returnValue(bldr)
+        return bldr
 
     @defer.inlineCallbacks
     def addBuilders(self, names):

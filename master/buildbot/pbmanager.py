@@ -209,7 +209,7 @@ class Dispatcher(service.AsyncService):
                 if not matched:
                     log.msg("invalid login from user '{}'".format(username))
                     raise error.UnauthorizedLogin()
-                defer.returnValue(creds.username)
+                return creds.username
             log.msg("invalid login from unknown user '{}'".format(username))
             raise error.UnauthorizedLogin()
         finally:

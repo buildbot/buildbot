@@ -460,7 +460,7 @@ class BuildStep(results.ResultComputingConfigMixin,
         summary = yield self.getResultSummary()
         if self.results in self.updateBuildSummaryPolicy and 'build' not in summary and 'step' in summary:
             summary['build'] = summary['step']
-        defer.returnValue(summary)
+        return summary
 
     @debounce.method(wait=1)
     @defer.inlineCallbacks
@@ -621,7 +621,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             self.results = EXCEPTION
         self.releaseLocks()
 
-        defer.returnValue(self.results)
+        return self.results
 
     @defer.inlineCallbacks
     def finishUnfinishedLogs(self):
@@ -634,7 +634,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             if not success:
                 log.err(res, "when trying to finish a log")
                 ok = False
-        defer.returnValue(ok)
+        return ok
 
     def acquireLocks(self, res=None):
         self._acquiringLock = None
@@ -720,7 +720,7 @@ class BuildStep(results.ResultComputingConfigMixin,
                         results = EXCEPTION
                 unhandled = self._start_unhandled_deferreds
 
-        defer.returnValue(results)
+        return results
 
     def finished(self, results):
         assert self._start_deferred, \
@@ -874,7 +874,7 @@ class BuildStep(results.ResultComputingConfigMixin,
     @defer.inlineCallbacks
     def addURL(self, name, url):
         yield self.master.data.updates.addStepURL(self.stepid, text_type(name), text_type(url))
-        defer.returnValue(None)
+        return None
 
     @defer.inlineCallbacks
     def runCommand(self, command):
@@ -884,7 +884,7 @@ class BuildStep(results.ResultComputingConfigMixin,
             res = yield command.run(self, self.remote, self.build.builder.name)
         finally:
             self.cmd = None
-        defer.returnValue(res)
+        return res
 
     def hasStatistic(self, name):
         return name in self.statistics
@@ -1248,7 +1248,7 @@ class ShellMixin(object):
                 # and tell the RemoteCommand to feed it
                 cmd.useLog(newlog, False)
 
-        defer.returnValue(cmd)
+        return cmd
 
     def getResultSummary(self):
         summary = util.command_to_string(self.command)

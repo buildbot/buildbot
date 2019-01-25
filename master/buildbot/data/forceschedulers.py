@@ -63,10 +63,10 @@ class ForceSchedulerEndpoint(base.Endpoint):
                 args['owner'] = "user"
             try:
                 res = yield sched.force(**args)
-                defer.returnValue(res)
+                return res
             except forcesched.CollectedValidationError as e:
                 raise BadJsonRpc2(e.errors, JSONRPC_CODES["invalid_params"])
-        defer.returnValue(None)
+        return None
 
 
 class ForceSchedulersEndpoint(base.Endpoint):
@@ -89,7 +89,7 @@ class ForceSchedulersEndpoint(base.Endpoint):
                 if builderid is not None and bdict['name'] not in sched.builderNames:
                     continue
                 ret.append(forceScheduler2Data(sched))
-        defer.returnValue(ret)
+        return ret
 
 
 class ForceScheduler(base.ResourceType):

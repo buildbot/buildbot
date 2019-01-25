@@ -245,7 +245,7 @@ class MailNotifier(NotifierBase):
                               "but it already exists in the Message - "
                               "not adding it.")
                 m[k] = v
-        defer.returnValue(m)
+        return m
 
     @defer.inlineCallbacks
     def sendMessage(self, body, subject=None, type='plain', builderName=None,
@@ -298,7 +298,7 @@ class MailNotifier(NotifierBase):
                 else:
                     twlog.msg("INVALID EMAIL: {}".format(r))
 
-        defer.returnValue(recipients)
+        return recipients
 
     def processRecipients(self, blamelist, m):
         to_recipients = set(blamelist)

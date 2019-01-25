@@ -128,8 +128,7 @@ class SharedService(AsyncMultiService):
     def getService(cls, parent, *args, **kwargs):
         name = cls.getName(*args, **kwargs)
         if name in parent.namedServices:
-            defer.returnValue(parent.namedServices[name])
-            return  # pragma: no cover
+            return parent.namedServices[name]
 
         instance = cls(*args, **kwargs)
 
@@ -145,7 +144,7 @@ class SharedService(AsyncMultiService):
         parent.services.remove(instance)
         parent.services.insert(0, instance)
         # hook the return value to the instance object
-        defer.returnValue(instance)
+        return instance
 
     @classmethod
     def getName(cls, *args, **kwargs):
@@ -194,7 +193,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         # sibling == self is using ComparableMixin's implementation
         # only compare compare_attrs
         if self.configured and sibling == self:
-            defer.returnValue(None)
+            return None
         self.configured = True
         # render renderables in parallel
         # Properties import to resolve cyclic import issue
@@ -215,7 +214,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
 
         d = yield self.reconfigService(*sibling._config_args,
                                        **kwargs)
-        defer.returnValue(d)
+        return d
 
     def configureService(self):
         # reconfigServiceWithSibling with self, means first configuration

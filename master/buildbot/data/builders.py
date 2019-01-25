@@ -33,16 +33,14 @@ class BuilderEndpoint(base.BuildNestingMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         builderid = yield self.getBuilderId(kwargs)
         if builderid is None:
-            defer.returnValue(None)
+            return None
 
         bdict = yield self.master.db.builders.getBuilder(builderid)
         if not bdict:
-            defer.returnValue(None)
-            return
+            return None
         if 'masterid' in kwargs:
             if kwargs['masterid'] not in bdict['masterids']:
-                defer.returnValue(None)
-                return
+                return None
         defer.returnValue(
             dict(builderid=builderid,
                  name=bdict['name'],
@@ -108,7 +106,7 @@ class Builder(base.ResourceType):
     def updateBuilderInfo(self, builderid, description, tags):
         ret = yield self.master.db.builders.updateBuilderInfo(builderid, description, tags)
         yield self.generateEvent(builderid, "update")
-        defer.returnValue(ret)
+        return ret
 
     @base.updateMethod
     @defer.inlineCallbacks

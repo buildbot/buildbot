@@ -91,7 +91,7 @@ class BuildChooserBase(object):
             # sort by submitted_at, so the first is the oldest
             brdicts.sort(key=lambda brd: brd['submitted_at'])
             self.unclaimedBrdicts = brdicts
-        defer.returnValue(self.unclaimedBrdicts)
+        return self.unclaimedBrdicts
 
     @defer.inlineCallbacks
     def _getBuildRequestForBrdict(self, brdict):
@@ -103,7 +103,7 @@ class BuildChooserBase(object):
             breq = yield BuildRequest.fromBrdict(self.master, brdict)
             if breq:
                 self.breqCache[brdict['buildrequestid']] = breq
-        defer.returnValue(breq)
+        return breq
 
     def _getBrdictForBuildRequest(self, breq):
         # Turn a BuildRequest back into a brdict. This operates from the
@@ -210,15 +210,14 @@ class BasicBuildChooser(BuildChooserBase):
                 nextBuild = (worker, breq)
                 break
 
-        defer.returnValue(nextBuild)
+        return nextBuild
 
     @defer.inlineCallbacks
     def _getNextUnclaimedBuildRequest(self):
         # ensure the cache is there
         yield self._fetchUnclaimedBrdicts()
         if not self.unclaimedBrdicts:
-            defer.returnValue(None)
-            return  # pragma: no cover
+            return None
 
         if self.nextBuild:
             # nextBuild expects BuildRequest objects
@@ -236,15 +235,14 @@ class BasicBuildChooser(BuildChooserBase):
             brdict = self.unclaimedBrdicts[0]
             nextBreq = yield self._getBuildRequestForBrdict(brdict)
 
-        defer.returnValue(nextBreq)
+        return nextBreq
 
     @defer.inlineCallbacks
     def _popNextWorker(self, buildrequest):
         # use 'preferred' workers first, if we have some ready
         if self.preferredWorkers:
             worker = self.preferredWorkers.pop(0)
-            defer.returnValue(worker)
-            return  # pragma: no cover
+            return worker
 
         while self.workerpool:
             try:
@@ -259,10 +257,9 @@ class BasicBuildChooser(BuildChooserBase):
                 break
 
             self.workerpool.remove(worker)
-            defer.returnValue(worker)
-            return
+            return worker
 
-        defer.returnValue(None)
+        return None
 
     def _unpopWorkers(self, workers):
         # push the workers back to the front
@@ -348,8 +345,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
 
         # if we won't add any builders, there's nothing to do
         if new_builders < existing_pending:
-            defer.returnValue(None)
-            return  # pragma: no cover
+            return None
 
         # reset the list of pending builders
         @defer.inlineCallbacks
@@ -416,7 +412,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # and reverse the transform
         rv = [xf[1] for xf in xformed]
         timer.stop()
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def _sortBuilders(self, buildernames):
@@ -444,7 +440,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
         # and return the names
         rv = [b.name for b in builders]
         timer.stop()
-        defer.returnValue(rv)
+        return rv
 
     @defer.inlineCallbacks
     def _activityLoop(self):

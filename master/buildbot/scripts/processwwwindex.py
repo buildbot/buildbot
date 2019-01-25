@@ -37,11 +37,11 @@ def processwwwindex(config):
     if not config.get('index-file'):
         print(
             "Path to the index.html file is required with option --index-file or -i")
-        defer.returnValue(1)
+        return 1
     path = config.get('index-file')
     if not os.path.isfile(path):
         print("Invalid path to index.html")
-        defer.returnValue(2)
+        return 2
 
     main_dir = os.path.dirname(path)
 
@@ -70,4 +70,4 @@ def processwwwindex(config):
             configjson=json.dumps(fakeconfig), config=fakeconfig)
     with open(path, 'w') as indexfile:
         indexfile.write(outputstr)
-    defer.returnValue(0)
+    return 0

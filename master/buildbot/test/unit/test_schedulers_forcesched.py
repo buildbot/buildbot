@@ -405,7 +405,7 @@ class TestForceScheduler(scheduler.SchedulerMixin, ConfigErrorsMixin, unittest.T
             if not isinstance(e, expect):
                 # the exception is the wrong kind
                 raise
-            defer.returnValue(None)  # success
+            return None  # success
 
         expect_props = {
             'owner': ('user', 'Force Build Form'),

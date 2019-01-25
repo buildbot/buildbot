@@ -42,4 +42,4 @@ def dataspec(config):
         f.write("window." + config['global'] + '=')
     f.write(json.dumps(data.allEndpoints(), indent=2))
     f.close()
-    defer.returnValue(0)
+    return 0

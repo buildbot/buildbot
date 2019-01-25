@@ -96,7 +96,7 @@ class Latin1ProducingCustomBuildStep(buildstep.BuildStep):
         output_str = '\N{CENT SIGN}'
         yield _log.addStdout(output_str)
         yield _log.finish()
-        defer.returnValue(results.SUCCESS)
+        return results.SUCCESS
 
 
 class FailingCustomStep(buildstep.LoggingBuildStep):
@@ -222,7 +222,7 @@ class RunSteps(unittest.TestCase):
         yield bfd
 
         # then get the BuildStatus and return it
-        defer.returnValue(self.master.status.lastBuilderStatus.lastBuildStatus)
+        return self.master.status.lastBuilderStatus.lastBuildStatus
 
     def assertLogs(self, exp_logs):
         got_logs = {}

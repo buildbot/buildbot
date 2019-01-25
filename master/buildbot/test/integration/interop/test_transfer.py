@@ -130,7 +130,7 @@ def masterGlobConfig():
             content = yield self.getFileContentFromWorker(
                 "dir/file1.txt", abandonOnFailure=True)
             assert content == "filecontent"
-            defer.returnValue(SUCCESS)
+            return SUCCESS
 
     c['schedulers'] = [
         schedulers.ForceScheduler(

@@ -119,9 +119,9 @@ def _upgradeMaster(config, master_cfg):
     except Exception:
         e = traceback.format_exc()
         print("problem while upgrading!:\n" + e, file=sys.stderr)
-        defer.returnValue(1)
+        return 1
     else:
         if not config['quiet']:
             print("upgrade complete")
 
-    defer.returnValue(0)
+    return 0

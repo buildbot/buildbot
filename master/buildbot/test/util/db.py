@@ -201,8 +201,7 @@ class RealDatabaseMixin(object):
                                                       basedir=basedir)
         # if the caller does not want a pool, we're done.
         if not want_pool:
-            defer.returnValue(None)
-            return
+            return None
 
         self.db_pool = pool.DBThreadPool(self.db_engine, reactor=reactor)
 

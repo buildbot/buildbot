@@ -125,7 +125,7 @@ class DataConnector(service.AsyncService):
         rv = yield endpoint.get(resultSpec, kwargs)
         if resultSpec:
             rv = resultSpec.apply(rv)
-        defer.returnValue(rv)
+        return rv
 
     def control(self, action, args, path):
         endpoint, kwargs = self.getEndpoint(path)

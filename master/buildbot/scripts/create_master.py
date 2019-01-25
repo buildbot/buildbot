@@ -106,4 +106,4 @@ def createMaster(config):
     if not config['quiet']:
         print("buildmaster configured in %s" % (config['basedir'],))
 
-    defer.returnValue(0)
+    return 0

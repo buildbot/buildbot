@@ -273,7 +273,7 @@ class Build(properties.PropertiesMixin):
 
             else:
                 self._builderid = yield self.builder.getBuilderId()
-        defer.returnValue(self._builderid)
+        return self._builderid
 
     @defer.inlineCallbacks
     def startBuild(self, build_status, workerforbuilder):
@@ -525,7 +525,7 @@ class Build(properties.PropertiesMixin):
         # `results` is just passed on to the next callback
         yield self.master.data.updates.setBuildProperties(self.buildid, self)
 
-        defer.returnValue(results)
+        return results
 
     @defer.inlineCallbacks
     def _stepDone(self, results, step):
@@ -562,7 +562,7 @@ class Build(properties.PropertiesMixin):
             # force the results to retry if the connection was lost
             self.results = RETRY
             terminate = True
-        defer.returnValue(terminate)
+        return terminate
 
     def lostRemote(self, conn=None):
         # the worker went away. There are several possible reasons for this,

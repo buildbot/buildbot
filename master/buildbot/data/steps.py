@@ -91,7 +91,7 @@ class StepsEndpoint(Db2DataMixin, base.BuildNestingMixin, base.Endpoint):
         results = []
         for dbdict in steps:
             results.append((yield self.db2data(dbdict)))
-        defer.returnValue(results)
+        return results
 
 
 class Step(base.ResourceType):

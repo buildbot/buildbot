@@ -51,7 +51,7 @@ class LogChunksJanitor(BuildStep):
         older_than_timestamp = datetime2epoch(now() - self.logHorizon)
         deleted = yield self.master.db.logs.deleteOldLogChunks(older_than_timestamp)
         self.descriptionDone = ["deleted", str(deleted), "logchunks"]
-        defer.returnValue(SUCCESS)
+        return SUCCESS
 
 
 class JanitorConfigurator(ConfiguratorBase):

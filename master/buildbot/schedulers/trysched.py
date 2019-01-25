@@ -360,19 +360,19 @@ class RemoteBuild(pb.Referenceable):
 
         yield d  # wait for event
         consumer.stopConsuming()
-        defer.returnValue(self)  # callers expect result=self
+        return self  # callers expect result=self
 
     @defer.inlineCallbacks
     def remote_getResults(self):
         buildid = self.builddict['buildid']
         builddict = yield self.master.data.get(('builds', buildid))
-        defer.returnValue(builddict['results'])
+        return builddict['results']
 
     @defer.inlineCallbacks
     def remote_getText(self):
         buildid = self.builddict['buildid']
         builddict = yield self.master.data.get(('builds', buildid))
-        defer.returnValue([builddict['state_string']])
+        return [builddict['state_string']]
 
 
 class Try_Userpass_Perspective(pbutil.NewCredPerspective):
@@ -416,7 +416,7 @@ class Try_Userpass_Perspective(pbutil.NewCredPerspective):
 
         # return a remotely-usable BuildSetStatus object
         bss = RemoteBuildSetStatus(self.scheduler.master, bsid, brids)
-        defer.returnValue(bss)
+        return bss
 
     def perspective_getAvailableBuilderNames(self):
         # Return a list of builder names that are configured

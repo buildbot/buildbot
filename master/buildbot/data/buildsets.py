@@ -35,7 +35,7 @@ class Db2DataMixin(object):
     @defer.inlineCallbacks
     def db2data(self, bsdict):
         if not bsdict:
-            defer.returnValue(None)
+            return None
 
         buildset = bsdict.copy()
 
@@ -55,7 +55,7 @@ class Db2DataMixin(object):
         buildset['submitted_at'] = datetime2epoch(buildset['submitted_at'])
         buildset['complete_at'] = datetime2epoch(buildset['complete_at'])
 
-        defer.returnValue(buildset)
+        return buildset
 
     fieldMapping = {
         'bsid': 'buildsets.id',
@@ -81,7 +81,7 @@ class BuildsetEndpoint(Db2DataMixin, base.Endpoint):
     def get(self, resultSpec, kwargs):
         res = yield self.master.db.buildsets.getBuildset(kwargs['bsid'])
         res = yield self.db2data(res)
-        defer.returnValue(res)
+        return res
 
 
 class BuildsetsEndpoint(Db2DataMixin, base.Endpoint):

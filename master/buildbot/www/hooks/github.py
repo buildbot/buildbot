@@ -87,7 +87,7 @@ class GitHubEventHandler(PullRequestMixin):
             raise ValueError('Unknown event: {}'.format(event_type))
 
         result = yield defer.maybeDeferred(lambda: handler(payload, event_type))
-        defer.returnValue(result)
+        return result
 
     def _get_payload(self, request):
         content = request.content.read()
@@ -232,7 +232,7 @@ class GitHubEventHandler(PullRequestMixin):
         res = yield http.get(url)
         data = yield res.json()
         msg = data.get('commit', {'message': 'No message field'})['message']
-        defer.returnValue(msg)
+        return msg
 
     def _process_change(self, payload, user, repo, repo_url, project, event,
                         properties):

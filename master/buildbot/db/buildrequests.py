@@ -131,7 +131,7 @@ class BuildRequestsConnectorComponent(base.DBConnectorComponent):
 
             return deduplicateBrdict([self._brdictFromRow(row, self.db.master.masterid) for row in res.fetchall()])
         res = yield self.db.pool.do(thd)
-        defer.returnValue(res)
+        return res
 
     @defer.inlineCallbacks
     def claimBuildRequests(self, brids, claimed_at=None, _reactor=reactor):

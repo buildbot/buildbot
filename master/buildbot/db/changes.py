@@ -208,7 +208,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
                     if change is None:
                         break
                     changes.append(change)
-        defer.returnValue(changes)
+        return changes
 
     # returns a Deferred that returns a value
     def getChangeFromSSid(self, sourcestampid):
@@ -314,8 +314,7 @@ class ChangesConnectorComponent(base.DBConnectorComponent):
         """
 
         if not changeHorizon:
-            defer.returnValue(None)
-            return  # pragma: no cover
+            return None
 
         def thd(conn):
             changes_tbl = self.db.model.changes

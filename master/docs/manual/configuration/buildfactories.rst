@@ -135,7 +135,7 @@ Each stage is then run in this example using ``./build.sh --run-stage <stage nam
                     for stage in self.extract_stages(self.observer.getStdout())
                 ])
 
-            defer.returnValue(result)
+            return result
 
     f = util.BuildFactory()
     f.addStep(steps.Git(repourl=repourl))

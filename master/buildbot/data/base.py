@@ -105,7 +105,7 @@ class BuildNestingMixin(object):
         # need to look in the context of a step, specified by build or
         # builder or whatever
         if 'buildid' in kwargs:
-            defer.returnValue(kwargs['buildid'])
+            return kwargs['buildid']
         else:
             builderid = yield self.getBuilderId(kwargs)
             if builderid is None:
@@ -115,12 +115,12 @@ class BuildNestingMixin(object):
                 number=kwargs['build_number'])
             if not build:
                 return
-            defer.returnValue(build['id'])
+            return build['id']
 
     @defer.inlineCallbacks
     def getStepid(self, kwargs):
         if 'stepid' in kwargs:
-            defer.returnValue(kwargs['stepid'])
+            return kwargs['stepid']
         else:
             buildid = yield self.getBuildid(kwargs)
             if buildid is None:
@@ -132,7 +132,7 @@ class BuildNestingMixin(object):
                                                         name=kwargs.get('step_name'))
             if not dbdict:
                 return
-            defer.returnValue(dbdict['id'])
+            return dbdict['id']
 
     def getBuilderId(self, kwargs):
         if 'buildername' in kwargs:
