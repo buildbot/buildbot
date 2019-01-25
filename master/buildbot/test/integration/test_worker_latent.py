@@ -542,7 +542,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         builds = yield master.data.get(("builds",))
         self.assertEqual(builds[0]['results'], None)
-        controller.disconnect_worker()
+        yield controller.disconnect_worker()
         builds = yield master.data.get(("builds",))
         self.assertEqual(builds[0]['results'], RETRY)
 
