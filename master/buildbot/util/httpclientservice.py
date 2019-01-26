@@ -178,7 +178,7 @@ class HTTPClientService(service.SharedService):
             kwargs['verify'] = False
 
         res = yield self._session.request(method, url, **kwargs)
-        return defer.returnValue(IHttpResponse(TxRequestsResponseWrapper(res)))
+        return IHttpResponse(TxRequestsResponseWrapper(res))
 
     @defer.inlineCallbacks
     def _doTReq(self, method, ep, **kwargs):
@@ -189,7 +189,7 @@ class HTTPClientService(service.SharedService):
         kwargs['agent'] = self._agent
 
         res = yield getattr(treq, method)(url, **kwargs)
-        return defer.returnValue(IHttpResponse(res))
+        return IHttpResponse(res)
 
     # lets be nice to the auto completers, and don't generate that code
     def get(self, ep, **kwargs):
