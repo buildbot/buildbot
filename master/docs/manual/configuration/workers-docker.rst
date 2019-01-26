@@ -379,11 +379,9 @@ Config loaders objects can be shared between LatentWorker.
 
 There are three options you may use to connect to your clusters.
 
-When running both the master and slaves run on the same Kubernetes cluster, you
-should use the KubeInClusterConfigLoader. If not, but having a configured
-``kubectl`` tool available to the build master is an option for you, you should use
-KubeCtlProxyConfigLoader. If neither of these options is convenient, use
-KubeHardcodedConfig.
+When running both the master and slaves run on the same Kubernetes cluster, you should use the KubeInClusterConfigLoader.
+If not, but having a configured ``kubectl`` tool available to the build master is an option for you, you should use KubeCtlProxyConfigLoader.
+If neither of these options is convenient, use KubeHardcodedConfig.
 
 .. py:class:: buildbot.util.kubeclientservice.KubeCtlProxyConfigLoader
 .. py:class:: buildbot.plugins.util.KubeCtlProxyConfigLoader
@@ -426,8 +424,7 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 
 ``basicAuth``
     (optional)
-    Basic authorization info to connect to the cluster, as a `{'user':
-    'username', 'password': 'psw' }` dict.
+    Basic authorization info to connect to the cluster, as a `{'user': 'username', 'password': 'psw' }` dict.
 
     Unlike the headers argument, this argument supports secret providers, e.g::
 
@@ -436,13 +433,12 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 ``bearerToken``
     (optional)
 
-    A bearer token to authenticate to the cluster, as a string. Unlike the
-    headers argument, this argument supports secret providers, e.g.
+    A bearer token to authenticate to the cluster, as a string.
+    Unlike the headers argument, this argument supports secret providers, e.g::
 
         bearerToken=Secret('k8s-token')
 
-    When using the Google Kubernetes Engine (GKE), a bearer token for the
-    default service account can be had with:
+    When using the Google Kubernetes Engine (GKE), a bearer token for the default service account can be had with:
 
     .. code-block:: bash
 
@@ -450,10 +446,9 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
         kubectl describe sa
         kubectl describe secret [SECRET_ID]
 
-    Where SECRET_ID is displayed by the "describe sa" line. The default service
-    account does not have rights on the cluster (to create/delete pods), which
-    is required by BuildBot's integration. You may give it this right by making
-    it a cluster admin with
+    Where SECRET_ID is displayed by the ``describe sa`` command line.
+    The default service account does not have rights on the cluster (to create/delete pods), which is required by BuildBot's integration.
+    You may give it this right by making it a cluster admin with
 
     .. code-block:: bash
 
@@ -474,9 +469,8 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 
         verify='/path/to/kube_server_certificate.crt'
 
-    When using the Google Kubernetes Engine (GKE), this certificate is available
-    from the admin console, on the Cluster page. Verify that it is valid (i.e. no
-    copy/paste errors) with ``openssl verify PATH_TO_PEM``.
+    When using the Google Kubernetes Engine (GKE), this certificate is available from the admin console, on the Cluster page.
+    Verify that it is valid (i.e. no copy/paste errors) with ``openssl verify PATH_TO_PEM``.
 
 ``namespace``
     (optional defaults to ``"default"``
