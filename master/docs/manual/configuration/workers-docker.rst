@@ -381,7 +381,7 @@ There are three options you may use to connect to your clusters.
 
 When running both the master and slaves run on the same Kubernetes cluster, you
 should use the KubeInClusterConfigLoader. If not, but having a configured
-kubectl tool available to the build master is an option for you, you should use
+``kubectl`` tool available to the build master is an option for you, you should use
 KubeCtlProxyConfigLoader. If neither of these options is convenient, use
 KubeHardcodedConfig.
 
@@ -429,7 +429,7 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     Basic authorization info to connect to the cluster, as a `{'user':
     'username', 'password': 'psw' }` dict.
 
-    Unlike the headers argument, this argument supports secret providers, e.g.
+    Unlike the headers argument, this argument supports secret providers, e.g::
 
         basicAuth={'user': 'username', 'password': Secret('k8spassword')}
 
@@ -444,6 +444,8 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     When using the Google Kubernetes Engine (GKE), a bearer token for the
     default service account can be had with:
 
+    .. code-block:: bash
+
         gcloud container clusters get-credentials --region [YOURREGION] YOURCLUSTER
         kubectl describe sa
         kubectl describe secret [SECRET_ID]
@@ -452,6 +454,8 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     account does not have rights on the cluster (to create/delete pods), which
     is required by BuildBot's integration. You may give it this right by making
     it a cluster admin with
+
+    .. code-block:: bash
 
         kubectl create clusterrolebinding service-account-admin \
             --clusterrole=cluster-admin \
