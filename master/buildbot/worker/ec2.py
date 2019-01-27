@@ -75,15 +75,12 @@ class EC2LatentWorker(AbstractLatentWorker):
                          "EC2LatentWorker")
 
         if keypair_name is None:
-            reportDeprecatedWorkerNameUsage(
-                "Use of default value of 'keypair_name' of EC2LatentWorker "
-                "constructor is deprecated. Please explicitly specify value")
-            keypair_name = 'latent_buildbot_slave'
+            config.error("EC2LatentWorker: 'keypair_name' parameter must be "
+                         "specified")
+
         if security_name is None and not subnet_id:
-            reportDeprecatedWorkerNameUsage(
-                "Use of default value of 'security_name' of EC2LatentWorker "
-                "constructor is deprecated. Please explicitly specify value")
-            security_name = 'latent_buildbot_slave'
+            config.error("EC2LatentWorker: 'security_name' parameter must be "
+                         "specified")
 
         if volumes is None:
             volumes = []

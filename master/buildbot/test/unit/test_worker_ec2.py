@@ -95,19 +95,13 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_constructor_minimal(self):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name='keypair_name',
+                                 security_name='security_name',
+                                 ami=amis[0].id,
+                                 )
         self.assertEqual(bs.workername, 'bot1')
         self.assertEqual(bs.password, 'sekrit')
         self.assertEqual(bs.instance_type, 'm1.large')
@@ -118,20 +112,14 @@ class TestEC2LatentWorker(unittest.TestCase):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     tags=tags,
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name='keypair_name',
+                                 security_name='security_name',
+                                 tags=tags,
+                                 ami=amis[0].id,
+                                 )
         self.assertEqual(bs.tags, tags)
 
     @mock_ec2
@@ -200,19 +188,13 @@ class TestEC2LatentWorker(unittest.TestCase):
     def test_start_instance(self):
         c, r = self.botoSetup()
         amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name='keypair_name',
+                                 security_name='security_name',
+                                 ami=amis[0].id
+                                 )
         bs._poll_resolution = 1
         instance_id, image_id, start_time = bs._start_instance()
         self.assertTrue(instance_id.startswith('i-'))
@@ -367,20 +349,14 @@ class TestEC2LatentWorker(unittest.TestCase):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         tags = {'foo': 'bar'}
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     tags=tags,
-                                     ami=amis[0].id
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name="latent_buildbot_worker",
+                                 security_name='latent_buildbot_worker',
+                                 tags=tags,
+                                 ami=amis[0].id
+                                 )
         bs._poll_resolution = 0
         id, _, _ = bs._start_instance()
         instances = r.instances.filter(
@@ -449,21 +425,15 @@ class TestEC2LatentWorker(unittest.TestCase):
         c, r = self.botoSetup('latent_buildbot_slave')
         amis = list(r.images.all())
         product_description = 'Linux/Unix'
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id, spot_instance=True,
-                                     max_spot_price=1.5,
-                                     product_description=product_description
-                                     )
+        bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
+                                 identifier='publickey',
+                                 secret_identifier='privatekey',
+                                 keypair_name='keypair_name',
+                                 security_name='security_name',
+                                 ami=amis[0].id, spot_instance=True,
+                                 max_spot_price=1.5,
+                                 product_description=product_description
+                                 )
         bs._poll_resolution = 0
         instance_id, _, _ = bs._start_instance()
         instances = r.instances.filter(
@@ -583,64 +553,6 @@ class TestEC2LatentWorkerDefaultKeyairSecurityGroup(unittest.TestCase):
         c.create_image(InstanceId=instance.id, Name="foo", Description="bar")
         c.terminate_instances(InstanceIds=[instance.id])
         return c, r
-
-    @mock_ec2
-    def test_use_of_default_keypair_security_warning(self):
-        c, r = self.botoSetup()
-        amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated"
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id
-                                     )
-        self.assertEqual(bs.keypair_name, 'latent_buildbot_slave')
-        self.assertEqual(bs.security_name, 'latent_buildbot_slave')
-
-    @mock_ec2
-    def test_use_of_default_keypair_warning(self):
-        c, r = self.botoSetup()
-        amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'keypair_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id,
-                                     security_name='test_security_group',
-                                     )
-        self.assertEqual(bs.keypair_name, 'latent_buildbot_slave')
-        self.assertEqual(bs.security_name, 'test_security_group')
-
-    @mock_ec2
-    def test_use_of_default_security_warning(self):
-        c, r = self.botoSetup()
-        amis = list(r.images.all())
-        with assertProducesWarnings(
-                DeprecatedWorkerNameWarning,
-                messages_patterns=[
-                    r"Use of default value of 'security_name' of "
-                    r"EC2LatentWorker constructor is deprecated",
-                ]):
-            bs = ec2.EC2LatentWorker('bot1', 'sekrit', 'm1.large',
-                                     identifier='publickey',
-                                     secret_identifier='privatekey',
-                                     ami=amis[0].id,
-                                     keypair_name='test_keypair',
-                                     )
-        self.assertEqual(bs.keypair_name, 'test_keypair')
-        self.assertEqual(bs.security_name, 'latent_buildbot_slave')
 
     @mock_ec2
     def test_no_default_security_warning_when_security_group_ids(self):
