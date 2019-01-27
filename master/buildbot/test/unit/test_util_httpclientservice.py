@@ -21,18 +21,18 @@ import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import components
 from twisted.python.compat import intToBytes
 from twisted.trial import unittest
 from twisted.web import resource
 from twisted.web import server
 
+from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
-from buildbot import interfaces
-from twisted.python import components
 
 try:
     from requests.auth import HTTPDigestAuth
@@ -44,6 +44,7 @@ except ImportError:
 components.registerAdapter(
     lambda m: m,
     mock.Mock, interfaces.IHttpResponse)
+
 
 class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
 
