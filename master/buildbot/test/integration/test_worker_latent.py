@@ -155,7 +155,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(controllers[1].starting, True)
         for controller in controllers:
             controller.start_instance(True)
-            controller.auto_stop(True)
+            yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_refused_substantiations_get_requeued(self):
@@ -182,7 +182,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -213,7 +213,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_substantiations_get_exception(self):
@@ -236,7 +236,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # When the substantiation fails, the result is an exception.
         self.assertEqual(EXCEPTION, dbdict['results'])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_worker_accepts_builds_after_failure(self):
@@ -247,7 +247,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller, master, builder_id = \
             yield self.create_single_worker_config()
 
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
@@ -332,7 +332,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
@@ -361,7 +361,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_sendBuilderList_get_requeued(self):
@@ -413,7 +413,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_worker_latent.TestException",
                 logs_by_name[i])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_ping_get_requeued(self):
@@ -465,7 +465,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_worker_latent.TestException",
                 logs_by_name[i])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_worker_close_connection_while_building(self):
@@ -481,7 +481,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Request two builds.
         for i in range(2):
             yield self.createBuildrequest(master, [builder_id])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
@@ -526,7 +526,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
         self.assertEqual(CANCELLED, dbdict['results'])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -561,7 +561,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -592,7 +592,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_connect_worker = True
         controller.auto_disconnect_worker = True
         controller.auto_start(True)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
@@ -646,7 +646,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_connect_worker = True
         controller.auto_disconnect_worker = True
         controller.auto_start(True)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')

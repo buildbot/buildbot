@@ -122,7 +122,7 @@ class Tests(TestCase, TestReactorMixin):
         controller.connect_worker()
 
         self.assertEqual(len(started_builds), 1)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_local_worker_max_builds(self):

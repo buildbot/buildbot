@@ -70,13 +70,15 @@ class LatentController(object):
         if self.auto_connect_worker:
             self.connect_worker()
 
+    @defer.inlineCallbacks
     def auto_stop(self, result):
         self.auto_stop_flag = result
         if self.auto_stop_flag and self.stopping:
-            self.stop_instance(True)
+            yield self.stop_instance(True)
 
+    @defer.inlineCallbacks
     def stop_instance(self, result):
-        self.do_stop_instance()
+        yield self.do_stop_instance()
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
@@ -84,7 +86,7 @@ class LatentController(object):
         assert self.stopping
         self.stopping = False
         self._started_kind = None
-        self.disconnect_worker()
+        return self.disconnect_worker()
 
     def connect_worker(self):
         if self.remote_worker is not None:
@@ -165,6 +167,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._controller._start_deferred = defer.Deferred()
         return self._controller._start_deferred
 
+    @defer.inlineCallbacks
     def stop_instance(self, build):
         assert not self._controller.stopping
         # TODO: we get duplicate stop_instance sometimes, this might indicate
@@ -175,7 +178,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
         self._controller.starting = False
         self._controller.stopping = True
         if self._controller.auto_stop_flag:
-            self._controller.do_stop_instance()
-            return defer.succeed(True)
+            yield self._controller.do_stop_instance()
+            return True
         self._controller._stop_deferred = defer.Deferred()
-        return self._controller._stop_deferred
+        return (yield self._controller._stop_deferred)
