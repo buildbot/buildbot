@@ -31,12 +31,19 @@ from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
 from buildbot.util import service
 from buildbot.util import unicode2bytes
+from buildbot import interfaces
+from twisted.python import components
 
 try:
     from requests.auth import HTTPDigestAuth
 except ImportError:
     pass
 
+# There is no way to unregister an adapter, so we have no other option
+# than registering it as a module side effect :-(
+components.registerAdapter(
+    lambda m: m,
+    mock.Mock, interfaces.IHttpResponse)
 
 class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
 
