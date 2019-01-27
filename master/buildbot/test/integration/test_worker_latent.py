@@ -478,9 +478,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 controller_kwargs=dict(build_wait_timeout=0)
             )
 
-        # Request two builds.
-        for i in range(2):
-            yield self.createBuildrequest(master, [builder_id])
+        # Request a build and disconnect midway
+        yield self.createBuildrequest(master, [builder_id])
         yield controller.auto_stop(True)
 
         self.assertTrue(controller.starting)
