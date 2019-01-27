@@ -76,7 +76,10 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         ))
 
     @defer.inlineCallbacks
-    def create_single_worker_config(self):
+    def create_single_worker_config(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
         controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
@@ -94,6 +97,30 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         builder_id = yield master.data.updates.findBuilderId('testy')
 
         return controller, master, builder_id
+
+    @defer.inlineCallbacks
+    def create_single_worker_config_with_step(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
+        controller = LatentController(self, 'local', **controller_kwargs)
+        stepcontroller = BuildStepController()
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory([stepcontroller.step]),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
+
+        return controller, stepcontroller, master, builder_id
 
     @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
@@ -443,25 +470,13 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     @defer.inlineCallbacks
     def test_worker_close_connection_while_building(self):
         """
-        If the worker close connection in the middle of the build, the next build can start correctly
+        If the worker close connection in the middle of the build, the next
+        build can start correctly
         """
-        controller = LatentController(self, 'local', build_wait_timeout=0)
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(build_wait_timeout=0)
+            )
 
         # Request two builds.
         for i in range(2):
@@ -557,26 +572,13 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         schedule any builds on workers that are running different instance type
         than what these builds will require.
         """
-        controller = LatentController(self, 'local',
-                                      kind=Interpolate('%(prop:worker_kind)s'),
-                                      build_wait_timeout=0)
-
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(
+                    kind=Interpolate('%(prop:worker_kind)s'),
+                    build_wait_timeout=0
+                )
+            )
 
         # create build request
         yield self.createBuildrequest(master, [builder_id],
@@ -623,26 +625,14 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         schedule any builds on workers that are running different instance type
         than what these builds will require.
         """
-        controller = LatentController(self, 'local',
-                                      kind=Interpolate('%(prop:worker_kind)s'),
-                                      build_wait_timeout=5)
 
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(
+                    kind=Interpolate('%(prop:worker_kind)s'),
+                    build_wait_timeout=5
+                )
+            )
 
         # create build request
         yield self.createBuildrequest(master, [builder_id],
