@@ -21,11 +21,13 @@
 # WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 
+from twisted.internet import defer
 from twisted.internet import reactor
 from twisted.internet.base import _ThreePhaseEvent
 from twisted.internet.interfaces import IReactorCore
 from twisted.internet.interfaces import IReactorThreads
 from twisted.internet.task import Clock
+from twisted.python import log
 from twisted.python.failure import Failure
 from zope.interface import implementer
 
@@ -132,6 +134,17 @@ class TestReactor(NonReactor, CoreReactor, Clock):
 
         self._pendingCurrentCalls = False
 
+    @defer.inlineCallbacks
+    def _catchPrintExceptions(self, what, *a, **kw):
+        try:
+            r = what(*a, **kw)
+            if isinstance(r, defer.Deferred):
+                yield r
+        except Exception as e:
+            log.msg('Unhandled exception from deferred when doing '
+                    'TestReactor.advance()', e)
+            raise
+
     def callLater(self, when, what, *a, **kw):
         # Buildbot often uses callLater(0, ...) to defer execution of certain
         # code to the next iteration of the reactor. This means that often
@@ -141,10 +154,14 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         # chance to advance the test reactor whenever we detect that there
         # are callbacks that should run in the next iteration of the test
         # reactor.
+        #
+        # Additionally, we wrap all calls with a function that prints any
+        # unhandled exceptions
         if when <= 0 and not self._pendingCurrentCalls:
             reactor.callLater(0, self._executeCurrentDelayedCalls)
 
-        return Clock.callLater(self, when, what, *a, **kw)
+        return Clock.callLater(self, when, self._catchPrintExceptions,
+                               what, *a, **kw)
 
     def stop(self):
         # first fire pending calls until the current time. Note that the real
