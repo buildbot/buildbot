@@ -377,8 +377,11 @@ Kubernetes provides many options to connect to a cluster.
 It is especially more complicated as some cloud providers use specific methods to connect to their managed kubernetes.
 Config loaders objects can be shared between LatentWorker.
 
-Here are the options you can use to connect to your clusters:
+There are three options you may use to connect to your clusters.
 
+When running both the master and slaves run on the same Kubernetes cluster, you should use the KubeInClusterConfigLoader.
+If not, but having a configured ``kubectl`` tool available to the build master is an option for you, you should use KubeCtlProxyConfigLoader.
+If neither of these options is convenient, use KubeHardcodedConfig.
 
 .. py:class:: buildbot.util.kubeclientservice.KubeCtlProxyConfigLoader
 .. py:class:: buildbot.plugins.util.KubeCtlProxyConfigLoader
@@ -417,10 +420,41 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
 
 ``headers``
     (optional)
-    The headers necessary for authentication if needed.
-    For example, for BasicAuth, you would say::
+    Additional headers to be passed to the HTTP request
 
-        headers={"Authorization": "Basic %s" % base64.b64encode("userid:password")}
+``basicAuth``
+    (optional)
+    Basic authorization info to connect to the cluster, as a `{'user': 'username', 'password': 'psw' }` dict.
+
+    Unlike the headers argument, this argument supports secret providers, e.g::
+
+        basicAuth={'user': 'username', 'password': Secret('k8spassword')}
+
+``bearerToken``
+    (optional)
+
+    A bearer token to authenticate to the cluster, as a string.
+    Unlike the headers argument, this argument supports secret providers, e.g::
+
+        bearerToken=Secret('k8s-token')
+
+    When using the Google Kubernetes Engine (GKE), a bearer token for the default service account can be had with:
+
+    .. code-block:: bash
+
+        gcloud container clusters get-credentials --region [YOURREGION] YOURCLUSTER
+        kubectl describe sa
+        kubectl describe secret [SECRET_ID]
+
+    Where SECRET_ID is displayed by the ``describe sa`` command line.
+    The default service account does not have rights on the cluster (to create/delete pods), which is required by BuildBot's integration.
+    You may give it this right by making it a cluster admin with
+
+    .. code-block:: bash
+
+        kubectl create clusterrolebinding service-account-admin \
+            --clusterrole=cluster-admin \
+            --serviceaccount default:default
 
 ``cert``
     (optional)
@@ -434,6 +468,9 @@ With :class:`KubeHardcodedConfig`, you just configure the necessary parameters t
     Path to server certificate authenticate the server::
 
         verify='/path/to/kube_server_certificate.crt'
+
+    When using the Google Kubernetes Engine (GKE), this certificate is available from the admin console, on the Cluster page.
+    Verify that it is valid (i.e. no copy/paste errors) with ``openssl verify PATH_TO_PEM``.
 
 ``namespace``
     (optional defaults to ``"default"``

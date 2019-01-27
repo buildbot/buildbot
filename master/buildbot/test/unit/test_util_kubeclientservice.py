@@ -16,6 +16,7 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import base64
 import copy
 import os
 import sys
@@ -31,6 +32,7 @@ from twisted.internet import defer
 from twisted.python import runtime
 from twisted.trial import unittest
 
+from buildbot.process.properties import Interpolate
 from buildbot.test.fake import fakemaster
 from buildbot.test.fake import httpclientservice as fakehttp
 from buildbot.test.fake import kube as fakekube
@@ -117,6 +119,83 @@ print("Issue with the config!", file=sys.stderr)
 sys.stderr.flush()
 sys.exit(1)
 """
+
+
+class KubeClientServiceTestKubeHardcodedConfig(config.ConfigErrorsMixin,
+                                              unittest.TestCase):
+    def test_basic(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default"
+        )
+        self.assertEqual(config.getConfig(), {
+            'master_url': 'http://localhost:8001',
+            'namespace': 'default',
+            'headers': {}
+        })
+
+    @defer.inlineCallbacks
+    def test_verify_is_forwarded_to_keywords(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem"
+        )
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual('/path/to/pem', kwargs['verify'])
+
+    @defer.inlineCallbacks
+    def test_verify_headers_are_passed_to_the_query(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            headers={'Test': '10'}
+        )
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual({'Test': '10'}, kwargs['headers'])
+
+    def test_the_configuration_parent_is_set_to_the_service(self):
+        # This is needed to allow secret expansion
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001")
+        service = kubeclientservice.KubeClientService(config)
+        self.assertEqual(service, self.config.parent)
+
+    def test_cannot_pass_both_bearer_and_basic_auth(self):
+        with self.assertRaises(Exception):
+            kubeclientservice.KubeHardcodedConfig(
+                master_url="http://localhost:8001",
+                namespace="default",
+                verify="/path/to/pem",
+                basicAuth="Bla",
+                bearerToken="Bla")
+
+    @defer.inlineCallbacks
+    def test_verify_bearerToken_is_expanded(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            bearerToken=Interpolate("%(kw:test)s", test=10))
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+        self.assertEqual("Bearer 10", kwargs['headers']['Authorization'])
+
+    @defer.inlineCallbacks
+    def test_verify_basicAuth_is_expanded(self):
+        self.config = config = kubeclientservice.KubeHardcodedConfig(
+            master_url="http://localhost:8001",
+            namespace="default",
+            verify="/path/to/pem",
+            basicAuth={'user': 'name', 'password': Interpolate("%(kw:test)s", test=10)})
+        service = kubeclientservice.KubeClientService(config)
+        url, kwargs = yield service._prepareRequest("/test", {})
+
+        expected = "Basic {0}".format(base64.b64encode("name:10".encode('utf-8')))
+        self.assertEqual(expected, kwargs['headers']['Authorization'])
 
 
 class KubeClientServiceTestKubeCtlProxyConfig(config.ConfigErrorsMixin,

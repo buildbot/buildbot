@@ -18,6 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
+import base64
 import os
 import time
 
@@ -66,19 +67,39 @@ class KubeConfigLoaderBase(BuildbotService):
 class KubeHardcodedConfig(KubeConfigLoaderBase):
     def reconfigService(self,
                         master_url=None,
+                        bearerToken=None,
+                        basicAuth=None,
                         headers=None,
                         cert=None,
                         verify=None,
                         namespace="default"):
-        self.config = {'master_url': master_url, 'namespace': namespace}
+        self.config = {'master_url': master_url, 'namespace': namespace, 'headers': {}}
         if headers is not None:
             self.config['headers'] = headers
+        if basicAuth and bearerToken:
+            raise Exception("set one of basicAuth and bearerToken, not both")
+        self.basicAuth = basicAuth
+        self.bearerToken = bearerToken
         if cert is not None:
             self.config['cert'] = cert
         if verify is not None:
             self.config['verify'] = verify
 
     checkConfig = reconfigService
+
+    @defer.inlineCallbacks
+    def getAuthorization(self):
+        if self.basicAuth is not None:
+            basicAuth = yield self.renderSecrets(self.basicAuth)
+            authstring = "{user}:{password}".format(**basicAuth).encode('utf-8')
+            encoded = base64.b64encode(authstring)
+            return defer.returnValue("Basic {0}".format(encoded))
+
+        if self.bearerToken is not None:
+            bearerToken = yield self.renderSecrets(self.bearerToken)
+            return defer.returnValue("Bearer {0}".format(bearerToken))
+
+        return defer.returnValue(None)
 
     def getConfig(self):
         return self.config
@@ -191,19 +212,31 @@ class KubeClientService(HTTPClientService):
         self.config = kube_config
         HTTPClientService.__init__(self, '')
         self._namespace = None
-        self.addService(kube_config)
+        kube_config.setServiceParent(self)
 
+    @defer.inlineCallbacks
     def _prepareRequest(self, ep, kwargs):
         config = self.config.getConfig()
         self._base_url = config['master_url']
         url, req_kwargs = HTTPClientService._prepareRequest(self, ep, kwargs)
 
+        if config['headers']:
+            if not req_kwargs['headers']:
+                req_kwargs['headers'] = {}
+            else:
+                req_kwargs['headers'] = req_kwargs['headers'].dup
+            req_kwargs['headers'].update(config['headers'])
+
+        auth = yield self.config.getAuthorization()
+        if auth is not None:
+            req_kwargs['headers']['Authorization'] = auth
+
         # warning: this only works with txrequests! not treq
         for arg in ['cert', 'verify']:
             if arg in config:
-                req_kwargs[arg] = self.config[arg]
+                req_kwargs[arg] = config[arg]
 
-        return url, req_kwargs
+        return defer.returnValue((url, req_kwargs))
 
     @defer.inlineCallbacks
     def createPod(self, namespace, spec):

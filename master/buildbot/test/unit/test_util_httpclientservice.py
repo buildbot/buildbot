@@ -21,11 +21,13 @@ import mock
 
 from twisted.internet import defer
 from twisted.internet import reactor
+from twisted.python import components
 from twisted.python.compat import intToBytes
 from twisted.trial import unittest
 from twisted.web import resource
 from twisted.web import server
 
+from buildbot import interfaces
 from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.util import bytes2unicode
 from buildbot.util import httpclientservice
@@ -36,6 +38,12 @@ try:
     from requests.auth import HTTPDigestAuth
 except ImportError:
     pass
+
+# There is no way to unregister an adapter, so we have no other option
+# than registering it as a module side effect :-(
+components.registerAdapter(
+    lambda m: m,
+    mock.Mock, interfaces.IHttpResponse)
 
 
 class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
