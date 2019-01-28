@@ -17,7 +17,7 @@ configparser==3.7.1
 constantly==15.1.0
 cookies==2.2.1
 cryptography==2.5
-decorator==4.3.0
+decorator==4.3.2
 dicttoxml==1.7.4
 docutils==0.14
 enum34==1.1.6
