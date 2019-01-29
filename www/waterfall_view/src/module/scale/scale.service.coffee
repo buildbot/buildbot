@@ -47,5 +47,4 @@ class ScaleService extends Factory
             getBuilderName: (builders) ->
                 @d3.scale.ordinal()
                     .domain(builders.map (builder) -> builder.builderid)
-                    .range(builders.map (builder) -> builder.name
-                                   .sort (name1, name2) -> name1.localeCompare name2)
+                    .range(builders.map (builder) -> builder.name)
