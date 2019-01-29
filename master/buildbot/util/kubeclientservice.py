@@ -58,6 +58,9 @@ class KubeConfigLoaderBase(BuildbotService):
         }
         """
 
+    def getAuthorization(self):
+        return None
+
     def __str__(self):
         """return unique str for SharedService"""
         # hash is implemented from ComparableMixin
@@ -220,11 +223,9 @@ class KubeClientService(HTTPClientService):
         self._base_url = config['master_url']
         url, req_kwargs = HTTPClientService._prepareRequest(self, ep, kwargs)
 
-        if config['headers']:
-            if not req_kwargs['headers']:
-                req_kwargs['headers'] = {}
-            else:
-                req_kwargs['headers'] = req_kwargs['headers'].dup
+        if 'headers' not in req_kwargs:
+            req_kwargs['headers'] = {}
+        if 'headers' in config:
             req_kwargs['headers'].update(config['headers'])
 
         auth = yield self.config.getAuthorization()
