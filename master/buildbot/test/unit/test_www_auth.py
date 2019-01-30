@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import json
 import mock
 
 from twisted.cred.checkers import InMemoryUsernamePasswordDatabaseDontUse
@@ -117,6 +118,7 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
                          'username': 'rachel',
                          'realm': 'foo.com',
                          'email': 'rachel'})
+        _ = json.dumps(self.request.session.user_info)
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin_no_header(self):
