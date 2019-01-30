@@ -1,0 +1,4 @@
+:issue:`4402`
+
+Fix RemoteUserAuth.maybeAutLogin consumes bytes object as str leading to 
+TypeError during JSON serialization. 
