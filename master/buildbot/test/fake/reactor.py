@@ -147,10 +147,9 @@ class TestReactor(NonReactor, CoreReactor, Clock):
         return Clock.callLater(self, when, what, *a, **kw)
 
     def stop(self):
-        # first fire pending calls
-        while self.getDelayedCalls():
-            last = sorted(self.getDelayedCalls(), key=lambda a: a.getTime())[-1]
-            self.advance(last.getTime() - self.seconds())
+        # first fire pending calls until the current time. Note that the real
+        # reactor only advances until the current time in the case of shutdown.
+        self.advance(0)
 
         # then, fire the shutdown event
         self.fireSystemEvent('shutdown')
