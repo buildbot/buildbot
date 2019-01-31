@@ -76,9 +76,12 @@ class TestReactorMixin(object):
     def setUpTestReactor(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
         _setReactor(self.reactor)
+        # During shutdown sequence we must first stop the reactor and only then
+        # set unset the reactor used for eventually() because any callbacks
+        # that are run during reactor.stop() may use eventually() themselves.
         self.addCleanup(_setReactor, None)
+        self.addCleanup(self.reactor.stop)
 
 
 def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
