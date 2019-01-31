@@ -132,6 +132,11 @@ class AbstractWorkerForBuilder(object):
 
         return d
 
+    def abortPingIfAny(self):
+        watchers, self.ping_watchers = self.ping_watchers, []
+        for d in watchers:
+            d.errback(PingException('aborted ping'))
+
     def _pong(self, res):
         watchers, self.ping_watchers = self.ping_watchers, []
         for d in watchers:
