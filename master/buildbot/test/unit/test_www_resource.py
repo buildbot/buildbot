@@ -45,3 +45,9 @@ class RedirectResource(www.WwwTestMixin, unittest.TestCase):
         rsrc = resource.RedirectResource(master, b'foo')
         self.render_resource(rsrc, b'/')
         self.assertEqual(self.request.redirected_to, b'h:/a/b/foo')
+
+    def test_redirect_cr_lf(self):
+        master = self.make_master(url=b'h:/a/b/')
+        rsrc = resource.RedirectResource(master, b'foo\r\nbar')
+        self.render_resource(rsrc, b'/')
+        self.assertEqual(self.request.redirected_to, b'h:/a/b/foo')
