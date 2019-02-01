@@ -16,6 +16,8 @@
 from __future__ import absolute_import
 from __future__ import print_function
 
+import re
+
 from twisted.internet import defer
 from twisted.python import log
 from twisted.web import resource
@@ -24,12 +26,17 @@ from twisted.web.error import Error
 
 from buildbot.util import unicode2bytes
 
+_CR_LF_RE = re.compile(br"[\r\n]+.*")
+
+
+def protect_redirect_url(url):
+    return _CR_LF_RE.sub(b"", url)
+
 
 class Redirect(Error):
-
     def __init__(self, url):
         Error.__init__(self, 302, "redirect")
-        self.url = url
+        self.url = protect_redirect_url(unicode2bytes(url))
 
 
 class Resource(resource.Resource):
@@ -115,5 +122,5 @@ class RedirectResource(Resource):
 
     def render(self, request):
         redir = self.base_url + self.basepath
-        request.redirect(redir)
+        request.redirect(protect_redirect_url(redir))
         return redir

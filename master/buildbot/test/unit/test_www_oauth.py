@@ -429,19 +429,19 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
         res = yield self.render_resource(rsrc, b'/')
         rsrc.auth.getLoginURL.assert_called_once_with(None)
         rsrc.auth.verifyCode.assert_not_called()
-        self.assertEqual(res, {'redirected': '://'})
+        self.assertEqual(res, {'redirected': b'://'})
         rsrc.auth.getLoginURL.reset_mock()
         rsrc.auth.verifyCode.reset_mock()
         res = yield self.render_resource(rsrc, b'/?code=code!')
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.verifyCode.assert_called_once_with(b"code!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
-        self.assertEqual(res, {'redirected': '://me'})
+        self.assertEqual(res, {'redirected': b'://me'})
         res = yield self.render_resource(rsrc, b'/?token=token!')
         rsrc.auth.getLoginURL.assert_not_called()
         rsrc.auth.acceptToken.assert_called_once_with(b"token!")
         self.assertEqual(self.master.session.user_info, {'username': 'bar'})
-        self.assertEqual(res, {'redirected': '://me'})
+        self.assertEqual(res, {'redirected': b'://me'})
 
     def test_getConfig(self):
         self.assertEqual(self.githubAuth.getConfigDict(), {'fa_icon': 'fa-github', 'autologin': False,
