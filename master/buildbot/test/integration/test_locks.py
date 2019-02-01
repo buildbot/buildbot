@@ -15,35 +15,26 @@
 
 
 from twisted.internet import defer
-from twisted.python import log
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import util
-from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
+from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.util.eventual import flushEventualQueue
 from buildbot.worker.local import LocalWorker
 
 
-class Tests(TestCase, TestReactorMixin):
+class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-
-        # to ease debugging we display the error logs in the test log
-        origAddCompleteLog = BuildStep.addCompleteLog
-
-        def addCompleteLog(self, name, _log):
-            if name.endswith("err.text"):
-                log.msg("got error log!", name, _log)
-            return origAddCompleteLog(self, name, _log)
-        self.patch(BuildStep, "addCompleteLog", addCompleteLog)
+        self.setupDebugIntegrationLogs()
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")

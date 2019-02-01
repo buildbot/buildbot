@@ -18,10 +18,12 @@ from future.utils import text_type
 import os
 import sys
 
+from twisted.python import log
 from twisted.python import threadpool
 from twisted.python.compat import NativeStringIO
 
 import buildbot
+from buildbot.process.buildstep import BuildStep
 from buildbot.test.fake.reactor import NonThreadPool
 from buildbot.test.fake.reactor import TestReactor
 from buildbot.util.eventual import _setReactor
@@ -74,9 +76,12 @@ class TestReactorMixin(object):
     def setUpTestReactor(self):
         self.patch(threadpool, 'ThreadPool', NonThreadPool)
         self.reactor = TestReactor()
-        self.addCleanup(self.reactor.stop)
         _setReactor(self.reactor)
+        # During shutdown sequence we must first stop the reactor and only then
+        # set unset the reactor used for eventually() because any callbacks
+        # that are run during reactor.stop() may use eventually() themselves.
         self.addCleanup(_setReactor, None)
+        self.addCleanup(self.reactor.stop)
 
 
 def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
@@ -100,8 +105,10 @@ def enable_trace(case, trace_exclusions=None, f=sys.stdout):
     """This function can be called to enable tracing of the execution
     """
     if trace_exclusions is None:
-        trace_exclusions = ["twisted", "worker_transition.py", "util/tu",
-                            "log.py", "/mq/", "/db/", "buildbot/data/", "fake/reactor.py"]
+        trace_exclusions = [
+            "twisted", "worker_transition.py", "util/tu", "util/path",
+            "log.py", "/mq/", "/db/", "buildbot/data/", "fake/reactor.py"
+        ]
 
     bbbase = os.path.dirname(buildbot.__file__)
     state = {'indent': 0}
@@ -119,3 +126,19 @@ def enable_trace(case, trace_exclusions=None, f=sys.stdout):
 
     sys.settrace(tracefunc)
     case.addCleanup(sys.settrace, lambda _a, _b, _c: None)
+
+
+class DebugIntegrationLogsMixin:
+
+    def setupDebugIntegrationLogs(self):
+        # to ease debugging we display the error logs in the test log
+        origAddCompleteLog = BuildStep.addCompleteLog
+
+        def addCompleteLog(self, name, _log):
+            if name.endswith("err.text"):
+                log.msg("got error log!", name, _log)
+            return origAddCompleteLog(self, name, _log)
+        self.patch(BuildStep, "addCompleteLog", addCompleteLog)
+
+        if 'BBTRACE' in os.environ:
+            enable_trace(self)

@@ -14,10 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-import os
-
 from twisted.internet import defer
-from twisted.python import log
 from twisted.python.failure import Failure
 from twisted.trial.unittest import SynchronousTestCase
 
@@ -25,7 +22,6 @@ from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
-from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.properties import Interpolate
 from buildbot.process.properties import Properties
@@ -36,8 +32,8 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
+from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
-from buildbot.test.util.misc import enable_trace
 
 
 class TestException(Exception):
@@ -47,23 +43,11 @@ class TestException(Exception):
     """
 
 
-class Tests(SynchronousTestCase, TestReactorMixin):
+class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
     def setUp(self):
         self.setUpTestReactor()
-
-        # to ease debugging we display the error logs in the test log
-        origAddCompleteLog = BuildStep.addCompleteLog
-
-        def addCompleteLog(self, name, _log):
-            if name.endswith("err.text"):
-                log.msg("got error log!", name, _log)
-            return origAddCompleteLog(self, name, _log)
-        self.patch(BuildStep, "addCompleteLog", addCompleteLog)
-
-        if 'BBTRACE' in os.environ:
-            enable_trace(self, ["twisted", "worker_transition.py", "util/tu", "util/path",
-                                "log.py", "/mq/", "/db/", "buildbot/data/", "fake/reactor.py"])
+        self.setupDebugIntegrationLogs()
 
     def tearDown(self):
         # Flush the errors logged by the master stop cancelling the builds.

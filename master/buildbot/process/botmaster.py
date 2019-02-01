@@ -97,6 +97,11 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             dl = []
             for builder in self.builders.values():
                 for build in builder.building:
+                    # build may be waiting for ping to worker to succeed which
+                    # may never happen if the connection to worker was broken
+                    # without TCP connection being severed
+                    build.workerforbuilder.abortPingIfAny()
+
                     dl.append(build.waitUntilFinished())
             if not dl:
                 log.msg("No running jobs, starting shutdown immediately")
