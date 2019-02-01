@@ -100,11 +100,11 @@ class LatentController(object):
         if self.remote_worker is None:
             return
         self.worker.conn, conn = None, self.worker.conn
+        self.remote_worker, worker = None, self.remote_worker
+
         # LocalWorker does actually disconnect, so we must force disconnection via detached
         conn.notifyDisconnected()
-        ret = self.remote_worker.disownServiceParent()
-        self.remote_worker = None
-        return ret
+        return worker.disownServiceParent()
 
     def setup_kind(self, build):
         self._started_kind_deferred = build.render(self.kind)

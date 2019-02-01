@@ -31,7 +31,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
     def setUp(self):
         self.setUpTestReactor()
         self.setupDebugIntegrationLogs()
-        self.timeout = 5
 
     def tearDown(self):
         self.assertFalse(self.master.running, "master is still running!")

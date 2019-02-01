@@ -16,7 +16,7 @@
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.trial.unittest import SynchronousTestCase
+from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
@@ -43,7 +43,7 @@ class TestException(Exception):
     """
 
 
-class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
+class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -54,28 +54,48 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         self.assertFalse(self.master.running, "master is still running!")
 
+    @defer.inlineCallbacks
     def getMaster(self, config_dict):
-        self.master = master = self.successResultOf(
-            getMaster(self, self.reactor, config_dict))
+        self.master = master = yield getMaster(self, self.reactor, config_dict)
         return master
 
+    @defer.inlineCallbacks
     def createBuildrequest(self, master, builder_ids, properties=None):
         properties = properties.asDict() if properties is not None else None
-        return self.successResultOf(
-            master.data.updates.addBuildset(
-                waited_for=False,
-                builderids=builder_ids,
-                sourcestamps=[
-                    {'codebase': '',
-                     'repository': '',
-                     'branch': None,
-                     'revision': None,
-                     'project': ''},
-                ],
-                properties=properties,
-            )
-        )
+        return (yield master.data.updates.addBuildset(
+            waited_for=False,
+            builderids=builder_ids,
+            sourcestamps=[
+                {'codebase': '',
+                 'repository': '',
+                 'branch': None,
+                 'revision': None,
+                 'project': ''},
+            ],
+            properties=properties,
+        ))
 
+    @defer.inlineCallbacks
+    def create_single_worker_config(self):
+        controller = LatentController(self, 'local')
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
+
+        return controller, master, builder_id
+
+    @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
         """
         If there are two latent workers configured, and two build
@@ -96,13 +116,12 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
 
         # Request two builds.
         for i in range(2):
-            self.createBuildrequest(master, [builder_id])
+            yield self.createBuildrequest(master, [builder_id])
 
         # Check that both workers were requested to start.
         self.assertEqual(controllers[0].starting, True)
@@ -111,34 +130,22 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             controller.start_instance(True)
             controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_refused_substantiations_get_requeued(self):
         """
-        If a latent worker refuses to substantiate, the build request becomes unclaimed.
+        If a latent worker refuses to substantiate, the build request becomes
+        unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
 
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
@@ -151,34 +158,22 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_failed_substantiations_get_requeued(self):
         """
-        If a latent worker fails to substantiate, the build request becomes unclaimed.
+        If a latent worker fails to substantiate, the build request becomes
+        unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
 
         # The worker fails to substantiate.
         controller.start_instance(
@@ -193,29 +188,16 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         )
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_failed_substantiations_get_exception(self):
         """
         If a latent worker fails to substantiate, the result is an exception.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        self.createBuildrequest(master, [builder_id])
+        yield self.createBuildrequest(master, [builder_id])
 
         # The worker fails to substantiate.
         controller.start_instance(
@@ -223,42 +205,29 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(LatentWorkerCannotSubstantiate)
 
-        dbdict = self.successResultOf(
-            master.db.builds.getBuildByNumber(builder_id, 1))
+        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
 
         # When the substantiation fails, the result is an exception.
         self.assertEqual(EXCEPTION, dbdict['results'])
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_worker_accepts_builds_after_failure(self):
         """
-        If a latent worker fails to substantiate, the worker is still able to accept jobs.
+        If a latent worker fails to substantiate, the worker is still able to
+        accept jobs.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         controller.auto_stop(True)
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
         # The worker fails to substantiate.
         controller.start_instance(
             Failure(TestException("substantiation failed")))
@@ -290,6 +259,7 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         master.reactor.advance(controller.worker.quarantine_initial_timeout)
         self.assertEqual(controller.starting, True)
 
+    @defer.inlineCallbacks
     def test_worker_multiple_substantiations_succeed(self):
         """
         If multiple builders trigger try to substantiate a worker at
@@ -312,19 +282,19 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        master = self.getMaster(config_dict)
+        master = yield self.getMaster(config_dict)
         builder_ids = [
-            self.successResultOf(master.data.updates.findBuilderId('testy-1')),
-            self.successResultOf(master.data.updates.findBuilderId('testy-2')),
+            (yield master.data.updates.findBuilderId('testy-1')),
+            (yield master.data.updates.findBuilderId('testy-2')),
         ]
 
         finished_builds = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, build: finished_builds.append(build),
-            ('builds', None, 'finished')))
+            ('builds', None, 'finished'))
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, builder_ids)
+        bsid, brids = yield self.createBuildrequest(master, builder_ids)
 
         # The worker succeeds to substantiate.
         controller.start_instance(True)
@@ -337,35 +307,22 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                           for build in finished_builds], [SUCCESS] * 2)
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
-        If a latent worker substantiate, but not connect, and then be unsubstantiated,
-        the build request becomes unclaimed.
+        If a latent worker substantiate, but not connect, and then be
+        unsubstantiated, the build request becomes unclaimed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
 
         # We never start the worker, rather timeout it.
         master.reactor.advance(controller.worker.missing_timeout)
@@ -379,39 +336,26 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         )
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_failed_sendBuilderList_get_requeued(self):
         """
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
         logs = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, log: logs.append(log),
-            ('logs', None, 'new')))
+            ('logs', None, 'new'))
 
         # The worker succeed to substantiate
         def remote_setBuilderList(self, dirs):
@@ -433,8 +377,8 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(len(logs), 2)
         logs_by_name = {}
         for _log in logs:
-            fulllog = self.successResultOf(
-                master.data.get(("logs", str(_log['logid']), "raw")))
+            fulllog = yield master.data.get(("logs", str(_log['logid']),
+                                            "raw"))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
         for i in ["err_text", "err_html"]:
@@ -444,39 +388,26 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 logs_by_name[i])
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_failed_ping_get_requeued(self):
         """
         sendBuilderList can fail due to missing permissions on the workdir,
         the build request becomes unclaimed
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
 
         # Trigger a buildrequest
-        bsid, brids = self.createBuildrequest(master, [builder_id])
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
         logs = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, log: logs.append(log),
-            ('logs', None, 'new')))
+            ('logs', None, 'new'))
 
         # The worker succeed to substantiate
         def remote_print(self, msg):
@@ -498,8 +429,8 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(len(logs), 2)
         logs_by_name = {}
         for _log in logs:
-            fulllog = self.successResultOf(
-                master.data.get(("logs", str(_log['logid']), "raw")))
+            fulllog = yield master.data.get(("logs", str(_log['logid']),
+                                            "raw"))
             logs_by_name[fulllog['filename']] = fulllog['raw']
 
         for i in ["err_text", "err_html"]:
@@ -509,6 +440,7 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 logs_by_name[i])
         controller.auto_stop(True)
 
+    @defer.inlineCallbacks
     def test_worker_close_connection_while_building(self):
         """
         If the worker close connection in the middle of the build, the next build can start correctly
@@ -528,62 +460,47 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             # Disable checks about missing scheduler.
             'multiMaster': True,
         }
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
 
         # Request two builds.
         for i in range(2):
-            self.createBuildrequest(master, [builder_id])
+            yield self.createBuildrequest(master, [builder_id])
         controller.auto_stop(True)
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
         controller.connect_worker()
 
-        builds = self.successResultOf(
-            master.data.get(("builds",)))
+        builds = yield master.data.get(("builds",))
         self.assertEqual(builds[0]['results'], None)
-        controller.disconnect_worker()
-        builds = self.successResultOf(
-            master.data.get(("builds",)))
+        yield controller.disconnect_worker()
+        builds = yield master.data.get(("builds",))
         self.assertEqual(builds[0]['results'], RETRY)
 
         # Request one build.
-        self.createBuildrequest(master, [builder_id])
+        yield self.createBuildrequest(master, [builder_id])
         controller.start_instance(True)
         controller.connect_worker()
-        builds = self.successResultOf(
-            master.data.get(("builds",)))
+        builds = yield master.data.get(("builds",))
         self.assertEqual(builds[1]['results'], None)
         stepcontroller.finish_step(SUCCESS)
-        builds = self.successResultOf(
-            master.data.get(("builds",)))
+        builds = yield master.data.get(("builds",))
         self.assertEqual(builds[1]['results'], SUCCESS)
 
+    @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
-        If a build is stopping during latent worker substantiating, the build becomes cancelled
+        If a build is stopping during latent worker substantiating, the build
+        becomes cancelled
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
+
         builder = master.botmaster.builders['testy']
-        builder_id = self.successResultOf(builder.getBuilderId())
 
         # Trigger a buildrequest
-        self.createBuildrequest(master, [builder_id])
+        yield self.createBuildrequest(master, [builder_id])
 
         # Stop the build
         build = builder.getBuild(0)
@@ -592,40 +509,28 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = self.successResultOf(
-            master.db.builds.getBuildByNumber(builder_id, 1))
+        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
         self.assertEqual(CANCELLED, dbdict['results'])
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_build_stop_with_retry_during_substantiation(self):
         """
         If master is shutting down during latent worker substantiating, the build becomes retry.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = self.getMaster(config_dict)
+        controller, master, builder_id = \
+            yield self.create_single_worker_config()
+
         builder = master.botmaster.builders['testy']
-        builder_id = self.successResultOf(builder.getBuilderId())
 
         # Trigger a buildrequest
-        _, brids = self.createBuildrequest(master, [builder_id])
+        _, brids = yield self.createBuildrequest(master, [builder_id])
 
         unclaimed_build_requests = []
-        self.successResultOf(master.mq.startConsuming(
+        yield master.mq.startConsuming(
             lambda key, request: unclaimed_build_requests.append(request),
-            ('buildrequests', None, 'unclaimed')))
+            ('buildrequests', None, 'unclaimed'))
 
         # Stop the build
         build = builder.getBuild(0)
@@ -634,8 +539,7 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = self.successResultOf(
-            master.db.builds.getBuildByNumber(builder_id, 1))
+        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
 
         self.assertEqual(RETRY, dbdict['results'])
         self.assertEqual(
@@ -645,6 +549,7 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
+    @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_zero(self):
         """
         If latent worker supports getting its instance type from properties that
@@ -670,13 +575,12 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'multiMaster': True,
         }
 
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
 
         # create build request
-        self.createBuildrequest(master, [builder_id],
-                                properties=Properties(worker_kind='a'))
+        yield self.createBuildrequest(master, [builder_id],
+                                      properties=Properties(worker_kind='a'))
 
         # start the build and verify the kind of the worker. Note that the
         # buildmaster needs to restart the worker in order to change the worker
@@ -688,12 +592,12 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_start(True)
         controller.auto_stop(True)
         controller.connect_worker()
-        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+        self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
         # before the other build finished, create another build request
-        self.createBuildrequest(master, [builder_id],
-                                properties=Properties(worker_kind='b'))
+        yield self.createBuildrequest(master, [builder_id],
+                                      properties=Properties(worker_kind='b'))
         stepcontroller.finish_step(SUCCESS)
 
         # give the botmaster chance to insubstantiate the worker and
@@ -702,15 +606,16 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # verify that the second build restarted with the expected instance
         # kind
-        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+        self.assertEqual((yield controller.get_started_kind()),
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = self.successResultOf(master.db.builds.getBuild(1))
+        dbdict = yield master.db.builds.getBuild(1)
         self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = self.successResultOf(master.db.builds.getBuild(2))
+        dbdict = yield master.db.builds.getBuild(2)
         self.assertEqual(SUCCESS, dbdict['results'])
 
+    @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
         """
         If latent worker supports getting its instance type from properties that
@@ -736,13 +641,12 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'multiMaster': True,
         }
 
-        master = self.getMaster(config_dict)
-        builder_id = self.successResultOf(
-            master.data.updates.findBuilderId('testy'))
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
 
         # create build request
-        self.createBuildrequest(master, [builder_id],
-                                properties=Properties(worker_kind='a'))
+        yield self.createBuildrequest(master, [builder_id],
+                                      properties=Properties(worker_kind='a'))
 
         # start the build and verify the kind of the worker. Note that the
         # buildmaster needs to restart the worker in order to change the worker
@@ -754,12 +658,12 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_start(True)
         controller.auto_stop(True)
         controller.connect_worker()
-        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+        self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
         # before the other build finished, create another build request
-        self.createBuildrequest(master, [builder_id],
-                                properties=Properties(worker_kind='b'))
+        yield self.createBuildrequest(master, [builder_id],
+                                      properties=Properties(worker_kind='b'))
         stepcontroller.finish_step(SUCCESS)
 
         # give the botmaster chance to insubstantiate the worker and
@@ -768,21 +672,21 @@ class Tests(SynchronousTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # verify build has not started, even though the worker is waiting
         # for one
-        self.assertIsNone(self.successResultOf(master.db.builds.getBuild(2)))
+        self.assertIsNone((yield master.db.builds.getBuild(2)))
         self.assertTrue(controller.started)
 
         # wait until the latent worker times out, is insubstantiated,
         # is substantiated because of pending buildrequest and starts the build
         self.reactor.advance(6)
-        self.assertIsNotNone(self.successResultOf(master.db.builds.getBuild(2)))
+        self.assertIsNotNone((yield master.db.builds.getBuild(2)))
 
         # verify that the second build restarted with the expected instance
         # kind
-        self.assertEqual(self.successResultOf(controller.get_started_kind()),
+        self.assertEqual((yield controller.get_started_kind()),
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = self.successResultOf(master.db.builds.getBuild(1))
+        dbdict = yield master.db.builds.getBuild(1)
         self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = self.successResultOf(master.db.builds.getBuild(2))
+        dbdict = yield master.db.builds.getBuild(2)
         self.assertEqual(SUCCESS, dbdict['results'])
