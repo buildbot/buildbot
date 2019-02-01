@@ -123,8 +123,9 @@ class RemoteUserAuth(AuthBase):
             raise Error(
                 403, b'http header does not match regex! "' + header + b'" not matching ' + self.headerRegex.pattern)
         session = request.getSession()
-        if session.user_info != dict(res.groupdict()):
-            session.user_info = dict(res.groupdict())
+        user_info = {k: bytes2unicode(v) for k, v in res.groupdict().items()}
+        if session.user_info != user_info:
+            session.user_info = user_info
             yield self.updateUserInfo(request)
 
 

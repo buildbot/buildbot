@@ -114,9 +114,9 @@ class RemoteUserAuth(www.WwwTestMixin, unittest.TestCase):
         self.request.input_headers[b'HDR'] = b'rachel@foo.com'
         yield self.auth.maybeAutoLogin(self.request)
         self.assertEqual(self.request.session.user_info, {
-                         'username': b'rachel',
-                         'realm': b'foo.com',
-                         'email': b'rachel'})
+                         'username': 'rachel',
+                         'realm': 'foo.com',
+                         'email': 'rachel'})
 
     @defer.inlineCallbacks
     def test_maybeAutoLogin_no_header(self):
