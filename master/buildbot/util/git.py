@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+import re
 from distutils.version import LooseVersion
 
 from twisted.internet import defer
@@ -26,12 +27,24 @@ from buildbot.process.properties import Properties
 RC_SUCCESS = 0
 
 
-def getSshCommand(keyPath, knownHostsPath):
-    command = ['ssh']
+def getSshArgsForKeys(keyPath, knownHostsPath):
+    args = []
     if keyPath is not None:
-        command += ['-i', '"{0}"'.format(keyPath)]
+        args += ['-i', keyPath]
     if knownHostsPath is not None:
-        command += ['-o', '"UserKnownHostsFile={0}"'.format(knownHostsPath)]
+        args += ['-o', 'UserKnownHostsFile={0}'.format(knownHostsPath)]
+    return args
+
+
+def escapeShellArgIfNeeded(arg):
+    if re.match(r"^[a-zA-Z0-9_-]+$", arg):
+        return arg
+    return '"{0}"'.format(arg)
+
+
+def getSshCommand(keyPath, knownHostsPath):
+    command = ['ssh'] + getSshArgsForKeys(keyPath, knownHostsPath)
+    command = [escapeShellArgIfNeeded(arg) for arg in command]
     return ' '.join(command)
 
 

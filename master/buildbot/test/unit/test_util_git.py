@@ -16,7 +16,39 @@
 from twisted.trial import unittest
 
 from buildbot.util.git import GitMixin
+from buildbot.util.git import escapeShellArgIfNeeded
 from buildbot.util.git import getSshKnownHostsContents
+
+
+class TestEscapeShellArgIfNeeded(unittest.TestCase):
+
+    def assert_escapes(self, arg):
+        escaped = '"{}"'.format(arg)
+        self.assertEqual(escapeShellArgIfNeeded(arg), escaped)
+
+    def assert_does_not_escape(self, arg):
+        self.assertEqual(escapeShellArgIfNeeded(arg), arg)
+
+    def test_empty(self):
+        self.assert_escapes('')
+
+    def test_spaces(self):
+        self.assert_escapes(' ')
+        self.assert_escapes('a ')
+        self.assert_escapes(' a')
+        self.assert_escapes('a b')
+
+    def test_special(self):
+        self.assert_escapes('a=b')
+        self.assert_escapes('a%b')
+        self.assert_escapes('a(b')
+        self.assert_escapes('a[b')
+
+    def test_no_escape(self):
+        self.assert_does_not_escape('abc')
+        self.assert_does_not_escape('a_b')
+        self.assert_does_not_escape('-opt')
+        self.assert_does_not_escape('--opt')
 
 
 class TestParseGitFeatures(GitMixin, unittest.TestCase):
