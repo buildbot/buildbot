@@ -10,6 +10,48 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.0.0`` ( ``2019-02-02`` )
+=====================================
+
+Deprecations and Removals
+-------------------------
+
+- Removed support for Python 2.7 in the buildbot master code.
+  Buildbot worker remains compatible with python2.7, and interoperability tests are run continuously.
+- APIs that are not documented in the official Buildbot documentation have been
+  made private. Users of these undocumented APIs are encouraged to file bugs to
+  get them exposed.
+- Removed support of old slave APIs from pre-0.9 days. Using old APIs may fail
+  silently. To avoid weird errors when upgrading a Buildbot installation that
+  may use old APIs, first upgrade to to 1.8.0 and make sure there are no
+  deprecated API warnings.
+- Remove deprecated default value handling of the ``keypair_name`` and
+  ``security_name`` attributes of ``EC2LatentWorker``.
+- Support for ``Hyper.sh`` containers cloud provider has been removed as this
+  service has shutdown.
+
+Bug fixes
+---------
+
+- Fix CRLF injection vulnerability with validating user provided redirect parameters (https://github.com/buildbot/buildbot/wiki/CRLF-injection-in-Buildbot-login-and-logout-redirect-code)
+  Thanks to ``mik317`` and ``mariadb`` for reporting it.
+
+- Fix lockup during master shutdown when there's a build with unanswered ping
+  from the worker and the TCP connection to worker is severed (issue:`4575`).
+- Fix RemoteUserAuth.maybeAutLogin consumes bytes object as str leading to
+  TypeError during JSON serialization. (:issue:`4402`)
+- Various database integrity problems were fixed. Most notably, it is now
+  possible to delete old changes without wiping all "child" changes in cascade
+  (:issue:`4539`, :pull:`4536`).
+- The GitLab change hook secret is now rendered correctly. (:issue:`4118`).
+
+Features
+--------
+
+- Identifiers can now contain UTF-8 characters which are not ASCII. This
+  includes worker names, builder names, and step names.
+
+
 Buildbot ``1.8.0`` ( ``2019-01-20`` )
 =====================================
 

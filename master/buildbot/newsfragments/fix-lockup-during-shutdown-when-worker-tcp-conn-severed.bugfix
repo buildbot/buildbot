@@ -1,1 +1,0 @@
-Fix lockup during master shutdown when there's a build with unanswered ping from the worker and the TCP connection to worker is severed (issue:`4575`).

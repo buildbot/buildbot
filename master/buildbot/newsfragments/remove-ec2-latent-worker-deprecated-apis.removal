@@ -1,1 +1,0 @@
-Remove deprecated default value handling of the ``keypair_name`` and ``security_name`` attributes of ``EC2LatentWorker``.
