@@ -7,10 +7,10 @@ Creating a worker
 -----------------
 
 Typically, you will be adding a worker to an existing buildmaster, to provide additional architecture coverage.
-The buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
+The Buildbot administrator will give you several pieces of information necessary to connect to the buildmaster.
 You should also be somewhat familiar with the project being tested, so you can troubleshoot build problems locally.
 
-The buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
+The Buildbot exists to make sure that the project's stated ``how to build it`` process actually works.
 To this end, the worker should run in an environment just like that of your regular developers.
 Typically the project build process is documented somewhere (:file:`README`, :file:`INSTALL`, etc), in a document that should mention all library dependencies and contain a basic set of build instructions.
 This document will be useful as you configure the host and account in which the worker runs.
@@ -24,10 +24,10 @@ Here's a good checklist for setting up a worker:
   This serves to isolate your personal working environment from that of the worker's, and helps to minimize the security threat posed by letting possibly-unknown contributors run arbitrary code on your system.
   The account should have a minimum of fancy init scripts.
 
-2. Install the buildbot code
+2. Install the Buildbot code
 
   Follow the instructions given earlier (:ref:`Installing-the-code`).
-  If you use a separate worker account, and you didn't install the buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
+  If you use a separate worker account, and you didn't install the Buildbot code to a shared location, then you will need to install it with ``--home=~`` for each account that needs it.
 
 3. Set up the host
 
@@ -44,7 +44,7 @@ Here's a good checklist for setting up a worker:
   Follow the instructions in the :file:`INSTALL` document, in the worker's account.
   Perform a full CVS (or whatever) checkout, configure, make, run tests, etc.
   Confirm that the build works without manual fussing.
-  If it doesn't work when you do it by hand, it will be unlikely to work when the buildbot attempts to do it in an automated fashion.
+  If it doesn't work when you do it by hand, it will be unlikely to work when the Buildbot attempts to do it in an automated fashion.
 
 5. Choose a base directory
 
@@ -54,7 +54,7 @@ Here's a good checklist for setting up a worker:
 
 6. Get the buildmaster host/port, botname, and password
 
-  When the buildbot admin configures the buildmaster to accept and use your worker, they will provide you with the following pieces of information:
+  When the Buildbot admin configures the buildmaster to accept and use your worker, they will provide you with the following pieces of information:
 
   * your worker's name
   * the password assigned to your worker
@@ -71,14 +71,14 @@ Here's a good checklist for setting up a worker:
 8. Fill in the hostinfo files
 
   When it first connects, the worker will send a few files up to the buildmaster which describe the host that it is running on.
-  These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the buildbot.
-  There are sample files in the :file:`info` subdirectory of the buildbot's base directory.
+  These files are presented on the web status display so that developers have more information to reproduce any test failures that are witnessed by the Buildbot.
+  There are sample files in the :file:`info` subdirectory of the Buildbot's base directory.
   You should edit these to correctly describe you and your host.
 
   :file:`{BASEDIR}/info/admin` should contain your name and email address.
   This is the ``worker admin address``, and will be visible from the build status page (so you may wish to munge it a bit if address-harvesting spambots are a concern).
 
-  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the buildbot code which is running the worker.
+  :file:`{BASEDIR}/info/host` should be filled with a brief description of the host: OS, version, memory size, CPU speed, versions of relevant libraries installed, and finally the version of the Buildbot code which is running the worker.
 
   The optional :file:`{BASEDIR}/info/access_uri` can specify a URI which will connect a user to the machine.
   Many systems accept ``ssh://hostname`` URIs for this purpose.
@@ -171,7 +171,7 @@ Other Worker Configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``unicode_encoding``
-    This represents the encoding that buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
+    This represents the encoding that Buildbot should use when converting unicode commandline arguments into byte strings in order to pass to the operating system when spawning new processes.
 
     The default value is what Python's :func:`sys.getfilesystemencoding()` returns, which on Windows is 'mbcs', on Mac OSX is 'utf-8', and on Unix depends on your locale settings.
 

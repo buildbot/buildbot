@@ -1,11 +1,11 @@
 Configuring Buildbot
 ====================
 
-The buildbot's behavior is defined by the *config file*, which normally lives in the :file:`master.cfg` file in the buildmaster's base directory (but this can be changed with an option to the :command:`buildbot create-master` command).
+The Buildbot's behavior is defined by the *config file*, which normally lives in the :file:`master.cfg` file in the buildmaster's base directory (but this can be changed with an option to the :command:`buildbot create-master` command).
 This file completely specifies which :class:`Builder`\s are to be run, which workers they should use, how :class:`Change`\s should be tracked, and where the status information is to be sent.
 The buildmaster's :file:`buildbot.tac` file names the base directory; everything else comes from the config file.
 
-A sample config file was installed for you when you created the buildmaster, but you will need to edit it before your buildbot will do anything useful.
+A sample config file was installed for you when you created the buildmaster, but you will need to edit it before your Buildbot will do anything useful.
 
 This chapter gives an overview of the format of this file and the various sections in it.
 You will need to read the later chapters to understand how to fill in each section properly.
@@ -22,7 +22,7 @@ If you *are* comfortable writing Python code, however, you can use all the power
 .. index: BuildMaster Config
 
 The ``BuildmasterConfig`` name is the only one which matters: all other names defined during the execution of the file are discarded.
-When parsing the config file, the Buildmaster generally compares the old configuration with the new one and performs the minimum set of actions necessary to bring the buildbot up to date: :class:`Builder`\s which are not changed are left untouched, and :class:`Builder`\s which are modified get to keep their old event history.
+When parsing the config file, the Buildmaster generally compares the old configuration with the new one and performs the minimum set of actions necessary to bring the Buildbot up to date: :class:`Builder`\s which are not changed are left untouched, and :class:`Builder`\s which are modified get to keep their old event history.
 
 The beginning of the :file:`master.cfg` file typically starts with something like::
 

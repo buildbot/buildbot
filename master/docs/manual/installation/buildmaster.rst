@@ -97,7 +97,7 @@ Each buildbot release tries to be compatible with configurations that worked cle
 
 The ``upgrade-master`` command is idempotent.
 It is safe to run it multiple times.
-After each upgrade of the buildbot code, you should use ``upgrade-master`` on all your buildmasters.
+After each upgrade of the Buildbot code, you should use ``upgrade-master`` on all your buildmasters.
 
 .. warning::
 
