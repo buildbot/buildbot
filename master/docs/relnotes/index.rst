@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``1.8.1`` ( ``2019-02-02`` )
+=====================================
+
+Bug fixes
+---------
+
+- Fix CRLF injection vulnerability with validating user provided redirect parameters (https://github.com/buildbot/buildbot/wiki/CRLF-injection-in-Buildbot-login-and-logout-redirect-code)
+  Thanks to ``mik317`` and ``mariadb`` for reporting it.
+
+
 Buildbot ``1.8.0`` ( ``2019-01-20`` )
 =====================================
 
