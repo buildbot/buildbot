@@ -34,7 +34,7 @@ Bug fixes
 ---------
 
 - Fix CRLF injection vulnerability with validating user provided redirect parameters (https://github.com/buildbot/buildbot/wiki/CRLF-injection-in-Buildbot-login-and-logout-redirect-code)
-  Thanks to mik317 and mariadb for reporting it.
+  Thanks to ``mik317`` and ``mariadb`` for reporting it.
 
 - Fix lockup during master shutdown when there's a build with unanswered ping
   from the worker and the TCP connection to worker is severed (issue:`4575`).
