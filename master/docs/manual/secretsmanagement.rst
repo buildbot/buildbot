@@ -128,11 +128,11 @@ SecretInVault
 Vault secures, stores, and tightly controls access to secrets.
 Vault presents a unified API to access multiple backends.
 At the moment buildbot supports KV v1 and v2 backends.
-To be authenticated in Vault, Buildbot need to send a token to the vault server.
+To be authenticated in Vault, Buildbot needs to send a token to the vault server.
 The token is generated when the Vault instance is initialized for the first time.
 
 
-In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the the Vault server address and the Vault token.
+In the master configuration, the Vault provider is instantiated through the Buildbot service manager as a secret provider with the Vault server address and the Vault token.
 The provider SecretInVault allows Buildbot to read secrets in Vault.
 For more information about Vault please visit: _`Vault`: https://www.vaultproject.io/
 
@@ -167,7 +167,7 @@ How to configure a Vault instance
 ---------------------------------
 
 Vault being a very generic system, it can be complex to install for the first time.
-Here is a simple tutorial to install the minimal Vault for use with Buildbot.
+Here is a simple tutorial to install the minimal Vault to use with Buildbot.
 
 Use Docker to install Vault
 ```````````````````````````

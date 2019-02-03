@@ -851,7 +851,7 @@ It accepts the following arguments:
     * a list of the branches to fetch. Non-existing branches are ignored.
     * ``True`` indicating that all branches should be fetched
     * a callable which takes a single argument.
-      It should take a remote refspec (such as ``'refs/heads/master'``, and return a boolean indicating whether that branch should be fetched.
+      It should take a remote refspec (such as ``'refs/heads/master'``), and return a boolean indicating whether that branch should be fetched.
 
 ``branch``
     accepts a single branch name to fetch.

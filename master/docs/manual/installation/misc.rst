@@ -40,7 +40,7 @@ One way is to use :command:`cron`, by putting them in a ``@reboot`` crontab entr
 When you run :command:`crontab` to set this up, remember to do it as the buildmaster or worker account!
 If you add this to your crontab when running as your regular account (or worse yet, root), then the daemon will run as the wrong user, quite possibly as one with more authority than you intended to provide.
 
-It is important to remember that the environment provided to cron jobs and init scripts can be quite different that your normal runtime.
+It is important to remember that the environment provided to cron jobs and init scripts can be quite different than your normal runtime.
 There may be fewer environment variables specified, and the :envvar:`PATH` may be shorter than usual.
 It is a good idea to test out this method of launching the worker by using a cron job with a time in the near future, with the same command, and then check :file:`twistd.log` to make sure the worker actually started correctly.
 Common problems here are for :file:`/usr/local` or :file:`~/bin` to not be on your :envvar:`PATH`, or for :envvar:`PYTHONPATH` to not be set correctly.
@@ -147,7 +147,7 @@ This behaviour is useful when writing scripts that stop, start and restart Build
 
 A worker may also be gracefully shutdown from the web UI.
 This is useful to shutdown a worker without interrupting any current builds.
-The buildmaster will wait until the worker is finished all its current builds, and will then tell the worker to shutdown.
+The buildmaster will wait until the worker has finished all its current builds, and will then tell the worker to shutdown.
 
 
 .. [#f1]
