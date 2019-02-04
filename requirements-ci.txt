@@ -49,7 +49,7 @@ Pillow==5.4.1
 pyaml==18.11.0
 pyasn1==0.4.5
 pyasn1-modules==0.2.4
-pycodestyle==2.4.0
+pycodestyle==2.5.0
 pycparser==2.19
 pyenchant==2.0.0
 pyflakes==2.1.0
