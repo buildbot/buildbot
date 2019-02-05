@@ -376,6 +376,37 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             self.changesource._ticket_passwd, 'TICKET_ID_GOES_HERE')
 
     @defer.inlineCallbacks
+    def test_acquire_ticket_auth2_fail(self):
+        self.attachChangeSource(
+            P4Source(p4port=None, p4user=None, p4passwd='pass',
+                     p4base='//depot/myproject/',
+                     split_file=lambda x: x.split('/', 1),
+                     use_tickets=True))
+        self.expectCommands(
+            gpo.Expect('p4', '-P', None,
+                       'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes)
+        )
+
+        transport = FakeTransport()
+
+        # p4poller uses only those arguments at the moment
+        def spawnProcess(pp, cmd, argv, env):
+            self.assertEqual([cmd, argv],
+                             ['p4', [b'p4', b'login', b'-p']])
+            pp.makeConnection(transport)
+            self.assertEqual('pass\n', transport.msg)
+            pp.outReceived('Enter password:\n')
+            pp.errReceived("Password invalid.\n'auth-check' validation failed: Incorrect password!\n")
+            so = error.ProcessDone(status=1)
+            pp.processEnded(failure.Failure(so))
+        self.patch(reactor, 'spawnProcess', spawnProcess)
+
+        yield self.changesource.poll()
+
+        self.assertEqual(
+            self.changesource._ticket_passwd, None)
+
+    @defer.inlineCallbacks
     def test_poll_split_file(self):
         """Make sure split file works on branch only changes"""
         self.attachChangeSource(
