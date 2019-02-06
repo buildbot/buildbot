@@ -260,6 +260,7 @@ setup_args = {
             ('buildbot.worker.openstack', ['OpenStackLatentWorker']),
             ('buildbot.worker.docker', ['DockerLatentWorker']),
             ('buildbot.worker.kubernetes', ['KubeLatentWorker']),
+            ('buildbot.worker.gce', ['GCELatentWorker']),
             ('buildbot.worker.local', ['LocalWorker']),
         ]),
         ('buildbot.steps', [
