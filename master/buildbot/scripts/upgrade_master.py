@@ -75,6 +75,7 @@ def upgradeDatabase(config, master_cfg):
     if not config['quiet']:
         print("upgrading database (%s)"
               % (stripUrlPassword(master_cfg.db['db_url'])))
+        print("Warning: Stopping this process might cause data loss")
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
