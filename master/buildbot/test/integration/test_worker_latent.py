@@ -76,7 +76,10 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         ))
 
     @defer.inlineCallbacks
-    def create_single_worker_config(self):
+    def create_single_worker_config(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
         controller = LatentController(self, 'local')
         config_dict = {
             'builders': [
@@ -94,6 +97,30 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         builder_id = yield master.data.updates.findBuilderId('testy')
 
         return controller, master, builder_id
+
+    @defer.inlineCallbacks
+    def create_single_worker_config_with_step(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
+        controller = LatentController(self, 'local', **controller_kwargs)
+        stepcontroller = BuildStepController()
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy",
+                              workernames=["local"],
+                              factory=BuildFactory([stepcontroller.step]),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_id = yield master.data.updates.findBuilderId('testy')
+
+        return controller, stepcontroller, master, builder_id
 
     @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
@@ -128,7 +155,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(controllers[1].starting, True)
         for controller in controllers:
             controller.start_instance(True)
-            controller.auto_stop(True)
+            yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_refused_substantiations_get_requeued(self):
@@ -155,7 +182,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -186,7 +213,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_substantiations_get_exception(self):
@@ -209,7 +236,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # When the substantiation fails, the result is an exception.
         self.assertEqual(EXCEPTION, dbdict['results'])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_worker_accepts_builds_after_failure(self):
@@ -220,7 +247,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller, master, builder_id = \
             yield self.create_single_worker_config()
 
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, [builder_id])
 
@@ -305,7 +332,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # that they both finished with success
         self.assertEqual([build['results']
                           for build in finished_builds], [SUCCESS] * 2)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
@@ -334,7 +361,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_sendBuilderList_get_requeued(self):
@@ -386,7 +413,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_worker_latent.TestException",
                 logs_by_name[i])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_failed_ping_get_requeued(self):
@@ -438,35 +465,22 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             # make sure stacktrace is present in html
             self.assertIn("buildbot.test.integration.test_worker_latent.TestException",
                 logs_by_name[i])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_worker_close_connection_while_building(self):
         """
-        If the worker close connection in the middle of the build, the next build can start correctly
+        If the worker close connection in the middle of the build, the next
+        build can start correctly
         """
-        controller = LatentController(self, 'local', build_wait_timeout=0)
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            # Disable checks about missing scheduler.
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(build_wait_timeout=0)
+            )
 
-        # Request two builds.
-        for i in range(2):
-            yield self.createBuildrequest(master, [builder_id])
-        controller.auto_stop(True)
+        # Request a build and disconnect midway
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.auto_stop(True)
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
@@ -511,7 +525,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
         self.assertEqual(CANCELLED, dbdict['results'])
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -546,7 +560,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
     @defer.inlineCallbacks
@@ -557,26 +571,13 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         schedule any builds on workers that are running different instance type
         than what these builds will require.
         """
-        controller = LatentController(self, 'local',
-                                      kind=Interpolate('%(prop:worker_kind)s'),
-                                      build_wait_timeout=0)
-
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(
+                    kind=Interpolate('%(prop:worker_kind)s'),
+                    build_wait_timeout=0
+                )
+            )
 
         # create build request
         yield self.createBuildrequest(master, [builder_id],
@@ -590,7 +591,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_connect_worker = True
         controller.auto_disconnect_worker = True
         controller.auto_start(True)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
@@ -623,26 +624,14 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         schedule any builds on workers that are running different instance type
         than what these builds will require.
         """
-        controller = LatentController(self, 'local',
-                                      kind=Interpolate('%(prop:worker_kind)s'),
-                                      build_wait_timeout=5)
 
-        # a step that we can finish when we want
-        stepcontroller = BuildStepController()
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy",
-                              workernames=["local"],
-                              factory=BuildFactory([stepcontroller.step]),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-
-        master = yield self.getMaster(config_dict)
-        builder_id = yield master.data.updates.findBuilderId('testy')
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(
+                    kind=Interpolate('%(prop:worker_kind)s'),
+                    build_wait_timeout=5
+                )
+            )
 
         # create build request
         yield self.createBuildrequest(master, [builder_id],
@@ -656,7 +645,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.auto_connect_worker = True
         controller.auto_disconnect_worker = True
         controller.auto_start(True)
-        controller.auto_stop(True)
+        yield controller.auto_stop(True)
         controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')

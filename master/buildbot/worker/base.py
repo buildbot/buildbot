@@ -357,6 +357,8 @@ class AbstractWorker(service.BuildbotService, object):
     def attached(self, conn):
         """This is called when the worker connects."""
 
+        assert self.conn is None
+
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", 1)
 
         # now we go through a sequence of calls, gathering information, then
@@ -412,6 +414,11 @@ class AbstractWorker(service.BuildbotService, object):
 
     @defer.inlineCallbacks
     def detached(self):
+        # protect against race conditions in conn disconnect path and someone
+        # calling detached directly. At the moment the null worker does that.
+        if self.conn is None:
+            return
+
         metrics.MetricCountEvent.log("AbstractWorker.attached_workers", -1)
         self.conn = None
         self._old_builder_list = []
