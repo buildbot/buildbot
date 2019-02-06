@@ -92,7 +92,7 @@ release_notes: $(VENV_NAME)
 	git commit -m "relnotes for $(VERSION)"
 
 $(ALL_PKGS_TARGETS): cleanup_for_tarballs frontend_deps
-	. .venv/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
+	. $(VENV_NAME)/bin/activate && ./common/maketarball.sh $(patsubst %_pkg,%,$@)
 
 cleanup_for_tarballs:
 	find . -name VERSION -exec rm {} \;
