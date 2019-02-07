@@ -777,6 +777,7 @@ synchronisation
 synchronise
 Synchronise
 syntaxes
+systemd
 Systemd
 tac
 tarball
