@@ -10,6 +10,16 @@ Release Notes
 
 .. towncrier release notes start
 
+Buildbot ``2.0.1`` ( ``2019-02-06`` )
+=====================================
+
+Bug fixes
+---------
+
+- Do not build universal python wheels now that Python 2 is not supported.
+- Print a warning discouraging users from stopping the database migration.
+
+
 Buildbot ``2.0.0`` ( ``2019-02-02`` )
 =====================================
 
