@@ -95,6 +95,18 @@ p4change = {
 }
 
 
+class FakeTransport:
+
+    def __init__(self):
+        self.msg = None
+
+    def write(self, msg):
+        self.msg = msg
+
+    def closeStdin(self):
+        pass
+
+
 class TestP4Poller(changesource.ChangeSourceMixin,
                    gpo.GetProcessOutputMixin,
                    config.ConfigErrorsMixin,
@@ -314,17 +326,6 @@ class TestP4Poller(changesource.ChangeSourceMixin,
             gpo.Expect('p4', '-P', 'TICKET_ID_GOES_HERE',
                        'changes', '-m', '1', '//depot/myproject/...').stdout(first_p4changes)
         )
-
-        class FakeTransport:
-
-            def __init__(self):
-                self.msg = None
-
-            def write(self, msg):
-                self.msg = msg
-
-            def closeStdin(self):
-                pass
 
         transport = FakeTransport()
 
