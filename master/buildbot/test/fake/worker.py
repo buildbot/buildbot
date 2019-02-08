@@ -74,7 +74,42 @@ class FakeWorker(object):
         pass
 
 
-class WorkerController:
+class SeverWorkerConnectionMixin:
+    def sever_connection(self):
+        # stubs the worker connection so that it appears that the TCP connection
+        # has been severed in a way that no response is ever received, but
+        # messages don't fail immediately.
+        def remotePrint(message):
+            return defer.Deferred()
+        self.worker.conn.remotePrint = remotePrint
+
+        def remoteGetWorkerInfo():
+            return defer.Deferred()
+        self.worker.conn.remoteGetWorkerInfo = remoteGetWorkerInfo
+
+        def remoteSetBuilderList(builders):
+            return defer.Deferred()
+        self.worker.conn.remoteSetBuilderList = remoteSetBuilderList
+
+        def remoteStartCommand(remoteCommand, builderName, commandId,
+                               commandName, args):
+            return defer.Deferred()
+        self.worker.conn.remoteStartCommand = remoteStartCommand
+
+        def remoteShutdown():
+            return defer.Deferred()
+        self.worker.conn.remoteShutdown = remoteShutdown
+
+        def remoteStartBuild(builderName):
+            return defer.Deferred()
+        self.worker.conn.remoteStartBuild = remoteStartBuild
+
+        def remoteInterruptCommand(builderName, commandId, why):
+            return defer.Deferred()
+        self.worker.conn.remoteInterruptCommand = remoteInterruptCommand
+
+
+class WorkerController(SeverWorkerConnectionMixin):
 
     """
     A controller for a ``Worker``.
@@ -112,36 +147,3 @@ class WorkerController:
         ret = self.remote_worker.disownServiceParent()
         self.remote_worker = None
         return ret
-
-    def sever_connection(self):
-        # stubs the worker connection so that it appears that the TCP connection
-        # has been severed in a way that no response is ever received, but
-        # messages don't fail immediately.
-        def remotePrint(message):
-            return defer.Deferred()
-        self.worker.conn.remotePrint = remotePrint
-
-        def remoteGetWorkerInfo():
-            return defer.Deferred()
-        self.worker.conn.remoteGetWorkerInfo = remoteGetWorkerInfo
-
-        def remoteSetBuilderList(builders):
-            return defer.Deferred()
-        self.worker.conn.remoteSetBuilderList = remoteSetBuilderList
-
-        def remoteStartCommand(remoteCommand, builderName, commandId,
-                               commandName, args):
-            return defer.Deferred()
-        self.worker.conn.remoteStartCommand = remoteStartCommand
-
-        def remoteShutdown():
-            return defer.Deferred()
-        self.worker.conn.remoteShutdown = remoteShutdown
-
-        def remoteStartBuild(builderName):
-            return defer.Deferred()
-        self.worker.conn.remoteStartBuild = remoteStartBuild
-
-        def remoteInterruptCommand(builderName, commandId, why):
-            return defer.Deferred()
-        self.worker.conn.remoteInterruptCommand = remoteInterruptCommand

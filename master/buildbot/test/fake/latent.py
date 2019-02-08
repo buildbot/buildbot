@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
+from buildbot.test.fake.worker import SeverWorkerConnectionMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -27,7 +28,7 @@ except ImportError:
     RemoteWorker = None
 
 
-class LatentController(object):
+class LatentController(SeverWorkerConnectionMixin):
 
     """
     A controller for ``ControllableLatentWorker``.
