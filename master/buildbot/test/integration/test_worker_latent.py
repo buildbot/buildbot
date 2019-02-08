@@ -55,6 +55,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertFalse(self.master.running, "master is still running!")
 
     @defer.inlineCallbacks
+    def assertBuildResults(self, build_id, result):
+        dbdict = yield self.master.db.builds.getBuild(build_id)
+        self.assertEqual(result, dbdict['results'])
+
+    @defer.inlineCallbacks
     def getMaster(self, config_dict):
         self.master = master = yield getMaster(self, self.reactor, config_dict)
         return master
@@ -262,10 +267,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(LatentWorkerCannotSubstantiate)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-
         # When the substantiation fails, the result is an exception.
-        self.assertEqual(EXCEPTION, dbdict['results'])
+        yield self.assertBuildResults(1, EXCEPTION)
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -326,21 +329,15 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller, master, builder_ids = \
             yield self.create_single_worker_two_builder_config()
 
-        finished_builds = []
-        yield master.mq.startConsuming(
-            lambda key, build: finished_builds.append(build),
-            ('builds', None, 'finished'))
-
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, builder_ids)
 
         # The worker succeeds to substantiate.
         controller.start_instance(True)
 
-        # We check that there were two builds that finished, and
-        # that they both finished with success
-        self.assertEqual([build['results']
-                          for build in finished_builds], [SUCCESS] * 2)
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
+
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -493,21 +490,17 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertTrue(controller.starting)
         controller.start_instance(True)
 
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[0]['results'], None)
+        yield self.assertBuildResults(1, None)
         yield controller.disconnect_worker()
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[0]['results'], RETRY)
+        yield self.assertBuildResults(1, RETRY)
 
         # Request one build.
         yield self.createBuildrequest(master, [builder_id])
         controller.start_instance(True)
 
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[1]['results'], None)
+        yield self.assertBuildResults(2, None)
         stepcontroller.finish_step(SUCCESS)
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[1]['results'], SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
@@ -531,8 +524,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-        self.assertEqual(CANCELLED, dbdict['results'])
+        yield self.assertBuildResults(1, CANCELLED)
+
         yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
@@ -561,9 +554,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-
-        self.assertEqual(RETRY, dbdict['results'])
+        yield self.assertBuildResults(1, RETRY)
         self.assertEqual(
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
@@ -616,10 +607,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
-        self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
-        self.assertEqual(SUCCESS, dbdict['results'])
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
@@ -677,7 +666,5 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
-        self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
-        self.assertEqual(SUCCESS, dbdict['results'])
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
