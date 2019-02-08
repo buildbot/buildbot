@@ -16,7 +16,6 @@
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
@@ -34,6 +33,7 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.misc import TimeoutableTestCase
 
 
 class TestException(Exception):
@@ -43,7 +43,7 @@ class TestException(Exception):
     """
 
 
-class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
+class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
     def setUp(self):
         self.setUpTestReactor()

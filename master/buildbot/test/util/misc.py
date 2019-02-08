@@ -21,6 +21,7 @@ import sys
 from twisted.python import log
 from twisted.python import threadpool
 from twisted.python.compat import NativeStringIO
+from twisted.trial.unittest import TestCase
 
 import buildbot
 from buildbot.process.buildstep import BuildStep
@@ -82,6 +83,25 @@ class TestReactorMixin(object):
         # that are run during reactor.stop() may use eventually() themselves.
         self.addCleanup(_setReactor, None)
         self.addCleanup(self.reactor.stop)
+
+
+class TimeoutableTestCase(TestCase):
+    # The addCleanup in current Twisted does not time out any functions
+    # registered via addCleanups. Until we can depend on fixed Twisted, use
+    # TimeoutableTestCase whenever test failure may cause it to block and not
+    # report anything.
+
+    def deferRunCleanups(self, ignored, result):
+        self._deferRunCleanupResult = result
+        d = self._run('deferRunCleanupsTimeoutable', result)
+        d.addErrback(self._ebGotMaybeTimeout, result)
+        return d
+
+    def _ebGotMaybeTimeout(self, failure, result):
+        result.addError(self, failure)
+
+    def deferRunCleanupsTimeoutable(self):
+        return super().deferRunCleanups(None, self._deferRunCleanupResult)
 
 
 def encodeExecutableAndArgs(executable, args, encoding="utf-8"):
