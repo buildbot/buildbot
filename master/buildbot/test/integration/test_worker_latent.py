@@ -325,7 +325,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # The worker succeeds to substantiate.
         controller.start_instance(True)
-
         controller.connect_worker()
 
         # We check that there were two builds that finished, and
@@ -479,6 +478,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             )
 
         # Request a build and disconnect midway
+        controller.auto_disconnect_worker = False
         yield self.createBuildrequest(master, [builder_id])
         yield controller.auto_stop(True)
 
@@ -501,6 +501,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         stepcontroller.finish_step(SUCCESS)
         builds = yield master.data.get(("builds",))
         self.assertEqual(builds[1]['results'], SUCCESS)
+        yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
@@ -589,7 +590,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(True, controller.starting)
 
         controller.auto_connect_worker = True
-        controller.auto_disconnect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
         controller.connect_worker()
@@ -643,7 +643,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(True, controller.starting)
 
         controller.auto_connect_worker = True
-        controller.auto_disconnect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
         controller.connect_worker()

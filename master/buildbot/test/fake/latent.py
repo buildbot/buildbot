@@ -47,6 +47,7 @@ class LatentController(object):
         self.auto_stop_flag = False
         self.auto_start_flag = False
         self.auto_connect_worker = False
+        self.auto_disconnect_worker = True
 
         self.kind = kind
         self._started_kind = None
@@ -82,11 +83,13 @@ class LatentController(object):
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
+    @defer.inlineCallbacks
     def do_stop_instance(self):
         assert self.stopping
         self.stopping = False
         self._started_kind = None
-        return self.disconnect_worker()
+        if self.auto_disconnect_worker:
+            yield self.disconnect_worker()
 
     def connect_worker(self):
         if self.remote_worker is not None:
