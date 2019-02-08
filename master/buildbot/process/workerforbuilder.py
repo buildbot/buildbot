@@ -88,6 +88,7 @@ class AbstractWorkerForBuilder(object):
         if self.worker:
             self.worker.buildFinished(self)
 
+    @defer.inlineCallbacks
     def attached(self, worker, commands):
         """
         @type  worker: L{buildbot.worker.Worker}
@@ -103,14 +104,9 @@ class AbstractWorkerForBuilder(object):
             assert self.worker == worker
         log.msg("Worker %s attached to %s" % (worker.workername,
                                               self.builder_name))
-        d = defer.succeed(None)
 
-        d.addCallback(lambda _:
-                      self.worker.conn.remotePrint(message="attached"))
-
-        d.addCallback(lambda _: self)
-
-        return d
+        yield self.worker.conn.remotePrint(message="attached")
+        return self
 
     def prepare(self, build):
         if not self.worker or not self.worker.acquireLocks():
