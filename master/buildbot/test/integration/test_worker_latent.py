@@ -123,6 +123,36 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         return controller, stepcontroller, master, builder_id
 
     @defer.inlineCallbacks
+    def create_single_worker_two_builder_config(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
+        controller = LatentController(self, 'local', **controller_kwargs)
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy-1",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+                BuilderConfig(name="testy-2",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_ids = [
+            (yield master.data.updates.findBuilderId('testy-1')),
+            (yield master.data.updates.findBuilderId('testy-2')),
+        ]
+
+        return controller, master, builder_ids
+
+    @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
         """
         If there are two latent workers configured, and two build
@@ -293,27 +323,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         the same time, if the substantiation succeeds then all of
         the builds proceed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy-1",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-                BuilderConfig(name="testy-2",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_ids = [
-            (yield master.data.updates.findBuilderId('testy-1')),
-            (yield master.data.updates.findBuilderId('testy-2')),
-        ]
+        controller, master, builder_ids = \
+            yield self.create_single_worker_two_builder_config()
 
         finished_builds = []
         yield master.mq.startConsuming(
