@@ -324,6 +324,7 @@ cors
 cowbuilder
 cppcheck
 cpu
+cpython
 cray
 createabsolutesourcestamps
 createmaster
