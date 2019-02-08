@@ -188,16 +188,15 @@ class WorkerForBuilder(AbstractWorkerForBuilder):
         AbstractWorkerForBuilder.__init__(self)
         self.state = States.DETACHED
 
+    @defer.inlineCallbacks
     def attached(self, worker, commands):
-        d = AbstractWorkerForBuilder.attached(self, worker, commands)
+        wfb = yield AbstractWorkerForBuilder.attached(self, worker, commands)
 
-        @d.addCallback
-        def setAvailable(res):
-            # Only set available on non-latent workers, since latent workers
-            # only attach while a build is in progress.
-            self.state = States.AVAILABLE
-            return res
-        return d
+        # Only set available on non-latent workers, since latent workers
+        # only attach while a build is in progress.
+        self.state = States.AVAILABLE
+
+        return wfb
 
     def detached(self):
         AbstractWorkerForBuilder.detached(self)
