@@ -232,7 +232,7 @@ class Builder(util_service.ReconfigurableServiceMixin,
             self.workers.append(wfb)
             return self
 
-        except Exception as e:
+        except Exception as e:  # pragma: no-cover
             # already log.err'ed by WorkerForBuilder._attachFailure
             # TODO: remove from self.workers (except that detached() should get
             #       run first, right?)
