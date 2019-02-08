@@ -109,6 +109,7 @@ class LatentController(SeverWorkerConnectionMixin):
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self):
+        super().disconnect_worker()
         if self.remote_worker is None:
             return
         self.worker.conn, conn = None, self.worker.conn

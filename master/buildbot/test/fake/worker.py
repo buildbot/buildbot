@@ -18,6 +18,7 @@ import os
 
 from twisted.internet import defer
 from twisted.python.filepath import FilePath
+from twisted.spread import pb
 from twisted.trial.unittest import SkipTest
 
 from buildbot.process import properties
@@ -75,37 +76,63 @@ class FakeWorker(object):
 
 
 class SeverWorkerConnectionMixin:
+
+    _connection_severed = False
+    _severed_deferreds = None
+
+    def disconnect_worker(self):
+        if not self._connection_severed:
+            return
+
+        if self._severed_deferreds is not None:
+            for d in self._severed_deferreds:
+                d.errback(pb.PBConnectionLost('lost connection'))
+
+        self._connection_severed = False
+
     def sever_connection(self):
         # stubs the worker connection so that it appears that the TCP connection
         # has been severed in a way that no response is ever received, but
-        # messages don't fail immediately.
+        # messages don't fail immediately. All callback will be called when
+        # disconnect_worker is called
+        self._connection_severed = True
+
+        def register_deferred():
+            d = defer.Deferred()
+
+            if self._severed_deferreds is None:
+                self._severed_deferreds = []
+            self._severed_deferreds.append(d)
+
+            return d
+
         def remotePrint(message):
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remotePrint = remotePrint
 
         def remoteGetWorkerInfo():
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteGetWorkerInfo = remoteGetWorkerInfo
 
         def remoteSetBuilderList(builders):
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteSetBuilderList = remoteSetBuilderList
 
         def remoteStartCommand(remoteCommand, builderName, commandId,
                                commandName, args):
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteStartCommand = remoteStartCommand
 
         def remoteShutdown():
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteShutdown = remoteShutdown
 
         def remoteStartBuild(builderName):
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteStartBuild = remoteStartBuild
 
         def remoteInterruptCommand(builderName, commandId, why):
-            return defer.Deferred()
+            return register_deferred()
         self.worker.conn.remoteInterruptCommand = remoteInterruptCommand
 
 
@@ -138,6 +165,7 @@ class WorkerController(SeverWorkerConnectionMixin):
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self):
+        super().disconnect_worker()
         if self.remote_worker is None:
             return
         self.worker.conn, conn = None, self.worker.conn
