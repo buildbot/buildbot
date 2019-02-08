@@ -33,6 +33,12 @@ class LatentController(object):
     A controller for ``ControllableLatentWorker``.
 
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
+
+    Note that by default workers will connect automatically if True is passed
+    to start_instance().
+
+    Also by default workers will disconnect automatically just as
+    stop_instance() is executed.
     """
 
     def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
@@ -46,7 +52,7 @@ class LatentController(object):
         self.stopping = False
         self.auto_stop_flag = False
         self.auto_start_flag = False
-        self.auto_connect_worker = False
+        self.auto_connect_worker = True
         self.auto_disconnect_worker = True
 
         self.kind = kind
@@ -59,16 +65,16 @@ class LatentController(object):
             self.start_instance(True)
 
     def start_instance(self, result):
-        self.do_start_instance()
+        self.do_start_instance(result)
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
 
-    def do_start_instance(self):
+    def do_start_instance(self, result):
         assert self.starting
         assert not self.started or not self.remote_worker
         self.starting = False
         self.started = True
-        if self.auto_connect_worker:
+        if self.auto_connect_worker and result is True:
             self.connect_worker()
 
     @defer.inlineCallbacks
@@ -164,7 +170,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
         self._controller.starting = True
         if self._controller.auto_start_flag:
-            self._controller.do_start_instance()
+            self._controller.do_start_instance(True)
             return defer.succeed(True)
 
         self._controller._start_deferred = defer.Deferred()

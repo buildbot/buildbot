@@ -325,7 +325,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         # The worker succeeds to substantiate.
         controller.start_instance(True)
-        controller.connect_worker()
 
         # We check that there were two builds that finished, and
         # that they both finished with success
@@ -389,7 +388,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.patchBot(self, 'remote_setBuilderList',
                             remote_setBuilderList)
         controller.start_instance(True)
-        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -441,7 +439,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 raise TestException("can't ping")
         controller.patchBot(self, 'remote_print', remote_print)
         controller.start_instance(True)
-        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -484,7 +481,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
-        controller.connect_worker()
 
         builds = yield master.data.get(("builds",))
         self.assertEqual(builds[0]['results'], None)
@@ -495,7 +491,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Request one build.
         yield self.createBuildrequest(master, [builder_id])
         controller.start_instance(True)
-        controller.connect_worker()
+
         builds = yield master.data.get(("builds",))
         self.assertEqual(builds[1]['results'], None)
         stepcontroller.finish_step(SUCCESS)
@@ -589,10 +585,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # kind, so we allow it both to auto start and stop
         self.assertEqual(True, controller.starting)
 
-        controller.auto_connect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
-        controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
@@ -642,10 +636,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # kind, so we allow it both to auto start and stop
         self.assertEqual(True, controller.starting)
 
-        controller.auto_connect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
-        controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
