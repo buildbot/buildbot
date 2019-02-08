@@ -80,7 +80,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         if not controller_kwargs:
             controller_kwargs = {}
 
-        controller = LatentController(self, 'local')
+        controller = LatentController(self, 'local', **controller_kwargs)
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
