@@ -543,8 +543,8 @@ Writing a new latent worker should only require subclassing :class:`buildbot.wor
 
 .. bb:worker:: AbstractWorkerController
 
-AbstractLatentController
-~~~~~~~~~~~~~~~~~~~~~~~~
+AbstractLatentWorker
+~~~~~~~~~~~~~~~~~~~~
 
 .. py:class:: buildbot.worker.AbstractLatentWorker
 
@@ -563,6 +563,8 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         A deferred should be returned.
         Any problems should use an errback.
         The callback value can be ``None``, or can be an iterable of short strings to include in the "substantiate success" status message, such as identifying the instance that started.
+        Buildbot will ensure that a single worker will never have its ``start_instance`` called before any previous calls to ``start_instance`` or ``stop_instance`` finish.
+        Additionally, for each ``start_instance`` call, exactly one corresponding call to ``stop_instance`` will be done eventually.
 
     .. py:method:: stop_instance(self, fast=False)
 
@@ -570,6 +572,8 @@ Overriding these members ensures that builds aren't ran on incompatible workers 
         A deferred should be returned.
         If ``fast`` is ``True`` then the function should call back as soon as it is safe to do so, as, for example, the master may be shutting down.
         The value returned by the callback is ignored.
+        Buildbot will ensure that a single worker will never have its ``stop_instance`` called before any previous calls to ``stop_instance`` finish.
+        ``stop_instance`` may be called before ``start_instance`` finishes only if ``start_instance`` takes a long time and the worker times out.
 
     .. py:attribute:: builds_may_be_incompatible
 
