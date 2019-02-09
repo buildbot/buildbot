@@ -212,6 +212,18 @@ class AbstractLatentWorker(AbstractWorker):
             self._substantiation_failed(failure.Failure(e))
             # swallow the failure as it is notified
 
+    def _fireSubstantiationNotifier(self, result):
+        if not self._substantiation_notifier:
+            log.msg("No substantiation deferred for %s" % (self.name,))
+            return
+
+        result_msg = 'success' if result is True else 'failure'
+        log.msg("Firing {} substantiation deferred with {}".format(
+            self.name, result_msg))
+
+        self.substantiation_build = None
+        self._substantiation_notifier.notify(result)
+
     @defer.inlineCallbacks
     def attached(self, bot):
         if self.state != self.STATE_SUBSTANTIATING and \
@@ -235,13 +247,7 @@ class AbstractLatentWorker(AbstractWorker):
         # negative, we throw an error (see above)
         if self.state == self.STATE_SUBSTANTIATING:
             self.state = self.STATE_SUBSTANTIATED
-        if not self._substantiation_notifier:
-            log.msg("No substantiation deferred for %s" % (self.name,))
-        else:
-            log.msg(
-                "Firing %s substantiation deferred with success" % (self.name,))
-            self.substantiation_build = None
-            self._substantiation_notifier.notify(True)
+        self._fireSubstantiationNotifier(True)
 
     def attachBuilder(self, builder):
         wfb = self.workerforbuilders.get(builder.name)
@@ -254,7 +260,7 @@ class AbstractLatentWorker(AbstractWorker):
     def _substantiation_failed(self, failure):
         if self.state == self.STATE_SUBSTANTIATING:
             self.substantiation_build = None
-            self._substantiation_notifier.notify(failure)
+            self._fireSubstantiationNotifier(failure)
         d = self.insubstantiate()
         d.addErrback(log.err, 'while insubstantiating')
         # notify people, but only if we're still in the config
@@ -341,7 +347,7 @@ class AbstractLatentWorker(AbstractWorker):
                               self.STATE_INSUBSTANTIATING_SUBSTANTIATING]
 
         if notify_cancel:
-            self._substantiation_notifier.notify(
+            self._fireSubstantiationNotifier(
                 failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
         if self.state == self.STATE_INSUBSTANTIATING_SUBSTANTIATING:
