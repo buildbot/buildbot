@@ -100,10 +100,9 @@ class AbstractLatentWorker(AbstractWorker):
     # self.conn -> not None
     #
     # detached():
-    # STATE_INSUBSTANTIATING_SUBSTANTIATING -> STATE_SUBSTANTIATING
     # self.conn -> None
     #
-    # errors in above will call insubstantiate()
+    # errors in any of above will call insubstantiate()
     #
     # insubstantiate():
     # STATE_SUBSTANTIATED -> STATE_INSUBSTANTIATING
@@ -243,15 +242,6 @@ class AbstractLatentWorker(AbstractWorker):
         wfb = self.workerforbuilders.get(builder.name)
         return wfb.attached(self, self.worker_commands)
 
-    def detached(self):
-        AbstractWorker.detached(self)
-        if self.state == self.STATE_INSUBSTANTIATING_SUBSTANTIATING:
-            self.state = self.STATE_SUBSTANTIATING
-            if self._insubstantiation_notifier:
-                self._insubstantiation_notifier.notify()
-            d = self._substantiate(self.substantiation_build)
-            d.addErrback(log.err, 'while re-substantiating')
-
     def _missing_timer_fired(self):
         self.missing_timer = None
         return self._substantiation_failed(defer.TimeoutError())
@@ -342,11 +332,8 @@ class AbstractLatentWorker(AbstractWorker):
             # reliability to the backend driver
             log.err(e, "while insubstantiating")
 
-        # TODO: There's a race with detached() in which one will first see
-        # STATE_INSUBSTANTIATING_SUBSTANTIATING and substantiate.
         assert self.state in [self.STATE_INSUBSTANTIATING,
-                              self.STATE_INSUBSTANTIATING_SUBSTANTIATING,
-                              self.STATE_SUBSTANTIATING]
+                              self.STATE_INSUBSTANTIATING_SUBSTANTIATING]
 
         if notify_cancel:
             self._substantiation_notifier.notify(
