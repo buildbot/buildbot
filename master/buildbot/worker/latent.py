@@ -26,7 +26,6 @@ from buildbot.interfaces import ILatentWorker
 from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
-from buildbot.util import asyncSleep
 from buildbot.worker.base import AbstractWorker
 
 
@@ -74,6 +73,8 @@ class AbstractLatentWorker(AbstractWorker):
 
     STATE_SUBSTANTIATED = 2
 
+    # When in this state, self._insubstantiation_notifier may be potentially
+    # waited on.
     STATE_INSUBSTANTIATING = 3
 
     # This state represents the case when insubstantiation is in progress and
@@ -81,6 +82,9 @@ class AbstractLatentWorker(AbstractWorker):
     # started as soon as insubstantiation completes. Note, that the opposite
     # actions are not supported: insubstantiation during substantiation will
     # cancel the substantiation.
+    #
+    # When in this state, self._insubstantiation_notifier may be potentially
+    # waited on.
     STATE_INSUBSTANTIATING_SUBSTANTIATING = 4
 
     state = STATE_NOT_SUBSTANTIATED
@@ -116,6 +120,7 @@ class AbstractLatentWorker(AbstractWorker):
                         build_wait_timeout=60 * 10,
                         **kwargs):
         self._substantiation_notifier = Notifier()
+        self._insubstantiation_notifier = Notifier()
         self.build_wait_timeout = build_wait_timeout
         return AbstractWorker.reconfigService(self, name, password, **kwargs)
 
@@ -242,6 +247,8 @@ class AbstractLatentWorker(AbstractWorker):
         AbstractWorker.detached(self)
         if self.state == self.STATE_INSUBSTANTIATING_SUBSTANTIATING:
             self.state = self.STATE_SUBSTANTIATING
+            if self._insubstantiation_notifier:
+                self._insubstantiation_notifier.notify()
             d = self._substantiate(self.substantiation_build)
             d.addErrback(log.err, 'while re-substantiating')
 
@@ -351,9 +358,13 @@ class AbstractLatentWorker(AbstractWorker):
 
         if self.state == self.STATE_INSUBSTANTIATING_SUBSTANTIATING:
             self.state = self.STATE_SUBSTANTIATING
+            if self._insubstantiation_notifier:
+                self._insubstantiation_notifier.notify(True)
             self._substantiate(self.substantiation_build)
         elif self.state == self.STATE_INSUBSTANTIATING:
             self.state = self.STATE_NOT_SUBSTANTIATED
+            if self._insubstantiation_notifier:
+                self._insubstantiation_notifier.notify(True)
         else:
             pass
         self.botmaster.maybeStartBuildsForWorker(self.name)
@@ -396,9 +407,9 @@ class AbstractLatentWorker(AbstractWorker):
     @defer.inlineCallbacks
     def stopService(self):
         # the worker might be insubstantiating from buildWaitTimeout
-        while self.state in [self.STATE_INSUBSTANTIATING,
-                             self.STATE_INSUBSTANTIATING_SUBSTANTIATING]:
-            yield asyncSleep(0.1)
+        if self.state in [self.STATE_INSUBSTANTIATING,
+                          self.STATE_INSUBSTANTIATING_SUBSTANTIATING]:
+            yield self._insubstantiation_notifier.wait()
 
         if self.conn is not None or self.state in [self.STATE_SUBSTANTIATING,
                                                    self.STATE_SUBSTANTIATED]:
