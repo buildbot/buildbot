@@ -17,6 +17,7 @@
 from twisted.internet import defer
 from twisted.trial import unittest
 
+from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.process.properties import Properties
 from buildbot.test.fake import fakebuild
 from buildbot.test.fake import fakemaster
@@ -51,6 +52,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
                 code = 200
             self._http.delete = lambda _: defer.succeed(FakeResult())
             self.worker.master.stopService()
+        self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
 
     def test_constructor_normal(self):
         worker = MarathonLatentWorker('bot', 'tcp://marathon.local', 'foo',
