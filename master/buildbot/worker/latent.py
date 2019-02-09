@@ -312,7 +312,7 @@ class AbstractLatentWorker(AbstractWorker):
             return
 
         if self.state == self.STATE_INSUBSTANTIATING:
-            # TODO: wait until stop_instance completes just like when substantiating
+            yield self._insubstantiation_notifier.wait()
             return
 
         notify_cancel = self.state == self.STATE_SUBSTANTIATING
