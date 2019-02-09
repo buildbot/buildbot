@@ -70,7 +70,7 @@ class Connection(base.Connection):
                base.FileReaderImpl: FileReaderProxy}
 
     def loseConnection(self):
-        pass
+        self.notifyDisconnected()
 
     def remotePrint(self, message):
         return defer.maybeDeferred(self.worker.bot.remote_print, message)

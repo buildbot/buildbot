@@ -115,8 +115,10 @@ class LatentController(SeverWorkerConnectionMixin):
         self.worker.conn, conn = None, self.worker.conn
         self.remote_worker, worker = None, self.remote_worker
 
-        # LocalWorker does actually disconnect, so we must force disconnection via detached
-        conn.notifyDisconnected()
+        # LocalWorker does actually disconnect, so we must force disconnection
+        # via detached. Note that the worker may have already detached
+        if conn is not None:
+            conn.loseConnection()
         return worker.disownServiceParent()
 
     def setup_kind(self, build):
