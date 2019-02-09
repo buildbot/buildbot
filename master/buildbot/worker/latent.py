@@ -277,10 +277,6 @@ class AbstractLatentWorker(AbstractWorker):
         # we were disconnected, but all the builds are not yet cleaned up.
         if self.conn is None and self.building:
             return False
-        # wait until any insubstantiation completes
-        if self.state in [self.STATE_INSUBSTANTIATING,
-                          self.STATE_INSUBSTANTIATING_SUBSTANTIATING]:
-            return False
         return AbstractWorker.canStartBuild(self)
 
     def buildStarted(self, wfb):
