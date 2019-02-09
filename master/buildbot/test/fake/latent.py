@@ -75,6 +75,10 @@ class LatentController(SeverWorkerConnectionMixin):
     def stopping(self):
         return self.state == self.STATE_STOPPING
 
+    @property
+    def stopped(self):
+        return self.state == self.STATE_NOT_STARTED
+
     def auto_start(self, result):
         self.auto_start_flag = result
         if self.auto_start_flag and self.state == self.STATE_STARTING:

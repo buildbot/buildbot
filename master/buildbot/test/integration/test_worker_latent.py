@@ -342,6 +342,44 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_very_late_detached_after_substantiation(self):
+        '''
+        A latent worker may detach at any time after stop_instance() call.
+        Make sure it works at the most late detachment point, i.e. when we're
+        substantiating again.
+        '''
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        self.assertTrue(controller.starting)
+
+        controller.auto_disconnect_worker = False
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        self.reactor.advance(1)
+
+        # stop the instance, but don't disconnect the worker up to until just
+        # before we complete start_instance()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+
+        self.assertTrue(controller.stopped)
+        yield self.createBuildrequest(master, [builder_id])
+        self.assertTrue(controller.starting)
+        yield controller.disconnect_worker()
+        yield controller.start_instance(True)
+
+        yield self.assertBuildResults(2, SUCCESS)
+        self.reactor.advance(1)
+
+        yield controller.stop_instance(True)
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
     def test_substantiation_during_stop_instance(self):
         '''
         If a latent worker detaches before stop_instance() completes and we
