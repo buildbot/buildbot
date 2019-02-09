@@ -42,15 +42,18 @@ class LatentController(SeverWorkerConnectionMixin):
     stop_instance() is executed.
     """
 
+    STATE_NOT_STARTED = 0
+    STATE_STARTING = 1
+    STATE_STARTED = 2
+    STATE_STOPPING = 3
+
     def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
         self.case = case
         self.build_wait_timeout = build_wait_timeout
         self.worker = ControllableLatentWorker(name, self, **kwargs)
         self.remote_worker = None
 
-        self.starting = False
-        self.started = False
-        self.stopping = False
+        self.state = self.STATE_NOT_STARTED
         self.auto_stop_flag = False
         self.auto_start_flag = False
         self.auto_connect_worker = True
@@ -60,9 +63,21 @@ class LatentController(SeverWorkerConnectionMixin):
         self._started_kind = None
         self._started_kind_deferred = None
 
+    @property
+    def starting(self):
+        return self.state == self.STATE_STARTING
+
+    @property
+    def started(self):
+        return self.state == self.STATE_STARTED
+
+    @property
+    def stopping(self):
+        return self.state == self.STATE_STOPPING
+
     def auto_start(self, result):
         self.auto_start_flag = result
-        if self.auto_start_flag and self.starting:
+        if self.auto_start_flag and self.state == self.STATE_STARTING:
             self.start_instance(True)
 
     def start_instance(self, result):
@@ -71,17 +86,16 @@ class LatentController(SeverWorkerConnectionMixin):
         d.callback(result)
 
     def do_start_instance(self, result):
-        assert self.starting
-        assert not self.started or not self.remote_worker
-        self.starting = False
-        self.started = True
+        assert self.state == self.STATE_STARTING
+        assert not self.remote_worker
+        self.state = self.STATE_STARTED
         if self.auto_connect_worker and result is True:
             self.connect_worker()
 
     @defer.inlineCallbacks
     def auto_stop(self, result):
         self.auto_stop_flag = result
-        if self.auto_stop_flag and self.stopping:
+        if self.auto_stop_flag and self.state == self.STATE_STOPPING:
             yield self.stop_instance(True)
 
     @defer.inlineCallbacks
@@ -92,8 +106,8 @@ class LatentController(SeverWorkerConnectionMixin):
 
     @defer.inlineCallbacks
     def do_stop_instance(self):
-        assert self.stopping
-        self.stopping = False
+        assert self.state == self.STATE_STOPPING
+        self.state = self.STATE_NOT_STARTED
         self._started_kind = None
         if self.auto_disconnect_worker:
             yield self.disconnect_worker()
@@ -160,7 +174,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):
-        if not self._controller.starting and not self._controller.started:
+        if self._controller.state == LatentController.STATE_NOT_STARTED:
             return True
 
         requested_kind = yield build_props.render((self._controller.kind))
@@ -170,9 +184,9 @@ class ControllableLatentWorker(AbstractLatentWorker):
     def start_instance(self, build):
         self._controller.setup_kind(build)
 
-        assert not self._controller.stopping
+        assert self._controller.state == LatentController.STATE_NOT_STARTED
+        self._controller.state = LatentController.STATE_STARTING
 
-        self._controller.starting = True
         if self._controller.auto_start_flag:
             self._controller.do_start_instance(True)
             return defer.succeed(True)
@@ -182,14 +196,15 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def stop_instance(self, build):
-        assert not self._controller.stopping
-        # TODO: we get duplicate stop_instance sometimes, this might indicate
-        # a bug in shutdown code path of AbstractWorkerController
-        # assert self._controller.started or self._controller.starting:
+        assert self._controller.state in [LatentController.STATE_STARTED,
+                                          LatentController.STATE_STARTING]
+        # if we did not succeed starting, at least call back the failure result
+        if self._controller.state == LatentController.STATE_STARTING:
+            self._controller.state = LatentController.STATE_NOT_STARTED
+            d, self._controller._start_deferred = self._controller._start_deferred, None
+            d.callback(False)
+        self._controller.state = LatentController.STATE_STOPPING
 
-        self._controller.started = False
-        self._controller.starting = False
-        self._controller.stopping = True
         if self._controller.auto_stop_flag:
             yield self._controller.do_stop_instance()
             return True
