@@ -34,6 +34,7 @@ from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.misc import TimeoutableTestCase
+from buildbot.test.util.patch_delay import patchForDelay
 
 
 class TestException(Exception):
@@ -339,6 +340,87 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield self.assertBuildResults(2, SUCCESS)
 
         yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
+    def test_substantiation_during_stop_instance(self):
+        '''
+        If a latent worker detaches before stop_instance() completes and we
+        start a build then it should start successfully without causing an
+        erroneous cancellation of the substantiation request.
+        '''
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        # Trigger a single buildrequest
+        yield self.createBuildrequest(master, [builder_id])
+
+        self.assertEqual(True, controller.starting)
+
+        # start instance
+        controller.auto_disconnect_worker = False
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        self.reactor.advance(1)
+
+        self.assertTrue(controller.stopping)
+        yield controller.disconnect_worker()
+        # now create a buildrequest that will substantiate the build. It should
+        # either not start at all until the instance finished substantiating,
+        # or the substantiation request needs to be recorded and start
+        # immediately after stop_instance completes.
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.stop_instance(True)
+
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_substantiation_during_stop_instance_canStartBuild_race(self):
+        '''
+        If build attempts substantiation after the latent worker detaches,
+        but stop_instance() is not completed yet, then we should successfully
+        complete substantiation without causing an erroneous cancellation.
+        The above sequence of events was possible even if canStartBuild
+        checked for a in-progress insubstantiation, as if the build is scheduled
+        before insubstantiation, its start could be delayed until when
+        stop_instance() is in progress.
+        '''
+        controller, master, builder_ids = \
+            yield self.create_single_worker_two_builder_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        # Trigger a single buildrequest
+        yield self.createBuildrequest(master, [builder_ids[0]])
+
+        self.assertEqual(True, controller.starting)
+
+        # start instance
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        with patchForDelay('buildbot.process.builder.Builder.maybeStartBuild') as delay:
+            # create a build request which will result in a build, but it won't
+            # attempt to substantiate until after stop_instance() is in progress
+            yield self.createBuildrequest(master, [builder_ids[1]])
+            self.assertEqual(len(delay), 1)
+            self.reactor.advance(1)
+
+            self.assertTrue(controller.stopping)
+            delay.fire()
+            yield controller.stop_instance(True)
+
+        self.assertTrue(controller.starting)
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
 
     @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
