@@ -661,6 +661,45 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
+    def test_negative_build_timeout_reattach_substantiated(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side. We should still support accidental disconnections from
+        worker side due to, e.g. network problems.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Now disconnect and reconnect worker and check whether we can still
+        # build. This should not change the worker state from our side.
+        yield controller.disconnect_worker()
+        self.assertTrue(controller.started)
+        yield controller.connect_worker()
+        self.assertTrue(controller.started)
+
+        yield self.createBuildrequest(master, [builder_id])
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # The only way to stop worker with negative build timeout is to
+        # insubstantiate explicitly
+        yield controller.auto_stop(True)
+        yield controller.worker.insubstantiate()
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
     def test_sever_connection_while_building(self):
         """
         If the connection to worker is severed without TCP notification in the
@@ -768,6 +807,52 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.stop_instance(True)
 
         self.flushLoggedErrors(pb.PBConnectionLost)
+
+    @defer.inlineCallbacks
+    def test_negative_build_timeout_reattach_insubstantiating(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side, but it can disconnect and reattach from worker side due to,
+        e.g. network problems.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Now start insubstantiation and disconnect and reconnect the worker.
+        # It should not change worker state from master side.
+        d = controller.worker.insubstantiate()
+        self.assertTrue(controller.stopping)
+        yield controller.disconnect_worker()
+        self.assertTrue(controller.stopping)
+        yield controller.connect_worker()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+        yield d
+
+        self.assertTrue(controller.stopped)
+        yield controller.disconnect_worker()
+
+        # Now substantiate the worker and verify build succeeds
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+        yield self.assertBuildResults(1, SUCCESS)
+
+        controller.auto_disconnect_worker = True
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):

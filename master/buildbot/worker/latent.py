@@ -229,7 +229,12 @@ class AbstractLatentWorker(AbstractWorker):
             return
         log.msg(r"Worker %s substantiated \o/" % (self.name,))
 
-        self.state = self.STATE_SUBSTANTIATED
+        # only change state when we are actually substantiating. We could
+        # end up at this point in different state than STATE_SUBSTANTIATING
+        # if build_wait_timeout is negative. When build_wait_timeout is not
+        # negative, we throw an error (see above)
+        if self.state == self.STATE_SUBSTANTIATING:
+            self.state = self.STATE_SUBSTANTIATED
         if not self._substantiation_notifier:
             log.msg("No substantiation deferred for %s" % (self.name,))
         else:
