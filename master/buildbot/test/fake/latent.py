@@ -91,7 +91,6 @@ class LatentController(SeverWorkerConnectionMixin):
 
     def do_start_instance(self, result):
         assert self.state == self.STATE_STARTING
-        assert not self.remote_worker
         self.state = self.STATE_STARTED
         if self.auto_connect_worker and result is True:
             self.connect_worker()
