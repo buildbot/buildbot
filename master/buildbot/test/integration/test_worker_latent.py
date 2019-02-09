@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
+from twisted.spread import pb
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
@@ -490,6 +491,42 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_sever_connection_before_ping_then_timeout_get_requeued(self):
+        """
+        If a latent worker connects, but its connection is severed without
+        notification in the TCP layer, we successfully wait until TCP times
+        out and requeue the build.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
+
+        # sever connection just before ping()
+        with patchForDelay('buildbot.process.workerforbuilder.AbstractWorkerForBuilder.ping') as delay:
+            yield controller.start_instance(True)
+            controller.sever_connection()
+            delay.fire()
+
+        # lose connection after TCP times out
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+        yield self.assertBuildResults(1, RETRY)
+
+        # the worker will be put into quarantine
+        self.reactor.advance(controller.worker.quarantine_initial_timeout)
+
+        yield controller.stop_instance(True)
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
+
+    @defer.inlineCallbacks
     def test_failed_sendBuilderList_get_requeued(self):
         """
         sendBuilderList can fail due to missing permissions on the workdir,
@@ -622,6 +659,115 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         stepcontroller.finish_step(SUCCESS)
         yield self.assertBuildResults(2, SUCCESS)
         yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_sever_connection_while_building(self):
+        """
+        If the connection to worker is severed without TCP notification in the
+        middle of the build, the build is re-queued and successfully restarted.
+        """
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(build_wait_timeout=0)
+            )
+
+        # Request a build and disconnect midway
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.auto_stop(True)
+
+        self.assertTrue(controller.starting)
+        controller.start_instance(True)
+
+        yield self.assertBuildResults(1, None)
+        # sever connection and lose it after TCP times out
+        controller.sever_connection()
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        yield self.assertBuildResults(1, RETRY)
+
+        # Request one build.
+        yield self.createBuildrequest(master, [builder_id])
+        controller.start_instance(True)
+        yield self.assertBuildResults(2, None)
+        stepcontroller.finish_step(SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_sever_connection_during_insubstantiation(self):
+        """
+        If latent worker connection is severed without notification in the TCP
+        layer, we successfully wait until TCP times out, insubstantiate and
+        can substantiate after that.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # sever connection just before insubstantiation and lose it after TCP
+        # times out
+        with patchForDelay('buildbot.worker.base.AbstractWorker.disconnect') as delay:
+            self.reactor.advance(1)
+            self.assertTrue(controller.stopping)
+            controller.sever_connection()
+            delay.fire()
+
+        yield controller.stop_instance(True)
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        # create new build request and verify it works
+        yield self.createBuildrequest(master, [builder_id])
+
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
+
+    @defer.inlineCallbacks
+    def test_sever_connection_during_insubstantiation_and_buildrequest(self):
+        """
+        If latent worker connection is severed without notification in the TCP
+        layer, we successfully wait until TCP times out, insubstantiate and
+        can substantiate after that. In this the subsequent build request is
+        created during insubstantiation
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # sever connection just before insubstantiation and lose it after TCP
+        # times out
+        with patchForDelay('buildbot.worker.base.AbstractWorker.disconnect') as delay:
+            self.reactor.advance(1)
+            self.assertTrue(controller.stopping)
+            yield self.createBuildrequest(master, [builder_id])
+            controller.sever_connection()
+            delay.fire()
+
+        yield controller.stop_instance(True)
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        # verify the previously created build successfully completes
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
 
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
