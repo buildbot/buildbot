@@ -855,6 +855,45 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_negative_build_timeout_no_disconnect_insubstantiating(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side, so it should be possible to insubstantiate and substantiate
+        it without problems if the worker does not disconnect either.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Insubstantiate worker without disconnecting it
+        d = controller.worker.insubstantiate()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+        yield d
+
+        self.assertTrue(controller.stopped)
+
+        # Now substantiate the worker without connecting it
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        controller.auto_disconnect_worker = True
+        yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
         """
         If a build is stopping during latent worker substantiating, the build

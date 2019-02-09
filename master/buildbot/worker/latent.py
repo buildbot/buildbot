@@ -199,6 +199,12 @@ class AbstractLatentWorker(AbstractWorker):
     def _substantiate(self, build):
         # register event trigger
         try:
+            # if build_wait_timeout is negative we don't ever disconnect the
+            # worker ourselves, so we don't need to wait for it to attach
+            # to declare it as substantiated.
+            dont_wait_to_attach = \
+                self.build_wait_timeout < 0 and self.conn is not None
+
             start_success = yield self.start_instance(build)
 
             if not start_success:
@@ -206,6 +212,14 @@ class AbstractLatentWorker(AbstractWorker):
                 # to just errback with a workable reason
                 msg = "Worker does not want to substantiate at this time"
                 raise LatentWorkerFailedToSubstantiate(self.name, msg)
+
+            if dont_wait_to_attach and \
+                    self.state == self.STATE_SUBSTANTIATING and \
+                    self.conn is not None:
+                log.msg(r"Worker %s substantiated (already attached)" %
+                    (self.name,))
+                self.state = self.STATE_SUBSTANTIATED
+                self._fireSubstantiationNotifier(True)
 
         except Exception as e:
             self.stopMissingTimer()
