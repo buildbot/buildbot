@@ -223,7 +223,7 @@ class TestMailNotifier(ConfigErrorsMixin, unittest.TestCase, NotifierTestMixin):
                                       exp_called_with=None, exp_TO=None,
                                       exp_CC=None):
         if extraRecipients is None:
-                extraRecipients = []
+            extraRecipients = []
         _, builds = yield self.setupBuildResults(SUCCESS)
 
         mn = yield self.setupMailNotifier('from@example.org', lookup=lookup, extraRecipients=extraRecipients,
