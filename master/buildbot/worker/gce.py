@@ -76,7 +76,7 @@ class GCELatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def getInstanceState(self):
         url = self.instanceEndpoint()
-        res = yield self._gce.get(url)
+        res = self._gce.get(url)
         info = yield self.validateRes(res, url=url)
         return defer.returnValue(info)
 
@@ -94,63 +94,62 @@ class GCELatentWorker(AbstractLatentWorker):
             result.append({"key": "BUILDMASTER", "value": self.masterFQDN})
         return result
 
-    @defer.inlineCallbacks
     def setMetadata(self, fingerprint, metadata):
-        res = yield self._gce.post(self.instanceEndpoint("setMetadata"), json={
+        return self._gce.post(self.instanceEndpoint("setMetadata"), json={
             "fingerprint": fingerprint,
             "items": metadata,
             "kind": "compute#metadata"
         })
-        res = yield self.validateRes(res)
-        return defer.returnValue(res)
 
     @defer.inlineCallbacks
-    def ensureInstanceStopped(self, instance_state):
-        while instance_state['status'] not in ('STOPPED', 'TERMINATED'):
-            if instance_state['status'] in ('RUNNING', 'SUSPENDING', 'SUSPENDED'):
-                yield self._gce.post(self.instanceEndpoint("stop"))
+    def waitOperationEnd(self, op):
+        while op['status'] != 'DONE':
+            time.sleep(0.1)
+            op = self._gce.get(op['selfLink'])
+            op = yield self.validateRes(op)
 
-            time.sleep(0.01)
-            instance_state = yield self.getInstanceState()
-
-        return defer.returnValue(instance_state)
-
-    @defer.inlineCallbacks
-    def ensureInstanceStarted(self, instance_state):
-        while instance_state['status'] not in ("RUNNING"):
-            if instance_state['status'] not in ("TERMINATED", "PROVISIONING", "STAGING"):
-                raise RuntimeError("Failed to start instance: is in state {0}".
-                    format(instance_state['status']))
-
-            time.sleep(0.01)
-            instance_state = yield self.getInstanceState()
-
-        return defer.returnValue(instance_state)
+        if 'error' in op:
+            raise GCEError(op['error'])
 
     @defer.inlineCallbacks
     def start_instance(self, build):
         instance_state = yield self.getInstanceState()
-        instance_state = yield self.ensureInstanceStopped(instance_state)
 
         fingerprint = instance_state['metadata']['fingerprint']
-        metadata = self.getDesiredMetadata(build)
-        yield self.setMetadata(fingerprint, metadata)
+        metadata = self.getDesiredMetadata(build,
+            instance_state['metadata'].get('items', []))
+        metadata_set = self.setMetadata(fingerprint, metadata)
 
-        res = yield self._gce.post(self.instanceEndpoint("start"))
-        yield self.validateRes(res)
-        instance_state = yield self.getInstanceState()
-        yield self.ensureInstanceStarted(instance_state)
+        if instance_state['status'] not in ('STOPPED', 'TERMINATED'):
+            instance_stop = self._gce.post(self.instanceEndpoint("stop"))
+        else:
+            instance_stop = None
+
+        metadata_set = yield self.validateRes(metadata_set)
+        yield self.waitOperationEnd(metadata_set)
+        if instance_stop is not None:
+            instance_stop = yield self.validateRes(instance_stop)
+            yield self.waitOperationEnd(instance_stop)
+
+        start = self._gce.post(self.instanceEndpoint("start"))
+        start = yield self.validateRes(start)
+        yield self.waitOperationEnd(start)
         return defer.returnValue(True)
 
     @defer.inlineCallbacks
     def stop_instance(self, build):
-        instance_state = yield self.getInstanceState()
-        yield self.ensureInstanceStopped(instance_state)
+        state = yield self.getInstanceState()
+        if state['status'] not in ('STOPPED', 'TERMINATED'):
+            stop = self._gce.post(self.instanceEndpoint("stop"))
+            stop = yield self.validateRes(stop)
+            yield self.waitOperationEnd(stop)
+
         return defer.returnValue(None)
 
     @defer.inlineCallbacks
     def validateRes(self, res, url=None):
         try:
+            res = yield res
             res_json = yield res.json()
         except json.decoder.JSONDecodeError:
             message = yield res.content()
