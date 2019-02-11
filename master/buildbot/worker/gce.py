@@ -88,10 +88,15 @@ class GCELatentWorker(AbstractLatentWorker):
         ])
         if ":" in self.masterFQDN:
             host, port = self.masterFQDN.split(":")
-            result.append({"key": "BUILDMASTER", "value": host})
-            result.append({"key": "BUILDMASTER_PORT", "value": port})
+            result.extend([
+                {"key": "BUILDMASTER", "value": host},
+                {"key": "BUILDMASTER_PORT", "value": port}
+            ])
         else:
-            result.append({"key": "BUILDMASTER", "value": self.masterFQDN})
+            result.extend([
+                {"key": "BUILDMASTER", "value": self.masterFQDN},
+                {"key": "BUILDMASTER_PORT", "value": 9989}
+            ])
         return result
 
     def setMetadata(self, fingerprint, metadata):
