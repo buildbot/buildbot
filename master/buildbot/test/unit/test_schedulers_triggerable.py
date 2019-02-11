@@ -69,7 +69,7 @@ class Triggerable(scheduler.SchedulerMixin, unittest.TestCase):
     @defer.inlineCallbacks
     def assertTriggeredBuildset(self, idsDeferred, waited_for, properties=None, sourcestamps=None):
         if properties is None:
-                properties = {}
+            properties = {}
         bsid, brids = yield idsDeferred
         properties.update({'scheduler': ('n', 'Scheduler')})
 

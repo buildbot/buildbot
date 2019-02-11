@@ -283,7 +283,7 @@ class Build(interfaces.InterfaceTests, unittest.TestCase):
     def do_test_event(self, method, exp_events=None,
                       *args, **kwargs):
         if exp_events is None:
-                exp_events = []
+            exp_events = []
         self.patch(reactor, "seconds", lambda: 1)
         yield method(*args, **kwargs)
         self.master.mq.assertProductions(exp_events)

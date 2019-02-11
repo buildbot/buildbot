@@ -89,12 +89,12 @@ class FakeRequest(Mock):
                     "values which are not bytes".format(self.args))
 
         if self.uri and not isinstance(self.uri, bytes):
-                raise ValueError("self.uri: {!r} is {}, not bytes".format(
-                    self.uri, type(self.uri)))
+            raise ValueError("self.uri: {!r} is {}, not bytes".format(
+                self.uri, type(self.uri)))
 
         if self.method and not isinstance(self.method, bytes):
-                raise ValueError("self.method: {!r} is {}, not bytes".format(
-                    self.method, type(self.method)))
+            raise ValueError("self.method: {!r} is {}, not bytes".format(
+                self.method, type(self.method)))
 
         result = resource.render(self)
         if isinstance(result, bytes):
