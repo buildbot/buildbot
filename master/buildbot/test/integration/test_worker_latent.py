@@ -16,7 +16,6 @@
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
-from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
@@ -34,6 +33,7 @@ from buildbot.test.fake.step import BuildStepController
 from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.misc import TimeoutableTestCase
 
 
 class TestException(Exception):
@@ -43,7 +43,7 @@ class TestException(Exception):
     """
 
 
-class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
+class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
     def setUp(self):
         self.setUpTestReactor()
@@ -53,6 +53,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Flush the errors logged by the master stop cancelling the builds.
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
         self.assertFalse(self.master.running, "master is still running!")
+
+    @defer.inlineCallbacks
+    def assertBuildResults(self, build_id, result):
+        dbdict = yield self.master.db.builds.getBuild(build_id)
+        self.assertEqual(result, dbdict['results'])
 
     @defer.inlineCallbacks
     def getMaster(self, config_dict):
@@ -80,7 +85,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         if not controller_kwargs:
             controller_kwargs = {}
 
-        controller = LatentController(self, 'local')
+        controller = LatentController(self, 'local', **controller_kwargs)
         config_dict = {
             'builders': [
                 BuilderConfig(name="testy",
@@ -121,6 +126,36 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         builder_id = yield master.data.updates.findBuilderId('testy')
 
         return controller, stepcontroller, master, builder_id
+
+    @defer.inlineCallbacks
+    def create_single_worker_two_builder_config(self, controller_kwargs=None):
+        if not controller_kwargs:
+            controller_kwargs = {}
+
+        controller = LatentController(self, 'local', **controller_kwargs)
+        config_dict = {
+            'builders': [
+                BuilderConfig(name="testy-1",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+                BuilderConfig(name="testy-2",
+                              workernames=["local"],
+                              factory=BuildFactory(),
+                              ),
+            ],
+            'workers': [controller.worker],
+            'protocols': {'null': {}},
+            # Disable checks about missing scheduler.
+            'multiMaster': True,
+        }
+        master = yield self.getMaster(config_dict)
+        builder_ids = [
+            (yield master.data.updates.findBuilderId('testy-1')),
+            (yield master.data.updates.findBuilderId('testy-2')),
+        ]
+
+        return controller, master, builder_ids
 
     @defer.inlineCallbacks
     def test_latent_workers_start_in_parallel(self):
@@ -232,10 +267,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(LatentWorkerCannotSubstantiate)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-
         # When the substantiation fails, the result is an exception.
-        self.assertEqual(EXCEPTION, dbdict['results'])
+        yield self.assertBuildResults(1, EXCEPTION)
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -293,32 +326,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         the same time, if the substantiation succeeds then all of
         the builds proceed.
         """
-        controller = LatentController(self, 'local')
-        config_dict = {
-            'builders': [
-                BuilderConfig(name="testy-1",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-                BuilderConfig(name="testy-2",
-                              workernames=["local"],
-                              factory=BuildFactory(),
-                              ),
-            ],
-            'workers': [controller.worker],
-            'protocols': {'null': {}},
-            'multiMaster': True,
-        }
-        master = yield self.getMaster(config_dict)
-        builder_ids = [
-            (yield master.data.updates.findBuilderId('testy-1')),
-            (yield master.data.updates.findBuilderId('testy-2')),
-        ]
-
-        finished_builds = []
-        yield master.mq.startConsuming(
-            lambda key, build: finished_builds.append(build),
-            ('builds', None, 'finished'))
+        controller, master, builder_ids = \
+            yield self.create_single_worker_two_builder_config()
 
         # Trigger a buildrequest
         bsid, brids = yield self.createBuildrequest(master, builder_ids)
@@ -326,12 +335,9 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # The worker succeeds to substantiate.
         controller.start_instance(True)
 
-        controller.connect_worker()
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
 
-        # We check that there were two builds that finished, and
-        # that they both finished with success
-        self.assertEqual([build['results']
-                          for build in finished_builds], [SUCCESS] * 2)
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
@@ -390,7 +396,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         controller.patchBot(self, 'remote_setBuilderList',
                             remote_setBuilderList)
         controller.start_instance(True)
-        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -442,7 +447,6 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 raise TestException("can't ping")
         controller.patchBot(self, 'remote_print', remote_print)
         controller.start_instance(True)
-        controller.connect_worker()
 
         # Flush the errors logged by the failure.
         self.flushLoggedErrors(TestException)
@@ -479,28 +483,25 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             )
 
         # Request a build and disconnect midway
+        controller.auto_disconnect_worker = False
         yield self.createBuildrequest(master, [builder_id])
         yield controller.auto_stop(True)
 
         self.assertTrue(controller.starting)
         controller.start_instance(True)
-        controller.connect_worker()
 
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[0]['results'], None)
+        yield self.assertBuildResults(1, None)
         yield controller.disconnect_worker()
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[0]['results'], RETRY)
+        yield self.assertBuildResults(1, RETRY)
 
         # Request one build.
         yield self.createBuildrequest(master, [builder_id])
         controller.start_instance(True)
-        controller.connect_worker()
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[1]['results'], None)
+
+        yield self.assertBuildResults(2, None)
         stepcontroller.finish_step(SUCCESS)
-        builds = yield master.data.get(("builds",))
-        self.assertEqual(builds[1]['results'], SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
+        yield controller.disconnect_worker()
 
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
@@ -523,8 +524,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-        self.assertEqual(CANCELLED, dbdict['results'])
+        yield self.assertBuildResults(1, CANCELLED)
+
         yield controller.auto_stop(True)
         self.flushLoggedErrors(LatentWorkerFailedToSubstantiate)
 
@@ -553,9 +554,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # Indicate that the worker can't start an instance.
         controller.start_instance(False)
 
-        dbdict = yield master.db.builds.getBuildByNumber(builder_id, 1)
-
-        self.assertEqual(RETRY, dbdict['results'])
+        yield self.assertBuildResults(1, RETRY)
         self.assertEqual(
             set(brids),
             {req['buildrequestid'] for req in unclaimed_build_requests}
@@ -588,11 +587,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # kind, so we allow it both to auto start and stop
         self.assertEqual(True, controller.starting)
 
-        controller.auto_connect_worker = True
-        controller.auto_disconnect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
-        controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
@@ -611,10 +607,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
-        self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
-        self.assertEqual(SUCCESS, dbdict['results'])
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
 
     @defer.inlineCallbacks
     def test_rejects_build_on_instance_with_different_type_timeout_nonzero(self):
@@ -642,11 +636,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         # kind, so we allow it both to auto start and stop
         self.assertEqual(True, controller.starting)
 
-        controller.auto_connect_worker = True
-        controller.auto_disconnect_worker = True
         controller.auto_start(True)
         yield controller.auto_stop(True)
-        controller.connect_worker()
         self.assertEqual((yield controller.get_started_kind()),
                          'a')
 
@@ -675,7 +666,5 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                          'b')
         stepcontroller.finish_step(SUCCESS)
 
-        dbdict = yield master.db.builds.getBuild(1)
-        self.assertEqual(SUCCESS, dbdict['results'])
-        dbdict = yield master.db.builds.getBuild(2)
-        self.assertEqual(SUCCESS, dbdict['results'])
+        yield self.assertBuildResults(1, SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)

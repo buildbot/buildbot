@@ -18,6 +18,7 @@ from twisted.internet import defer
 from twisted.python.filepath import FilePath
 from twisted.trial.unittest import SkipTest
 
+from buildbot.test.fake.worker import SeverWorkerConnectionMixin
 from buildbot.worker import AbstractLatentWorker
 
 try:
@@ -27,12 +28,18 @@ except ImportError:
     RemoteWorker = None
 
 
-class LatentController(object):
+class LatentController(SeverWorkerConnectionMixin):
 
     """
     A controller for ``ControllableLatentWorker``.
 
     https://glyph.twistedmatrix.com/2015/05/separate-your-fakes-and-your-inspectors.html
+
+    Note that by default workers will connect automatically if True is passed
+    to start_instance().
+
+    Also by default workers will disconnect automatically just as
+    stop_instance() is executed.
     """
 
     def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
@@ -46,7 +53,8 @@ class LatentController(object):
         self.stopping = False
         self.auto_stop_flag = False
         self.auto_start_flag = False
-        self.auto_connect_worker = False
+        self.auto_connect_worker = True
+        self.auto_disconnect_worker = True
 
         self.kind = kind
         self._started_kind = None
@@ -58,16 +66,16 @@ class LatentController(object):
             self.start_instance(True)
 
     def start_instance(self, result):
-        self.do_start_instance()
+        self.do_start_instance(result)
         d, self._start_deferred = self._start_deferred, None
         d.callback(result)
 
-    def do_start_instance(self):
+    def do_start_instance(self, result):
         assert self.starting
         assert not self.started or not self.remote_worker
         self.starting = False
         self.started = True
-        if self.auto_connect_worker:
+        if self.auto_connect_worker and result is True:
             self.connect_worker()
 
     @defer.inlineCallbacks
@@ -82,11 +90,13 @@ class LatentController(object):
         d, self._stop_deferred = self._stop_deferred, None
         d.callback(result)
 
+    @defer.inlineCallbacks
     def do_stop_instance(self):
         assert self.stopping
         self.stopping = False
         self._started_kind = None
-        return self.disconnect_worker()
+        if self.auto_disconnect_worker:
+            yield self.disconnect_worker()
 
     def connect_worker(self):
         if self.remote_worker is not None:
@@ -99,13 +109,16 @@ class LatentController(object):
         self.remote_worker.setServiceParent(self.worker)
 
     def disconnect_worker(self):
+        super().disconnect_worker()
         if self.remote_worker is None:
             return
         self.worker.conn, conn = None, self.worker.conn
         self.remote_worker, worker = None, self.remote_worker
 
-        # LocalWorker does actually disconnect, so we must force disconnection via detached
-        conn.notifyDisconnected()
+        # LocalWorker does actually disconnect, so we must force disconnection
+        # via detached. Note that the worker may have already detached
+        if conn is not None:
+            conn.loseConnection()
         return worker.disownServiceParent()
 
     def setup_kind(self, build):
@@ -161,7 +174,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
         self._controller.starting = True
         if self._controller.auto_start_flag:
-            self._controller.do_start_instance()
+            self._controller.do_start_instance(True)
             return defer.succeed(True)
 
         self._controller._start_deferred = defer.Deferred()

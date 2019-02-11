@@ -79,7 +79,7 @@ class Resource(resource.Resource):
                 if s is not None:
                     request.write(s)
                 request.finish()
-            except RuntimeError:  # pragma: no-cover
+            except RuntimeError:  # pragma: no cover
                 # this occurs when the client has already disconnected; ignore
                 # it (see #2027)
                 log.msg("http client disconnected before results were sent")
