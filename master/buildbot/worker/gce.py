@@ -11,7 +11,13 @@ from buildbot.util import gceclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
 
-GCE_NODE_METADATA_KEYS = ('WORKERNAME', 'WORKERPASS', 'BUILDMASTER', 'BUILDMASTER_PORT')
+GCE_NODE_METADATA_KEYS = (
+    'WORKERNAME', 'WORKERPASS',
+    'BUILDMASTER', 'BUILDMASTER_PORT',
+    'BUILDBOT_CLEAN'
+)
+
+DISK_NAME_GEN_KEY = "BUILDBOT_DISK_GEN"
 
 class GCEError(RuntimeError):
     def __init__(self, response_json, url=None):
@@ -27,7 +33,7 @@ class GCELatentWorker(AbstractLatentWorker):
     name = "GCELatentWorker"
 
     def checkConfig(self, name,
-        project=None, zone=None, instance=None,
+        project=None, zone=None, instance=None, image=None,
         sa_credentials=None,
         password=None, masterFQDN=None, **kwargs):
 
@@ -38,6 +44,8 @@ class GCELatentWorker(AbstractLatentWorker):
         if instance is not None and not isinstance(instance, str):
             if not hasattr(instance, 'getRenderingFor'):
                 config.error("instance must be a string")
+        if image is None:
+            config.error("must provide a base disk image")
 
         if password is None:
             password = self.getRandomPass()
@@ -46,7 +54,7 @@ class GCELatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def reconfigService(self, name, password=None,
-        project=None, zone=None, instance=None,
+        project=None, zone=None, instance=None, image=None,
         sa_credentials=None,
         masterFQDN=None, **kwargs):
 
@@ -58,6 +66,7 @@ class GCELatentWorker(AbstractLatentWorker):
         self.project = project
         self.zone = zone
         self.instance = instance
+        self.image = image
         self.sa_credentials = sa_credentials
         self._gce = yield gceclientservice.GCEClientService.getService(
             self.master, ['https://www.googleapis.com/auth/compute'],
@@ -65,46 +74,103 @@ class GCELatentWorker(AbstractLatentWorker):
         AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
         return defer.returnValue(True)
 
-    def instanceEndpoint(self, method=None):
+    def zoneEndpoint(self, method=None):
+        base = "/compute/v1/projects/{0}/zones/{1}".format(
+            self.project, self.zone)
         if method:
-            return "/compute/v1/projects/{0}/zones/{1}/instances/{2}/{3}".format(
-                self.project, self.zone, self.instance, method)
+            return "{0}/{1}".format(base, method)
         else:
-            return "/compute/v1/projects/{0}/zones/{1}/instances/{2}".format(
-                self.project, self.zone, self.instance)
+            return base
+
+    def instanceEndpoint(self, method=None):
+        rel = "instances/{0}".format(self.instance)
+        if method:
+            rel = "{0}/{1}".format(rel, method)
+        return self.zoneEndpoint(rel)
+
+    def processRequest(self, deferred):
+        return self.validateRes(deferred)
 
     @defer.inlineCallbacks
-    def getInstanceState(self):
-        url = self.instanceEndpoint()
-        res = self._gce.get(url)
-        info = yield self.validateRes(res, url=url)
-        return defer.returnValue(info)
+    def processAsyncRequest(self, deferred):
+        op = yield self.validateRes(deferred)
+        yield self.waitOperationEnd(op)
 
-    def getDesiredMetadata(self, build, existingMetadata=[]):
-        result = [x for x in existingMetadata if x['key'] not in GCE_NODE_METADATA_KEYS]
-        result.extend([
-            {"key": "WORKERNAME", "value": self.name},
-            {"key": "WORKERPASS", "value": self.password}
-        ])
+    def getInstanceState(self):
+        return self._gce.get(self.instanceEndpoint())
+
+    def getMetadataFromState(self, state):
+        metadata = state['metadata']
+        dict = {}
+        for x in metadata.get('items', []):
+            dict[x['key']] = x['value']
+        return (metadata['fingerprint'], dict)
+
+    def getDesiredMetadata(self, build):
         if ":" in self.masterFQDN:
             host, port = self.masterFQDN.split(":")
-            result.extend([
-                {"key": "BUILDMASTER", "value": host},
-                {"key": "BUILDMASTER_PORT", "value": port}
-            ])
         else:
-            result.extend([
-                {"key": "BUILDMASTER", "value": self.masterFQDN},
-                {"key": "BUILDMASTER_PORT", "value": 9989}
-            ])
+            host = self.masterFQDN
+            port = 9989
+
+        return {
+            "WORKERNAME": self.name,
+            "WORKERPASS": self.password,
+            "BUILDMASTER": host,
+            "BUILDMASTER_PORT": port
+        }
+
+    def updateMetadata(self, build, metadata):
+        result = metadata.copy()
+        for key in GCE_NODE_METADATA_KEYS:
+            result.pop(key, None)
+        result.update(self.getDesiredMetadata(build))
         return result
+
+    def getMetadataItemsFromDict(self, metadata):
+        return [{"key": key, "value": metadata[key]} for key in metadata]
 
     def setMetadata(self, fingerprint, metadata):
         return self._gce.post(self.instanceEndpoint("setMetadata"), json={
             "fingerprint": fingerprint,
-            "items": metadata,
+            "items": self.getMetadataItemsFromDict(metadata),
             "kind": "compute#metadata"
         })
+
+    def getCurrentDiskName(self, metadata):
+        gen = metadata.get(DISK_NAME_GEN_KEY, None)
+        if gen is not None:
+            return "{0}-{1}".format(self.instance, gen)
+
+    def getNewDiskName(self, metadata):
+        gen = int(metadata.get(DISK_NAME_GEN_KEY, 0)) + 1
+        metadata[DISK_NAME_GEN_KEY] = str(gen)
+        return "{0}-{1}".format(self.instance, gen)
+
+    def createBootDisk(self, disk_name):
+        return self._gce.post(self.zoneEndpoint("disks"),
+            json={
+                "sourceImage": self.image,
+                "name": disk_name
+            }
+        )
+
+    def attachBootDisk(self, disk_name):
+        return self._gce.post(
+            self.instanceEndpoint("attachDisk"),
+            json={
+                "boot": True,
+                "source": self.zoneEndpoint("disks/{0}".format(disk_name)),
+                "deviceName": disk_name,
+                "index": 0
+            }
+        )
+
+    def detachBootDisk(self, diskName):
+        return self._gce.post(
+            self.instanceEndpoint("detachDisk"),
+            params={"deviceName": diskName}
+        )
 
     @defer.inlineCallbacks
     def waitOperationEnd(self, op):
@@ -118,36 +184,46 @@ class GCELatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def start_instance(self, build):
-        instance_state = yield self.getInstanceState()
+        instance_state = yield self.processRequest(self.getInstanceState())
 
-        fingerprint = instance_state['metadata']['fingerprint']
-        metadata = self.getDesiredMetadata(build,
-            instance_state['metadata'].get('items', []))
-        metadata_set = self.setMetadata(fingerprint, metadata)
+        fingerprint, metadata = self.getMetadataFromState(instance_state)
+        updated_metadata = self.updateMetadata(build, metadata)
 
+        instance_stop = None
         if instance_state['status'] not in ('STOPPED', 'TERMINATED'):
             instance_stop = self._gce.post(self.instanceEndpoint("stop"))
-        else:
-            instance_stop = None
 
-        metadata_set = yield self.validateRes(metadata_set)
-        yield self.waitOperationEnd(metadata_set)
+
+        boot_disk_create = None
+        if 'BUILDBOT_CLEAN' not in metadata:
+            boot_disk_name   = self.getNewDiskName(updated_metadata)
+            boot_disk_create = self.createBootDisk(boot_disk_name)
+
+        metadata_set = self.setMetadata(fingerprint, updated_metadata)
+
         if instance_stop is not None:
-            instance_stop = yield self.validateRes(instance_stop)
-            yield self.waitOperationEnd(instance_stop)
+            yield self.processAsyncRequest(instance_stop)
 
-        start = self._gce.post(self.instanceEndpoint("start"))
-        start = yield self.validateRes(start)
-        yield self.waitOperationEnd(start)
+        if boot_disk_create is not None:
+            current_disk_name = self.getCurrentDiskName(metadata)
+            if current_disk_name is not None:
+                self.processAsyncRequest(self.detachBootDisk(current_disk_name))
+            yield self.processAsyncRequest(boot_disk_create)
+            yield self.processAsyncRequest(
+                self.attachBootDisk(boot_disk_name))
+
+        yield self.processAsyncRequest(metadata_set)
+
+        yield self.processAsyncRequest(
+            self._gce.post(self.instanceEndpoint("start")))
         return defer.returnValue(True)
 
     @defer.inlineCallbacks
     def stop_instance(self, build):
-        state = yield self.getInstanceState()
+        state = yield self.processRequest(self.getInstanceState())
         if state['status'] not in ('STOPPED', 'TERMINATED'):
-            stop = self._gce.post(self.instanceEndpoint("stop"))
-            stop = yield self.validateRes(stop)
-            yield self.waitOperationEnd(stop)
+            yield self.processAsyncRequest(
+                self._gce.post(self.instanceEndpoint("stop")))
 
         return defer.returnValue(None)
 
