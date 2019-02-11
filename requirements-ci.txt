@@ -58,7 +58,7 @@ PyJWT==1.7.1
 pylint==2.2.2; python_version >= "3.4"
 pyOpenSSL==19.0.0
 pyparsing==2.3.1
-python-dateutil==2.7.5
+python-dateutil==2.8.0
 pytz==2018.9
 PyYAML==3.13
 requests==2.21.0
