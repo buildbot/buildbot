@@ -250,7 +250,6 @@ class Expect(object):
 
         @param exp: The nested exception that passed or self.
         """
-        pass
 
     def raiseExpectationFailure(self, exp, failure):
         """

@@ -122,7 +122,6 @@ class WorkerForBuilderBase(service.Service):
     def remote_startBuild(self):
         """This is invoked before the first step of any new build is run.  It
         doesn't do much, but masters call it so it's still here."""
-        pass
 
     def remote_startCommand(self, stepref, stepId, command, args):
         """

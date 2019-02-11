@@ -153,7 +153,6 @@ class Command(object):
 
     def setup(self, args):
         """Override this in a subclass to extract items from the args dict."""
-        pass
 
     def doStart(self):
         self.running = True
@@ -193,7 +192,6 @@ class Command(object):
         """Override this in a subclass to allow commands to be interrupted.
         May be called multiple times, test and set self.interrupted=True if
         this matters."""
-        pass
 
     # utility methods, mostly used by WorkerShellCommand and the like
 

@@ -725,7 +725,6 @@ class FakeChangeSourcesComponent(FakeDBComponent):
         self.states = {}
 
     def insertTestData(self, rows):
-        pass
         for row in rows:
             if isinstance(row, ChangeSource):
                 self.changesources[row.id] = row.name

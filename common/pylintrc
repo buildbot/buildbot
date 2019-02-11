@@ -105,7 +105,6 @@ disable=
   pointless-statement,
   pointless-string-statement,
   expression-not-assigned,
-  unnecessary-pass,
   useless-else-on-loop,
   bad-builtin,
   attribute-defined-outside-init,

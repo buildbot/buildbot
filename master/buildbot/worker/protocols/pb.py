@@ -104,7 +104,6 @@ class FileWriterProxy(ReferenceableProxy):
 
 class _NoSuchMethod(Exception):
     """Rewrapped pb.NoSuchMethod remote exception"""
-    pass
 
 
 @contextlib.contextmanager

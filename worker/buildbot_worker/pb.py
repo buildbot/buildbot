@@ -154,7 +154,6 @@ class BotFactory(ReconnectingPBClientFactory):
     def activity(self, res=None):
         """Subclass or monkey-patch this method to be alerted whenever there is
         active communication between the master and worker."""
-        pass
 
     def stopFactory(self):
         ReconnectingPBClientFactory.stopFactory(self)
