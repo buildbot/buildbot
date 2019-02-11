@@ -197,10 +197,10 @@ class P4Source(base.PollingChangeSource, util.ComparableMixin):
         reactor.spawnProcess(protocol, self.p4bin, command, env=os.environ)
 
     def _parseTicketPassword(self, text):
-        lines = text.split("\n")
-        if len(lines) < 3:
+        lines = text.splitlines()
+        if len(lines) < 2:
             return None
-        return lines[2].strip()
+        return lines[-1].strip()
 
     def _getPasswd(self):
         if self.use_tickets:
