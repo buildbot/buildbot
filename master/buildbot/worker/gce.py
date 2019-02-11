@@ -11,6 +11,8 @@ from buildbot.util import gceclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
 
+GCE_NODE_METADATA_KEYS = ('WORKERNAME', 'WORKERPASS', 'BUILDMASTER', 'BUILDMASTER_PORT')
+
 class GCEError(RuntimeError):
     def __init__(self, response_json, url=None):
         message = response_json['error']['message']
@@ -78,11 +80,12 @@ class GCELatentWorker(AbstractLatentWorker):
         info = yield self.validateRes(res, url=url)
         return defer.returnValue(info)
 
-    def getDesiredMetadata(self, build):
-        result = [
+    def getDesiredMetadata(self, build, existingMetadata=[]):
+        result = [x for x in existingMetadata if x['key'] not in GCE_NODE_METADATA_KEYS]
+        result.extend([
             {"key": "WORKERNAME", "value": self.name},
             {"key": "WORKERPASS", "value": self.password}
-        ]
+        ])
         if ":" in self.masterFQDN:
             host, port = self.masterFQDN.split(":")
             result.append({"key": "BUILDMASTER", "value": host})
