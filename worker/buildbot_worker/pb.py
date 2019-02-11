@@ -21,6 +21,7 @@ import signal
 
 from twisted.application import service
 from twisted.application.internet import ClientService
+from twisted.application.internet import backoffPolicy
 from twisted.cred import credentials
 from twisted.internet import defer
 from twisted.internet import reactor
@@ -60,9 +61,8 @@ class BotFactory(AutoLoginPBFactory):
     buildmaster_host and port were used for logging only, mostly within
     reconnection methods
 
-    maxDelay is a feature of protocol.ReconnectingClientFactory, that we
+    maxDelay was a feature of protocol.ReconnectingClientFactory, that we
     don't use anymore. With endpoints, this is managed by the service
-    (TODO reimplement that)
 
     This class implements the optional applicative keepalives, on top of
     AutoLoginPBFactory.
@@ -152,14 +152,13 @@ class Worker(WorkerBase, service.MultiService):
     to just pass a connection description string, set buildmaster_host and
     port to None, and use conndescr.
 
-    note: keepaliveTimeout is ignored, but preserved here for
-    backward-compatibility
+    maxdelay is deprecated if favour of using twisteds backoffPolicy.
     """
     Bot = BotPb
 
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
-                 maxdelay=300, numcpus=None, unicode_encoding=None,
+                 maxdelay=None, numcpus=None, unicode_encoding=None,
                  allow_shutdown=None, maxRetries=None, conndescr=None):
 
         assert usePTY is None, "worker-side usePTY is not supported anymore"
@@ -195,7 +194,8 @@ class Worker(WorkerBase, service.MultiService):
             conndescr = 'tcp:host={}:port={}'.format(
                 buildmaster_host, port)  # TODO escaping for buildmaster_host
         endpoint = clientFromString(reactor, conndescr)
-        pb_service = ClientService(endpoint, bf)
+        pb_service = ClientService(endpoint, bf,
+                                   retryPolicy=backoffPolicy(initialDelay=0))
         self.addService(pb_service)
 
     def startService(self):
