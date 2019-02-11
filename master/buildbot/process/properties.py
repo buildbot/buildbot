@@ -216,7 +216,7 @@ class Properties(util.ComparableMixin):
         return text
 
 
-class PropertiesMixin(object):
+class PropertiesMixin:
 
     """
     A mixin to add L{IProperties} methods to a class which does not implement
@@ -257,7 +257,7 @@ class PropertiesMixin(object):
         return props.render(value)
 
 
-class _PropertyMap(object):
+class _PropertyMap:
 
     """
     Privately-used mapping object to implement WithProperties' substitutions,
@@ -444,7 +444,7 @@ def _getInterpolationList(fmtstring):
 
 
 @implementer(IRenderable)
-class _PropertyDict(object):
+class _PropertyDict:
 
     def getRenderingFor(self, build):
         return build.getProperties()
@@ -454,7 +454,7 @@ _thePropertyDict = _PropertyDict()
 
 
 @implementer(IRenderable)
-class _SecretRenderer(object):
+class _SecretRenderer:
 
     def __init__(self, secret_name):
         self.secret_name = secret_name
@@ -498,7 +498,7 @@ class Secret(_SecretRenderer):
         return secret_detail.value
 
 
-class _SecretIndexer(object):
+class _SecretIndexer:
 
     def __contains__(self, password):
         return True
@@ -877,7 +877,7 @@ def renderer(fn):
 
 
 @implementer(IRenderable)
-class _DefaultRenderer(object):
+class _DefaultRenderer:
 
     """
     Default IRenderable adaptor. Calls .getRenderingFor if available, otherwise
@@ -898,7 +898,7 @@ registerAdapter(_DefaultRenderer, object, IRenderable)
 
 
 @implementer(IRenderable)
-class _ListRenderer(object):
+class _ListRenderer:
 
     """
     List IRenderable adaptor. Maps Build.render over the list.
@@ -915,7 +915,7 @@ registerAdapter(_ListRenderer, list, IRenderable)
 
 
 @implementer(IRenderable)
-class _TupleRenderer(object):
+class _TupleRenderer:
 
     """
     Tuple IRenderable adaptor. Maps Build.render over the tuple.
@@ -934,7 +934,7 @@ registerAdapter(_TupleRenderer, tuple, IRenderable)
 
 
 @implementer(IRenderable)
-class _DictRenderer(object):
+class _DictRenderer:
 
     """
     Dict IRenderable adaptor. Maps Build.render over the keys and values in the dict.
@@ -954,7 +954,7 @@ registerAdapter(_DictRenderer, dict, IRenderable)
 
 
 @implementer(IRenderable)
-class Transform(object):
+class Transform:
 
     """
     A renderable that combines other renderables' results using an arbitrary function.

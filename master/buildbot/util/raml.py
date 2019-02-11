@@ -47,7 +47,7 @@ RamlLoader.add_constructor(
 RamlLoader.add_constructor('!include', construct_include)
 
 
-class RamlSpec(object):
+class RamlSpec:
 
     """
     This class loads the raml specification, and expose useful

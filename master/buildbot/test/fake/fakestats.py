@@ -80,7 +80,7 @@ class FakeStatsService(stats_service.StatsService):
         self._master = value
 
 
-class FakeInfluxDBClient(object):
+class FakeInfluxDBClient:
 
     """
     Fake Influx module for testing on systems that don't have influxdb installed.

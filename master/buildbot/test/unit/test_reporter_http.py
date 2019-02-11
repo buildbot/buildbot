@@ -28,7 +28,7 @@ from buildbot.test.fake import httpclientservice as fakehttpclientservice
 from buildbot.test.util.reporter import ReporterTestMixin
 
 
-class BuildLookAlike(object):
+class BuildLookAlike:
 
     """ a class whose instances compares to any build dict that this reporter is supposed to send out"""
 

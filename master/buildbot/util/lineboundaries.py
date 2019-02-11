@@ -23,7 +23,7 @@ from buildbot.util.logger import Logger
 log = Logger()
 
 
-class LineBoundaryFinder(object):
+class LineBoundaryFinder:
 
     __slots__ = ['partialLine', 'callback', 'warned']
     # split at reasonable line length.

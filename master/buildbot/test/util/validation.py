@@ -29,7 +29,7 @@ from buildbot.util import bytes2unicode
 validatorsByName = {}
 
 
-class Validator(object):
+class Validator:
 
     name = None
     hasArgs = False
@@ -119,7 +119,7 @@ class IdentifierValidator(Validator):
 # Miscellaneous
 
 
-class NoneOk(object):
+class NoneOk:
 
     def __init__(self, original):
         self.original = original
@@ -132,7 +132,7 @@ class NoneOk(object):
                 yield msg
 
 
-class Any(object):
+class Any:
 
     def validate(self, name, object):
         return

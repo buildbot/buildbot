@@ -35,7 +35,7 @@ from buildbot.util import epoch2datetime
 from buildbot.worker import AbstractLatentWorker
 
 
-class BuilderMixin(object):
+class BuilderMixin:
 
     def setUpBuilderMixin(self):
         self.factory = factory.BuildFactory()
@@ -79,7 +79,7 @@ class BuilderMixin(object):
             return self.bldr.reconfigServiceWithBuildbotConfig(mastercfg)
 
 
-class FakeWorker(object):
+class FakeWorker:
     builds_may_be_incompatible = False
 
     def __init__(self, workername):

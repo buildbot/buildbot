@@ -26,7 +26,7 @@ from twisted.trial import unittest
 from buildbot import pbmanager
 
 
-class FakeMaster(object):
+class FakeMaster:
     initLock = defer.DeferredLock()
 
     def addService(self, svc):

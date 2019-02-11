@@ -77,7 +77,7 @@ def uploadTarFile(filename, **members):
     return behavior
 
 
-class UploadError(object):
+class UploadError:
 
     def __init__(self, behavior):
         self.behavior = behavior

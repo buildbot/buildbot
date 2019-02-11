@@ -535,7 +535,7 @@ class TestVC7(steps.BuildStepMixin, unittest.TestCase):
         return self.runStep()
 
 
-class VC8ExpectedEnvMixin(object):
+class VC8ExpectedEnvMixin:
     # used for VC8 and VC9Express
 
     def getExpectedEnv(self, installdir, x64=False, LIB=None, i=None, p=None):

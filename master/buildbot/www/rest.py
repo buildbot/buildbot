@@ -47,7 +47,7 @@ class BadJsonRpc2(Exception):
         self.jsonrpccode = jsonrpccode
 
 
-class ContentTypeParser(object):
+class ContentTypeParser:
 
     def __init__(self, contenttype):
         self.typeheader = contenttype

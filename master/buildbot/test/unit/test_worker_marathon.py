@@ -25,7 +25,7 @@ from buildbot.test.util.misc import TestReactorMixin
 from buildbot.worker.marathon import MarathonLatentWorker
 
 
-class FakeBot(object):
+class FakeBot:
     info = {}
 
     def notifyOnDisconnect(self, n):
@@ -47,7 +47,7 @@ class TestMarathonLatentWorker(unittest.SynchronousTestCase, TestReactorMixin):
 
     def tearDown(self):
         if self.worker is not None:
-            class FakeResult(object):
+            class FakeResult:
                 code = 200
             self._http.delete = lambda _: defer.succeed(FakeResult())
             self.worker.master.stopService()

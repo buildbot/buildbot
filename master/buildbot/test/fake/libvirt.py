@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-class Domain(object):
+class Domain:
 
     def __init__(self, name, conn):
         self.conn = conn
@@ -35,7 +35,7 @@ class Domain(object):
         del self.conn[self._name]
 
 
-class Connection(object):
+class Connection:
 
     def __init__(self, uri):
         self.uri = uri

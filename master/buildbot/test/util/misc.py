@@ -30,7 +30,7 @@ from buildbot.test.fake.reactor import TestReactor
 from buildbot.util.eventual import _setReactor
 
 
-class PatcherMixin(object):
+class PatcherMixin:
 
     """
     Mix this in to get a few special-cased patching methods
@@ -48,7 +48,7 @@ class PatcherMixin(object):
             os.uname = replacement
 
 
-class StdoutAssertionsMixin(object):
+class StdoutAssertionsMixin:
 
     """
     Mix this in to be able to assert on stdout during the test
@@ -68,7 +68,7 @@ class StdoutAssertionsMixin(object):
         return self.stdout.getvalue().strip()
 
 
-class TestReactorMixin(object):
+class TestReactorMixin:
 
     """
     Mix this in to get TestReactor as self.reactor which is correctly cleaned up

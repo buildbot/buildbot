@@ -56,7 +56,7 @@ except ImportError:
     resource = None
 
 
-class MetricEvent(object):
+class MetricEvent:
 
     @classmethod
     def log(cls, *args, **kwargs):
@@ -99,7 +99,7 @@ def countMethod(counter):
     return decorator
 
 
-class Timer(object):
+class Timer:
     # For testing
     _reactor = None
 
@@ -177,7 +177,7 @@ class AveragingFiniteList(FiniteList):
         return self.average
 
 
-class MetricHandler(object):
+class MetricHandler:
 
     def __init__(self, metrics):
         self.metrics = metrics
@@ -295,7 +295,7 @@ class MetricAlarmHandler(MetricHandler):
         return dict(alarms=retval)
 
 
-class AttachedWorkersWatcher(object):
+class AttachedWorkersWatcher:
 
     def __init__(self, metrics):
         self.metrics = metrics

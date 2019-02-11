@@ -550,7 +550,7 @@ class MyService(service.BuildbotService):
         return defer.succeed(None)
 
 
-class fakeConfig(object):
+class fakeConfig:
     pass
 
 

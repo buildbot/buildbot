@@ -20,7 +20,7 @@ from twisted.python import log
 from buildbot.data import base
 
 
-class FieldBase(object):
+class FieldBase:
 
     """
     This class implements a basic behavior
@@ -119,7 +119,7 @@ class Filter(FieldBase):
     """
 
 
-class NoneComparator(object):
+class NoneComparator:
     """
     Object which wraps 'None' when doing comparisons in sorted().
     '> None' and '< None' are not supported
@@ -153,7 +153,7 @@ class NoneComparator(object):
         return self.value < other.value
 
 
-class ReverseComparator(object):
+class ReverseComparator:
     """
     Object which swaps '<' and '>' so
     instead of a < b, it does b < a,
@@ -176,7 +176,7 @@ class ReverseComparator(object):
         return other.value > self.value
 
 
-class ResultSpec(object):
+class ResultSpec:
 
     __slots__ = ['filters', 'fields', 'properties',
                  'order', 'limit', 'offset', 'fieldMapping']

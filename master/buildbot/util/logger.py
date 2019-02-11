@@ -19,7 +19,7 @@ try:
 except ImportError:
     from twisted.python import log
 
-    class Logger(object):
+    class Logger:
         """A simplistic backporting of the new logger system for old versions of twisted"""
         def _log(self, format, *args, **kwargs):
             log.msg(format.format(args, **kwargs))

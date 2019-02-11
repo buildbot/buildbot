@@ -22,7 +22,7 @@ from twisted.trial import unittest
 from buildbot.util import debounce
 
 
-class DebouncedClass(object):
+class DebouncedClass:
 
     def __init__(self, reactor):
         self.callDeferred = None

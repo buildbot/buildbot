@@ -87,7 +87,7 @@ def timed_do_fn(f):
     return wrap
 
 
-class DBThreadPool(object):
+class DBThreadPool:
 
     running = False
 

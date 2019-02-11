@@ -60,7 +60,7 @@ class FakeWorkerManager(service.AsyncMultiService):
         return defer.succeed(True)
 
 
-class FakeWorkerRegistration(object):
+class FakeWorkerRegistration:
 
     def __init__(self, worker):
         self.updates = []

@@ -119,11 +119,11 @@ def defaultSummaryCB(buildInfoList, results, master, arg):
 
 
 # These are just sentinel values for GerritStatusPush.__init__ args
-class DEFAULT_REVIEW(object):
+class DEFAULT_REVIEW:
     pass
 
 
-class DEFAULT_SUMMARY(object):
+class DEFAULT_SUMMARY:
     pass
 
 

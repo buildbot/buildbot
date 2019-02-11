@@ -30,7 +30,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     @defer.inlineCallbacks
     def db2data(self, bsdict):

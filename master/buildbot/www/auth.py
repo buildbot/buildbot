@@ -130,7 +130,7 @@ class RemoteUserAuth(AuthBase):
 
 
 @implementer(IRealm)
-class AuthRealm(object):
+class AuthRealm:
 
     def __init__(self, master, auth):
         self.auth = auth

@@ -40,7 +40,7 @@ class CollectedValidationError(ValueError):
             self, "\n".join([k + ":" + v for k, v in errors.items()]))
 
 
-class ValidationErrorCollector(object):
+class ValidationErrorCollector:
 
     def __init__(self):
         self.errors = {}
@@ -66,7 +66,7 @@ class ValidationErrorCollector(object):
 DefaultField = object()  # sentinel object to signal default behavior
 
 
-class BaseParameter(object):
+class BaseParameter:
 
     """
     BaseParameter provides a base implementation for property customization

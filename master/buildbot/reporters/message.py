@@ -30,7 +30,7 @@ from buildbot.process.results import statusToString
 from buildbot.reporters import utils
 
 
-class MessageFormatterBase(object):
+class MessageFormatterBase:
     template_filename = 'default_mail.txt'
     template_type = 'plain'
 

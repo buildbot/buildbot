@@ -28,7 +28,7 @@ from buildbot.util import config
 from buildbot.util import unicode2bytes
 
 
-class ReconfigurableServiceMixin(object):
+class ReconfigurableServiceMixin:
 
     reconfig_priority = 128
 

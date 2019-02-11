@@ -21,7 +21,7 @@ class Listener(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     pass
 
 
-class Connection(object):
+class Connection:
     proxies = {}
 
     def __init__(self, master, worker):
@@ -76,7 +76,7 @@ class Connection(object):
 
 
 # RemoteCommand base implementation and base proxy
-class RemoteCommandImpl(object):
+class RemoteCommandImpl:
 
     def remote_update(self, updates):
         raise NotImplementedError
@@ -86,7 +86,7 @@ class RemoteCommandImpl(object):
 
 
 # FileWriter base implementation
-class FileWriterImpl(object):
+class FileWriterImpl:
 
     def remote_write(self, data):
         raise NotImplementedError
@@ -102,7 +102,7 @@ class FileWriterImpl(object):
 
 
 # FileReader base implementation
-class FileReaderImpl(object):
+class FileReaderImpl:
 
     def remote_read(self, maxLength):
         raise NotImplementedError

@@ -21,7 +21,7 @@ star_or_int_re = re.compile(r'^(\d+|\*)$')
 __all__ = ('croniter',)
 
 
-class croniter(object):
+class croniter:
     RANGES = (
         (0, 59),
         (0, 23),

@@ -17,7 +17,7 @@
 from twisted.internet import defer
 
 
-class StateMixin(object):
+class StateMixin:
     # state management
 
     _objectid = None

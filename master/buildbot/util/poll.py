@@ -22,7 +22,7 @@ from twisted.python import log
 _poller_instances = None
 
 
-class Poller(object):
+class Poller:
 
     __slots__ = ['fn', 'instance', 'loop', 'started', 'running',
                  'pending', 'stopDeferreds', '_reactor']
@@ -86,7 +86,7 @@ class Poller(object):
         return defer.succeed(None)
 
 
-class _Descriptor(object):
+class _Descriptor:
 
     def __init__(self, fn, attrName):
         self.fn = fn

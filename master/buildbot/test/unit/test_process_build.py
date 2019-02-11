@@ -126,7 +126,7 @@ class FakeBuilder:
 
 
 @implementer(interfaces.IBuildStepFactory)
-class FakeStepFactory(object):
+class FakeStepFactory:
 
     """Fake step factory that just returns a fixed step object."""
 
@@ -142,7 +142,7 @@ class TestException(Exception):
 
 
 @implementer(interfaces.IBuildStepFactory)
-class FailingStepFactory(object):
+class FailingStepFactory:
 
     """Fake step factory that just returns a fixed step object."""
 

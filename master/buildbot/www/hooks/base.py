@@ -24,7 +24,7 @@ import json
 from buildbot.util import bytes2unicode
 
 
-class BaseHookHandler(object):
+class BaseHookHandler:
     def __init__(self, master, options):
         self.master = master
         self.options = options

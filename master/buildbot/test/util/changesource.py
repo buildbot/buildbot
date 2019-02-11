@@ -20,7 +20,7 @@ from twisted.internet import task
 from buildbot.test.fake import fakemaster
 
 
-class ChangeSourceMixin(object):
+class ChangeSourceMixin:
 
     """
     This class is used for testing change sources, and handles a few things:

@@ -20,7 +20,7 @@ from buildbot import interfaces
 
 
 @implementer(interfaces.ILogObserver)
-class LogObserver(object):
+class LogObserver:
 
     def setStep(self, step):
         self.step = step

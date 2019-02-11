@@ -21,7 +21,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.test.util import db
 
 
-class FakeDBConnector(object):
+class FakeDBConnector:
     pass
 
 

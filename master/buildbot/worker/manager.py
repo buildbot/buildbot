@@ -23,7 +23,7 @@ from buildbot.util import service
 from buildbot.worker.protocols import pb as bbpb
 
 
-class WorkerRegistration(object):
+class WorkerRegistration:
 
     __slots__ = ['master', 'worker', 'pbReg']
 

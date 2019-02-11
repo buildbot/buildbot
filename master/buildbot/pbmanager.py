@@ -80,7 +80,7 @@ class PBManager(service.AsyncMultiService):
         return defer.succeed(None)
 
 
-class Registration(object):
+class Registration:
 
     def __init__(self, pbmanager, portstr, username):
         self.portstr = portstr

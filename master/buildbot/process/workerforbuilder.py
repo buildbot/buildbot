@@ -29,7 +29,7 @@ class States(Names):
     BUILDING = NamedConstant()
 
 
-class AbstractWorkerForBuilder(object):
+class AbstractWorkerForBuilder:
 
     def __init__(self):
         self.ping_watchers = []

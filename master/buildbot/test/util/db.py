@@ -42,7 +42,7 @@ def skip_for_dialect(dialect):
     return dec
 
 
-class RealDatabaseMixin(object):
+class RealDatabaseMixin:
 
     """
     A class that sets up a real database for testing.  This sets self.db_url to

@@ -23,7 +23,7 @@ from buildbot.util import service
 from buildbot.wamp import connector
 
 
-class FakeConfig(object):
+class FakeConfig:
     mq = dict(type='wamp', router_url="wss://foo", realm="bb")
 
 

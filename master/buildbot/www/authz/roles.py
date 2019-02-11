@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-class RolesFromBase(object):
+class RolesFromBase:
 
     def __init__(self):
         pass

@@ -25,7 +25,7 @@ from buildbot import util
 from buildbot.util import bytes2unicode
 
 
-class Type(object):
+class Type:
 
     name = None
     doc = None

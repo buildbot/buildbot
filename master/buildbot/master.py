@@ -51,7 +51,7 @@ from buildbot.worker import manager as workermanager
 from buildbot.www import service as wwwservice
 
 
-class LogRotation(object):
+class LogRotation:
 
     def __init__(self):
         self.rotateLength = 1 * 1000 * 1000

@@ -23,7 +23,7 @@ from buildbot.interfaces import IConfigurator
 
 
 @implementer(IConfigurator)
-class ConfiguratorBase(object):
+class ConfiguratorBase:
     """
         I provide base helper methods for configurators
     """

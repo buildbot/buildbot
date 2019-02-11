@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-class SecretDetails(object):
+class SecretDetails:
     """
     A SecretDetails object has secrets attributes:
     - source: provider where the secret was retrieved

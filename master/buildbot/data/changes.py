@@ -30,7 +30,7 @@ from buildbot.util import datetime2epoch
 from buildbot.util import epoch2datetime
 
 
-class FixerMixin(object):
+class FixerMixin:
 
     @defer.inlineCallbacks
     def _fixChange(self, change):

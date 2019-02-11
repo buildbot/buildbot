@@ -17,7 +17,7 @@
 from buildbot.config import MasterConfig
 
 
-class ConfiguratorMixin(object):
+class ConfiguratorMixin:
 
     """
     Support for testing configurators.

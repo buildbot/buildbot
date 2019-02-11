@@ -24,7 +24,7 @@ from buildbot import util
 from buildbot.util import lineboundaries
 
 
-class Log(object):
+class Log:
     _byType = {}
 
     def __init__(self, master, name, type, logid, decoder):

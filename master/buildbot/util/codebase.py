@@ -17,7 +17,7 @@
 from twisted.internet import defer
 
 
-class AbsoluteSourceStampsMixin(object):
+class AbsoluteSourceStampsMixin:
     # record changes and revisions per codebase
 
     _lastCodebases = None

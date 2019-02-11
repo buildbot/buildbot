@@ -99,7 +99,7 @@ class BuildFactory(util.ComparableMixin):
 # BuildFactory subclasses for common build tools
 
 
-class _DefaultCommand(object):
+class _DefaultCommand:
     # Used to indicate a default command to the step.
     pass
 

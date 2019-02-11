@@ -42,7 +42,7 @@ def reStrMatcher(value, match):
 
 
 @implementer(IConfigured)
-class Authz(object):
+class Authz:
 
     def getConfigDict(self):
         return {}

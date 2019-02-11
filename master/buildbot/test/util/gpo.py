@@ -27,7 +27,7 @@ def _check_env_is_expected(test, expected_env, env):
                          'Expected environment to have %s = %r' % (var, value))
 
 
-class Expect(object):
+class Expect:
     _stdout = b""
     _stderr = b""
     _exit = 0

@@ -30,7 +30,7 @@ from buildbot.scripts import runner
 from buildbot.test.util import misc
 
 
-class OptionsMixin(object):
+class OptionsMixin:
 
     def setUpOptions(self):
         self.options_file = {}

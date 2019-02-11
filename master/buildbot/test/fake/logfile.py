@@ -22,7 +22,7 @@ from buildbot import util
 from buildbot.util import lineboundaries
 
 
-class FakeLogFile(object):
+class FakeLogFile:
 
     def __init__(self, name, step):
         self.name = name

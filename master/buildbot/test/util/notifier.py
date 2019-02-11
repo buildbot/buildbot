@@ -19,7 +19,7 @@ from buildbot.reporters import utils
 from buildbot.test.fake import fakedb
 
 
-class NotifierTestMixin(object):
+class NotifierTestMixin:
     @defer.inlineCallbacks
     def setupBuildResults(self, results, wantPreviousBuild=False):
         # this testsuite always goes through setupBuildResults so that

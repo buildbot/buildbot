@@ -22,7 +22,7 @@ from buildbot.data import types
 from buildbot.util import identifiers
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     def db2data(self, dbdict):
         return {

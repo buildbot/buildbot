@@ -245,7 +245,7 @@ class SyncLogFileWrapper(logobserver.LogObserver):
         self._maybeFinished()
 
 
-class BuildStepStatus(object):
+class BuildStepStatus:
     # used only for old-style steps
     pass
 
@@ -1078,7 +1078,7 @@ class LoggingBuildStep(BuildStep):
         return defer.succeed(None)
 
 
-class CommandMixin(object):
+class CommandMixin:
 
     @defer.inlineCallbacks
     def _runRemoteCommand(self, cmd, abandonOnFailure, args, makeResult=None):
@@ -1114,7 +1114,7 @@ class CommandMixin(object):
             makeResult=lambda cmd: cmd.updates['files'][0])
 
 
-class ShellMixin(object):
+class ShellMixin:
 
     command = None
     env = {}

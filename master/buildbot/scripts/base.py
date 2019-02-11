@@ -273,7 +273,7 @@ class SubcommandOptions(usage.Options):
             raise usage.UsageError(msg)
 
 
-class BasedirMixin(object):
+class BasedirMixin:
 
     """SubcommandOptions Mixin to handle subcommands that take a basedir
     argument"""

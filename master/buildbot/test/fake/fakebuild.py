@@ -121,7 +121,7 @@ components.registerAdapter(
     FakeBuild, interfaces.IProperties)
 
 
-class FakeBuildForRendering(object):
+class FakeBuildForRendering:
     def render(self, r):
         if isinstance(r, str):
             return "rendered:" + r

@@ -21,7 +21,7 @@ from twisted.internet import reactor
 from twisted.python import log
 
 
-class _SimpleCallQueue(object):
+class _SimpleCallQueue:
 
     _reactor = reactor
 

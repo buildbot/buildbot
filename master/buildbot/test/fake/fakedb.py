@@ -43,7 +43,7 @@ from buildbot.util import unicode2bytes
 # Fake DB Rows
 
 
-class Row(object):
+class Row:
 
     """
     Parent class for row classes, which are used to specify test data for
@@ -678,7 +678,7 @@ class ConfiguredWorker(Row):
 # Fake DB Components
 
 
-class FakeDBComponent(object):
+class FakeDBComponent:
     data2db = {}
 
     def __init__(self, db, testcase):
