@@ -15,6 +15,7 @@
 
 
 import os
+import signal
 import sys
 import traceback
 
@@ -76,6 +77,19 @@ def upgradeDatabase(config, master_cfg):
         print("upgrading database (%s)"
               % (stripUrlPassword(master_cfg.db['db_url'])))
         print("Warning: Stopping this process might cause data loss")
+
+    def sighandler(signum, frame):
+        msg = " ".join("""
+        WARNING: ignoring signal %s.
+        This process should not be interrupted to avoid database corruption.
+        If you really need to terminate it, use SIGKILL.
+        """.split())
+        print(msg % signum)
+
+    for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP",
+                    "SIGUSR1", "SIGUSR2", "SIGBREAK"):
+        if hasattr(signal, signame):
+            signal.signal(getattr(signal, signame), sighandler)
 
     master = BuildMaster(config['basedir'])
     master.config = master_cfg
