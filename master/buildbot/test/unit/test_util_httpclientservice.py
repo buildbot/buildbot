@@ -58,14 +58,30 @@ class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
         self.base_headers = {}
         self.successResultOf(self.parent.startService())
 
+class HTTPClientServiceCommonTests:
+    @defer.inlineCallbacks
+    def test_fails_if_relative_url_is_given(self):
+        with self.assertRaises(AssertionError) as context:
+            yield self._http.get('bar')
 
-class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
+    @defer.inlineCallbacks
+    def test_fails_if_absolute_url_is_given_that_doesnt_match_expected_base_url(self):
+        with self.assertRaises(AssertionError) as context:
+            yield self._http.get('http://somewhere/bar')
+
+
+class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase, HTTPClientServiceCommonTests):
 
     def setUp(self):
         super().setUp()
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            headers=self.base_headers))
+
+    def test_accepts_full_url(self):
+        self._http.get('http://foo/bar')
+        self._http._session.request.assert_called_once_with('get', 'http://foo/bar', headers={},
+                                                            background_callback=mock.ANY)
 
     def test_get(self):
         self._http.get('/bar')
@@ -125,7 +141,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
                                                             })
 
 
-class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
+class HTTPClientServiceTestTReq(HTTPClientServiceTestBase,HTTPClientServiceCommonTests):
 
     def setUp(self):
         super().setUp()
@@ -133,6 +149,12 @@ class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            headers=self.base_headers))
+
+    def test_accepts_full_url(self):
+        self._http.get('http://foo/bar')
+        httpclientservice.treq.get.assert_called_once_with('http://foo/bar',
+                                                           agent=mock.ANY,
+                                                           headers={})
 
     def test_get(self):
         self._http.get('/bar')
