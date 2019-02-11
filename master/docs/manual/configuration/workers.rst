@@ -50,6 +50,14 @@ For example::
                       properties={ 'os':'solaris' }),
     ]
 
+:class:`Worker` properties have priority over other sources (:class:`Builder`, :class:`Scheduler`, etc.).
+You may use the ``defaultProperties`` parameter that will only be added to :ref:`Build-Properties` if they are not already set by :ref:`another source <Properties>`::
+
+   c['workers'] = [
+       worker.Worker('fast-bot', 'fast-passwd',
+                     defaultProperties={'parallel_make': 10}),
+   ]
+
 Limiting Concurrency
 ++++++++++++++++++++
 

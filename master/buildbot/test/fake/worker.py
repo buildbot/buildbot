@@ -37,6 +37,7 @@ class FakeWorker(object):
         self.master = master
         self.conn = fakeprotocol.FakeConnection(master, self)
         self.properties = properties.Properties()
+        self.defaultProperties = properties.Properties()
         self.workerid = 383
 
     def acquireLocks(self):

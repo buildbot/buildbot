@@ -60,7 +60,8 @@ class AbstractWorker(service.BuildbotService, object):
     def checkConfig(self, name, password, max_builds=None,
                     notify_on_missing=None,
                     missing_timeout=None,
-                    properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                    properties=None, defaultProperties=None,
+                    locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
         """
         @param name: botname this machine will supply when it connects
         @param password: password this machine will supply when
@@ -71,14 +72,15 @@ class AbstractWorker(service.BuildbotService, object):
         @param properties: properties that will be applied to builds run on
                            this worker
         @type properties: dictionary
+        @param defaultProperties: properties that will be applied to builds
+                                  run on this worker only if the property
+                                  has not been set by another source
+        @type defaultProperties: dictionary
         @param locks: A list of locks that must be acquired before this worker
                       can be used
         @type locks: dictionary
         """
         self.name = name = bytes2unicode(name)
-
-        if properties is None:
-            properties = {}
 
         self.password = password
 
@@ -102,8 +104,10 @@ class AbstractWorker(service.BuildbotService, object):
         self.lock_subscriptions = []
 
         self.properties = Properties()
-        self.properties.update(properties, "Worker")
+        self.properties.update(properties or {}, "Worker")
         self.properties.setProperty("workername", name, "Worker")
+        self.defaultProperties = Properties()
+        self.defaultProperties.update(defaultProperties or {}, "Worker")
 
         self.lastMessageReceived = 0
 
@@ -240,7 +244,8 @@ class AbstractWorker(service.BuildbotService, object):
     @defer.inlineCallbacks
     def reconfigService(self, name, password, max_builds=None,
                         notify_on_missing=None, missing_timeout=DEFAULT_MISSING_TIMEOUT,
-                        properties=None, locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
+                        properties=None, defaultProperties=None,
+                        locks=None, keepalive_interval=DEFAULT_KEEPALIVE_INTERVAL):
         # Given a Worker config arguments, configure this one identically.
         # Because Worker objects are remotely referenced, we can't replace them
         # without disconnecting the worker, yet there's no reason to do that.
@@ -266,11 +271,11 @@ class AbstractWorker(service.BuildbotService, object):
             if running_missing_timer:
                 self.startMissingTimer()
 
-        if properties is None:
-            properties = {}
         self.properties = Properties()
-        self.properties.update(properties, "Worker")
+        self.properties.update(properties or {}, "Worker")
         self.properties.setProperty("workername", name, "Worker")
+        self.defaultProperties = Properties()
+        self.defaultProperties.update(defaultProperties or {}, "Worker")
 
         # update our records with the worker manager
         if not self.registration:
@@ -411,6 +416,15 @@ class AbstractWorker(service.BuildbotService, object):
         now = time.time()
         self.lastMessageReceived = now
         self.worker_status.setLastMessageReceived(now)
+
+    def setupProperties(self, props):
+        for name in self.properties.properties:
+            props.setProperty(
+                name, self.properties.getProperty(name), "Worker")
+        for name in self.defaultProperties.properties:
+            if name not in props:
+                props.setProperty(
+                    name, self.defaultProperties.getProperty(name), "Worker")
 
     @defer.inlineCallbacks
     def detached(self):
