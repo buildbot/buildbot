@@ -192,7 +192,8 @@ class Worker(WorkerBase, service.MultiService):
             credentials.UsernamePassword(name, passwd), client=self.bot)
         if conndescr is None:
             conndescr = 'tcp:host={}:port={}'.format(
-                buildmaster_host, port)  # TODO escaping for buildmaster_host
+                buildmaster_host.replace(':', r'\:'),  # escape ipv6 addresses
+                port)
         endpoint = clientFromString(reactor, conndescr)
         pb_service = ClientService(endpoint, bf,
                                    retryPolicy=backoffPolicy(initialDelay=0))
