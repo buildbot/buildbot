@@ -31,7 +31,7 @@ except ImportError:
     RemoteWorker = None
 
 
-class FakeWorker(object):
+class FakeWorker:
     workername = 'test'
 
     def __init__(self, master):

@@ -18,7 +18,7 @@ import shutil
 import tempfile
 
 
-class PrivateTemporaryDirectory(object):
+class PrivateTemporaryDirectory:
     """ Works similarly to python 3.2+ TemporaryDirectory except the
         also sets the permissions of the created directory and
 

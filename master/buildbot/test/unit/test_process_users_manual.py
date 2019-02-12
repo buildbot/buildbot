@@ -25,7 +25,7 @@ from buildbot.process.users import manual
 from buildbot.test.fake import fakemaster
 
 
-class ManualUsersMixin(object):
+class ManualUsersMixin:
 
     """
     This class fakes out the master/db components to test the manual

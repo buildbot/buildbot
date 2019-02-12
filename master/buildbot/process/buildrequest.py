@@ -25,7 +25,7 @@ from buildbot.process import properties
 from buildbot.process.results import SKIPPED
 
 
-class BuildRequestCollapser(object):
+class BuildRequestCollapser:
     # brids is a list of the new added buildrequests id
     # This class is called before generated the 'new' event for the
     # buildrequest
@@ -96,7 +96,7 @@ class BuildRequestCollapser(object):
         return brids
 
 
-class TempSourceStamp(object):
+class TempSourceStamp:
     # temporary fake sourcestamp
 
     ATTRS = ('branch', 'revision', 'repository', 'project', 'codebase')
@@ -141,7 +141,7 @@ class TempSourceStamp(object):
         return result
 
 
-class TempChange(object):
+class TempChange:
     # temporary fake change
 
     def __init__(self, d):
@@ -158,7 +158,7 @@ class TempChange(object):
         return self._chdict
 
 
-class BuildRequest(object):
+class BuildRequest:
 
     """
 

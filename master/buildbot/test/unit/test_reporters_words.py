@@ -725,7 +725,7 @@ class TestContactChannel(unittest.TestCase):
             "build #3 of builder1 started")
 
 
-class FakeContact(object):
+class FakeContact:
 
     def __init__(self, bot, user=None, channel=None):
         self.bot = bot

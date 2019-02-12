@@ -32,7 +32,7 @@ from buildbot.util import epoch2datetime
 from buildbot.util import service
 
 
-class BuildChooserBase(object):
+class BuildChooserBase:
     #
     # WARNING: This API is experimental and in active development.
     #

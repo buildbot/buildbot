@@ -44,7 +44,7 @@ log = Logger()
 
 
 @implementer(IHttpResponse)
-class TxRequestsResponseWrapper(object):
+class TxRequestsResponseWrapper:
 
     def __init__(self, res):
         self._res = res

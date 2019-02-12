@@ -363,7 +363,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def setupProtectedResource(self, resource_obj, checkers):
         @implementer(IRealm)
-        class SimpleRealm(object):
+        class SimpleRealm:
 
             """
             A realm which gives out L{ChangeHookResource} instances for authenticated

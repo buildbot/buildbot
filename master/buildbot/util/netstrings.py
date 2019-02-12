@@ -23,13 +23,13 @@ from buildbot.util import unicode2bytes
 
 
 @implementer(IAddress)
-class NullAddress(object):
+class NullAddress:
 
     "an address for NullTransport"
 
 
 @implementer(ITransport)
-class NullTransport(object):
+class NullTransport:
 
     "a do-nothing transport to make NetstringReceiver happy"
 

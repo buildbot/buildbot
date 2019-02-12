@@ -36,7 +36,7 @@ with mock.patch.dict(sys.modules, {'ldap3': fake_ldap}):
     from buildbot.www import ldapuserinfo
 
 
-class FakeLdap(object):
+class FakeLdap:
 
     def __init__(self):
         def search(base, filterstr='f', scope=None, attributes=None):

@@ -35,7 +35,7 @@ from buildbot.www import auth
 from buildbot.www import authz
 
 
-class FakeSession(object):
+class FakeSession:
 
     def __init__(self):
         self.user_info = {"anonymous": True}
@@ -44,7 +44,7 @@ class FakeSession(object):
         pass
 
 
-class FakeRequest(object):
+class FakeRequest:
     written = b''
     finished = False
     redirected_to = None
@@ -122,7 +122,7 @@ class FakeRequest(object):
         return self.session
 
 
-class RequiresWwwMixin(object):
+class RequiresWwwMixin:
     # mix this into a TestCase to skip if buildbot-www is not installed
 
     if not list(pkg_resources.iter_entry_points('buildbot.www', 'base')):

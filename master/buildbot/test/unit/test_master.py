@@ -39,14 +39,14 @@ from buildbot.test.util import logging
 
 
 @implementer(IConfigLoader)
-class FailingLoader(object):
+class FailingLoader:
 
     def loadConfig(self):
         config.error('oh noes')
 
 
 @implementer(IConfigLoader)
-class DefaultLoader(object):
+class DefaultLoader:
 
     def loadConfig(self):
         return config.MasterConfig()

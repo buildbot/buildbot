@@ -98,7 +98,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
         self.productions = []
 
 
-class FakeQueueRef(object):
+class FakeQueueRef:
 
     def stopConsuming(self):
         if self in self.qrefs:

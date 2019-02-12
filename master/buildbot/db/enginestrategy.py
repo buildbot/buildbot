@@ -40,13 +40,13 @@ from buildbot.util import sautils
 # from http://www.mail-archive.com/sqlalchemy@googlegroups.com/msg15079.html
 
 
-class ReconnectingListener(object):
+class ReconnectingListener:
 
     def __init__(self):
         self.retried = False
 
 
-class Strategy(object):
+class Strategy:
 
     def set_up(self, u, engine):
         pass
@@ -121,7 +121,7 @@ class MySQLStrategy(Strategy):
         # older versions of sqlalchemy require the listener to be specified
         # in the kwargs, in a class instance
         if sautils.sa_version() < (0, 7, 0):
-            class ReconnectingListener(object):
+            class ReconnectingListener:
                 pass
             rcl = ReconnectingListener()
             rcl.checkout = checkout_listener

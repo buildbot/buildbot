@@ -53,7 +53,7 @@ class EndpointBase(www.WwwTestMixin, unittest.TestCase):
         ])
 
 
-class ValidEndpointMixin(object):
+class ValidEndpointMixin:
 
     @defer.inlineCallbacks
     def test_invalidPath(self):

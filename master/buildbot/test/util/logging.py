@@ -19,7 +19,7 @@ import re
 from twisted.python import log
 
 
-class LoggingMixin(object):
+class LoggingMixin:
 
     def setUpLogging(self):
         self._logEvents = []

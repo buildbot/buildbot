@@ -18,7 +18,7 @@ from future.utils import text_type
 import re
 
 
-class RevlinkMatch(object):
+class RevlinkMatch:
 
     def __init__(self, repo_urls, revlink):
         if isinstance(repo_urls, (str, text_type)):
@@ -68,7 +68,7 @@ SourceforgeGitRevlink_AlluraPlatform = RevlinkMatch(
     revlink=r'https://sourceforge.net/p/\1/ci/%s/')
 
 
-class RevlinkMultiplexer(object):
+class RevlinkMultiplexer:
 
     def __init__(self, *revlinks):
         self.revlinks = revlinks

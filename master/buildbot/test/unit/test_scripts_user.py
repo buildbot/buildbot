@@ -25,7 +25,7 @@ from buildbot.scripts import user
 
 class TestUsersClient(unittest.TestCase):
 
-    class FakeUsersClient(object):
+    class FakeUsersClient:
 
         def __init__(self, master, username="user", passwd="userpw", port=0):
             self.master = master

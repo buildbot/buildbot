@@ -40,7 +40,7 @@ class MQBase(service.AsyncService):
         return res
 
 
-class QueueRef(object):
+class QueueRef:
 
     __slots__ = ['callback']
 

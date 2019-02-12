@@ -23,25 +23,25 @@ from buildbot.db import model
 from buildbot.db import state
 
 
-class FakeDBConnector(object):
+class FakeDBConnector:
     pass
 
 
-class FakeCacheManager(object):
+class FakeCacheManager:
 
     def get_cache(self, cache_name, miss_fn):
         return None
 
 
-class FakeMaster(object):
+class FakeMaster:
     pass
 
 
-class FakePool(object):
+class FakePool:
     pass
 
 
-class DbConfig(object):
+class DbConfig:
 
     def __init__(self, BuildmasterConfig, basedir, name="config"):
         self.db_url = MasterConfig.getDbUrlFromConfig(

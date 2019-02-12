@@ -20,7 +20,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.results import CANCELLED
 
 
-class BuildStepController(object):
+class BuildStepController:
 
     """
     A controller for ``ControllableBuildStep``.

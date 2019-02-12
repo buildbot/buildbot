@@ -16,7 +16,7 @@
 import abc
 
 
-class StatsStorageBase(object):
+class StatsStorageBase:
 
     """
     Base class for sub service responsible for passing on stats data to

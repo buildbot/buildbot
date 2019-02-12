@@ -42,7 +42,7 @@ except ImportError:
 
 
 @implementer(IConfigLoader)
-class DictLoader(object):
+class DictLoader:
 
     def __init__(self, config_dict):
         self.config_dict = config_dict

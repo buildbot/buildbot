@@ -21,7 +21,7 @@ from twisted.internet import reactor
 from twisted.spread import pb
 
 
-class UsersClient(object):
+class UsersClient:
 
     """
     Client set up in buildbot.scripts.runner to send `buildbot user` args

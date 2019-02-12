@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-class State(object):
+class State:
 
     """
     A simple class you can use to keep track of state throughout

@@ -35,7 +35,7 @@ from buildbot.test.fake.botmaster import FakeBotMaster
 from buildbot.util import service
 
 
-class FakeCache(object):
+class FakeCache:
 
     """Emulate an L{AsyncLRUCache}, but without any real caching.  This
     I{does} do the weakref part, to catch un-weakref-able objects."""
@@ -58,7 +58,7 @@ class FakeCache(object):
         pass
 
 
-class FakeCaches(object):
+class FakeCaches:
 
     def get_cache(self, name, miss_fn):
         return FakeCache(name, miss_fn)
@@ -106,7 +106,7 @@ class FakeStatus(service.BuildbotService):
 
 
 @implementer(interfaces.IBuilderStatus)
-class FakeBuilderStatus(object):
+class FakeBuilderStatus:
 
     def __init__(self, master=None, buildername="Builder"):
         if master:
@@ -150,7 +150,7 @@ class FakeBuilderStatus(object):
         pass
 
 
-class FakeLogRotation(object):
+class FakeLogRotation:
     rotateLength = 42
     maxRotatedFiles = 42
 

@@ -14,7 +14,7 @@
 # Copyright Buildbot Team Members
 
 
-class TupleMatchingMixin(object):
+class TupleMatchingMixin:
 
     # a bunch of tuple-matching tests that all call do_test_match
     # this is used to test this behavior in a few places

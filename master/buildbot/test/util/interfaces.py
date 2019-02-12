@@ -20,7 +20,7 @@ import pkg_resources
 from twisted.trial import unittest
 
 
-class InterfaceTests(object):
+class InterfaceTests:
 
     # assertions
 

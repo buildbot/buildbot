@@ -17,7 +17,7 @@
 from buildbot import config
 
 
-class _AssertRaisesConfigErrorContext(object):
+class _AssertRaisesConfigErrorContext:
     def __init__(self, substr_or_re, case):
         self.substr_or_re = substr_or_re
         self.case = case
@@ -37,7 +37,7 @@ class _AssertRaisesConfigErrorContext(object):
         return True
 
 
-class ConfigErrorsMixin(object):
+class ConfigErrorsMixin:
 
     def assertConfigError(self, errors, substr_or_re):
         if len(errors.errors) > 1:

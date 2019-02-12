@@ -239,7 +239,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addBuildset_two_builderNames(self):
         @implementer(interfaces.IScheduler)
-        class FakeSched(object):
+        class FakeSched:
             name = 'fakesched'
 
         kwargs = dict(scheduler='fakesched', reason='because',
@@ -263,7 +263,7 @@ class Buildset(util_interfaces.InterfaceTests, unittest.TestCase):
 
     def test_addBuildset_no_builderNames(self):
         @implementer(interfaces.IScheduler)
-        class FakeSched(object):
+        class FakeSched:
             name = 'fakesched'
 
         kwargs = dict(scheduler='fakesched', reason='because',

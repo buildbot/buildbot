@@ -28,7 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.wamp import connector
 
 
-class FakeEventDetails(object):
+class FakeEventDetails:
     def __init__(self, topic):
         self.topic = topic
 
@@ -43,7 +43,7 @@ class ComparableSubscribeOptions(SubscribeOptions):
     __repr__ = SubscribeOptions.__str__
 
 
-class FakeWampConnector(object):
+class FakeWampConnector:
     # a fake wamp connector with only one queue
 
     def topic_match(self, topic):
@@ -150,7 +150,7 @@ class WampMQ(unittest.TestCase):
         self.assertEqual(self.master.wamp.last_data, 'foo')
 
 
-class FakeConfig(object):
+class FakeConfig:
     mq = dict(type='wamp', router_url="wss://foo", realm="realm1")
 
 

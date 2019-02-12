@@ -18,7 +18,7 @@ from twisted.trial import unittest
 from buildbot.data import types
 
 
-class TypeMixin(object):
+class TypeMixin:
 
     klass = None
     good = []

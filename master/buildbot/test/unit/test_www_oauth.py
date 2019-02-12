@@ -41,7 +41,7 @@ if requests:
     from buildbot.www import oauth2  # pylint: disable=ungrouped-imports
 
 
-class FakeResponse(object):
+class FakeResponse:
 
     def __init__(self, _json):
         self.json = lambda: _json
@@ -412,7 +412,7 @@ class OAuth2Auth(www.WwwTestMixin, ConfigErrorsMixin, unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_loginResource(self):
-        class fakeAuth(object):
+        class fakeAuth:
             homeUri = "://me"
             getLoginURL = mock.Mock(side_effect=lambda x: defer.succeed("://"))
             verifyCode = mock.Mock(

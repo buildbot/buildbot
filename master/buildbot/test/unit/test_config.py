@@ -87,13 +87,13 @@ class FakeStatusReceiver(status_base.StatusReceiver):
 
 
 @implementer(interfaces.IScheduler)
-class FakeScheduler(object):
+class FakeScheduler:
 
     def __init__(self, name):
         self.name = name
 
 
-class FakeBuilder(object):
+class FakeBuilder:
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -975,7 +975,7 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
 
     def test_load_services_badservice(self):
 
-        class MyService(object):
+        class MyService:
             pass
         myService = MyService()
         self.cfg.load_services(self.filename, dict(

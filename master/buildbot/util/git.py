@@ -48,7 +48,7 @@ def getSshCommand(keyPath, knownHostsPath):
     return ' '.join(command)
 
 
-class GitMixin(object):
+class GitMixin:
 
     def setupGit(self):
         self.gitInstalled = False

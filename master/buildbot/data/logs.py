@@ -21,7 +21,7 @@ from buildbot.data import types
 from buildbot.util import identifiers
 
 
-class EndpointMixin(object):
+class EndpointMixin:
 
     def db2data(self, dbdict):
         data = {

@@ -27,12 +27,12 @@ from buildbot.util import pathmatch
 from buildbot.util import service
 
 
-class Updates(object):
+class Updates:
     # empty container object; see _scanModule, below
     pass
 
 
-class RTypes(object):
+class RTypes:
     # empty container object; see _scanModule, below
     pass
 

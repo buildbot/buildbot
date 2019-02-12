@@ -23,7 +23,7 @@ from buildbot.data.exceptions import InvalidPathError
 from buildbot.util import bytes2unicode
 
 
-class EndpointMatcherBase(object):
+class EndpointMatcherBase:
 
     def __init__(self, role, defaultDeny=True):
         self.role = role
@@ -60,7 +60,7 @@ class EndpointMatcherBase(object):
         return "%s(%s)" % (self.__class__.__name__, ", ".join(args))
 
 
-class Match(object):
+class Match:
 
     def __init__(self, master, build=None, buildrequest=None, buildset=None):
         self.master = master

@@ -24,7 +24,7 @@ def ident(x):
     raise TypeError
 
 
-class Matcher(object):
+class Matcher:
 
     def __init__(self):
         self._patterns = {}

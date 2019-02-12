@@ -23,7 +23,7 @@ import sqlalchemy as sa
 from buildbot.util import unicode2bytes
 
 
-class DBConnectorComponent(object):
+class DBConnectorComponent:
     # A fixed component of the DBConnector, handling one particular aspect of
     # the database.  Instances of subclasses are assigned to attributes of the
     # DBConnector object, so that they are available at e.g.,
@@ -120,7 +120,7 @@ class DBConnectorComponent(object):
             yield batch
 
 
-class CachedMethod(object):
+class CachedMethod:
 
     def __init__(self, cache_name, method):
         self.cache_name = cache_name

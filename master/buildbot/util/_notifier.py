@@ -23,7 +23,7 @@
 from twisted.internet.defer import Deferred
 
 
-class Notifier(object):
+class Notifier:
     def __init__(self):
         self._waiters = []
 

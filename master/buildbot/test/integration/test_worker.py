@@ -35,7 +35,7 @@ except ImportError:
 
 
 @implementer(IBuildStepFactory)
-class StepController(object):
+class StepController:
 
     def __init__(self, **kwargs):
         self.kwargs = kwargs

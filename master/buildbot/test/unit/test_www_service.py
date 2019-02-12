@@ -251,7 +251,7 @@ class TestBuildbotSite(unittest.SynchronousTestCase):
     def test_updateSession(self):
         session = self.site.makeSession()
 
-        class FakeChannel(object):
+        class FakeChannel:
             transport = None
 
             def isSecure(self):

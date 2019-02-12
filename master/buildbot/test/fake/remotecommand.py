@@ -23,7 +23,7 @@ from buildbot.process.results import SUCCESS
 from buildbot.test.fake import logfile
 
 
-class FakeRemoteCommand(object):
+class FakeRemoteCommand:
 
     # callers should set this to the running TestCase instance
     testcase = None
@@ -109,7 +109,7 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                                    stdioLogName=stdioLogName)
 
 
-class ExpectRemoteRef(object):
+class ExpectRemoteRef:
 
     """
     Define an expected RemoteReference in the args to an L{Expect} class
@@ -122,7 +122,7 @@ class ExpectRemoteRef(object):
         return isinstance(other, self.rrclass)
 
 
-class Expect(object):
+class Expect:
 
     """
     Define an expected L{RemoteCommand}, with the same arguments

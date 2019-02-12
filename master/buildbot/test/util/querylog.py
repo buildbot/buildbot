@@ -93,7 +93,7 @@ def log_queries():
         stop_log_queries(handler)
 
 
-class SqliteMaxVariableMixin(object):
+class SqliteMaxVariableMixin:
 
     @contextlib.contextmanager
     def assertNoMaxVariables(self):

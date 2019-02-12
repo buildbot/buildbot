@@ -22,7 +22,7 @@ from twisted.internet import defer
 from twisted.python import log
 
 
-class LRUCache(object):
+class LRUCache:
 
     """
     A least-recently-used cache, with a fixed maximum size.

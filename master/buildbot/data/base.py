@@ -22,7 +22,7 @@ from twisted.internet import defer
 from buildbot.data import exceptions
 
 
-class ResourceType(object):
+class ResourceType:
     name = None
     plural = None
     endpoints = []
@@ -69,7 +69,7 @@ class ResourceType(object):
                 self.master.mq.produce(routingKey, msg)
 
 
-class Endpoint(object):
+class Endpoint:
     pathPatterns = ""
     rootLinkName = None
     isCollection = False
@@ -93,7 +93,7 @@ class Endpoint(object):
         return "endpoint for " + self.pathPatterns
 
 
-class BuildNestingMixin(object):
+class BuildNestingMixin:
 
     """
     A mixin for methods to decipher the many ways a build, step, or log can be

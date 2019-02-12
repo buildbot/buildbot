@@ -32,7 +32,7 @@ log = Logger()
 
 
 @implementer(IHttpResponse)
-class ResponseWrapper(object):
+class ResponseWrapper:
 
     def __init__(self, code, content):
         self._content = content

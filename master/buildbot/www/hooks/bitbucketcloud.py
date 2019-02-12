@@ -28,7 +28,7 @@ GIT_TAG_REF = "refs/tags/{}"
 _HEADER_EVENT = b'X-Event-Key'
 
 
-class BitbucketCloudEventHandler(object):
+class BitbucketCloudEventHandler:
 
     def __init__(self, master, options=None):
         if options is None:

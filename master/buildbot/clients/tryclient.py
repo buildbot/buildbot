@@ -39,7 +39,7 @@ from buildbot.util import unicode2bytes
 from buildbot.util.eventual import fireEventually
 
 
-class SourceStamp(object):
+class SourceStamp:
 
     def __init__(self, branch, revision, patch, repository=''):
         self.branch = branch

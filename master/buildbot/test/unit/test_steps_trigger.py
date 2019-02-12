@@ -36,7 +36,7 @@ from buildbot.test.util.interfaces import InterfaceTests
 
 
 @implementer(interfaces.ITriggerableScheduler)
-class FakeTriggerable(object):
+class FakeTriggerable:
 
     triggered_with = None
     result = SUCCESS
@@ -70,7 +70,7 @@ class TriggerableInterfaceTest(unittest.TestCase, InterfaceTests):
         self.assertInterfacesImplemented(FakeTriggerable)
 
 
-class FakeSourceStamp(object):
+class FakeSourceStamp:
 
     def __init__(self, **kwargs):
         self.__dict__.update(kwargs)
@@ -79,7 +79,7 @@ class FakeSourceStamp(object):
         return self.__dict__.copy()
 
 
-class FakeSchedulerManager(object):
+class FakeSchedulerManager:
     pass
 
 

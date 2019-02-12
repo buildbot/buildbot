@@ -1069,7 +1069,7 @@ class TestProperties(unittest.TestCase):
     @defer.inlineCallbacks
     def test_render(self):
         @implementer(IRenderable)
-        class Renderable(object):
+        class Renderable:
 
             def getRenderingFor(self, props):
                 return props.getProperty('x') + 'z'

@@ -62,7 +62,7 @@ def computeResultAndTermination(obj, result, previousResult):
     return result, terminate
 
 
-class ResultComputingConfigMixin(object):
+class ResultComputingConfigMixin:
 
     haltOnFailure = False
     flunkOnWarnings = False

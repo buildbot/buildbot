@@ -25,7 +25,7 @@ from buildbot.test.fake import fakedb
 from buildbot.test.util import scheduler
 
 
-class CommonStuffMixin(object):
+class CommonStuffMixin:
 
     def makeScheduler(self, klass, **kwargs_override):
         kwargs = dict(name="tsched", treeStableTimer=60,

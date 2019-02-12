@@ -16,7 +16,7 @@
 from buildbot.test.fake import fakedb
 
 
-class ReporterTestMixin(object):
+class ReporterTestMixin:
 
     TEST_PROJECT = 'testProject'
     TEST_REPO = 'https://example.org/repo'

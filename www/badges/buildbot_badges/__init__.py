@@ -29,7 +29,7 @@ from xml.sax.saxutils import escape
 from buildbot.util import bytes2unicode
 
 
-class Api(object):
+class Api:
     app = Klein()
 
     default = {  # note that these defaults are documented in configuration/www.rst

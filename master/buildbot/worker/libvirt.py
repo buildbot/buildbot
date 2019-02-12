@@ -35,7 +35,7 @@ except ImportError:
     libvirt = None
 
 
-class WorkQueue(object):
+class WorkQueue:
 
     """
     I am a class that turns parallel access into serial access.
@@ -96,7 +96,7 @@ class WorkQueue(object):
 queue = WorkQueue()
 
 
-class Domain(object):
+class Domain:
 
     """
     I am a wrapper around a libvirt Domain object
@@ -119,7 +119,7 @@ class Domain(object):
         return queue.executeInThread(self.domain.destroy)
 
 
-class Connection(object):
+class Connection:
 
     """
     I am a wrapper around a libvirt Connection object.

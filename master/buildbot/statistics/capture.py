@@ -23,7 +23,7 @@ from buildbot import config
 from buildbot.errors import CaptureCallbackError
 
 
-class Capture(object):
+class Capture:
 
     """
     Base class for all Capture* classes.

@@ -22,7 +22,7 @@ from buildbot.data import types
 from buildbot.db.changesources import ChangeSourceAlreadyClaimedError
 
 
-class Db2DataMixin(object):
+class Db2DataMixin:
 
     @defer.inlineCallbacks
     def db2data(self, dbdict):

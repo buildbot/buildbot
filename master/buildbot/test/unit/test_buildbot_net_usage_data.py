@@ -105,7 +105,7 @@ class Tests(unittest.TestCase):
     def test_urllib(self):
         self.patch(buildbot.buildbot_net_usage_data, '_sendWithRequests', lambda _, __: None)
 
-        class FakeRequest(object):
+        class FakeRequest:
 
             def __init__(self, *args, **kwargs):
                 self.args = args
@@ -113,7 +113,7 @@ class Tests(unittest.TestCase):
 
         open_url = []
 
-        class urlopen(object):
+        class urlopen:
 
             def __init__(self, r):
                 self.request = r

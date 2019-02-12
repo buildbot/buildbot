@@ -21,7 +21,7 @@ from twisted.web import static
 from buildbot.util import bytes2unicode
 
 
-class Application(object):
+class Application:
 
     def __init__(self, modulename, description, ui=True):
         self.description = description
