@@ -11,6 +11,8 @@ from buildbot.util import gceclientservice
 from buildbot.util.logger import Logger
 from buildbot.worker import AbstractLatentWorker
 
+log = Logger()
+
 GCE_NODE_METADATA_KEYS = (
     'WORKERNAME', 'WORKERPASS',
     'BUILDMASTER', 'BUILDMASTER_PORT',
@@ -191,27 +193,41 @@ class GCELatentWorker(AbstractLatentWorker):
 
         instance_stop = None
         if instance_state['status'] not in ('STOPPED', 'TERMINATED'):
+            log.info("gce: {0} is running, requesting stop".format(
+                self.instance))
             instance_stop = self._gce.post(self.instanceEndpoint("stop"))
 
 
         boot_disk_create = None
         if 'BUILDBOT_CLEAN' not in metadata:
+            log.info("gce: {0} has not been reset on stop, will do it now".format(
+                self.instance))
             boot_disk_name   = self.getNewDiskName(updated_metadata)
             boot_disk_create = self.createBootDisk(boot_disk_name)
 
         metadata_set = self.setMetadata(fingerprint, updated_metadata)
 
         if instance_stop is not None:
+            log.info("gce: waiting for {0} to be stopped".format(self.instance))
             yield self.processAsyncRequest(instance_stop)
 
         if boot_disk_create is not None:
             current_disk_name = self.getCurrentDiskName(metadata)
             if current_disk_name is not None:
                 self.processAsyncRequest(self.detachBootDisk(current_disk_name))
+                log.info("gce: detaching {0} from {1}".format(
+                    current_disk_name, self.instance))
+
+            log.info("gce: waiting for fresh disk {0} to be created for {1}".format(
+                boot_disk_name, self.instance))
             yield self.processAsyncRequest(boot_disk_create)
+
+            log.info("gce: attaching new disk {0} to {1}".format(
+                boot_disk_name, self.instance))
             yield self.processAsyncRequest(
                 self.attachBootDisk(boot_disk_name))
 
+        log.info("gce: starting {0}".format(self.instance))
         yield self.processAsyncRequest(metadata_set)
 
         yield self.processAsyncRequest(
