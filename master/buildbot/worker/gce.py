@@ -98,8 +98,12 @@ class GCELatentWorker(AbstractLatentWorker):
         op = yield self.validateRes(deferred)
         yield self.waitOperationEnd(op)
 
-    def getInstanceState(self):
-        return self._gce.get(self.instanceEndpoint())
+    def getInstanceState(self, fields=None):
+        if fields is None:
+            return self._gce.get(self.instanceEndpoint())
+        else:
+            return self._gce.get(self.instanceEndpoint(),
+                params={'fields': fields})
 
     def getMetadataFromState(self, state):
         metadata = state['metadata']
@@ -175,6 +179,13 @@ class GCELatentWorker(AbstractLatentWorker):
         )
 
     @defer.inlineCallbacks
+    def waitInstanceState(self, desiredState):
+        state = yield self.processRequest(self.getInstanceState(fields='status'))
+        while state['status'] != desiredState:
+            time.sleep(0.1)
+            state = yield self.processRequest(self.getInstanceState(fields='status'))
+
+    @defer.inlineCallbacks
     def waitOperationEnd(self, op):
         while op['status'] != 'DONE':
             time.sleep(0.1)
@@ -209,7 +220,8 @@ class GCELatentWorker(AbstractLatentWorker):
 
         if instance_stop is not None:
             log.info("gce: waiting for {0} to be stopped".format(self.instance))
-            yield self.processAsyncRequest(instance_stop)
+            yield self.processRequest(instance_stop)
+            yield self.waitInstanceState('TERMINATED')
 
         if boot_disk_create is not None:
             current_disk_name = self.getCurrentDiskName(metadata)
@@ -229,9 +241,9 @@ class GCELatentWorker(AbstractLatentWorker):
 
         log.info("gce: starting {0}".format(self.instance))
         yield self.processAsyncRequest(metadata_set)
-
-        yield self.processAsyncRequest(
+        yield self.processRequest(
             self._gce.post(self.instanceEndpoint("start")))
+        yield self.waitInstanceState('RUNNING')
         return defer.returnValue(True)
 
     @defer.inlineCallbacks
