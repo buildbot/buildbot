@@ -36,6 +36,7 @@ class GCELatentWorker(AbstractLatentWorker):
 
     def checkConfig(self, name,
         project=None, zone=None, instance=None, image=None,
+        stopInstanceOnStop=True, resetDisk=True, useSSD=True,
         sa_credentials=None,
         password=None, masterFQDN=None, **kwargs):
 
@@ -57,6 +58,7 @@ class GCELatentWorker(AbstractLatentWorker):
     @defer.inlineCallbacks
     def reconfigService(self, name, password=None,
         project=None, zone=None, instance=None, image=None,
+        stopInstanceOnStop=True, resetDisk=True, useSSD=True,
         sa_credentials=None,
         masterFQDN=None, **kwargs):
 
@@ -69,6 +71,9 @@ class GCELatentWorker(AbstractLatentWorker):
         self.zone = zone
         self.instance = instance
         self.image = image
+        self.resetDisk = resetDisk
+        self.useSSD = useSSD
+        self.stopInstanceOnStop = stopInstanceOnStop
         self.sa_credentials = sa_credentials
         self._gce = yield gceclientservice.GCEClientService.getService(
             self.master, ['https://www.googleapis.com/auth/compute'],
@@ -154,10 +159,17 @@ class GCELatentWorker(AbstractLatentWorker):
         return "{0}-{1}".format(self.instance, gen)
 
     def createBootDisk(self, disk_name):
+        if self.useSSD:
+            diskType = "pd-ssd"
+        else:
+            diskType = "pd-standard"
+
         return self._gce.post(self.zoneEndpoint("disks"),
             json={
                 "sourceImage": self.image,
-                "name": disk_name
+                "name": disk_name,
+                "type": "projects/{0}/zones/{1}/diskTypes/{2}".format(
+                    self.project, self.zone, diskType)
             }
         )
 
@@ -212,6 +224,8 @@ class GCELatentWorker(AbstractLatentWorker):
                 self.instance))
             instance_stop = self._gce.post(self.instanceEndpoint("stop"))
 
+        if not self.resetDisk:
+            metadata['BUILDBOT_CLEAN'] = '1'
 
         boot_disk_create = None
         if 'BUILDBOT_CLEAN' not in metadata:
@@ -254,6 +268,10 @@ class GCELatentWorker(AbstractLatentWorker):
 
     @defer.inlineCallbacks
     def stop_instance(self, build):
+        if not self.stopInstanceOnStop:
+            log.info("gce: not stopping {0}: stopInstanceOnStop == False".format(
+                self.instance))
+            return defer.returnValue(None)
         state = yield self.processRequest(self.getInstanceState())
         if state['status'] not in ('STOPPED', 'TERMINATED'):
             yield self.processAsyncRequest(
