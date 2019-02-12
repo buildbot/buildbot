@@ -143,10 +143,10 @@ class GCELatentWorker(AbstractLatentWorker):
             "kind": "compute#metadata"
         })
 
-    def getCurrentDiskName(self, metadata):
-        gen = metadata.get(DISK_NAME_GEN_KEY, None)
-        if gen is not None:
-            return "{0}-{1}".format(self.instance, gen)
+    def getCurrentDiskName(self, disks):
+        for d in disks:
+            if d['boot']:
+                return d['deviceName']
 
     def getNewDiskName(self, metadata):
         gen = int(metadata.get(DISK_NAME_GEN_KEY, 0)) + 1
@@ -224,11 +224,11 @@ class GCELatentWorker(AbstractLatentWorker):
             yield self.waitInstanceState('TERMINATED')
 
         if boot_disk_create is not None:
-            current_disk_name = self.getCurrentDiskName(metadata)
-            if current_disk_name is not None:
-                self.processAsyncRequest(self.detachBootDisk(current_disk_name))
+            current_disk_name = self.getCurrentDiskName(instance_state['disks'])
+            if current_disk_name:
                 log.info("gce: detaching {0} from {1}".format(
                     current_disk_name, self.instance))
+                yield self.processAsyncRequest(self.detachBootDisk(current_disk_name))
 
             log.info("gce: waiting for fresh disk {0} to be created for {1}".format(
                 boot_disk_name, self.instance))
