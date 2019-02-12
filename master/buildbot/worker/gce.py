@@ -267,15 +267,43 @@ class GCELatentWorker(AbstractLatentWorker):
         return defer.returnValue(True)
 
     @defer.inlineCallbacks
-    def stop_instance(self, build):
+    def stop_instance(self, fast=False):
         if not self.stopInstanceOnStop:
             log.info("gce: not stopping {0}: stopInstanceOnStop == False".format(
                 self.instance))
             return defer.returnValue(None)
+
         state = yield self.processRequest(self.getInstanceState())
-        if state['status'] not in ('STOPPED', 'TERMINATED'):
-            yield self.processAsyncRequest(
-                self._gce.post(self.instanceEndpoint("stop")))
+        if state['status'] not in ('TERMINATED'):
+            log.info("gce: stopping {0}".format(self.instance))
+            yield self.processRequest(self._gce.post(self.instanceEndpoint("stop")))
+            # We don't use waitOperationEnd here as I'm having ~55s between
+            # the instance state switching to TERMINATED and the operation
+            # reporting to be DONE
+            yield self.waitInstanceState('TERMINATED')
+
+        if self.resetDisk:
+            log.info("gce: resetting the boot disk of {0}".format(
+                self.instance))
+            fingerprint, metadata = self.getMetadataFromState(state)
+            boot_disk_name    = self.getNewDiskName(metadata)
+            current_disk_name = self.getCurrentDiskName(state['disks'])
+            detach_disk = self.detachBootDisk(current_disk_name)
+            yield self.processAsyncRequest(self.createBootDisk(boot_disk_name))
+            # Update the GEN metadata key so that we can restart even if stop
+            # fails
+            metadata_set = self.setMetadata(fingerprint, metadata)
+
+            yield self.processAsyncRequest(detach_disk)
+            yield self.deleteDisk(current_disk_name)
+            yield self.processAsyncRequest(self.attachBootDisk(boot_disk_name))
+            yield self.processAsyncRequest(metadata_set)
+
+            # Finally, mark as clean
+            instance_state = yield self.processRequest(self.getInstanceState())
+            fingerprint, metadata = self.getMetadataFromState(instance_state)
+            metadata['BUILDBOT_CLEAN'] = '1'
+            yield self.processAsyncRequest(self.setMetadata(fingerprint, metadata))
 
         return defer.returnValue(None)
 
