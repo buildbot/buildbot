@@ -205,6 +205,7 @@ buildstep
 buildstepmixin
 buildsteps
 buildstepstatus
+buildworker
 builtin
 builtins
 bulid
@@ -315,6 +316,7 @@ configs
 configurator
 configurators
 conn
+conndescr
 connectedness
 connectionmade
 connectionpool
@@ -825,6 +827,7 @@ masterdest
 masterfqdn
 masterid
 masterlock
+mastersideworker
 masterstatus
 matcher
 matchers
@@ -1377,6 +1380,7 @@ taichino
 tarball
 tbl
 tcp
+tcpdump
 teardown
 teardownbasedir
 tempfile
@@ -1573,6 +1577,7 @@ wiki
 wikipedia
 wildcard
 winerror
+wireshark
 wkdir
 workdir
 workdirs

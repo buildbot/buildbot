@@ -120,7 +120,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
                    umask=0o123, maxdelay=10)
 
     def test_constructor_invalid_both_styles(self):
-        """Can't instantiate with both host/port and connection descr."""
+        """Can't instantiate with both host/port and connection description."""
         # assertRaises as a context manager appears in Python 2.7
         self.assertRaises(AssertionError, bot.Worker,
                           'mstr', 9010, 'me', 'pwd', '/s', 10,
@@ -133,7 +133,7 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
                           conndescr="tcp:anything")
 
     def test_constructor_invalid_both_styles_partial2(self):
-        """Can't instantiate with both host/port and connection descr."""
+        """Can't instantiate with both host/port and connection description."""
         # assertRaises as a context manager appears in Python 2.7
         self.assertRaises(AssertionError, bot.Worker,
                           None, 9010, None, 'me', 'pwd', '/s', 10,

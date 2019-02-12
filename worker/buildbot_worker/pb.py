@@ -52,18 +52,6 @@ class BotPb(BotBase, pb.Referenceable):
 class BotFactory(AutoLoginPBFactory):
     """The protocol factory for the worker.
 
-    buildmaster host, port and maxDelay are accepted for backwards
-    compatibility only.
-
-    With endpoints, everything related to reconnection is managed by the
-    service.
-
-    buildmaster_host and port were used for logging only, mostly within
-    reconnection methods
-
-    maxDelay was a feature of protocol.ReconnectingClientFactory, that we
-    don't use anymore. With endpoints, this is managed by the service
-
     This class implements the optional applicative keepalives, on top of
     AutoLoginPBFactory.
 
@@ -75,16 +63,13 @@ class BotFactory(AutoLoginPBFactory):
     system a chance to notice that the master has gone away, and inform us
     of such (although this could take several minutes).
 
-    @ivar currentKeepAliveWaiter: either ``None`` or a deferred for the reply
-                                  to the keepalive (mostly useful for tests)
+    buildmaster host, port and maxDelay are accepted for backwards
+    compatibility only.
     """
     keepaliveInterval = None  # None = do not use keepalives
-    currentKeepaliveWaiter = None
     keepaliveTimer = None
-    unsafeTracebacks = 1
     perspective = None
 
-    # for tests
     _reactor = reactor
 
     def __init__(self, buildmaster_host, port, keepaliveInterval, maxDelay):
@@ -152,7 +137,7 @@ class Worker(WorkerBase, service.MultiService):
     to just pass a connection description string, set buildmaster_host and
     port to None, and use conndescr.
 
-    maxdelay is deprecated if favour of using twisteds backoffPolicy.
+    maxdelay and maxRetries are deprecated if favor of using twisted's backoffPolicy.
     """
     Bot = BotPb
 

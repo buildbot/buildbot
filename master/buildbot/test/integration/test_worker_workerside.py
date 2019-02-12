@@ -84,7 +84,7 @@ class TestingWorker(buildbot_worker.bot.Worker):
                            connection is operational (``gotPerspective``).
                            Callbacks receive the ``Perspective`` object.
     @ivar tests_disconnected: a ``Deferred`` that's called back upon
-                              deconnections.
+                              disconnections.
 
     yielding these in an inlineCallbacks has the effect to wait on the
     corresponding conditions, actually allowing the services to fulfill them.
