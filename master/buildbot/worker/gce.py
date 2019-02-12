@@ -172,11 +172,15 @@ class GCELatentWorker(AbstractLatentWorker):
             }
         )
 
-    def detachBootDisk(self, diskName):
+    def detachBootDisk(self, disk_name):
         return self._gce.post(
             self.instanceEndpoint("detachDisk"),
-            params={"deviceName": diskName}
+            params={"deviceName": disk_name}
         )
+
+    def deleteDisk(self, disk_name):
+        return self._gce.delete(
+            "{0}/disks/{1}".format(self.zoneEndpoint(), disk_name))
 
     @defer.inlineCallbacks
     def waitInstanceState(self, desiredState):
@@ -229,6 +233,8 @@ class GCELatentWorker(AbstractLatentWorker):
                 log.info("gce: detaching {0} from {1}".format(
                     current_disk_name, self.instance))
                 yield self.processAsyncRequest(self.detachBootDisk(current_disk_name))
+                log.info("gce: deleting {0}".format(current_disk_name))
+                yield self.deleteDisk(current_disk_name)
 
             log.info("gce: waiting for fresh disk {0} to be created for {1}".format(
                 boot_disk_name, self.instance))
