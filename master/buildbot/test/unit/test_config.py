@@ -35,6 +35,7 @@ from buildbot import locks
 from buildbot import revlinks
 from buildbot import worker
 from buildbot.changes import base as changes_base
+from buildbot.process import buildrequestdistributor
 from buildbot.process import factory
 from buildbot.process import properties
 from buildbot.schedulers import base as schedulers_base
@@ -65,6 +66,7 @@ global_defaults = dict(
     properties=properties.Properties(),
     collapseRequests=None,
     prioritizeBuilders=None,
+    buildRequestDistributorClass=None,
     protocols={},
     multiMaster=False,
     manhole=None,
@@ -557,6 +559,24 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.load_global(self.filename,
                              dict(prioritizeBuilders='yes'))
         self.assertConfigError(self.errors, "must be a callable")
+
+    def test_load_global_buildRequestDistributorClass_valid(self):
+        class MyBrd(buildrequestdistributor.BuildRequestDistributor):
+            pass
+        self.do_test_load_global(dict(buildRequestDistributorClass=MyBrd),
+                                 buildRequestDistributorClass=MyBrd)
+
+    def test_load_global_buildRequestDistributorClass_not_a_class(self):
+        self.cfg.load_global(self.filename,
+                             dict(buildRequestDistributorClass='MyBrd'))
+        self.assertConfigError(self.errors, "must be a subclass of")
+
+    def test_load_global_buildRequestDistributorClass_invalid(self):
+        class MyBrd:
+            pass
+        self.cfg.load_global(self.filename,
+                             dict(buildRequestDistributorClass=MyBrd))
+        self.assertConfigError(self.errors, "must be a subclass of")
 
     def test_load_global_protocols_str(self):
         self.do_test_load_global(dict(protocols={'pb': {'port': 'udp:123'}}),

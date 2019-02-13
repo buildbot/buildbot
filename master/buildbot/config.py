@@ -204,6 +204,7 @@ class MasterConfig(util.ComparableMixin):
         self.collapseRequests = None
         self.codebaseGenerator = None
         self.prioritizeBuilders = None
+        self.buildRequestDistributorClass = None
         self.multiMaster = False
         self.manhole = None
         self.protocols = {}
@@ -250,6 +251,7 @@ class MasterConfig(util.ComparableMixin):
         "buildCacheSize",
         "builders",
         "buildHorizon",
+        "buildRequestDistributor",
         "caches",
         "change_source",
         "codebaseGenerator",
@@ -472,6 +474,18 @@ class MasterConfig(util.ComparableMixin):
             error("prioritizeBuilders must be a callable")
         else:
             self.prioritizeBuilders = prioritizeBuilders
+
+        # local import to avoid circular imports
+        from buildbot.process.buildrequestdistributor import BuildRequestDistributor
+
+        brd_cls = config_dict.get('buildRequestDistributorClass')
+        if brd_cls is not None and (
+                not inspect.isclass(brd_cls) or
+                not issubclass(brd_cls, BuildRequestDistributor)):
+            error('buildRequestDistributorClass must be a subclass of %s'
+                  % BuildRequestDistributor)
+        else:
+            self.buildRequestDistributorClass = brd_cls
 
         protocols = config_dict.get('protocols', {})
         if isinstance(protocols, dict):

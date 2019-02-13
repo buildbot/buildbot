@@ -394,6 +394,20 @@ This parameter controls the order that the build master can start builds, and is
 It does not affect the order in which a builder processes the build requests in its queue.
 For that purpose, see :ref:`Prioritizing-Builds`.
 
+.. index:: Builders; priority
+
+.. bb:cfg:: buildRequestDistributorClass
+
+Build Request Distributor
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If the default build request distribution algorithm does not fit your needs, you may completely override it with your own class.
+It needs to be a subclass of :py:class:`buildbot.process.buildrequestdistributor.BuildRequestDistributor`.
+
+.. attention::
+
+   Setting this may cause the :bb:cfg:`builders` ``nextWorker`` and ``nextBuild`` functions not to be called.
+
 .. bb:cfg:: protocols
 
 .. _Setting-the-PB-Port-for-Workers:

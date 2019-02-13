@@ -185,6 +185,9 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         timer = metrics.Timer("BotMaster.reconfigServiceWithBuildbotConfig")
         timer.start()
 
+        # reconfigure build request distributor
+        yield self.reconfigBuildRequestDistributor(new_config)
+
         # reconfigure builders
         yield self.reconfigServiceBuilders(new_config)
 
@@ -195,6 +198,23 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case
         self.maybeStartBuildsForAllBuilders()
+
+        timer.stop()
+
+    @defer.inlineCallbacks
+    def reconfigBuildRequestDistributor(self, new_config):
+
+        timer = metrics.Timer("BotMaster.reconfigBuildRequestDistributor")
+        timer.start()
+
+        brd_cls = new_config.buildRequestDistributorClass
+        if brd_cls is None:
+            brd_cls = BuildRequestDistributor
+        if not isinstance(self.brd, brd_cls):
+            if self.brd is not None:
+                yield self.brd.disownServiceParent()
+            self.brd = brd_cls(self)
+            self.brd.setServiceParent(self)
 
         timer.stop()
 

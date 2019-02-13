@@ -21,6 +21,7 @@ from twisted.trial import unittest
 from buildbot import config
 from buildbot.process import factory
 from buildbot.process.botmaster import BotMaster
+from buildbot.process.buildrequestdistributor import BuildRequestDistributor
 from buildbot.process.results import CANCELLED
 from buildbot.process.results import RETRY
 from buildbot.test.fake import fakemaster
@@ -154,7 +155,6 @@ class TestBotMaster(unittest.TestCase):
         self.master.botmaster.disownServiceParent()
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self.master)
-        self.new_config = mock.Mock()
         self.botmaster.startService()
 
     def tearDown(self):
@@ -162,7 +162,9 @@ class TestBotMaster(unittest.TestCase):
 
     @defer.inlineCallbacks
     def test_reconfigServiceWithBuildbotConfig(self):
-        # check that reconfigServiceBuilders is called.
+        # check that reconfig methods are called.
+        self.patch(self.botmaster, 'reconfigBuildRequestDistributor',
+                   mock.Mock())
         self.patch(self.botmaster, 'reconfigServiceBuilders',
                    mock.Mock(side_effect=lambda c: defer.succeed(None)))
         self.patch(self.botmaster, 'maybeStartBuildsForAllBuilders',
@@ -171,6 +173,8 @@ class TestBotMaster(unittest.TestCase):
         new_config = mock.Mock()
         yield self.botmaster.reconfigServiceWithBuildbotConfig(new_config)
 
+        self.botmaster.reconfigBuildRequestDistributor.assert_called_with(
+            new_config)
         self.botmaster.reconfigServiceBuilders.assert_called_with(
             new_config)
         self.assertTrue(
@@ -180,23 +184,51 @@ class TestBotMaster(unittest.TestCase):
     def test_reconfigServiceBuilders_add_remove(self):
         bc = config.BuilderConfig(name='bldr', factory=factory.BuildFactory(),
                                   workername='f')
-        self.new_config.builders = [bc]
+        new_config = mock.Mock()
+        new_config.builders = [bc]
 
-        yield self.botmaster.reconfigServiceBuilders(self.new_config)
+        yield self.botmaster.reconfigServiceBuilders(new_config)
 
         bldr = self.botmaster.builders['bldr']
         self.assertIdentical(bldr.parent, self.botmaster)
         self.assertIdentical(bldr.master, self.master)
         self.assertEqual(self.botmaster.builderNames, ['bldr'])
 
-        self.new_config.builders = []
+        new_config = mock.Mock()
+        new_config.builders = []
 
-        yield self.botmaster.reconfigServiceBuilders(self.new_config)
+        yield self.botmaster.reconfigServiceBuilders(new_config)
 
         self.assertIdentical(bldr.parent, None)
         self.assertIdentical(bldr.master, None)
         self.assertEqual(self.botmaster.builders, {})
         self.assertEqual(self.botmaster.builderNames, [])
+
+    @defer.inlineCallbacks
+    def test_reconfigBuildRequestDistributor(self):
+        new_config = mock.Mock()
+        new_config.buildRequestDistributorClass = None
+
+        prev_brd = self.botmaster.brd
+        self.patch(prev_brd, 'disownServiceParent', mock.Mock())
+
+        yield self.botmaster.reconfigBuildRequestDistributor(new_config)
+
+        self.assertIdentical(self.botmaster.brd, prev_brd)
+        prev_brd.disownServiceParent.assert_not_called()
+
+        class MyBrd(BuildRequestDistributor):
+            setServiceParent = mock.Mock()
+
+        new_config = mock.Mock()
+        new_config.buildRequestDistributorClass = MyBrd
+
+        yield self.botmaster.reconfigBuildRequestDistributor(new_config)
+
+        prev_brd.disownServiceParent.assert_called()
+        self.assertNotIdentical(self.botmaster.brd, prev_brd)
+        self.assertIsInstance(self.botmaster.brd, MyBrd)
+        self.botmaster.brd.setServiceParent.assert_called_with(self.botmaster)
 
     def test_maybeStartBuildsForBuilder(self):
         brd = self.botmaster.brd = mock.Mock()
