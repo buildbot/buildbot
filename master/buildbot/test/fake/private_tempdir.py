@@ -19,7 +19,7 @@ from __future__ import print_function
 import os
 
 
-class FakePrivateTemporaryDirectory(object):
+class FakePrivateTemporaryDirectory:
     def __init__(self, suffix=None, prefix=None, dir=None, mode=0o700):
         dir = dir or '/'
         prefix = prefix or ''
@@ -38,7 +38,7 @@ class FakePrivateTemporaryDirectory(object):
         pass
 
 
-class MockPrivateTemporaryDirectory(object):
+class MockPrivateTemporaryDirectory:
     def __init__(self):
         self.dirs = []
 

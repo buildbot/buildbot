@@ -37,7 +37,7 @@ link_urls = {
 }
 
 
-class PullRequestMixin(object):
+class PullRequestMixin:
     def extractProperties(self, payload):
         def flatten(properties, base, info_dict):
             for k, v in info_dict.items():

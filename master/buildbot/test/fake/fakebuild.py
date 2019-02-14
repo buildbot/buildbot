@@ -28,7 +28,7 @@ from buildbot.test.fake import fakemaster
 from buildbot.worker import base
 
 
-class FakeBuildStatus(properties.PropertiesMixin, object):
+class FakeBuildStatus(properties.PropertiesMixin):
 
     def __init__(self):
         self.properties = properties.Properties()

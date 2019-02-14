@@ -32,7 +32,7 @@ from buildbot.util.eventual import eventually
 
 
 @implementer(IWorker)
-class AbstractWorker(service.BuildbotService, object):
+class AbstractWorker(service.BuildbotService):
 
     """This is the master-side representative for a remote buildbot worker.
     There is exactly one for each worker described in the config file (the

@@ -155,7 +155,7 @@ def loadConfigDict(basedir, configFileName):
 
 
 @implementer(interfaces.IConfigLoader)
-class FileLoader(ComparableMixin, object):
+class FileLoader(ComparableMixin):
     compare_attrs = ['basedir', 'configFileName']
 
     def __init__(self, basedir, configFileName):

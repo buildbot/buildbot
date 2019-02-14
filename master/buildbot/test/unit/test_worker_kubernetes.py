@@ -27,7 +27,7 @@ from buildbot.util.kubeclientservice import KubeHardcodedConfig
 from buildbot.worker import kubernetes
 
 
-class FakeBot(object):
+class FakeBot:
     info = {}
 
     def notifyOnDisconnect(self, n):
@@ -40,7 +40,7 @@ class FakeBot(object):
         self.n()
 
 
-class FakeResult(object):
+class FakeResult:
     code = 204
 
 
