@@ -1,17 +1,18 @@
 [Unit]
 Description=Buildbot Master
-Wants=network.target
 After=network.target
-
 
 [Service]
 User=buildbot
 Group=buildbot
-WorkingDirectory=/home/buildbot/master
-ExecStart=/usr/local/bin/buildbot start --nodaemon
+WorkingDirectory=/var/lib/buildbot
+ExecStart=/usr/bin/buildbot --verbose start --nodaemon %I
 ExecReload=/bin/kill -HUP $MAINPID
 Restart=always
-User=buildbot
+ProtectSystem=full
+ProtectHome=yes
+PrivateDevices=yes
+PrivateTmp=yes
 
 [Install]
 WantedBy=multi-user.target
