@@ -14,6 +14,7 @@
 # Portions Copyright Buildbot Team Members
 # Portions Copyright Canonical Ltd. 2009
 
+import enum
 import random
 import string
 
@@ -27,6 +28,33 @@ from buildbot.interfaces import LatentWorkerFailedToSubstantiate
 from buildbot.interfaces import LatentWorkerSubstantiatiationCancelled
 from buildbot.util import Notifier
 from buildbot.worker.base import AbstractWorker
+
+
+class States(enum.Enum):
+    # Represents the states of AbstractLatentWorker
+
+    NOT_SUBSTANTIATED = 0
+
+    # When in this state, self._substantiation_notifier is waited on. The
+    # notifier is notified immediately after the state transition out of
+    # SUBSTANTIATING.
+    SUBSTANTIATING = 1
+
+    SUBSTANTIATED = 2
+
+    # When in this state, self._insubstantiation_notifier may be potentially
+    # waited on.
+    INSUBSTANTIATING = 3
+
+    # This state represents the case when insubstantiation is in progress and
+    # we also request substantiation at the same time. Substantiation will be
+    # started as soon as insubstantiation completes. Note, that the opposite
+    # actions are not supported: insubstantiation during substantiation will
+    # cancel the substantiation.
+    #
+    # When in this state, self._insubstantiation_notifier may be potentially
+    # waited on.
+    INSUBSTANTIATING_SUBSTANTIATING = 4
 
 
 @implementer(ILatentWorker)
@@ -64,39 +92,16 @@ class AbstractLatentWorker(AbstractWorker):
     # The above means that the connection state of the worker (self.conn) must
     # be tracked separately from the intended state of the worker (self.state).
 
-    STATE_NOT_SUBSTANTIATED = 0
-
-    # When in this state, self._substantiation_notifier is waited on. The
-    # notifier is notified immediately after the state transition out of
-    # STATE_SUBSTANTIATING.
-    STATE_SUBSTANTIATING = 1
-
-    STATE_SUBSTANTIATED = 2
-
-    # When in this state, self._insubstantiation_notifier may be potentially
-    # waited on.
-    STATE_INSUBSTANTIATING = 3
-
-    # This state represents the case when insubstantiation is in progress and
-    # we also request substantiation at the same time. Substantiation will be
-    # started as soon as insubstantiation completes. Note, that the opposite
-    # actions are not supported: insubstantiation during substantiation will
-    # cancel the substantiation.
-    #
-    # When in this state, self._insubstantiation_notifier may be potentially
-    # waited on.
-    STATE_INSUBSTANTIATING_SUBSTANTIATING = 4
-
-    state = STATE_NOT_SUBSTANTIATED
+    state = States.NOT_SUBSTANTIATED
 
     # state transitions:
     #
     # substantiate(): either of
-    # STATE_NOT_SUBSTANTIATED -> STATE_SUBSTANTIATING
-    # STATE_INSUBSTANTIATING -> STATE_INSUBSTANTIATING_SUBSTANTIATING
+    # NOT_SUBSTANTIATED -> SUBSTANTIATING
+    # INSUBSTANTIATING -> INSUBSTANTIATING_SUBSTANTIATING
     #
     # attached():
-    # STATE_SUBSTANTIATING -> STATE_SUBSTANTIATED
+    # SUBSTANTIATING -> SUBSTANTIATED
     # self.conn -> not None
     #
     # detached():
@@ -105,10 +110,10 @@ class AbstractLatentWorker(AbstractWorker):
     # errors in any of above will call insubstantiate()
     #
     # insubstantiate():
-    # STATE_SUBSTANTIATED -> STATE_INSUBSTANTIATING
+    # SUBSTANTIATED -> INSUBSTANTIATING
     # < other state transitions may happen during this time >
-    # STATE_INSUBSTANTIATING_SUBSTANTIATING -> STATE_SUBSTANTIATING
-    # STATE_INSUBSTANTIATING -> STATE_NOT_SUBSTANTIATED
+    # INSUBSTANTIATING_SUBSTANTIATING -> SUBSTANTIATING
+    # INSUBSTANTIATING -> NOT_SUBSTANTIATED
 
     def checkConfig(self, name, password,
                     build_wait_timeout=60 * 10,
@@ -158,17 +163,17 @@ class AbstractLatentWorker(AbstractWorker):
 
     @property
     def substantiated(self):
-        return self.state == self.STATE_SUBSTANTIATED and self.conn is not None
+        return self.state == States.SUBSTANTIATED and self.conn is not None
 
     def substantiate(self, wfb, build):
         log.msg("substantiating worker %s" % (wfb,))
 
-        if self.state == self.STATE_SUBSTANTIATED and self.conn is not None:
+        if self.state == States.SUBSTANTIATED and self.conn is not None:
             self._setBuildWaitTimer()
             return defer.succeed(True)
 
-        if self.state in [self.STATE_SUBSTANTIATING,
-                          self.STATE_INSUBSTANTIATING_SUBSTANTIATING]:
+        if self.state in [States.SUBSTANTIATING,
+                          States.INSUBSTANTIATING_SUBSTANTIATING]:
             return self._substantiation_notifier.wait()
 
         self.startMissingTimer()
@@ -178,21 +183,21 @@ class AbstractLatentWorker(AbstractWorker):
         # deferred ready to be notified
         d = self._substantiation_notifier.wait()
 
-        if self.state == self.STATE_SUBSTANTIATED and self.conn is None:
+        if self.state == States.SUBSTANTIATED and self.conn is None:
             # connection dropped while we were substantiated.
             # insubstantiate to clean up and then substantiate normally.
             d_ins = self.insubstantiate(_force_substantiation=True)
             d_ins.addErrback(log.err, 'while insubstantiating')
             return d
 
-        assert self.state in [self.STATE_NOT_SUBSTANTIATED,
-                              self.STATE_INSUBSTANTIATING]
+        assert self.state in [States.NOT_SUBSTANTIATED,
+                              States.INSUBSTANTIATING]
 
-        if self.state == self.STATE_NOT_SUBSTANTIATED:
-            self.state = self.STATE_SUBSTANTIATING
+        if self.state == States.NOT_SUBSTANTIATED:
+            self.state = States.SUBSTANTIATING
             self._substantiate(build)
         else:
-            self.state = self.STATE_INSUBSTANTIATING_SUBSTANTIATING
+            self.state = States.INSUBSTANTIATING_SUBSTANTIATING
         return d
 
     @defer.inlineCallbacks
@@ -214,11 +219,11 @@ class AbstractLatentWorker(AbstractWorker):
                 raise LatentWorkerFailedToSubstantiate(self.name, msg)
 
             if dont_wait_to_attach and \
-                    self.state == self.STATE_SUBSTANTIATING and \
+                    self.state == States.SUBSTANTIATING and \
                     self.conn is not None:
                 log.msg(r"Worker %s substantiated (already attached)" %
                     (self.name,))
-                self.state = self.STATE_SUBSTANTIATED
+                self.state = States.SUBSTANTIATED
                 self._fireSubstantiationNotifier(True)
 
         except Exception as e:
@@ -240,7 +245,7 @@ class AbstractLatentWorker(AbstractWorker):
 
     @defer.inlineCallbacks
     def attached(self, bot):
-        if self.state != self.STATE_SUBSTANTIATING and \
+        if self.state != States.SUBSTANTIATING and \
                 self.build_wait_timeout >= 0:
             msg = 'Worker %s received connection while not trying to ' \
                 'substantiate.  Disconnecting.' % (self.name,)
@@ -256,11 +261,11 @@ class AbstractLatentWorker(AbstractWorker):
         log.msg(r"Worker %s substantiated \o/" % (self.name,))
 
         # only change state when we are actually substantiating. We could
-        # end up at this point in different state than STATE_SUBSTANTIATING
-        # if build_wait_timeout is negative. When build_wait_timeout is not
+        # end up at this point in different state than SUBSTANTIATING if
+        # build_wait_timeout is negative. When build_wait_timeout is not
         # negative, we throw an error (see above)
-        if self.state == self.STATE_SUBSTANTIATING:
-            self.state = self.STATE_SUBSTANTIATED
+        if self.state == States.SUBSTANTIATING:
+            self.state = States.SUBSTANTIATED
         self._fireSubstantiationNotifier(True)
 
     def attachBuilder(self, builder):
@@ -272,7 +277,7 @@ class AbstractLatentWorker(AbstractWorker):
         return self._substantiation_failed(defer.TimeoutError())
 
     def _substantiation_failed(self, failure):
-        if self.state == self.STATE_SUBSTANTIATING:
+        if self.state == States.SUBSTANTIATING:
             self.substantiation_build = None
             self._fireSubstantiationNotifier(failure)
         d = self.insubstantiate()
@@ -333,19 +338,19 @@ class AbstractLatentWorker(AbstractWorker):
         # with stored substantiation_build at the end of substantiation
 
         log.msg("insubstantiating worker {}".format(self))
-        if self.state == self.STATE_NOT_SUBSTANTIATED:
+        if self.state == States.NOT_SUBSTANTIATED:
             return
 
-        if self.state == self.STATE_INSUBSTANTIATING:
+        if self.state == States.INSUBSTANTIATING:
             yield self._insubstantiation_notifier.wait()
             return
 
-        notify_cancel = self.state == self.STATE_SUBSTANTIATING
+        notify_cancel = self.state == States.SUBSTANTIATING
 
         if _force_substantiation:
-            self.state = self.STATE_INSUBSTANTIATING_SUBSTANTIATING
+            self.state = States.INSUBSTANTIATING_SUBSTANTIATING
         else:
-            self.state = self.STATE_INSUBSTANTIATING
+            self.state = States.INSUBSTANTIATING
         self._clearBuildWaitTimer()
         d = self.stop_instance(fast)
         try:
@@ -357,20 +362,20 @@ class AbstractLatentWorker(AbstractWorker):
             # reliability to the backend driver
             log.err(e, "while insubstantiating")
 
-        assert self.state in [self.STATE_INSUBSTANTIATING,
-                              self.STATE_INSUBSTANTIATING_SUBSTANTIATING]
+        assert self.state in [States.INSUBSTANTIATING,
+                              States.INSUBSTANTIATING_SUBSTANTIATING]
 
         if notify_cancel:
             self._fireSubstantiationNotifier(
                 failure.Failure(LatentWorkerSubstantiatiationCancelled()))
 
-        if self.state == self.STATE_INSUBSTANTIATING_SUBSTANTIATING:
-            self.state = self.STATE_SUBSTANTIATING
+        if self.state == States.INSUBSTANTIATING_SUBSTANTIATING:
+            self.state = States.SUBSTANTIATING
             if self._insubstantiation_notifier:
                 self._insubstantiation_notifier.notify(True)
             self._substantiate(self.substantiation_build)
-        elif self.state == self.STATE_INSUBSTANTIATING:
-            self.state = self.STATE_NOT_SUBSTANTIATED
+        elif self.state == States.INSUBSTANTIATING:
+            self.state = States.NOT_SUBSTANTIATED
             if self._insubstantiation_notifier:
                 self._insubstantiation_notifier.notify(True)
         else:
@@ -415,12 +420,12 @@ class AbstractLatentWorker(AbstractWorker):
     @defer.inlineCallbacks
     def stopService(self):
         # the worker might be insubstantiating from buildWaitTimeout
-        if self.state in [self.STATE_INSUBSTANTIATING,
-                          self.STATE_INSUBSTANTIATING_SUBSTANTIATING]:
+        if self.state in [States.INSUBSTANTIATING,
+                          States.INSUBSTANTIATING_SUBSTANTIATING]:
             yield self._insubstantiation_notifier.wait()
 
-        if self.conn is not None or self.state in [self.STATE_SUBSTANTIATING,
-                                                   self.STATE_SUBSTANTIATED]:
+        if self.conn is not None or self.state in [States.SUBSTANTIATING,
+                                                   States.SUBSTANTIATED]:
             yield self._soft_disconnect()
         self._clearBuildWaitTimer()
         res = yield AbstractWorker.stopService(self)
