@@ -197,7 +197,7 @@ class CommandlineUserManager(service.AsyncMultiService):
     """
 
     def __init__(self, username=None, passwd=None, port=None):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         assert username and passwd, ("A username and password pair must be given "
                                      "to connect and use `buildbot user`")
         self.username = username
@@ -215,7 +215,7 @@ class CommandlineUserManager(service.AsyncMultiService):
                                                            self.username,
                                                            self.passwd,
                                                            factory)
-        return service.AsyncMultiService.startService(self)
+        return super().startService()
 
     def stopService(self):
         d = defer.maybeDeferred(service.AsyncMultiService.stopService, self)

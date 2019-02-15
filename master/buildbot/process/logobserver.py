@@ -141,7 +141,7 @@ class OutputProgressObserver(LogObserver):
 class BufferLogObserver(LogObserver):
 
     def __init__(self, wantStdout=True, wantStderr=False):
-        LogObserver.__init__(self)
+        super().__init__()
         self.stdout = [] if wantStdout else None
         self.stderr = [] if wantStderr else None
 

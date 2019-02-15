@@ -39,7 +39,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
 
     def __init__(self, nickname, password, channels, pm_to_nicks,
                  noticeOnChannel, *args, **kwargs):
-        StatusBot.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.nickname = nickname
         self.channels = channels
         self.pm_to_nicks = pm_to_nicks
@@ -50,13 +50,13 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             lambda: self.ping(self.nickname))
 
     def connectionMade(self):
-        irc.IRCClient.connectionMade(self)
+        super().connectionMade()
         self._keepAliveCall.start(60)
 
     def connectionLost(self, reason):
         if self._keepAliveCall.running:
             self._keepAliveCall.stop()
-        irc.IRCClient.connectionLost(self, reason)
+        super().connectionLost(reason)
 
     # The following methods are called when we write something.
     def groupChat(self, channel, message):
@@ -77,7 +77,7 @@ class IrcStatusBot(StatusBot, irc.IRCClient):
             user = user.lower()
         if channel:
             channel = channel.lower()
-        return StatusBot.getContact(self, user, channel)
+        return super().getContact(user, channel)
 
     # the following irc.IRCClient methods are called when we have input
     def privmsg(self, user, channel, message):
@@ -142,8 +142,7 @@ class IrcStatusFactory(ThrottledClientFactory):
                  useRevisions=False, showBlameList=False,
                  parent=None,
                  lostDelay=None, failedDelay=None, useColors=True, allowShutdown=False):
-        ThrottledClientFactory.__init__(self, lostDelay=lostDelay,
-                                        failedDelay=failedDelay)
+        super().__init__(lostDelay=lostDelay, failedDelay=failedDelay)
         self.nickname = nickname
         self.password = password
         self.channels = channels
@@ -190,13 +189,13 @@ class IrcStatusFactory(ThrottledClientFactory):
         if self.shuttingDown:
             log.msg("not scheduling reconnection attempt")
             return
-        ThrottledClientFactory.clientConnectionLost(self, connector, reason)
+        super().clientConnectionLost(connector, reason)
 
     def clientConnectionFailed(self, connector, reason):
         if self.shuttingDown:
             log.msg("not scheduling reconnection attempt")
             return
-        ThrottledClientFactory.clientConnectionFailed(self, connector, reason)
+        super().clientConnectionFailed(connector, reason)
 
 
 class IRC(service.BuildbotService):

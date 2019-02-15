@@ -43,7 +43,7 @@ class PBManager(service.AsyncMultiService):
     """
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setName('pbmanager')
         self.dispatchers = {}
 
@@ -135,7 +135,7 @@ class Dispatcher(service.AsyncService):
     def startService(self):
         assert not self.port
         self.port = strports.listen(self.portstr, self.serverFactory)
-        return service.AsyncService.startService(self)
+        return super().startService()
 
     def stopService(self):
         # stop listening on the port when shut down

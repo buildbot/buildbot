@@ -79,7 +79,7 @@ class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
                     kube_config=None,
                     **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, None, **kwargs)
+        super().checkConfig(name, None, **kwargs)
         kubeclientservice.KubeClientService.checkAvailable(
             self.__class__.__name__)
 
@@ -100,8 +100,7 @@ class KubeLatentWorker(DockerBaseWorker, CompatibleLatentWorkerMixin):
             masterFQDN = self.get_ip
         if callable(masterFQDN):
             masterFQDN = masterFQDN()
-        yield DockerBaseWorker.reconfigService(
-            self, name, image=image, masterFQDN=masterFQDN, **kwargs)
+        yield super().reconfigService(name, image=image, masterFQDN=masterFQDN, **kwargs)
         self._kube = yield kubeclientservice.KubeClientService.getService(
             self.master, kube_config=kube_config)
         self.namespace = namespace or self._kube.namespace

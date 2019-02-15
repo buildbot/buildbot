@@ -71,7 +71,7 @@ class RestRootResource(resource.Resource):
         version_cls.apiVersion = version
 
     def __init__(self, master):
-        resource.Resource.__init__(self, master)
+        super().__init__(master)
 
         min_vers = master.config.www.get('rest_minimum_version', 0)
         latest = max(list(self.version_classes))

@@ -251,8 +251,7 @@ class TestBuildbotPlugins(unittest.TestCase):
 class SimpleFakeEntry(FakeEntry):
 
     def __init__(self, name, value):
-        FakeEntry.__init__(self, name, 'non-existent', 'irrelevant', False,
-                           value)
+        super().__init__(name, 'non-existent', 'irrelevant', False, value)
 
 
 _WORKER_FAKE_ENTRIES = {

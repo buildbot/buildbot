@@ -89,7 +89,7 @@ class HTTPClientService(service.SharedService):
     def __init__(self, base_url, auth=None, headers=None, verify=None, debug=False):
         assert not base_url.endswith(
             "/"), "baseurl should not end with /: " + base_url
-        service.SharedService.__init__(self)
+        super().__init__()
         self._base_url = base_url
         self._auth = auth
         self._headers = headers
@@ -129,7 +129,7 @@ class HTTPClientService(service.SharedService):
             self._pool = HTTPConnectionPool(self.master.reactor)
             self._pool.maxPersistentPerHost = self.MAX_THREADS
             self._agent = Agent(self.master.reactor, pool=self._pool)
-        return service.SharedService.startService(self)
+        return super().startService()
 
     @defer.inlineCallbacks
     def stopService(self):
@@ -137,7 +137,7 @@ class HTTPClientService(service.SharedService):
             yield self._session.close()
         if self._pool:
             yield self._pool.closeCachedConnections()
-        yield service.SharedService.stopService(self)
+        yield super().stopService()
 
     def _prepareRequest(self, ep, kwargs):
         assert ep == "" or ep.startswith("/"), "ep should start with /: " + ep

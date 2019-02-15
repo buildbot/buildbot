@@ -35,7 +35,7 @@ class GerritChangeFilter(ChangeFilter):
 
     def __init__(self,
                  eventtype=None, eventtype_re=None, eventtype_fn=None, **kw):
-        ChangeFilter.__init__(self, **kw)
+        super().__init__(**kw)
 
         self.checks.update(
             self.createChecks(
@@ -223,7 +223,7 @@ class GerritChangeSource(GerritChangeSourceBase):
                 username, gerritserver, gerritport)
         if 'gitBaseURL' not in kwargs:
             kwargs['gitBaseURL'] = "automatic at reconfigure"
-        GerritChangeSourceBase.checkConfig(self, **kwargs)
+        super().checkConfig(**kwargs)
 
     def reconfigService(self,
                         gerritserver,
@@ -241,7 +241,7 @@ class GerritChangeSource(GerritChangeSourceBase):
         self.process = None
         self.wantProcess = False
         self.streamProcessTimeout = self.STREAM_BACKOFF_MIN
-        return GerritChangeSourceBase.reconfigService(self, **kwargs)
+        return super().reconfigService(**kwargs)
 
     class LocalPP(ProcessProtocol):
 
@@ -342,7 +342,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                     **kwargs):
         if self.name is None:
             self.name = "GerritEventLogPoller:{}".format(baseURL)
-        GerritChangeSourceBase.checkConfig(self, **kwargs)
+        super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self,
@@ -352,7 +352,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
                         pollAtLaunch=True,
                         **kwargs):
 
-        yield GerritChangeSourceBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
         if baseURL.endswith('/'):
             baseURL = baseURL[:-1]
 
@@ -382,7 +382,7 @@ class GerritEventLogPoller(GerritChangeSourceBase):
 
     @defer.inlineCallbacks
     def eventReceived(self, event):
-        res = yield GerritChangeSourceBase.eventReceived(self, event)
+        res = yield super().eventReceived(event)
         if 'eventCreatedOn' in event:
             yield self.master.db.state.setState(self._oid, 'last_event_ts', event['eventCreatedOn'])
         return res

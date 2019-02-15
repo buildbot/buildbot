@@ -34,10 +34,10 @@ class SourceStepMixin(steps.BuildStepMixin):
     """
 
     def setUpSourceStep(self):
-        return steps.BuildStepMixin.setUpBuildStep(self)
+        return super().setUpBuildStep()
 
     def tearDownSourceStep(self):
-        return steps.BuildStepMixin.tearDownBuildStep(self)
+        return super().tearDownBuildStep()
 
     # utilities
 
@@ -46,7 +46,7 @@ class SourceStepMixin(steps.BuildStepMixin):
         Set up C{step} for testing.  This calls L{BuildStepMixin}'s C{setupStep}
         and then does setup specific to a Source step.
         """
-        step = steps.BuildStepMixin.setupStep(self, step, **kwargs)
+        step = super().setupStep(step, **kwargs)
 
         if args is None:
             args = {}

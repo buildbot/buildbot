@@ -82,7 +82,7 @@ class Item():
 class Image(Item):
 
     def __init__(self, *args, **kwargs):
-        Item.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         setattr(self, 'OS-EXT-IMG-SIZE:size', self.size)
 
 

@@ -56,7 +56,7 @@ class CVS(Source):
         if not self._hasAttrGroupMember('mode', self.mode):
             raise ValueError("mode %s is not one of %s" %
                              (self.mode, self._listAttrGroupMembers('mode')))
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def startVC(self, branch, revision, patch):
         self.branch = branch

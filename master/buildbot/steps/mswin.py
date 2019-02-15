@@ -67,7 +67,7 @@ class Robocopy(ShellCommand):
         self.custom_opts = kwargs.pop('custom_opts', None)
         self.verbose = kwargs.pop('verbose', False)
 
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     def start(self):
         command = ['robocopy', self.source, self.destination]
@@ -91,7 +91,7 @@ class Robocopy(ShellCommand):
             command += self.custom_opts
         command += ['/TEE', '/NP']
         self.setCommand(command)
-        ShellCommand.start(self)
+        super().start()
 
     def evaluateCommand(self, cmd):
         # If we have a "clean" return code, it's good.

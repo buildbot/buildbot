@@ -36,7 +36,7 @@ from buildbot.util.eventual import eventually
 class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.watchers = []
         # No default limit to the log size
         self.logMaxSize = None
@@ -75,7 +75,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self._change_consumer = yield self.master.mq.startConsuming(
             self.change_consumer_cb, ('changes', None, 'new'))
 
-        yield service.AsyncMultiService.startService(self)
+        yield super().startService()
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -87,8 +87,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             yield sr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     def stopService(self):
         if self._buildset_complete_consumer:
@@ -103,7 +102,7 @@ class Status(service.ReconfigurableServiceMixin, service.AsyncMultiService):
             self._change_consumer.stopConsuming()
             self._change_consumer = None
 
-        return service.AsyncMultiService.stopService(self)
+        return super().stopService()
 
     # clean shutdown
 

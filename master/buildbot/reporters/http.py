@@ -29,14 +29,14 @@ class HttpStatusPushBase(service.BuildbotService):
     neededDetails = dict()
 
     def checkConfig(self, *args, **kwargs):
-        service.BuildbotService.checkConfig(self)
+        super().checkConfig()
         httpclientservice.HTTPClientService.checkAvailable(self.__class__.__name__)
         if not isinstance(kwargs.get('builders'), (type(None), list)):
             config.error("builders must be a list or None")
 
     @defer.inlineCallbacks
     def reconfigService(self, builders=None, debug=None, verify=None, **kwargs):
-        yield service.BuildbotService.reconfigService(self)
+        yield super().reconfigService()
         self.debug = debug
         self.verify = verify
         self.builders = builders
@@ -47,7 +47,7 @@ class HttpStatusPushBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
 
         startConsuming = self.master.mq.startConsuming
         self._buildCompleteConsumer = yield startConsuming(
@@ -98,11 +98,11 @@ class HttpStatusPush(HttpStatusPushBase):
             config.warnDeprecated("0.9.1", "user/password is deprecated, use 'auth=(user, password)'")
         if (format_fn is not None) and not callable(format_fn):
             config.error("format_fn must be a function")
-        HttpStatusPushBase.checkConfig(self, **kwargs)
+        super().checkConfig(**kwargs)
 
     @defer.inlineCallbacks
     def reconfigService(self, serverUrl, user=None, password=None, auth=None, format_fn=None, **kwargs):
-        yield HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
         if user is not None:
             auth = (user, password)
         if format_fn is None:

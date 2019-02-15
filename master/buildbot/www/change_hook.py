@@ -45,7 +45,7 @@ class ChangeHookResource(resource.Resource):
         The value is passed to the module's getChanges function, providing
         configuration options to the dialect.
         """
-        resource.Resource.__init__(self, master)
+        super().__init__(master)
 
         if dialects is None:
             dialects = {}

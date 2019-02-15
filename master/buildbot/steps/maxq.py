@@ -24,7 +24,7 @@ from buildbot.steps.shell import ShellCommand
 class MaxQObserver(buildstep.LogLineObserver):
 
     def __init__(self):
-        buildstep.LogLineObserver.__init__(self)
+        super().__init__()
         self.failures = 0
 
     def outLineReceived(self, line):
@@ -40,7 +40,7 @@ class MaxQ(ShellCommand):
         if not testdir:
             config.error("please pass testdir")
         kwargs['command'] = 'run_maxq.py %s' % (testdir,)
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.observer = MaxQObserver()
         self.addLogObserver('stdio', self.observer)
 

@@ -31,7 +31,7 @@ class TestGitLab(sourcesteps.SourceStepMixin, config.ConfigErrorsMixin, unittest
         return self.setUpSourceStep()
 
     def setupStep(self, step, args, **kwargs):
-        step = sourcesteps.SourceStepMixin.setupStep(self, step, args, **kwargs)
+        step = super().setupStep(step, args, **kwargs)
         step.build.properties.setProperty("source_branch", "ms-viewport", "gitlab source branch")
         step.build.properties.setProperty("source_git_ssh_url",
             "git@gitlab.example.com:build/awesome_project.git",

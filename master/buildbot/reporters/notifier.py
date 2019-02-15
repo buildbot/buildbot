@@ -124,7 +124,7 @@ class NotifierBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self.buildsetComplete,
@@ -138,7 +138,7 @@ class NotifierBase(service.BuildbotService):
 
     @defer.inlineCallbacks
     def stopService(self):
-        yield service.BuildbotService.stopService(self)
+        yield super().stopService()
         if self._buildsetCompleteConsumer is not None:
             yield self._buildsetCompleteConsumer.stopConsuming()
             self._buildsetCompleteConsumer = None

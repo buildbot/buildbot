@@ -98,10 +98,10 @@ class SVNPoller(base.PollingChangeSource, util.ComparableMixin):
         if name is None:
             name = repourl
 
-        base.PollingChangeSource.__init__(self, name=name,
-                                          pollInterval=pollInterval,
-                                          pollAtLaunch=pollAtLaunch,
-                                          svnuser=svnuser, svnpasswd=svnpasswd)
+        super().__init__(name=name,
+                         pollInterval=pollInterval,
+                         pollAtLaunch=pollAtLaunch,
+                         svnuser=svnuser, svnpasswd=svnpasswd)
 
         if repourl.endswith("/"):
             repourl = repourl[:-1]  # strip the trailing slash

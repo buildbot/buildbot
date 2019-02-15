@@ -46,7 +46,7 @@ class HLint(ShellCommand):
     warnings = 0
 
     def __init__(self, python=None, **kwargs):
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.python = python
         self.warningLines = []
         self.addLogObserver(
@@ -72,7 +72,7 @@ class HLint(ShellCommand):
         # add an extra log file to show the .html files we're checking
         self.addCompleteLog("files", "\n".join(self.hlintFiles) + "\n")
 
-        ShellCommand.start(self)
+        super().start()
 
     def logConsumer(self):
         while True:
@@ -103,7 +103,7 @@ class TrialTestCaseCounter(logobserver.LogLineObserver):
     _line_re = re.compile(r'^(?:Doctest: )?([\w\.]+) \.\.\. \[([^\]]+)\]$')
 
     def __init__(self):
-        logobserver.LogLineObserver.__init__(self)
+        super().__init__()
         self.numTests = 0
         self.finished = False
         self.counts = {'total': None,
@@ -283,7 +283,7 @@ class Trial(ShellCommand):
                        warnOnWarnings, warnOnFailure, want_stdout, want_stderr,
                        timeout.
         """
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         if python:
             self.python = python
@@ -374,7 +374,7 @@ class Trial(ShellCommand):
         self.text = 'running'
 
     def setupEnvironment(self, cmd):
-        ShellCommand.setupEnvironment(self, cmd)
+        super().setupEnvironment(cmd)
         if self.testpath is not None:
             e = cmd.args['env']
             if e is None:
@@ -420,7 +420,7 @@ class Trial(ShellCommand):
             self.command.extend(self.tests)
         log.msg("Trial.start: command is", self.command)
 
-        ShellCommand.start(self)
+        super().start()
 
     def commandComplete(self, cmd):
         # figure out all status, then let the various hook functions return

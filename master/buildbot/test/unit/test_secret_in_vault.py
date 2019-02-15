@@ -43,7 +43,7 @@ class TestSecretInVaultHttpFakeBase(ConfigErrorsMixin, unittest.TestCase):
 class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 
     def setUp(self):
-        TestSecretInVaultHttpFakeBase.setUp(self, version=1)
+        super().setUp(version=1)
 
     @defer.inlineCallbacks
     def testGetValue(self):
@@ -104,7 +104,7 @@ class TestSecretInVaultV1(TestSecretInVaultHttpFakeBase):
 class TestSecretInVaultV2(TestSecretInVaultHttpFakeBase):
 
     def setUp(self):
-        TestSecretInVaultHttpFakeBase.setUp(self, version=2)
+        super().setUp(version=2)
 
     @defer.inlineCallbacks
     def testGetValue(self):

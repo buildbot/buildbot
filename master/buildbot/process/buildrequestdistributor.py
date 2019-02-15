@@ -155,7 +155,7 @@ class BasicBuildChooser(BuildChooserBase):
     # must have the locks available.
 
     def __init__(self, bldr, master):
-        BuildChooserBase.__init__(self, bldr, master)
+        super().__init__(bldr, master)
 
         self.nextWorker = self.bldr.config.nextWorker
         if not self.nextWorker:
@@ -284,7 +284,7 @@ class BuildRequestDistributor(service.AsyncMultiService):
     BuildChooser = BasicBuildChooser
 
     def __init__(self, botmaster):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.botmaster = botmaster
 
         # lock to ensure builders are only sorted once at any time

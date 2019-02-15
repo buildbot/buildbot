@@ -109,7 +109,7 @@ class BBService(win32serviceutil.ServiceFramework):
                         'see http://buildbot.net'
 
     def __init__(self, args):
-        win32serviceutil.ServiceFramework.__init__(self, args)
+        super().__init__(args)
 
         # Create an event which we will use to wait on. The "service stop"
         # request will set this event.

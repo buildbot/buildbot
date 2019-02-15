@@ -40,7 +40,7 @@ class OAuth2LoginResource(auth.LoginResource):
     needsReconfig = False
 
     def __init__(self, master, _auth):
-        auth.LoginResource.__init__(self, master)
+        super().__init__(master)
         self.auth = _auth
 
     def render_POST(self, request):
@@ -86,7 +86,7 @@ class OAuth2Auth(auth.AuthBase):
 
     def __init__(self,
                  clientId, clientSecret, autologin=False, **kwargs):
-        auth.AuthBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.clientId = clientId
         self.clientSecret = clientSecret
         self.autologin = autologin
@@ -224,7 +224,7 @@ class GitHubAuth(OAuth2Auth):
                  apiVersion=3, getTeamsMembership=False, debug=False,
                  **kwargs):
 
-        OAuth2Auth.__init__(self, clientId, clientSecret, autologin, **kwargs)
+        super().__init__(clientId, clientSecret, autologin, **kwargs)
         if serverURL is not None:
             # setup for enterprise github
             if serverURL.endswith("/"):

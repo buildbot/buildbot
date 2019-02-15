@@ -79,7 +79,7 @@ global_defaults = dict(
 class FakeChangeSource(changes_base.ChangeSource):
 
     def __init__(self):
-        changes_base.ChangeSource.__init__(self, name='FakeChangeSource')
+        super().__init__(name='FakeChangeSource')
 
 
 class FakeStatusReceiver(status_base.StatusReceiver):
@@ -1497,8 +1497,7 @@ class FakeService(service.ReconfigurableServiceMixin,
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = FakeService.call_index
         FakeService.call_index += 1
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
-            self, new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
         if not self.succeed:
             raise ValueError("oh noes")
 
@@ -1508,8 +1507,7 @@ class FakeMultiService(service.ReconfigurableServiceMixin,
 
     def reconfigServiceWithBuildbotConfig(self, new_config):
         self.called = True
-        d = service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(
-            self, new_config)
+        d = super().reconfigServiceWithBuildbotConfig(new_config)
         return d
 
 

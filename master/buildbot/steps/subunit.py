@@ -60,7 +60,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         self.protocol.lineReceived(line + '\n')
 
     def stopTest(self, test):
-        TestResult.stopTest(self, test)
+        super().stopTest(test)
         self.step.setProgress('tests', self.testsRun)
 
     def addSuccess(self, test):
@@ -68,16 +68,16 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
 
     def addSkip(self, test, detail):
         if hasattr(TestResult, 'addSkip'):
-            TestResult.addSkip(self, test, detail)
+            super().addSkip(test, detail)
         else:
             self.skips.append((test, detail))
 
     def addError(self, test, err):
-        TestResult.addError(self, test, err)
+        super().addError(test, err)
         self.issue(test, err)
 
     def addFailure(self, test, err):
-        TestResult.addFailure(self, test, err)
+        super().addFailure(test, err)
         self.issue(test, err)
 
     def issue(self, test, err):
@@ -96,7 +96,7 @@ class SubunitShellCommand(ShellCommand):
     """
 
     def __init__(self, failureOnNoTests=False, *args, **kwargs):
-        ShellCommand.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.failureOnNoTests = failureOnNoTests
 
         self.ioObserver = SubunitLogObserver()

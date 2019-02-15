@@ -163,7 +163,7 @@ class Identifier(Type):
     ramlType = "string"
 
     def __init__(self, len=None, **kwargs):
-        Type.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.len = len
 
     def valueFromString(self, arg):
@@ -198,7 +198,7 @@ class List(Type):
         return self.of.ramlname
 
     def __init__(self, of=None, **kwargs):
-        Type.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.of = of
 
     def validate(self, name, object):

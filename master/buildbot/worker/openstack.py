@@ -82,7 +82,7 @@ class OpenStackLatentWorker(AbstractLatentWorker,
         if not block_devices and not image:
             raise ValueError('One of block_devices or image must be given')
 
-        AbstractLatentWorker.__init__(self, name, password, **kwargs)
+        super().__init__(name, password, **kwargs)
 
         self.flavor = flavor
         self.client_version = client_version

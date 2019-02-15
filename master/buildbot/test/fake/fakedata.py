@@ -433,7 +433,7 @@ class FakeDataConnector(service.AsyncMultiService):
     # relevant updates with fake methods, though.
 
     def __init__(self, master, testcase):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.setServiceParent(master)
         self.updates = FakeUpdates(testcase)
         self.updates.setServiceParent(self)

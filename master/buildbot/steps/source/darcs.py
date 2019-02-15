@@ -44,7 +44,7 @@ class Darcs(Source):
         self.repourl = repourl
         self.method = method
         self.mode = mode
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         errors = []
 
         if not self._hasAttrGroupMember('mode', self.mode):

@@ -34,7 +34,7 @@ class FakeService(service.AsyncMultiService):
 
     def __init__(self, url, realm, make, extra=None,
                  debug=False, debug_wamp=False, debug_app=False):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.make = make
         self.extra = extra
 

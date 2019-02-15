@@ -205,7 +205,7 @@ class KubeInClusterConfigLoader(KubeConfigLoaderBase):
 
 class KubeError(RuntimeError):
     def __init__(self, response_json):
-        RuntimeError.__init__(self, response_json['message'])
+        super().__init__(response_json['message'])
         self.json = response_json
         self.reason = response_json.get('reason')
 
@@ -213,7 +213,7 @@ class KubeError(RuntimeError):
 class KubeClientService(HTTPClientService):
     def __init__(self, kube_config=None):
         self.config = kube_config
-        HTTPClientService.__init__(self, '')
+        super().__init__('')
         self._namespace = None
         kube_config.setServiceParent(self)
 
@@ -221,7 +221,7 @@ class KubeClientService(HTTPClientService):
     def _prepareRequest(self, ep, kwargs):
         config = self.config.getConfig()
         self._base_url = config['master_url']
-        url, req_kwargs = HTTPClientService._prepareRequest(self, ep, kwargs)
+        url, req_kwargs = super()._prepareRequest(ep, kwargs)
 
         if 'headers' not in req_kwargs:
             req_kwargs['headers'] = {}

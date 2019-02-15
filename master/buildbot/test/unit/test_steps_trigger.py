@@ -108,7 +108,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         sourcestamps = sourcestampsInBuild or []
         got_revisions = gotRevisionsInBuild or {}
 
-        steps.BuildStepMixin.setupStep(self, step, *args, **kwargs)
+        super().setupStep(step, *args, **kwargs)
 
         # This step reaches deeply into a number of parts of Buildbot.  That
         # should be fixed!
@@ -185,7 +185,7 @@ class TestTrigger(steps.BuildStepMixin, unittest.TestCase):
         if self.step.waitForFinish:
             for i in [11, 22, 33, 44]:
                 yield self.master.db.builds.finishBuild(BRID_TO_BID(i), results_dict.get(i, SUCCESS))
-        d = steps.BuildStepMixin.runStep(self)
+        d = super().runStep()
         # the build doesn't finish until after a callLater, so this has the
         # effect of checking whether the deferred has been fired already;
         if self.step.waitForFinish:

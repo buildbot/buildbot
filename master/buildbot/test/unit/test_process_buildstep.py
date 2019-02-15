@@ -936,7 +936,7 @@ class ShellMixinExample(buildstep.ShellMixin, buildstep.BuildStep):
     def __init__(self, cleanupScript='./cleanup.sh', **kwargs):
         self.cleanupScript = cleanupScript
         kwargs = self.setupShellMixin(kwargs, prohibitArgs=['command'])
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):
@@ -957,7 +957,7 @@ class SimpleShellCommand(buildstep.ShellMixin, buildstep.BuildStep):
         self.makeRemoteShellCommandKwargs = makeRemoteShellCommandKwargs or {}
 
         kwargs = self.setupShellMixin(kwargs)
-        buildstep.BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def run(self):

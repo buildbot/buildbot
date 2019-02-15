@@ -150,7 +150,7 @@ class FiniteList(deque):
 
     def __init__(self, maxlen=10):
         self._maxlen = maxlen
-        deque.__init__(self)
+        super().__init__()
 
     def append(self, o):
         deque.append(self, o)
@@ -161,11 +161,11 @@ class FiniteList(deque):
 class AveragingFiniteList(FiniteList):
 
     def __init__(self, maxlen=10):
-        FiniteList.__init__(self, maxlen)
+        super().__init__(maxlen)
         self.average = 0
 
     def append(self, o):
-        FiniteList.append(self, o)
+        super().append(o)
         self._calc()
 
     def _calc(self):
@@ -379,7 +379,7 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
     _reactor = reactor
 
     def __init__(self):
-        service.MultiService.__init__(self)
+        super().__init__()
         self.setName('metrics')
 
         self.enabled = False
@@ -432,12 +432,11 @@ class MetricLogObserver(util_service.ReconfigurableServiceMixin,
                     self.periodic_task.start(periodic_interval)
 
         # upcall
-        return util_service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                         new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     def stopService(self):
         self.disable()
-        service.MultiService.stopService(self)
+        super().stopService()
 
     def enable(self):
         if self.enabled:

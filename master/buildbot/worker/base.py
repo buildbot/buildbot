@@ -221,7 +221,7 @@ class AbstractWorker(service.BuildbotService):
         # startService
 
         self.manager = parent
-        return service.BuildbotService.setServiceParent(self, parent)
+        return super().setServiceParent(parent)
 
     @defer.inlineCallbacks
     def startService(self):
@@ -235,7 +235,7 @@ class AbstractWorker(service.BuildbotService):
                                                                         None))
 
         yield self._getWorkerInfo()
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
 
         # startMissingTimer wants the service to be running to really start
         if self.start_missing_on_startup:
@@ -288,7 +288,7 @@ class AbstractWorker(service.BuildbotService):
     def reconfigServiceWithSibling(self, sibling):
         # reconfigServiceWithSibling will only reconfigure the worker when it is configured differently.
         # However, the worker configuration depends on which builder it is configured
-        yield service.BuildbotService.reconfigServiceWithSibling(self, sibling)
+        yield super().reconfigServiceWithSibling(sibling)
 
         # update the attached worker's notion of which builders are attached.
         # This assumes that the relevant builders have already been configured,
@@ -311,7 +311,7 @@ class AbstractWorker(service.BuildbotService):
         self.stopQuarantineTimer()
         # mark this worker as configured for zero builders in this master
         yield self.master.data.updates.workerConfigured(self.workerid, self.master.masterid, [])
-        yield service.BuildbotService.stopService(self)
+        yield super().stopService()
 
     def isCompatibleWithBuild(self, build_props):
         # given a build properties object, determines whether the build is
@@ -640,21 +640,21 @@ class AbstractWorker(service.BuildbotService):
 class Worker(AbstractWorker):
 
     def detached(self):
-        AbstractWorker.detached(self)
+        super().detached()
         self.botmaster.workerLost(self)
         self.startMissingTimer()
 
     @defer.inlineCallbacks
     def attached(self, bot):
         try:
-            yield AbstractWorker.attached(self, bot)
+            yield super().attached(bot)
         except Exception as e:
             log.err(e, "worker %s cannot attach" % (self.name,))
             return
 
     def buildFinished(self, wfb):
         """This is called when a build on this worker is finished."""
-        AbstractWorker.buildFinished(self, wfb)
+        super().buildFinished(wfb)
 
         # If we're gracefully shutting down, and we have no more active
         # builders, then it's safe to disconnect

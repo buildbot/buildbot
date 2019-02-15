@@ -261,7 +261,7 @@ class GerritStatusPush(service.BuildbotService):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield service.BuildbotService.startService(self)
+        yield super().startService()
         startConsuming = self.master.mq.startConsuming
         self._buildsetCompleteConsumer = yield startConsuming(
             self.buildsetComplete,

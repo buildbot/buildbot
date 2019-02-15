@@ -79,7 +79,7 @@ class P4(Source):
         self.p4extra_args = p4extra_args
         self.use_tickets = use_tickets
 
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         if self.mode not in self.possible_modes and not interfaces.IRenderable.providedBy(self.mode):
             config.error("mode %s is not an IRenderable, or one of %s" % (

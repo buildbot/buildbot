@@ -251,7 +251,7 @@ class BuildPyCommand(setuptools.command.build_py.build_py):
 
     def run(self):
         self.run_command('build_js')
-        setuptools.command.build_py.build_py.run(self)
+        super().run()
 
 
 class EggInfoCommand(setuptools.command.egg_info.egg_info):
@@ -259,7 +259,7 @@ class EggInfoCommand(setuptools.command.egg_info.egg_info):
 
     def run(self):
         self.run_command('build_js')
-        setuptools.command.egg_info.egg_info.run(self)
+        super().run()
 
 
 def setup_www_plugin(**kw):

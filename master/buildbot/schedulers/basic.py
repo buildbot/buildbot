@@ -62,7 +62,7 @@ class BaseBasicScheduler(base.BaseScheduler):
                 "fileIsImportant must be a callable")
 
         # initialize parent classes
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
 
         self.treeStableTimer = treeStableTimer
         if fileIsImportant is not None:
@@ -86,7 +86,7 @@ class BaseBasicScheduler(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.activate(self)
+        yield super().activate()
 
         if not self.enabled:
             return
@@ -109,7 +109,7 @@ class BaseBasicScheduler(base.BaseScheduler):
     @defer.inlineCallbacks
     def deactivate(self):
         # the base deactivate will unsubscribe from new changes
-        yield base.BaseScheduler.deactivate(self)
+        yield super().deactivate()
 
         if not self.enabled:
             return
@@ -254,7 +254,7 @@ class Scheduler(SingleBranchScheduler):
                 "buildbot.schedulers.basic.SingleBranchScheduler instead " +
                 "(note that this may require you to change your import " +
                 "statement)")
-        SingleBranchScheduler.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
 
 
 class AnyBranchScheduler(BaseBasicScheduler):

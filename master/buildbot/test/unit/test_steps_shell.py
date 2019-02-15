@@ -924,7 +924,7 @@ class WarningCountingShellCommand(steps.BuildStepMixin, unittest.TestCase,
 
             def start(self):
                 self.addSuppression([('.*', '.*unseen.*', None, None)])
-                return shell.WarningCountingShellCommand.start(self)
+                return super().start()
 
         def warningExtractor(step, line, match):
             return line.split(':', 2)

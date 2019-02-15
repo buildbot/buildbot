@@ -44,7 +44,7 @@ class Cppcheck(ShellCommand):
                               ('extra_args', [])]:
             setattr(self, name, kwargs.pop(name, default))
 
-        ShellCommand.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 

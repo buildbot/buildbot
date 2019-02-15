@@ -75,7 +75,7 @@ class RpmBuild(ShellCommand):
         @type vcsRevision: boolean
         @param vcsRevision: Use vcs version number as revision number.
         """
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.dist = dist
 

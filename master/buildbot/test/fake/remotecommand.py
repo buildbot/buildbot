@@ -102,11 +102,11 @@ class FakeRemoteShellCommand(FakeRemoteCommand):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
-        FakeRemoteCommand.__init__(self, "shell", args,
-                                   collectStdout=collectStdout,
-                                   collectStderr=collectStderr,
-                                   decodeRC=decodeRC,
-                                   stdioLogName=stdioLogName)
+        super().__init__("shell", args,
+                         collectStdout=collectStdout,
+                         collectStderr=collectStderr,
+                         decodeRC=decodeRC,
+                         stdioLogName=stdioLogName)
 
 
 class ExpectRemoteRef:
@@ -314,7 +314,7 @@ class ExpectShell(Expect):
                     initial_stdin=initialStdin,
                     timeout=timeout, maxTime=maxTime, logfiles=logfiles,
                     usePTY=usePTY, logEnviron=logEnviron)
-        Expect.__init__(self, "shell", args)
+        super().__init__("shell", args)
 
     def __repr__(self):
         return "ExpectShell(" + repr(self.remote_command) + repr(self.args['command']) + ")"

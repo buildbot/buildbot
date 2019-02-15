@@ -118,7 +118,7 @@ class StopBuildEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
-        EndpointMatcherBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def matchFromBuilderId(self, builderid):
@@ -158,7 +158,7 @@ class ForceBuildEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
-        EndpointMatcherBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def match_ForceSchedulerEndpoint_force(self, epobject, epdict, options):
@@ -180,7 +180,7 @@ class RebuildBuildEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, builder=None, **kwargs):
         self.builder = builder
-        EndpointMatcherBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
     @defer.inlineCallbacks
     def match_BuildEndpoint_rebuild(self, epobject, epdict, options):
@@ -200,7 +200,7 @@ class EnableSchedulerEndpointMatcher(EndpointMatcherBase):
 class ViewBuildsEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, branch=None, project=None, builder=None, **kwargs):
-        EndpointMatcherBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.branch = branch
         self.project = project
         self.builder = builder
@@ -210,4 +210,4 @@ class BranchEndpointMatcher(EndpointMatcherBase):
 
     def __init__(self, branch, **kwargs):
         self.branch = branch
-        EndpointMatcherBase.__init__(self, **kwargs)
+        super().__init__(**kwargs)

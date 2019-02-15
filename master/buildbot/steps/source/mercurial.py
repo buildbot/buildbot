@@ -75,7 +75,7 @@ class Mercurial(Source):
         self.method = method
         self.clobberOnBranchChange = clobberOnBranchChange
         self.mode = mode
-        Source.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         errors = []
         if not self._hasAttrGroupMember('mode', self.mode):

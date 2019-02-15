@@ -19,7 +19,6 @@ from twisted.python import log
 
 from buildbot.process.measured_service import MeasuredBuildbotServiceManager
 from buildbot.util import misc
-from buildbot.util import service
 from buildbot.worker.protocols import pb as bbpb
 
 
@@ -65,7 +64,7 @@ class WorkerManager(MeasuredBuildbotServiceManager):
     reconfig_priority = 127
 
     def __init__(self, master):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.pb = bbpb.Listener()
         self.pb.setServiceParent(master)

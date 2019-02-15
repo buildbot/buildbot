@@ -146,7 +146,7 @@ class ListResult(UserList):
 
     def __init__(self, values,
                  offset=None, total=None, limit=None):
-        UserList.__init__(self, values)
+        super().__init__(values)
 
         # if set, this is the index in the overall results of the first element of
         # this list

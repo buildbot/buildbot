@@ -73,7 +73,7 @@ class DockerBaseWorker(AbstractLatentWorker):
             if not hasattr(image, 'getRenderingFor'):
                 config.error("image must be a string")
 
-        AbstractLatentWorker.checkConfig(self, name, password, **kwargs)
+        super().checkConfig(name, password, **kwargs)
 
     def reconfigService(self, name, password=None, image=None,
                         masterFQDN=None, **kwargs):
@@ -89,7 +89,7 @@ class DockerBaseWorker(AbstractLatentWorker):
         self.image = image
         masterName = unicode2bytes(self.master.name)
         self.masterhash = hashlib.sha1(masterName).hexdigest()[:6]
-        return AbstractLatentWorker.reconfigService(self, name, password, **kwargs)
+        return super().reconfigService(name, password, **kwargs)
 
     def getContainerName(self):
         return ('buildbot-{worker}-{hash}'.format(worker=self.workername, hash=self.masterhash)).replace("_", "-")
@@ -133,7 +133,7 @@ class DockerLatentWorker(DockerBaseWorker,
                     volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
                     masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
 
-        DockerBaseWorker.checkConfig(self, name, password, image, masterFQDN, **kwargs)
+        super().checkConfig(name, password, image, masterFQDN, **kwargs)
 
         if not client:
             config.error("The python module 'docker>=2.0' is needed to use a"
@@ -161,7 +161,7 @@ class DockerLatentWorker(DockerBaseWorker,
                         volumes=None, dockerfile=None, version=None, tls=None, followStartupLogs=False,
                         masterFQDN=None, hostconfig=None, autopull=False, alwaysPull=False, **kwargs):
 
-        yield DockerBaseWorker.reconfigService(self, name, password, image, masterFQDN, **kwargs)
+        yield super().reconfigService(name, password, image, masterFQDN, **kwargs)
         self.volumes = volumes or []
         self.followStartupLogs = followStartupLogs
 

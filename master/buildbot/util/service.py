@@ -178,7 +178,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
         self._config_args = args
         self._config_kwargs = kwargs
         self.rendered = False
-        AsyncMultiService.__init__(self)
+        super().__init__()
 
     def getConfigDict(self):
         _type = type(self)
@@ -227,7 +227,7 @@ class BuildbotService(AsyncMultiService, config.ConfiguredMixin, util.Comparable
                 yield self.configureService()
             except NotImplementedError:
                 pass
-        yield AsyncMultiService.startService(self)
+        yield super().startService()
 
     def checkConfig(self, *args, **kwargs):
         return defer.succeed(True)
@@ -272,7 +272,7 @@ class ClusteredBuildbotService(BuildbotService):
         self.active = False
         self._activityPollCall = None
         self._activityPollDeferred = None
-        super(ClusteredBuildbotService, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
     # activity handling
 
@@ -314,7 +314,7 @@ class ClusteredBuildbotService(BuildbotService):
         # subclasses should override startService only to perform actions that should
         # run on all instances, even if they never get activated on this
         # master.
-        yield super(ClusteredBuildbotService, self).startService()
+        yield super().startService()
         self._startServiceDeferred = defer.Deferred()
         self._startActivityPolling()
         yield self._startServiceDeferred
@@ -340,7 +340,7 @@ class ClusteredBuildbotService(BuildbotService):
             except Exception as e:
                 log.err(e, _why="Caught exception while deactivating ClusteredService(%s)" % self.name)
 
-        yield super(ClusteredBuildbotService, self).stopService()
+        yield super().stopService()
 
     def _startActivityPolling(self):
         self._activityPollCall = task.LoopingCall(self._activityPoll)

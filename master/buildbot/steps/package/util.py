@@ -21,7 +21,7 @@ from buildbot.process import logobserver
 class WEObserver(logobserver.LogLineObserver):
 
     def __init__(self):
-        logobserver.LogLineObserver.__init__(self)
+        super().__init__()
         self.warnings = []
         self.errors = []
 

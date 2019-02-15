@@ -43,7 +43,7 @@ class LogChunksJanitor(BuildStep):
     renderables = ["logHorizon"]
 
     def __init__(self, logHorizon):
-        BuildStep.__init__(self)
+        super().__init__()
         self.logHorizon = logHorizon
 
     @defer.inlineCallbacks
@@ -56,7 +56,7 @@ class LogChunksJanitor(BuildStep):
 
 class JanitorConfigurator(ConfiguratorBase):
     def __init__(self, logHorizon=None, hour=0, **kwargs):
-        ConfiguratorBase.__init__(self)
+        super().__init__()
         self.logHorizon = logHorizon
         self.hour = hour
         self.kwargs = kwargs
@@ -68,7 +68,7 @@ class JanitorConfigurator(ConfiguratorBase):
         hour = self.hour
         kwargs = self.kwargs
 
-        ConfiguratorBase.configure(self, config_dict)
+        super().configure(config_dict)
         nightly_kwargs = {}
 
         # we take the defaults of Nightly, except for hour

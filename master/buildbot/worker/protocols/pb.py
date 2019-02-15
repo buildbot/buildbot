@@ -28,7 +28,7 @@ class Listener(base.Listener):
     name = "pbListener"
 
     def __init__(self):
-        base.Listener.__init__(self)
+        super().__init__()
 
         # username : (password, portstr, PBManager registration)
         self._registrations = {}
@@ -128,7 +128,7 @@ class Connection(base.Connection, pb.Avatar):
     info = None
 
     def __init__(self, master, worker, mind):
-        base.Connection.__init__(self, master, worker)
+        super().__init__(master, worker)
         self.mind = mind
 
     # methods called by the PBManager

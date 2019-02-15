@@ -65,7 +65,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
     UNCLAIMED_BUILD_FACTOR = 6
 
     def __init__(self, basedir, configFileName=None, umask=None, reactor=None, config_loader=None):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         if reactor is None:
             from twisted.internet import reactor
@@ -280,7 +280,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                                                   masterid=self.masterid)
 
             # call the parent method
-            yield service.AsyncMultiService.startService(self)
+            yield super().startService()
 
             # We make sure the housekeeping is done before configuring in order to cleanup
             # any remaining claimed schedulers or change sources from zombie
@@ -331,7 +331,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
             if self.running:
                 yield self.botmaster.cleanShutdown(
                     quickMode=True, stopReactor=False)
-                yield service.AsyncMultiService.stopService(self)
+                yield super().stopService()
 
             log.msg("BuildMaster is stopped")
             self._master_initialized = False
@@ -426,8 +426,7 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
                 "Cannot change c['mq']['type'] after the master has started",
             ])
 
-        return service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                    new_config)
+        return super().reconfigServiceWithBuildbotConfig(new_config)
 
     # informational methods
     def allSchedulers(self):

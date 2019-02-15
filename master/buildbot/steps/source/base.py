@@ -109,9 +109,10 @@ class Source(LoggingBuildStep, CompositeStepMixin):
         if not descriptionSuffix and codebase:
             descriptionSuffix = [codebase]
 
-        LoggingBuildStep.__init__(self, description=description,
-                                  descriptionDone=descriptionDone, descriptionSuffix=descriptionSuffix,
-                                  **kwargs)
+        super().__init__(description=description,
+                         descriptionDone=descriptionDone,
+                         descriptionSuffix=descriptionSuffix,
+                         **kwargs)
 
         # This will get added to args later, after properties are rendered
         self.workdir = workdir
@@ -175,12 +176,12 @@ class Source(LoggingBuildStep, CompositeStepMixin):
                 % self.name
             property_dict = self.getProperty(name, {})
             property_dict[self.codebase] = value
-            LoggingBuildStep.setProperty(self, name, property_dict, source)
+            super().setProperty(name, property_dict, source)
         else:
             assert not isinstance(self.getProperty(name, None), dict), \
                 "Sourcestep %s does not have a codebase, other sourcesteps do" \
                 % self.name
-            LoggingBuildStep.setProperty(self, name, value, source)
+            super().setProperty(name, value, source)
 
     def describe(self, done=False):
         desc = self.descriptionDone if done else self.description

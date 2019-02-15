@@ -30,7 +30,7 @@ class BuildEPYDoc(ShellCommand):
     descriptionDone = ["epydoc"]
 
     def __init__(self, **kwargs):
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
@@ -82,7 +82,7 @@ class PyFlakes(ShellCommand):
         # categorize this initially as WARNINGS so that
         # evaluateCommand below can inspect the results more closely.
         kwargs['decodeRC'] = {0: SUCCESS, 1: WARNINGS}
-        ShellCommand.__init__(self, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.addLogObserver(
             'stdio', logobserver.LineConsumerLogObserver(self.logConsumer))
 
@@ -209,7 +209,7 @@ class PyLint(ShellCommand):
         r'[^:]+:\d+: \[%s(\d{4})?(\([a-z-]+\))?[,\]] .+' % _msgtypes_re_str)
 
     def __init__(self, **kwargs):
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.counts = {}
         self.summaries = {}
         self.addLogObserver(
@@ -290,7 +290,7 @@ class Sphinx(ShellCommand):
                          "'full' is required")
 
         self.success = False
-        ShellCommand.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         # build the command
         command = [sphinx]

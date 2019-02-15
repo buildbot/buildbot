@@ -51,7 +51,7 @@ class MasterShellCommand(BuildStep):
         self.interruptSignal = kwargs.pop('interruptSignal', 'KILL')
         self.logEnviron = kwargs.pop('logEnviron', True)
 
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
 
         self.command = command
         self.masterWorkdir = self.workdir
@@ -169,7 +169,7 @@ class MasterShellCommand(BuildStep):
             pass
         except error.ProcessExitedAlready:
             pass
-        BuildStep.interrupt(self, reason)
+        super().interrupt(reason)
 
 
 class SetProperty(BuildStep):
@@ -179,7 +179,7 @@ class SetProperty(BuildStep):
     renderables = ['property', 'value']
 
     def __init__(self, property, value, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.property = property
         self.value = value
 
@@ -197,7 +197,7 @@ class SetProperties(BuildStep):
     renderables = ['properties']
 
     def __init__(self, properties=None, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.properties = properties
 
     def run(self):
@@ -215,7 +215,7 @@ class Assert(BuildStep):
     renderables = ['check']
 
     def __init__(self, check, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.check = check
         self.descriptionDone = ["checked {}".format(repr(self.check))]
 
@@ -232,7 +232,7 @@ class LogRenderable(BuildStep):
     renderables = ['content']
 
     def __init__(self, content, **kwargs):
-        BuildStep.__init__(self, **kwargs)
+        super().__init__(**kwargs)
         self.content = content
 
     def start(self):

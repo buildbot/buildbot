@@ -206,7 +206,7 @@ class StringListValidator(ListValidator):
     name = 'string-list'
 
     def __init__(self):
-        ListValidator.__init__(self, StringValidator())
+        super().__init__(StringValidator())
 
 
 class SourcedPropertiesValidator(Validator):

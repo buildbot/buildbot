@@ -138,7 +138,7 @@ class BuildbotSite(server.Site):
     """
 
     def __init__(self, root, logPath, rotateLength, maxRotatedFiles):
-        server.Site.__init__(self, root, logPath=logPath)
+        super().__init__(root, logPath=logPath)
         self.rotateLength = rotateLength
         self.maxRotatedFiles = maxRotatedFiles
         self.session_secret = None
@@ -173,7 +173,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name = 'www'
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.port = None
         self.port_service = None
@@ -244,8 +244,7 @@ class WWWService(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if not self.port_service:
             log.msg("No web server configured on this master")
 
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
     def getPortnum(self):
         # for tests, when the configured port is 0 and the kernel selects a

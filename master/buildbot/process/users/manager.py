@@ -25,7 +25,7 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
     # this class manages a fleet of user managers; hence the name..
 
     def __init__(self, master):
-        service.MultiService.__init__(self)
+        super().__init__()
         self.setName('user_manager_manager')
         self.master = master
 
@@ -42,5 +42,4 @@ class UserManagerManager(util_service.ReconfigurableServiceMixin,
             yield mgr.setServiceParent(self)
 
         # reconfig any newly-added change sources, as well as existing
-        yield util_service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                        new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)

@@ -57,7 +57,7 @@ class EventResource(resource.Resource):
     isLeaf = True
 
     def __init__(self, master):
-        resource.Resource.__init__(self)
+        super().__init__()
 
         self.master = master
         self.consumers = {}

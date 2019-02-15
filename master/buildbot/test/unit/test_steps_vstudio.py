@@ -194,7 +194,7 @@ class VCx(vstudio.VisualStudio):
     def start(self):
         command = ["command", "here"]
         self.setCommand(command)
-        return vstudio.VisualStudio.start(self)
+        return super().start()
 
 
 class VisualStudio(steps.BuildStepMixin, unittest.TestCase):

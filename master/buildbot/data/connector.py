@@ -66,7 +66,7 @@ class DataConnector(service.AsyncService):
 
     @defer.inlineCallbacks
     def setServiceParent(self, parent):
-        yield service.AsyncService.setServiceParent(self, parent)
+        yield super().setServiceParent(parent)
         self._setup()
 
     def _scanModule(self, mod, _noSetattr=False):

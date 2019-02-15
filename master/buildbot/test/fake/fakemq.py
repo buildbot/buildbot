@@ -32,7 +32,7 @@ class FakeMQConnector(service.AsyncMultiService, base.MQBase):
     verifyMessages = True
 
     def __init__(self, testcase):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
         self.testcase = testcase
         self.setup_called = False
         self.productions = []

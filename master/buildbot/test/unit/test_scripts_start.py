@@ -49,7 +49,7 @@ from twisted.python import log
 application = service.Application('highscore')
 class App(service.Service):
     def startService(self):
-        service.Service.startService(self)
+        super().startService()
         log.msg("BuildMaster is running") # heh heh heh
         reactor.callLater(0, reactor.stop)
 app = App()

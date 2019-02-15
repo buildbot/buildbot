@@ -45,8 +45,8 @@ GithubRevlink = RevlinkMatch(
 class GitwebMatch(RevlinkMatch):
 
     def __init__(self, repo_urls, revlink):
-        RevlinkMatch.__init__(self, repo_urls=repo_urls,
-                              revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
+        super().__init__(repo_urls=repo_urls,
+                         revlink=revlink + r'?p=\g<repo>;a=commit;h=%s')
 
 
 SourceforgeGitRevlink = GitwebMatch(

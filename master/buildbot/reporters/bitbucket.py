@@ -45,7 +45,7 @@ class BitbucketStatusPush(http.HttpStatusPushBase):
                         oauth_url=_OAUTH_URL,
                         **kwargs):
         oauth_key, oauth_secret = yield self.renderSecrets(oauth_key, oauth_secret)
-        yield http.HttpStatusPushBase.reconfigService(self, **kwargs)
+        yield super().reconfigService(**kwargs)
 
         if base_url.endswith('/'):
             base_url = base_url[:-1]

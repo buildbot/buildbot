@@ -62,7 +62,7 @@ class HTTPClientServiceTestBase(unittest.SynchronousTestCase):
 class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 
     def setUp(self):
-        HTTPClientServiceTestBase.setUp(self)
+        super().setUp()
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
                                                            headers=self.base_headers))
@@ -128,7 +128,7 @@ class HTTPClientServiceTestTxRequest(HTTPClientServiceTestBase):
 class HTTPClientServiceTestTReq(HTTPClientServiceTestBase):
 
     def setUp(self):
-        HTTPClientServiceTestBase.setUp(self)
+        super().setUp()
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
         self._http = self.successResultOf(
             httpclientservice.HTTPClientService.getService(self.parent, 'http://foo',
@@ -364,7 +364,7 @@ class HTTPClientServiceTestTReqE2E(HTTPClientServiceTestTxRequestE2E):
 
     def setUp(self):
         self.patch(httpclientservice.HTTPClientService, 'PREFER_TREQ', True)
-        return HTTPClientServiceTestTxRequestE2E.setUp(self)
+        return super().setUp()
 
 
 class HTTPClientServiceTestFakeE2E(HTTPClientServiceTestTxRequestE2E):

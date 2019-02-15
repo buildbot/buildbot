@@ -38,7 +38,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
     name = "botmaster"
 
     def __init__(self):
-        service.AsyncMultiService.__init__(self)
+        super().__init__()
 
         self.builders = {}
         self.builderNames = []
@@ -178,7 +178,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         self.buildrequest_consumer_unclaimed = yield startConsuming(
             buildRequestAdded,
             ('buildrequests', None, 'unclaimed'))
-        yield service.AsyncMultiService.startService(self)
+        yield super().startService()
 
     @defer.inlineCallbacks
     def reconfigServiceWithBuildbotConfig(self, new_config):
@@ -189,8 +189,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         yield self.reconfigServiceBuilders(new_config)
 
         # call up
-        yield service.ReconfigurableServiceMixin.reconfigServiceWithBuildbotConfig(self,
-                                                                                   new_config)
+        yield super().reconfigServiceWithBuildbotConfig(new_config)
 
         # try to start a build for every builder; this is necessary at master
         # startup, and a good idea in any other case
@@ -255,7 +254,7 @@ class BotMaster(service.ReconfigurableServiceMixin, service.AsyncMultiService):
         if self.buildrequest_consumer_unclaimed:
             self.buildrequest_consumer_unclaimed.stopConsuming()
             self.buildrequest_consumer_unclaimed = None
-        return service.AsyncMultiService.stopService(self)
+        return super().stopService()
 
     def getLockByID(self, lockid):
         """Convert a Lock identifier into an actual Lock instance.

@@ -29,7 +29,7 @@ class Triggerable(base.BaseScheduler):
     compare_attrs = base.BaseScheduler.compare_attrs + ('reason',)
 
     def __init__(self, name, builderNames, reason=None, **kwargs):
-        base.BaseScheduler.__init__(self, name, builderNames, **kwargs)
+        super().__init__(name, builderNames, **kwargs)
         self._waiters = {}
         self._buildset_complete_consumer = None
         self.reason = reason
@@ -76,7 +76,7 @@ class Triggerable(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def startService(self):
-        yield base.BaseScheduler.startService(self)
+        yield super().startService()
         self._updateWaiters.start()
 
     @defer.inlineCallbacks
@@ -96,7 +96,7 @@ class Triggerable(base.BaseScheduler):
                 d.errback(failure.Failure(RuntimeError(msg)))
             self._waiters = {}
 
-        yield base.BaseScheduler.stopService(self)
+        yield super().stopService()
 
     @debounce.method(wait=0)
     @defer.inlineCallbacks

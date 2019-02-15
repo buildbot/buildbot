@@ -153,11 +153,11 @@ class BasicWithDebug(Basic):
 
     def setUp(self):
         pool.debug = True
-        return Basic.setUp(self)
+        return super().setUp()
 
     def tearDown(self):
         pool.debug = False
-        return Basic.tearDown(self)
+        return super().tearDown()
 
 
 class Native(unittest.TestCase, db.RealDatabaseMixin):

@@ -30,7 +30,7 @@ from buildbot.util import service
 class FakeContact(service.AsyncService):
 
     def __init__(self, bot, user=None, channel=None):
-        service.AsyncService.__init__(self)
+        super().__init__()
         self.bot = bot
         self.user = user
         self.channel = channel

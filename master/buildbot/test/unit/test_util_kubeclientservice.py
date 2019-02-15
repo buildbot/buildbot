@@ -69,12 +69,12 @@ class KubeClientServiceTestClusterConfig(
     }
 
     def setUp(self):
-        MockFileBase.setUp(self)
+        super().setUp()
         self.patch(kubeclientservice.os, 'environ',
                    {'KUBERNETES_PORT': 'tcp://foo'})
 
     def tearDown(self):
-        return MockFileBase.tearDown(self)
+        return super().tearDown()
 
     def patchExist(self, val):
         self.patch(kubeclientservice.os.path, 'exists', lambda x: val)
