@@ -40,7 +40,7 @@ from buildbot.test.util import config
 from buildbot.util import kubeclientservice
 
 
-class MockFileBase(object):
+class MockFileBase:
     file_mock_config = {}
 
     def setUp(self):

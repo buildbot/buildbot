@@ -385,7 +385,7 @@ _notHasKey = _NotHasKey()
 
 
 @implementer(IRenderable)
-class _Lookup(util.ComparableMixin, object):
+class _Lookup(util.ComparableMixin):
 
     compare_attrs = (
         'value', 'index', 'default', 'defaultWhenFalse', 'hasKey', 'elideNoneAs')
@@ -508,7 +508,7 @@ class _SecretIndexer:
 
 
 @implementer(IRenderable)
-class _SourceStampDict(util.ComparableMixin, object):
+class _SourceStampDict(util.ComparableMixin):
 
     compare_attrs = ('codebase',)
 
@@ -523,7 +523,7 @@ class _SourceStampDict(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
-class _Lazy(util.ComparableMixin, object):
+class _Lazy(util.ComparableMixin):
 
     compare_attrs = ('value',)
 
@@ -538,7 +538,7 @@ class _Lazy(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
-class Interpolate(util.ComparableMixin, object):
+class Interpolate(util.ComparableMixin):
 
     """
     This is a marker class, used fairly widely to indicate that we
@@ -727,7 +727,7 @@ class Interpolate(util.ComparableMixin, object):
 
 
 @implementer(IRenderable)
-class _ComparisonRenderer(util.ComparableMixin, object):
+class _ComparisonRenderer(util.ComparableMixin):
     """
     An instance of this class renders a comparison given by a comparator
     function with v1 and v2
@@ -839,7 +839,7 @@ class FlattenList(util.ComparableMixin):
 
 
 @implementer(IRenderable)
-class _Renderer(util.ComparableMixin, object):
+class _Renderer(util.ComparableMixin):
 
     compare_attrs = ('fn',)
 
