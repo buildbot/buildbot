@@ -45,7 +45,7 @@ class Dependent(base.BaseScheduler):
 
     @defer.inlineCallbacks
     def activate(self):
-        yield base.BaseScheduler.deactivate(self)
+        yield base.BaseScheduler.activate(self)
 
         if not self.enabled:
             return
