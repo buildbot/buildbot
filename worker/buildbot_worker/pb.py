@@ -137,7 +137,7 @@ class Worker(WorkerBase, service.MultiService):
     to just pass a connection description string, set buildmaster_host and
     port to None, and use conndescr.
 
-    maxdelay and maxRetries are deprecated if favor of using twisted's backoffPolicy.
+    maxdelay is deprecated in favor of using twisted's backoffPolicy.
     """
     Bot = BotPb
 
@@ -180,8 +180,13 @@ class Worker(WorkerBase, service.MultiService):
                 buildmaster_host.replace(':', r'\:'),  # escape ipv6 addresses
                 port)
         endpoint = clientFromString(reactor, conndescr)
+
+        def policy(attempt):
+            if maxRetries and attempt >= maxRetries:
+                reactor.stop()
+            return backoffPolicy()(attempt)
         pb_service = ClientService(endpoint, bf,
-                                   retryPolicy=backoffPolicy(initialDelay=0))
+                                   retryPolicy=policy)
         self.addService(pb_service)
 
     def startService(self):
