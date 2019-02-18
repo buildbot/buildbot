@@ -84,7 +84,7 @@ typing==3.6.6
 webcolors==1.8.1
 Werkzeug==0.14.1
 wrapt==1.11.1
-xmltodict==0.11.0
+xmltodict==0.12.0
 zope.interface==4.6.0
 coverage==4.5.2
 codecov==2.0.15
