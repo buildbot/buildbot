@@ -183,6 +183,92 @@ Other Worker Configuration
                keepalive, usepty, umask=umask, maxdelay=maxdelay,
                unicode_encoding='utf-8', allow_shutdown='signal')
 
+.. _Worker-TLS-Config:
+
+Worker TLS Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``connection_string``
+    For TLS connections to the master the ``connection_string``-argument must be used to ``Worker.__init__`` function. ``buildmaster_host`` and ``port`` must then be ``None``.
+
+    ``connection_string`` will be used to create a client endpoint with clientFromString_. An example of ``connection_string`` is ``"TLS:buildbot-master.com:9989"``.
+
+    See more about how to formulate the connection string in ConnectionStrings_.
+
+    Example TLS connection string:
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive,
+                   connection_string='TLS:buildbot-master.com:9989')
+
+    Make sure the worker trusts the masters certificate. If you have an non-authoritative certificate
+    (CA is self-signed) the trustRoot parameter can be used.
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive,
+                   connection_string=
+                   'TLS:buildbot-master.com:9989:trustRoots=/dir-with-ca-certs')
+
+
+    It must point to a directory with PEM-encoded certificates in files with file ending .pem. For example:
+
+    .. code-block:: bash
+
+        $ cat /dir-with-ca-certs/ca.pem
+        -----BEGIN CERTIFICATE-----
+        MIIE9DCCA9ygAwIBAgIJALEqLrC/m1w3MA0GCSqGSIb3DQEBCwUAMIGsMQswCQYD
+        VQQGEwJaWjELMAkGA1UECBMCUUExEDAOBgNVBAcTB05vd2hlcmUxETAPBgNVBAoT
+        CEJ1aWxkYm90MRkwFwYDVQQLExBEZXZlbG9wbWVudCBUZWFtMRQwEgYDVQQDEwtC
+        dWlsZGJvdCBDQTEQMA4GA1UEKRMHRWFzeVJTQTEoMCYGCSqGSIb3DQEJARYZYnVp
+        bGRib3RAaW50ZWdyYXRpb24udGVzdDAeFw0xNjA5MDIxMjA5NTJaFw0yNjA4MzEx
+        MjA5NTJaMIGsMQswCQYDVQQGEwJaWjELMAkGA1UECBMCUUExEDAOBgNVBAcTB05v
+        d2hlcmUxETAPBgNVBAoTCEJ1aWxkYm90MRkwFwYDVQQLExBEZXZlbG9wbWVudCBU
+        ZWFtMRQwEgYDVQQDEwtCdWlsZGJvdCBDQTEQMA4GA1UEKRMHRWFzeVJTQTEoMCYG
+        CSqGSIb3DQEJARYZYnVpbGRib3RAaW50ZWdyYXRpb24udGVzdDCCASIwDQYJKoZI
+        hvcNAQEBBQADggEPADCCAQoCggEBALJZcC9j4XYBi1fYT/fibY2FRWn6Qh74b1Pg
+        I7iIde6Sf3DPdh/ogYvZAT+cIlkZdo4v326d0EkuYKcywDvho8UeET6sIYhuHPDW
+        lRl1Ret6ylxpbEfxFNvMoEGNhYAP0C6QS2eWEP9LkV2lCuMQtWWzdedjk+efqBjR
+        Gozaim0lr/5lx7bnVx0oRLAgbI5/9Ukbopansfr+Cp9CpFpbNPGZSmELzC3FPKXK
+        5tycj8WEqlywlha2/VRnCZfYefB3aAuQqQilLh+QHyhn6hzc26+n5B0l8QvrMkOX
+        atKdznMLzJWGxS7UwmDKcsolcMAW+82BZ8nUCBPF3U5PkTLO540CAwEAAaOCARUw
+        ggERMB0GA1UdDgQWBBT7A/I+MZ1sFFJ9jikYkn51Q3wJ+TCB4QYDVR0jBIHZMIHW
+        gBT7A/I+MZ1sFFJ9jikYkn51Q3wJ+aGBsqSBrzCBrDELMAkGA1UEBhMCWloxCzAJ
+        BgNVBAgTAlFBMRAwDgYDVQQHEwdOb3doZXJlMREwDwYDVQQKEwhCdWlsZGJvdDEZ
+        MBcGA1UECxMQRGV2ZWxvcG1lbnQgVGVhbTEUMBIGA1UEAxMLQnVpbGRib3QgQ0Ex
+        EDAOBgNVBCkTB0Vhc3lSU0ExKDAmBgkqhkiG9w0BCQEWGWJ1aWxkYm90QGludGVn
+        cmF0aW9uLnRlc3SCCQCxKi6wv5tcNzAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEB
+        CwUAA4IBAQCJGJVMAmwZRK/mRqm9E0e3s4YGmYT2jwX5IX17XljEy+1cS4huuZW2
+        33CFpslkT1MN/r8IIZWilxT/lTujHyt4eERGjE1oRVKU8rlTH8WUjFzPIVu7nkte
+        09abqynAoec8aQukg79NRCY1l/E2/WzfnUt3yTgKPfZmzoiN0K+hH4gVlWtrizPA
+        LaGwoslYYTA6jHNEeMm8OQLNf17OTmAa7EpeIgVpLRCieI9S3JIG4WYU8fVkeuiU
+        cB439SdixU4cecVjNfFDpq6JM8N6+DQoYOSNRt9Dy0ioGyx5D4lWoIQ+BmXQENal
+        gw+XLyejeNTNgLOxf9pbNYMJqxhkTkoE
+        -----END CERTIFICATE-----
+
+
+    Using TCP in ``connection_string`` is the equivalent as using the ``buildmaster_host`` and ``port`` arguments.
+
+    .. code-block:: python
+
+        s = Worker(None, None, workername, passwd, basedir, keepalive
+                   connection_string='TCP:buildbot-master.com:9989')
+
+
+    is equivalent to
+
+    .. code-block:: python
+
+        s = Worker('buildbot-master.com', 9989, workername, passwd, basedir,
+                   keepalive)
+
+
+
+
+.. _ConnectionStrings: https://twistedmatrix.com/documents/current/core/howto/endpoints.html
+.. _clientFromString: https://twistedmatrix.com/documents/current/api/twisted.internet.endpoints.clientFromString.html
+
 .. _Upgrading-an-Existing-Worker:
 
 Upgrading an Existing Worker

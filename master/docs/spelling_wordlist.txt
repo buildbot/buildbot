@@ -395,6 +395,7 @@ io
 ip
 iPhone
 IProperties
+IPv
 iptables
 irc
 Irc
@@ -566,6 +567,8 @@ pathname
 pathnames
 pb
 pbuilder
+pem
+PEM
 perl
 petmail
 Phantomjs
@@ -801,6 +804,7 @@ tracebacks
 tradeoffs
 travelled
 travis
+trustRoot
 triallog
 triggerable
 Triggerable
