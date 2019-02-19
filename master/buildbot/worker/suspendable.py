@@ -38,6 +38,13 @@ class SuspendableWorker(AbstractLatentWorker):
                                                     **kwargs)
 
 
+class SuspendableMachineManager(service.BuildbotServiceManager):
+    reconfig_priority = AbstractWorker.reconfig_priority - 1
+    name = 'SuspendableMachineManager'
+    managed_services_name = 'suspendable_machines'
+    config_attr = 'suspendable_machines'
+
+
 @implementer(interfaces.ISuspendableMachine)
 class SuspendableMachine(service.BuildbotService, object):
 

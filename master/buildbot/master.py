@@ -48,6 +48,7 @@ from buildbot.util import service
 from buildbot.util.eventual import eventually
 from buildbot.wamp import connector as wampconnector
 from buildbot.worker import manager as workermanager
+from buildbot.worker.suspendable import SuspendableMachineManager
 from buildbot.www import service as wwwservice
 
 
@@ -150,6 +151,9 @@ class BuildMaster(service.ReconfigurableServiceMixin, service.MasterService):
 
         self.botmaster = BotMaster()
         self.botmaster.setServiceParent(self)
+
+        self.machine_manager = SuspendableMachineManager()
+        self.machine_manager.setServiceParent(self)
 
         self.scheduler_manager = SchedulerManager()
         self.scheduler_manager.setServiceParent(self)
