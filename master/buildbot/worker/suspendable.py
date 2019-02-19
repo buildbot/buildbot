@@ -13,20 +13,22 @@
 #
 # Portions Copyright Buildbot Team Members
 
-import tempfile
+import os
+import stat
 
 from twisted.internet import defer
-from twisted.internet import reactor
 from twisted.internet import utils
-from twisted.python import log
-
-from twisted.internet import defer
 from twisted.python import log
 from zope.interface import implementer
 
+from buildbot import config
 from buildbot import interfaces
 from buildbot.util import Notifier
+from buildbot.util import misc
+from buildbot.util import private_tempdir
 from buildbot.util import service
+from buildbot.util.git import getSshArgsForKeys
+from buildbot.util.git import getSshKnownHostsContents
 from buildbot.worker import AbstractWorker
 from buildbot.worker.latent import AbstractLatentWorker
 
@@ -74,6 +76,124 @@ class SuspendableMachineManager(service.BuildbotServiceManager):
     name = 'SuspendableMachineManager'
     managed_services_name = 'suspendable_machines'
     config_attr = 'suspendable_machines'
+
+
+class _LocalMachineActionMixin(object):
+    def setupLocal(self, command):
+        if not isinstance(command, list):
+            config.error('command parameter must be a list')
+        self._command = command
+
+    @defer.inlineCallbacks
+    def execute(self, manager):
+        args = yield manager.renderSecrets(self._command)
+        _, _, code = yield utils.getProcessOutputAndValue(args[0], args[1:])
+        defer.returnValue(code == 0)
+
+
+class _SshActionMixin(object):
+    def setupSsh(self, sshBin, host, remoteCommand, sshKey=None,
+                 sshHostKey=None):
+        if not isinstance(sshBin, str):
+            config.error('sshBin parameter must be a string')
+        if not isinstance(host, str):
+            config.error('host parameter must be a string')
+        if not isinstance(remoteCommand, list):
+            config.error('remoteCommand parameter must be a list')
+
+        self._sshBin = sshBin
+        self._host = host
+        self._remoteCommand = remoteCommand
+        self._sshKey = sshKey
+        self._sshHostKey = sshHostKey
+
+    @defer.inlineCallbacks
+    def _executeImpl(self, manager, key_path, known_hosts_path):
+        args = getSshArgsForKeys(key_path, known_hosts_path)
+        args.append((yield manager.renderSecrets(self._host)))
+        args.extend((yield manager.renderSecrets(self._remoteCommand)))
+        _, _, code = yield utils.getProcessOutputAndValue(self._sshBin, args)
+        defer.returnValue(code == 0)
+
+    @defer.inlineCallbacks
+    def _prepareSshKeys(self, manager, temp_dir_path):
+        key_path = None
+        if self._sshKey is not None:
+            ssh_key_data = yield manager.renderSecrets(self._sshKey)
+
+            key_path = os.path.join(temp_dir_path, 'ssh-key')
+            misc.writeLocalFile(key_path, ssh_key_data,
+                                mode=stat.S_IRUSR)
+
+        known_hosts_path = None
+        if self._sshHostKey is not None:
+            ssh_host_key_data = yield manager.renderSecrets(self._sshHostKey)
+            ssh_host_key_data = getSshKnownHostsContents(ssh_host_key_data)
+
+            known_hosts_path = os.path.join(temp_dir_path, 'ssh-known-hosts')
+            misc.writeLocalFile(known_hosts_path, ssh_host_key_data)
+
+        defer.returnValue((key_path, known_hosts_path))
+
+    @defer.inlineCallbacks
+    def execute(self, manager):
+        if self._sshKey is not None or self._sshHostKey is not None:
+            with private_tempdir.PrivateTemporaryDirectory(
+                    prefix='ssh-', dir=manager.master.basedir) as temp_dir:
+
+                key_path, hosts_path = yield self._prepareSshKeys(manager,
+                                                                  temp_dir)
+
+                ret = yield self._executeImpl(manager, key_path, hosts_path)
+        else:
+            ret = yield self._executeImpl(manager, None, None)
+        defer.returnValue(ret)
+
+
+@implementer(interfaces.IMachineWakeAction)
+class LocalWakeAction(_LocalMachineActionMixin):
+    def __init__(self, command):
+        self.setupLocal(command)
+
+    def wake(self, manager):
+        return self.execute(manager)
+
+
+class LocalWOLAction(LocalWakeAction):
+    def __init__(self, wakeMac, wolBin='wakeonlan'):
+        LocalWakeAction.__init__(self, [wolBin, wakeMac])
+
+
+@implementer(interfaces.IMachineWakeAction)
+class RemoteSshWakeAction(_SshActionMixin):
+    def __init__(self, host, remoteCommand, sshBin='ssh',
+                 sshKey=None, sshHostKey=None):
+        self.setupSsh(sshBin, host, remoteCommand,
+                      sshKey=sshKey, sshHostKey=sshHostKey)
+
+    def wake(self, manager):
+        return self.execute(manager)
+
+
+class RemoteSshWOLAction(RemoteSshWakeAction):
+    def __init__(self, host, wakeMac, wolBin='wakeonlan', sshBin='ssh',
+                 sshKey=None, sshHostKey=None):
+        RemoteSshWakeAction.__init__(self, host, [wolBin, wakeMac],
+                                     sshBin=sshBin,
+                                     sshKey=sshKey, sshHostKey=sshHostKey)
+
+
+@implementer(interfaces.IMachineSuspendAction)
+class RemoteSshSuspendAction(_SshActionMixin):
+    def __init__(self, host, remoteCommand=None, sshBin='ssh',
+                 sshKey=None, sshHostKey=None):
+        if remoteCommand is None:
+            remoteCommand = ['systemctl', 'suspend']
+        self.setupSsh(sshBin, host, remoteCommand,
+                      sshKey=sshKey, sshHostKey=sshHostKey)
+
+    def suspend(self, manager):
+        return self.execute(manager)
 
 
 @implementer(interfaces.ISuspendableMachine)
