@@ -1,3 +1,9 @@
+# This template file assumes the buildbot worker lives in a subdirectory od
+# /var/lib/buildbot
+# Usage:
+#   cd /var/lib/buildbot
+#   buildbot-worker create-worker [directory] [master hostname] [name] [password]
+#   systemctl enable --now buildbot-worker@[directory].service
 [Unit]
 Description=Buildbot Worker
 After=network.target

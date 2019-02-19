@@ -1,3 +1,9 @@
+# This template file assumes the buildbot master lives in a subdirectory of
+# /var/lib/buildbot
+# Usage:
+#   cd /var/lib/buildbot
+#   buildbot create-master [directory]
+#   systemctl enable --now buildbot@[directory].service
 [Unit]
 Description=Buildbot Master
 After=network.target
