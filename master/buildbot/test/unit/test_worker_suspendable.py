@@ -59,8 +59,8 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
 
         manager = FakeManager()
         action = LocalWakeAction(['cmd', 'arg1', 'arg2'])
-        self.assertFalse((yield action.wake(manager)))
-        self.assertTrue((yield action.wake(manager)))
+        self.assertFalse((yield action.perform(manager)))
+        self.assertTrue((yield action.perform(manager)))
         self.assertAllCommandsRan()
 
     def test_local_wake_action_command_not_list(self):
@@ -78,10 +78,10 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
 
         manager = FakeManager()
         action = LocalWOLAction('00:11:22:33:44:55', wolBin='wol')
-        self.assertFalse((yield action.wake(manager)))
+        self.assertFalse((yield action.perform(manager)))
 
         action = LocalWOLAction('00:11:22:33:44:55')
-        self.assertTrue((yield action.wake(manager)))
+        self.assertTrue((yield action.perform(manager)))
         self.assertAllCommandsRan()
 
     @mock.patch('buildbot.util.private_tempdir.PrivateTemporaryDirectory',
@@ -99,8 +99,8 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
 
         manager = FakeManager()
         action = RemoteSshWakeAction('remote_host', ['remotebin', 'arg1'])
-        self.assertFalse((yield action.wake(manager)))
-        self.assertTrue((yield action.wake(manager)))
+        self.assertFalse((yield action.perform(manager)))
+        self.assertTrue((yield action.perform(manager)))
         self.assertAllCommandsRan()
 
         self.assertEqual(temp_dir_mock.dirs, [])
@@ -127,7 +127,7 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
         action = RemoteSshWakeAction('remote_host', ['remotebin', 'arg1'],
                                      sshKey='ssh_key',
                                      sshHostKey='ssh_host_key')
-        self.assertTrue((yield action.wake(manager)))
+        self.assertTrue((yield action.perform(manager)))
 
         self.assertAllCommandsRan()
 
@@ -167,11 +167,11 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
 
         manager = FakeManager()
         action = RemoteSshWOLAction('remote_host', '00:11:22:33:44:55')
-        self.assertTrue((yield action.wake(manager)))
+        self.assertTrue((yield action.perform(manager)))
 
         action = RemoteSshWOLAction('remote_host', '00:11:22:33:44:55',
                                     wolBin='wolbin')
-        self.assertTrue((yield action.wake(manager)))
+        self.assertTrue((yield action.perform(manager)))
         self.assertAllCommandsRan()
 
         self.assertEqual(temp_dir_mock.dirs, [])
@@ -192,11 +192,11 @@ class TestActions(unittest.TestCase, gpo.GetProcessOutputMixin,
 
         manager = FakeManager()
         action = RemoteSshSuspendAction('remote_host')
-        self.assertTrue((yield action.suspend(manager)))
+        self.assertTrue((yield action.perform(manager)))
 
         action = RemoteSshSuspendAction('remote_host',
                                         remoteCommand=['dosuspend', 'arg1'])
-        self.assertTrue((yield action.suspend(manager)))
+        self.assertTrue((yield action.perform(manager)))
         self.assertAllCommandsRan()
 
         self.assertEqual(temp_dir_mock.dirs, [])

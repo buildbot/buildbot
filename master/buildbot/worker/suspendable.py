@@ -97,7 +97,7 @@ class _LocalMachineActionMixin(object):
         self._command = command
 
     @defer.inlineCallbacks
-    def execute(self, manager):
+    def perform(self, manager):
         args = yield manager.renderSecrets(self._command)
         return (yield runProcessLogFailures(args[0], args[1:]))
 
@@ -119,7 +119,7 @@ class _SshActionMixin(object):
         self._sshHostKey = sshHostKey
 
     @defer.inlineCallbacks
-    def _executeImpl(self, manager, key_path, known_hosts_path):
+    def _performImpl(self, manager, key_path, known_hosts_path):
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
@@ -146,7 +146,7 @@ class _SshActionMixin(object):
         defer.returnValue((key_path, known_hosts_path))
 
     @defer.inlineCallbacks
-    def execute(self, manager):
+    def perform(self, manager):
         if self._sshKey is not None or self._sshHostKey is not None:
             with private_tempdir.PrivateTemporaryDirectory(
                     prefix='ssh-', dir=manager.master.basedir) as temp_dir:
@@ -154,19 +154,16 @@ class _SshActionMixin(object):
                 key_path, hosts_path = yield self._prepareSshKeys(manager,
                                                                   temp_dir)
 
-                ret = yield self._executeImpl(manager, key_path, hosts_path)
+                ret = yield self._performImpl(manager, key_path, hosts_path)
         else:
-            ret = yield self._executeImpl(manager, None, None)
+            ret = yield self._performImpl(manager, None, None)
         defer.returnValue(ret)
 
 
-@implementer(interfaces.IMachineWakeAction)
+@implementer(interfaces.IMachineAction)
 class LocalWakeAction(_LocalMachineActionMixin):
     def __init__(self, command):
         self.setupLocal(command)
-
-    def wake(self, manager):
-        return self.execute(manager)
 
 
 class LocalWOLAction(LocalWakeAction):
@@ -174,15 +171,12 @@ class LocalWOLAction(LocalWakeAction):
         LocalWakeAction.__init__(self, [wolBin, wakeMac])
 
 
-@implementer(interfaces.IMachineWakeAction)
+@implementer(interfaces.IMachineAction)
 class RemoteSshWakeAction(_SshActionMixin):
     def __init__(self, host, remoteCommand, sshBin='ssh',
                  sshKey=None, sshHostKey=None):
         self.setupSsh(sshBin, host, remoteCommand,
                       sshKey=sshKey, sshHostKey=sshHostKey)
-
-    def wake(self, manager):
-        return self.execute(manager)
 
 
 class RemoteSshWOLAction(RemoteSshWakeAction):
@@ -193,7 +187,7 @@ class RemoteSshWOLAction(RemoteSshWakeAction):
                                      sshKey=sshKey, sshHostKey=sshHostKey)
 
 
-@implementer(interfaces.IMachineSuspendAction)
+@implementer(interfaces.IMachineAction)
 class RemoteSshSuspendAction(_SshActionMixin):
     def __init__(self, host, remoteCommand=None, sshBin='ssh',
                  sshKey=None, sshHostKey=None):
@@ -201,9 +195,6 @@ class RemoteSshSuspendAction(_SshActionMixin):
             remoteCommand = ['systemctl', 'suspend']
         self.setupSsh(sshBin, host, remoteCommand,
                       sshKey=sshKey, sshHostKey=sshHostKey)
-
-    def suspend(self, manager):
-        return self.execute(manager)
 
 
 @implementer(interfaces.ISuspendableMachine)
@@ -224,15 +215,12 @@ class SuspendableMachine(service.BuildbotService, object):
         self.state = self.STATE_SUSPENDED
         self.workers = []
 
-        if not interfaces.IMachineWakeAction.providedBy(wake_action):
-            msg = "wake_action of {} does not implement required " \
-                  "interface".format(self.name)
-            raise Exception(msg)
-
-        if not interfaces.IMachineSuspendAction.providedBy(suspend_action):
-            msg = "suspend_action of {} does not implement required " \
-                  "interface".format(self.name)
-            raise Exception(msg)
+        for action, arg_name in [(wake_action, 'wake_action'),
+                                 (suspend_action, 'suspend_action')]:
+            if not interfaces.IMachineAction.providedBy(action):
+                msg = "{} of {} does not implement required " \
+                      "interface".format(arg_name, self.name)
+                raise Exception(msg)
 
     def reconfigService(self, name, workernames, wake_action, suspend_action,
                         build_wait_timeout=0,
@@ -296,7 +284,7 @@ class SuspendableMachine(service.BuildbotService, object):
         # Wake the machine. We don't need to wait for any workers to actually
         # come online as that's handled in their substantiate() functions.
         try:
-            ret = yield self.wake_action.wake(self)
+            ret = yield self.wake_action.perform(self)
         except Exception as e:
             log.err(e, 'while waking suspendable machine {0}'.format(self.name))
             ret = False
@@ -332,7 +320,7 @@ class SuspendableMachine(service.BuildbotService, object):
                                   for worker in self.workers],
                                  consumeErrors=True)
         try:
-            yield self.suspend_action.suspend(self)
+            yield self.suspend_action.perform(self)
         except Exception as e:
             log.err(e, 'while suspending suspendable machine {0}'.format(
                 self.name))

@@ -54,24 +54,16 @@ class ControllableSuspendableWorker(ControllableLatentWorkerMixin,
         defer.returnValue(ret)
 
 
-@implementer(interfaces.IMachineWakeAction)
-class FakeWakeAction(object):
-    def __init__(self, controller):
+@implementer(interfaces.IMachineAction)
+class FakeAction(object):
+    def __init__(self, controller, attr):
         self._controller = controller
+        self._attr = attr
 
-    def wake(self, manager):
-        self._controller._wake_deferred = defer.Deferred()
-        return self._controller._wake_deferred
-
-
-@implementer(interfaces.IMachineSuspendAction)
-class FakeSuspendAction(object):
-    def __init__(self, controller):
-        self._controller = controller
-
-    def suspend(self, manager):
-        self._controller._suspend_deferred = defer.Deferred()
-        return self._controller._suspend_deferred
+    def perform(self, manager):
+        deferred = defer.Deferred()
+        setattr(self._controller, self._attr, deferred)
+        return deferred
 
 
 class SuspendableMachineController(object):
@@ -79,8 +71,8 @@ class SuspendableMachineController(object):
     '''
 
     def __init__(self, name, **kwargs):
-        self._suspend_action = FakeSuspendAction(self)
-        self._wake_action = FakeWakeAction(self)
+        self._suspend_action = FakeAction(self, '_suspend_deferred')
+        self._wake_action = FakeAction(self, '_wake_deferred')
         self._suspend_deferred = None
         self._wake_deferred = None
         self.manager = SuspendableMachine(
