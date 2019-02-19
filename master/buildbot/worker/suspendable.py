@@ -78,6 +78,18 @@ class SuspendableMachineManager(service.BuildbotServiceManager):
     config_attr = 'suspendable_machines'
 
 
+@defer.inlineCallbacks
+def runProcessLogFailures(bin, args, expectedCode=0):
+    stdout, stderr, code = yield utils.getProcessOutputAndValue(bin, args)
+    if code != expectedCode:
+        log.err(('Got unexpected return code when running {} {}: '
+                 'code: {}, stdout: {}, stderr: {}').format(bin, args,
+                                                            code, stdout,
+                                                            stderr))
+        return False
+    return True
+
+
 class _LocalMachineActionMixin(object):
     def setupLocal(self, command):
         if not isinstance(command, list):
@@ -87,8 +99,7 @@ class _LocalMachineActionMixin(object):
     @defer.inlineCallbacks
     def execute(self, manager):
         args = yield manager.renderSecrets(self._command)
-        _, _, code = yield utils.getProcessOutputAndValue(args[0], args[1:])
-        defer.returnValue(code == 0)
+        return (yield runProcessLogFailures(args[0], args[1:]))
 
 
 class _SshActionMixin(object):
@@ -112,8 +123,7 @@ class _SshActionMixin(object):
         args = getSshArgsForKeys(key_path, known_hosts_path)
         args.append((yield manager.renderSecrets(self._host)))
         args.extend((yield manager.renderSecrets(self._remoteCommand)))
-        _, _, code = yield utils.getProcessOutputAndValue(self._sshBin, args)
-        defer.returnValue(code == 0)
+        return (yield runProcessLogFailures(self._sshBin, args))
 
     @defer.inlineCallbacks
     def _prepareSshKeys(self, manager, temp_dir_path):
