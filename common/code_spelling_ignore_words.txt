@@ -316,7 +316,6 @@ configs
 configurator
 configurators
 conn
-conndescr
 connectedness
 connectionmade
 connectionpool

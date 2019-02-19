@@ -134,8 +134,8 @@ class BotFactory(AutoLoginPBFactory):
 class Worker(WorkerBase, service.MultiService):
     """The service class to be instantiated from buildbot.tac
 
-    to just pass a connection description string, set buildmaster_host and
-    port to None, and use conndescr.
+    to just pass a connection string, set buildmaster_host and
+    port to None, and use connection_string.
 
     maxdelay is deprecated in favor of using twisted's backoffPolicy.
     """
@@ -144,12 +144,12 @@ class Worker(WorkerBase, service.MultiService):
     def __init__(self, buildmaster_host, port, name, passwd, basedir,
                  keepalive, usePTY=None, keepaliveTimeout=None, umask=None,
                  maxdelay=None, numcpus=None, unicode_encoding=None,
-                 allow_shutdown=None, maxRetries=None, conndescr=None):
+                 allow_shutdown=None, maxRetries=None, connection_string=None):
 
         assert usePTY is None, "worker-side usePTY is not supported anymore"
-        assert (conndescr is None or
+        assert (connection_string is None or
                 (buildmaster_host, port) == (None, None)), (
-                    "If you want to supply a connection description string, "
+                    "If you want to supply a connection string, "
                     "then set host and port to None")
 
         service.MultiService.__init__(self)
@@ -175,11 +175,11 @@ class Worker(WorkerBase, service.MultiService):
         bf = self.bf = BotFactory(buildmaster_host, port, keepalive, maxdelay)
         bf.startLogin(
             credentials.UsernamePassword(name, passwd), client=self.bot)
-        if conndescr is None:
-            conndescr = 'tcp:host={}:port={}'.format(
+        if connection_string is None:
+            connection_string = 'tcp:host={}:port={}'.format(
                 buildmaster_host.replace(':', r'\:'),  # escape ipv6 addresses
                 port)
-        endpoint = clientFromString(reactor, conndescr)
+        endpoint = clientFromString(reactor, connection_string)
 
         def policy(attempt):
             if maxRetries and attempt >= maxRetries:

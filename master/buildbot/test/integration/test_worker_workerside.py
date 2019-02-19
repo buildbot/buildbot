@@ -163,7 +163,7 @@ class TestWorkerConnection(unittest.TestCase):
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
-        self.client_conndescr_tpl = r"tcp:host=127.0.0.1:port={port}"
+        self.client_connection_string_tpl = r"tcp:host=127.0.0.1:port={port}"
 
         self.tmpdirs = set()
 
@@ -185,7 +185,7 @@ class TestWorkerConnection(unittest.TestCase):
 
     @defer.inlineCallbacks
     def addMasterSideWorker(self,
-                            conndescr=r"tcp:{port}:interface=127.0.0.1".format(
+                            connection_string=r"tcp:{port}:interface=127.0.0.1".format(
                                 port=DEFAULT_PORT),
                             name="testworker", password="pw",
                             update_port=True,
@@ -199,7 +199,7 @@ class TestWorkerConnection(unittest.TestCase):
 
         # reconfig the master to get it set up
         new_config = self.master.config
-        new_config.protocols = {"pb": {"port": conndescr}}
+        new_config.protocols = {"pb": {"port": connection_string}}
         new_config.workers = [self.buildworker]
         new_config.builders = [config.BuilderConfig(
             name='bldr',
@@ -220,13 +220,13 @@ class TestWorkerConnection(unittest.TestCase):
         """
         worker.bf.disconnect()
 
-    def addWorker(self, conndescr_tpl=r"tcp:host=127.0.0.1:port={port}",
+    def addWorker(self, connection_string_tpl=r"tcp:host=127.0.0.1:port={port}",
                   password="pw", name="testworker", keepalive=None):
         """Add a true Worker object to the services."""
         wdir = tempfile.mkdtemp()
         self.tmpdirs.add(wdir)
         return TestingWorker(None, None, name, password, wdir, keepalive,
-                             conndescr=conndescr_tpl.format(port=self.port))
+                             connection_string=connection_string_tpl.format(port=self.port))
 
     @defer.inlineCallbacks
     def test_connect_disconnect(self):
@@ -289,7 +289,7 @@ class TestWorkerConnection(unittest.TestCase):
         yield self.addMasterSideWorker(
             password='pw2',
             update_port=False,  # don't know why, but it'd fail
-            conndescr=r"tcp:{port}:interface=127.0.0.1".format(port=self.port))
+            connection_string=r"tcp:{port}:interface=127.0.0.1".format(port=self.port))
         timeout = reactor.callLater(10, could_not_connect)
         yield worker.tests_connected
 

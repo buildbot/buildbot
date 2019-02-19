@@ -154,8 +154,8 @@ class TestWorkerComm(unittest.TestCase):
     @ivar worker: master-side L{Worker} instance
     @ivar workerworker: worker-side L{FakeWorkerWorker} instance
     @ivar port: TCP port to connect to
-    @ivar server_conndescr: description string for the server endpoint
-    @ivar client_conndescr_tpl: description string template for the client
+    @ivar server_connection_string: description string for the server endpoint
+    @ivar client_connection_string_tpl: description string template for the client
                                 endpoint (expects to passed 'port')
     @ivar endpoint: endpoint controlling the outbound connection
                     from worker to master
@@ -197,8 +197,8 @@ class TestWorkerComm(unittest.TestCase):
         # patch in our FakeBuilder for the regular Builder class
         self.patch(botmaster, 'Builder', FakeBuilder)
 
-        self.server_conndescr = "tcp:0:interface=127.0.0.1"
-        self.client_conndescr_tpl = "tcp:host=127.0.0.1:port={port}"
+        self.server_connection_string = "tcp:0:interface=127.0.0.1"
+        self.client_connection_string_tpl = "tcp:host=127.0.0.1:port={port}"
 
     def tearDown(self):
         if self.broker:
@@ -228,7 +228,7 @@ class TestWorkerComm(unittest.TestCase):
 
         # reconfig the master to get it set up
         new_config = self.master.config
-        new_config.protocols = {"pb": {"port": self.server_conndescr}}
+        new_config.protocols = {"pb": {"port": self.server_connection_string}}
         new_config.workers = [self.buildworker]
         new_config.builders = [config.BuilderConfig(
             name='bldr',
@@ -271,7 +271,7 @@ class TestWorkerComm(unittest.TestCase):
             return workerworker
 
         self.endpoint = clientFromString(
-                reactor, self.client_conndescr_tpl.format(port=self.port))
+                reactor, self.client_connection_string_tpl.format(port=self.port))
         connected_d = self.endpoint.connect(factory)
 
         dlist = [connected_d, login_d]
@@ -315,12 +315,12 @@ class TestWorkerComm(unittest.TestCase):
         def escape_colon(path):
             # on windows we can't have \ as it serves as the escape character for :
             return path.replace('\\', '/').replace(':', '\\:')
-        self.server_conndescr = (
+        self.server_connection_string = (
             "ssl:port=0:certKey={pub}:privateKey={priv}:" +
             "interface=127.0.0.1").format(
                 pub=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.crt')),
                 priv=escape_colon(os.path.join(PKI_DIR, '127.0.0.1.key')))
-        self.client_conndescr_tpl = "ssl:host=127.0.0.1:port={port}"
+        self.client_connection_string_tpl = "ssl:host=127.0.0.1:port={port}"
 
         yield self.addWorker()
 
