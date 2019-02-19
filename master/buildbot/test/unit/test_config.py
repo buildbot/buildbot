@@ -99,6 +99,12 @@ class FakeBuilder:
         self.__dict__.update(kwargs)
 
 
+@implementer(interfaces.ISuspendableMachine)
+class FakeSuspendableMachine(object):
+    def __init__(self, **kwargs):
+        self.__dict__.update(kwargs)
+
+
 class ConfigErrors(unittest.TestCase):
 
     def test_constr(self):
@@ -362,6 +368,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.load_builders.called)
         self.assertTrue(rv.load_workers.called)
         self.assertTrue(rv.load_change_sources.called)
+        self.assertTrue(rv.load_suspendable_machines.called)
         self.assertTrue(rv.load_user_managers.called)
 
         self.assertTrue(rv.check_single_master.called)
@@ -369,6 +376,7 @@ class MasterConfig(ConfigErrorsMixin, dirs.DirsMixin, unittest.TestCase):
         self.assertTrue(rv.check_locks.called)
         self.assertTrue(rv.check_builders.called)
         self.assertTrue(rv.check_ports.called)
+        self.assertTrue(rv.check_suspendable_machines.called)
 
     def test_preChangeGenerator(self):
         cfg = config.MasterConfig()
@@ -857,6 +865,27 @@ class MasterConfig_loaders(ConfigErrorsMixin, unittest.TestCase):
                                      dict(change_source=[chsrc]))
         self.assertResults(change_sources=[chsrc])
 
+    def test_load_suspendable_machines_defaults(self):
+        self.cfg.load_suspendable_machines(self.filename, {})
+        self.assertResults(suspendable_machines=[])
+
+    def test_load_suspendable_machines_not_instance(self):
+        self.cfg.load_suspendable_machines(self.filename,
+                                           dict(suspendableMachines=[mock.Mock()]))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_suspendable_machines_single(self):
+        mm = FakeSuspendableMachine(name='a')
+        self.cfg.load_suspendable_machines(self.filename,
+                                           dict(suspendableMachines=mm))
+        self.assertConfigError(self.errors, "must be a list of")
+
+    def test_load_suspendable_machines_list(self):
+        mm = FakeSuspendableMachine()
+        self.cfg.load_suspendable_machines(self.filename,
+                                       dict(suspendableMachines=[mm]))
+        self.assertResults(suspendable_machines=[mm])
+
     def test_load_user_managers_defaults(self):
         self.cfg.load_user_managers(self.filename, {})
         self.assertResults(user_managers=[])
@@ -1223,6 +1252,36 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
         self.cfg.check_ports()
         self.assertConfigError(self.errors,
                                "Some of ports in c['protocols'] duplicated")
+
+    def test_check_suspendable_machines_unknown_worker(self):
+        wrk = mock.Mock()
+        wrk.workername = 'a'
+        self.cfg.workers = [wrk]
+        self.cfg.suspendable_machines = [
+            FakeSuspendableMachine(name='a', workernames=['b'])
+        ]
+        self.cfg.check_suspendable_machines()
+        self.assertConfigError(self.errors, 'uses unknown workers')
+
+    def test_check_suspendable_machines_duplicate_name(self):
+        self.cfg.suspendable_machines = [
+            FakeSuspendableMachine(name='a', workernames=[]),
+            FakeSuspendableMachine(name='a', workernames=[])
+        ]
+        self.cfg.check_suspendable_machines()
+        self.assertConfigError(self.errors,
+                               'duplicate suspendable machine controller name')
+
+    def test_check_suspendable_machines_duplicate_worker(self):
+        wrk = mock.Mock()
+        wrk.workername = 'b'
+        self.cfg.workers = [wrk]
+        self.cfg.suspendable_machines = [
+            FakeSuspendableMachine(name='a', workernames=['b']),
+            FakeSuspendableMachine(name='b', workernames=['b'])
+        ]
+        self.cfg.check_suspendable_machines()
+        self.assertConfigError(self.errors, 'uses duplicate workers')
 
 
 class MasterConfig_old_worker_api(unittest.TestCase):

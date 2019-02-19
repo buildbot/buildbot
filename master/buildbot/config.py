@@ -231,6 +231,7 @@ class MasterConfig(util.ComparableMixin):
         self.builders = []
         self.workers = []
         self.change_sources = []
+        self.suspendable_machines = []
         self.status = []
         self.user_managers = []
         self.revlink = default_revlink_matcher
@@ -266,6 +267,7 @@ class MasterConfig(util.ComparableMixin):
         "logMaxSize",
         "logMaxTailSize",
         "manhole",
+        "suspendableMachines",
         "collapseRequests",
         "metrics",
         "mq",
@@ -341,6 +343,7 @@ class MasterConfig(util.ComparableMixin):
             config.load_builders(filename, config_dict)
             config.load_workers(filename, config_dict)
             config.load_change_sources(filename, config_dict)
+            config.load_suspendable_machines(filename, config_dict)
             config.load_user_managers(filename, config_dict)
             config.load_www(filename, config_dict)
             config.load_services(filename, config_dict)
@@ -351,6 +354,7 @@ class MasterConfig(util.ComparableMixin):
             config.check_locks()
             config.check_builders()
             config.check_ports()
+            config.check_suspendable_machines()
         finally:
             _errors = None
 
@@ -729,6 +733,23 @@ class MasterConfig(util.ComparableMixin):
 
         self.change_sources = change_sources
 
+    def load_suspendable_machines(self, filename, config_dict):
+        if 'suspendableMachines' not in config_dict:
+            return
+
+        suspendable_machines = config_dict['suspendableMachines']
+        msg = "c['suspendableMachines'] must be a list of suspendable machines"
+        if not isinstance(suspendable_machines, (list, tuple)):
+            error(msg)
+            return
+
+        for m in suspendable_machines:
+            if not interfaces.ISuspendableMachine.providedBy(m):
+                error(msg)
+                return
+
+        self.suspendable_machines = suspendable_machines
+
     def load_user_managers(self, filename, config_dict):
         if 'user_managers' not in config_dict:
             return
@@ -904,6 +925,32 @@ class MasterConfig(util.ComparableMixin):
             return
         if self.workers:
             error("workers are configured, but c['protocols'] not")
+
+    def check_suspendable_machines(self):
+        if not self.suspendable_machines:
+            return
+
+        workernames = {w.workername for w in self.workers}
+        seen_managed_workers = set()
+        seen_names = set()
+
+        for mm in self.suspendable_machines:
+            unknowns = set(mm.workernames) - workernames
+            if unknowns:
+                error("suspendable machine controller '%s' uses unknown "
+                      "workers %s" % (mm.name,
+                                      ", ".join(repr(u) for u in unknowns)))
+            if mm.name in seen_names:
+                error("duplicate suspendable machine controller "
+                      "name '%s'" % mm.name)
+            duplicate = seen_managed_workers & set(mm.workernames)
+            if duplicate:
+                error("suspendable machine controller '%s' uses duplicate "
+                      "workers %s" % (mm.name,
+                                      ", ".join(repr(u) for u in duplicate)))
+
+            seen_names.add(mm.name)
+            seen_managed_workers |= set(mm.workernames)
 
 
 class BuilderConfig(util_config.ConfiguredMixin):

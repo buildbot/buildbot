@@ -187,6 +187,14 @@ class ILatentWorker(IWorker):
         """
 
 
+class ISuspendableMachine(Interface):
+    pass
+
+
+class ISuspendableWorker(Interface):
+    pass
+
+
 class IRenderable(Interface):
 
     """An object that can be interpolated with properties from a build.
