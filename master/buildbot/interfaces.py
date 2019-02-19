@@ -191,6 +191,20 @@ class ISuspendableMachine(Interface):
     pass
 
 
+class IMachineWakeAction(Interface):
+    def wake(self, manager):
+        """ Wake the machine managed by manager. Returns a deferred evaluating
+            to True if it was possible to execute the wake action.
+        """
+
+
+class IMachineSuspendAction(Interface):
+    def suspend(self, manager):
+        """ Suspend or shut down the machine managed by manager.
+            Returns a deferred.
+        """
+
+
 class ISuspendableWorker(Interface):
     pass
 

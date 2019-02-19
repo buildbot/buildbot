@@ -1096,6 +1096,7 @@ reconfiguring
 reconnection
 recurse
 redhat
+reentrant
 refactor
 refcount
 refetch
