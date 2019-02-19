@@ -1058,3 +1058,39 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
 
         yield self.assertBuildResults(1, SUCCESS)
         yield self.assertBuildResults(2, SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_supports_no_build_for_substantiation(self):
+        """
+        Abstract latent worker should support being substantiated without a
+        build and then insubstantiated.
+        """
+        controller, _, _ = \
+            yield self.create_single_worker_config()
+
+        controller.worker.substantiate(None, None)
+        controller.start_instance(True)
+        self.assertTrue(controller.started)
+
+        controller.worker.insubstantiate()
+        controller.stop_instance(True)
+
+    @defer.inlineCallbacks
+    def test_supports_no_build_for_substantiation_accepts_build_later(self):
+        """
+        Abstract latent worker should support being substantiated without a
+        build and then accept a build request.
+        """
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        controller.worker.substantiate(None, None)
+        controller.start_instance(True)
+        self.assertTrue(controller.started)
+
+        self.createBuildrequest(master, [builder_id])
+        stepcontroller.finish_step(SUCCESS)
+
+        self.reactor.advance(1)
+        controller.stop_instance(True)
