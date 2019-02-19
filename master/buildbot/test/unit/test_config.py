@@ -105,6 +105,12 @@ class FakeSuspendableMachine(object):
         self.__dict__.update(kwargs)
 
 
+@implementer(interfaces.ISuspendableWorker)
+class FakeSuspendableWorker(object):
+    def __init__(self, workername):
+        self.workername = workername
+
+
 class ConfigErrors(unittest.TestCase):
 
     def test_constr(self):
@@ -1254,14 +1260,25 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                "Some of ports in c['protocols'] duplicated")
 
     def test_check_suspendable_machines_unknown_worker(self):
-        wrk = mock.Mock()
-        wrk.workername = 'a'
-        self.cfg.workers = [wrk]
+        self.cfg.workers = [
+            FakeSuspendableWorker('a')
+        ]
         self.cfg.suspendable_machines = [
             FakeSuspendableMachine(name='a', workernames=['b'])
         ]
         self.cfg.check_suspendable_machines()
         self.assertConfigError(self.errors, 'uses unknown workers')
+
+    def test_check_suspendable_machines_workers_implement_iface(self):
+        wrk = mock.Mock()
+        wrk.workername = 'a'
+        self.cfg.workers = [wrk]
+        self.cfg.suspendable_machines = [
+            FakeSuspendableMachine(name='a', workernames=['a'])
+        ]
+        self.cfg.check_suspendable_machines()
+        self.assertConfigError(self.errors,
+                               'has worker that is not SuspendableWorker')
 
     def test_check_suspendable_machines_duplicate_name(self):
         self.cfg.suspendable_machines = [
@@ -1273,9 +1290,9 @@ class MasterConfig_checkers(ConfigErrorsMixin, unittest.TestCase):
                                'duplicate suspendable machine controller name')
 
     def test_check_suspendable_machines_duplicate_worker(self):
-        wrk = mock.Mock()
-        wrk.workername = 'b'
-        self.cfg.workers = [wrk]
+        self.cfg.workers = [
+            FakeSuspendableWorker('b')
+        ]
         self.cfg.suspendable_machines = [
             FakeSuspendableMachine(name='a', workernames=['b']),
             FakeSuspendableMachine(name='b', workernames=['b'])

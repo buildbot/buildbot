@@ -930,12 +930,22 @@ class MasterConfig(util.ComparableMixin):
         if not self.suspendable_machines:
             return
 
-        workernames = {w.workername for w in self.workers}
+        workersbyname = {w.workername: w for w in self.workers}
         seen_managed_workers = set()
         seen_names = set()
 
         for mm in self.suspendable_machines:
-            unknowns = set(mm.workernames) - workernames
+            unknowns = []
+            for w in mm.workernames:
+                if w not in workersbyname:
+                    unknowns.append(w)
+                    continue
+
+                worker = workersbyname[w]
+                if not interfaces.ISuspendableWorker.providedBy(worker):
+                    error("suspendable machine controller '%s' has worker "
+                          "that is not SuspendableWorker %s" % (mm.name, w))
+
             if unknowns:
                 error("suspendable machine controller '%s' uses unknown "
                       "workers %s" % (mm.name,
