@@ -1,0 +1,1 @@
+Fixed incorrect tracking of latent worker states that could sometimes result in duplicate ``stop_instance`` calls and so on.

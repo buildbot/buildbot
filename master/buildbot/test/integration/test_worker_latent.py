@@ -16,6 +16,7 @@
 
 from twisted.internet import defer
 from twisted.python.failure import Failure
+from twisted.spread import pb
 
 from buildbot.config import BuilderConfig
 from buildbot.interfaces import LatentWorkerCannotSubstantiate
@@ -34,6 +35,7 @@ from buildbot.test.util.integration import getMaster
 from buildbot.test.util.misc import DebugIntegrationLogsMixin
 from buildbot.test.util.misc import TestReactorMixin
 from buildbot.test.util.misc import TimeoutableTestCase
+from buildbot.test.util.patch_delay import patchForDelay
 
 
 class TestException(Exception):
@@ -341,6 +343,125 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
+    def test_very_late_detached_after_substantiation(self):
+        '''
+        A latent worker may detach at any time after stop_instance() call.
+        Make sure it works at the most late detachment point, i.e. when we're
+        substantiating again.
+        '''
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        self.assertTrue(controller.starting)
+
+        controller.auto_disconnect_worker = False
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        self.reactor.advance(1)
+
+        # stop the instance, but don't disconnect the worker up to until just
+        # before we complete start_instance()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+
+        self.assertTrue(controller.stopped)
+        yield self.createBuildrequest(master, [builder_id])
+        self.assertTrue(controller.starting)
+        yield controller.disconnect_worker()
+        yield controller.start_instance(True)
+
+        yield self.assertBuildResults(2, SUCCESS)
+        self.reactor.advance(1)
+
+        yield controller.stop_instance(True)
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_substantiation_during_stop_instance(self):
+        '''
+        If a latent worker detaches before stop_instance() completes and we
+        start a build then it should start successfully without causing an
+        erroneous cancellation of the substantiation request.
+        '''
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        # Trigger a single buildrequest
+        yield self.createBuildrequest(master, [builder_id])
+
+        self.assertEqual(True, controller.starting)
+
+        # start instance
+        controller.auto_disconnect_worker = False
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        self.reactor.advance(1)
+
+        self.assertTrue(controller.stopping)
+        yield controller.disconnect_worker()
+        # now create a buildrequest that will substantiate the build. It should
+        # either not start at all until the instance finished substantiating,
+        # or the substantiation request needs to be recorded and start
+        # immediately after stop_instance completes.
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.stop_instance(True)
+
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_substantiation_during_stop_instance_canStartBuild_race(self):
+        '''
+        If build attempts substantiation after the latent worker detaches,
+        but stop_instance() is not completed yet, then we should successfully
+        complete substantiation without causing an erroneous cancellation.
+        The above sequence of events was possible even if canStartBuild
+        checked for a in-progress insubstantiation, as if the build is scheduled
+        before insubstantiation, its start could be delayed until when
+        stop_instance() is in progress.
+        '''
+        controller, master, builder_ids = \
+            yield self.create_single_worker_two_builder_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        # Trigger a single buildrequest
+        yield self.createBuildrequest(master, [builder_ids[0]])
+
+        self.assertEqual(True, controller.starting)
+
+        # start instance
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        with patchForDelay('buildbot.process.builder.Builder.maybeStartBuild') as delay:
+            # create a build request which will result in a build, but it won't
+            # attempt to substantiate until after stop_instance() is in progress
+            yield self.createBuildrequest(master, [builder_ids[1]])
+            self.assertEqual(len(delay), 1)
+            self.reactor.advance(1)
+
+            self.assertTrue(controller.stopping)
+            delay.fire()
+            yield controller.stop_instance(True)
+
+        self.assertTrue(controller.starting)
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+    @defer.inlineCallbacks
     def test_stalled_substantiation_then_timeout_get_requeued(self):
         """
         If a latent worker substantiate, but not connect, and then be
@@ -368,6 +489,42 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             {req['buildrequestid'] for req in unclaimed_build_requests}
         )
         yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
+    def test_sever_connection_before_ping_then_timeout_get_requeued(self):
+        """
+        If a latent worker connects, but its connection is severed without
+        notification in the TCP layer, we successfully wait until TCP times
+        out and requeue the build.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        bsid, brids = yield self.createBuildrequest(master, [builder_id])
+
+        # sever connection just before ping()
+        with patchForDelay('buildbot.process.workerforbuilder.AbstractWorkerForBuilder.ping') as delay:
+            yield controller.start_instance(True)
+            controller.sever_connection()
+            delay.fire()
+
+        # lose connection after TCP times out
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+        yield self.assertBuildResults(1, RETRY)
+
+        # the worker will be put into quarantine
+        self.reactor.advance(controller.worker.quarantine_initial_timeout)
+
+        yield controller.stop_instance(True)
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(2, SUCCESS)
+
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
 
     @defer.inlineCallbacks
     def test_failed_sendBuilderList_get_requeued(self):
@@ -502,6 +659,239 @@ class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         stepcontroller.finish_step(SUCCESS)
         yield self.assertBuildResults(2, SUCCESS)
         yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_negative_build_timeout_reattach_substantiated(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side. We should still support accidental disconnections from
+        worker side due to, e.g. network problems.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Now disconnect and reconnect worker and check whether we can still
+        # build. This should not change the worker state from our side.
+        yield controller.disconnect_worker()
+        self.assertTrue(controller.started)
+        yield controller.connect_worker()
+        self.assertTrue(controller.started)
+
+        yield self.createBuildrequest(master, [builder_id])
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # The only way to stop worker with negative build timeout is to
+        # insubstantiate explicitly
+        yield controller.auto_stop(True)
+        yield controller.worker.insubstantiate()
+        yield controller.disconnect_worker()
+
+    @defer.inlineCallbacks
+    def test_sever_connection_while_building(self):
+        """
+        If the connection to worker is severed without TCP notification in the
+        middle of the build, the build is re-queued and successfully restarted.
+        """
+        controller, stepcontroller, master, builder_id = \
+            yield self.create_single_worker_config_with_step(
+                controller_kwargs=dict(build_wait_timeout=0)
+            )
+
+        # Request a build and disconnect midway
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.auto_stop(True)
+
+        self.assertTrue(controller.starting)
+        controller.start_instance(True)
+
+        yield self.assertBuildResults(1, None)
+        # sever connection and lose it after TCP times out
+        controller.sever_connection()
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        yield self.assertBuildResults(1, RETRY)
+
+        # Request one build.
+        yield self.createBuildrequest(master, [builder_id])
+        controller.start_instance(True)
+        yield self.assertBuildResults(2, None)
+        stepcontroller.finish_step(SUCCESS)
+        yield self.assertBuildResults(2, SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_sever_connection_during_insubstantiation(self):
+        """
+        If latent worker connection is severed without notification in the TCP
+        layer, we successfully wait until TCP times out, insubstantiate and
+        can substantiate after that.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # sever connection just before insubstantiation and lose it after TCP
+        # times out
+        with patchForDelay('buildbot.worker.base.AbstractWorker.disconnect') as delay:
+            self.reactor.advance(1)
+            self.assertTrue(controller.stopping)
+            controller.sever_connection()
+            delay.fire()
+
+        yield controller.stop_instance(True)
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        # create new build request and verify it works
+        yield self.createBuildrequest(master, [builder_id])
+
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
+
+    @defer.inlineCallbacks
+    def test_sever_connection_during_insubstantiation_and_buildrequest(self):
+        """
+        If latent worker connection is severed without notification in the TCP
+        layer, we successfully wait until TCP times out, insubstantiate and
+        can substantiate after that. In this the subsequent build request is
+        created during insubstantiation
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=1))
+
+        yield self.createBuildrequest(master, [builder_id])
+
+        controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        # sever connection just before insubstantiation and lose it after TCP
+        # times out
+        with patchForDelay('buildbot.worker.base.AbstractWorker.disconnect') as delay:
+            self.reactor.advance(1)
+            self.assertTrue(controller.stopping)
+            yield self.createBuildrequest(master, [builder_id])
+            controller.sever_connection()
+            delay.fire()
+
+        yield controller.stop_instance(True)
+        self.reactor.advance(100)
+        yield controller.disconnect_worker()
+
+        # verify the previously created build successfully completes
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+        self.reactor.advance(1)
+        yield controller.stop_instance(True)
+
+        self.flushLoggedErrors(pb.PBConnectionLost)
+
+    @defer.inlineCallbacks
+    def test_negative_build_timeout_reattach_insubstantiating(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side, but it can disconnect and reattach from worker side due to,
+        e.g. network problems.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Now start insubstantiation and disconnect and reconnect the worker.
+        # It should not change worker state from master side.
+        d = controller.worker.insubstantiate()
+        self.assertTrue(controller.stopping)
+        yield controller.disconnect_worker()
+        self.assertTrue(controller.stopping)
+        yield controller.connect_worker()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+        yield d
+
+        self.assertTrue(controller.stopped)
+        yield controller.disconnect_worker()
+
+        # Now substantiate the worker and verify build succeeds
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+        yield self.assertBuildResults(1, SUCCESS)
+
+        controller.auto_disconnect_worker = True
+        yield controller.auto_stop(True)
+
+    @defer.inlineCallbacks
+    def test_negative_build_timeout_no_disconnect_insubstantiating(self):
+        """
+        When build_wait_timeout is negative, we don't disconnect the worker from
+        our side, so it should be possible to insubstantiate and substantiate
+        it without problems if the worker does not disconnect either.
+        """
+        controller, master, builder_id = \
+            yield self.create_single_worker_config(
+                controller_kwargs=dict(build_wait_timeout=-1)
+            )
+
+        controller.auto_disconnect_worker = False
+        controller.auto_connect_worker = False
+
+        # Substantiate worker via a build
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield controller.connect_worker()
+
+        yield self.assertBuildResults(1, SUCCESS)
+        self.assertTrue(controller.started)
+
+        # Insubstantiate worker without disconnecting it
+        d = controller.worker.insubstantiate()
+        self.assertTrue(controller.stopping)
+        yield controller.stop_instance(True)
+        yield d
+
+        self.assertTrue(controller.stopped)
+
+        # Now substantiate the worker without connecting it
+        yield self.createBuildrequest(master, [builder_id])
+        yield controller.start_instance(True)
+        yield self.assertBuildResults(1, SUCCESS)
+
+        controller.auto_disconnect_worker = True
+        yield controller.auto_stop(True)
 
     @defer.inlineCallbacks
     def test_build_stop_with_cancelled_during_substantiation(self):
