@@ -329,7 +329,7 @@ class TestWorkerConnection(unittest.TestCase):
         worker.keepalive_waiter = None
         yield worker.bf.currentKeepaliveWaiter
 
-        self.assertGreater(second, first + 0.09)
+        self.assertGreater(second, first)
         self.assertLess(second, first + 1)  # seems safe enough
 
         yield worker.stopService()
