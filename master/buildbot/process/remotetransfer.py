@@ -179,11 +179,23 @@ class StringFileWriter(base.FileWriterImpl):
     def __init__(self):
         self.buffer = ""
 
+        # Preserve the data if converting from bytes to unicode fails because of packet size
+        # truncation, so we may attempt later.
+        self._data_tail = b""
+
     def remote_write(self, data):
-        self.buffer += bytes2unicode(data)
+        self._data_tail += data
+
+        try:
+            self.buffer += bytes2unicode(self._data_tail)
+            self._data_tail = b""
+        except UnicodeError:
+            pass
 
     def remote_close(self):
-        pass
+        # Shouldn't, but could happen.
+        if self._data_tail != b"":
+            self.buffer += bytes2unicode(self._data_tail)
 
 
 class StringFileReader(FileReader):
