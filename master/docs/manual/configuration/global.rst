@@ -412,7 +412,7 @@ This port should be visible to the outside world, and you'll need to tell your w
 It does not matter which port you pick, as long it is externally visible; however, you should probably use something larger than 1024, since most operating systems don't allow non-root processes to bind to low-numbered ports.
 If your buildmaster is behind a firewall or a NAT box of some sort, you may have to configure your firewall to permit inbound connections to this port.
 
-``c['protocols']['pb']['port']`` is a *strports* specification string, defined in the ``twisted.application.strports`` module (try ``pydoc twisted.application.strports`` to get documentation on the format).
+``c['protocols']['pb']['port']`` can also be used as a *connection string*, as defined in the ConnectionStrings_ guide.
 
 This means that you can have the buildmaster listen on a localhost-only port by doing:
 
@@ -421,6 +421,20 @@ This means that you can have the buildmaster listen on a localhost-only port by 
    c['protocols'] = {"pb": {"port": "tcp:10000:interface=127.0.0.1"}}
 
 This might be useful if you only run workers on the same machine, and they are all configured to contact the buildmaster at ``localhost:10000``.
+
+*connection strings* can also be used configure workers connecting over TLS. The syntax is then
+
+.. code-block:: python
+
+   c['protocols'] = {"pb": {"port":
+                            "ssl:9989:privateKey=master.key:certKey=master.crt"}}
+
+Please note that IPv6 addresses with : must be escaped with \ as well as : in paths and \ in paths.
+Read more about the *connection strings* format in ConnectionStrings_ documentation
+
+See also :ref:`Worker TLS Configuration <Worker-TLS-Config>`
+
+.. _ConnectionStrings: https://twistedmatrix.com/documents/current/core/howto/endpoints.html
 
 .. index:: Properties; global
 

@@ -109,9 +109,35 @@ class TestWorker(misc.PatcherMixin, unittest.TestCase):
         bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10)
 
     def test_constructor_083_tac(self):
-        # invocation as made from default 083 tac files
+        """invocation as made from default 0.8.3 tac files"""
         bot.Worker('mstr', 9010, 'me', 'pwd', '/s', 10,
                    umask=0o123, maxdelay=10)
+
+    def test_constructor_091_tac(self):
+        # invocation as made from default 0.9.1 tac files
+        bot.Worker(None, None, 'me', 'pwd', '/s', 10,
+                   connection_string="tcp:host=localhost:port=9010",
+                   umask=0o123, maxdelay=10)
+
+    def test_constructor_invalid_both_styles(self):
+        """Can't instantiate with both host/port and connection string."""
+        # assertRaises as a context manager appears in Python 2.7
+        self.assertRaises(AssertionError, bot.Worker,
+                          'mstr', 9010, 'me', 'pwd', '/s', 10,
+                          connection_string="tcp:anything")
+
+    def test_constructor_invalid_both_styles_partial(self):
+        # assertRaises as a context manager appears in Python 2.7
+        self.assertRaises(AssertionError, bot.Worker,
+                          'mstr', None, 'me', 'pwd', '/s', 10,
+                          connection_string="tcp:anything")
+
+    def test_constructor_invalid_both_styles_partial2(self):
+        """Can't instantiate with both host/port and connection string."""
+        # assertRaises as a context manager appears in Python 2.7
+        self.assertRaises(AssertionError, bot.Worker,
+                          None, 9010, None, 'me', 'pwd', '/s', 10,
+                          connection_string="tcp:anything")
 
     def test_constructor_full(self):
         # invocation with all args
