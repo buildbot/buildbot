@@ -101,10 +101,12 @@ class Mock(ShellCommand):
                                                     [self.build.path_module.join('build', self.logfiles[l])
                                                      for l in self.mock_logfiles]})
         d = self.runCommand(cmd)
+        # must resolve super() outside of the callback context.
+        super_ = super()
 
         @d.addCallback
         def removeDone(cmd):
-            ShellCommand.start(self)
+            super_.start()
         d.addErrback(self.failed)
 
 

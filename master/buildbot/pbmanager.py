@@ -137,13 +137,13 @@ class Dispatcher(service.AsyncService):
         self.port = strports.listen(self.portstr, self.serverFactory)
         return super().startService()
 
+    @defer.inlineCallbacks
     def stopService(self):
         # stop listening on the port when shut down
         assert self.port
         port, self.port = self.port, None
-        d = defer.maybeDeferred(port.stopListening)
-        d.addCallback(lambda _: service.AsyncService.stopService(self))
-        return d
+        yield defer.maybeDeferred(port.stopListening)
+        yield super().stopService()
 
     def register(self, username, password, pfactory):
         if debug:
