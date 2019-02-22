@@ -96,17 +96,11 @@ class Match:
 
 class AnyEndpointMatcher(EndpointMatcherBase):
 
-    def __init__(self, **kwargs):
-        EndpointMatcherBase.__init__(self, **kwargs)
-
     def match(self, ep, action="get", options=None):
         return defer.succeed(Match(self.master))
 
 
 class AnyControlEndpointMatcher(EndpointMatcherBase):
-
-    def __init__(self, **kwargs):
-        EndpointMatcherBase.__init__(self, **kwargs)
 
     def match(self, ep, action="", options=None):
         if bytes2unicode(action).lower() != "get":

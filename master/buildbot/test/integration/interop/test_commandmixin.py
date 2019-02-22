@@ -49,9 +49,6 @@ class CommandMixinMasterPB(CommandMixinMaster):
 
 class TestCommandMixinStep(BuildStep, CommandMixin):
 
-    def __init__(self, *args, **kwargs):
-        BuildStep.__init__(self, *args, **kwargs)
-
     @defer.inlineCallbacks
     def run(self):
         contents = yield self.runGlob('*')

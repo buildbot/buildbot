@@ -425,9 +425,6 @@ class MultipleFileUpload(_TransferBuildStep, CompositeStepMixin):
 
         d.addCallback(self.finished).addErrback(self.failed)
 
-    def finished(self, result):
-        return super().finished(result)
-
 
 class FileDownload(_TransferBuildStep):
 

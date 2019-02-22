@@ -28,8 +28,13 @@ from buildbot.util import ssl
 
 class UsageError(ValueError):
 
+    # pylint: disable=useless-super-delegation
     def __init__(self, string="Invalid usage", *more):
-        ValueError.__init__(self, string, *more)
+        # This is not useless as we change the default value of an argument.
+        # This bug is reported as "fixed" but apparently, it is not.
+        # https://github.com/PyCQA/pylint/issues/1085
+        # (Maybe there is a problem with builtin exceptions).
+        super().__init__(string, *more)
 
 
 class IrcStatusBot(StatusBot, irc.IRCClient):

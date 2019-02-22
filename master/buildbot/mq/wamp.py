@@ -30,9 +30,6 @@ from buildbot.util import toJson
 class WampMQ(service.ReconfigurableServiceMixin, base.MQBase):
     NAMESPACE = "org.buildbot.mq"
 
-    def __init__(self):
-        base.MQBase.__init__(self)
-
     def produce(self, routingKey, data):
         d = self._produce(routingKey, data)
         d.addErrback(

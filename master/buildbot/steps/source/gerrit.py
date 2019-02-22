@@ -19,9 +19,6 @@ from buildbot.steps.source.git import Git
 
 class Gerrit(Git):
 
-    def __init__(self, **kwargs):
-        Git.__init__(self, **kwargs)
-
     def startVC(self, branch, revision, patch):
         gerrit_branch = None
 

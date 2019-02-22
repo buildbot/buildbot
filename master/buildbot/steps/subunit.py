@@ -63,9 +63,6 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
         super().stopTest(test)
         self.step.setProgress('tests', self.testsRun)
 
-    def addSuccess(self, test):
-        TestResult.addSuccess(self, test)
-
     def addSkip(self, test, detail):
         if hasattr(TestResult, 'addSkip'):
             super().addSkip(test, detail)

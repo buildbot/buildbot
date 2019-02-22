@@ -72,6 +72,3 @@ class SandboxedWorker(AsyncService):
         yield self.worker.shutdown()
         # wait for process to disappear
         yield self.processprotocol.waitForFinish()
-
-    def stopService(self):
-        return super().stopService()
