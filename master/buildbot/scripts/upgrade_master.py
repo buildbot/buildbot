@@ -86,19 +86,27 @@ def upgradeDatabase(config, master_cfg):
         """.split())
         print(msg % signum)
 
-    for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP",
-                    "SIGUSR1", "SIGUSR2", "SIGBREAK"):
-        if hasattr(signal, signame):
-            signal.signal(getattr(signal, signame), sighandler)
+    prev_handlers = {}
+    try:
+        for signame in ("SIGTERM", "SIGINT", "SIGQUIT", "SIGHUP",
+                        "SIGUSR1", "SIGUSR2", "SIGBREAK"):
+            if hasattr(signal, signame):
+                signum = getattr(signal, signame)
+                prev_handlers[signum] = signal.signal(signum, sighandler)
 
-    master = BuildMaster(config['basedir'])
-    master.config = master_cfg
-    master.db.disownServiceParent()
-    db = connector.DBConnector(basedir=config['basedir'])
-    db.setServiceParent(master)
-    yield db.setup(check_version=False, verbose=not config['quiet'])
-    yield db.model.upgrade()
-    yield db.masters.setAllMastersActiveLongTimeAgo()
+        master = BuildMaster(config['basedir'])
+        master.config = master_cfg
+        master.db.disownServiceParent()
+        db = connector.DBConnector(basedir=config['basedir'])
+        db.setServiceParent(master)
+        yield db.setup(check_version=False, verbose=not config['quiet'])
+        yield db.model.upgrade()
+        yield db.masters.setAllMastersActiveLongTimeAgo()
+
+    finally:
+        # restore previous signal handlers
+        for signum, handler in prev_handlers.items():
+            signal.signal(signum, handler)
 
 
 @in_reactor
