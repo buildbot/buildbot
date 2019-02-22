@@ -85,7 +85,7 @@ class Builder extends Controller
 
                 glTopbarContextualActionsService.setContextualActions(actions)
 
-            builder.getForceschedulers().onChange = (forceschedulers) ->
+            builder.getForceschedulers({order:'name'}).onChange = (forceschedulers) ->
                 $scope.forceschedulers = forceschedulers
                 refreshContextMenu()
                 # reinstall contextual actions when coming back from forcesched
