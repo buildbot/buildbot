@@ -206,22 +206,22 @@ class BaseBasicScheduler(base.BaseScheduler):
             self.serviceid, less_than=max_changeid + 1)
 
 
-class SingleBranchScheduler(BaseBasicScheduler, AbsoluteSourceStampsMixin):
+class SingleBranchScheduler(AbsoluteSourceStampsMixin, BaseBasicScheduler):
 
     def __init__(self, name, createAbsoluteSourceStamps=False, **kwargs):
         self.createAbsoluteSourceStamps = createAbsoluteSourceStamps
-        BaseBasicScheduler.__init__(self, name, **kwargs)
+        super().__init__(name, **kwargs)
 
     @defer.inlineCallbacks
     def gotChange(self, change, important):
         if self.createAbsoluteSourceStamps:
             yield self.recordChange(change)
 
-        yield BaseBasicScheduler.gotChange(self, change, important)
+        yield super().gotChange(change, important)
 
     def getCodebaseDict(self, codebase):
         if self.createAbsoluteSourceStamps:
-            return AbsoluteSourceStampsMixin.getCodebaseDict(self, codebase)
+            return super().getCodebaseDict(codebase)
         return self.codebases[codebase]
 
     def getChangeFilter(self, branch, branches, change_filter, categories):
