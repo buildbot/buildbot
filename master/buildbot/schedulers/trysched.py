@@ -64,6 +64,7 @@ class JobdirService(MaildirService):
     # NOTE: tightly coupled with Try_Jobdir, below. We used to track it as a "parent"
     # via the MultiService API, but now we just track it as the member
     # "self.scheduler"
+    name = 'JobdirService'
 
     def __init__(self, scheduler, basedir=None):
         self.scheduler = scheduler
