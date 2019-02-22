@@ -13,7 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
-import os
+import subprocess
 from unittest.case import SkipTest
 
 from twisted.internet import defer
@@ -30,22 +30,31 @@ from buildbot.test.util.integration import RunMasterBase
 class SecretsConfig(RunMasterBase):
 
     def setUp(self):
-        rv = os.system("docker run -d -e SKIP_SETCAP=yes -e "
-                       "'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken' -e 'VAULT_TOKEN=my_vaulttoken'"
-                       " --name=vault_for_buildbot -p 8200:8200 vault")
-        if rv != 0:
+        try:
+            rv = subprocess.call(['docker', 'pull', 'vault'])
+            if rv != 0:
+                raise FileNotFoundError('docker')
+        except FileNotFoundError:
             raise SkipTest(
                 "Vault integration need docker environment to be setup")
 
+        rv = subprocess.call(['docker', 'run', '-d',
+                              '-e', 'SKIP_SETCAP=yes',
+                              '-e', 'VAULT_DEV_ROOT_TOKEN_ID=my_vaulttoken',
+                              '-e', 'VAULT_TOKEN=my_vaulttoken',
+                              '--name=vault_for_buildbot',
+                              '-p', '8200:8200', 'vault'])
+        self.assertEqual(rv, 0)
         self.addCleanup(self.remove_container)
 
-        rv = os.system("docker exec vault_for_buildbot /bin/sh -c "
-                       "'export VAULT_ADDR=http://127.0.0.1:8200/\n"
-                       "vault kv put secret/key value=word'")
+        rv = subprocess.call(['docker', 'exec',
+                              '-e', 'VAULT_ADDR=http://127.0.0.1:8200/',
+                              'vault_for_buildbot',
+                              'vault', 'kv', 'put', 'secret/key', 'value=word'])
         self.assertEqual(rv, 0)
 
     def remove_container(self):
-        os.system("docker rm -f vault_for_buildbot")
+        subprocess.call(['docker', 'rm', '-f', 'vault_for_buildbot'])
 
     @defer.inlineCallbacks
     def test_secret(self):
