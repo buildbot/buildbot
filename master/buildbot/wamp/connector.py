@@ -33,6 +33,8 @@ class MasterService(ApplicationSession, service.AsyncMultiService):
     """
 
     def __init__(self, config):
+        # Cannot use super() here.
+        # We must explicitly call both parent constructors.
         ApplicationSession.__init__(self)
         service.AsyncMultiService.__init__(self)
         self.config = config

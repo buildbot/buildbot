@@ -72,6 +72,9 @@ class AsyncService(service.Service):
 class AsyncMultiService(AsyncService, service.MultiService):
 
     def startService(self):
+        # Do NOT use super() here.
+        # The method resolution order would cause MultiService.startService() to
+        # be called which we explicitly want to override with this method.
         service.Service.startService(self)
         dl = []
         # if a service attaches another service during the reconfiguration
@@ -84,6 +87,9 @@ class AsyncMultiService(AsyncService, service.MultiService):
 
     @defer.inlineCallbacks
     def stopService(self):
+        # Do NOT use super() here.
+        # The method resolution order would cause MultiService.stopService() to
+        # be called which we explicitly want to override with this method.
         service.Service.stopService(self)
         services = list(self)
         services.reverse()

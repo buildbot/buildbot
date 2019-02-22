@@ -64,6 +64,9 @@ class BuildbotSession(server.Session):
         """
         self.site = site
         assert self.site.session_secret is not None, "site.session_secret is not configured yet!"
+        # Cannot use super() here as it would call server.Session.__init__
+        # which we explicitly want to override. However, we still want to call
+        # server.Session parent class constructor
         components.Componentized.__init__(self)
         if token:
             self._fromToken(token)

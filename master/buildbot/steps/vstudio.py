@@ -320,6 +320,7 @@ class VC8(VC7):
         super().__init__(**kwargs)
 
     def setupEnvironment(self, cmd):
+        # Do not use super() here. We want to override VC7.setupEnvironment().
         VisualStudio.setupEnvironment(self, cmd)
 
         VSInstallDir = self.installdir
@@ -381,6 +382,7 @@ class VCExpress9(VC8):
             command.append("/Project")
             command.append(self.project)
         self.setCommand(command)
+        # Do not use super() here. We want to override VC7.start().
         return VisualStudio.start(self)
 
 
