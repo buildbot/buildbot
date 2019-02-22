@@ -33,8 +33,7 @@ class SubunitLogObserver(logobserver.LogLineObserver, TestResult):
     """
 
     def __init__(self):
-        logobserver.LogLineObserver.__init__(self)
-        TestResult.__init__(self)
+        super().__init__()
         try:
             from subunit import TestProtocolServer, PROGRESS_CUR, PROGRESS_SET
             from subunit import PROGRESS_PUSH, PROGRESS_POP
