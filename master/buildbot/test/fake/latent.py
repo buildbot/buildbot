@@ -51,10 +51,14 @@ class LatentController(SeverWorkerConnectionMixin):
     stop_instance() is executed.
     """
 
-    def __init__(self, case, name, kind=None, build_wait_timeout=600, **kwargs):
+    def __init__(self, case, name, kind=None, build_wait_timeout=600,
+                 worker_class=None, **kwargs):
+        if worker_class is None:
+            worker_class = ControllableLatentWorker
+
         self.case = case
         self.build_wait_timeout = build_wait_timeout
-        self.worker = ControllableLatentWorker(name, self, **kwargs)
+        self.worker = worker_class(name, self, **kwargs)
         self.remote_worker = None
 
         self.state = States.STOPPED
@@ -143,7 +147,10 @@ class LatentController(SeverWorkerConnectionMixin):
         return worker.disownServiceParent()
 
     def setup_kind(self, build):
-        self._started_kind_deferred = build.render(self.kind)
+        if build:
+            self._started_kind_deferred = build.render(self.kind)
+        else:
+            self._started_kind_deferred = self.kind
 
     @defer.inlineCallbacks
     def get_started_kind(self):
@@ -156,7 +163,7 @@ class LatentController(SeverWorkerConnectionMixin):
         case.patch(BotBase, remoteMethod, patch)
 
 
-class ControllableLatentWorker(AbstractLatentWorker):
+class ControllableLatentWorkerMixin:
 
     """
     A latent worker that can be controlled by tests.
@@ -165,19 +172,7 @@ class ControllableLatentWorker(AbstractLatentWorker):
 
     def __init__(self, name, controller, **kwargs):
         self._controller = controller
-        AbstractLatentWorker.__init__(self, name, None, **kwargs)
-
-    def checkConfig(self, name, _, **kwargs):
-        AbstractLatentWorker.checkConfig(
-            self, name, None,
-            build_wait_timeout=self._controller.build_wait_timeout,
-            **kwargs)
-
-    def reconfigService(self, name, _, **kwargs):
-        AbstractLatentWorker.reconfigService(
-            self, name, None,
-            build_wait_timeout=self._controller.build_wait_timeout,
-            **kwargs)
+        super().__init__(name, None, **kwargs)
 
     @defer.inlineCallbacks
     def isCompatibleWithBuild(self, build_props):
@@ -216,3 +211,16 @@ class ControllableLatentWorker(AbstractLatentWorker):
             return True
         self._controller._stop_deferred = defer.Deferred()
         return (yield self._controller._stop_deferred)
+
+
+class ControllableLatentWorker(ControllableLatentWorkerMixin,
+                               AbstractLatentWorker):
+    def checkConfig(self, name, _, **kwargs):
+        super().checkConfig(
+            name, None, build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
+
+    def reconfigService(self, name, _, **kwargs):
+        super().reconfigService(
+            name, None, build_wait_timeout=self._controller.build_wait_timeout,
+            **kwargs)
