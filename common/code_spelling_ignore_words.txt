@@ -49,6 +49,7 @@ api
 apimaster
 app
 appdata
+applicative
 apps
 araujo
 arg
