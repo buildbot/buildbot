@@ -49,6 +49,14 @@ class BaseLock:
         # maximal number of counting owners
         self.maxCount = maxCount
 
+        # current number of claimed exclusive locks (0 or 1), must match
+        # self.owners
+        self._claimed_excl = 0
+
+        # current number of claimed counting locks (0 to self.maxCount), must
+        # match self.owners
+        self._claimed_counting = 0
+
         # subscriptions to this lock being released
         self.release_subs = subscription.SubscriptionPoint("%r releases"
                                                            % (self,))
@@ -56,27 +64,11 @@ class BaseLock:
     def __repr__(self):
         return self.description
 
-    def _getOwnersCount(self):
-        """ Return the number of current exclusive and counting owners.
-
-            @return: Tuple (number exclusive owners, number counting owners)
-        """
-        num_excl, num_counting = 0, 0
-        for owner in self.owners:
-            if owner[1].mode == 'exclusive':
-                num_excl = num_excl + 1
-            else:  # mode == 'counting'
-                num_counting = num_counting + 1
-
-        assert (num_excl == 1 and num_counting == 0) \
-            or (num_excl == 0 and num_counting <= self.maxCount)
-        return num_excl, num_counting
-
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
         debuglog("%s isAvailable(%s, %s): self.owners=%r"
                  % (self, requester, access, self.owners))
-        num_excl, num_counting = self._getOwnersCount()
+        num_excl, num_counting = self._claimed_excl, self._claimed_counting
 
         # Find all waiters ahead of the requester in the wait queue
         for idx, waiter in enumerate(self.waiting):
@@ -94,6 +86,30 @@ class BaseLock:
         # else Wants exclusive access
         return num_excl == 0 and num_counting == 0 and not ahead
 
+    def _addOwner(self, owner, access):
+        self.owners.append((owner, access))
+        if access.mode == 'counting':
+            self._claimed_counting += 1
+        else:
+            self._claimed_excl += 1
+
+        assert (self._claimed_excl == 1 and self._claimed_counting == 0) \
+            or (self._claimed_excl == 0 and self._claimed_excl <= self.maxCount)
+
+    def _removeOwner(self, owner, access):
+        # returns True if owner removed, False if the lock has been already
+        # released
+        entry = (owner, access)
+        if entry not in self.owners:
+            return False
+
+        self.owners.remove(entry)
+        if access.mode == 'counting':
+            self._claimed_counting -= 1
+        else:
+            self._claimed_excl -= 1
+        return True
+
     def claim(self, owner, access):
         """ Claim the lock (lock must be available) """
         debuglog("%s claim(%s, %s)" % (self, owner, access.mode))
@@ -103,7 +119,8 @@ class BaseLock:
         assert isinstance(access, LockAccess)
         assert access.mode in ['counting', 'exclusive']
         self.waiting = [w for w in self.waiting if w[0] is not owner]
-        self.owners.append((owner, access))
+        self._addOwner(owner, access)
+
         debuglog(" %s is claimed '%s'" % (self, access.mode))
 
     def subscribeToReleases(self, callback):
@@ -116,19 +133,18 @@ class BaseLock:
         assert isinstance(access, LockAccess)
 
         debuglog("%s release(%s, %s)" % (self, owner, access.mode))
-        entry = (owner, access)
-        if entry not in self.owners:
+        if not self._removeOwner(owner, access):
             debuglog("%s already released" % self)
             return
-        self.owners.remove(entry)
+
         # who can we wake up?
         # After an exclusive access, we may need to wake up several waiting.
         # Break out of the loop when the first waiting client should not be
         # awakened.
-        num_excl, num_counting = self._getOwnersCount()
+        num_excl, num_counting = self._claimed_excl, self._claimed_counting
         for i, (w_owner, w_access, d) in enumerate(self.waiting):
             if w_access.mode == 'counting':
-                if num_excl > 0 or num_counting == self.maxCount:
+                if num_excl > 0 or num_counting >= self.maxCount:
                     break
                 else:
                     num_counting = num_counting + 1
