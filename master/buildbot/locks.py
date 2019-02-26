@@ -144,7 +144,7 @@ class BaseLock:
         num_excl, num_counting = self._claimed_excl, self._claimed_counting
         for i, (w_owner, w_access, d) in enumerate(self.waiting):
             if w_access.mode == 'counting':
-                if num_excl > 0 or num_counting == self.maxCount:
+                if num_excl > 0 or num_counting >= self.maxCount:
                     break
                 else:
                     num_counting = num_counting + 1
