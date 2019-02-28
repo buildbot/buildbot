@@ -934,6 +934,7 @@ The scheduler takes the following parameters:
 
 ``name``
     See :ref:`name scheduler argument <Scheduler-Attr-Name>`.
+    Force buttons are ordered by this property in the UI (so you can prefix by 01, 02 etc in order to control precisely the order).
 
 ``builderNames``
     List of builders where the force button should appear.
@@ -1089,7 +1090,7 @@ All parameter types have a few common arguments:
 
 ``maxsize`` (optional; default: None)
 
-    The maximum size of a field (in bytes). 
+    The maximum size of a field (in bytes).
     Buildbot will ensure the field sent by the user is not too large.
 
 ``autopopulate`` (optional; default: None)
@@ -1106,7 +1107,7 @@ All parameter types have a few common arguments:
         builderNames=["runtests"],
         buttonName="Start Custom Build",
         codebases = [util.CodebaseParameter(
-            codebase='', project=None, 
+            codebase='', project=None,
             branch=util.ChoiceStringParameter(
                 name="branch",
                 label="Branch",
@@ -1353,7 +1354,7 @@ This is a parameter group to specify a sourcestamp for a given codebase.
 FileParameter
 #############
 
-This parameter allows the user to upload a file to a build. 
+This parameter allows the user to upload a file to a build.
 The user can either write some text to a text area, or select a file from the browser.
 Note that the file is then stored inside a property, so a ``maxsize`` of 10 megabytes has been set.
 You can still override that ``maxsize`` if you wish.
