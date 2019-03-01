@@ -50,6 +50,6 @@
             buildrequestsummary(style="margin-left:30px;margin-top:8px",buildrequestid='buildsummary.getBuildRequestIDFromURL(url.url)')
         div.anim-stepdetails(ng-if="step.fulldisplay")
           logpreview(ng-repeat="log in buildsummary.getLogs(step)", log="log",
-                     fulldisplay="step.logs.length == 1 || buildsummary.isSummaryLog(log)",
+                     fulldisplay="step.logs.length == 1 || buildsummary.expandByName(log)",
                      builderid="buildsummary.build.builderid", buildnumber="buildsummary.build.number",
                      step="step")

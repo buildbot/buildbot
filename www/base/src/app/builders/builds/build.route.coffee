@@ -27,4 +27,9 @@ class State extends Config
                 name:'maxlines'
                 caption:'Maximum number of lines to show'
                 default_value: 40
+            ,
+                type:'text'
+                name:'expand_logs'
+                caption:'Expand logs with these names (use ; as separator)'
+                default_value: 'summary'
             ]
