@@ -139,14 +139,14 @@ class LockTests(unittest.TestCase):
         self.assertTrue(lock.isAvailable(req1, access))
         self.assertTrue(lock.isAvailable(req_waiter1, access))
         self.assertTrue(lock.isAvailable(req_waiter2, access))
-        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
 
         lock.claim(req_waiter3, access)
         lock.release(req_waiter3, access)
         self.assertTrue(lock.isAvailable(req1, access))
         self.assertTrue(lock.isAvailable(req_waiter1, access))
         self.assertTrue(lock.isAvailable(req_waiter2, access))
-        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
 
     @parameterized.expand(['counting', 'exclusive'])
     def test_stop_waiting_raises_after_release(self, mode):
