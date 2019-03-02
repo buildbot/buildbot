@@ -150,6 +150,9 @@ Likewise any :class:`Builder`\s which have not been changed will be left running
 If a :class:`Builder` is modified (say, the build command is changed), this change will apply only for new :class:`Build`\s.
 Any existing build that is currently running or was already queued will be allowed to finish using the old configuration.
 
+Note that if any lock is renamed, old and new instances of the lock will be completely unrelated in the eyes of the buildmaster.
+This means that buildmaster will be able to start new builds that would otherwise have waited for the old lock to be released.
+
 .. warning::
 
    Buildbot's reconfiguration system is fragile for a few difficult-to-fix reasons:
