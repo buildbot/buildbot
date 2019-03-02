@@ -13,6 +13,7 @@
 #
 # Copyright Buildbot Team Members
 
+from parameterized import parameterized
 
 from twisted.internet import defer
 from twisted.python.filepath import FilePath
@@ -67,7 +68,7 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         )
 
     @defer.inlineCallbacks
-    def create_two_worker_two_builder_lock_config(self):
+    def create_two_worker_two_builder_lock_config(self, mode):
         stepcontrollers = [BuildStepController(), BuildStepController()]
 
         master_lock = util.MasterLock("lock1", maxCount=1)
@@ -77,11 +78,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
                 BuilderConfig(name='builder1',
                               workernames=['worker1'],
                               factory=BuildFactory([stepcontrollers[0].step]),
-                              locks=[master_lock.access('counting')]),
+                              locks=[master_lock.access(mode)]),
                 BuilderConfig(name='builder2',
                               workernames=['worker2'],
                               factory=BuildFactory([stepcontrollers[1].step]),
-                              locks=[master_lock.access('counting')]),
+                              locks=[master_lock.access(mode)]),
             ],
             'workers': [
                 self.createLocalWorker('worker1'),
@@ -129,15 +130,16 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], SUCCESS)
 
+    @parameterized.expand(['counting', 'exclusive'])
     @defer.inlineCallbacks
-    def test_builder_lock_release_wakes_builds_for_another_builder(self):
+    def test_builder_lock_release_wakes_builds_for_another_builder(self, mode):
         """
         If a builder locks a master lock then the build request distributor
         must retry running any buildrequests that might have been not scheduled
         due to unavailability of that lock when the lock becomes available.
         """
         stepcontrollers, master, builder_ids = \
-            yield self.create_two_worker_two_builder_lock_config()
+            yield self.create_two_worker_two_builder_lock_config(mode)
 
         yield self.assert_two_builds_created_one_after_another(
             stepcontrollers, master, builder_ids)
