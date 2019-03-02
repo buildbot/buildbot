@@ -52,8 +52,8 @@ class ControllableBuildStep(BuildStep):
     """
     name = "controllableStep"
 
-    def __init__(self, controller):
-        super().__init__()
+    def __init__(self, controller, **kwargs):
+        super().__init__(**kwargs)
         self._controller = controller
 
     def run(self):
