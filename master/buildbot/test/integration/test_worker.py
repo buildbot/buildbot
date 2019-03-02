@@ -24,7 +24,6 @@ from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.util.integration import RunFakeMasterTestCase
-from buildbot.worker.local import LocalWorker
 
 try:
     from buildbot_worker.bot import LocalWorker as RemoteWorker
@@ -134,7 +133,7 @@ class Tests(RunFakeMasterTestCase):
                               factory=BuildFactory([step_controller]),
                               ),
             ],
-            'workers': [LocalWorker('local', max_builds=1)],
+            'workers': [self.createLocalWorker('local', max_builds=1)],
             'protocols': {'null': {}},
             'multiMaster': True,
         }

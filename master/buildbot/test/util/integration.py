@@ -96,10 +96,10 @@ class RunFakeMasterTestCase(unittest.TestCase, TestReactorMixin,
         self.master = master = yield getMaster(self, self.reactor, config_dict)
         defer.returnValue(master)
 
-    def createLocalWorker(self, name):
+    def createLocalWorker(self, name, **kwargs):
         workdir = FilePath(self.mktemp())
         workdir.createDirectory()
-        return LocalWorker(name, workdir.path)
+        return LocalWorker(name, workdir.path, **kwargs)
 
     @defer.inlineCallbacks
     def assertBuildResults(self, build_id, result):
