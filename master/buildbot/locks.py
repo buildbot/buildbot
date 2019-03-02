@@ -219,6 +219,11 @@ class RealMasterLock(BaseLock):
     def getLockForWorker(self, workername):
         return self
 
+    def updateFromLockId(self, lockid):
+        assert self.name == lockid.name
+        self.setMaxCount(lockid.maxCount)
+        self._updateDescription()
+
 
 class RealWorkerLock:
 
@@ -250,6 +255,19 @@ class RealWorkerLock:
         lock.description = \
             "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
                                                  workername, id(lock))
+
+    def updateFromLockId(self, lockid):
+        assert self.name == lockid.name
+
+        self.maxCount = lockid.maxCount
+        self.maxCountForWorker = lockid.maxCountForWorker
+
+        self._updateDescription()
+
+        for workername, lock in self.locks.items():
+            maxCount = self.maxCountForWorker.get(workername, self.maxCount)
+            lock.setMaxCount(maxCount)
+            self._updateDescriptionForLock(lock, workername)
 
 
 class LockAccess(util.ComparableMixin):
