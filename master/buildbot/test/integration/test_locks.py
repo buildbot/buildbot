@@ -67,15 +67,8 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         )
 
     @defer.inlineCallbacks
-    def test_builder_lock_release_wakes_builds_for_another_builder(self):
-        """
-        If a builder locks a master lock then the build request distributor
-        must retry running any buildrequests that might have been not scheduled
-        due to unavailability of that lock when the lock becomes available.
-        """
-
-        stepcontroller1 = BuildStepController()
-        stepcontroller2 = BuildStepController()
+    def create_two_worker_two_builder_lock_config(self):
+        stepcontrollers = [BuildStepController(), BuildStepController()]
 
         master_lock = util.MasterLock("lock1", maxCount=1)
 
@@ -83,11 +76,11 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'builders': [
                 BuilderConfig(name='builder1',
                               workernames=['worker1'],
-                              factory=BuildFactory([stepcontroller1.step]),
+                              factory=BuildFactory([stepcontrollers[0].step]),
                               locks=[master_lock.access('counting')]),
                 BuilderConfig(name='builder2',
                               workernames=['worker2'],
-                              factory=BuildFactory([stepcontroller2.step]),
+                              factory=BuildFactory([stepcontrollers[1].step]),
                               locks=[master_lock.access('counting')]),
             ],
             'workers': [
@@ -98,20 +91,27 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
             'multiMaster': True,
         }
         master = yield self.getMaster(config_dict)
-        builder1_id = yield master.data.updates.findBuilderId('builder1')
-        builder2_id = yield master.data.updates.findBuilderId('builder2')
+        builder_ids = [
+            (yield master.data.updates.findBuilderId('builder1')),
+            (yield master.data.updates.findBuilderId('builder2')),
+        ]
 
+        return stepcontrollers, master, builder_ids
+
+    @defer.inlineCallbacks
+    def assert_two_builds_created_one_after_another(self, stepcontrollers,
+                                                    master, builder_ids):
         # start two builds and verify that a second build starts after the
         # first is finished
-        yield self.createBuildrequest(master, [builder1_id])
-        yield self.createBuildrequest(master, [builder2_id])
+        yield self.createBuildrequest(master, [builder_ids[0]])
+        yield self.createBuildrequest(master, [builder_ids[1]])
 
         builds = yield master.data.get(("builds",))
         self.assertEqual(len(builds), 1)
         self.assertEqual(builds[0]['results'], None)
-        self.assertEqual(builds[0]['builderid'], builder1_id)
+        self.assertEqual(builds[0]['builderid'], builder_ids[0])
 
-        stepcontroller1.finish_step(SUCCESS)
+        stepcontrollers[0].finish_step(SUCCESS)
 
         # execute Build.releaseLocks which is called eventually
         yield flushEventualQueue()
@@ -120,11 +120,24 @@ class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], None)
-        self.assertEqual(builds[1]['builderid'], builder2_id)
+        self.assertEqual(builds[1]['builderid'], builder_ids[1])
 
-        stepcontroller2.finish_step(SUCCESS)
+        stepcontrollers[1].finish_step(SUCCESS)
 
         builds = yield master.data.get(("builds",))
         self.assertEqual(len(builds), 2)
         self.assertEqual(builds[0]['results'], SUCCESS)
         self.assertEqual(builds[1]['results'], SUCCESS)
+
+    @defer.inlineCallbacks
+    def test_builder_lock_release_wakes_builds_for_another_builder(self):
+        """
+        If a builder locks a master lock then the build request distributor
+        must retry running any buildrequests that might have been not scheduled
+        due to unavailability of that lock when the lock becomes available.
+        """
+        stepcontrollers, master, builder_ids = \
+            yield self.create_two_worker_two_builder_lock_config()
+
+        yield self.assert_two_builds_created_one_after_another(
+            stepcontrollers, master, builder_ids)
