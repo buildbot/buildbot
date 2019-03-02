@@ -201,7 +201,11 @@ class RealMasterLock(BaseLock):
 
     def __init__(self, lockid):
         super().__init__(lockid.name, lockid.maxCount)
-        self.description = "<MasterLock(%s, %s)>" % (self.name, self.maxCount)
+        self._updateDescription()
+
+    def _updateDescription(self):
+        self.description = "<MasterLock({}, {})>".format(self.name,
+                                                         self.maxCount)
 
     def getLock(self, worker):
         return self
@@ -213,9 +217,7 @@ class RealWorkerLock:
         self.name = lockid.name
         self.maxCount = lockid.maxCount
         self.maxCountForWorker = lockid.maxCountForWorker
-        self.description = "<WorkerLock(%s, %s, %s)>" % (self.name,
-                                                         self.maxCount,
-                                                         self.maxCountForWorker)
+        self._updateDescription()
         self.locks = {}
 
     def __repr__(self):
@@ -227,11 +229,19 @@ class RealWorkerLock:
             maxCount = self.maxCountForWorker.get(workername,
                                                   self.maxCount)
             lock = self.locks[workername] = BaseLock(self.name, maxCount)
-            desc = "<WorkerLock(%s, %s)[%s] %d>" % (self.name, maxCount,
-                                                    workername, id(lock))
-            lock.description = desc
+            self._updateDescriptionForLock(lock, workername)
             self.locks[workername] = lock
         return self.locks[workername]
+
+    def _updateDescription(self):
+        self.description = \
+            "<WorkerLock({}, {}, {})>".format(self.name, self.maxCount,
+                                              self.maxCountForWorker)
+
+    def _updateDescriptionForLock(self, lock, workername):
+        lock.description = \
+            "<WorkerLock({}, {})[{}] {}>".format(lock.name, lock.maxCount,
+                                                 workername, id(lock))
 
 
 class LockAccess(util.ComparableMixin):
