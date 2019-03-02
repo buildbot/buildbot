@@ -15,7 +15,6 @@
 
 
 from twisted.internet import defer
-from twisted.trial.unittest import TestCase
 from zope.interface import implementer
 
 from buildbot.config import BuilderConfig
@@ -24,8 +23,7 @@ from buildbot.process.buildstep import BuildStep
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import CANCELLED
 from buildbot.test.fake.latent import LatentController
-from buildbot.test.util.integration import getMaster
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.worker.local import LocalWorker
 
 try:
@@ -61,13 +59,7 @@ class ControllableStep(BuildStep):
         self._step_deferred.callback(CANCELLED)
 
 
-class Tests(TestCase, TestReactorMixin):
-
-    def setUp(self):
-        self.setUpTestReactor()
-
-    def tearDown(self):
-        self.assertFalse(self.master.running, "master is still running!")
+class Tests(RunFakeMasterTestCase):
 
     @defer.inlineCallbacks
     def test_latent_max_builds(self):
@@ -92,7 +84,7 @@ class Tests(TestCase, TestReactorMixin):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        self.master = master = yield getMaster(self, self.reactor, config_dict)
+        master = yield self.getMaster(config_dict)
         builder_ids = [
             (yield master.data.updates.findBuilderId('testy-1')),
             (yield master.data.updates.findBuilderId('testy-2')),
@@ -146,7 +138,7 @@ class Tests(TestCase, TestReactorMixin):
             'protocols': {'null': {}},
             'multiMaster': True,
         }
-        self.master = master = yield getMaster(self, self.reactor, config_dict)
+        master = yield self.getMaster(config_dict)
         builder_ids = [
             (yield master.data.updates.findBuilderId('testy-1')),
             (yield master.data.updates.findBuilderId('testy-2')),

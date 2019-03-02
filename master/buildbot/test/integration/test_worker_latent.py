@@ -31,9 +31,7 @@ from buildbot.process.results import RETRY
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.latent import LatentController
 from buildbot.test.fake.step import BuildStepController
-from buildbot.test.util.integration import getMaster
-from buildbot.test.util.misc import DebugIntegrationLogsMixin
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.test.util.misc import TimeoutableTestCase
 from buildbot.test.util.patch_delay import patchForDelay
 
@@ -45,42 +43,12 @@ class TestException(Exception):
     """
 
 
-class Tests(TimeoutableTestCase, TestReactorMixin, DebugIntegrationLogsMixin):
-
-    def setUp(self):
-        self.setUpTestReactor()
-        self.setupDebugIntegrationLogs()
+class Tests(TimeoutableTestCase, RunFakeMasterTestCase):
 
     def tearDown(self):
         # Flush the errors logged by the master stop cancelling the builds.
         self.flushLoggedErrors(LatentWorkerSubstantiatiationCancelled)
-        self.assertFalse(self.master.running, "master is still running!")
-
-    @defer.inlineCallbacks
-    def assertBuildResults(self, build_id, result):
-        dbdict = yield self.master.db.builds.getBuild(build_id)
-        self.assertEqual(result, dbdict['results'])
-
-    @defer.inlineCallbacks
-    def getMaster(self, config_dict):
-        self.master = master = yield getMaster(self, self.reactor, config_dict)
-        return master
-
-    @defer.inlineCallbacks
-    def createBuildrequest(self, master, builder_ids, properties=None):
-        properties = properties.asDict() if properties is not None else None
-        return (yield master.data.updates.addBuildset(
-            waited_for=False,
-            builderids=builder_ids,
-            sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
-            ],
-            properties=properties,
-        ))
+        super().tearDown()
 
     @defer.inlineCallbacks
     def create_single_worker_config(self, controller_kwargs=None):

@@ -16,57 +16,17 @@
 from parameterized import parameterized
 
 from twisted.internet import defer
-from twisted.python.filepath import FilePath
-from twisted.trial.unittest import TestCase
 
 from buildbot.config import BuilderConfig
 from buildbot.plugins import util
 from buildbot.process.factory import BuildFactory
 from buildbot.process.results import SUCCESS
 from buildbot.test.fake.step import BuildStepController
-from buildbot.test.util.integration import getMaster
-from buildbot.test.util.misc import DebugIntegrationLogsMixin
-from buildbot.test.util.misc import TestReactorMixin
+from buildbot.test.util.integration import RunFakeMasterTestCase
 from buildbot.util.eventual import flushEventualQueue
-from buildbot.worker.local import LocalWorker
 
 
-class Tests(TestCase, TestReactorMixin, DebugIntegrationLogsMixin):
-
-    def setUp(self):
-        self.setUpTestReactor()
-        self.setupDebugIntegrationLogs()
-
-    def tearDown(self):
-        self.assertFalse(self.master.running, "master is still running!")
-
-    @defer.inlineCallbacks
-    def getMaster(self, config_dict):
-        self.master = master = yield getMaster(self, self.reactor, config_dict)
-        defer.returnValue(master)
-
-    def createLocalWorker(self, name):
-        workdir = FilePath(self.mktemp())
-        workdir.createDirectory()
-        return LocalWorker(name, workdir.path)
-
-    def createBuildrequest(self, master, builder_ids, properties=None):
-        # returns a Deferred
-
-        properties = properties.asDict() if properties is not None else None
-        return master.data.updates.addBuildset(
-            waited_for=False,
-            builderids=builder_ids,
-            sourcestamps=[
-                {'codebase': '',
-                 'repository': '',
-                 'branch': None,
-                 'revision': None,
-                 'project': ''},
-            ],
-            properties=properties,
-        )
-
+class Tests(RunFakeMasterTestCase):
     @defer.inlineCallbacks
     def create_single_worker_two_builder_lock_config(self, lock_cls, mode):
         stepcontrollers = [BuildStepController(), BuildStepController()]
