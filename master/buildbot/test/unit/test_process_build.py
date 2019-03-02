@@ -327,8 +327,10 @@ class TestBuild(unittest.TestCase):
         self.assertTrue(
             Build._canAcquireLocks(lock_list, workerforbuilder2))
 
-        worker_lock_1 = real_lock.getLock(workerforbuilder1.worker)
-        worker_lock_2 = real_lock.getLock(workerforbuilder2.worker)
+        worker_lock_1 = real_lock.getLockForWorker(
+            workerforbuilder1.worker.workername)
+        worker_lock_2 = real_lock.getLockForWorker(
+            workerforbuilder2.worker.workername)
 
         # then have workerforbuilder2 claim its lock:
         worker_lock_2.claim(workerforbuilder2, counting_access)
@@ -382,7 +384,7 @@ class TestBuild(unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+            .getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
             claimCount[0] += 1
@@ -418,7 +420,8 @@ class TestBuild(unittest.TestCase):
 
         lock = WorkerLock('lock', 2)
         claimLog = []
-        realLock = self.master.botmaster.getLockByID(lock).getLock(self.worker)
+        realLock = self.master.botmaster.getLockByID(lock) \
+            .getLockForWorker(self.worker.workername)
 
         def claim(owner, access):
             claimLog.append(owner)
@@ -459,7 +462,7 @@ class TestBuild(unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+            .getLockForWorker(self.workerforbuilder.worker.workername)
 
         def claim(owner, access):
             claimCount[0] += 1
@@ -486,7 +489,7 @@ class TestBuild(unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+            .getLockForWorker(self.workerforbuilder.worker.workername)
         b.setLocks([lock_access])
 
         step = FakeBuildStep()
@@ -513,7 +516,7 @@ class TestBuild(unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+            .getLockForWorker(self.workerforbuilder.worker.workername)
         b.setLocks([lock_access])
 
         step = FakeBuildStep()
@@ -543,7 +546,7 @@ class TestBuild(unittest.TestCase):
         lock_access = lock.access('counting')
         lock.access = lambda mode: lock_access
         real_lock = b.builder.botmaster.getLockByID(lock) \
-            .getLock(self.workerforbuilder.worker)
+            .getLockForWorker(self.workerforbuilder.worker.workername)
 
         step = LoggingBuildStep(locks=[lock_access])
         b.setStepFactories([FakeStepFactory(step)])

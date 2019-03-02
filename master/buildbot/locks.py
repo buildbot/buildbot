@@ -216,7 +216,7 @@ class RealMasterLock(BaseLock):
         self.description = "<MasterLock({}, {})>".format(self.name,
                                                          self.maxCount)
 
-    def getLock(self, worker):
+    def getLockForWorker(self, workername):
         return self
 
 
@@ -232,8 +232,7 @@ class RealWorkerLock:
     def __repr__(self):
         return self.description
 
-    def getLock(self, worker):
-        workername = worker.workername
+    def getLockForWorker(self, workername):
         if workername not in self.locks:
             maxCount = self.maxCountForWorker.get(workername,
                                                   self.maxCount)
