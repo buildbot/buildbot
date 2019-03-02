@@ -238,3 +238,196 @@ class Tests(RunFakeMasterTestCase):
 
         yield self.assert_two_builds_created_one_after_another(
             stepcontrollers, master, builder_ids)
+
+
+class TestReconfig(RunFakeMasterTestCase):
+
+    def create_stepcontrollers(self, count, lock, mode):
+        stepcontrollers = []
+        for i in range(count):
+            locks = [lock.access(mode)] if lock is not None else []
+            stepcontrollers.append(BuildStepController(locks=locks))
+        return stepcontrollers
+
+    def update_builder_config(self, config_dict, stepcontrollers, lock, mode):
+        config_dict['builders'] = []
+        for i, stepcontroller in enumerate(stepcontrollers):
+            locks = [lock.access(mode)] if lock is not None else []
+            b = BuilderConfig(name='builder{}'.format(i),
+                              workernames=['worker1'],
+                              factory=BuildFactory([stepcontroller.step]),
+                              locks=locks)
+            config_dict['builders'].append(b)
+
+    @defer.inlineCallbacks
+    def create_single_worker_n_builder_lock_config(self, builder_count,
+                                                   lock_cls, max_count, mode):
+        stepcontrollers = self.create_stepcontrollers(builder_count, None, None)
+
+        lock = lock_cls("lock1", maxCount=max_count)
+
+        config_dict = {
+            'builders': [],
+            'workers': [
+                self.createLocalWorker('worker1'),
+            ],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+        self.update_builder_config(config_dict, stepcontrollers, lock, mode)
+
+        master = yield self.getMaster(config_dict)
+
+        builder_ids = []
+        for i in range(builder_count):
+            builder_ids.append((
+                yield master.data.updates.findBuilderId('builder{}'.format(i))))
+
+        return stepcontrollers, master, config_dict, lock, builder_ids
+
+    @defer.inlineCallbacks
+    def create_single_worker_n_builder_step_lock_config(self, builder_count,
+                                                        lock_cls, max_count,
+                                                        mode):
+        lock = lock_cls("lock1", maxCount=max_count)
+        stepcontrollers = self.create_stepcontrollers(builder_count, lock, mode)
+
+        config_dict = {
+            'builders': [],
+            'workers': [
+                self.createLocalWorker('worker1'),
+            ],
+            'protocols': {'null': {}},
+            'multiMaster': True,
+        }
+        self.update_builder_config(config_dict, stepcontrollers, None, None)
+
+        master = yield self.getMaster(config_dict)
+
+        builder_ids = []
+        for i in range(builder_count):
+            builder_ids.append((
+                yield master.data.updates.findBuilderId('builder{}'.format(i))))
+
+        return stepcontrollers, master, config_dict, lock, builder_ids
+
+    @parameterized.expand([
+        (3, util.MasterLock, 'counting', 1, 2, 1, 3),
+        (3, util.WorkerLock, 'counting', 1, 2, 1, 3),
+        (3, util.MasterLock, 'counting', 2, 1, 2, 3),
+        (3, util.WorkerLock, 'counting', 2, 1, 2, 3),
+        (2, util.MasterLock, 'exclusive', 1, 2, 1, 2),
+        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 2),
+        (2, util.MasterLock, 'exclusive', 2, 1, 1, 2),
+        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 2),
+    ])
+    @defer.inlineCallbacks
+    def test_changing_max_lock_count_does_not_break_builder_locks(
+            self, builder_count, lock_cls, mode, max_count_before,
+            max_count_after, allowed_builds_before, allowed_builds_after):
+        # TODO: the test currently demonstrates broken behavior
+        '''
+        Check that Buildbot does not allow extra claims on a claimed lock after
+        a reconfig that changed the maxCount of that lock. Some Buildbot
+        versions created a completely separate real lock after each maxCount
+        change, which allowed to e.g. take an exclusive lock twice.
+        '''
+        stepcontrollers, master, config_dict, lock, builder_ids = \
+            yield self.create_single_worker_n_builder_lock_config(
+                builder_count, lock_cls, max_count_before, mode)
+
+        # create a number of builds and check that the expected number of them
+        # start
+        for i in range(builder_count):
+            yield self.createBuildrequest(master, [builder_ids[i]])
+
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), allowed_builds_before)
+
+        # update the config and reconfig the master
+        lock = lock_cls(lock.name, maxCount=max_count_after)
+        self.update_builder_config(config_dict, stepcontrollers, lock, mode)
+        yield master.reconfig()
+        yield flushEventualQueue()
+
+        # check that the number of running builds matches expectation
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), allowed_builds_after)
+
+        # finish the steps and check that builds finished as expected
+        for stepcontroller in stepcontrollers:
+            stepcontroller.finish_step(SUCCESS)
+            yield flushEventualQueue()
+
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), allowed_builds_after)
+        for b in builds:
+            self.assertEqual(b['results'], SUCCESS)
+
+    @parameterized.expand([
+        (3, util.MasterLock, 'counting', 1, 2, 1, 3),
+        (3, util.WorkerLock, 'counting', 1, 2, 1, 3),
+        (3, util.MasterLock, 'counting', 2, 1, 2, 3),
+        (3, util.WorkerLock, 'counting', 2, 1, 2, 3),
+        (2, util.MasterLock, 'exclusive', 1, 2, 1, 2),
+        (2, util.WorkerLock, 'exclusive', 1, 2, 1, 2),
+        (2, util.MasterLock, 'exclusive', 2, 1, 1, 2),
+        (2, util.WorkerLock, 'exclusive', 2, 1, 1, 2),
+    ])
+    @defer.inlineCallbacks
+    def test_changing_max_lock_count_does_not_break_step_locks(
+            self, builder_count, lock_cls, mode, max_count_before,
+            max_count_after, allowed_steps_before, allowed_steps_after):
+        # TODO: the test currently demonstrates broken behavior
+        '''
+        Check that Buildbot does not allow extra claims on a claimed lock after
+        a reconfig that changed the maxCount of that lock. Some Buildbot
+        versions created a completely separate real lock after each maxCount
+        change, which allowed to e.g. take an exclusive lock twice.
+        '''
+        stepcontrollers, master, config_dict, lock, builder_ids = \
+            yield self.create_single_worker_n_builder_step_lock_config(
+                builder_count, lock_cls, max_count_before, mode)
+
+        # create a number of builds and check that the expected number of them
+        # start their steps
+        for i in range(builder_count):
+            yield self.createBuildrequest(master, [builder_ids[i]])
+
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), builder_count)
+
+        self.assertEqual(sum(sc.running for sc in stepcontrollers),
+                         allowed_steps_before)
+
+        # update the config and reconfig the master
+        lock = lock_cls(lock.name, maxCount=max_count_after)
+        new_stepcontrollers = \
+            self.create_stepcontrollers(builder_count, lock, mode)
+
+        self.update_builder_config(config_dict, new_stepcontrollers, lock, mode)
+        yield master.reconfig()
+        yield flushEventualQueue()
+
+        # check that all builds are still running
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), builder_count)
+
+        # check that the expected number of steps has been started and that
+        # none of the new steps has been started
+        self.assertEqual(sum(sc.running for sc in stepcontrollers),
+                         allowed_steps_before)
+        self.assertEqual(sum(sc.running for sc in new_stepcontrollers), 0)
+
+        # finish the steps and check that builds finished as expected
+        for stepcontroller in stepcontrollers:
+            stepcontroller.finish_step(SUCCESS)
+            yield flushEventualQueue()
+
+        builds = yield master.data.get(("builds",))
+        self.assertEqual(len(builds), builder_count)
+        for b in builds:
+            self.assertEqual(b['results'], SUCCESS)
+
+        self.assertEqual(sum(sc.running for sc in stepcontrollers), 0)
+        self.assertEqual(sum(sc.running for sc in new_stepcontrollers), 0)
