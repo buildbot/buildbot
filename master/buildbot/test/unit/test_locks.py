@@ -201,6 +201,23 @@ class LockTests(unittest.TestCase):
         self.assertTrue(lock.isAvailable(req_waiter1, access))
         self.assertTrue(lock.isAvailable(req_waiter2, access))
 
+    @parameterized.expand(['counting', 'exclusive'])
+    def test_can_release_non_waited_lock(self, mode):
+        req = Requester()
+        req_not_waited = Requester()
+
+        lock = BaseLock('test', maxCount=1)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = mode
+
+        lock.release(req_not_waited, access)
+
+        lock.claim(req, access)
+        lock.release(req, access)
+        yield flushEventualQueue()
+
+        lock.release(req_not_waited, access)
+
     @parameterized.expand([
         ('counting', 'counting'),
         ('counting', 'exclusive'),
