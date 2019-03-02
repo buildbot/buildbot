@@ -137,7 +137,12 @@ class BaseLock:
             debuglog("%s already released" % self)
             return
 
-        # who can we wake up?
+        self._tryWakeUp()
+
+        # notify any listeners
+        self.release_subs.deliver()
+
+    def _tryWakeUp(self):
         # After an exclusive access, we may need to wake up several waiting.
         # Break out of the loop when the first waiting client should not be
         # awakened.
@@ -160,9 +165,6 @@ class BaseLock:
             if d:
                 self.waiting[i] = (w_owner, w_access, None)
                 eventually(d.callback, self)
-
-        # notify any listeners
-        self.release_subs.deliver()
 
     def waitUntilMaybeAvailable(self, owner, access):
         """Fire when the lock *might* be available. The caller will need to
