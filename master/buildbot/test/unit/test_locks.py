@@ -148,6 +148,61 @@ class LockTests(unittest.TestCase):
         self.assertTrue(lock.isAvailable(req_waiter2, access))
         self.assertTrue(lock.isAvailable(req_waiter3, access))
 
+    def test_is_available_with_mult_waiters_mult_counting_set_maxCount(self):
+        req1 = Requester()
+        req2 = Requester()
+        req_waiter1 = Requester()
+        req_waiter2 = Requester()
+        req_waiter3 = Requester()
+
+        lock = BaseLock('test', maxCount=2)
+        access = mock.Mock(spec=LockAccess)
+        access.mode = 'counting'
+
+        lock.claim(req1, access)
+        lock.claim(req2, access)
+        lock.waitUntilMaybeAvailable(req_waiter1, access)
+        lock.waitUntilMaybeAvailable(req_waiter2, access)
+        lock.waitUntilMaybeAvailable(req_waiter3, access)
+        lock.release(req1, access)
+        lock.release(req2, access)
+        self.assertFalse(lock.isAvailable(req1, access))
+        self.assertTrue(lock.isAvailable(req_waiter1, access))
+        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertFalse(lock.isAvailable(req_waiter3, access))
+
+        lock.setMaxCount(4)
+        self.assertTrue(lock.isAvailable(req1, access))
+        self.assertTrue(lock.isAvailable(req_waiter1, access))
+        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
+
+        lock.claim(req_waiter1, access)
+        lock.release(req_waiter1, access)
+        self.assertTrue(lock.isAvailable(req1, access))
+        self.assertTrue(lock.isAvailable(req_waiter1, access))
+        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
+
+        lock.setMaxCount(2)
+        lock.waitUntilMaybeAvailable(req_waiter1, access)
+        lock.claim(req_waiter2, access)
+        lock.release(req_waiter2, access)
+        self.assertFalse(lock.isAvailable(req1, access))
+        self.assertTrue(lock.isAvailable(req_waiter1, access))
+        self.assertFalse(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
+
+        lock.claim(req_waiter3, access)
+        lock.release(req_waiter3, access)
+        self.assertTrue(lock.isAvailable(req1, access))
+        self.assertTrue(lock.isAvailable(req_waiter1, access))
+        self.assertTrue(lock.isAvailable(req_waiter2, access))
+        self.assertTrue(lock.isAvailable(req_waiter3, access))
+
+        lock.claim(req_waiter1, access)
+        lock.release(req_waiter1, access)
+
     @parameterized.expand(['counting', 'exclusive'])
     def test_stop_waiting_raises_after_release(self, mode):
         req = Requester()
@@ -283,6 +338,31 @@ class LockTests(unittest.TestCase):
         self.assertEqual([d.called for d in deferreds], [False] * 5)
 
         lock.release(req, access_excl)
+        yield flushEventualQueue()
+
+        self.assertEqual([d.called for d in deferreds], [True] * 5)
+
+    @defer.inlineCallbacks
+    def test_release_calls_multiple_waiters_on_setMaxCount(self):
+        req = Requester()
+
+        req_waiters = [Requester() for _ in range(5)]
+
+        lock = BaseLock('test', maxCount=1)
+        access_counting = mock.Mock(spec=LockAccess)
+        access_counting.mode = 'counting'
+
+        lock.claim(req, access_counting)
+        deferreds = [lock.waitUntilMaybeAvailable(req_waiter, access_counting)
+                     for req_waiter in req_waiters]
+        self.assertEqual([d.called for d in deferreds], [False] * 5)
+
+        lock.release(req, access_counting)
+        yield flushEventualQueue()
+
+        self.assertEqual([d.called for d in deferreds], [True] + [False] * 4)
+
+        lock.setMaxCount(5)
         yield flushEventualQueue()
 
         self.assertEqual([d.called for d in deferreds], [True] * 5)

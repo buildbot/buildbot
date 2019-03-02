@@ -54,7 +54,9 @@ class BaseLock:
         self._claimed_excl = 0
 
         # current number of claimed counting locks (0 to self.maxCount), must
-        # match self.owners
+        # match self.owners. Note that self.maxCount is not a strict limit, the
+        # number of claimed counting locks may be higher than self.maxCount if
+        # it was lowered by
         self._claimed_counting = 0
 
         # subscriptions to this lock being released
@@ -63,6 +65,13 @@ class BaseLock:
 
     def __repr__(self):
         return self.description
+
+    def setMaxCount(self, count):
+        old_max_count = self.maxCount
+        self.maxCount = count
+
+        if count > old_max_count:
+            self._tryWakeUp()
 
     def isAvailable(self, requester, access):
         """ Return a boolean whether the lock is available for claiming """
