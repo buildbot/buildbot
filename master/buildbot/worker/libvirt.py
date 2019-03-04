@@ -29,7 +29,6 @@ from buildbot.worker import AbstractLatentWorker
 
 try:
     import libvirt
-    libvirt = libvirt
 except ImportError:
     libvirt = None
 
